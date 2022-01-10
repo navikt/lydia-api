@@ -3,13 +3,35 @@
  */
 package no.nav.lydia
 
-class App {
-    val greeting: String
-        get() {
-            return "Hello World!"
-        }
-}
+import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.serialization.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+
 
 fun main() {
-    println(App().greeting)
+    embeddedServer(Netty, port = 8080) {
+        lydiaBackend()
+    }.start(wait = true)
+}
+
+fun Application.lydiaBackend() {
+    install(ContentNegotiation) {
+        json()
+    }
+    routing {
+        healthChecks()
+    }
+}
+
+private fun Routing.healthChecks() {
+    get("/isAlive") {
+        call.respondText { "OK" }
+    }
+    get("/isReady") {
+        call.respondText { "OK" }
+    }
 }
