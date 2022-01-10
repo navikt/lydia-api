@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     val ktor_version = "1.6.7"
+    val testcontainers_version = "1.16.2"
 
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -34,6 +35,10 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
+
+    testImplementation("org.testcontainers:testcontainers:$testcontainers_version")
+    testImplementation("org.testcontainers:postgresql:$testcontainers_version")
+
 }
 
 testing {
