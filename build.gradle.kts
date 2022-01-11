@@ -43,6 +43,8 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:$testcontainers_version")
     testImplementation("org.postgresql:postgresql:42.3.1")
 
+    testImplementation("com.github.kittinunf.fuel:fuel:2.3.1")
+
 }
 
 testing {
