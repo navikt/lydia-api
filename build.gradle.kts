@@ -1,6 +1,6 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.5.31"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     // For å bygge
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
@@ -33,11 +33,15 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.5")
     implementation("net.logstash.logback:logstash-logback-encoder:7.0")
 
+    implementation("com.zaxxer:HikariCP:5.0.1")
+
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     testImplementation("org.testcontainers:testcontainers:$testcontainers_version")
+    testImplementation("org.testcontainers:junit-jupiter:$testcontainers_version")
     testImplementation("org.testcontainers:postgresql:$testcontainers_version")
+    testImplementation("org.postgresql:postgresql:42.3.1")
 
 }
 
