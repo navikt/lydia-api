@@ -3,6 +3,7 @@ package no.nav.lydia.container
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.sql.ResultSet
 import java.sql.Statement
 import kotlin.test.Test
@@ -10,7 +11,7 @@ import kotlin.test.assertEquals
 
 class PostgresTest {
     private val postgresContainer: PostgreSQLContainer<*> =
-        PostgreSQLContainer("postgres:latest").apply {
+        PostgreSQLContainer("postgres:latest").waitingFor(HostPortWaitStrategy()).apply {
             start()
         }
 
@@ -22,7 +23,7 @@ class PostgresTest {
         assertEquals(1, resultSetInt)
     }
 
-    private fun getDataSource(postgresContainer : PostgreSQLContainer<*>) =
+    private fun getDataSource(postgresContainer: PostgreSQLContainer<*>) =
         HikariDataSource(HikariConfig().apply {
             jdbcUrl = postgresContainer.jdbcUrl
             username = postgresContainer.username
