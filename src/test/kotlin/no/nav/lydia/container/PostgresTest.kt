@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 
 class PostgresTest {
     private val postgresContainer: PostgreSQLContainer<*> =
-        PostgreSQLContainer("postgres:latest").waitingFor(HostPortWaitStrategy()).apply {
+        PostgreSQLContainer("postgres:12").waitingFor(HostPortWaitStrategy()).apply {
             start()
         }
 
