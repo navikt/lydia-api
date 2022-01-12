@@ -40,6 +40,6 @@ spec:
       enabled: true
   gcp:
     sqlInstances:
-    - type: "POSTGRES_12"
+    - type: POSTGRES_12
       databases:
-        "name": "lydia-api-db"
+        - name: "lydia-api-db"
