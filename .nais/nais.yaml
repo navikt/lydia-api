@@ -18,20 +18,13 @@ spec:
     initialDelay: 20
     timeout: 60
   replicas:
-    min: 2
-    max: 2
+    min: 1
+    max: 1
     cpuThresholdPercentage: 50
   prometheus:
     enabled: true
     path: "/metrics"
-  resources:
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
-    requests:
-      cpu: "200"
-      memory: "256Mi"
-  ingresses: 
+  ingresses:
   {{#each ingresses as |url|}}
     - {{url}}
   {{/each}}
