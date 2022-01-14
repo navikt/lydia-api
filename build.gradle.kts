@@ -34,6 +34,7 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:7.0")
 
     implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.flywaydb:flyway-core:8.4.1")
 
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -41,7 +42,6 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:$testcontainers_version")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainers_version")
     testImplementation("org.testcontainers:postgresql:$testcontainers_version")
-    testImplementation("org.postgresql:postgresql:42.3.1")
 
     testImplementation("com.github.kittinunf.fuel:fuel:2.3.1")
 
