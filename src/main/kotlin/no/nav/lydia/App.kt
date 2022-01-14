@@ -13,6 +13,17 @@ import io.ktor.server.netty.*
 
 
 fun main() {
+    val naisCluster = NaisCluster.fromString(System.getenv("NAIS_CLUSTER_NAME") ?: "local")
+    val naisEnv = NaisEnvironment(naisCluster)
+
+    val dataSource = createDataSource(
+        jdbcUrl = naisEnv.database.jdbcUrl,
+        username = naisEnv.database.username,
+        password = naisEnv.database.password
+    )
+
+    runMigration(naisEnv.database.name, dataSource)
+
     embeddedServer(Netty, port = 8080) {
         lydiaBackend()
     }.start(wait = true)
