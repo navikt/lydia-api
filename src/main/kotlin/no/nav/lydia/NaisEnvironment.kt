@@ -1,8 +1,8 @@
 package no.nav.lydia
 
 enum class NaisCluster(val value: String) {
-    DEV("dev-fss"),
-    PROD("prod-fss"),
+    DEV("dev-gcp"),
+    PROD("prod-gcp"),
     LOCAL("local");
 
     override fun toString() = value
@@ -10,8 +10,8 @@ enum class NaisCluster(val value: String) {
     companion object {
         fun fromString(value: String) =
             when (value) {
-                "dev-fss" -> DEV
-                "prod-fss" -> PROD
+                "dev-gcp" -> DEV
+                "prod-gcp" -> PROD
                 "local" -> LOCAL
                 else -> throw IllegalArgumentException()
             }
