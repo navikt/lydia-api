@@ -24,6 +24,10 @@ spec:
   prometheus:
     enabled: true
     path: "/metrics"
+  accessPolicy:
+    inbound:
+      rules:
+        - application: lydia-radgiver-frontend
   ingresses:
   {{#each ingresses as |url|}}
     - {{url}}
