@@ -14,10 +14,8 @@ import io.ktor.server.netty.*
 
 fun main() {
     val naisEnv = NaisEnvironment()
-
     val dataSource = createDataSource(naisEnv.database)
-
-    runMigration(naisEnv.database.name, dataSource)
+    runMigration(dataSource)
 
     embeddedServer(Netty, port = 8080) {
         lydiaBackend()

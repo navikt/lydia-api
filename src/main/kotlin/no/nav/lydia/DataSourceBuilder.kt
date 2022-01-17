@@ -24,11 +24,9 @@ fun createDataSource(database: Database): DataSource {
     }
 }
 
-fun runMigration(databaseName: String, dataSource: DataSource) {
-    val initSql = "SET ROLE \"$databaseName-${Role.Admin}\""
+fun runMigration(dataSource: DataSource) {
     Flyway.configure()
         .dataSource(dataSource)
-        .initSql(initSql)
         .load()
         .migrate()
 }

@@ -30,7 +30,6 @@ class AppContainerTest {
             .withNetwork(network)
             .withNetworkAliases(postgresNetworkAlias)
             .withDatabaseName(lydiaDbName)
-            .withInitScript("postgres_init.sql") // Flyway forventer en admin-bruker for å kjøre migrering.
             .waitingFor(
                 HostPortWaitStrategy()
             )
