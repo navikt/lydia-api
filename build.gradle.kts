@@ -33,6 +33,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.5")
     implementation("net.logstash.logback:logstash-logback-encoder:7.0")
 
+    implementation("org.postgresql:postgresql:42.3.1")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:8.4.1")
 
