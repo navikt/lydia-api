@@ -13,8 +13,7 @@ import io.ktor.server.netty.*
 
 
 fun main() {
-    val naisCluster = NaisCluster.fromString(System.getenv("NAIS_CLUSTER_NAME") ?: "local")
-    val naisEnv = NaisEnvironment(naisCluster)
+    val naisEnv = NaisEnvironment()
 
     val dataSource = createDataSource(
         jdbcUrl = naisEnv.database.jdbcUrl,

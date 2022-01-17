@@ -1,24 +1,6 @@
 package no.nav.lydia
 
-enum class NaisCluster(val value: String) {
-    DEV("dev-gcp"),
-    PROD("prod-gcp"),
-    LOCAL("local");
-
-    override fun toString() = value
-
-    companion object {
-        fun fromString(value: String) =
-            when (value) {
-                "dev-gcp" -> DEV
-                "prod-gcp" -> PROD
-                "local" -> LOCAL
-                else -> throw IllegalArgumentException()
-            }
-    }
-}
-
-class NaisEnvironment(val naisCluster: NaisCluster) {
+class NaisEnvironment() {
     val database = Database()
 }
 
