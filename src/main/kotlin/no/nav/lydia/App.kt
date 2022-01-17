@@ -15,11 +15,7 @@ import io.ktor.server.netty.*
 fun main() {
     val naisEnv = NaisEnvironment()
 
-    val dataSource = createDataSource(
-        jdbcUrl = naisEnv.database.jdbcUrl,
-        username = naisEnv.database.username,
-        password = naisEnv.database.password
-    )
+    val dataSource = createDataSource(naisEnv.database)
 
     runMigration(naisEnv.database.name, dataSource)
 

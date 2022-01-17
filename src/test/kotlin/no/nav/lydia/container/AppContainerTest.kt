@@ -11,6 +11,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.sql.Connection
 import kotlin.io.path.Path
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -23,14 +24,13 @@ class AppContainerTest {
     val network = Network.newNetwork()
     val postgresNetworkAlias = "postgrescontainer"
     val lydiaDbName = "lydia-api-container-db"
-    val db_admin = "$lydiaDbName-admin" // Flyway forventer en admin-bruker for å kjøre migrering. Burde vi hatt en vanlig bruker her også?
     private val postgresContainer: PostgreSQLContainer<*> =
         PostgreSQLContainer("postgres:12")
             .withLogConsumer(logConsumer)
             .withNetwork(network)
             .withNetworkAliases(postgresNetworkAlias)
             .withDatabaseName(lydiaDbName)
-            .withUsername(db_admin)
+            .withInitScript("postgres_init.sql") // Flyway forventer en admin-bruker for å kjøre migrering.
             .waitingFor(
                 HostPortWaitStrategy()
             )
@@ -48,9 +48,10 @@ class AppContainerTest {
 
         lydiaApiContainer.withEnv(
             mapOf(
-                "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_URL" to "jdbc:postgresql://$postgresNetworkAlias:5432/$lydiaDbName?loggerLevel=OFF",
-                "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME" to postgresContainer.getUsername(),
-                "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD" to postgresContainer.getPassword(),
+                "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST" to postgresNetworkAlias,
+                "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT" to "5432",
+                "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME" to postgresContainer.username,
+                "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD" to postgresContainer.password,
                 "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE" to lydiaDbName,
             )
         )
