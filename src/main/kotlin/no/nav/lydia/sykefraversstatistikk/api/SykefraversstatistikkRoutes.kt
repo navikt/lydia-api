@@ -17,7 +17,7 @@ fun Route.sykefraversstatistikk() {
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
-        call.respond("OK")
+        call.respond(FilterverdierDto())
     }
 
 }

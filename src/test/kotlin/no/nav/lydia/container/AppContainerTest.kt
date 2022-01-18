@@ -1,19 +1,9 @@
 package no.nav.lydia.container
 
 import com.github.kittinunf.fuel.core.isSuccessful
-import com.github.kittinunf.fuel.httpGet
-import no.nav.lydia.container.DbTestUtil.Companion.performQuery
-import no.nav.lydia.container.TestContainerHelper.Companion.performGet
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.Network
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.containers.output.Slf4jLogConsumer
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
-import org.testcontainers.images.builder.ImageFromDockerfile
-import java.sql.Connection
-import kotlin.io.path.Path
+import no.nav.lydia.container.helper.DbTestHelper.Companion.performQuery
+import no.nav.lydia.container.helper.TestContainerHelper
+import no.nav.lydia.container.helper.TestContainerHelper.Companion.performGet
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

@@ -1,6 +1,8 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.6.10"
+    kotlin("jvm") version "1.6.10"
+    // Skru json-serialisering
+    kotlin("plugin.serialization") version "1.6.10"
     // For å bygge
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
@@ -14,8 +16,8 @@ repositories {
 }
 
 dependencies {
-    val ktor_version = "1.6.7"
-    val testcontainers_version = "1.16.2"
+    val ktorVersion = "1.6.7"
+    val testcontainersVersion = "1.16.2"
 
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -27,9 +29,9 @@ dependencies {
     implementation("com.google.guava:guava:30.1.1-jre")
 
     // ktor
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-serialization:$ktor_version")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.2.5")
     implementation("net.logstash.logback:logstash-logback-encoder:7.0")
 
@@ -37,14 +39,16 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:8.4.1")
 
-    testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
-    testImplementation("org.testcontainers:testcontainers:$testcontainers_version")
-    testImplementation("org.testcontainers:junit-jupiter:$testcontainers_version")
-    testImplementation("org.testcontainers:postgresql:$testcontainers_version")
+    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
+    testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
+    testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
 
-    testImplementation("com.github.kittinunf.fuel:fuel:2.3.1")
+    val fuelVersion = "2.3.1"
+    testImplementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
 
 }
 

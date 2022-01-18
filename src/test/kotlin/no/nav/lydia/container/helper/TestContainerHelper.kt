@@ -1,9 +1,7 @@
-package no.nav.lydia.container
+package no.nav.lydia.container.helper
 
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.httpGet
-import no.nav.lydia.container.TestContainerHelper.Companion.performGet
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
