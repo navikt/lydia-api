@@ -1,4 +1,4 @@
-package no.nav.lydia.container
+package no.nav.lydia.container.helper
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -6,7 +6,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.ResultSet
 import java.sql.Statement
 
-class DbTestUtil {
+class DbTestHelper {
 
     companion object{
         fun getDataSource(postgresContainer: PostgreSQLContainer<*>) =
