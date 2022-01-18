@@ -10,6 +10,8 @@ import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import no.nav.lydia.health.healthChecks
+import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 
 
 fun main() {
@@ -28,14 +30,6 @@ fun Application.lydiaBackend() {
     }
     routing {
         healthChecks()
-    }
-}
-
-private fun Routing.healthChecks() {
-    get("/isAlive") {
-        call.respondText { "OK" }
-    }
-    get("/isReady") {
-        call.respondText { "OK" }
+        sykefraversstatistikk()
     }
 }
