@@ -26,7 +26,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // This dependency is used by the application.
-    implementation("com.google.guava:guava:30.1.1-jre")
+    implementation("com.google.guava:guava:31.0.1-jre")
 
     // ktor
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -34,8 +34,8 @@ dependencies {
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("io.ktor:ktor-auth:$ktorVersion")
     implementation("io.ktor:ktor-auth-jwt:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.2.5")
-    implementation("net.logstash.logback:logstash-logback-encoder:7.0")
+    implementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("net.logstash.logback:logstash-logback-encoder:7.0.1")
 
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("com.zaxxer:HikariCP:5.0.1")
