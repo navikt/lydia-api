@@ -32,6 +32,8 @@ dependencies {
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("io.ktor:ktor-auth:$ktorVersion")
+    implementation("io.ktor:ktor-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.2.5")
     implementation("net.logstash.logback:logstash-logback-encoder:7.0")
 
@@ -49,6 +51,8 @@ dependencies {
     val fuelVersion = "2.3.1"
     testImplementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
+
+    testImplementation("no.nav.security:mock-oauth2-server:0.4.1")
 
 }
 
