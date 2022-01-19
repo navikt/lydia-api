@@ -3,7 +3,12 @@
  */
 package no.nav.lydia
 
+import com.auth0.jwk.JwkProviderBuilder
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.application.*
+import io.ktor.auth.*
+import io.ktor.auth.jwt.*
 import io.ktor.features.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
@@ -20,7 +25,7 @@ fun main() {
     runMigration(dataSource)
 
     embeddedServer(Netty, port = 8080) {
-        lydiaBackend()
+        lydiaBackend(naisEnv)
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
@@ -29,12 +34,36 @@ fun main() {
     }.start(wait = true)
 }
 
-fun Application.lydiaBackend() {
+fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
     install(ContentNegotiation) {
         json()
     }
+
     routing {
         healthChecks()
         sykefraversstatistikk()
+    }
+
+    val jwkProvider = JwkProviderBuilder(naisEnv.security.azureConfig.jwksUri)
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
+    install(Authentication) {
+        jwt {
+            verifier(jwkProvider, naisEnv.security.azureConfig.issuer)
+            validate { credentials ->
+                try {
+                    requireNotNull(credentials.payload.audience) {
+                        "Auth: Missing audience in token"
+                    }
+                    require(credentials.payload.audience.contains(naisEnv.security.azureConfig.audience)) {
+                        "Auth: Valid audience not found in claims"
+                    }
+                    JWTPrincipal(credentials.payload)
+                } catch (e: Throwable) {
+                    null
+                }
+            }
+        }
     }
 }
