@@ -5,13 +5,13 @@ package no.nav.lydia
 
 import io.ktor.application.*
 import io.ktor.features.*
-import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import no.nav.lydia.health.healthChecks
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
+import java.util.concurrent.TimeUnit
 
 
 fun main() {
@@ -21,6 +21,11 @@ fun main() {
 
     embeddedServer(Netty, port = 8080) {
         lydiaBackend()
+    }.also {
+        // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
+        it.addShutdownHook {
+            it.stop(3, 5, TimeUnit.SECONDS)
+        }
     }.start(wait = true)
 }
 
