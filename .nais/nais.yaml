@@ -35,6 +35,12 @@ spec:
   azure:
     application:
       enabled: true
+      claims:
+        extra:
+          - "NAVident"
+    sidecar:
+      enabled: true
+      autoLogin: true
   gcp:
     sqlInstances:
     - type: POSTGRES_12
