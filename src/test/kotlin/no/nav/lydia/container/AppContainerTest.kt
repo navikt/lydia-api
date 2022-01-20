@@ -13,7 +13,7 @@ class AppContainerTest {
 
     @Test
     fun `Kaller isAlive`() {
-        val (_, response, _) = lydiaApiContainer.performGet("isAlive")
+        val (_, response, _) = lydiaApiContainer.performGet("internal/isalive")
             .responseString()
 
         assert(response.isSuccessful)
