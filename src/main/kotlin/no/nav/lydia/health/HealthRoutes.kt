@@ -5,10 +5,11 @@ import io.ktor.response.*
 import io.ktor.routing.*
 
 fun Routing.healthChecks() {
-    get("/isAlive") {
+    get("internal/isalive") {
         call.respondText { "OK" }
     }
-    get("/isReady") {
+    get("internal/isready") {
+        //TODO sørg for at appens avhengigheter, f.eks database-tilkoblingen funker før vi svarer ja på isReady
         call.respondText { "OK" }
     }
 }

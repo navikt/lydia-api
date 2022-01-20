@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 
 class AppTest {
     private val naisEnv = NaisEnvironment(
-        database = Database(
+        database = Database( // TODO vi må legge til database-config her om vi skal gjøre noe mer enn helsesjekk-kall
             host = "",
             port = "",
             username = "",
@@ -24,9 +24,21 @@ class AppTest {
     )
 
     @Test
-    fun appHasAGreeting() {
+    fun `appen svarer på isAlive-kall når den kjører`() {
         withTestApplication({ lydiaBackend(naisEnv) }) {
-            with(handleRequest(HttpMethod.Get, "/isAlive")) {
+            with(handleRequest(HttpMethod.Get, "/internal/isalive")) {
+                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals("OK", response.content)
+            }
+        }
+    }
+
+    @Test
+    fun `appen svarer på isReady-kall når den er klar til å ta imot trafikk`() {
+        withTestApplication({ lydiaBackend(naisEnv) }) {
+            with(handleRequest(HttpMethod.Get, "/internal/isready")) {
+                //TODO sørg for at database-tilkoblingen funker før vi svarer ja på isReady
+                assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals("OK", response.content)
             }
         }
