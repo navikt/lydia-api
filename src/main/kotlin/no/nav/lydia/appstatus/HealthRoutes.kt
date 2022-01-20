@@ -1,4 +1,4 @@
-package no.nav.lydia.health
+package no.nav.lydia.appstatus
 
 import io.ktor.application.*
 import io.ktor.response.*

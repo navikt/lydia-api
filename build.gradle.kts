@@ -37,21 +37,35 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.10")
     implementation("net.logstash.logback:logstash-logback-encoder:7.0.1")
 
+    // metrics
+    implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.8.1")
+
+    // Database
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:8.4.1")
 
+    // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
+    // Enklere assertions
+    val kotestVerstion = "5.1.0"
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
+    testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
+
+    // Testcontainers
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
 
+    // Enklere httpklient
     val fuelVersion = "2.3.1"
     testImplementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
 
+    // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:0.4.1")
 
 }

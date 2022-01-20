@@ -8,11 +8,14 @@ import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
 import io.ktor.features.*
+import io.ktor.metrics.micrometer.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import no.nav.lydia.health.healthChecks
+import no.nav.lydia.appstatus.Metrics
+import no.nav.lydia.appstatus.healthChecks
+import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import java.util.concurrent.TimeUnit
 
@@ -37,8 +40,13 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
         json()
     }
 
+    install(MicrometerMetrics) {
+        registry = Metrics.appMicrometerRegistry
+    }
+
     routing {
         healthChecks()
+        metrics()
         sykefraversstatistikk()
     }
 
