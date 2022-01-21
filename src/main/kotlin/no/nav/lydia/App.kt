@@ -44,12 +44,6 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
         registry = Metrics.appMicrometerRegistry
     }
 
-    routing {
-        healthChecks()
-        metrics()
-        sykefraversstatistikk()
-    }
-
     val jwkProvider = JwkProviderBuilder(naisEnv.security.azureConfig.jwksUri)
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
@@ -72,4 +66,10 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
             }
         }
     }
+    routing {
+        healthChecks()
+        metrics()
+        sykefraversstatistikk()
+    }
+
 }

@@ -3,6 +3,7 @@ package no.nav.lydia.container.helper
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.httpGet
 import no.nav.lydia.getEnvVar
+import no.nav.security.mock.oauth2.MockOAuth2Server
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
@@ -22,6 +23,8 @@ class TestContainerHelper {
 
         private val network = Network.newNetwork()
         private val postgresNetworkAlias = "postgrescontainer"
+        private val mockOauth2NetworkAlias = "oath2server"
+        private val mockOauth2Port = "8100"
         private val lydiaDbName = "lydia-api-container-db"
         private val postgresContainer: PostgreSQLContainer<*> =
             PostgreSQLContainer("postgres:12")
@@ -33,11 +36,16 @@ class TestContainerHelper {
                     HostPortWaitStrategy()
                 )
 
+        // TODO lag metoder for å hente ut token med claims fra containeren
         private val mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
             builder.from("ghcr.io/navikt/mock-oauth2-server:0.4.1")
+                .env(mapOf(
+                    "SERVER_PORT" to mockOauth2Port,
+                    "SERVER_HOSTNAME" to mockOauth2NetworkAlias
+                ))
         })
             .withNetwork(network)
-            .withNetworkAliases("oath2server")
+            .withNetworkAliases(mockOauth2NetworkAlias)
             .waitingFor(Wait.defaultWaitStrategy())
 
         private val lydiaApiContainer = GenericContainer(
@@ -59,8 +67,8 @@ class TestContainerHelper {
                     "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD" to postgresContainer.password,
                     "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE" to lydiaDbName,
                     "AZURE_APP_CLIENT_ID" to "lydia-api",
-                    "AZURE_OPENID_CONFIG_JWKS_URI" to "http://oath2server:8080/default/jwks",
-                    "AZURE_OPENID_CONFIG_ISSUER" to "http://oath2server:8080/default",
+                    "AZURE_OPENID_CONFIG_JWKS_URI" to "http://$mockOauth2NetworkAlias:$mockOauth2Port/default/jwks",
+                    "AZURE_OPENID_CONFIG_ISSUER" to "http://$mockOauth2NetworkAlias:$mockOauth2Port/default",
                 )
             )
             lydiaApiContainer.start()
