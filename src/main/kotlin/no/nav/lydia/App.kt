@@ -9,6 +9,8 @@ import io.ktor.auth.*
 import io.ktor.auth.jwt.*
 import io.ktor.features.*
 import io.ktor.metrics.micrometer.*
+import io.ktor.request.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.serialization.*
 import io.ktor.server.engine.*
@@ -39,6 +41,7 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
     install(ContentNegotiation) {
         json()
     }
+    install(IgnoreTrailingSlash)
 
     install(MicrometerMetrics) {
         registry = Metrics.appMicrometerRegistry
@@ -64,6 +67,12 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
                     null
                 }
             }
+//            challenge { _, _ ->
+//                val ingress = getEnvVar("wonderwall.ingress", "${call.request.local.scheme}://${call.request.host()}")
+//                // redirect to login endpoint (wonderwall) and indicate that the user should be redirected back
+//                // to the original request path after authentication
+//                call.respondRedirect("$ingress/oauth2/login?redirect=${call.request.path()}")
+//            }
         }
     }
     routing {

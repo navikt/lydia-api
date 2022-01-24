@@ -35,6 +35,8 @@ spec:
   azure:
     application:
       enabled: true
+      sidecar:
+        enabled: true
       claims:
         extra:
           - "NAVident"

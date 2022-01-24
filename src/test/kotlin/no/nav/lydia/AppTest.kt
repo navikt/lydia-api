@@ -2,6 +2,7 @@ package no.nav.lydia
 
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import java.net.URL
@@ -55,7 +56,7 @@ class AppTest {
     @Test
     fun `Uautorisert kall mot beskyttet endepunkt skal returnere 401`() {
         withTestApplication({ lydiaBackend(naisEnv) }) {
-            with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/protected")) {
+            with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
             }
         }
@@ -64,7 +65,7 @@ class AppTest {
     @Test
     fun `Kall med ugyldig token mot beskyttet endepunkt skal returnere 401`() {
         withTestApplication({ lydiaBackend(naisEnv) }) {
-            with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/protected") {
+            with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
                 addHeader(HttpHeaders.Authorization, "Bearer detteErIkkeEtGyldigToken")
             }) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
@@ -81,7 +82,14 @@ class AppTest {
                 )
             ).serialize()
 
-            with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/protected") {
+            with(handleRequest(HttpMethod.Get, SYKEFRAVERSSTATISTIKK_PATH) {
+                addHeader(HttpHeaders.Authorization, "Bearer $token")
+            }) {
+                assertEquals(HttpStatusCode.OK, response.status())
+            }
+
+            // Kaller samme endepunkt bare med en trailing slash foran
+            with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/") {
                 addHeader(HttpHeaders.Authorization, "Bearer $token")
             }) {
                 assertEquals(HttpStatusCode.OK, response.status())
