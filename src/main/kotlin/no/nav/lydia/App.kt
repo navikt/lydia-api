@@ -69,7 +69,9 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
     routing {
         healthChecks()
         metrics()
-        sykefraversstatistikk()
+        authenticate {
+            sykefraversstatistikk()
+        }
     }
 
 }

@@ -10,8 +10,8 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 class AppContainerTest {
-    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer()
-    private val postgresContainer = TestContainerHelper.postgresContainer()
+    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
+    private val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
     fun `Kaller isAlive`() {
@@ -44,7 +44,6 @@ class AppContainerTest {
 
         assert(response.isSuccessful)
         result.fold(success = { metrikker ->
-            println(metrikker)
             metrikker.shouldContain("process_cpu_usage")
             metrikker.shouldContain("jvm_memory_used_bytes")
             metrikker.shouldContain("ktor_http_server_requests_active")

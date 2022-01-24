@@ -2,7 +2,6 @@ package no.nav.lydia
 
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.lydia.container.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import java.net.URL
@@ -12,9 +11,8 @@ import kotlin.test.assertEquals
 class AppTest {
     companion object {
         val mockOAuth2Server = MockOAuth2Server().apply {
-            start(8100)
+            start(port = 8100)
         }
-
     }
 
     private val naisEnv = NaisEnvironment(
