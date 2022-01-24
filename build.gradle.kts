@@ -91,4 +91,8 @@ tasks{
             attributes(Pair("Main-Class", "no.nav.lydia.AppKt"))
         }
     }
+
+    withType<Test>{
+        dependsOn(shadowJar)
+    }
 }
