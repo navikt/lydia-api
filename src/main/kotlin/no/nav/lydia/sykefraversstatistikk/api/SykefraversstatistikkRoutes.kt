@@ -1,7 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import io.ktor.application.*
-import io.ktor.auth.*
 import io.ktor.response.*
 import io.ktor.routing.*
 
@@ -14,11 +13,10 @@ fun Route.sykefraversstatistikk() {
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {
-        call.respond("OK")
+        call.respond(SykefraversstatistikkVirksomhetDto.dummySvar)
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
         call.respond(FilterverdierDto())
     }
-
 }
