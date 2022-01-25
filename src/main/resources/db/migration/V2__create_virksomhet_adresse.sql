@@ -1,4 +1,5 @@
-alter table virksomhet_metadata rename to virksomhet_statistikk_metadata, remove column navn;
+alter table virksomhet_metadata rename to virksomhet_statistikk_metadata;
+alter table virksomhet_statistikk_metadata drop column navn;
 
 create table virksomhet
 (

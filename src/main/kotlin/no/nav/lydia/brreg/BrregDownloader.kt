@@ -2,7 +2,11 @@ package no.nav.lydia.brreg
 
 import com.github.kittinunf.fuel.core.Headers
 import com.github.kittinunf.fuel.httpGet
+import com.google.gson.GsonBuilder
+import com.google.gson.stream.JsonReader
+import no.nav.lydia.domene.Virksomhet
 import org.slf4j.LoggerFactory
+import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.zip.GZIPInputStream
 import kotlin.io.path.*
@@ -27,11 +31,18 @@ class BrregDownloader {
                             bw.write(it)
                         }
                     }
+                }
+            log.info("Lastet ned decompressed fil med størrelse ${file.fileSize()} og path ${file.pathString}")
+            val gson = GsonBuilder().create()
+            JsonReader(InputStreamReader(file.inputStream())).use { reader ->
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    val virksomhet = gson.fromJson<Virksomhet>(reader, Virksomhet::class.java)
+                    // TODO: Lagre i database.
 
                 }
-
-            log.info("Lastet ned decompressed fil med størrelse ${file.fileSize()} og path ${file.pathString}")
-            // TODO: Gjør json deserializering og lagre i db.
+                reader.endArray()
+            }
         }, failure = {
             println("Error :( ${it.message}")
         })
