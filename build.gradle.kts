@@ -62,7 +62,7 @@ dependencies {
 
     // Enklere httpklient
     val fuelVersion = "2.3.1"
-    testImplementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
 
     // Autentisering
