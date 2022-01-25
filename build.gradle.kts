@@ -65,6 +65,8 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
 
+    implementation("com.google.code.gson:gson:2.8.9")
+
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:0.4.1")
 
