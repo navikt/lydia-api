@@ -1,4 +1,4 @@
-package no.nav.lydia.domene
+package no.nav.lydia.virksomhet.domene
 
 data class Virksomhet (
     val id: Long,

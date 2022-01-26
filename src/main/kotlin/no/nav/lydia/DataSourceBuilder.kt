@@ -1,8 +1,6 @@
 package no.nav.lydia
 
-import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.http.*
 import org.flywaydb.core.Flyway
 import org.postgresql.ds.PGSimpleDataSource
 import java.util.*

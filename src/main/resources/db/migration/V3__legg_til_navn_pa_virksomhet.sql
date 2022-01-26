@@ -1,0 +1,1 @@
+alter table virksomhet add column navn varchar not null default '';

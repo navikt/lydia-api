@@ -4,8 +4,8 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.container.helper.TestContainerHelper
-import no.nav.lydia.container.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH

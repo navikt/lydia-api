@@ -1,4 +1,4 @@
-package no.nav.lydia.container.helper
+package no.nav.lydia.helper
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

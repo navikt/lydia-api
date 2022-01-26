@@ -1,4 +1,4 @@
-package no.nav.lydia.container.helper
+package no.nav.lydia.helper
 
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jwt.SignedJWT

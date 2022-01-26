@@ -1,4 +1,4 @@
-package no.nav.lydia.container.helper
+package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.httpGet
@@ -22,7 +22,7 @@ class TestContainerHelper {
         val oauth2ServerContainer = AuthContainerHelper(network = network, log = log)
 
         private val postgresNetworkAlias = "postgrescontainer"
-        private val lydiaDbName = "lydia-api-container-db"
+        val lydiaDbName = "lydia-api-container-db"
         val postgresContainer: PostgreSQLContainer<*> =
             PostgreSQLContainer("postgres:12")
                 .withLogConsumer(Slf4jLogConsumer(log).withPrefix("postgresContainer").withSeparateOutputStreams())

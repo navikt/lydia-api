@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     val ktorVersion = "1.6.7"
+    val fuelVersion = "2.3.1"
     val testcontainersVersion = "1.16.2"
 
     // Align versions of all Kotlin components
@@ -39,12 +40,17 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.8.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.8.2")
 
     // Database
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:8.4.1")
+    implementation("com.github.seratch:kotliquery:1.6.0")
+
+    // Enklere httpklient
+    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    implementation("com.google.code.gson:gson:2.8.9")
 
     // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
@@ -60,12 +66,10 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
 
-    // Enklere httpklient
-    val fuelVersion = "2.3.1"
-    implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
+    // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.32.0")
 
-    implementation("com.google.code.gson:gson:2.8.9")
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:0.4.1")
