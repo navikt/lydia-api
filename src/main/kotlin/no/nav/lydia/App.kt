@@ -57,14 +57,17 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
                     requireNotNull(credentials.payload.audience) {
                         "Auth: Missing audience in token"
                     }
+                    credentials.payload.audience.forEach { aud ->
+                        log.info("Audience received: $aud")
+                    }
+                    log.info("Audience expected: ${naisEnv.security.azureConfig.audience}")
                     require(credentials.payload.audience.contains(naisEnv.security.azureConfig.audience)) {
                         "Auth: Valid audience not found in claims"
                     }
                     JWTPrincipal(credentials.payload)
                 } catch (e: Throwable) {
                     log.error("Feil under autentisering")
-                    log.error(credentials.toString())
-                    log.error(e.toString())
+                    log.error(e.message)
                     null
                 }
             }
