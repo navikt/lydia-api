@@ -57,6 +57,9 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
                     requireNotNull(credentials.payload.audience) {
                         "Auth: Missing audience in token"
                     }
+                    log.info("Manual retreive of audience: ${credentials.payload.getClaim("aud")}")
+                    log.info("Manual retreive of azp: ${credentials.payload.getClaim("azp")}")
+                    log.info("Manual retreive of iss: ${credentials.payload.getClaim("iss")}")
                     credentials.payload.audience.forEach { aud ->
                         log.info("Audience received: $aud")
                     }
