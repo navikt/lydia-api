@@ -62,6 +62,8 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
                     }
                     JWTPrincipal(credentials.payload)
                 } catch (e: Throwable) {
+                    log.error("Feil under autentisering")
+                    log.error(e.toString())
                     null
                 }
             }
