@@ -34,12 +34,12 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         """.trimMargin(),
                 mapOf(
                     "orgnr" to virksomhet.organisasjonsnummer,
-                    "land" to virksomhet.forretningsadresse.land,
-                    "landkode" to virksomhet.forretningsadresse.landkode,
-                    "postnummer" to virksomhet.forretningsadresse.postnummer,
-                    "poststed" to virksomhet.forretningsadresse.poststed,
-                    "kommune" to virksomhet.forretningsadresse.kommune,
-                    "kommunenummer" to virksomhet.forretningsadresse.kommunenummer
+                    "land" to virksomhet.beliggenhetsadresse.land,
+                    "landkode" to virksomhet.beliggenhetsadresse.landkode,
+                    "postnummer" to virksomhet.beliggenhetsadresse.postnummer,
+                    "poststed" to virksomhet.beliggenhetsadresse.poststed,
+                    "kommune" to virksomhet.beliggenhetsadresse.kommune,
+                    "kommunenummer" to virksomhet.beliggenhetsadresse.kommunenummer
                 )
             ).asUpdate
         )
