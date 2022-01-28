@@ -19,8 +19,6 @@ import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import java.util.concurrent.TimeUnit
 
-val ikkeLoggDisseClaims = listOf("sub", "NAVident", "preferred_username")
-
 fun main() {
     val naisEnv = NaisEnvironment()
     val dataSource = createDataSource(naisEnv.database)
@@ -58,8 +56,6 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
                     requireNotNull(credentials.payload.audience) {
                         "Auth: Missing audience in token"
                     }
-                    credentials.payload.claims.entries.filterNot { claim -> ikkeLoggDisseClaims.contains(claim.key)}.forEach { log.info("${it.key}: ${it.value.asString()}") }
-                    log.info("Audience expected: ${naisEnv.security.azureConfig.audience}")
                     require(credentials.payload.audience.contains(naisEnv.security.azureConfig.audience)) {
                         "Auth: Valid audience not found in claims"
                     }
