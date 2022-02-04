@@ -16,6 +16,7 @@ import io.ktor.server.netty.*
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import java.util.concurrent.TimeUnit
 
@@ -68,11 +69,13 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
             }
         }
     }
+
+    val dataSource = createDataSource(naisEnv.database)
     routing {
         healthChecks()
         metrics()
         authenticate {
-            sykefraversstatistikk()
+            sykefraversstatistikk(SykefraversstatistikkRepository(dataSource))
         }
     }
 

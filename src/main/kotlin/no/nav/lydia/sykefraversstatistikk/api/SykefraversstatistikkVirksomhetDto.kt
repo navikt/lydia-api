@@ -1,6 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import kotlinx.serialization.Serializable
+import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 
 @Serializable
 data class SykefraversstatistikkVirksomhetDto(
@@ -28,5 +29,22 @@ data class SykefraversstatistikkVirksomhetDto(
             muligeDagsverk = "500.0",
             tapteDagsverk = "10.0",
         )
+
+        fun List<SykefraversstatistikkVirksomhet>.toDto(): List<SykefraversstatistikkVirksomhetDto> =
+            this.map { it.toDto() }
+        
+        fun SykefraversstatistikkVirksomhet.toDto() : SykefraversstatistikkVirksomhetDto =
+            SykefraversstatistikkVirksomhetDto(
+                orgnr = this.orgnr,
+                virksomhetsnavn = "",
+                sektor = "",
+                neringsgruppe = "",
+                arstall = this.arstall.toString(),
+                kvartal = this.kvartal.toString(),
+                sykefraversprosent = this.sykefraversprosent.toString(),
+                antallPersoner = this.antallPersoner.toString(),
+                muligeDagsverk = this.muligeDagsverk.toString(),
+                tapteDagsverk = this.tapteDagsverk.toString()
+            )
     }
 }

@@ -3,6 +3,7 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -22,11 +23,12 @@ class SykefraversstatistikkApiTest {
         val orgnum = "123456789"
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnum")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<SykefraversstatistikkVirksomhetDto>()
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
 
         result.fold(
             success = { sykefraværsstatistikkVirksomhet ->
-                sykefraværsstatistikkVirksomhet shouldBeEqualToComparingFields SykefraversstatistikkVirksomhetDto.dummySvar
+                sykefraværsstatistikkVirksomhet.size shouldBeExactly 1
+                sykefraværsstatistikkVirksomhet[0] shouldBeEqualToComparingFields SykefraversstatistikkVirksomhetDto.dummySvar
             }, failure = {
                 fail(it.message)
             })
