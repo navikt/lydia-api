@@ -18,7 +18,7 @@ import kotlin.test.Test
 
 class BrregDownloaderTest {
     val httpMock = HttpMock().start()
-    val lastNedPath = "/brregmock/enhetsregisteret/api/enheter/lastned"
+    val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
     val brregMockUrl = httpMock.url(lastNedPath)
 
     val postgres = TestContainerHelper.postgresContainer
@@ -32,20 +32,56 @@ class BrregDownloaderTest {
     }
 
     @Test
-    fun `Vi kan laste ned liste med virksomhetsadresser fra Brreg`() {
+    fun `Vi kan laste ned liste med underenheter og deres beliggenhetsadresser fra Brreg`() {
         httpMock.wireMockServer.stubFor(
             WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
-                .willReturn(ok()
-                    .withHeader(HttpHeaders.CONTENT_TYPE, BrregDownloader.enhetApplicationType)
-                    .withBody(Gzip.gzip(enhetsListe)))
+                .willReturn(
+                    ok()
+                        .withHeader(HttpHeaders.CONTENT_TYPE, BrregDownloader.underEnhetApplicationType)
+                        .withBody(Gzip.gzip(underEnheter))
+                )
         )
 
         val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
         BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
 
-        val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '922924368'")
+        val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '995858266'")
         resultSet.row shouldBe 1
     }
+
+
+    val underEnheter =
+        """
+          [{
+          "organisasjonsnummer" : "995858266",
+          "navn" : ":-) PROSJEKTER",
+          "organisasjonsform" : {
+            "kode" : "BEDR",
+            "beskrivelse" : "Bedrift",
+            "links" : [ ]
+          },
+          "registreringsdatoEnhetsregisteret" : "2010-08-25",
+          "registrertIMvaregisteret" : false,
+          "naeringskode1" : {
+            "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
+            "kode" : "70.220"
+          },
+          "antallAnsatte" : 1,
+          "overordnetEnhet" : "995849364",
+          "oppstartsdato" : "2010-07-01",
+          "beliggenhetsadresse" : {
+            "land" : "Norge",
+            "landkode" : "NO",
+            "postnummer" : "5034",
+            "poststed" : "BERGEN",
+            "adresse" : [ "Skanselien 37" ],
+            "kommune" : "BERGEN",
+            "kommunenummer" : "4601"
+          },
+          "links" : [ ]
+        }]
+        """.trimIndent()
+
 
     val enhetsListe =
         """
