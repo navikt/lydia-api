@@ -15,7 +15,7 @@ import org.slf4j.Logger
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
-import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
 import java.net.URI
 import java.util.*
@@ -46,7 +46,9 @@ class AuthContainerHelper(network: Network, log: Logger) {
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("oAuthContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withNetworkAliases(mockOauth2NetworkAlias)
-            .waitingFor(Wait.defaultWaitStrategy()).apply {
+            .waitingFor(
+                HostPortWaitStrategy()
+            ).apply {
                 start()
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
