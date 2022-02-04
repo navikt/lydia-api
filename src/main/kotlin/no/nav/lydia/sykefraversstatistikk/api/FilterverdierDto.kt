@@ -1,23 +1,11 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import kotlinx.serialization.Serializable
+import no.nav.lydia.sykefraversstatistikk.api.geografi.Fylke
+import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 
 @Serializable
-data class FilterverdierDto(val fylker: List<FylkeDto> = FilterverdierDto.fylker) {
-    companion object {
-        val fylker = listOf(
-            FylkeDto(
-                "Innlandet",
-                listOf(
-                    KommuneDto("Alvdal")
-                )
-            )
-        )
-    }
-}
+data class FilterverdierDto(val fylker: List<FylkeOgKommuner>)
 
 @Serializable
-data class FylkeDto(val navn: String, val kommuner: List<KommuneDto>)
-
-@Serializable
-data class KommuneDto(val navn: String)
+data class FylkeOgKommuner (val fylke: Fylke, val kommuner: List<Kommune>)

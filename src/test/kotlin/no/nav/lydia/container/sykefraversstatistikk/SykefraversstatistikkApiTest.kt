@@ -48,8 +48,9 @@ class SykefraversstatistikkApiTest {
 
         result.fold(
             success = { filterverdier ->
-                filterverdier.fylker[0].navn shouldBe "Innlandet"
-                filterverdier.fylker[0].kommuner[0].navn shouldBe "Alvdal"
+                filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
+                filterverdier.fylker[0].fylke.nummer shouldBe "03"
+                filterverdier.fylker[0].kommuner.size shouldBe 1
             }, failure = {
                 fail(it.message)
             })
