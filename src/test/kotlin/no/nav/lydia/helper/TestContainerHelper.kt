@@ -8,7 +8,8 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
+import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
 import kotlin.io.path.Path
 
@@ -30,7 +31,7 @@ class TestContainerHelper {
                 .withNetworkAliases(postgresNetworkAlias)
                 .withDatabaseName(lydiaDbName)
                 .waitingFor(
-                    HostPortWaitStrategy()
+                    LogMessageWaitStrategy().withRegEx(".*database system is ready to accept connections.*\\s")
                 ).also {
                     it.start()
                 }
@@ -41,6 +42,9 @@ class TestContainerHelper {
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withExposedPorts(8080)
+            .waitingFor(
+                HttpWaitStrategy().forPath("/internal/isready")
+            )
 
         init {
             lydiaApiContainer.withEnv(

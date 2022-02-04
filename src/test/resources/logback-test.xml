@@ -10,5 +10,6 @@
     </root>
 
     <logger name="org.testcontainers" level="INFO"/>
-    <logger name="com.github.dockerjava" level="WARN"/>
+    <logger name="com.github.dockerjava.transport" level="INFO"/>
+    <logger name="com.github.dockerjava.api" level="INFO"/>
 </configuration>
