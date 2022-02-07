@@ -7,13 +7,25 @@ import io.ktor.routing.*
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
+import no.nav.lydia.virksomhet.VirksomhetService
 
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
 
-fun Route.sykefraversstatistikk(sykefraversstatistikkRepository: SykefraversstatistikkRepository) {
+fun Route.sykefraversstatistikk(
+    virksomhetService: VirksomhetService,
+    geografiService: GeografiService,
+    sykefraversstatistikkRepository: SykefraversstatistikkRepository
+) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        call.respond("OK")
+        val kommunenummerISøk = call.request.queryParameters["kommuner"]?.split(",")?.toSet() ?: emptySet()
+
+        val alleKommuner = geografiService.hentKommuner().associateBy{ it.nummer }
+        val gyldigeKommunenummerISøk = kommunenummerISøk.filter{
+            kommunenummer -> alleKommuner.containsKey(kommunenummer)
+        }
+        val virksomheter = virksomhetService.hentVirksomheterFraFylkesnummer(gyldigeKommunenummerISøk)
+        call.respond(virksomheter)
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {
@@ -27,6 +39,6 @@ fun Route.sykefraversstatistikk(sykefraversstatistikkRepository: Sykefraversstat
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
-        call.respond(FilterverdierDto(GeografiService().hentFylkerOgKommuner()))
+        call.respond(FilterverdierDto(geografiService.hentFylkerOgKommuner()))
     }
 }
