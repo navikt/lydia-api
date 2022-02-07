@@ -2,12 +2,12 @@ package no.nav.lydia.virksomhet
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.lydia.virksomhet.brreg.VirksomhetDTO
+import no.nav.lydia.virksomhet.brreg.VirksomhetDto
 import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
 
-    fun insert(virksomhet: VirksomhetDTO) {
+    fun insert(virksomhet: VirksomhetDto) {
         val session = sessionOf(dataSource)
         session.run(
             queryOf(

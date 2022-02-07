@@ -78,7 +78,7 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment(), dataS
     val virksomhetService = VirksomhetService(virksomhetRepository)
     val geografiService = GeografiService()
 
-    BrregDownloader(virksomhetRepository = virksomhetRepository).lastNed()
+//    BrregDownloader(virksomhetRepository = virksomhetRepository).lastNed()
 
     routing {
         healthChecks()

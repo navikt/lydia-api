@@ -1,11 +1,11 @@
 package no.nav.lydia.virksomhet
 
 import no.nav.lydia.virksomhet.brreg.Beliggenhetsadresse
-import no.nav.lydia.virksomhet.brreg.VirksomhetDTO
+import no.nav.lydia.virksomhet.brreg.VirksomhetDto
 
 class VirksomhetService(virksomhetRepository: VirksomhetRepository) {
-    fun hentVirksomheterFraFylkesnummer(fylkesnummmer: List<String>): VirksomhetDTO {
-        return VirksomhetDTO(
+    fun hentVirksomheterFraFylkesnummer(fylkesnummmer: List<String>): VirksomhetDto {
+        return VirksomhetDto(
             "123456789",
             "123456789",
             Beliggenhetsadresse(

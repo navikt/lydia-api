@@ -10,8 +10,7 @@ import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
-import no.nav.lydia.virksomhet.brreg.VirksomhetDTO
-import no.nav.lydia.virksomhet.domene.Virksomhet
+import no.nav.lydia.virksomhet.brreg.VirksomhetDto
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -70,7 +69,7 @@ class SykefraversstatistikkApiTest {
     fun `Skal kunne alle organisasjoner i Viken fylke`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=Viken")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<List<VirksomhetDTO>>()
+            .responseObject<List<VirksomhetDto>>()
 
         result.fold(
             success = { virksomheter ->
