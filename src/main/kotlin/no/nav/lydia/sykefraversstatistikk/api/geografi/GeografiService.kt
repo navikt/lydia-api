@@ -7,29 +7,48 @@ import no.nav.lydia.sykefraversstatistikk.api.FylkeOgKommuner
 
 
 class GeografiService {
-    val JSON_PARSER = Json { ignoreUnknownKeys = true }
+    private val jsonParser = Json { ignoreUnknownKeys = true }
+    val alleKommuner = hentKommuner()
+    val alleFylker = hentFylker()
 
     @OptIn(ExperimentalSerializationApi::class)
-    fun hentFylker(): List<Fylke> {
+    private fun hentFylker(): List<Fylke> {
         val resource = hentRessurs("fylker.json")
         return resource?.openStream()?.use {
-            JSON_PARSER.decodeFromStream<List<Fylke>>(it)
+            jsonParser.decodeFromStream<List<Fylke>>(it)
         } ?: listOf()
     }
 
     private fun hentRessurs(filnavn: String) = javaClass.classLoader.getResource(filnavn)
 
     @OptIn(ExperimentalSerializationApi::class)
-    fun hentKommuner(): List<Kommune> {
+    private fun hentKommuner(): List<Kommune> {
         val resource = hentRessurs("kommuner.json")
         return resource?.openStream()?.use {
-            JSON_PARSER.decodeFromStream<List<Kommune>>(it)
+            jsonParser.decodeFromStream<List<Kommune>>(it)
         } ?: emptyList()
     }
 
     fun hentFylkerOgKommuner(): List<FylkeOgKommuner> {
-        val fylker = hentFylker()
-        val kommuner = hentKommuner()
-        return fylker.map { fylke -> FylkeOgKommuner(fylke, kommuner.filter { kommune -> kommune.nummer.take(2) == fylke.nummer }) }
+        return alleFylker.map { fylke -> FylkeOgKommuner(fylke, alleKommuner.filter { kommune -> kommune.nummer.take(2) == fylke.nummer }) }
+    }
+
+    fun hentKommunerFraFylkesnummer(fylkesnummer: List<String>): List<Kommune> {
+        return hentFylkerOgKommuner()
+            .filter { fylkesnummer.contains(it.fylke.nummer) }
+            .flatMap { it.kommuner }
+    }
+
+
+    fun hentKommunerFraFylkerOgKommuner(
+        fylkesnummerISøk: Set<String>,
+        kommunenummerISøk: Set<String>
+    ): Set<String> {
+        val alleKommunenummer = alleKommuner.associateBy { it.nummer }
+        val kommunerFraFylkesnummer = hentKommunerFraFylkesnummer(fylkesnummerISøk.toList())
+        return setOf(
+            *kommunenummerISøk.filter { kommunenummer -> alleKommunenummer.containsKey(kommunenummer) }.toTypedArray(),
+            *kommunerFraFylkesnummer.map { it.nummer }.toTypedArray()
+        )
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.lydia.virksomhet
 
+import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -9,30 +10,27 @@ import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
 
-    fun hentVirksomheterFraKommunenummer(kommunenummer : List<String>) : List<VirksomhetDto>{
+    fun hentVirksomheterFraKommunenummer(kommunenummer : Collection<String>) : List<VirksomhetDto>{
         val queryString = """
             SELECT * FROM virksomhet
-            WHERE kommunenummer IN (:kommunenummer);
+            WHERE kommunenummer IN (${kommunenummer.joinToString(transform = { "?" })});
         """.trimIndent()
         val query = queryOf(
                 statement = queryString,
-                paramMap = mapOf(
-                    "kommunenummer" to kommunenummer.joinToString(",")
-                )
-            ).map { row ->
-                VirksomhetDto(
-                    organisasjonsnummer = row.string("orgnr"),
-                    navn = row.string("navn"),
-                    beliggenhetsadresse = Beliggenhetsadresse(
-                        land = row.string("land"),
-                        landkode = row.string("landkode"),
-                        postnummer = row.string("postnummer"),
-                        poststed = row.string("poststed"),
-                        kommune = row.string("kommune"),
-                        kommunenummer = row.string("kommunenummer")
-                    )
-                )
-            }.asList
+                *kommunenummer.toTypedArray()
+            ).map { rowToVirksomhetDto(it) }.asList
+        return using(sessionOf(dataSource)) { session ->
+            session.run(query)
+        }
+    }
+
+    fun hentAlleVirksomheter() : List<VirksomhetDto>{
+        val queryString = """
+            SELECT * FROM virksomhet;
+        """.trimIndent()
+        val query = queryOf(
+            statement = queryString
+        ).map { rowToVirksomhetDto(it) }.asList
         return using(sessionOf(dataSource)) { session ->
             session.run(query)
         }
@@ -75,5 +73,19 @@ class VirksomhetRepository(val dataSource: DataSource) {
             ).asUpdate
         )
     }
+
+
+    private fun rowToVirksomhetDto(row: Row) = VirksomhetDto(
+        organisasjonsnummer = row.string("orgnr"),
+        navn = row.string("navn"),
+        beliggenhetsadresse = Beliggenhetsadresse(
+            land = row.string("land"),
+            landkode = row.string("landkode"),
+            postnummer = row.string("postnummer"),
+            poststed = row.string("poststed"),
+            kommune = row.string("kommune"),
+            kommunenummer = row.string("kommunenummer")
+        )
+    )
 
 }

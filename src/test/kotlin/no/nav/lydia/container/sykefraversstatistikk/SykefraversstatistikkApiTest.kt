@@ -5,9 +5,12 @@ import com.github.kittinunf.fuel.gson.responseObject
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.DbTestHelper
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.TestContainerHelper
@@ -17,12 +20,14 @@ import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomheterDto
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
+import kotlin.test.expect
 import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
@@ -37,6 +42,7 @@ class SykefraversstatistikkApiTest {
         @JvmStatic
         fun beforeAll() {
             httpMock.start()
+            mockNedlastingAvVirksomheter()
         }
 
         @AfterClass
@@ -96,16 +102,74 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `Skal kunne hente alle virksomheter i Bergen kommune`() {
-        val postgres = TestContainerHelper.postgresContainer
-        val dataSource = DbTestHelper.getDataSource(postgresContainer = postgres).apply {
-            runMigration(this)
-        }
-        val virksomhetRepository = VirksomhetRepository(dataSource)
-        val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
-        val brregMockUrl = httpMock.url(lastNedPath)
+        val kommunenummer = "4601"
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?kommuner=$kommunenummer")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<VirksomheterDto>()
 
-        val underEnheter =
-            """
+        result.fold(
+            success = { respons ->
+                val testVirksomhet = respons.virksomheter.first()
+                testVirksomhet.organisasjonsnummer shouldBe "995858266"
+                testVirksomhet.beliggenhetsadresse.kommune shouldBe "BERGEN"
+                testVirksomhet.beliggenhetsadresse.kommunenummer shouldBe kommunenummer
+            }, failure = {
+                fail(it.message)
+            })
+    }
+
+    @Test
+    fun `Skal kunne hente alle virksomheter i Vestland fylke`(){
+        val fylkesnummer = "46"
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<VirksomheterDto>()
+
+        result.fold(
+            success = { respons ->
+                val testVirksomhet = respons.virksomheter.first()
+                testVirksomhet.organisasjonsnummer shouldBe "995858266"
+                testVirksomhet.beliggenhetsadresse.kommune shouldBe "BERGEN"
+                testVirksomhet.beliggenhetsadresse.kommunenummer shouldStartWith fylkesnummer
+            }, failure = {
+                fail(it.message)
+            })
+    }
+
+    @Test
+    fun `Skal kunne hente alle virksomheter`(){
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<VirksomheterDto>()
+
+        result.fold(
+            success = { respons ->
+                respons.virksomheter shouldHaveAtLeastSize 1
+            }, failure = {
+                fail(it.message)
+            })
+    }
+
+    @Test
+    fun `Kan hente kommuner basert på fylkesnummer`(){
+        val fylkesnummer = listOf("46", "03") // Vestland og Oslo
+        val geografiService = GeografiService()
+        val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
+        kommuner shouldHaveSize 44
+    }
+}
+
+fun mockNedlastingAvVirksomheter() {
+    val postgres = TestContainerHelper.postgresContainer
+    val dataSource = DbTestHelper.getDataSource(postgresContainer = postgres).apply {
+        runMigration(this)
+    }
+    val virksomhetRepository = VirksomhetRepository(dataSource)
+    val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
+    val brregMockUrl = SykefraversstatistikkApiTest.httpMock.url(lastNedPath)
+
+    val underEnheter =
+        """
           [{
           "organisasjonsnummer" : "995858266",
           "navn" : ":-) PROSJEKTER",
@@ -136,26 +200,14 @@ class SykefraversstatistikkApiTest {
         }]
         """.trimIndent()
 
-        httpMock.wireMockServer.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
-                .willReturn(
-                    WireMock.ok()
-                        .withHeader(HttpHeaders.CONTENT_TYPE, BrregDownloader.underEnhetApplicationType)
-                        .withBody(Gzip.gzip(underEnheter))
-                )
-        )
+    SykefraversstatistikkApiTest.httpMock.wireMockServer.stubFor(
+        WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
+            .willReturn(
+                WireMock.ok()
+                    .withHeader(HttpHeaders.CONTENT_TYPE, BrregDownloader.underEnhetApplicationType)
+                    .withBody(Gzip.gzip(underEnheter))
+            )
+    )
 
-        BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
-
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?kommuner=4601")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<VirksomheterDto>()
-
-        result.fold(
-            success = { respons ->
-                respons.virksomheter.first().beliggenhetsadresse.kommune shouldBe "BERGEN"
-            }, failure = {
-                fail(it.message)
-            })
-    }
+    BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
 }
