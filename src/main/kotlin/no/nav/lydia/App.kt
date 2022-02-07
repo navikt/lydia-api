@@ -16,6 +16,7 @@ import io.ktor.server.netty.*
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -75,6 +76,7 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment(), dataS
     }
 
     val virksomhetRepository = VirksomhetRepository(dataSource)
+    val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource)
     val virksomhetService = VirksomhetService(virksomhetRepository)
     val geografiService = GeografiService()
 
@@ -82,7 +84,7 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment(), dataS
         healthChecks()
         metrics()
         authenticate {
-            sykefraversstatistikk(virksomhetService, geografiService)
+            sykefraversstatistikk(virksomhetService, geografiService, sykefraversstatistikkRepository)
         }
     }
 

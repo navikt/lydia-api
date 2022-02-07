@@ -22,6 +22,8 @@ class TestContainerHelper {
 
         val oauth2ServerContainer = AuthContainerHelper(network = network, log = log)
 
+        val kafkaContainerHelper = KafkaContainerHelper(network = network, log = log)
+
         private val postgresNetworkAlias = "postgrescontainer"
         val lydiaDbName = "lydia-api-container-db"
         val postgresContainer: PostgreSQLContainer<*> =

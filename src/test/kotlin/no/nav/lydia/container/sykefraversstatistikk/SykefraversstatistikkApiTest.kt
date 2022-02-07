@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.DbTestHelper
 import no.nav.lydia.helper.HttpMock
@@ -50,11 +51,12 @@ class SykefraversstatistikkApiTest {
         val orgnum = "123456789"
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnum")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<SykefraversstatistikkVirksomhetDto>()
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
 
         result.fold(
             success = { sykefraværsstatistikkVirksomhet ->
-                sykefraværsstatistikkVirksomhet shouldBeEqualToComparingFields SykefraversstatistikkVirksomhetDto.dummySvar
+                sykefraværsstatistikkVirksomhet.size shouldBeExactly 1
+                sykefraværsstatistikkVirksomhet[0] shouldBeEqualToComparingFields SykefraversstatistikkVirksomhetDto.dummySvar
             }, failure = {
                 fail(it.message)
             })
