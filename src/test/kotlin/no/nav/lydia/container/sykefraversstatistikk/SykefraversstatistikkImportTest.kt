@@ -4,6 +4,8 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.Kafka
+import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
@@ -11,18 +13,35 @@ import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerRecord
+import java.util.*
 import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraversstatistikkImportTest {
     val postgres = TestContainerHelper.postgresContainer
     val lydiaApi = TestContainerHelper.lydiaApiContainer
+    val kafka = TestContainerHelper.kafkaContainerHelper
 
     val sykefraversstatistikkRepository = SykefraversstatistikkRepository(postgres.getDataSource())
 
     @Test
     fun `Importerte data skal kunne hentes ut`() {
+
+        val producer = kafka.producer()
+        var i = 0
+        producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST ${i++}")).get()
+        producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST ${i++}")).get()
+        producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST ${i++}")).get()
+        producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST ${i++}")).get()
+        producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST ${i++}")).get()
+        producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST ${i++}")).get()
+
+
         val testOrgnr = "910969439"
         // Send inn data
         sykefraversstatistikkRepository.insert(
@@ -55,3 +74,4 @@ class SykefraversstatistikkImportTest {
     }
 
 }
+

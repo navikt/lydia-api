@@ -4,9 +4,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import no.nav.lydia.Kafka
 import no.nav.lydia.NaisEnvironment
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -32,16 +34,21 @@ object StatistikkConsumer : CoroutineScope {
 
     fun run() {
         launch {
-            KafkaConsumer<String, String>(
-                naisEnvironment.kafka.consumerConfig()
+            KafkaConsumer(
+                naisEnvironment.kafka.consumerConfig(),
+                StringDeserializer(),
+                StringDeserializer()
             ).use { consumer ->
-                consumer.subscribe(listOf(naisEnvironment.kafka.statistikkTopic))
+                consumer.subscribe(listOf(Kafka.statistikkTopic))
 
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.of(100, ChronoUnit.MILLIS))
-                        records.asSequence()
-                        .onEach { logger.info(it.key()) }
+                        records.forEach { logger.info("""
+                            \n\n FROM KAFKA \n
+                            ${it.value()}
+                            \n\n
+                            """.trimIndent()) }
 
                         consumer.commitSync()
                     } catch (e: RetriableException) {

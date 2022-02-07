@@ -31,12 +31,12 @@ fun main() {
 
 fun startLydiaBackend() {
         val naisEnv = NaisEnvironment()
-        val dataSource = createDataSource(naisEnv.database)
+        val dataSource = createDataSource(database = naisEnv.database)
         runMigration(dataSource = dataSource)
 
         statistikkConsumer(naisEnv = naisEnv)
 
-        embeddedServer(Netty, port = 8080) {
+        embeddedServer(factory = Netty, port = 8080) {
             lydiaRestApi(security = naisEnv.security, dataSource = dataSource)
         }.also {
             // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully

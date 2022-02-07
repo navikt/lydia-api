@@ -29,8 +29,10 @@ class Security(val azureConfig: AzureConfig = AzureConfig())
 class Kafka(
     val brokers: String = getEnvVar("KAFKA_BROKERS"),
     val groupId: String = "lydiaApiStatistikkConsumers",
-    val statistikkTopic: String = "statistikkTopic"
 ){
+    companion object {
+        val statistikkTopic: String = "statistikkTopic"
+    }
     fun consumerConfig() = mapOf(
         CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
         CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "PLAINTEXT",
