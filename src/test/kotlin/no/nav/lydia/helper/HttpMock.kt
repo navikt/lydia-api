@@ -9,12 +9,16 @@ class HttpMock(portNumber: Int = 6969) {
     val wireMockServer: WireMockServer = WireMockServer(WireMockConfiguration.options().port(portNumber))
 
     fun start(): HttpMock {
-        wireMockServer.start()
+        if (!wireMockServer.isRunning) {
+            wireMockServer.start()
+        }
         return this
     }
 
     fun stop() {
-        wireMockServer.stop()
+        if (wireMockServer.isRunning) {
+            wireMockServer.stop()
+        }
     }
 
     fun url(path: String) = wireMockServer.url(path)

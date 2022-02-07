@@ -10,15 +10,14 @@ import javax.sql.DataSource
 class VirksomhetRepository(val dataSource: DataSource) {
 
     fun hentVirksomheterFraKommunenummer(kommunenummer : List<String>) : List<VirksomhetDto>{
-        // TODO: bytt fra int -> string på postnummer i databasen
         val queryString = """
             SELECT * FROM virksomhet
-            WHERE kommunenr IN (:kommunenummer);
+            WHERE kommunenummer IN (:kommunenummer);
         """.trimIndent()
         val query = queryOf(
                 statement = queryString,
                 paramMap = mapOf(
-                    "kommunenummer" to kommunenummer
+                    "kommunenummer" to kommunenummer.joinToString(",")
                 )
             ).map { row ->
                 VirksomhetDto(

@@ -19,8 +19,8 @@ import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomheterDto
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import no.nav.lydia.virksomhet.brreg.VirksomhetDto
-import org.junit.jupiter.api.AfterAll
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -28,11 +28,21 @@ class SykefraversstatistikkApiTest {
     val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
-    val httpMock = HttpMock().start()
 
-    @AfterAll
-    fun teardown() {
-        httpMock.stop()
+    companion object {
+        val httpMock = HttpMock()
+
+        @BeforeClass
+        @JvmStatic
+        fun beforeAll() {
+            httpMock.start()
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun afterAll() {
+            httpMock.stop()
+        }
     }
 
     @Test
@@ -90,6 +100,7 @@ class SykefraversstatistikkApiTest {
         }
         val virksomhetRepository = VirksomhetRepository(dataSource)
         val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
+        val brregMockUrl = httpMock.url(lastNedPath)
 
         val underEnheter =
             """
@@ -132,7 +143,7 @@ class SykefraversstatistikkApiTest {
                 )
         )
 
-        BrregDownloader(virksomhetRepository = virksomhetRepository).lastNed()
+        BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
 
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?kommuner=4601")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
