@@ -21,6 +21,7 @@ import java.net.URI
 import java.util.*
 
 
+
 class AuthContainerHelper(network: Network, log: Logger) {
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
     private val mockOauth2Port: String = "8100"
@@ -28,8 +29,9 @@ class AuthContainerHelper(network: Network, log: Logger) {
     private val issuerName = "default"
     private val config = OAuth2Config()
     private val tokenEndpointUrl = "http://$mockOauth2NetworkAlias:$mockOauth2Port"
-    val issuerUrl = "$tokenEndpointUrl/$issuerName"
-    val jwksUri = "$issuerUrl/jwks"
+    private val issuerUrl = "$tokenEndpointUrl/$issuerName"
+    private val jwksUri = "$issuerUrl/jwks"
+    private val audience = "lydia-api"
     val lydiaApiToken: String
 
     init {
@@ -53,7 +55,7 @@ class AuthContainerHelper(network: Network, log: Logger) {
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
                 lydiaApiToken = issueToken(
-                    audience = "lydia-api",
+                    audience = audience,
                     claims = mapOf(
                         "NAVident" to "X12345"
                     )
@@ -64,7 +66,7 @@ class AuthContainerHelper(network: Network, log: Logger) {
     private fun issueToken(
         issuerId: String = issuerName,
         subject: String = UUID.randomUUID().toString(),
-        audience: String = "lydia-api",
+        audience: String = this.audience,
         claims: Map<String, Any> = emptyMap(),
         expiry: Long = 3600
     ): SignedJWT {
@@ -85,5 +87,11 @@ class AuthContainerHelper(network: Network, log: Logger) {
         )
         return config.tokenProvider.accessToken(tokenRequest, issuerUrl.toHttpUrl(), tokenCallback, null)
     }
+
+    fun envVars() = mapOf(
+        "AZURE_APP_CLIENT_ID" to audience,
+        "AZURE_OPENID_CONFIG_ISSUER" to issuerUrl,
+        "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri
+    )
 
 }

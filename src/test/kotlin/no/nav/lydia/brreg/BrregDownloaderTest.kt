@@ -5,11 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.ok
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.DbTestHelper
-import no.nav.lydia.helper.DbTestHelper.Companion.performQuery
 import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.runMigration
+import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import org.junit.jupiter.api.AfterAll
@@ -21,10 +18,7 @@ class BrregDownloaderTest {
     val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
     val brregMockUrl = httpMock.url(lastNedPath)
 
-    val postgres = TestContainerHelper.postgresContainer
-    val dataSource = DbTestHelper.getDataSource(postgresContainer = postgres).apply {
-        runMigration(this)
-    }
+    val postgres = PostgrestContainerHelper()
 
     @AfterAll
     fun teardown() {
@@ -42,7 +36,7 @@ class BrregDownloaderTest {
                 )
         )
 
-        val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+        val virksomhetRepository = VirksomhetRepository(dataSource = postgres.getDataSource())
         BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
 
         val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '995858266'")

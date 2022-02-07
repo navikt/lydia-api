@@ -1,5 +1,6 @@
 package no.nav.lydia
 
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
@@ -14,27 +15,20 @@ class AppTest {
         val mockOAuth2Server = MockOAuth2Server().apply {
             start(port = 8100)
         }
+        val dataSource = HikariDataSource() // TODO...?
     }
 
-    private val naisEnv = NaisEnvironment(
-        database = Database( // TODO vi må legge til database-config her om vi skal gjøre noe mer enn helsesjekk-kall
-            host = "",
-            port = "",
-            username = "",
-            password = "",
-            name = ""
-        ), security = Security(
+    private val security = Security(
             AzureConfig(
                 audience = "lydia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
                 issuer = "http://localhost:8100/default"
             )
         )
-    )
 
     @Test
     fun `appen svarer på isAlive-kall når den kjører`() {
-        withTestApplication({ lydiaBackend(naisEnv) }) {
+        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isalive")) {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals("OK", response.content)
@@ -44,7 +38,7 @@ class AppTest {
 
     @Test
     fun `appen svarer på isReady-kall når den er klar til å ta imot trafikk`() {
-        withTestApplication({ lydiaBackend(naisEnv) }) {
+        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isready")) {
                 //TODO sørg for at database-tilkoblingen funker før vi svarer ja på isReady
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -55,7 +49,7 @@ class AppTest {
 
     @Test
     fun `Uautorisert kall mot beskyttet endepunkt skal returnere 401`() {
-        withTestApplication({ lydiaBackend(naisEnv) }) {
+        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
             }
@@ -64,7 +58,7 @@ class AppTest {
 
     @Test
     fun `Kall med ugyldig token mot beskyttet endepunkt skal returnere 401`() {
-        withTestApplication({ lydiaBackend(naisEnv) }) {
+        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
                 addHeader(HttpHeaders.Authorization, "Bearer detteErIkkeEtGyldigToken")
             }) {
@@ -75,7 +69,7 @@ class AppTest {
 
     @Test
     fun `Innlogget nav ansatt skal kunne nå beskyttede endepunkt`() {
-        withTestApplication({ lydiaBackend(naisEnv) }) {
+        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
             val token = mockOAuth2Server.issueToken(
                 audience = "lydia-api", claims = mapOf(
                     "NAVident" to "X12345"

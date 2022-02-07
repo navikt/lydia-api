@@ -45,12 +45,15 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:8.4.1")
+    implementation("org.flywaydb:flyway-core:8.4.3")
     implementation("com.github.seratch:kotliquery:1.6.0")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     implementation("com.google.code.gson:gson:2.8.9")
+
+    // Kafka
+    implementation("org.apache.kafka:kafka-clients:2.8.0")
 
     // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
