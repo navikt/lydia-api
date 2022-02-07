@@ -68,7 +68,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `Skal kunne alle organisasjoner i Viken fylke`() {
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=Viken")
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=30")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<VirksomheterDto>()
 
