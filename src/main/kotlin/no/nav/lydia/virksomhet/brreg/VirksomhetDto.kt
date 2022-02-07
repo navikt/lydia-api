@@ -10,4 +10,4 @@ data class VirksomhetDto(
 )
 
 @Serializable
-data class Beliggenhetsadresse(val land: String, val landkode: String, val postnummer: Int, val poststed: String, val kommune: String, val kommunenummer: String)
+data class Beliggenhetsadresse(val land: String, val landkode: String, val postnummer: String, val poststed: String, val kommune: String, val kommunenummer: String)

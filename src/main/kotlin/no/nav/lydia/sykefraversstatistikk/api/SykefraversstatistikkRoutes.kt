@@ -1,7 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import io.ktor.application.*
-import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
@@ -12,13 +11,13 @@ val FILTERVERDIER_PATH = "filterverdier"
 
 fun Route.sykefraversstatistikk(virksomhetService: VirksomhetService, geografiService: GeografiService) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        val fylkesNummerISøk = call.request.queryParameters["fylker"]?.split(",")?.toSet() ?: emptySet()
+        val kommunenummerISøk = call.request.queryParameters["kommuner"]?.split(",")?.toSet() ?: emptySet()
 
-        val alleFylker = geografiService.hentFylker().associateBy{ it.nummer }
-        val gyldigeFylkesNummerISøk = fylkesNummerISøk.filter{
-            fylkesnummer -> alleFylker.containsKey(fylkesnummer)
+        val alleKommuner = geografiService.hentKommuner().associateBy{ it.nummer }
+        val gyldigeKommunenummerISøk = kommunenummerISøk.filter{
+            kommunenummer -> alleKommuner.containsKey(kommunenummer)
         }
-        val virksomheter = virksomhetService.hentVirksomheterFraFylkesnummer(gyldigeFylkesNummerISøk)
+        val virksomheter = virksomhetService.hentVirksomheterFraFylkesnummer(gyldigeKommunenummerISøk)
         call.respond(virksomheter)
     }
 
