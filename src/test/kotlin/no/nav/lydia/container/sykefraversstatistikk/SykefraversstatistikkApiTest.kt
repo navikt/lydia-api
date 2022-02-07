@@ -10,6 +10,8 @@ import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import no.nav.lydia.virksomhet.brreg.VirksomhetDTO
+import no.nav.lydia.virksomhet.domene.Virksomhet
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -62,5 +64,19 @@ class SykefraversstatistikkApiTest {
         val (_, response, _) = request.responseString()
 
         response.statusCode shouldBe 401
+    }
+
+    @Test
+    fun `Skal kunne alle organisasjoner i Viken fylke`() {
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=Viken")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<VirksomhetDTO>>()
+
+        result.fold(
+            success = { virksomheter ->
+                virksomheter.first().navn shouldBe "Brønnøy"
+            }, failure = {
+                fail(it.message)
+            })
     }
 }

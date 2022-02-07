@@ -10,23 +10,16 @@ import no.nav.lydia.virksomhet.VirksomhetService
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
 
-fun Route.sykefraversstatistikk() {
-    val virksomhetService = VirksomhetService()
-    val geografiService = GeografiService()
-
-
+fun Route.sykefraversstatistikk(virksomhetService: VirksomhetService, geografiService: GeografiService) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        val fylkesNummerISøk = call.request.queryParameters["fylke"]?.split(",")?.toSet() ?: emptySet()
+        val fylkesNummerISøk = call.request.queryParameters["fylker"]?.split(",")?.toSet() ?: emptySet()
 
         val alleFylker = geografiService.hentFylker().associateBy{ it.nummer }
-        val virksomheter = virksomhetService.hentVirksomheterFraFylkesnummer(fylkesNummerISøk.filter{
+        val gyldigeFylkesNummerISøk = fylkesNummerISøk.filter{
             fylkesnummer -> alleFylker.containsKey(fylkesnummer)
-        })
+        }
+        val virksomheter = virksomhetService.hentVirksomheterFraFylkesnummer(gyldigeFylkesNummerISøk)
         call.respond(virksomheter)
-
-//      /api?fylke=Viken,Vestland&
-//
-//
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {

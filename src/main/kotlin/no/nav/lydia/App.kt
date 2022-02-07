@@ -16,8 +16,13 @@ import io.ktor.server.netty.*
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
+import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.VirksomhetService
+import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import java.util.concurrent.TimeUnit
+import javax.sql.DataSource
 
 fun main() {
     val naisEnv = NaisEnvironment()
@@ -25,7 +30,7 @@ fun main() {
     runMigration(dataSource)
 
     embeddedServer(Netty, port = 8080) {
-        lydiaBackend(naisEnv)
+        lydiaBackend(naisEnv, dataSource)
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
@@ -34,7 +39,7 @@ fun main() {
     }.start(wait = true)
 }
 
-fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
+fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment(), dataSource: DataSource) {
     install(ContentNegotiation) {
         json()
     }
@@ -68,11 +73,18 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment()) {
             }
         }
     }
+
+    val virksomhetRepository = VirksomhetRepository(dataSource)
+    val virksomhetService = VirksomhetService(virksomhetRepository)
+    val geografiService = GeografiService()
+
+    BrregDownloader(virksomhetRepository = virksomhetRepository).lastNed()
+
     routing {
         healthChecks()
         metrics()
         authenticate {
-            sykefraversstatistikk()
+            sykefraversstatistikk(virksomhetService, geografiService)
         }
     }
 
