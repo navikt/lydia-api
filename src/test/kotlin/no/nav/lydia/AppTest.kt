@@ -36,7 +36,7 @@ class AppTest {
     )
 
     @Test
-    fun `appen svarer på isAlive-kall når den kjører`() {
+    fun `appen svarer på isAlive kall når den kjører`() {
         withTestApplication({ lydiaBackend(naisEnv, dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isalive")) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -46,7 +46,7 @@ class AppTest {
     }
 
     @Test
-    fun `appen svarer på isReady-kall når den er klar til å ta imot trafikk`() {
+    fun `appen svarer på isReady kall når den er klar til å ta imot trafikk`() {
         withTestApplication({ lydiaBackend(naisEnv, dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isready")) {
                 //TODO sørg for at database-tilkoblingen funker før vi svarer ja på isReady
@@ -57,7 +57,7 @@ class AppTest {
     }
 
     @Test
-    fun `Uautorisert kall mot beskyttet endepunkt skal returnere 401`() {
+    fun `uautorisert kall mot beskyttet endepunkt skal returnere 401`() {
         withTestApplication({ lydiaBackend(naisEnv, dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
@@ -66,7 +66,7 @@ class AppTest {
     }
 
     @Test
-    fun `Kall med ugyldig token mot beskyttet endepunkt skal returnere 401`() {
+    fun `kall med ugyldig token mot beskyttet endepunkt skal returnere 401`() {
         withTestApplication({ lydiaBackend(naisEnv, dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
                 addHeader(HttpHeaders.Authorization, "Bearer detteErIkkeEtGyldigToken")
@@ -77,7 +77,7 @@ class AppTest {
     }
 
     @Test
-    fun `Innlogget nav ansatt skal kunne nå beskyttede endepunkt`() {
+    fun `innlogget nav ansatt skal kunne nå beskyttede endepunkt`() {
         withTestApplication({ lydiaBackend(naisEnv, dataSource) }) {
             val token = mockOAuth2Server.issueToken(
                 audience = "lydia-api", claims = mapOf(
