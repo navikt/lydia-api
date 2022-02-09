@@ -5,7 +5,6 @@ import com.github.kittinunf.fuel.gson.responseObject
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
-import io.kotest.inspectors.forSome
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
@@ -29,7 +28,6 @@ import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
-import kotlin.test.expect
 import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
