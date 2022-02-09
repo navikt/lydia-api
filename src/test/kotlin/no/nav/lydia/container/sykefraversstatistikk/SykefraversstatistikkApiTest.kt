@@ -100,7 +100,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente alle virksomheter i Bergen kommune`() {
-        val kommunenummer = "4601"
+        val kommunenummer = "4601" // Brønnøy kommune i Bergen
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?kommuner=$kommunenummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<VirksomheterDto>()
