@@ -118,8 +118,8 @@ class SykefraversstatistikkApiTest {
             .responseObject<VirksomheterDto>()
 
         result.fold(
-            success = { respons ->
-                val testVirksomhet = respons.virksomheter.first()
+            success = { apiResponse ->
+                val testVirksomhet = apiResponse.virksomheter.first()
                 testVirksomhet.organisasjonsnummer shouldBe "995858266"
                 testVirksomhet.beliggenhetsadresse.kommune shouldBe "BERGEN"
                 testVirksomhet.beliggenhetsadresse.kommunenummer shouldStartWith fylkesnummer
