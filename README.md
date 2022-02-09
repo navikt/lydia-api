@@ -5,7 +5,7 @@
 
 # Komme i gang
 
-TODO
+Kjør ./run.sh
 
 ## Docker-oppsett med `colima`
 
