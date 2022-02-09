@@ -5,6 +5,8 @@ import com.github.kittinunf.fuel.gson.responseObject
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
+import io.kotest.inspectors.forSome
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
@@ -137,6 +139,23 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `Skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`(){
+        val fylkesnummer = "46"
+        val kommunenummer = "0301"
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer&kommuner=$kommunenummer")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<VirksomheterDto>()
+
+        result.fold(
+            success = { respons ->
+                val testVirsomheter = respons.virksomheter
+                testVirsomheter.map { it.organisasjonsnummer } shouldContainExactly listOf("995858266", "998877665")
+            }, failure = {
+                fail(it.message)
+            })
+    }
+
+    @Test
     fun `Skal kunne hente alle virksomheter`(){
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -170,34 +189,64 @@ fun mockNedlastingAvVirksomheter() {
 
     val underEnheter =
         """
-          [{
-          "organisasjonsnummer" : "995858266",
-          "navn" : ":-) PROSJEKTER",
-          "organisasjonsform" : {
-            "kode" : "BEDR",
-            "beskrivelse" : "Bedrift",
-            "links" : [ ]
-          },
-          "registreringsdatoEnhetsregisteret" : "2010-08-25",
-          "registrertIMvaregisteret" : false,
-          "naeringskode1" : {
-            "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
-            "kode" : "70.220"
-          },
-          "antallAnsatte" : 1,
-          "overordnetEnhet" : "995849364",
-          "oppstartsdato" : "2010-07-01",
-          "beliggenhetsadresse" : {
-            "land" : "Norge",
-            "landkode" : "NO",
-            "postnummer" : "5034",
-            "poststed" : "BERGEN",
-            "adresse" : [ "Skanselien 37" ],
-            "kommune" : "BERGEN",
-            "kommunenummer" : "4601"
-          },
-          "links" : [ ]
-        }]
+          [
+            {
+              "organisasjonsnummer" : "995858266",
+              "navn" : ":-) PROSJEKTER",
+              "organisasjonsform" : {
+                "kode" : "BEDR",
+                "beskrivelse" : "Bedrift",
+                "links" : [ ]
+              },
+              "registreringsdatoEnhetsregisteret" : "2010-08-25",
+              "registrertIMvaregisteret" : false,
+              "naeringskode1" : {
+                "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
+                "kode" : "70.220"
+              },
+              "antallAnsatte" : 1,
+              "overordnetEnhet" : "995849364",
+              "oppstartsdato" : "2010-07-01",
+              "beliggenhetsadresse" : {
+                "land" : "Norge",
+                "landkode" : "NO",
+                "postnummer" : "5034",
+                "poststed" : "BERGEN",
+                "adresse" : [ "Skanselien 37" ],
+                "kommune" : "BERGEN",
+                "kommunenummer" : "4601"
+              },
+              "links" : [ ]
+            },
+            {
+              "organisasjonsnummer" : "998877665",
+              "navn" : "Virkningsfull virksomhet",
+              "organisasjonsform" : {
+                "kode" : "BEDR",
+                "beskrivelse" : "Bedrift",
+                "links" : [ ]
+              },
+              "registreringsdatoEnhetsregisteret" : "2011-02-25",
+              "registrertIMvaregisteret" : false,
+              "naeringskode1" : {
+                "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
+                "kode" : "70.220"
+              },
+              "antallAnsatte" : 13,
+              "overordnetEnhet" : "995849364",
+              "oppstartsdato" : "2011-02-25",
+              "beliggenhetsadresse" : {
+                "land" : "Norge",
+                "landkode" : "NO",
+                "postnummer" : "0656",
+                "poststed" : "OSLO",
+                "adresse" : [ "Schweigaards gate 81" ],
+                "kommune" : "OSLO",
+                "kommunenummer" : "0301"
+              },
+              "links" : [ ]
+            }
+          ]
         """.trimIndent()
 
     SykefraversstatistikkApiTest.httpMock.wireMockServer.stubFor(
