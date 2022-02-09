@@ -16,7 +16,6 @@ import no.nav.lydia.helper.DbTestHelper
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.runMigration
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
@@ -42,7 +41,14 @@ class SykefraversstatistikkApiTest {
         @JvmStatic
         fun beforeAll() {
             httpMock.start()
-            mockNedlastingAvVirksomheter()
+            val postgres = TestContainerHelper.postgresContainer
+            val dataSource = DbTestHelper.getDataSource(postgresContainer = postgres).apply {
+                DbTestHelper.cleanMigrate(this)
+            }
+            val virksomhetRepository = VirksomhetRepository(dataSource)
+            val brregMockUrl = mockKallMotBrregUnderhenter()
+            BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
+
         }
 
         @AfterClass
@@ -139,7 +145,7 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { respons ->
                 val testVirsomheter = respons.virksomheter
-                testVirsomheter.map { it.organisasjonsnummer } shouldContainExactly listOf("995858266", "998877665")
+                testVirsomheter.map { it.organisasjonsnummer } shouldContainExactly listOf("995858266", "825001662")
             }, failure = {
                 fail(it.message)
             })
@@ -168,12 +174,8 @@ class SykefraversstatistikkApiTest {
     }
 }
 
-fun mockNedlastingAvVirksomheter() {
-    val postgres = TestContainerHelper.postgresContainer
-    val dataSource = DbTestHelper.getDataSource(postgresContainer = postgres).apply {
-        runMigration(this)
-    }
-    val virksomhetRepository = VirksomhetRepository(dataSource)
+fun mockKallMotBrregUnderhenter() : String {
+
     val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
     val brregMockUrl = SykefraversstatistikkApiTest.httpMock.url(lastNedPath)
 
@@ -209,33 +211,33 @@ fun mockNedlastingAvVirksomheter() {
               "links" : [ ]
             },
             {
-              "organisasjonsnummer" : "998877665",
-              "navn" : "Virkningsfull virksomhet",
+              "organisasjonsnummer" : "825001662",
+              "navn" : "1012 PROJECT AISTE CESNAUSKAITE",
               "organisasjonsform" : {
                 "kode" : "BEDR",
-                "beskrivelse" : "Bedrift",
+                "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
                 "links" : [ ]
               },
-              "registreringsdatoEnhetsregisteret" : "2011-02-25",
+              "registreringsdatoEnhetsregisteret" : "2020-04-28",
               "registrertIMvaregisteret" : false,
               "naeringskode1" : {
-                "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
-                "kode" : "70.220"
+                "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
+                "kode" : "90.012"
               },
-              "antallAnsatte" : 13,
-              "overordnetEnhet" : "995849364",
-              "oppstartsdato" : "2011-02-25",
+              "antallAnsatte" : 0,
+              "overordnetEnhet" : "924965304",
+              "oppstartsdato" : "2020-04-22",
               "beliggenhetsadresse" : {
                 "land" : "Norge",
                 "landkode" : "NO",
-                "postnummer" : "0656",
+                "postnummer" : "0364",
                 "poststed" : "OSLO",
-                "adresse" : [ "Schweigaards gate 81" ],
+                "adresse" : [ "Trudvangveien 5C" ],
                 "kommune" : "OSLO",
                 "kommunenummer" : "0301"
               },
               "links" : [ ]
-            }
+            }                  
           ]
         """.trimIndent()
 
@@ -247,6 +249,5 @@ fun mockNedlastingAvVirksomheter() {
                     .withBody(Gzip.gzip(underEnheter))
             )
     )
-
-    BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
+    return brregMockUrl
 }
