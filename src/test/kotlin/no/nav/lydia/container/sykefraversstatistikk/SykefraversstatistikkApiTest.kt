@@ -143,9 +143,11 @@ class SykefraversstatistikkApiTest {
             .responseObject<VirksomheterDto>()
 
         result.fold(
-            success = { respons ->
-                val testVirsomheter = respons.virksomheter
-                testVirsomheter.map { it.organisasjonsnummer } shouldContainExactly listOf("995858266", "825001662")
+            success = { (virksomheter) ->
+                virksomheter.map { it.organisasjonsnummer } shouldContainExactly listOf(
+                    "995858266",
+                    "825001662"
+                )
             }, failure = {
                 fail(it.message)
             })
