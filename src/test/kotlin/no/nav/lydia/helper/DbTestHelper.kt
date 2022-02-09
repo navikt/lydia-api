@@ -3,7 +3,6 @@ package no.nav.lydia.helper
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.lydia.getFlyway
-import org.flywaydb.core.Flyway
 import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.ResultSet
 import java.sql.Statement

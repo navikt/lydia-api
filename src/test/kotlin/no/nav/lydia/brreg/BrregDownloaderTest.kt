@@ -41,7 +41,7 @@ class BrregDownloaderTest {
     }
 
     @Test
-    fun `Vi kan laste ned liste med underenheter og deres beliggenhetsadresser fra Brreg`() {
+    fun `vi kan laste ned liste med underenheter og deres beliggenhetsadresser fra Brreg`() {
         val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
         val brregMockUrl = httpMock.url(lastNedPath)
 

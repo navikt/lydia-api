@@ -21,7 +21,6 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
-import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 

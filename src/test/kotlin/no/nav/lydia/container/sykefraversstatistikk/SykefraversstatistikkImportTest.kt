@@ -27,7 +27,7 @@ class SykefraversstatistikkImportTest {
     val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource)
 
     @Test
-    fun `Importerte data skal kunne hentes ut`() {
+    fun `importerte data skal kunne hentes ut`() {
         val testOrgnr = "910969439"
         // Send inn data
         sykefraversstatistikkRepository.insert(

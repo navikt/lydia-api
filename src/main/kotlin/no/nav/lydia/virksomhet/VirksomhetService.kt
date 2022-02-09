@@ -1,7 +1,6 @@
 package no.nav.lydia.virksomhet
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.virksomhet.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.brreg.VirksomhetDto
 
 class VirksomhetService(private val virksomhetRepository: VirksomhetRepository) {
