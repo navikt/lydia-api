@@ -169,7 +169,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `kan hente kommuner basert på fylkesnummer`(){
-        val fylkesnummer = listOf("46", "03") // Vestland og Oslo
+        val fylkesnummer = listOf("46", "03") // Vestland og Oslo fylke
         val geografiService = GeografiService()
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
         kommuner shouldHaveSize 44
