@@ -55,7 +55,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
+    fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
         val orgnum = "123456789"
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnum")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -71,15 +71,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Uautorisert kall mot sykefraværsstatistikkVirksomhet-endepunktet skal returnere 401`() {
-        val request = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
-        val (_, response, _) = request.responseString()
-
-        response.statusCode shouldBe 401
-    }
-
-    @Test
-    fun `Frontend skal kunne hente filterverdier til prioriteringssiden`() {
+    fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<FilterverdierDto>()
@@ -95,7 +87,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Uautorisert kall mot filterverdi-endepunktet skal returnere 401`() {
+    fun `uautorisert kall mot sykefraværendepunktet skal returnere 401`() {
         val request = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
         val (_, response, _) = request.responseString()
 
@@ -103,7 +95,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Skal kunne hente alle virksomheter i Bergen kommune`() {
+    fun `skal kunne hente alle virksomheter i Bergen kommune`() {
         val kommunenummer = "4601"
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?kommuner=$kommunenummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -121,7 +113,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Skal kunne hente alle virksomheter i Vestland fylke`(){
+    fun `skal kunne hente alle virksomheter i Vestland fylke`(){
         val fylkesnummer = "46"
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -139,7 +131,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`(){
+    fun `skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`(){
         val fylkesnummer = "46"
         val kommunenummer = "0301"
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer&kommuner=$kommunenummer")
@@ -156,7 +148,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Skal kunne hente alle virksomheter`(){
+    fun `skal kunne hente alle virksomheter`(){
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<VirksomheterDto>()
@@ -170,7 +162,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Kan hente kommuner basert på fylkesnummer`(){
+    fun `kan hente kommuner basert på fylkesnummer`(){
         val fylkesnummer = listOf("46", "03") // Vestland og Oslo
         val geografiService = GeografiService()
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
