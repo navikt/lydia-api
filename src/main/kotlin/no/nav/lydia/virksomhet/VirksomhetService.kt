@@ -11,7 +11,10 @@ class VirksomhetService(private val virksomhetRepository: VirksomhetRepository) 
             virksomheter = virksomheter
         )
     }
-    fun hentAlleVirksomheter(): VirksomheterDto = VirksomheterDto(virksomheter = virksomhetRepository.hentAlleVirksomheter())
+    fun hentAlleVirksomheter(): VirksomheterDto {
+        val alleVirksomheter = virksomhetRepository.hentAlleVirksomheter()
+        return VirksomheterDto(virksomheter = alleVirksomheter)
+    }
 }
 
 

@@ -22,11 +22,10 @@ fun createDataSource(database: Database): DataSource {
     }
 }
 
+fun getFlyway(dataSource: DataSource): Flyway = Flyway.configure().dataSource(dataSource).load()
+
 fun runMigration(dataSource: DataSource) {
-    Flyway.configure()
-        .dataSource(dataSource)
-        .load()
-        .migrate()
+    getFlyway(dataSource).migrate()
 }
 
 enum class Role {

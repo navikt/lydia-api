@@ -2,9 +2,12 @@ package no.nav.lydia.helper
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.lydia.getFlyway
+import org.flywaydb.core.Flyway
 import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.ResultSet
 import java.sql.Statement
+import javax.sql.DataSource
 
 class DbTestHelper {
 
@@ -22,6 +25,12 @@ class DbTestHelper {
             val resultSet: ResultSet = statement.resultSet
             resultSet.next()
             return resultSet
+        }
+
+        fun cleanMigrate(dataSource: DataSource) {
+            val flyway = getFlyway(dataSource)
+            flyway.clean()
+            flyway.migrate()
         }
     }
 
