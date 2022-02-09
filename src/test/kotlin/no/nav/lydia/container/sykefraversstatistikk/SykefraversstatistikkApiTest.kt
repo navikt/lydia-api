@@ -136,8 +136,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`(){
-        val fylkesnummer = "46"
-        val kommunenummer = "0301"
+        val fylkesnummer = "46" // Vestland fylke
+        val kommunenummer = "0301" // Oslo kommune
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer&kommuner=$kommunenummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<VirksomheterDto>()
