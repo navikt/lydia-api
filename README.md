@@ -5,6 +5,8 @@
 
 # Komme i gang
 
+Kopier .env.local > .env i root-mappa av prosjektet
+
 Kjør ./run.sh
 
 ## Docker-oppsett med `colima`

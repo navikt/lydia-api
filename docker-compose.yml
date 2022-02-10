@@ -3,24 +3,18 @@ services:
   backend:
     depends_on:
       - postgres
-    build: .
+    build:
+      target: local
+      context: .
     ports:
-      - "8080:8080"
-    environment:
-      - NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST=postgres
-      - NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT=5432
-      - NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME=lydia
-      - NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD=lydia
-      - NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE=lydia
-      - AZURE_APP_CLIENT_ID=notfound
-      - AZURE_OPENID_CONFIG_JWKS_URI=https://fakedings.dev-gcp.nais.io/fake/jwks
-      - AZURE_OPENID_CONFIG_ISSUER=https://fakedings.dev-gcp.nais.io/fake
+      - "8081:8080"
+      - "5005:5005"
+    env_file:
+      - .env
 
   postgres:
     image: postgres:12-alpine
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_USER=lydia
-      - POSTGRES_PASSWORD=lydia
-      - POSTGRES_DB=lydia
+    env_file:
+      - .env
