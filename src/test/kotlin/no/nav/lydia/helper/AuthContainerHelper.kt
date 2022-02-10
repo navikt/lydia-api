@@ -12,6 +12,7 @@ import no.nav.security.mock.oauth2.OAuth2Config
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -22,10 +23,10 @@ import java.util.*
 
 
 
-class AuthContainerHelper(network: Network, log: Logger) {
+class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
     private val mockOauth2Port: String = "8100"
-    private val mockOath2Server: GenericContainer<*>
+    val mockOath2Server: GenericContainer<*>
     private val issuerName = "default"
     private val config = OAuth2Config()
     private val tokenEndpointUrl = "http://$mockOauth2NetworkAlias:$mockOauth2Port"
@@ -48,6 +49,7 @@ class AuthContainerHelper(network: Network, log: Logger) {
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("oAuthContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withNetworkAliases(mockOauth2NetworkAlias)
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("$mockOauth2NetworkAlias-${System.currentTimeMillis()}") }
             .waitingFor(
                 HostPortWaitStrategy()
             ).apply {

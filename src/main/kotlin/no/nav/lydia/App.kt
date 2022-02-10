@@ -24,9 +24,7 @@ import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 fun main() {
-    runBlocking {
-        startLydiaBackend()
-    }
+    startLydiaBackend()
 }
 
 fun startLydiaBackend() {
@@ -91,7 +89,7 @@ fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
 }
 fun statistikkConsumer(naisEnv: NaisEnvironment) =
         StatistikkConsumer.apply {
-            create(naisEnv = naisEnv)
+            create(kafka = naisEnv.kafka)
             run()
         }
 

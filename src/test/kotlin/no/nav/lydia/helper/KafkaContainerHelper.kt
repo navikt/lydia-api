@@ -16,18 +16,24 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
+import java.util.*
 
 
 class KafkaContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)) {
     private val kafkaNetworkAlias = "kafkaContainer"
-    val kafkaContainer = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.1"))
+    val kafkaContainer = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka"))
         .withNetwork(network)
         .withNetworkAliases(kafkaNetworkAlias)
         .withExposedPorts(9092, 9093, KafkaContainer.ZOOKEEPER_PORT)
         .withLogConsumer(Slf4jLogConsumer(log).withPrefix(kafkaNetworkAlias).withSeparateOutputStreams())
+        .withEnv(mapOf(
+            "KAFKA_AUTO_LEADER_REBALANCE_ENABLE" to "false",
+            "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS" to "1",
+            "TZ" to TimeZone.getDefault().id
+        ))
+        .withCreateContainerCmdModifier { cmd -> cmd.withName("$kafkaNetworkAlias-${System.currentTimeMillis()}") }
         .waitingFor(HostPortWaitStrategy())
         .apply {
-            this.addEnv("KAFKA_ADVERTISED_LISTENERS", "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092")
             this.start()
             this.createTopic(statistikkTopic)
         }

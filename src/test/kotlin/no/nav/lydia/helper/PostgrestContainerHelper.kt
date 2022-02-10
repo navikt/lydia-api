@@ -23,10 +23,11 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
             .withNetwork(network)
             .withNetworkAliases(postgresNetworkAlias)
             .withDatabaseName(lydiaDbName)
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("$postgresNetworkAlias-${System.currentTimeMillis()}") }
             .waitingFor(
                 LogMessageWaitStrategy().withRegEx(".*database system is ready to accept connections.*\\s")
-            ).also {
-                it.start()
+            ).apply {
+                start()
             }
 
     fun getDataSource() =
@@ -46,6 +47,7 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
         return resultSet
     }
 
+
     fun envVars() = mapOf(
         "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST" to postgresNetworkAlias,
         "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT" to "5432",
@@ -53,5 +55,4 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
         "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD" to postgresContainer.password,
         "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE" to lydiaDbName
     )
-
 }

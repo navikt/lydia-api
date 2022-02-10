@@ -28,19 +28,22 @@ class TestContainerHelper {
         val lydiaApiContainer: GenericContainer<*> = GenericContainer(
             ImageFromDockerfile().withDockerfile(Path("./Dockerfile"))
         )
+            .dependsOn(kafkaContainerHelper.kafkaContainer, postgresContainer.postgresContainer, oauth2ServerContainer.mockOath2Server)
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withExposedPorts(8080)
-            .waitingFor(
-                HttpWaitStrategy().forPath("/internal/isready")
-            )
-
-        init {
-            lydiaApiContainer.withEnv(
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("lydia-${System.currentTimeMillis()}") }
+            .withEnv(
                 postgresContainer.envVars()
                     .plus(oauth2ServerContainer.envVars())
-                    .plus(kafkaContainerHelper.envVars())
-            )
+                    .plus(kafkaContainerHelper.envVars()))
+            .waitingFor(HttpWaitStrategy().forPath("/internal/isready"))
+        init {
+//            lydiaApiContainer.withEnv(
+//                postgresContainer.envVars()
+//                    .plus(oauth2ServerContainer.envVars())
+//                    .plus(kafkaContainerHelper.envVars())
+//            )
             lydiaApiContainer.start()
         }
 
