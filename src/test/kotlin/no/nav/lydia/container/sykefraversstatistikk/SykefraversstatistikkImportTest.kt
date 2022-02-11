@@ -25,12 +25,11 @@ class SykefraversstatistikkImportTest {
     val sykefraversstatistikkRepository = SykefraversstatistikkRepository(postgres.getDataSource())
 
     @Test
-    fun `Importerte data skal kunne hentes ut`() {
+    fun `importerte data skal kunne hentes ut`() {
 
         val producer = kafkaHelper.producer()
         for (i in 1..5)
           producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST $i")).get()
-
         val testOrgnr = "910969439"
         // Send inn data
         sykefraversstatistikkRepository.insert(

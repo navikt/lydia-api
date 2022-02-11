@@ -9,24 +9,36 @@ import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import org.junit.jupiter.api.AfterAll
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 
 class BrregDownloaderTest {
-    val httpMock = HttpMock().start()
-    val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
-    val brregMockUrl = httpMock.url(lastNedPath)
-
     val postgres = PostgrestContainerHelper()
 
-    @AfterAll
-    fun teardown() {
-        httpMock.stop()
+    companion object {
+        val httpMock = HttpMock()
+
+        @BeforeClass
+        @JvmStatic
+        fun beforeAll() {
+            httpMock.start()
+        }
+
+
+        @AfterClass
+        @JvmStatic
+        fun afterAll() {
+            httpMock.stop()
+        }
     }
 
     @Test
-    fun `Vi kan laste ned liste med underenheter og deres beliggenhetsadresser fra Brreg`() {
+    fun `vi kan laste ned liste med underenheter og deres beliggenhetsadresser fra Brreg`() {
+        val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
+        val brregMockUrl = httpMock.url(lastNedPath)
+
         httpMock.wireMockServer.stubFor(
             WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
                 .willReturn(

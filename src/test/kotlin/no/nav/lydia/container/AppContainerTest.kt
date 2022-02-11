@@ -13,7 +13,7 @@ class AppContainerTest {
     private val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
-    fun `Kaller isAlive`() {
+    fun `kaller isAlive`() {
         val (_, response, _) = lydiaApiContainer.performGet("internal/isalive")
             .responseString()
 
@@ -21,7 +21,7 @@ class AppContainerTest {
     }
 
     @Test
-    fun `Lydia skal ha satt opp databasen`() {
+    fun `lydia skal ha satt opp databasen`() {
         val resultSet = postgresContainer.performQuery(
             """
             SELECT EXISTS(
@@ -37,7 +37,7 @@ class AppContainerTest {
     }
 
     @Test
-    fun `Lydia skal kunne gi oss metrikker`() {
+    fun `lydia skal kunne gi oss metrikker`() {
         val (_, response, result) = lydiaApiContainer.performGet("metrics")
             .responseString()
 

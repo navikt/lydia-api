@@ -1,9 +1,13 @@
 # lydia-api
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=navikt_lydia-api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=navikt_lydia-api)
+
 
 # Komme i gang
 
-TODO
+Kopier .env.local > .env i root-mappa av prosjektet
+
+Kjør ./run.sh
 
 ## Docker-oppsett med `colima`
 

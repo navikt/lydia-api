@@ -47,7 +47,7 @@ class BrregDownloader(
             JsonReader(InputStreamReader(file.inputStream())).use { reader ->
                 reader.beginArray()
                 while (reader.hasNext()) {
-                    val virksomhet = gson.fromJson<VirksomhetDTO>(reader, VirksomhetDTO::class.java)
+                    val virksomhet = gson.fromJson<VirksomhetDto>(reader, VirksomhetDto::class.java)
                     virksomhetRepository.insert(virksomhet = virksomhet)
                 }
                 reader.endArray()

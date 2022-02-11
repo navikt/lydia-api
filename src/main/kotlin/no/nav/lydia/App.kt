@@ -17,8 +17,12 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+
+import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.VirksomhetService
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -31,16 +35,16 @@ fun startLydiaBackend() {
         val dataSource = createDataSource(database = naisEnv.database)
         runMigration(dataSource = dataSource)
 
-        statistikkConsumer(naisEnv = naisEnv)
+    statistikkConsumer(naisEnv = naisEnv)
 
-        embeddedServer(factory = Netty, port = 8080) {
-            lydiaRestApi(security = naisEnv.security, dataSource = dataSource)
-        }.also {
-            // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
-            it.addShutdownHook {
-                it.stop(3, 5, TimeUnit.SECONDS)
-            }
-        }.start(wait = true)
+    embeddedServer(Netty, port = 8080) {
+        lydiaRestApi(security = naisEnv.security, dataSource = dataSource)
+    }.also {
+        // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
+        it.addShutdownHook {
+            it.stop(3, 5, TimeUnit.SECONDS)
+        }
+    }.start(wait = true)
 }
 
 fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
@@ -78,11 +82,16 @@ fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
         }
     }
 
+    val virksomhetRepository = VirksomhetRepository(dataSource)
+    val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource)
+    val virksomhetService = VirksomhetService(virksomhetRepository)
+    val geografiService = GeografiService()
+
     routing {
         healthChecks()
         metrics()
         authenticate {
-            sykefraversstatistikk(SykefraversstatistikkRepository(dataSource))
+            sykefraversstatistikk(virksomhetService, geografiService, sykefraversstatistikkRepository)
         }
     }
 }
