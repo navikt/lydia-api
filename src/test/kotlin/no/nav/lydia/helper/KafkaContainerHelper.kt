@@ -19,23 +19,30 @@ import org.testcontainers.utility.DockerImageName
 import java.util.*
 
 
-class KafkaContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)) {
+class KafkaContainerHelper(
+    network: Network = Network.newNetwork(),
+    log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)
+) {
     private val kafkaNetworkAlias = "kafkaContainer"
-    val kafkaContainer = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka"))
+    val kafkaContainer = KafkaContainer(
+        DockerImageName.parse("kymeric/cp-kafka")
+            .asCompatibleSubstituteFor("confluentinc/cp-kafka")
+    )
         .withNetwork(network)
         .withNetworkAliases(kafkaNetworkAlias)
-        .withExposedPorts(9092, 9093, KafkaContainer.ZOOKEEPER_PORT)
         .withLogConsumer(Slf4jLogConsumer(log).withPrefix(kafkaNetworkAlias).withSeparateOutputStreams())
-        .withEnv(mapOf(
-            "KAFKA_AUTO_LEADER_REBALANCE_ENABLE" to "false",
-            "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS" to "1",
-            "TZ" to TimeZone.getDefault().id
-        ))
+        .withEnv(
+            mapOf(
+                "KAFKA_AUTO_LEADER_REBALANCE_ENABLE" to "false",
+                "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS" to "1",
+                "TZ" to TimeZone.getDefault().id
+            )
+        )
         .withCreateContainerCmdModifier { cmd -> cmd.withName("$kafkaNetworkAlias-${System.currentTimeMillis()}") }
         .waitingFor(HostPortWaitStrategy())
         .apply {
-            this.start()
-            this.createTopic(statistikkTopic)
+            start()
+            createTopic(statistikkTopic)
         }
 
     fun envVars() = mapOf(
@@ -54,17 +61,18 @@ class KafkaContainerHelper(network: Network = Network.newNetwork(), log: Logger 
 
     fun producer(bootstrapServers: String = kafkaContainer.bootstrapServers): KafkaProducer<String, String> =
         KafkaProducer(
-        mapOf(
-            CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
-            CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "PLAINTEXT",
-            ProducerConfig.ACKS_CONFIG to "all",
-            ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to "1",
-            ProducerConfig.LINGER_MS_CONFIG to "0",
-            ProducerConfig.RETRIES_CONFIG to "0",
-            ProducerConfig.BATCH_SIZE_CONFIG to "1",
-            SaslConfigs.SASL_MECHANISM to "PLAIN"
-        ),
-        StringSerializer(),
-        StringSerializer()
-    )
+            mapOf(
+                CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
+                CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "PLAINTEXT",
+                ProducerConfig.ACKS_CONFIG to "all",
+                ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to "1",
+                ProducerConfig.LINGER_MS_CONFIG to "0",
+                ProducerConfig.RETRIES_CONFIG to "0",
+                ProducerConfig.BATCH_SIZE_CONFIG to "1",
+                SaslConfigs.SASL_MECHANISM to "PLAIN"
+            ),
+            StringSerializer(),
+            StringSerializer()
+        )
 }
+

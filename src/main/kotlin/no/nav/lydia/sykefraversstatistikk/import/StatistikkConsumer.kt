@@ -19,7 +19,6 @@ object StatistikkConsumer : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     lateinit var job: Job
     lateinit var kafka: Kafka
-    var processedMessages = 0
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -49,7 +48,6 @@ object StatistikkConsumer : CoroutineScope {
                     try {
                         val records = consumer.poll(Duration.of(100, ChronoUnit.MILLIS))
                         records.forEach {
-                            processedMessages++
                             logger.info("Kafka emits ${it.value()}")
                         }
                         consumer.commitSync()

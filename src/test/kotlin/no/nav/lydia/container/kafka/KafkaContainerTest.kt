@@ -1,6 +1,8 @@
 package no.nav.lydia.container.kafka
 
+import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -15,15 +17,13 @@ import java.time.temporal.ChronoUnit
 import kotlin.test.Test
 
 class KafkaContainerTest {
-    val kafkaContainer = KafkaContainerHelper()
+    private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
 
     @Test
     fun `Kan koble til kafka brokers`() {
-        val TEST_TOPIC = "testTopic"
-
         val kafkaProducer = kafkaContainer.producer()
 
-        kafkaProducer.send(ProducerRecord(TEST_TOPIC, "testValue")).get()
+        kafkaProducer.send(ProducerRecord(Kafka.statistikkTopic, "testValue")).get()
 
         val kafkaConsumer = KafkaConsumer(
             mapOf(
@@ -35,20 +35,6 @@ class KafkaContainerTest {
             ),
             StringDeserializer(),
             StringDeserializer()
-        ).apply { subscribe(listOf(TEST_TOPIC)) }
-
-
-//        var i = 0
-//        while (true) {
-//            println(i++)
-//            val result = kafkaProducer.send(ProducerRecord(TEST_TOPIC, "testValue")).get()
-//
-//            kafkaConsumer.poll(Duration.of(100, ChronoUnit.MILLIS)).forEach {
-//                   println("Record key: ${it.value()}")
-//                }
-//            kafkaConsumer.commitSync()
-//
-//            Thread.sleep(1000)
-//        }
+        ).apply { subscribe(listOf(Kafka.statistikkTopic)) }
     }
 }

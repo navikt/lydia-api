@@ -13,7 +13,6 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 import kotlin.io.path.Path
 
 class TestContainerHelper {
-
     companion object {
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -25,9 +24,7 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
-        val lydiaApiContainer: GenericContainer<*> = GenericContainer(
-            ImageFromDockerfile().withDockerfile(Path("./Dockerfile"))
-        )
+        val lydiaApiContainer: GenericContainer<*> = GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
             .dependsOn(kafkaContainerHelper.kafkaContainer, postgresContainer.postgresContainer, oauth2ServerContainer.mockOath2Server)
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
             .withNetwork(network)
@@ -37,15 +34,9 @@ class TestContainerHelper {
                 postgresContainer.envVars()
                     .plus(oauth2ServerContainer.envVars())
                     .plus(kafkaContainerHelper.envVars()))
-            .waitingFor(HttpWaitStrategy().forPath("/internal/isready"))
-        init {
-//            lydiaApiContainer.withEnv(
-//                postgresContainer.envVars()
-//                    .plus(oauth2ServerContainer.envVars())
-//                    .plus(kafkaContainerHelper.envVars())
-//            )
-            lydiaApiContainer.start()
-        }
+            .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
+                start()
+            }
 
         fun GenericContainer<*>.performGet(url: String): Request {
             val baseurl = "http://${this.host}:${this.getMappedPort(8080)}"
