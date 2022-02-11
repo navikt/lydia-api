@@ -2,6 +2,7 @@ package no.nav.lydia.helper
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.lydia.getFlyway
 import no.nav.lydia.runMigration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -11,10 +12,11 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import java.sql.ResultSet
 import java.sql.Statement
+import javax.sql.DataSource
 
 class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(PostgrestContainerHelper::class.java)) {
     private val postgresNetworkAlias = "postgrescontainer"
-    private val lydiaDbName = "lydia-api-container-db"
+    val lydiaDbName = "lydia-api-container-db"
     val postgresContainer: PostgreSQLContainer<*> =
         PostgreSQLContainer("postgres:12")
             .withLogConsumer(
@@ -45,6 +47,12 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
         val resultSet: ResultSet = statement.resultSet
         resultSet.next()
         return resultSet
+    }
+
+    fun cleanMigrate(dataSource: DataSource) {
+        val flyway = getFlyway(dataSource)
+        flyway.clean()
+        flyway.migrate()
     }
 
 

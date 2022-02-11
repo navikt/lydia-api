@@ -24,17 +24,5 @@ class KafkaContainerTest {
         val kafkaProducer = kafkaContainer.producer()
 
         kafkaProducer.send(ProducerRecord(Kafka.statistikkTopic, "testValue")).get()
-
-        val kafkaConsumer = KafkaConsumer(
-            mapOf(
-                CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to kafkaContainer.kafkaContainer.bootstrapServers,
-                CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "PLAINTEXT",
-                SaslConfigs.SASL_MECHANISM to "PLAIN",
-                ConsumerConfig.GROUP_ID_CONFIG to "integration-test",
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest"
-            ),
-            StringDeserializer(),
-            StringDeserializer()
-        ).apply { subscribe(listOf(Kafka.statistikkTopic)) }
     }
 }

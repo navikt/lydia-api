@@ -6,7 +6,7 @@ import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.PostgrestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import org.junit.AfterClass
@@ -15,7 +15,7 @@ import kotlin.test.Test
 
 
 class BrregDownloaderTest {
-    val postgres = PostgrestContainerHelper()
+    val postgres = TestContainerHelper.postgresContainer
 
     companion object {
         val httpMock = HttpMock()

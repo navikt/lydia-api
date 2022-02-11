@@ -1,9 +1,7 @@
 package no.nav.lydia
 
-import com.zaxxer.hikari.HikariDataSource
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.lydia.helper.DbTestHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
@@ -17,23 +15,17 @@ class AppTest {
         val mockOAuth2Server = MockOAuth2Server().apply {
             start(port = 8100)
         }
-        val dataSource = DbTestHelper.getDataSource(postgresContainer = TestContainerHelper.postgresContainer).apply { runMigration(this) }
+        val postgres = TestContainerHelper.postgresContainer
+        val dataSource = postgres.getDataSource().apply { runMigration(this) }
     }
 
-    private val naisEnv = NaisEnvironment(
-        database = Database( // TODO vi må legge til database-config her om vi skal gjøre noe mer enn helsesjekk-kall
-            host = "postgres",
-            port = "5432",
-            username = "postgres",
-            password = "postgres",
-            name = TestContainerHelper.lydiaDbName
-        ), security = Security(
-            AzureConfig(
-                audience = "lydia-api",
-                jwksUri = URL("http://localhost:8100/default/jwks"),
-                issuer = "http://localhost:8100/default"
-            )
+    val security = Security(
+        AzureConfig(
+            audience = "lydia-api",
+            jwksUri = URL("http://localhost:8100/default/jwks"),
+            issuer = "http://localhost:8100/default"
         )
+    )
 
     @Test
     fun `appen svarer på isAlive-kall når den kjører`() {
