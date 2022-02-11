@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import java.sql.ResultSet
 import java.sql.Statement
@@ -26,9 +27,7 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
             .withNetworkAliases(postgresNetworkAlias)
             .withDatabaseName(lydiaDbName)
             .withCreateContainerCmdModifier { cmd -> cmd.withName("$postgresNetworkAlias-${System.currentTimeMillis()}") }
-            .waitingFor(
-                LogMessageWaitStrategy().withRegEx(".*database system is ready to accept connections.*\\s")
-            ).apply {
+            .waitingFor(HostPortWaitStrategy()).apply {
                 start()
             }
 
