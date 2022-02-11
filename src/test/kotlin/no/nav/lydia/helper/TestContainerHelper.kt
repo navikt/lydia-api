@@ -1,20 +1,18 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
-import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
-import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
 import kotlin.io.path.Path
 
 class TestContainerHelper {
-
     companion object {
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -24,50 +22,28 @@ class TestContainerHelper {
 
         val kafkaContainerHelper = KafkaContainerHelper(network = network, log = log)
 
-        private val postgresNetworkAlias = "postgrescontainer"
-        val lydiaDbName = "lydia-api-container-db"
-        val postgresContainer: PostgreSQLContainer<*> =
-            PostgreSQLContainer("postgres:12")
-                .withLogConsumer(Slf4jLogConsumer(log).withPrefix("postgresContainer").withSeparateOutputStreams())
-                .withNetwork(network)
-                .withNetworkAliases(postgresNetworkAlias)
-                .withDatabaseName(lydiaDbName)
-                .waitingFor(
-                    LogMessageWaitStrategy().withRegEx(".*database system is ready to accept connections.*\\s")
-                ).also {
-                    it.start()
-                }
+        val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
-        val lydiaApiContainer: GenericContainer<*> = GenericContainer(
-            ImageFromDockerfile().withDockerfile(Path("./Dockerfile"))
-        )
+        val lydiaApiContainer: GenericContainer<*> = GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
+            .dependsOn(kafkaContainerHelper.kafkaContainer, postgresContainer.postgresContainer, oauth2ServerContainer.mockOath2Server)
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withExposedPorts(8080)
-            .waitingFor(
-                HttpWaitStrategy().forPath("/internal/isready")
-            )
-
-        init {
-            lydiaApiContainer.withEnv(
-                mapOf(
-                    "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST" to postgresNetworkAlias,
-                    "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT" to "5432",
-                    "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME" to postgresContainer.username,
-                    "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD" to postgresContainer.password,
-                    "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE" to lydiaDbName,
-                    "AZURE_APP_CLIENT_ID" to "lydia-api",
-                    "AZURE_OPENID_CONFIG_ISSUER" to oauth2ServerContainer.issuerUrl,
-                    "AZURE_OPENID_CONFIG_JWKS_URI" to oauth2ServerContainer.jwksUri
-                )
-            )
-            lydiaApiContainer.start()
-        }
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("lydia-${System.currentTimeMillis()}") }
+            .withEnv(
+                postgresContainer.envVars()
+                    .plus(oauth2ServerContainer.envVars())
+                    .plus(kafkaContainerHelper.envVars()))
+            .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
+                start()
+            }
 
         fun GenericContainer<*>.performGet(url: String): Request {
             val baseurl = "http://${this.host}:${this.getMappedPort(8080)}"
             return "$baseurl/$url".httpGet()
         }
+
+        fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.lydiaApiToken)
     }
 
 }

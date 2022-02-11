@@ -1,10 +1,14 @@
 package no.nav.lydia
 
+import org.apache.kafka.clients.CommonClientConfigs
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.config.SaslConfigs
 import java.net.URL
 
 class NaisEnvironment(
     val database: Database = Database(),
-    val security: Security = Security()
+    val security: Security = Security(),
+    val kafka: Kafka = Kafka()
 )
 
 class Database(
@@ -21,6 +25,22 @@ class Security(val azureConfig: AzureConfig = AzureConfig())
         val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
         val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
     )
+
+class Kafka(
+    val brokers: String = getEnvVar("KAFKA_BROKERS"),
+    val groupId: String = "lydiaApiStatistikkConsumers",
+){
+    companion object {
+        val statistikkTopic: String = "statistikkTopic"
+    }
+    fun consumerConfig() = mapOf(
+        CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
+        CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "PLAINTEXT",
+        SaslConfigs.SASL_MECHANISM to "PLAIN",
+        ConsumerConfig.GROUP_ID_CONFIG to groupId,
+        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest"
+    )
+}
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
     System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable $varName")

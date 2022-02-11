@@ -12,7 +12,6 @@ import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.DbTestHelper
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -42,8 +41,8 @@ class SykefraversstatistikkApiTest {
         fun beforeAll() {
             httpMock.start()
             val postgres = TestContainerHelper.postgresContainer
-            val dataSource = DbTestHelper.getDataSource(postgresContainer = postgres).apply {
-                DbTestHelper.cleanMigrate(this)
+            val dataSource = postgres.getDataSource().apply {
+                postgres.cleanMigrate(this)
             }
             val virksomhetRepository = VirksomhetRepository(dataSource)
             val brregMockUrl = mockKallMotBrregUnderhenter()

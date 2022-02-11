@@ -1,33 +1,35 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.DbTestHelper
+import no.nav.lydia.Kafka
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.runMigration
+import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import org.apache.kafka.clients.producer.ProducerRecord
 import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraversstatistikkImportTest {
     val postgres = TestContainerHelper.postgresContainer
     val lydiaApi = TestContainerHelper.lydiaApiContainer
-    val mockOauthContaier = TestContainerHelper.oauth2ServerContainer
-    val dataSource = DbTestHelper.getDataSource(postgresContainer = postgres).apply {
-        runMigration(this)
-    }
-    val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource)
+    val kafkaHelper = TestContainerHelper.kafkaContainerHelper
+
+    val sykefraversstatistikkRepository = SykefraversstatistikkRepository(postgres.getDataSource())
 
     @Test
     fun `importerte data skal kunne hentes ut`() {
+
+        val producer = kafkaHelper.producer()
+        for (i in 1..5)
+          producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST $i")).get()
         val testOrgnr = "910969439"
         // Send inn data
         sykefraversstatistikkRepository.insert(
@@ -47,9 +49,9 @@ class SykefraversstatistikkImportTest {
         val sykefravær = sykefraversstatistikkRepository.hentSykefravær(testOrgnr)
         sykefravær.size shouldBe 1
 
-         val (_, _, result) = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$testOrgnr")
-             .authentication().bearer(mockOauthContaier.lydiaApiToken)
-             .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+         val result = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$testOrgnr")
+             .withLydiaToken()
+             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
         result.fold(success = { dto ->
             dto.size shouldBeExactly 1
@@ -60,3 +62,4 @@ class SykefraversstatistikkImportTest {
     }
 
 }
+

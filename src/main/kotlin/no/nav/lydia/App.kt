@@ -19,18 +19,26 @@ import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 fun main() {
-    val naisEnv = NaisEnvironment()
-    val dataSource = createDataSource(naisEnv.database)
-    runMigration(dataSource)
+    startLydiaBackend()
+}
+
+fun startLydiaBackend() {
+        val naisEnv = NaisEnvironment()
+        val dataSource = createDataSource(database = naisEnv.database)
+        runMigration(dataSource = dataSource)
+
+    statistikkConsumer(naisEnv = naisEnv)
 
     embeddedServer(Netty, port = 8080) {
-        lydiaBackend(naisEnv, dataSource)
+        lydiaRestApi(security = naisEnv.security, dataSource = dataSource)
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
@@ -39,7 +47,7 @@ fun main() {
     }.start(wait = true)
 }
 
-fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment(), dataSource: DataSource) {
+fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
     install(ContentNegotiation) {
         json()
     }
@@ -49,19 +57,19 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment(), dataS
         registry = Metrics.appMicrometerRegistry
     }
 
-    val jwkProvider = JwkProviderBuilder(naisEnv.security.azureConfig.jwksUri)
+    val jwkProvider = JwkProviderBuilder(security.azureConfig.jwksUri)
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
     install(Authentication) {
         jwt {
-            verifier(jwkProvider, naisEnv.security.azureConfig.issuer)
+            verifier(jwkProvider, security.azureConfig.issuer)
             validate { credentials ->
                 try {
                     requireNotNull(credentials.payload.audience) {
                         "Auth: Missing audience in token"
                     }
-                    require(credentials.payload.audience.contains(naisEnv.security.azureConfig.audience)) {
+                    require(credentials.payload.audience.contains(security.azureConfig.audience)) {
                         "Auth: Valid audience not found in claims"
                     }
                     JWTPrincipal(credentials.payload)
@@ -86,5 +94,10 @@ fun Application.lydiaBackend(naisEnv: NaisEnvironment = NaisEnvironment(), dataS
             sykefraversstatistikk(virksomhetService, geografiService, sykefraversstatistikkRepository)
         }
     }
-
 }
+fun statistikkConsumer(naisEnv: NaisEnvironment) =
+        StatistikkConsumer.apply {
+            create(kafka = naisEnv.kafka)
+            run()
+        }
+

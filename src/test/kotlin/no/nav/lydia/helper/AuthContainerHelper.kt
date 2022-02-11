@@ -12,6 +12,7 @@ import no.nav.security.mock.oauth2.OAuth2Config
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -21,20 +22,22 @@ import java.net.URI
 import java.util.*
 
 
-class AuthContainerHelper(network: Network, log: Logger) {
+
+class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
     private val mockOauth2Port: String = "8100"
-    private val mockOath2Server: GenericContainer<*>
+    val mockOath2Server: GenericContainer<*>
     private val issuerName = "default"
     private val config = OAuth2Config()
     private val tokenEndpointUrl = "http://$mockOauth2NetworkAlias:$mockOauth2Port"
-    val issuerUrl = "$tokenEndpointUrl/$issuerName"
-    val jwksUri = "$issuerUrl/jwks"
+    private val issuerUrl = "$tokenEndpointUrl/$issuerName"
+    private val jwksUri = "$issuerUrl/jwks"
+    private val audience = "lydia-api"
     val lydiaApiToken: String
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-            builder.from("ghcr.io/navikt/mock-oauth2-server:0.4.1")
+            builder.from("ghcr.io/navikt/mock-oauth2-server:0.4.3")
                 .env(
                     mapOf(
                         "TZ" to TimeZone.getDefault().id,
@@ -46,6 +49,7 @@ class AuthContainerHelper(network: Network, log: Logger) {
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("oAuthContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withNetworkAliases(mockOauth2NetworkAlias)
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("$mockOauth2NetworkAlias-${System.currentTimeMillis()}") }
             .waitingFor(
                 HostPortWaitStrategy()
             ).apply {
@@ -53,7 +57,7 @@ class AuthContainerHelper(network: Network, log: Logger) {
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
                 lydiaApiToken = issueToken(
-                    audience = "lydia-api",
+                    audience = audience,
                     claims = mapOf(
                         "NAVident" to "X12345"
                     )
@@ -64,7 +68,7 @@ class AuthContainerHelper(network: Network, log: Logger) {
     private fun issueToken(
         issuerId: String = issuerName,
         subject: String = UUID.randomUUID().toString(),
-        audience: String = "lydia-api",
+        audience: String = this.audience,
         claims: Map<String, Any> = emptyMap(),
         expiry: Long = 3600
     ): SignedJWT {
@@ -85,5 +89,11 @@ class AuthContainerHelper(network: Network, log: Logger) {
         )
         return config.tokenProvider.accessToken(tokenRequest, issuerUrl.toHttpUrl(), tokenCallback, null)
     }
+
+    fun envVars() = mapOf(
+        "AZURE_APP_CLIENT_ID" to audience,
+        "AZURE_OPENID_CONFIG_ISSUER" to issuerUrl,
+        "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri
+    )
 
 }
