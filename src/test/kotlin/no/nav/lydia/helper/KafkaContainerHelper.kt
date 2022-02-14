@@ -1,6 +1,5 @@
 package no.nav.lydia.helper
 
-import no.nav.lydia.Kafka.Companion.statistikkTopic
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -24,6 +23,7 @@ class KafkaContainerHelper(
     log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)
 ) {
     private val kafkaNetworkAlias = "kafkaContainer"
+    val statistikkTopic = "statistikkTopic"
     val kafkaContainer = KafkaContainer(
         DockerImageName.parse("kymeric/cp-kafka")
             .asCompatibleSubstituteFor("confluentinc/cp-kafka")
@@ -49,7 +49,8 @@ class KafkaContainerHelper(
         "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092",
         "KAFKA_TRUSTSTORE_PATH" to "",
         "KAFKA_KEYSTORE_PATH" to "",
-        "KAFKA_CREDSTORE_PASSWORD" to ""
+        "KAFKA_CREDSTORE_PASSWORD" to "",
+        "STATISTIKK_TOPIC" to statistikkTopic
     )
 
     private fun KafkaContainer.createTopic(vararg topics: String) {

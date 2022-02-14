@@ -46,3 +46,6 @@ spec:
 
   kafka:
     pool: {{kafkaPool}}
+  env:
+    - name: STATISTIKK_TOPIC
+      value: {{statistikkTopic}}

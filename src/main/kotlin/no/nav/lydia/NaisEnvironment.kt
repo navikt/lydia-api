@@ -2,7 +2,6 @@ package no.nav.lydia
 
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import java.net.URL
 
@@ -37,7 +36,7 @@ class Kafka(
     val groupId: String = "lydiaApiStatistikkConsumers",
 ){
     companion object {
-        val statistikkTopic: String = "aura.kafkarator-canary-dev-gcp"
+        val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC")
     }
     fun consumerConfig() = mapOf(
         CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
