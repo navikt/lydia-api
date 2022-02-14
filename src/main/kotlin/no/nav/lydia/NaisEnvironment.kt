@@ -37,7 +37,7 @@ class Kafka(
     val groupId: String = "lydiaApiStatistikkConsumers",
 ){
     companion object {
-        val statistikkTopic: String = "statistikkTopic"
+        val statistikkTopic: String = "aura.kafkarator-canary-dev-gcp"
     }
     fun consumerConfig() = mapOf(
         CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
