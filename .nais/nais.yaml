@@ -43,3 +43,6 @@ spec:
     - type: POSTGRES_12
       databases:
         - name: "lydia-api-db"
+
+  kafka:
+    pool: {{kafkaPool}}

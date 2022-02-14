@@ -36,7 +36,6 @@ object StatistikkConsumer : CoroutineScope {
 
     fun run() {
         launch {
-            logger.info("Launching kafka consumer with config ${kafka.consumerConfig()}")
             KafkaConsumer(
                 kafka.consumerConfig(),
                 StringDeserializer(),

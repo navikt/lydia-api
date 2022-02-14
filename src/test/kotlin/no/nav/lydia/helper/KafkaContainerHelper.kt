@@ -46,7 +46,10 @@ class KafkaContainerHelper(
         }
 
     fun envVars() = mapOf(
-        "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092"
+        "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092",
+        "KAFKA_TRUSTSTORE_PATH" to "",
+        "KAFKA_KEYSTORE_PATH" to "",
+        "KAFKA_CREDSTORE_PASSWORD" to ""
     )
 
     private fun KafkaContainer.createTopic(vararg topics: String) {
