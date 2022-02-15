@@ -4,7 +4,6 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.Kafka
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
@@ -29,7 +28,7 @@ class SykefraversstatistikkImportTest {
 
         val producer = kafkaHelper.producer()
         for (i in 1..5)
-          producer.send(ProducerRecord(Kafka.statistikkTopic, "TEST $i")).get()
+          producer.send(ProducerRecord(kafkaHelper.statistikkTopic, "TEST $i")).get()
         val testOrgnr = "910969439"
         // Send inn data
         sykefraversstatistikkRepository.insert(

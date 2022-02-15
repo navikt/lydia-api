@@ -36,7 +36,6 @@ object StatistikkConsumer : CoroutineScope {
 
     fun run() {
         launch {
-            logger.info("Launching kafka consumer with config ${kafka.consumerConfig()}")
             KafkaConsumer(
                 kafka.consumerConfig(),
                 StringDeserializer(),
@@ -46,10 +45,8 @@ object StatistikkConsumer : CoroutineScope {
                 logger.info("Kafka consumer subscribed to ${Kafka.statistikkTopic}")
                 while (job.isActive) {
                     try {
-                        val records = consumer.poll(Duration.of(100, ChronoUnit.MILLIS))
-                        records.forEach {
-                            logger.info("Kafka emits ${it.value()}")
-                        }
+                        val records = consumer.poll(Duration.ofMinutes(1))
+                        logger.info("Fant ${records.count()} nye meldinger")
                         consumer.commitSync()
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
