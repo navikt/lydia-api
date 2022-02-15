@@ -1,6 +1,8 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
+import SykefraversstatistikkKafkaMelding
 import com.github.kittinunf.fuel.gson.responseObject
+import com.google.gson.GsonBuilder
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
@@ -11,7 +13,6 @@ import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import org.apache.kafka.clients.producer.ProducerRecord
 import kotlin.test.Test
 import kotlin.test.fail
@@ -20,31 +21,22 @@ class SykefraversstatistikkImportTest {
     val postgres = TestContainerHelper.postgresContainer
     val lydiaApi = TestContainerHelper.lydiaApiContainer
     val kafkaHelper = TestContainerHelper.kafkaContainerHelper
-
     val sykefraversstatistikkRepository = SykefraversstatistikkRepository(postgres.getDataSource())
+    val gson = GsonBuilder().create()
 
     @Test
     fun `importerte data skal kunne hentes ut`() {
+        val jsonFromResources = this::class.java.getResource("/sykefraværsstatistikk_kafka_melding.json").readText()
+        val kafkaMelding = gson.fromJson(jsonFromResources, SykefraversstatistikkKafkaMelding::class.java)
 
         val producer = kafkaHelper.producer()
-        for (i in 1..5)
-          producer.send(ProducerRecord(kafkaHelper.statistikkTopic, "TEST $i")).get()
-        val testOrgnr = "910969439"
-        // Send inn data
-        sykefraversstatistikkRepository.insert(
-            sykefraversstatistikkVirksomhet = SykefraversstatistikkImportDto(
-                orgnr = testOrgnr,
-                arstall = 2021,
-                kvartal = 4,
-                antallPersoner = 10.0,
-                tapteDagsverk = 219.078753,
-                muligeDagsverk = 1026.185439,
-                sykefraversprosent = 20.0,
-                maskert = false
-            )
-        )
+        producer.send(ProducerRecord(kafkaHelper.statistikkTopic, gson.toJson(kafkaMelding.key), gson.toJson(kafkaMelding.value))).get()
+
+        // TODO finn bedre løsning enn Thread.sleep?
+        Thread.sleep(5000)
 
         // Hent ut sykefraværsstatistikk
+        val testOrgnr = "987654321"
         val sykefravær = sykefraversstatistikkRepository.hentSykefravær(testOrgnr)
         sykefravær.size shouldBe 1
 

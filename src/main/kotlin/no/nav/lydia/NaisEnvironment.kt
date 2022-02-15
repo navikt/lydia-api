@@ -2,6 +2,7 @@ package no.nav.lydia
 
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import java.net.URL
 
@@ -20,11 +21,11 @@ class Database(
 )
 
 class Security(val azureConfig: AzureConfig = AzureConfig())
-    class AzureConfig(
-        val audience: String = getEnvVar("AZURE_APP_CLIENT_ID"),
-        val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
-        val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
-    )
+class AzureConfig(
+    val audience: String = getEnvVar("AZURE_APP_CLIENT_ID"),
+    val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
+    val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
+)
 
 class Kafka(
     val brokers: String = getEnvVar("KAFKA_BROKERS"),
@@ -34,25 +35,37 @@ class Kafka(
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
 
     val groupId: String = "lydiaApiStatistikkConsumers",
-){
+) {
     companion object {
         val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC")
     }
-    fun consumerConfig() = mapOf(
-        CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
-        ConsumerConfig.GROUP_ID_CONFIG to groupId,
-        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
 
-        CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "SSL",
-        SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG to "",
-        SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG to "JKS",
-        SslConfigs.SSL_KEYSTORE_TYPE_CONFIG to "PKCS12",
-        SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to truststoreLocation,
-        SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to credstorePassword,
-        SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG to keystoreLocation,
-        SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to credstorePassword,
-        SslConfigs.SSL_KEY_PASSWORD_CONFIG to credstorePassword,
-    )
+    fun consumerProperties() =
+        baseConsumerProperties().apply {
+            // TODO: Finn smidigere måte å få tester til å kjøre
+            if (truststoreLocation.isNullOrBlank()) {
+                put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "PLAINTEXT")
+                put(SaslConfigs.SASL_MECHANISM, "PLAIN")
+            } else {
+                put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL")
+                put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "")
+                put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "JKS")
+                put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12")
+                put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststoreLocation)
+                put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, credstorePassword)
+                put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, keystoreLocation)
+                put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, credstorePassword)
+                put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, credstorePassword)
+            }
+        }
+
+    fun baseConsumerProperties() =
+        mapOf(
+            CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
+            ConsumerConfig.GROUP_ID_CONFIG to groupId,
+            ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+        ).toProperties()
+
 }
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
