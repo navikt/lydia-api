@@ -23,7 +23,7 @@ class KafkaContainerHelper(
     log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)
 ) {
     private val kafkaNetworkAlias = "kafkaContainer"
-    val statistikkTopic = "statistikkTopic"
+    val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
     val kafkaContainer = KafkaContainer(
         DockerImageName.parse("kymeric/cp-kafka")
             .asCompatibleSubstituteFor("confluentinc/cp-kafka")
