@@ -31,11 +31,14 @@ fun main() {
 }
 
 fun startLydiaBackend() {
-        val naisEnv = NaisEnvironment()
-        val dataSource = createDataSource(database = naisEnv.database)
-        runMigration(dataSource = dataSource)
+    val naisEnv = NaisEnvironment()
+    val dataSource = createDataSource(database = naisEnv.database)
+    runMigration(dataSource = dataSource)
 
-    statistikkConsumer(naisEnv = naisEnv)
+    statistikkConsumer(
+        kafka = naisEnv.kafka,
+        sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource)
+    )
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(security = naisEnv.security, dataSource = dataSource)
@@ -95,9 +98,10 @@ fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
         }
     }
 }
-fun statistikkConsumer(naisEnv: NaisEnvironment) =
-        StatistikkConsumer.apply {
-            create(kafka = naisEnv.kafka)
-            run()
-        }
+
+fun statistikkConsumer(kafka: Kafka, sykefraversstatistikkRepository: SykefraversstatistikkRepository) =
+    StatistikkConsumer.apply {
+        create(kafka = kafka, sykefraversstatistikkRepository = sykefraversstatistikkRepository)
+        run()
+    }
 
