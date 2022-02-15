@@ -20,6 +20,10 @@ services:
       AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
       AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
       TZ: Europe/Oslo
+      STATISTIKK_TOPIC: hei123
+      KAFKA_TRUSTSTORE_PATH: ""
+      KAFKA_KEYSTORE_PATH: ""
+      KAFKA_CREDSTORE_PASSWORD: ""
 
   postgres:
     image: postgres:12-alpine
@@ -43,6 +47,17 @@ services:
       timeout: 10s
       retries: 5
 
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: control-center
+    depends_on:
+      - kafka
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      PORT: 9021
 
   kafka:
     image: kymeric/cp-kafka
