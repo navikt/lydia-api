@@ -6,6 +6,9 @@ import com.google.gson.GsonBuilder
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
@@ -14,6 +17,7 @@ import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import org.apache.kafka.clients.producer.ProducerRecord
+import java.time.Duration
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -25,19 +29,23 @@ class SykefraversstatistikkImportTest {
     val gson = GsonBuilder().create()
 
     @Test
-    fun `importerte data skal kunne hentes ut`() {
+    fun `importerte data skal kunne hentes ut`() = runBlocking {
         val jsonFromResources = this::class.java.getResource("/sykefraværsstatistikk_kafka_melding.json").readText()
         val kafkaMelding = gson.fromJson(jsonFromResources, SykefraversstatistikkKafkaMelding::class.java)
 
         val producer = kafkaHelper.producer()
         producer.send(ProducerRecord(kafkaHelper.statistikkTopic, gson.toJson(kafkaMelding.key), gson.toJson(kafkaMelding.value))).get()
 
-        // TODO finn bedre løsning enn Thread.sleep?
-        Thread.sleep(5000)
-
-        // Hent ut sykefraværsstatistikk
         val testOrgnr = "987654321"
-        val sykefravær = sykefraversstatistikkRepository.hentSykefravær(testOrgnr)
+        // Hent ut sykefraværsstatistikk
+        val sykefravær = withTimeout(5000) {
+            var sykefravær = sykefraversstatistikkRepository.hentSykefravær(testOrgnr)
+            while (sykefravær.isEmpty()) {
+                delay(500)
+                sykefravær = sykefraversstatistikkRepository.hentSykefravær(testOrgnr)
+            }
+            sykefravær
+        }
         sykefravær.size shouldBe 1
 
          val result = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$testOrgnr")
