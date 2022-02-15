@@ -2,19 +2,84 @@ version: "3.9"
 services:
   backend:
     depends_on:
-      - postgres
+      - postgres,kafka
     build:
       target: local
       context: .
     ports:
       - "8081:8080"
       - "5005:5005"
-    env_file:
-      - .env
+    environment:
+      KAFKA_BROKERS: BROKER://kafka:9092,PLAINTEXT://kafka:9092
+      NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST: postgres
+      NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT: 5432
+      NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME: lydia
+      NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD: lydia
+      NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE: lydia
+      AZURE_APP_CLIENT_ID: notfound
+      AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
+      AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
+      TZ: Europe/Oslo
+      STATISTIKK_TOPIC: hei123
+      KAFKA_TRUSTSTORE_PATH: ""
+      KAFKA_KEYSTORE_PATH: ""
+      KAFKA_CREDSTORE_PASSWORD: ""
 
   postgres:
     image: postgres:12-alpine
     ports:
       - "5432:5432"
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: lydia
+      POSTGRES_PASSWORD: lydia
+      POSTGRES_DB: lydia
+      TZ: Europe/Oslo
+
+  zookeeper:
+    container_name: zookeeper
+    image: "kymeric/cp-zookeeper"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://zookeeper:2181" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: control-center
+    depends_on:
+      - kafka
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      PORT: 9021
+
+  kafka:
+    image: kymeric/cp-kafka
+    environment:
+      KAFKA_AUTO_LEADER_REBALANCE_ENABLE: false
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093,BROKER://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: Long.MAX_VALUE
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,BROKER://kafka:9092
+      TZ: Europe/Oslo
+    command: "sh -c '/etc/confluent/docker/run'"
+    depends_on:
+      - zookeeper
+    restart: on-failure
+    ports:
+      - 9093:9093
+      - 9092:9092

@@ -4,15 +4,26 @@
 package no.nav.lydia
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
-import io.ktor.features.*
-import io.ktor.metrics.micrometer.*
-import io.ktor.routing.*
-import io.ktor.serialization.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import io.ktor.application.Application
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.application.log
+import io.ktor.auth.Authentication
+import io.ktor.auth.authenticate
+import io.ktor.auth.jwt.JWTPrincipal
+import io.ktor.auth.jwt.jwt
+import io.ktor.features.ContentNegotiation
+import io.ktor.features.StatusPages
+import io.ktor.http.HttpStatusCode
+import io.ktor.metrics.micrometer.MicrometerMetrics
+import io.ktor.response.respond
+import io.ktor.routing.IgnoreTrailingSlash
+import io.ktor.routing.routing
+import io.ktor.serialization.json
+import io.ktor.server.engine.addShutdownHook
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.stop
+import io.ktor.server.netty.Netty
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
@@ -20,7 +31,6 @@ import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
-
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import java.util.concurrent.TimeUnit
@@ -82,6 +92,12 @@ fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
                     null
                 }
             }
+        }
+    }
+    install(StatusPages) {
+        exception<Throwable> { cause ->
+            log.error("Det har skjedd en feil bro!", cause)
+            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 

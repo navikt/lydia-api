@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-./gradlew build
-docker-compose up -d --force-recreate
+./gradlew build -x test
+docker-compose up --force-recreate -d
