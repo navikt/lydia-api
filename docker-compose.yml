@@ -1,8 +1,9 @@
 version: "3.9"
 services:
   backend:
+    container_name: lydia-api
     depends_on:
-      - postgres,kafka
+      - postgres, kafka, fakedings
     build:
       target: local
       context: .
@@ -10,22 +11,44 @@ services:
       - "8081:8080"
       - "5005:5005"
     environment:
-      KAFKA_BROKERS: BROKER://kafka:9092,PLAINTEXT://kafka:9092
+      KAFKA_BROKERS: BROKER://kafka:9092
       NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST: postgres
       NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT: 5432
       NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME: lydia
       NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD: lydia
       NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE: lydia
       AZURE_APP_CLIENT_ID: notfound
-      AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
-      AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
+      AZURE_OPENID_CONFIG_JWKS_URI: http://localhost:3434/fake/jwks
+      AZURE_OPENID_CONFIG_ISSUER: http://localhost:3434/fake/
       TZ: Europe/Oslo
       STATISTIKK_TOPIC: hei123
       KAFKA_TRUSTSTORE_PATH: ""
       KAFKA_KEYSTORE_PATH: ""
       KAFKA_CREDSTORE_PASSWORD: ""
 
+  frontend:
+    container_name: lydia-radgiver-frontend
+    depends_on:
+      - backend
+    image: lydia-radgiver-frontend:latest
+    environment:
+      SERVER_PORT: 8080
+      AZURE_APP_CLIENT_ID: notfound
+      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: http://localhost:3434/fake/aad
+      AZURE_APP_CLIENT_SECRET: secret
+      AZURE_OPENID_CONFIG_ISSUER: http://localhost:3434/fake
+      AZURE_OPENID_CONFIG_JWKS_URI: http://localhost:3434/fake/jwks
+      LYDIA_API_URI: http://localhost:8081
+      NAIS_CLUSTER_NAME: lokal
+      NAIS_NAMESPACE: pia
+      TZ: Europe/Oslo
+    ports:
+    - "9876:8080"
+    expose:
+      - 9876
+
   postgres:
+    container_name: postgres
     image: postgres:12-alpine
     ports:
       - "5432:5432"
@@ -35,10 +58,19 @@ services:
       POSTGRES_DB: lydia
       TZ: Europe/Oslo
 
+  fakedings:
+    container_name: fakedings
+    image: ghcr.io/navikt/fakedings/fakedings:b1244f187badb294b47e0e3c3042abec91e04658
+    environment:
+      TZ: Europe/Oslo
+    ports:
+    - "3434:8080"
+
   zookeeper:
     container_name: zookeeper
-    image: "kymeric/cp-zookeeper"
+    image: confluentinc/cp-zookeeper:6.2.1
     environment:
+<<<<<<< Updated upstream
       ZOOKEEPER_CLIENT_PORT: "2181"
       ZOOKEEPER_TICK_TIME: "2000"
     healthcheck:
@@ -58,28 +90,43 @@ services:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       PORT: 9021
+=======
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+>>>>>>> Stashed changes
 
   kafka:
-    image: kymeric/cp-kafka
+    container_name: kafka
+    image: confluentinc/cp-kafka:6.2.1
+    depends_on:
+      - zookeeper
     environment:
+      KAFKA_BROKER_ID: 1
       KAFKA_AUTO_LEADER_REBALANCE_ENABLE: false
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093,BROKER://0.0.0.0:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
-      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: BROKER://:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-#      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: Long.MAX_VALUE
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,BROKER://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: BROKER://kafka:9092
       TZ: Europe/Oslo
     command: "sh -c '/etc/confluent/docker/run'"
-    depends_on:
-      - zookeeper
     restart: on-failure
     ports:
-      - 9093:9093
-      - 9092:9092
+      - "9092:9092"
+
+  control-center:
+    container_name: control-center
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: control-center
+    depends_on:
+      - kafka
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      PORT: 9021
