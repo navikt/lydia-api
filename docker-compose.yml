@@ -43,7 +43,7 @@ services:
       NAIS_NAMESPACE: pia
       TZ: Europe/Oslo
     ports:
-    - "9876:8080"
+      - "9876:8080"
     expose:
       - 9876
 
@@ -70,31 +70,9 @@ services:
     container_name: zookeeper
     image: confluentinc/cp-zookeeper:6.2.1
     environment:
-<<<<<<< Updated upstream
-      ZOOKEEPER_CLIENT_PORT: "2181"
-      ZOOKEEPER_TICK_TIME: "2000"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://zookeeper:2181" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  control-center:
-    image: confluentinc/cp-enterprise-control-center:latest
-    hostname: control-center
-    depends_on:
-      - kafka
-    ports:
-      - "9021:9021"
-    environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
-      CONTROL_CENTER_REPLICATION_FACTOR: 1
-      PORT: 9021
-=======
       ZOOKEEPER_CLIENT_PORT: 2181
     ports:
       - "2181:2181"
->>>>>>> Stashed changes
 
   kafka:
     container_name: kafka
