@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   backend:
+    container_name: backend
     depends_on:
       - postgres,kafka
     build:
@@ -58,6 +59,23 @@ services:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       PORT: 9021
+
+  frontend:
+    depends_on:
+      - backend
+    image: ghcr.io/navikt/lydia-radgiver-frontend:latest
+    environment:
+      SERVER_PORT: 8090
+      AZURE_APP_CLIENT_ID: notfound
+      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: https://fakedings.dev-gcp.nais.io/fake/aad?NAVIdent=A123456&aud=lydia-radgiver-frontend-lokal
+      AZURE_APP_CLIENT_SECRET: secret
+      AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
+      AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
+      LYDIA_API_URI: http://backend:8081
+      NAIS_CLUSTER_NAME: lokal
+      NAIS_NAMESPACE: pia
+    ports:
+      - "8888:8090"
 
   kafka:
     image: kymeric/cp-kafka
