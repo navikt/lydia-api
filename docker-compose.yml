@@ -18,8 +18,8 @@ services:
       NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD: lydia
       NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE: lydia
       AZURE_APP_CLIENT_ID: notfound
-      AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
-      AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
+      AZURE_OPENID_CONFIG_JWKS_URI: http://fakedings:8080/fake/jwks
+      AZURE_OPENID_CONFIG_ISSUER: http://0e5d6b5650c0:8080/fake
       TZ: Europe/Oslo
       STATISTIKK_TOPIC: hei123
       KAFKA_TRUSTSTORE_PATH: ""
@@ -70,10 +70,10 @@ services:
     environment:
       SERVER_PORT: 8090
       AZURE_APP_CLIENT_ID: notfound
-      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: https://fakedings.dev-gcp.nais.io/fake/aad?NAVIdent=A123456&aud=lydia-radgiver-frontend-lokal
+      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: http://fakedings:8080/fake/aad?NAVIdent=A123456&aud=lydia-radgiver-frontend-lokal
       AZURE_APP_CLIENT_SECRET: secret
-      AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
-      AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
+      AZURE_OPENID_CONFIG_ISSUER: http://0e5d6b5650c0:8080/fake
+      AZURE_OPENID_CONFIG_JWKS_URI: http://fakedings:8080/fake/jwks
       LYDIA_API_URI: http://lydia-api:8080
       NAIS_CLUSTER_NAME: lokal
       NAIS_NAMESPACE: pia
@@ -105,3 +105,11 @@ services:
     ports:
       - 9093:9093
       - 9092:9092
+
+  fakedings:
+    container_name: fakedings
+    image: ghcr.io/navikt/fakedings/fakedings:b1244f187badb294b47e0e3c3042abec91e04658
+    environment:
+      TZ: Europe/Oslo
+    ports:
+      - "3434:8080"
