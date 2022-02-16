@@ -48,7 +48,7 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
         return resultSet
     }
 
-    fun cleanMigrate(dataSource: DataSource) {
+    fun cleanMigrate(dataSource: DataSource = getDataSource()) {
         val flyway = getFlyway(dataSource)
         flyway.clean()
         flyway.migrate()

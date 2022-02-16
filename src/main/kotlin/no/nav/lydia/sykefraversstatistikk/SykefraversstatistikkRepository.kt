@@ -1,6 +1,5 @@
 package no.nav.lydia.sykefraversstatistikk
 
-import SykefraversstatistikkImportDto
 import VirksomhetSykefravær
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -11,10 +10,10 @@ import javax.sql.DataSource
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
     fun insert(virksomhetSykefravær: VirksomhetSykefravær) {
-        val session = sessionOf(dataSource)
-        session.run(
-            queryOf(
-                """
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
                        INSERT INTO sykefravar_statistikk_virksomhet(
                         orgnr,
                         arstall,
@@ -37,18 +36,19 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ) 
                         ON CONFLICT DO NOTHING
                         """.trimMargin(),
-                mapOf(
-                    "orgnr" to virksomhetSykefravær.orgnr,
-                    "arstall" to virksomhetSykefravær.arstall,
-                    "kvartal" to virksomhetSykefravær.kvartal,
-                    "antall_personer" to virksomhetSykefravær.antallPersoner,
-                    "tapte_dagsverk" to virksomhetSykefravær.tapteDagsverk,
-                    "mulige_dagsverk" to virksomhetSykefravær.muligeDagsverk,
-                    "sykefraversprosent" to virksomhetSykefravær.sykefraversprosent,
-                    "maskert" to virksomhetSykefravær.maskert
-                )
-            ).asUpdate
-        )
+                    mapOf(
+                        "orgnr" to virksomhetSykefravær.orgnr,
+                        "arstall" to virksomhetSykefravær.arstall,
+                        "kvartal" to virksomhetSykefravær.kvartal,
+                        "antall_personer" to virksomhetSykefravær.antallPersoner,
+                        "tapte_dagsverk" to virksomhetSykefravær.tapteDagsverk,
+                        "mulige_dagsverk" to virksomhetSykefravær.muligeDagsverk,
+                        "sykefraversprosent" to virksomhetSykefravær.sykefraversprosent,
+                        "maskert" to virksomhetSykefravær.maskert
+                    )
+                ).asUpdate
+            )
+        }
     }
 
     fun hentSykefravær(orgnr: String): List<SykefraversstatistikkVirksomhet> {
