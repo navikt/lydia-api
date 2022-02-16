@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   backend:
-    container_name: backend
+    container_name: lydia-api
     depends_on:
       - postgres,kafka
     build:
@@ -61,6 +61,7 @@ services:
       PORT: 9021
 
   frontend:
+    container_name: lydia-radgiver-frontend
     depends_on:
       - backend
     image: ghcr.io/navikt/lydia-radgiver-frontend:latest
@@ -71,7 +72,7 @@ services:
       AZURE_APP_CLIENT_SECRET: secret
       AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
       AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
-      LYDIA_API_URI: http://backend:8081
+      LYDIA_API_URI: http://lydia-api:8080
       NAIS_CLUSTER_NAME: lokal
       NAIS_NAMESPACE: pia
     ports:
