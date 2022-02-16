@@ -41,8 +41,8 @@ class KafkaContainerHelper(
         .withCreateContainerCmdModifier { cmd -> cmd.withName("$kafkaNetworkAlias-${System.currentTimeMillis()}") }
         .waitingFor(HostPortWaitStrategy())
         .apply {
-            start()
-            createTopic(statistikkTopic)
+            this.start()
+            this.createTopic(statistikkTopic)
         }
 
     fun envVars() = mapOf(
@@ -62,6 +62,8 @@ class KafkaContainerHelper(
             )
         }
     }
+
+    fun adminClient() = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to kafkaContainer.bootstrapServers))
 
     fun producer(bootstrapServers: String = kafkaContainer.bootstrapServers): KafkaProducer<String, String> =
         KafkaProducer(

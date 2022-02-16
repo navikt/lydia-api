@@ -3,7 +3,6 @@ package no.nav.lydia
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
 import org.postgresql.ds.PGSimpleDataSource
-import java.util.*
 import javax.sql.DataSource
 
 fun createDataSource(database: Database): DataSource {
@@ -14,7 +13,7 @@ fun createDataSource(database: Database): DataSource {
         addDataSourceProperty("user", database.username)
         addDataSourceProperty("password", database.password)
         addDataSourceProperty("databaseName", database.name)
-        maximumPoolSize = 3
+        maximumPoolSize = 10
         minimumIdle = 1
         idleTimeout = 100000
         connectionTimeout = 100000
@@ -26,10 +25,4 @@ fun getFlyway(dataSource: DataSource): Flyway = Flyway.configure().dataSource(da
 
 fun runMigration(dataSource: DataSource) {
     getFlyway(dataSource).migrate()
-}
-
-enum class Role {
-    Admin, User, ReadOnly;
-
-    override fun toString() = name.lowercase(Locale.getDefault())
 }

@@ -10,21 +10,21 @@ import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
 
-    fun hentVirksomheterFraKommunenummer(kommunenummer : Collection<String>) : List<VirksomhetDto>{
+    fun hentVirksomheterFraKommunenummer(kommunenummer: Collection<String>): List<VirksomhetDto> {
         val queryString = """
             SELECT * FROM virksomhet
             WHERE kommunenummer IN (${kommunenummer.joinToString(transform = { "?" })});
         """.trimIndent()
         val query = queryOf(
-                statement = queryString,
-                *kommunenummer.toTypedArray()
-            ).map { rowToVirksomhetDto(it) }.asList
+            statement = queryString,
+            *kommunenummer.toTypedArray()
+        ).map { rowToVirksomhetDto(it) }.asList
         return using(sessionOf(dataSource)) { session ->
             session.run(query)
         }
     }
 
-    fun hentAlleVirksomheter() : List<VirksomhetDto>{
+    fun hentAlleVirksomheter(): List<VirksomhetDto> {
         val queryString = """
             SELECT * FROM virksomhet;
         """.trimIndent()
@@ -37,10 +37,10 @@ class VirksomhetRepository(val dataSource: DataSource) {
     }
 
     fun insert(virksomhet: VirksomhetDto) {
-        val session = sessionOf(dataSource)
-        session.run(
-            queryOf(
-                """
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
                        INSERT INTO virksomhet(
                         orgnr,
                         land,
@@ -61,19 +61,19 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         ) 
                         ON CONFLICT DO NOTHING
                         """.trimMargin(),
-                mapOf(
-                    "orgnr" to virksomhet.organisasjonsnummer,
-                    "land" to virksomhet.beliggenhetsadresse.land,
-                    "landkode" to virksomhet.beliggenhetsadresse.landkode,
-                    "postnummer" to virksomhet.beliggenhetsadresse.postnummer,
-                    "poststed" to virksomhet.beliggenhetsadresse.poststed,
-                    "kommune" to virksomhet.beliggenhetsadresse.kommune,
-                    "kommunenummer" to virksomhet.beliggenhetsadresse.kommunenummer
-                )
-            ).asUpdate
-        )
+                    mapOf(
+                        "orgnr" to virksomhet.organisasjonsnummer,
+                        "land" to virksomhet.beliggenhetsadresse.land,
+                        "landkode" to virksomhet.beliggenhetsadresse.landkode,
+                        "postnummer" to virksomhet.beliggenhetsadresse.postnummer,
+                        "poststed" to virksomhet.beliggenhetsadresse.poststed,
+                        "kommune" to virksomhet.beliggenhetsadresse.kommune,
+                        "kommunenummer" to virksomhet.beliggenhetsadresse.kommunenummer
+                    )
+                ).asUpdate
+            )
+        }
     }
-
 
     private fun rowToVirksomhetDto(row: Row) = VirksomhetDto(
         organisasjonsnummer = row.string("orgnr"),
