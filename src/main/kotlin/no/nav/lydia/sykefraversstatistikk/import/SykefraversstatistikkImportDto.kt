@@ -1,8 +1,8 @@
 data class NæringSykefravær (
     val kvartal : Int,
-    val sykefraversprosent : Double,
+    val prosent : Double,
     val muligeDagsverk : Double,
-    val arstall : Int,
+    val årstall : Int,
     val kode : Int,
     val antallPersoner : Double,
     val kategori : String,
@@ -12,9 +12,9 @@ data class NæringSykefravær (
 
 data class Næring5SifferSykefravær (
     val kvartal : Int,
-    val sykefraversprosent : Double,
+    val prosent : Double,
     val muligeDagsverk : Double,
-    val arstall : Int,
+    val årstall : Int,
     val kode : Int,
     val antallPersoner : Double,
     val kategori : String,
@@ -24,9 +24,9 @@ data class Næring5SifferSykefravær (
 
 data class VirksomhetSykefravær (
     val kvartal : Int,
-    val sykefraversprosent : Double,
+    val prosent : Double,
     val muligeDagsverk : Double,
-    val arstall : Int,
+    val årstall : Int,
     val antallPersoner : Double,
     val orgnr : String,
     val tapteDagsverk : Double,
@@ -35,9 +35,9 @@ data class VirksomhetSykefravær (
 
 data class LandSykefravær (
     val kvartal : Int,
-    val sykefraversprosent : Double,
+    val prosent : Double,
     val muligeDagsverk : Double,
-    val arstall : Int,
+    val årstall : Int,
     val kode : String,
     val antallPersoner : Double,
     val kategori : String,
@@ -47,9 +47,9 @@ data class LandSykefravær (
 
 data class SektorSykefravær (
     val kvartal : Int,
-    val sykefraversprosent : Double,
+    val prosent : Double,
     val muligeDagsverk : Double,
-    val arstall : Int,
+    val årstall : Int,
     val kode : Int,
     val antallPersoner : Double,
     val kategori : String,
@@ -67,7 +67,7 @@ data class SykefraversstatistikkImportDto (
 
 data class Key (
     val kvartal : Int,
-    val arstall : Int,
+    val årstall : Int,
     val orgnr : String
 )
 

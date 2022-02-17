@@ -7,13 +7,11 @@ import io.ktor.routing.*
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
-import no.nav.lydia.virksomhet.VirksomhetService
 
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
 
 fun Route.sykefraversstatistikk(
-    virksomhetService: VirksomhetService,
     geografiService: GeografiService,
     sykefraversstatistikkRepository: SykefraversstatistikkRepository
 ) {
@@ -22,10 +20,10 @@ fun Route.sykefraversstatistikk(
         val kommunenummerISøk = call.request.queryParameters["kommuner"]?.split(",")?.toSet() ?: emptySet()
 
         if (fylkesnummerISøk.isEmpty() && kommunenummerISøk.isEmpty()){
-            return@get call.respond(virksomhetService.hentAlleVirksomheter())
+            return@get call.respond(sykefraversstatistikkRepository.hentAltSykefravær().toDto())
         }
         val gyldigeKommunenummerISøk = geografiService.hentKommunerFraFylkerOgKommuner(fylkesnummerISøk, kommunenummerISøk)
-        val virksomheter = virksomhetService.hentVirksomheterFraKommunenummer(gyldigeKommunenummerISøk)
+        val virksomheter = sykefraversstatistikkRepository.hentSykefraværIKommuner(gyldigeKommunenummerISøk).toDto()
         call.respond(virksomheter)
     }
 
