@@ -1,14 +1,15 @@
 package no.nav.lydia.sykefraversstatistikk
 
 import VirksomhetSykefravær
+import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
-
     fun insert(virksomhetSykefravær: VirksomhetSykefravær) {
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -38,12 +39,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         """.trimMargin(),
                     mapOf(
                         "orgnr" to virksomhetSykefravær.orgnr,
-                        "arstall" to virksomhetSykefravær.arstall,
+                        "arstall" to virksomhetSykefravær.årstall,
                         "kvartal" to virksomhetSykefravær.kvartal,
                         "antall_personer" to virksomhetSykefravær.antallPersoner,
                         "tapte_dagsverk" to virksomhetSykefravær.tapteDagsverk,
                         "mulige_dagsverk" to virksomhetSykefravær.muligeDagsverk,
-                        "sykefraversprosent" to virksomhetSykefravær.sykefraversprosent,
+                        "sykefraversprosent" to virksomhetSykefravær.prosent,
                         "maskert" to virksomhetSykefravær.maskert
                     )
                 ).asUpdate
@@ -51,25 +52,99 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
+    fun hentAltSykefravær(): List<SykefraversstatistikkVirksomhet> {
+        return using(sessionOf(dataSource)) { session ->
+            val sql = """
+                    SELECT
+                        statistikk.orgnr,
+                        virksomhet.navn,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        statistikk.arstall,
+                        statistikk.kvartal,
+                        statistikk.antall_personer,
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet
+                    FROM sykefravar_statistikk_virksomhet AS statistikk
+                    JOIN virksomhet USING (orgnr)
+                """.trimIndent()
+            val query = queryOf(
+                statement = sql
+            ).map(this::mapRow).asList
+            session.run(query)
+        }
+    }
+
+    fun hentSykefraværIKommuner(kommuner: Set<String>): List<SykefraversstatistikkVirksomhet> {
+        return using(sessionOf(dataSource)) { session ->
+            val sql = """
+                    SELECT
+                        statistikk.orgnr,
+                        virksomhet.navn,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        statistikk.arstall,
+                        statistikk.kvartal,
+                        statistikk.antall_personer,
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet
+                    FROM sykefravar_statistikk_virksomhet AS statistikk
+                    JOIN virksomhet USING (orgnr)
+                    WHERE virksomhet.kommunenummer IN (${kommuner.joinToString(transform = { "?" })})
+                """.trimIndent()
+            val query = queryOf(
+                statement = sql,
+                *kommuner.toTypedArray()
+            ).map(this::mapRow).asList
+            session.run(query)
+        }
+    }
+
+    private fun mapRow(row: Row): SykefraversstatistikkVirksomhet {
+        return SykefraversstatistikkVirksomhet(
+            virksomhetsnavn = row.string("navn"),
+            kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
+            orgnr = row.string("orgnr"),
+            arstall = row.int("arstall"),
+            kvartal = row.int("kvartal"),
+            antallPersoner = row.double("antall_personer"),
+            tapteDagsverk = row.double("tapte_dagsverk"),
+            muligeDagsverk = row.double("mulige_dagsverk"),
+            sykefraversprosent = row.double("sykefraversprosent"),
+            maskert = row.boolean("maskert"),
+            opprettet = row.localDateTime("opprettet"),
+        )
+    }
+
     fun hentSykefravær(orgnr: String): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
-                statement = "SELECT * FROM sykefravar_statistikk_virksomhet WHERE (orgnr = :orgnr)",
+                statement = """
+                    SELECT
+                        statistikk.orgnr,
+                        virksomhet.navn,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        statistikk.arstall,
+                        statistikk.kvartal,
+                        statistikk.antall_personer,
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet
+                  FROM sykefravar_statistikk_virksomhet AS statistikk
+                  JOIN virksomhet USING (orgnr)
+                  WHERE (statistikk.orgnr = :orgnr)
+                """.trimIndent(),
                 paramMap = mapOf("orgnr" to orgnr)
-            ).map { row ->
-                SykefraversstatistikkVirksomhet(
-                    id = row.string("id"),
-                    orgnr = row.string("orgnr"),
-                    arstall = row.int("arstall"),
-                    kvartal = row.int("kvartal"),
-                    antallPersoner = row.double("antall_personer"),
-                    tapteDagsverk = row.double("tapte_dagsverk"),
-                    muligeDagsverk = row.double("mulige_dagsverk"),
-                    sykefraversprosent = row.double("sykefraversprosent"),
-                    maskert = row.boolean("maskert"),
-                    opprettet = row.localDateTime("opprettet"),
-                )
-            }.asList
+            ).map(this::mapRow).asList
             session.run(query)
         }
     }

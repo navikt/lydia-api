@@ -1,13 +1,13 @@
 {
   "key": {
-    "orgnr": "987654321",
+    "orgnr": "995858266",
     "kvartal": 2,
     "årstall": 2020
   },
   "value": {
     "virksomhetSykefravær": {
-      "orgnr": "987654321",
-      "navn": "Virksomhet 1",
+      "orgnr": "995858266",
+      "navn": "Virksomhet Bergen",
       "årstall": 2020,
       "kvartal": 2,
       "tapteDagsverk": 10.0,

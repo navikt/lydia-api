@@ -9,7 +9,7 @@ fun Routing.healthChecks() {
         call.respondText { "OK" }
     }
     get("internal/isready") {
-        //TODO sørg for at appens avhengigheter, f.eks database-tilkoblingen funker før vi svarer ja på isReady
+        //TODO sørg for at appens avhengigheter, f.eks database-tilkoblingen / kafka consumer funker før vi svarer ja på isReady
         call.respondText { "OK" }
     }
 }

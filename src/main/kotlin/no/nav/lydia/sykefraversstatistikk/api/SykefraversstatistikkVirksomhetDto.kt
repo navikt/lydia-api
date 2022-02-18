@@ -1,12 +1,14 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import kotlinx.serialization.Serializable
+import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 
 @Serializable
 data class SykefraversstatistikkVirksomhetDto(
     val orgnr: String,
     val virksomhetsnavn: String,
+    val kommune: Kommune,
     val sektor: String,
     val neringsgruppe: String,
     val arstall: String,
@@ -20,6 +22,7 @@ data class SykefraversstatistikkVirksomhetDto(
         val dummySvar = SykefraversstatistikkVirksomhetDto(
             orgnr = "123456789",
             virksomhetsnavn = "Sinnasnekkern",
+            kommune = Kommune("Oslo", "0301"),
             sektor = "Bygg og anlegg",
             neringsgruppe = "F - Bygge- og anleggsvirksomhet",
             arstall = "2021",
@@ -36,7 +39,8 @@ data class SykefraversstatistikkVirksomhetDto(
         fun SykefraversstatistikkVirksomhet.toDto() : SykefraversstatistikkVirksomhetDto =
             SykefraversstatistikkVirksomhetDto(
                 orgnr = this.orgnr,
-                virksomhetsnavn = "",
+                virksomhetsnavn = this.virksomhetsnavn,
+                kommune = this.kommune,
                 sektor = "",
                 neringsgruppe = "",
                 arstall = this.arstall.toString(),

@@ -15,13 +15,13 @@ import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestSted
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import no.nav.lydia.virksomhet.VirksomheterDto
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -31,7 +31,6 @@ import kotlin.test.fail
 class SykefraversstatistikkApiTest {
     val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
-
 
     companion object {
         val httpMock = HttpMock()
@@ -44,6 +43,10 @@ class SykefraversstatistikkApiTest {
             val dataSource = postgres.getDataSource().apply {
                 postgres.cleanMigrate(this)
             }
+
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.bergen)
+
             val virksomhetRepository = VirksomhetRepository(dataSource)
             val brregMockUrl = mockKallMotBrregUnderhenter()
             BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
@@ -102,50 +105,51 @@ class SykefraversstatistikkApiTest {
         val kommunenummer = "4601" // Brønnøy kommune i Bergen
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?kommuner=$kommunenummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<VirksomheterDto>()
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
 
         result.fold(
             success = { respons ->
-                val testVirksomhet = respons.virksomheter.first()
-                testVirksomhet.organisasjonsnummer shouldBe "995858266"
-                testVirksomhet.beliggenhetsadresse.kommune shouldBe "BERGEN"
-                testVirksomhet.beliggenhetsadresse.kommunenummer shouldBe kommunenummer
+                val testVirksomhet = respons.first()
+                testVirksomhet.orgnr shouldBe "995858266"
+                testVirksomhet.kommune.navn shouldBe "BERGEN"
+                testVirksomhet.kommune.nummer shouldBe kommunenummer
             }, failure = {
                 fail(it.message)
             })
     }
 
     @Test
-    fun `skal kunne hente alle virksomheter i Vestland fylke`(){
+    fun `skal kunne hente alle virksomheter i Vestland fylke`() {
         val fylkesnummer = "46"
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<VirksomheterDto>()
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
 
         result.fold(
             success = { apiResponse ->
-                val testVirksomhet = apiResponse.virksomheter.first()
-                testVirksomhet.organisasjonsnummer shouldBe "995858266"
-                testVirksomhet.beliggenhetsadresse.kommune shouldBe "BERGEN"
-                testVirksomhet.beliggenhetsadresse.kommunenummer shouldStartWith fylkesnummer
+                val testVirksomhet = apiResponse.first()
+                testVirksomhet.orgnr shouldBe "995858266"
+                testVirksomhet.kommune.navn shouldBe "BERGEN"
+                testVirksomhet.kommune.nummer shouldStartWith fylkesnummer
             }, failure = {
                 fail(it.message)
             })
     }
 
     @Test
-    fun `skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`(){
+    fun `skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`() {
         val fylkesnummer = "46" // Vestland fylke
         val kommunenummer = "0301" // Oslo kommune
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer&kommuner=$kommunenummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<VirksomheterDto>()
+        val result =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?fylker=$fylkesnummer&kommuner=$kommunenummer")
+                .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+                .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
         result.fold(
-            success = { (virksomheter) ->
-                virksomheter.map { it.organisasjonsnummer } shouldContainExactly listOf(
-                    "995858266",
-                    "825001662"
+            success = { sykefravær ->
+                sykefravær.map { it.orgnr } shouldContainExactly listOf(
+                    "987654321",
+                    "995858266"
                 )
             }, failure = {
                 fail(it.message)
@@ -153,21 +157,21 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `skal kunne hente alle virksomheter`(){
+    fun `skal kunne hente alle virksomheter`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<VirksomheterDto>()
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
 
         result.fold(
             success = { respons ->
-                respons.virksomheter shouldHaveAtLeastSize 1
+                respons shouldHaveAtLeastSize 1
             }, failure = {
                 fail(it.message)
             })
     }
 
     @Test
-    fun `kan hente kommuner basert på fylkesnummer`(){
+    fun `kan hente kommuner basert på fylkesnummer`() {
         val fylkesnummer = listOf("46", "03") // Vestland og Oslo fylke
         val geografiService = GeografiService()
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
@@ -175,73 +179,71 @@ class SykefraversstatistikkApiTest {
     }
 }
 
-fun mockKallMotBrregUnderhenter() : String {
-
+fun mockKallMotBrregUnderhenter(): String {
     val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
     val brregMockUrl = SykefraversstatistikkApiTest.httpMock.url(lastNedPath)
 
     val underEnheter =
         """
-          [
-            {
-              "organisasjonsnummer" : "995858266",
-              "navn" : ":-) PROSJEKTER",
-              "organisasjonsform" : {
-                "kode" : "BEDR",
-                "beskrivelse" : "Bedrift",
-                "links" : [ ]
-              },
-              "registreringsdatoEnhetsregisteret" : "2010-08-25",
-              "registrertIMvaregisteret" : false,
-              "naeringskode1" : {
-                "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
-                "kode" : "70.220"
-              },
-              "antallAnsatte" : 1,
-              "overordnetEnhet" : "995849364",
-              "oppstartsdato" : "2010-07-01",
-              "beliggenhetsadresse" : {
-                "land" : "Norge",
-                "landkode" : "NO",
-                "postnummer" : "5034",
-                "poststed" : "BERGEN",
-                "adresse" : [ "Skanselien 37" ],
-                "kommune" : "BERGEN",
-                "kommunenummer" : "4601"
-              },
+        [
+          {
+            "organisasjonsnummer" : "995858266",
+            "navn" : ":-) PROSJEKTER",
+            "organisasjonsform" : {
+              "kode" : "BEDR",
+              "beskrivelse" : "Bedrift",
               "links" : [ ]
             },
-            {
-              "organisasjonsnummer" : "825001662",
-              "navn" : "1012 PROJECT AISTE CESNAUSKAITE",
-              "organisasjonsform" : {
-                "kode" : "BEDR",
-                "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
-                "links" : [ ]
-              },
-              "registreringsdatoEnhetsregisteret" : "2020-04-28",
-              "registrertIMvaregisteret" : false,
-              "naeringskode1" : {
-                "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
-                "kode" : "90.012"
-              },
-              "antallAnsatte" : 0,
-              "overordnetEnhet" : "924965304",
-              "oppstartsdato" : "2020-04-22",
-              "beliggenhetsadresse" : {
-                "land" : "Norge",
-                "landkode" : "NO",
-                "postnummer" : "0364",
-                "poststed" : "OSLO",
-                "adresse" : [ "Trudvangveien 5C" ],
-                "kommune" : "OSLO",
-                "kommunenummer" : "0301"
-              },
+            "registreringsdatoEnhetsregisteret" : "2010-08-25",
+            "registrertIMvaregisteret" : false,
+            "naeringskode1" : {
+              "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
+              "kode" : "70.220"
+            },
+            "antallAnsatte" : 1,
+            "overordnetEnhet" : "995849364",
+            "oppstartsdato" : "2010-07-01",
+            "beliggenhetsadresse" : {
+              "land" : "Norge",
+              "landkode" : "NO",
+              "postnummer" : "5034",
+              "poststed" : "BERGEN",
+              "adresse" : [ "Skanselien 37" ],
+              "kommune" : "BERGEN",
+              "kommunenummer" : "4601"
+            },
+            "links" : [ ]
+          },
+          {
+            "organisasjonsnummer" : "987654321",
+            "navn" : "1012 PROJECT AISTE CESNAUSKAITE",
+            "organisasjonsform" : {
+              "kode" : "BEDR",
+              "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
               "links" : [ ]
-            }                  
-          ]
+            },
+            "registreringsdatoEnhetsregisteret" : "2020-04-28",
+            "registrertIMvaregisteret" : false,
+            "naeringskode1" : {
+              "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
+              "kode" : "90.012"
+            },
+            "antallAnsatte" : 0,
+            "overordnetEnhet" : "924965304",
+            "oppstartsdato" : "2020-04-22",
+            "beliggenhetsadresse" : {
+              "land" : "Norge",
+              "landkode" : "NO",
+              "postnummer" : "0364",
+              "poststed" : "OSLO",
+              "adresse" : [ "Trudvangveien 5C" ],
+              "kommune" : "OSLO",
+              "kommunenummer" : "0301"
+            },
+            "links" : [ ]
+          }
+        ]
         """.trimIndent()
-
     SykefraversstatistikkApiTest.httpMock.wireMockServer.stubFor(
         WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
             .willReturn(

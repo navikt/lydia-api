@@ -43,6 +43,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     """
                        INSERT INTO virksomhet(
                         orgnr,
+                        navn,
                         land,
                         landkode,
                         postnummer,
@@ -52,6 +53,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                        )
                         VALUES(
                         :orgnr,
+                        :navn,
                         :land,
                         :landkode,
                         :postnummer,
@@ -63,6 +65,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         """.trimMargin(),
                     mapOf(
                         "orgnr" to virksomhet.organisasjonsnummer,
+                        "navn" to virksomhet.navn,
                         "land" to virksomhet.beliggenhetsadresse.land,
                         "landkode" to virksomhet.beliggenhetsadresse.landkode,
                         "postnummer" to virksomhet.beliggenhetsadresse.postnummer,

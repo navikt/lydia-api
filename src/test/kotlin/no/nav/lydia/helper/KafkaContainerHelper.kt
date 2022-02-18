@@ -1,11 +1,17 @@
 package no.nav.lydia.helper
 
+import SykefraversstatistikkKafkaMelding
+import com.google.gson.GsonBuilder
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.time.withTimeoutOrNull
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
@@ -15,6 +21,7 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
+import java.time.Duration
 import java.util.*
 
 
@@ -22,8 +29,12 @@ class KafkaContainerHelper(
     network: Network = Network.newNetwork(),
     log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)
 ) {
+    private val gson = GsonBuilder().create()
     private val kafkaNetworkAlias = "kafkaContainer"
     val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
+    private var adminClient: AdminClient
+    private var kafkaProducer: KafkaProducer<String, String>
+
     val kafkaContainer = KafkaContainer(
         DockerImageName.parse("kymeric/cp-kafka")
             .asCompatibleSubstituteFor("confluentinc/cp-kafka")
@@ -41,8 +52,10 @@ class KafkaContainerHelper(
         .withCreateContainerCmdModifier { cmd -> cmd.withName("$kafkaNetworkAlias-${System.currentTimeMillis()}") }
         .waitingFor(HostPortWaitStrategy())
         .apply {
-            this.start()
-            this.createTopic(statistikkTopic)
+            start()
+            adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
+            createTopic(statistikkTopic)
+            kafkaProducer = producer()
         }
 
     fun envVars() = mapOf(
@@ -56,19 +69,14 @@ class KafkaContainerHelper(
     private fun KafkaContainer.createTopic(vararg topics: String) {
         val newTopics = topics
             .map { topic -> NewTopic(topic, 1, 1.toShort()) }
-        AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers)).use { admin ->
-            admin.createTopics(
-                newTopics
-            )
-        }
+        adminClient.createTopics(newTopics)
     }
 
-    fun adminClient() = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to kafkaContainer.bootstrapServers))
 
-    fun producer(bootstrapServers: String = kafkaContainer.bootstrapServers): KafkaProducer<String, String> =
+    private fun KafkaContainer.producer(): KafkaProducer<String, String> =
         KafkaProducer(
             mapOf(
-                CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
+                CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers,
                 CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "PLAINTEXT",
                 ProducerConfig.ACKS_CONFIG to "all",
                 ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to "1",
@@ -80,5 +88,48 @@ class KafkaContainerHelper(
             StringSerializer(),
             StringSerializer()
         )
+
+    fun sykefraversstatistikkKafkaMelding(kommune: String = "oslo"): SykefraversstatistikkKafkaMelding {
+        val jsonFromResources = this::class.java.getResource("/json/sykefraværsstatistikk_kafka_melding_$kommune.json").readText()
+        return gson.fromJson(jsonFromResources, SykefraversstatistikkKafkaMelding::class.java)
+    }
+
+    fun sendSykefraversstatistikkKafkaMelding(testSted: TestSted) {
+        val kafkaMelding = sykefraversstatistikkKafkaMelding(testSted.sted)
+        sendOgVentTilKonsumert(
+            key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
+        )
+    }
+
+    fun sendOgVentTilKonsumert(topic: String = statistikkTopic,
+        key: String, value: String, timeout: Duration = Duration.ofSeconds(5)
+    ) {
+        runBlocking {
+            val sendtMelding = kafkaProducer.send(
+                ProducerRecord(
+                    topic,
+                    key,
+                    value
+                )
+            ).get()
+
+            withTimeoutOrNull(timeout) {
+                do {
+                    delay(timeMillis = 250L)
+                } while (consumerSinOffset("lydiaApiStatistikkConsumers") <= sendtMelding.offset())
+            }
+        }
+    }
+
+    private fun consumerSinOffset(consumerGroup: String): Long {
+        val offsetMetadata = adminClient.listConsumerGroupOffsets(consumerGroup)
+            .partitionsToOffsetAndMetadata().get()
+        return offsetMetadata[offsetMetadata.keys.firstOrNull()]?.offset() ?: -1
+    }
+
 }
 
+enum class TestSted(val sted: String) {
+    oslo("oslo"),
+    bergen("bergen")
+}
