@@ -36,6 +36,8 @@ spec:
     application:
       enabled: true
       claims:
+        groups:
+          - id: {{azureAdGroup}}
         extra:
           - "NAVident"
   gcp:

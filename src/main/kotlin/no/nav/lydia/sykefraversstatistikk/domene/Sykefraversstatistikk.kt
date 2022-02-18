@@ -4,8 +4,8 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import java.time.LocalDateTime
 
 class SykefraversstatistikkVirksomhet(
-    val virksomhetsnavn: String?,
-    val kommune: Kommune?,
+    val virksomhetsnavn: String,
+    val kommune: Kommune,
     val orgnr: String,
     val arstall: Int,
     val kvartal: Int,

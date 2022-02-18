@@ -32,8 +32,8 @@ class KafkaContainerHelper(
     private val gson = GsonBuilder().create()
     private val kafkaNetworkAlias = "kafkaContainer"
     val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
-    var adminClient: AdminClient
-    var kafkaProducer: KafkaProducer<String, String>
+    private var adminClient: AdminClient
+    private var kafkaProducer: KafkaProducer<String, String>
 
     val kafkaContainer = KafkaContainer(
         DockerImageName.parse("kymeric/cp-kafka")

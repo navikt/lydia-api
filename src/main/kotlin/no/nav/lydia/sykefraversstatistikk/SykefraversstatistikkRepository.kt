@@ -69,7 +69,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet
                     FROM sykefravar_statistikk_virksomhet AS statistikk
-                    LEFT JOIN virksomhet USING (orgnr)
+                    JOIN virksomhet USING (orgnr)
                 """.trimIndent()
             val query = queryOf(
                 statement = sql
@@ -95,7 +95,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet
                     FROM sykefravar_statistikk_virksomhet AS statistikk
-                    LEFT JOIN virksomhet USING (orgnr)
+                    JOIN virksomhet USING (orgnr)
                     WHERE virksomhet.kommunenummer IN (${kommuner.joinToString(transform = { "?" })})
                 """.trimIndent()
             val query = queryOf(
@@ -108,8 +108,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
     private fun mapRow(row: Row): SykefraversstatistikkVirksomhet {
         return SykefraversstatistikkVirksomhet(
-            virksomhetsnavn = row.stringOrNull("navn"),
-            kommune = Kommune.kommune(row.stringOrNull("kommune"), row.stringOrNull("kommunenummer")),
+            virksomhetsnavn = row.string("navn"),
+            kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
             orgnr = row.string("orgnr"),
             arstall = row.int("arstall"),
             kvartal = row.int("kvartal"),
@@ -140,7 +140,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet
                   FROM sykefravar_statistikk_virksomhet AS statistikk
-                  LEFT JOIN virksomhet USING (orgnr)
+                  JOIN virksomhet USING (orgnr)
                   WHERE (statistikk.orgnr = :orgnr)
                 """.trimIndent(),
                 paramMap = mapOf("orgnr" to orgnr)

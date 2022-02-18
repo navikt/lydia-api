@@ -7,8 +7,8 @@ import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 @Serializable
 data class SykefraversstatistikkVirksomhetDto(
     val orgnr: String,
-    val virksomhetsnavn: String?,
-    val kommune: Kommune?,
+    val virksomhetsnavn: String,
+    val kommune: Kommune,
     val sektor: String,
     val neringsgruppe: String,
     val arstall: String,
