@@ -33,7 +33,10 @@ class TestContainerHelper {
             .withEnv(
                 postgresContainer.envVars()
                     .plus(oauth2ServerContainer.envVars())
-                    .plus(kafkaContainerHelper.envVars()))
+                    .plus(kafkaContainerHelper.envVars()
+                    .plus(mapOf(
+                        "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned"
+                    ))))
             .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
                 start()
             }

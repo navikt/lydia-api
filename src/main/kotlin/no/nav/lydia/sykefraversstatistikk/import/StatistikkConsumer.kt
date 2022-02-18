@@ -46,14 +46,14 @@ object StatistikkConsumer : CoroutineScope {
                 StringDeserializer(),
                 StringDeserializer()
             ).use { consumer ->
-                consumer.subscribe(listOf(Kafka.statistikkTopic))
-                logger.info("Kafka consumer subscribed to ${Kafka.statistikkTopic}")
+                consumer.subscribe(listOf(kafka.statistikkTopic))
+                logger.info("Kafka consumer subscribed to ${kafka.statistikkTopic}")
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofMinutes(1))
 
                         // TODO: Fjern test når vi skal begynne å konsumere ekte statistikk
-                        if (Kafka.statistikkTopic == "arbeidsgiver.sykefravarsstatistikk-v1") {
+                        if (kafka.statistikkTopic == "arbeidsgiver.sykefravarsstatistikk-v1") {
                             records.forEach {
                                 // TODO: Feilhåndtering (og alarmering?)
                                 val sykefraversstatistikkImportDto =

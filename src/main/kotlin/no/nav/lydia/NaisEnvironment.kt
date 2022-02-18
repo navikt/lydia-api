@@ -1,5 +1,6 @@
 package no.nav.lydia
 
+import io.ktor.http.*
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
@@ -9,7 +10,8 @@ import java.net.URL
 class NaisEnvironment(
     val database: Database = Database(),
     val security: Security = Security(),
-    val kafka: Kafka = Kafka()
+    val kafka: Kafka = Kafka(),
+    val brreg: Brreg = Brreg()
 )
 
 class Database(
@@ -29,17 +31,13 @@ class AzureConfig(
 
 class Kafka(
     val brokers: String = getEnvVar("KAFKA_BROKERS"),
-
     val truststoreLocation: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
     val keystoreLocation: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
-
-    val groupId: String = "lydiaApiStatistikkConsumers",
+    val groupId: String = "lydia-api-kafka-group-id",
+    val clientId: String = "lydia-api",
+    val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC")
 ) {
-    companion object {
-        val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC")
-    }
-
     fun consumerProperties() =
         baseConsumerProperties().apply {
             // TODO: Finn smidigere måte å få tester til å kjøre
@@ -63,10 +61,13 @@ class Kafka(
         mapOf(
             CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
             ConsumerConfig.GROUP_ID_CONFIG to groupId,
+            ConsumerConfig.CLIENT_ID_CONFIG to clientId,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
         ).toProperties()
 
 }
+
+class Brreg(val underEnhetUrl: String = getEnvVar("BRREG_UNDERENHET_URL"))
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
     System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable $varName")

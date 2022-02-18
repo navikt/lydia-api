@@ -5,18 +5,49 @@ import com.github.tomakehurst.wiremock.client.WireMock.ok
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
 import io.kotest.matchers.shouldBe
+import io.ktor.http.*
+import io.ktor.server.testing.*
+import no.nav.lydia.*
+import no.nav.lydia.AppTest.Companion.dataSource
+import no.nav.lydia.container.sykefraversstatistikk.SykefraversstatistikkApiTest.Companion.httpMock
 import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
+import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import java.net.URL
 import kotlin.test.Test
 
 
 class BrregDownloaderTest {
-    val postgres = TestContainerHelper.postgresContainer
+    val postgres = PostgrestContainerHelper()
+    val path = "/brregmock/enhetsregisteret/api/underenheter/lastned"
+    val brregMockUrl = httpMock.url(path)
 
+    val naisEnvironment = NaisEnvironment(
+        database = Database(
+            host = "",
+            port = "",
+            username = "",
+            password = "",
+            name = "",
+        ), security = Security(
+            AzureConfig(
+                audience = "lydia-api",
+                jwksUri = URL("http://localhost:8100/default/jwks"),
+                issuer = "http://localhost:8100/default"
+            )
+        ), kafka = Kafka(
+            brokers = "",
+            truststoreLocation = "",
+            keystoreLocation = "",
+            credstorePassword = "",
+            statistikkTopic = ""
+        ), brreg = Brreg(underEnhetUrl = brregMockUrl)
+    )
     companion object {
         val httpMock = HttpMock()
 
@@ -34,25 +65,25 @@ class BrregDownloaderTest {
         }
     }
 
+
+
     @Test
     fun `vi kan laste ned liste med underenheter og deres beliggenhetsadresser fra Brreg`() {
-        val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
-        val brregMockUrl = httpMock.url(lastNedPath)
-
         httpMock.wireMockServer.stubFor(
-            WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
+            WireMock.get(WireMock.urlPathEqualTo(path))
                 .willReturn(
                     ok()
                         .withHeader(HttpHeaders.CONTENT_TYPE, BrregDownloader.underEnhetApplicationType)
                         .withBody(Gzip.gzip(underEnheter))
                 )
         )
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
+            with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
+                val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '995858266'")
+                resultSet.row shouldBe 1
 
-        val virksomhetRepository = VirksomhetRepository(dataSource = postgres.getDataSource())
-        BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
-
-        val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '995858266'")
-        resultSet.row shouldBe 1
+            }
+        }
     }
 
 

@@ -22,6 +22,9 @@ import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.brreg.BrregDownloader
+import no.nav.lydia.virksomhet.brreg.virksomhetsImport
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -40,7 +43,7 @@ fun startLydiaBackend() {
     )
 
     embeddedServer(Netty, port = 8080) {
-        lydiaRestApi(security = naisEnv.security, dataSource = dataSource)
+        lydiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource)
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
@@ -49,7 +52,7 @@ fun startLydiaBackend() {
     }.start(wait = true)
 }
 
-fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
+fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataSource) {
     install(ContentNegotiation) {
         json()
     }
@@ -59,19 +62,19 @@ fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
         registry = Metrics.appMicrometerRegistry
     }
 
-    val jwkProvider = JwkProviderBuilder(security.azureConfig.jwksUri)
+    val jwkProvider = JwkProviderBuilder(naisEnvironment.security.azureConfig.jwksUri)
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
     install(Authentication) {
         jwt {
-            verifier(jwkProvider, security.azureConfig.issuer)
+            verifier(jwkProvider, naisEnvironment.security.azureConfig.issuer)
             validate { credentials ->
                 try {
                     requireNotNull(credentials.payload.audience) {
                         "Auth: Missing audience in token"
                     }
-                    require(credentials.payload.audience.contains(security.azureConfig.audience)) {
+                    require(credentials.payload.audience.contains(naisEnvironment.security.azureConfig.audience)) {
                         "Auth: Valid audience not found in claims"
                     }
                     JWTPrincipal(credentials.payload)
@@ -96,6 +99,9 @@ fun Application.lydiaRestApi(security: Security, dataSource: DataSource) {
     routing {
         healthChecks()
         metrics()
+        virksomhetsImport(BrregDownloader(
+            url = naisEnvironment.brreg.underEnhetUrl,
+            virksomhetRepository = VirksomhetRepository(dataSource)))
         authenticate {
             sykefraversstatistikk(geografiService, sykefraversstatistikkRepository)
         }

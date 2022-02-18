@@ -2,6 +2,7 @@ package no.nav.lydia
 
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
@@ -17,19 +18,33 @@ class AppTest {
         }
         val postgres = TestContainerHelper.postgresContainer
         val dataSource = postgres.getDataSource().apply { runMigration(this) }
+        val naisEnvironment = NaisEnvironment(
+            database = Database(
+                host = "",
+                port = "",
+                username = "",
+                password = "",
+                name = "",
+            ), security = Security(
+                AzureConfig(
+                    audience = "lydia-api",
+                    jwksUri = URL("http://localhost:8100/default/jwks"),
+                    issuer = "http://localhost:8100/default"
+                )
+            ), kafka = Kafka(
+                brokers = "",
+                truststoreLocation = "",
+                keystoreLocation = "",
+                credstorePassword = "",
+                statistikkTopic = ""
+            ), brreg = Brreg(underEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned")
+        )
     }
 
-    val security = Security(
-        AzureConfig(
-            audience = "lydia-api",
-            jwksUri = URL("http://localhost:8100/default/jwks"),
-            issuer = "http://localhost:8100/default"
-        )
-    )
 
     @Test
     fun `appen svarer på isAlive-kall når den kjører`() {
-        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isalive")) {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals("OK", response.content)
@@ -39,7 +54,7 @@ class AppTest {
 
     @Test
     fun `appen svarer på isReady-kall når den er klar til å ta imot trafikk`() {
-        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isready")) {
                 //TODO sørg for at database-tilkoblingen funker før vi svarer ja på isReady
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -50,7 +65,7 @@ class AppTest {
 
     @Test
     fun `uautorisert kall mot beskyttet endepunkt skal returnere 401`() {
-        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
             }
@@ -59,7 +74,7 @@ class AppTest {
 
     @Test
     fun `kall med ugyldig token mot beskyttet endepunkt skal returnere 401`() {
-        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
                 addHeader(HttpHeaders.Authorization, "Bearer detteErIkkeEtGyldigToken")
             }) {
@@ -70,7 +85,7 @@ class AppTest {
 
     @Test
     fun `innlogget nav ansatt skal kunne nå beskyttede endepunkt`() {
-        withTestApplication({ lydiaRestApi(security = security, dataSource = dataSource) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             val token = mockOAuth2Server.issueToken(
                 audience = "lydia-api", claims = mapOf(
                     "NAVident" to "X12345"

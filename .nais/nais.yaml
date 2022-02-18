@@ -51,3 +51,5 @@ spec:
   env:
     - name: STATISTIKK_TOPIC
       value: {{statistikkTopic}}
+    - name: BRREG_UNDERENHET_URL
+      value: "https://data.brreg.no/enhetsregisteret/api/underenheter/lastned"
