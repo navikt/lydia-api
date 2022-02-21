@@ -9,10 +9,10 @@ spec:
   image: {{image}}
   resources:
     limits:
-      cpu: 500m
+      cpu: 2000m
       memory: 2048Mi
     requests:
-      cpu: 200m
+      cpu: 1000m
       memory: 1024Mi
   liveness:
     path: "/internal/isalive"
