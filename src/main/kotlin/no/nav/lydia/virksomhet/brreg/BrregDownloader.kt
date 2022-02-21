@@ -53,7 +53,7 @@ class BrregDownloader(
                 reader.endArray()
             }
         }, failure = {
-            println("Error :( ${it.message}")
+            println("Error :( $it")
         })
 
     }

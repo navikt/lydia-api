@@ -51,18 +51,21 @@ object StatistikkConsumer : CoroutineScope {
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofMinutes(1))
+                        logger.info("Fant ${records.count()} nye meldinger")
 
                         // TODO: Fjern test når vi skal begynne å konsumere ekte statistikk
                         if (kafka.statistikkTopic == "arbeidsgiver.sykefravarsstatistikk-v1") {
+                            logger.info("Lagrer ${records.count()} meldinger")
                             records.forEach {
                                 // TODO: Feilhåndtering (og alarmering?)
                                 val sykefraversstatistikkImportDto =
                                     gson.fromJson(it.value(), SykefraversstatistikkImportDto::class.java)
                                 sykefraversstatistikkRepository.insert(sykefraversstatistikkImportDto.virksomhetSykefravær)
                             }
+                        } else {
+                            logger.info("Dropper lagring, fordi statistikkTopic ikke er arbeidsgiver.sykefravarsstatistikk-v1, men ${kafka.statistikkTopic}")
                         }
 
-                        logger.info("Fant ${records.count()} nye meldinger")
                         consumer.commitSync()
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
