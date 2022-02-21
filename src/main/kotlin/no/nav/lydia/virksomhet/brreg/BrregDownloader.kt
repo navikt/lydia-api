@@ -8,7 +8,6 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets.UTF_8
-import java.sql.SQLException
 import java.util.zip.GZIPInputStream
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createTempFile
@@ -51,7 +50,7 @@ class BrregDownloader(
                     val virksomhet = gson.fromJson<VirksomhetDto>(reader, VirksomhetDto::class.java)
                     try {
                         virksomhetRepository.insert(virksomhet = virksomhet)
-                    } catch (e: SQLException) {
+                    } catch (e: Exception) {
                         log.error("Lagring av virksomhet feilet", e)
                     }
                 }

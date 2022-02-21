@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
 import no.nav.lydia.AzureConfig
 import no.nav.lydia.Brreg
@@ -81,11 +82,16 @@ class BrregDownloaderTest {
         )
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
+                this.response.status() shouldBe OK
+
                 val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '995858266'")
                 resultSet.row shouldBe 1
 
-                val resultSetUtenlandskVirksomhet = postgres.performQuery("select * from virksomhet where orgnr = '921972539'")
-                resultSetUtenlandskVirksomhet.row shouldBe 0
+                val resultSetUtenPostnummer = postgres.performQuery("select * from virksomhet where orgnr = '921972539'")
+                resultSetUtenPostnummer.row shouldBe 0
+
+                val resultSetUtenAdresse = postgres.performQuery("select * from virksomhet where orgnr = '921972540'")
+                resultSetUtenAdresse.row shouldBe 0
             }
         }
     }
@@ -123,7 +129,7 @@ class BrregDownloaderTest {
         },
         {
           "organisasjonsnummer" : "921972539",
-          "navn" : "09 SOLUTIONS EUROPE GMBH",
+          "navn" : "MANGLER POSTNUMMER",
           "organisasjonsform" : {
             "kode" : "AAFY",
             "beskrivelse" : "Underenhet til ikke-næringsdrivende",
@@ -143,6 +149,24 @@ class BrregDownloaderTest {
             "poststed" : "60313 FRANKFURT AM MAIN",
             "adresse" : [ "Thurn-und-Taxis-Platz 6" ]
           },
+          "links" : [ ]
+        },
+        {
+          "organisasjonsnummer" : "921972540",
+          "navn" : "MANGLER BELIGGENHETSADRESSE",
+          "organisasjonsform" : {
+            "kode" : "AAFY",
+            "beskrivelse" : "Underenhet til ikke-næringsdrivende",
+            "links" : [ ]
+          },
+          "registreringsdatoEnhetsregisteret" : "2018-12-22",
+          "registrertIMvaregisteret" : false,
+          "naeringskode1" : {
+            "beskrivelse" : "Butikkhandel med datamaskiner og utstyr til datamaskiner",
+            "kode" : "47.410"
+          },
+          "antallAnsatte" : 0,
+          "overordnetEnhet" : "921780583",
           "links" : [ ]
         }
         ]
