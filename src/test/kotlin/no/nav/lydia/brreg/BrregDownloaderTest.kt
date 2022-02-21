@@ -7,13 +7,15 @@ import com.google.common.net.HttpHeaders
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.lydia.*
-import no.nav.lydia.AppTest.Companion.dataSource
-import no.nav.lydia.container.sykefraversstatistikk.SykefraversstatistikkApiTest.Companion.httpMock
+import no.nav.lydia.AzureConfig
+import no.nav.lydia.Brreg
+import no.nav.lydia.Database
+import no.nav.lydia.Kafka
+import no.nav.lydia.NaisEnvironment
+import no.nav.lydia.Security
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.PostgrestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.lydiaRestApi
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import org.junit.AfterClass
@@ -82,6 +84,8 @@ class BrregDownloaderTest {
                 val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '995858266'")
                 resultSet.row shouldBe 1
 
+                val resultSetUtenlandskVirksomhet = postgres.performQuery("select * from virksomhet where orgnr = '921972539'")
+                resultSetUtenlandskVirksomhet.row shouldBe 0
             }
         }
     }
@@ -116,7 +120,32 @@ class BrregDownloaderTest {
             "kommunenummer" : "4601"
           },
           "links" : [ ]
-        }]
+        },
+        {
+          "organisasjonsnummer" : "921972539",
+          "navn" : "09 SOLUTIONS EUROPE GMBH",
+          "organisasjonsform" : {
+            "kode" : "AAFY",
+            "beskrivelse" : "Underenhet til ikke-næringsdrivende",
+            "links" : [ ]
+          },
+          "registreringsdatoEnhetsregisteret" : "2018-12-22",
+          "registrertIMvaregisteret" : false,
+          "naeringskode1" : {
+            "beskrivelse" : "Butikkhandel med datamaskiner og utstyr til datamaskiner",
+            "kode" : "47.410"
+          },
+          "antallAnsatte" : 0,
+          "overordnetEnhet" : "921780583",
+          "beliggenhetsadresse" : {
+            "land" : "Tyskland",
+            "landkode" : "DE",
+            "poststed" : "60313 FRANKFURT AM MAIN",
+            "adresse" : [ "Thurn-und-Taxis-Platz 6" ]
+          },
+          "links" : [ ]
+        }
+        ]
         """.trimIndent()
 
 

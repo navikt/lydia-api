@@ -8,6 +8,7 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets.UTF_8
+import java.sql.SQLException
 import java.util.zip.GZIPInputStream
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createTempFile
@@ -43,17 +44,21 @@ class BrregDownloader(
                     }
                 }
             log.info("Lastet ned decompressed fil med størrelse ${file.fileSize()} og path ${file.pathString}")
-            val gson = GsonBuilder().create()
+            val gson = GsonBuilder().serializeNulls().create()
             JsonReader(InputStreamReader(file.inputStream())).use { reader ->
                 reader.beginArray()
                 while (reader.hasNext()) {
                     val virksomhet = gson.fromJson<VirksomhetDto>(reader, VirksomhetDto::class.java)
-                    virksomhetRepository.insert(virksomhet = virksomhet)
+                    try {
+                        virksomhetRepository.insert(virksomhet = virksomhet)
+                    } catch (e: SQLException) {
+                        log.error("Lagring av virksomhet feilet", e)
+                    }
                 }
                 reader.endArray()
             }
         }, failure = {
-            println("Error :( $it")
+            log.error("Kall mot BRREG feilet: $it")
         })
 
     }
