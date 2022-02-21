@@ -7,6 +7,13 @@ metadata:
     "team": "pia"
 spec:
   image: {{image}}
+  resources:
+    limits:
+      cpu: 500m
+      memory: 2048Mi
+    requests:
+      cpu: 200m
+      memory: 1024Mi
   liveness:
     path: "/internal/isalive"
     port: 8080
