@@ -70,6 +70,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.opprettet
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
+                    ORDER BY statistikk.tapte_dagsverk DESC
+                    LIMIT 20
                 """.trimIndent()
             val query = queryOf(
                 statement = sql
@@ -97,6 +99,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
                     WHERE virksomhet.kommunenummer IN (${kommuner.joinToString(transform = { "?" })})
+                    ORDER BY statistikk.tapte_dagsverk DESC
+                    LIMIT 20
                 """.trimIndent()
             val query = queryOf(
                 statement = sql,
