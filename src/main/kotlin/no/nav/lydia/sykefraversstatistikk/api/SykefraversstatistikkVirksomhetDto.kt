@@ -11,12 +11,12 @@ data class SykefraversstatistikkVirksomhetDto(
     val kommune: Kommune,
     val sektor: String,
     val neringsgruppe: String,
-    val arstall: String,
-    val kvartal: String,
-    val sykefraversprosent: String,
-    val antallPersoner: String,
-    val muligeDagsverk: String,
-    val tapteDagsverk: String
+    val arstall: Int,
+    val kvartal: Int,
+    val sykefraversprosent: Double,
+    val antallPersoner: Double,
+    val muligeDagsverk: Double,
+    val tapteDagsverk: Double
 ) {
     companion object {
         val dummySvar = SykefraversstatistikkVirksomhetDto(
@@ -25,12 +25,12 @@ data class SykefraversstatistikkVirksomhetDto(
             kommune = Kommune("Oslo", "0301"),
             sektor = "Bygg og anlegg",
             neringsgruppe = "F - Bygge- og anleggsvirksomhet",
-            arstall = "2021",
-            kvartal = "4",
-            sykefraversprosent = "2.0",
-            antallPersoner = "10",
-            muligeDagsverk = "500.0",
-            tapteDagsverk = "10.0",
+            arstall = 2021,
+            kvartal = 4,
+            sykefraversprosent = 2.0,
+            antallPersoner = 10.0,
+            muligeDagsverk = 500.0,
+            tapteDagsverk = 10.0,
         )
 
         fun List<SykefraversstatistikkVirksomhet>.toDto(): List<SykefraversstatistikkVirksomhetDto> =
@@ -43,12 +43,12 @@ data class SykefraversstatistikkVirksomhetDto(
                 kommune = this.kommune,
                 sektor = "",
                 neringsgruppe = "",
-                arstall = this.arstall.toString(),
-                kvartal = this.kvartal.toString(),
-                sykefraversprosent = this.sykefraversprosent.toString(),
-                antallPersoner = this.antallPersoner.toString(),
-                muligeDagsverk = this.muligeDagsverk.toString(),
-                tapteDagsverk = this.tapteDagsverk.toString()
+                arstall = this.arstall,
+                kvartal = this.kvartal,
+                sykefraversprosent = this.sykefraversprosent,
+                antallPersoner = this.antallPersoner,
+                muligeDagsverk = this.muligeDagsverk,
+                tapteDagsverk = this.tapteDagsverk
             )
     }
 }

@@ -34,13 +34,13 @@ class SykefraversstatistikkImportTest {
         result.fold(success = { dtos ->
             dtos.size shouldBeExactly 1
             val dto = dtos[0]
-            dto.orgnr shouldBeToStringEqualTo kafkaMelding.value.virksomhetSykefravær.orgnr
-            dto.arstall shouldBeToStringEqualTo kafkaMelding.value.virksomhetSykefravær.årstall
-            dto.kvartal shouldBeToStringEqualTo kafkaMelding.value.virksomhetSykefravær.kvartal
-            dto.sykefraversprosent shouldBeToStringEqualTo kafkaMelding.value.virksomhetSykefravær.prosent
-            dto.antallPersoner shouldBeToStringEqualTo kafkaMelding.value.virksomhetSykefravær.antallPersoner
-            dto.muligeDagsverk shouldBeToStringEqualTo kafkaMelding.value.virksomhetSykefravær.muligeDagsverk
-            dto.tapteDagsverk shouldBeToStringEqualTo kafkaMelding.value.virksomhetSykefravær.tapteDagsverk
+            dto.orgnr shouldBe kafkaMelding.value.virksomhetSykefravær.orgnr
+            dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
+            dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal
+            dto.sykefraversprosent shouldBe kafkaMelding.value.virksomhetSykefravær.prosent
+            dto.antallPersoner shouldBe kafkaMelding.value.virksomhetSykefravær.antallPersoner
+            dto.muligeDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.muligeDagsverk
+            dto.tapteDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.tapteDagsverk
         }, failure = {
             fail(it.message)
         })
@@ -64,20 +64,16 @@ class SykefraversstatistikkImportTest {
         second.fold(success = { dtos ->
             dtos.size shouldBeExactly 1
             val dto = dtos[0]
-            dto.orgnr shouldBeToStringEqualTo førsteLagredeStatistikk[0].orgnr
-            dto.arstall shouldBeToStringEqualTo førsteLagredeStatistikk[0].arstall
-            dto.kvartal shouldBeToStringEqualTo førsteLagredeStatistikk[0].kvartal
-            dto.sykefraversprosent shouldBeToStringEqualTo førsteLagredeStatistikk[0].sykefraversprosent
-            dto.antallPersoner shouldBeToStringEqualTo førsteLagredeStatistikk[0].antallPersoner
-            dto.muligeDagsverk shouldBeToStringEqualTo førsteLagredeStatistikk[0].muligeDagsverk
-            dto.tapteDagsverk shouldBeToStringEqualTo førsteLagredeStatistikk[0].tapteDagsverk
+            dto.orgnr shouldBe førsteLagredeStatistikk[0].orgnr
+            dto.arstall shouldBe førsteLagredeStatistikk[0].arstall
+            dto.kvartal shouldBe førsteLagredeStatistikk[0].kvartal
+            dto.sykefraversprosent shouldBe førsteLagredeStatistikk[0].sykefraversprosent
+            dto.antallPersoner shouldBe førsteLagredeStatistikk[0].antallPersoner
+            dto.muligeDagsverk shouldBe førsteLagredeStatistikk[0].muligeDagsverk
+            dto.tapteDagsverk shouldBe førsteLagredeStatistikk[0].tapteDagsverk
         }, failure = {
             fail(it.message)
         })
-    }
-
-    infix fun String.shouldBeToStringEqualTo(other: Any) {
-        this shouldBe other.toString()
     }
 }
 
