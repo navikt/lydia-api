@@ -2,10 +2,7 @@ package no.nav.lydia.sykefraversstatistikk.import
 
 import SykefraversstatistikkImportDto
 import com.google.gson.GsonBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import no.nav.lydia.Kafka
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -18,8 +15,10 @@ import kotlin.coroutines.CoroutineContext
 
 object StatistikkConsumer : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    private val BULK_SIZE = 50
     lateinit var job: Job
     lateinit var kafka: Kafka
+
     // TODO: Er det greit å holde en datasource oppe i en coroutine scope?
     lateinit var sykefraversstatistikkRepository: SykefraversstatistikkRepository
 
@@ -56,11 +55,14 @@ object StatistikkConsumer : CoroutineScope {
                         // TODO: Fjern test når vi skal begynne å konsumere ekte statistikk
                         if (kafka.statistikkTopic == "arbeidsgiver.sykefravarsstatistikk-v1") {
                             logger.info("Lagrer ${records.count()} meldinger")
-                            records.forEach {
+                            records.map {
+                                gson.fromJson(
+                                    it.value(),
+                                    SykefraversstatistikkImportDto::class.java
+                                ).virksomhetSykefravær
+                            }.chunked(size = BULK_SIZE).forEach { virksomhetersSykefravær ->
                                 // TODO: Feilhåndtering (og alarmering?)
-                                val sykefraversstatistikkImportDto =
-                                    gson.fromJson(it.value(), SykefraversstatistikkImportDto::class.java)
-                                sykefraversstatistikkRepository.insert(sykefraversstatistikkImportDto.virksomhetSykefravær)
+                                sykefraversstatistikkRepository.insert(virksomhetersSykefravær = virksomhetersSykefravær)
                             }
                         } else {
                             logger.info("Dropper lagring, fordi statistikkTopic ikke er arbeidsgiver.sykefravarsstatistikk-v1, men ${kafka.statistikkTopic}")
@@ -70,6 +72,8 @@ object StatistikkConsumer : CoroutineScope {
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
                     }
+
+                    delay(200L)
                 }
 
             }

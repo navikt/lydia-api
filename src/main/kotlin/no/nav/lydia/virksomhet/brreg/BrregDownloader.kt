@@ -56,6 +56,7 @@ class BrregDownloader(
                 }
                 reader.endArray()
             }
+            log.info("Ferdig å importere virksomheter")
         }, failure = {
             log.error("Kall mot BRREG feilet: $it")
         })

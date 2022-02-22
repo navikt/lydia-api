@@ -10,8 +10,9 @@ import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
-    fun insert(virksomhetSykefravær: VirksomhetSykefravær) {
+    fun insert(virksomhetersSykefravær: List<VirksomhetSykefravær>) {
         using(sessionOf(dataSource)) { session ->
+            virksomhetersSykefravær.forEach { virksomhetSykefravær ->
             session.run(
                 queryOf(
                     """
@@ -48,7 +49,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         "maskert" to virksomhetSykefravær.maskert
                     )
                 ).asUpdate
-            )
+            )}
         }
     }
 
