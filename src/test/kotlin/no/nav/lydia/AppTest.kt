@@ -2,7 +2,6 @@ package no.nav.lydia
 
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
@@ -36,7 +35,8 @@ class AppTest {
                 truststoreLocation = "",
                 keystoreLocation = "",
                 credstorePassword = "",
-                statistikkTopic = ""
+                statistikkTopic = "",
+                consumerLoopDelay = 200L
             ), brreg = Brreg(underEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned")
         )
     }

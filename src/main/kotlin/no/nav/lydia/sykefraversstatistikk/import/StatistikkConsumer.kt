@@ -47,6 +47,7 @@ object StatistikkConsumer : CoroutineScope {
             ).use { consumer ->
                 consumer.subscribe(listOf(kafka.statistikkTopic))
                 logger.info("Kafka consumer subscribed to ${kafka.statistikkTopic}")
+
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofMinutes(1))
@@ -73,7 +74,7 @@ object StatistikkConsumer : CoroutineScope {
                         logger.warn("Had a retriable exception, retrying", e)
                     }
 
-                    delay(200L)
+                    delay(kafka.consumerLoopDelay)
                 }
 
             }
