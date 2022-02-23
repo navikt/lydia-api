@@ -17,6 +17,7 @@ import kotlin.test.fail
 class SykefraversstatistikkImportTest {
     val lydiaApi = TestContainerHelper.lydiaApiContainer
     val kafkaContainer = TestContainerHelper.kafkaContainerHelper
+    val postgres = TestContainerHelper.postgresContainer
     val gson = GsonBuilder().create()
     val testOrgnr = "987654321"
 
@@ -74,6 +75,15 @@ class SykefraversstatistikkImportTest {
         }, failure = {
             fail(it.message)
         })
+    }
+
+    @Test
+    fun `vi lagrer metadata ved import`() {
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
+
+        val rs = postgres.performQuery("SELECT * FROM virksomhet_statistikk_metadata WHERE orgnr = '$testOrgnr'")
+
+        rs.row shouldBe 1
     }
 }
 

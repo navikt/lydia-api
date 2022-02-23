@@ -60,10 +60,10 @@ object StatistikkConsumer : CoroutineScope {
                                 gson.fromJson(
                                     it.value(),
                                     SykefraversstatistikkImportDto::class.java
-                                ).virksomhetSykefravær
-                            }.chunked(size = BULK_SIZE).forEach { virksomhetersSykefravær ->
+                                )
+                            }.chunked(size = BULK_SIZE).forEach { sykefraværsStatistikkListe ->
                                 // TODO: Feilhåndtering (og alarmering?)
-                                sykefraversstatistikkRepository.insert(virksomhetersSykefravær = virksomhetersSykefravær)
+                                sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
                             }
                         } else {
                             logger.info("Dropper lagring, fordi statistikkTopic ikke er arbeidsgiver.sykefravarsstatistikk-v1, men ${kafka.statistikkTopic}")

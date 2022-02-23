@@ -30,7 +30,8 @@ data class VirksomhetSykefravær (
     val antallPersoner : Double,
     val orgnr : String,
     val tapteDagsverk : Double,
-    val maskert : Boolean
+    val maskert : Boolean,
+    val kategori : String
 )
 
 data class LandSykefravær (

@@ -1,6 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk
 
-import VirksomhetSykefravær
+import SykefraversstatistikkImportDto
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -11,10 +11,10 @@ import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
-    fun insert(virksomhetersSykefravær: List<VirksomhetSykefravær>) {
+    fun insert(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                virksomhetersSykefravær.forEach { virksomhetSykefravær ->
+                sykefraværsStatistikkListe.forEach { sykefraværsStatistikk ->
                     tx.run(
                         queryOf(
                             """
@@ -41,14 +41,43 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ON CONFLICT DO NOTHING
                         """.trimMargin(),
                             mapOf(
-                                "orgnr" to virksomhetSykefravær.orgnr,
-                                "arstall" to virksomhetSykefravær.årstall,
-                                "kvartal" to virksomhetSykefravær.kvartal,
-                                "antall_personer" to virksomhetSykefravær.antallPersoner,
-                                "tapte_dagsverk" to virksomhetSykefravær.tapteDagsverk,
-                                "mulige_dagsverk" to virksomhetSykefravær.muligeDagsverk,
-                                "sykefraversprosent" to virksomhetSykefravær.prosent,
-                                "maskert" to virksomhetSykefravær.maskert
+                                "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
+                                "arstall" to sykefraværsStatistikk.virksomhetSykefravær.årstall,
+                                "kvartal" to sykefraværsStatistikk.virksomhetSykefravær.kvartal,
+                                "antall_personer" to sykefraværsStatistikk.virksomhetSykefravær.antallPersoner,
+                                "tapte_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.tapteDagsverk,
+                                "mulige_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.muligeDagsverk,
+                                "sykefraversprosent" to sykefraværsStatistikk.virksomhetSykefravær.prosent,
+                                "maskert" to sykefraværsStatistikk.virksomhetSykefravær.maskert
+                            )
+                        ).asUpdate
+                    )
+
+                    tx.run(
+                        queryOf(
+                            """
+                        INSERT INTO virksomhet_statistikk_metadata(
+                            orgnr,
+                            kategori,
+                            sektor,
+                            naring_kode
+                        )
+                        VALUES(
+                            :orgnr,
+                            :kategori,
+                            :sektor,
+                            :naring_kode
+                        )
+                        ON CONFLICT (orgnr) DO UPDATE SET
+                            kategori = :kategori,
+                            sektor = :sektor,
+                            naring_kode = :naring_kode
+                    """.trimIndent(),
+                            mapOf(
+                                "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
+                                "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
+                                "sektor" to sykefraværsStatistikk.sektorSykefravær.kode,
+                                "naring_kode" to sykefraværsStatistikk.næring5SifferSykefravær.first().kode
                             )
                         ).asUpdate
                     )
@@ -85,7 +114,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentSykefraværIKommuner(kommuner: Set<String>, søkeparametere: Søkeparametere): List<SykefraversstatistikkVirksomhet> {
+    fun hentSykefraværIKommuner(
+        kommuner: Set<String>,
+        søkeparametere: Søkeparametere
+    ): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
             val sql = """
                     SELECT
