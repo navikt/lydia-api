@@ -25,6 +25,8 @@ services:
       KAFKA_TRUSTSTORE_PATH: ""
       KAFKA_KEYSTORE_PATH: ""
       KAFKA_CREDSTORE_PASSWORD: ""
+      BRREG_UNDERENHET_URL: /brregmock/enhetsregisteret/api/underenheter/lastned
+      CONSUMER_LOOP_DELAY: 200
 
   postgres:
     container_name: postgres

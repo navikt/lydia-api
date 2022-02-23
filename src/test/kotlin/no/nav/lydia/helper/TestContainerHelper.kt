@@ -35,7 +35,8 @@ class TestContainerHelper {
                     .plus(oauth2ServerContainer.envVars())
                     .plus(kafkaContainerHelper.envVars()
                     .plus(mapOf(
-                        "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned"
+                        "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned",
+                        "CONSUMER_LOOP_DELAY" to "200"
                     ))))
             .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
                 start()

@@ -10,11 +10,13 @@ import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
-    fun insert(virksomhetSykefravær: VirksomhetSykefravær) {
+    fun insert(virksomhetersSykefravær: List<VirksomhetSykefravær>) {
         using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
+            session.transaction { tx ->
+                virksomhetersSykefravær.forEach { virksomhetSykefravær ->
+                    tx.run(
+                        queryOf(
+                            """
                        INSERT INTO sykefravar_statistikk_virksomhet(
                         orgnr,
                         arstall,
@@ -37,18 +39,20 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ) 
                         ON CONFLICT DO NOTHING
                         """.trimMargin(),
-                    mapOf(
-                        "orgnr" to virksomhetSykefravær.orgnr,
-                        "arstall" to virksomhetSykefravær.årstall,
-                        "kvartal" to virksomhetSykefravær.kvartal,
-                        "antall_personer" to virksomhetSykefravær.antallPersoner,
-                        "tapte_dagsverk" to virksomhetSykefravær.tapteDagsverk,
-                        "mulige_dagsverk" to virksomhetSykefravær.muligeDagsverk,
-                        "sykefraversprosent" to virksomhetSykefravær.prosent,
-                        "maskert" to virksomhetSykefravær.maskert
+                            mapOf(
+                                "orgnr" to virksomhetSykefravær.orgnr,
+                                "arstall" to virksomhetSykefravær.årstall,
+                                "kvartal" to virksomhetSykefravær.kvartal,
+                                "antall_personer" to virksomhetSykefravær.antallPersoner,
+                                "tapte_dagsverk" to virksomhetSykefravær.tapteDagsverk,
+                                "mulige_dagsverk" to virksomhetSykefravær.muligeDagsverk,
+                                "sykefraversprosent" to virksomhetSykefravær.prosent,
+                                "maskert" to virksomhetSykefravær.maskert
+                            )
+                        ).asUpdate
                     )
-                ).asUpdate
-            )
+                }
+            }
         }
     }
 

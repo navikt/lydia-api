@@ -1,6 +1,5 @@
 package no.nav.lydia
 
-import io.ktor.http.*
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
@@ -36,7 +35,8 @@ class Kafka(
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
     val groupId: String = "lydia-api-kafka-group-id",
     val clientId: String = "lydia-api",
-    val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC")
+    val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
+    val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
     fun consumerProperties() =
         baseConsumerProperties().apply {
@@ -63,6 +63,7 @@ class Kafka(
             ConsumerConfig.GROUP_ID_CONFIG to groupId,
             ConsumerConfig.CLIENT_ID_CONFIG to clientId,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1000"
         ).toProperties()
 
 }

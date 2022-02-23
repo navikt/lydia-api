@@ -8,15 +8,9 @@ import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
-import no.nav.lydia.AzureConfig
-import no.nav.lydia.Brreg
-import no.nav.lydia.Database
-import no.nav.lydia.Kafka
-import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.Security
+import no.nav.lydia.*
 import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.PostgrestContainerHelper
-import no.nav.lydia.lydiaRestApi
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import org.junit.AfterClass
@@ -26,7 +20,7 @@ import kotlin.test.Test
 
 
 class BrregDownloaderTest {
-    val postgres = PostgrestContainerHelper()
+    val postgres = TestContainerHelper.postgresContainer
     val path = "/brregmock/enhetsregisteret/api/underenheter/lastned"
     val brregMockUrl = httpMock.url(path)
 
@@ -48,7 +42,8 @@ class BrregDownloaderTest {
             truststoreLocation = "",
             keystoreLocation = "",
             credstorePassword = "",
-            statistikkTopic = ""
+            statistikkTopic = "",
+            consumerLoopDelay = 200L
         ), brreg = Brreg(underEnhetUrl = brregMockUrl)
     )
     companion object {
