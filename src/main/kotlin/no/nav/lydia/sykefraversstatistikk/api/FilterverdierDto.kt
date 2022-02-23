@@ -7,7 +7,8 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 @Serializable
 data class FilterverdierDto(
     val fylker: List<FylkeOgKommuner>,
-    val næringsgrupper: List<Næringsgruppe> = emptyList()
+    val næringsgrupper: List<Næringsgruppe> = emptyList(),
+    val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler()
 )
 
 @Serializable

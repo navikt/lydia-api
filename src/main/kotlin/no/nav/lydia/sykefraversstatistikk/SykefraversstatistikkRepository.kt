@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import javax.sql.DataSource
@@ -56,7 +57,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentAltSykefravær(): List<SykefraversstatistikkVirksomhet> {
+    fun hentAltSykefravær(søkeparametere: Søkeparametere): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
             val sql = """
                     SELECT
@@ -74,7 +75,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.opprettet
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
-                    ORDER BY statistikk.tapte_dagsverk DESC
+                    ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
                 """.trimIndent()
             val query = queryOf(
@@ -84,7 +85,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentSykefraværIKommuner(kommuner: Set<String>): List<SykefraversstatistikkVirksomhet> {
+    fun hentSykefraværIKommuner(kommuner: Set<String>, søkeparametere: Søkeparametere): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
             val sql = """
                     SELECT
@@ -103,12 +104,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
                     WHERE virksomhet.kommunenummer IN (${kommuner.joinToString(transform = { "?" })})
-                    ORDER BY statistikk.tapte_dagsverk DESC
+                    ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
                 """.trimIndent()
             val query = queryOf(
                 statement = sql,
-                *kommuner.toTypedArray()
+                *kommuner.toTypedArray(),
             ).map(this::mapRow).asList
             session.run(query)
         }
@@ -156,6 +157,5 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.run(query)
         }
     }
-
 
 }

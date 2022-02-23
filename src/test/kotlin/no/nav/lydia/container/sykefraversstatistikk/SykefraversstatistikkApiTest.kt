@@ -75,6 +75,36 @@ class SykefraversstatistikkApiTest {
                 fail(it.message)
             })
     }
+    @Test
+    fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel`() {
+        val forventedeTapteDagsverk = listOf(20.0, 10.0)
+
+        val sorteringsnøkkel = "tapte_dagsverk"
+
+        val (_, _, result1) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?sorteringsnokkel=$sorteringsnøkkel&sorteringsretning=desc")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+
+        result1.fold(
+            success = { sykefraværsstatistikkVirksomhet ->
+                sykefraværsstatistikkVirksomhet.size shouldBeExactly 2
+                sykefraværsstatistikkVirksomhet.map { it.tapteDagsverk } shouldBe forventedeTapteDagsverk
+            }, failure = {
+                fail(it.message)
+            })
+
+        val (_, _, result2) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?sorteringsnokkel=$sorteringsnøkkel&sorteringsretning=asc")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+
+        result2.fold(
+            success = { sykefraværsstatistikkVirksomhet ->
+                sykefraværsstatistikkVirksomhet.size shouldBeExactly 2
+                sykefraværsstatistikkVirksomhet.map { it.tapteDagsverk } shouldBe forventedeTapteDagsverk.reversed()
+            }, failure = {
+                fail(it.message)
+            })
+    }
 
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
@@ -148,8 +178,8 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { sykefravær ->
                 sykefravær.map { it.orgnr } shouldContainExactly listOf(
-                    "987654321",
-                    "995858266"
+                    "995858266",
+                    "987654321"
                 )
             }, failure = {
                 fail(it.message)
