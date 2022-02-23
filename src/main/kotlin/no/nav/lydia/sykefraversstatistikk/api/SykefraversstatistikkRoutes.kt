@@ -16,13 +16,16 @@ fun Route.sykefraversstatistikk(
     sykefraversstatistikkRepository: SykefraversstatistikkRepository
 ) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        val fylkesnummerISøk = call.request.queryParameters["fylker"]?.split(",")?.toSet() ?: emptySet()
-        val kommunenummerISøk = call.request.queryParameters["kommuner"]?.split(",")?.toSet() ?: emptySet()
+        val søkeparametere = Søkeparametere.from(call.request.queryParameters)
 
-        if (fylkesnummerISøk.isEmpty() && kommunenummerISøk.isEmpty()){
+        // TODO send med sortering ned til db
+        if (søkeparametere.erTom()){
             return@get call.respond(sykefraversstatistikkRepository.hentAltSykefravær().toDto())
         }
-        val gyldigeKommunenummerISøk = geografiService.hentKommunerFraFylkerOgKommuner(fylkesnummerISøk, kommunenummerISøk)
+
+        val gyldigeKommunenummerISøk = geografiService.hentKommunerFraFylkerOgKommuner(
+            søkeparametere.fylkesnummer,
+            søkeparametere.kommunenummer)
         val virksomheter = sykefraversstatistikkRepository.hentSykefraværIKommuner(gyldigeKommunenummerISøk).toDto()
         call.respond(virksomheter)
     }
