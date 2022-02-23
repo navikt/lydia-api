@@ -50,7 +50,7 @@ object StatistikkConsumer : CoroutineScope {
 
                 while (job.isActive) {
                     try {
-                        val records = consumer.poll(Duration.ofMinutes(1))
+                        val records = consumer.poll(Duration.ofSeconds(1))
                         logger.info("Fant ${records.count()} nye meldinger")
 
                         // TODO: Fjern test når vi skal begynne å konsumere ekte statistikk

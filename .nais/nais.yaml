@@ -60,4 +60,4 @@ spec:
     - name: BRREG_UNDERENHET_URL
       value: "https://data.brreg.no/enhetsregisteret/api/underenheter/lastned"
     - name: CONSUMER_LOOP_DELAY
-      value: 60000
+      value: 1000

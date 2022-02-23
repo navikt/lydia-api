@@ -63,6 +63,7 @@ class Kafka(
             ConsumerConfig.GROUP_ID_CONFIG to groupId,
             ConsumerConfig.CLIENT_ID_CONFIG to clientId,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
+            ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1000"
         ).toProperties()
 
 }
