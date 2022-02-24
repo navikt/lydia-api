@@ -1,5 +1,5 @@
 ingresses:
 - "https://lydia-api.intern.nav.no"
 kafkaPool: nav-prod
-statistikkTopic: aura.kafkarator-canary-prod-gcp
+statistikkTopic: arbeidsgiver.sykefravarsstatistikk-v1
 azureAdGroup: 1019baaf-898f-49db-b7b8-e09f0b5b051f
