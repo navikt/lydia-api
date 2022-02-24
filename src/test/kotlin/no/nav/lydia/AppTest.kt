@@ -37,7 +37,9 @@ class AppTest {
                 credstorePassword = "",
                 statistikkTopic = "",
                 consumerLoopDelay = 200L
-            ), brreg = Brreg(underEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned")
+            ), integrasjoner = Integrasjoner(
+                ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
+                brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned")
         )
     }
 
