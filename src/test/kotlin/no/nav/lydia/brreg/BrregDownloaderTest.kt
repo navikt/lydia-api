@@ -68,7 +68,7 @@ class BrregDownloaderTest {
 
 
     @Test
-    fun `vi kan laste ned liste med underenheter og deres beliggenhetsadresser fra Brreg`() {
+    fun `vi kan laste ned liste med underenheter og deres beliggenhetsadresser og næringsgrupper fra Brreg`() {
         httpMock.wireMockServer.stubFor(
             WireMock.get(WireMock.urlPathEqualTo(path))
                 .willReturn(
@@ -77,12 +77,26 @@ class BrregDownloaderTest {
                         .withBody(Gzip.gzip(underEnheter))
                 )
         )
+
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
+            val næringskodeMock = "70.220"
+            postgres.performInsert("insert into naring (kode, navn, kort_navn) VALUES ('$næringskodeMock', 'A', 'B')");
+            val resultSetNæring = postgres.performQuery("select * from naring")
+            resultSetNæring.row shouldBe 1
+
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
 
-                val resultSet = postgres.performQuery("select * from virksomhet where orgnr = '995858266'")
+
+                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '995858266'")
                 resultSet.row shouldBe 1
+
+                val id = resultSet.getLong("id")
+
+
+                val resultSetFraVirksomhetNæring = postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
+                resultSetFraVirksomhetNæring.row shouldBe 1
+                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeMock
 
                 val resultSetUtenPostnummer = postgres.performQuery("select * from virksomhet where orgnr = '921972539'")
                 resultSetUtenPostnummer.row shouldBe 0
@@ -168,132 +182,4 @@ class BrregDownloaderTest {
         }
         ]
         """.trimIndent()
-
-
-    val enhetsListe =
-        """
-        [
-          {
-          "organisasjonsnummer" : "922924368",
-          "navn" : "- A THOUSAND WORDS - ØDEGÅRDEN GJERRUD TRANSLATIONS",
-          "organisasjonsform" : {
-            "kode" : "ENK",
-            "beskrivelse" : "Enkeltpersonforetak",
-            "links" : [ ]
-          },
-          "registreringsdatoEnhetsregisteret" : "2019-06-19",
-          "registrertIMvaregisteret" : true,
-          "naeringskode1" : {
-            "beskrivelse" : "Oversettelses- og tolkevirksomhet",
-            "kode" : "74.300"
-          },
-          "antallAnsatte" : 0,
-          "forretningsadresse" : {
-            "land" : "Norge",
-            "landkode" : "NO",
-            "postnummer" : "3060",
-            "poststed" : "SVELVIK",
-            "adresse" : [ "Storgaten 120" ],
-            "kommune" : "DRAMMEN",
-            "kommunenummer" : "3005"
-          },
-          "institusjonellSektorkode" : {
-            "kode" : "8200",
-            "beskrivelse" : "Personlig næringsdrivende"
-          },
-          "registrertIForetaksregisteret" : false,
-          "registrertIStiftelsesregisteret" : false,
-          "registrertIFrivillighetsregisteret" : false,
-          "konkurs" : false,
-          "underAvvikling" : false,
-          "underTvangsavviklingEllerTvangsopplosning" : false,
-          "maalform" : "Bokmål",
-          "links" : [ ]
-        },
-          {
-          "organisasjonsnummer" : "916627939",
-          "navn" : "- P A L M E R A -",
-          "organisasjonsform" : {
-            "kode" : "FLI",
-            "beskrivelse" : "Forening/lag/innretning",
-            "links" : [ ]
-          },
-          "hjemmeside" : "palmera-i-bergen.no",
-          "postadresse" : {
-            "land" : "Norge",
-            "landkode" : "NO",
-            "postnummer" : "5033",
-            "poststed" : "BERGEN",
-            "adresse" : [ "c/o Lady Tatiana Lozano Prieto", "Hans Hauges gate 37" ],
-            "kommune" : "BERGEN",
-            "kommunenummer" : "4601"
-          },
-          "registreringsdatoEnhetsregisteret" : "2016-01-26",
-          "registrertIMvaregisteret" : false,
-          "naeringskode1" : {
-            "beskrivelse" : "Aktiviteter i andre interesseorganisasjoner ikke nevnt annet sted",
-            "kode" : "94.991"
-          },
-          "antallAnsatte" : 0,
-          "forretningsadresse" : {
-            "land" : "Norge",
-            "landkode" : "NO",
-            "postnummer" : "5004",
-            "poststed" : "BERGEN",
-            "adresse" : [ "Strandgaten 208" ],
-            "kommune" : "BERGEN",
-            "kommunenummer" : "4601"
-          },
-          "stiftelsesdato" : "2015-11-01",
-          "institusjonellSektorkode" : {
-            "kode" : "7000",
-            "beskrivelse" : "Ideelle organisasjoner"
-          },
-          "registrertIForetaksregisteret" : false,
-          "registrertIStiftelsesregisteret" : false,
-          "registrertIFrivillighetsregisteret" : false,
-          "konkurs" : false,
-          "underAvvikling" : false,
-          "underTvangsavviklingEllerTvangsopplosning" : false,
-          "maalform" : "Bokmål",
-          "links" : [ ]
-        },
-          {
-          "organisasjonsnummer" : "911963582",
-          "navn" : "- TTT- WINES TORE EUGEN KRISTIANSEN",
-          "organisasjonsform" : {
-            "kode" : "ENK",
-            "beskrivelse" : "Enkeltpersonforetak",
-            "links" : [ ]
-          },
-          "registreringsdatoEnhetsregisteret" : "2013-05-25",
-          "registrertIMvaregisteret" : false,
-          "naeringskode1" : {
-            "beskrivelse" : "Engroshandel med vin og brennevin",
-            "kode" : "46.341"
-          },
-          "antallAnsatte" : 0,
-          "forretningsadresse" : {
-            "land" : "Norge",
-            "landkode" : "NO",
-            "postnummer" : "1344",
-            "poststed" : "HASLUM",
-            "adresse" : [ "Hasselveien 16" ],
-            "kommune" : "BÆRUM",
-            "kommunenummer" : "3024"
-          },
-          "institusjonellSektorkode" : {
-            "kode" : "8200",
-            "beskrivelse" : "Personlig næringsdrivende"
-          },
-          "registrertIForetaksregisteret" : false,
-          "registrertIStiftelsesregisteret" : false,
-          "registrertIFrivillighetsregisteret" : false,
-          "konkurs" : false,
-          "underAvvikling" : false,
-          "underTvangsavviklingEllerTvangsopplosning" : false,
-          "maalform" : "Bokmål",
-          "links" : [ ]
-        }]
-    """.trimIndent()
 }
