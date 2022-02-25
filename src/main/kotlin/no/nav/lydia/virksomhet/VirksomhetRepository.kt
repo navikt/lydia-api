@@ -13,6 +13,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
     fun hentVirksomheterFraKommunenummer(kommunenummer: Collection<String>): List<VirksomhetDto> {
         val queryString = """
             SELECT * FROM virksomhet
+            LEFT JOIN virksomhet_naring ON virksomhet.id = virksomhet_naring.virksomhet
             WHERE kommunenummer IN (${kommunenummer.joinToString(transform = { "?" })});
         """.trimIndent()
         val query = queryOf(
@@ -26,7 +27,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
 
     fun hentAlleVirksomheter(): List<VirksomhetDto> {
         val queryString = """
-            SELECT * FROM virksomhet;
+            SELECT * FROM virksomhet
+            LEFT JOIN virksomhet_naring ON virksomhet.id = virksomhet_naring.virksomhet;
         """.trimIndent()
         val query = queryOf(
             statement = queryString
@@ -38,43 +40,65 @@ class VirksomhetRepository(val dataSource: DataSource) {
 
     fun insert(virksomhet: VirksomhetDto) {
         using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                       INSERT INTO virksomhet(
-                        orgnr,
-                        navn,
-                        land,
-                        landkode,
-                        postnummer,
-                        poststed,
-                        kommune,
-                        kommunenummer
-                       )
-                        VALUES(
-                        :orgnr,
-                        :navn,
-                        :land,
-                        :landkode,
-                        :postnummer,
-                        :poststed,
-                        :kommune,
-                        :kommunenummer
-                        ) 
-                        ON CONFLICT DO NOTHING
-                        """.trimMargin(),
-                    mapOf(
-                        "orgnr" to virksomhet.organisasjonsnummer,
-                        "navn" to virksomhet.navn,
-                        "land" to virksomhet.beliggenhetsadresse.land,
-                        "landkode" to virksomhet.beliggenhetsadresse.landkode,
-                        "postnummer" to virksomhet.beliggenhetsadresse.postnummer,
-                        "poststed" to virksomhet.beliggenhetsadresse.poststed,
-                        "kommune" to virksomhet.beliggenhetsadresse.kommune,
-                        "kommunenummer" to virksomhet.beliggenhetsadresse.kommunenummer
+            session.transaction { tx ->
+                val id = tx.run(
+                    queryOf(
+                        """
+                           INSERT INTO virksomhet(
+                            orgnr,
+                            navn,
+                            land,
+                            landkode,
+                            postnummer,
+                            poststed,
+                            kommune,
+                            kommunenummer
+                           )
+                            VALUES(
+                            :orgnr,
+                            :navn,
+                            :land,
+                            :landkode,
+                            :postnummer,
+                            :poststed,
+                            :kommune,
+                            :kommunenummer
+                            ) 
+                            ON CONFLICT DO NOTHING
+                            """.trimMargin(),
+                        mapOf(
+                            "orgnr" to virksomhet.organisasjonsnummer,
+                            "navn" to virksomhet.navn,
+                            "land" to virksomhet.beliggenhetsadresse.land,
+                            "landkode" to virksomhet.beliggenhetsadresse.landkode,
+                            "postnummer" to virksomhet.beliggenhetsadresse.postnummer,
+                            "poststed" to virksomhet.beliggenhetsadresse.poststed,
+                            "kommune" to virksomhet.beliggenhetsadresse.kommune,
+                            "kommunenummer" to virksomhet.beliggenhetsadresse.kommunenummer
+                        )
+                    ).asUpdateAndReturnGeneratedKey
+                )
+                virksomhet.hentNæringsgrupper().forEach {
+                    tx.run(
+                        queryOf(
+                            """
+                                INSERT INTO virksomhet_naring(
+                                    virksomhet,
+                                    narings_kode 
+                                )
+                                VALUES(
+                                    :id
+                                    :kode
+                                )
+                            """.trimIndent(),
+                            mapOf(
+                                "id" to id,
+                                "kode" to it.kode
+                            )
+                        ).asUpdate
                     )
-                ).asUpdate
-            )
+                }
+            }
         }
     }
 
@@ -88,7 +112,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
             poststed = row.string("poststed"),
             kommune = row.string("kommune"),
             kommunenummer = row.string("kommunenummer")
-        )
+        ),
     )
 
 }
