@@ -35,7 +35,14 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     :kommune,
                                     :kommunenummer
                                 ) 
-                                ON CONFLICT DO NOTHING
+                                ON CONFLICT (orgnr) DO UPDATE SET
+                                    navn = :navn,
+                                    land = :land,
+                                    landkode = :landkode,
+                                    postnummer = :postnummer,
+                                    poststed = :poststed,
+                                    kommune = :kommune,
+                                    kommunenummer = :kommunenummer
                                 RETURNING id
                            )
                            INSERT INTO virksomhet_naring(
@@ -59,26 +66,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         },
                     ).asUpdate
                 )
-//                virksomhet.hentNæringsgrupper().forEach {
-//                    tx.run(
-//                        queryOf(
-//                            """
-//                                INSERT INTO virksomhet_naring(
-//                                    virksomhet,
-//                                    narings_kode
-//                                )
-//                                VALUES(
-//                                    :id
-//                                    :kode
-//                                )
-//                            """.trimIndent(),
-//                            mapOf(
-//                                "id" to id,
-//                                "kode" to it.kode
-//                            )
-//                        ).asUpdate
-//                    )
-//                }
             }
         }
     }

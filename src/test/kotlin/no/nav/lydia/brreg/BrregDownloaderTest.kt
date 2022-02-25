@@ -10,7 +10,7 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
 import no.nav.lydia.*
 import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import org.junit.AfterClass
@@ -20,7 +20,7 @@ import kotlin.test.Test
 
 
 class BrregDownloaderTest {
-    val postgres = TestContainerHelper.postgresContainer
+    val postgres = PostgrestContainerHelper()
     val path = "/brregmock/enhetsregisteret/api/underenheter/lastned"
     val brregMockUrl = httpMock.url(path)
 
@@ -68,7 +68,7 @@ class BrregDownloaderTest {
 
 
     @Test
-    fun `vi kan laste ned liste med underenheter og deres beliggenhetsadresser og næringsgrupper fra Brreg`() {
+    fun `vi kan laste ned liste med underenheter fra Brreg flere ganger uten konflikt`() {
         httpMock.wireMockServer.stubFor(
             WireMock.get(WireMock.urlPathEqualTo(path))
                 .willReturn(
@@ -80,7 +80,7 @@ class BrregDownloaderTest {
 
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
             val næringskodeMock = "70.220"
-            postgres.performInsert("insert into naring (kode, navn, kort_navn) VALUES ('$næringskodeMock', 'A', 'B')");
+            postgres.performInsert("insert into naring (kode, navn, kort_navn) VALUES ('$næringskodeMock', 'A', 'B')")
             val resultSetNæring = postgres.performQuery("select * from naring")
             resultSetNæring.row shouldBe 1
 
@@ -103,6 +103,17 @@ class BrregDownloaderTest {
 
                 val resultSetUtenAdresse = postgres.performQuery("select * from virksomhet where orgnr = '921972540'")
                 resultSetUtenAdresse.row shouldBe 0
+            }
+            // sjekk at næringer blir populert på nytt ved ny import av virksomheter
+            postgres.performInsert("delete from virksomhet_naring")
+            with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)){
+                this.response.status() shouldBe OK
+                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '995858266'")
+                resultSet.row shouldBe 1
+                val id = resultSet.getLong("id")
+                val resultSetFraVirksomhetNæring = postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
+                resultSetFraVirksomhetNæring.row shouldBe 1
+                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeMock
             }
         }
     }
