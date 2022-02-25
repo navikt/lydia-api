@@ -25,6 +25,9 @@ import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import no.nav.lydia.virksomhet.brreg.virksomhetsImport
+import no.nav.lydia.virksomhet.ssb.NæringsDownloader
+import no.nav.lydia.virksomhet.ssb.NæringsRepository
+import no.nav.lydia.virksomhet.ssb.næringsImport
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -100,8 +103,12 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
         healthChecks()
         metrics()
         virksomhetsImport(BrregDownloader(
-            url = naisEnvironment.brreg.underEnhetUrl,
+            url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
             virksomhetRepository = VirksomhetRepository(dataSource)))
+        næringsImport(
+            næringsDownloader = NæringsDownloader(
+                url = naisEnvironment.integrasjoner.ssbNæringsUrl,
+                næringsRepository = NæringsRepository(dataSource = dataSource)))
         authenticate {
             sykefraversstatistikk(geografiService, sykefraversstatistikkRepository)
         }

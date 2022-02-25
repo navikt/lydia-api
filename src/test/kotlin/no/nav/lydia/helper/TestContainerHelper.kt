@@ -36,7 +36,8 @@ class TestContainerHelper {
                     .plus(kafkaContainerHelper.envVars()
                     .plus(mapOf(
                         "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned",
-                        "CONSUMER_LOOP_DELAY" to "200"
+                        "CONSUMER_LOOP_DELAY" to "200",
+                        "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json"
                     ))))
             .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
                 start()

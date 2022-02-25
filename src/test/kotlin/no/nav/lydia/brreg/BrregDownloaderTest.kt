@@ -44,7 +44,9 @@ class BrregDownloaderTest {
             credstorePassword = "",
             statistikkTopic = "",
             consumerLoopDelay = 200L
-        ), brreg = Brreg(underEnhetUrl = brregMockUrl)
+        ), integrasjoner = Integrasjoner(
+            ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
+            brregUnderEnhetUrl = brregMockUrl)
     )
     companion object {
         val httpMock = HttpMock()

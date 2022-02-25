@@ -10,7 +10,7 @@ class NaisEnvironment(
     val database: Database = Database(),
     val security: Security = Security(),
     val kafka: Kafka = Kafka(),
-    val brreg: Brreg = Brreg()
+    val integrasjoner: Integrasjoner = Integrasjoner()
 )
 
 class Database(
@@ -68,7 +68,10 @@ class Kafka(
 
 }
 
-class Brreg(val underEnhetUrl: String = getEnvVar("BRREG_UNDERENHET_URL"))
+class Integrasjoner(
+    val brregUnderEnhetUrl: String = getEnvVar("BRREG_UNDERENHET_URL"),
+    val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL")
+)
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
     System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable $varName")
