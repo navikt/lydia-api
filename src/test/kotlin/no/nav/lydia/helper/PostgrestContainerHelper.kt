@@ -10,7 +10,6 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
-import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import java.sql.ResultSet
 import java.sql.Statement
 import javax.sql.DataSource
@@ -46,6 +45,10 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
         val resultSet: ResultSet = statement.resultSet
         resultSet.next()
         return resultSet
+    }
+    fun performInsert(sql: String): Unit {
+        val statement: Statement = getDataSource().connection.createStatement()
+        statement.execute(sql)
     }
 
     fun cleanMigrate(dataSource: DataSource = getDataSource()) {

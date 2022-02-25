@@ -12,7 +12,11 @@ data class VirksomhetDto(
     val naeringskode3: NæringskodeBrreg?,
 
 ){
-    fun hentNæringsgrupper(): List<NæringskodeBrreg> = listOfNotNull(naeringskode1, naeringskode2, naeringskode3)
+    fun hentNæringsgruppekoder() = mutableMapOf(
+        "naeringskode1" to naeringskode1.kode).apply {
+            naeringskode2?.let { this["naeringskode2"] = it.kode }
+            naeringskode3?.let { this["naeringskode3"] = it.kode }
+    }
 }
 
 @Serializable

@@ -1,11 +1,11 @@
-package no.nav.lydia
+package no.nav.lydia.ssb
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import no.nav.lydia.*
 import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.virksomhet.ssb.NÆRINGSIMPORT_URL
 import org.junit.AfterClass
