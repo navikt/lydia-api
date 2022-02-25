@@ -51,22 +51,18 @@ object StatistikkConsumer : CoroutineScope {
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
-                        logger.info("Fant ${records.count()} nye meldinger")
-
-                        // TODO: Fjern test når vi skal begynne å konsumere ekte statistikk
-                        if (kafka.statistikkTopic == "arbeidsgiver.sykefravarsstatistikk-v1") {
-                            logger.info("Lagrer ${records.count()} meldinger")
-                            records.map {
-                                gson.fromJson(
-                                    it.value(),
-                                    SykefraversstatistikkImportDto::class.java
-                                )
-                            }.chunked(size = BULK_SIZE).forEach { sykefraværsStatistikkListe ->
-                                // TODO: Feilhåndtering (og alarmering?)
-                                sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
-                            }
-                        } else {
-                            logger.info("Dropper lagring, fordi statistikkTopic ikke er arbeidsgiver.sykefravarsstatistikk-v1, men ${kafka.statistikkTopic}")
+                        if (records.count() > 0){
+                            logger.info("Fant ${records.count()} nye meldinger")
+                        }
+                        records.map {
+                            gson.fromJson(
+                                it.value(),
+                                SykefraversstatistikkImportDto::class.java
+                            )
+                        }.chunked(size = BULK_SIZE).forEach { sykefraværsStatistikkListe ->
+                            // TODO: Feilhåndtering (og alarmering?)
+                            sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
+                            logger.info("Lagret ${sykefraværsStatistikkListe.count()} meldinger")
                         }
 
                         consumer.commitSync()
