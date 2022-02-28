@@ -3,6 +3,7 @@ package no.nav.lydia.virksomhet.ssb
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import javax.sql.DataSource
 
 class NæringsRepository(
@@ -10,7 +11,9 @@ class NæringsRepository(
 ) {
     fun settInn(næringsDto: NæringsDto) {
         using(sessionOf(dataSource = dataSource)) { session ->
-            session.run(queryOf("""
+            session.run(
+                queryOf(
+                    """
                 INSERT INTO naring (kode, navn, kort_navn) 
                     VALUES (:kode, :navn, :kort_navn)
                 ON CONFLICT (kode) DO 
@@ -18,10 +21,24 @@ class NæringsRepository(
                         navn = (:navn),
                         kort_navn = (:kort_navn)
             """.trimIndent(), mapOf(
-                "kode" to næringsDto.code,
-                "navn" to næringsDto.name,
-                "kort_navn" to næringsDto.shortName
-            )).asUpdate)
+                        "kode" to næringsDto.code,
+                        "navn" to næringsDto.name,
+                        "kort_navn" to næringsDto.shortName
+                    )
+                ).asUpdate
+            )
         }
     }
+
+    fun hentNæringer() = using(sessionOf(dataSource = dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                select * from naring where length(kode) = 6
+            """.trimIndent()
+                ).map {
+                    Næringsgruppe(navn = it.string("navn"), kode = it.string("kode"))
+                }.asList
+            )
+        }
 }

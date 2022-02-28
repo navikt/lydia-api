@@ -1,19 +1,22 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.respond
+import io.ktor.routing.Route
+import io.ktor.routing.get
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
+import no.nav.lydia.virksomhet.ssb.NæringsRepository
 
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
 
 fun Route.sykefraversstatistikk(
     geografiService: GeografiService,
-    sykefraversstatistikkRepository: SykefraversstatistikkRepository
+    sykefraversstatistikkRepository: SykefraversstatistikkRepository,
+    næringsRepository: NæringsRepository
 ) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
         val søkeparametere = Søkeparametere.from(call.request.queryParameters)
@@ -40,6 +43,11 @@ fun Route.sykefraversstatistikk(
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
-        call.respond(FilterverdierDto(geografiService.hentFylkerOgKommuner()))
+        call.respond(
+            FilterverdierDto(
+                fylker = geografiService.hentFylkerOgKommuner(),
+                næringsgrupper = næringsRepository.hentNæringer()
+            )
+        )
     }
 }

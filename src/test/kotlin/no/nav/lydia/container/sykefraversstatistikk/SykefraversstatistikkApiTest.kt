@@ -2,14 +2,13 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.responseObject
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.common.Gzip
-import com.google.common.net.HttpHeaders
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.HttpMock
@@ -28,7 +27,6 @@ import no.nav.lydia.virksomhet.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsRepository
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -124,6 +122,9 @@ class SykefraversstatistikkApiTest {
                 filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
                 filterverdier.fylker[0].fylke.nummer shouldBe "03"
                 filterverdier.fylker[0].kommuner.size shouldBe 1
+                filterverdier.næringsgrupper.find { it.kode == "00.000" }.shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
+                filterverdier.næringsgrupper.size shouldBe 4
+                filterverdier.næringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
             }, failure = {
                 fail(it.message)
             })
