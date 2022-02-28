@@ -54,7 +54,10 @@ class BrregDownloader(
                             continue
                         }
                         virksomhetRepository.insert(virksomhet = virksomhet)
-                    } catch (e: Exception) {
+                    } catch (e: NullPointerException) {
+                        log.warn("Nullpointer et eller annet sted her er årsaken: ${e.cause?.message} og her er feilen: ${e.message} ${e.stackTraceToString()}")
+                    }
+                    catch (e: Exception) {
                         log.error("Lagring av virksomhet feilet", e)
                     }
                 }
