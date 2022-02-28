@@ -49,8 +49,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 virksomhet,
                                 narings_kode 
                             )
-                            VALUES
-                                ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = {"((select id from virksomhetId), :${it}) "})}
+                            VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = {"((select id from virksomhetId), :${it}) "})}
+                            ON CONFLICT DO NOTHING
                             """.trimMargin(),
                         mutableMapOf(
                             "orgnr" to virksomhet.organisasjonsnummer,
