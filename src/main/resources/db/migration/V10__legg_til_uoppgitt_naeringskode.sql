@@ -1,0 +1,1 @@
+insert into naring(kode, navn, kort_navn) values ('00.000', 'Uoppgitt', 'Uoppgitt');

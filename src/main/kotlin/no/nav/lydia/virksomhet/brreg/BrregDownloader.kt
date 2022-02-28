@@ -49,6 +49,10 @@ class BrregDownloader(
                 while (reader.hasNext()) {
                     val virksomhet = gson.fromJson<VirksomhetDto>(reader, VirksomhetDto::class.java)
                     try {
+                        if (virksomhet.beliggenhetsadresse.postnummer == null) {
+                            log.info("Virksomhet ${virksomhet.navn} med informasjon ${virksomhet}")
+                            continue
+                        }
                         virksomhetRepository.insert(virksomhet = virksomhet)
                     } catch (e: Exception) {
                         log.error("Lagring av virksomhet feilet", e)
