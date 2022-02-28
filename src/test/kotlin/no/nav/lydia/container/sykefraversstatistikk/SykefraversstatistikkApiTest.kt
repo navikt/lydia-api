@@ -147,6 +147,7 @@ class SykefraversstatistikkApiTest {
 
         result.fold(
             success = { respons ->
+                respons.size shouldBe 1
                 val testVirksomhet = respons.first()
                 testVirksomhet.orgnr shouldBe "995858266"
                 testVirksomhet.kommune.navn shouldBe "BERGEN"

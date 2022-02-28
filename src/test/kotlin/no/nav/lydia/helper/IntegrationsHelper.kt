@@ -122,6 +122,10 @@ class IntegrationsHelper {
                       "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
                       "kode" : "70.220"
                     },
+                    "naeringskode2" : {
+                      "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
+                      "kode" : "90.012"
+                    },
                     "antallAnsatte" : 1,
                     "overordnetEnhet" : "995849364",
                     "oppstartsdato" : "2010-07-01",

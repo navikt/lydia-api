@@ -121,7 +121,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         return using(sessionOf(dataSource)) { session ->
             val sql = """
                     SELECT
-                        statistikk.orgnr,
+                        DISTINCT virksomhet.orgnr,
                         virksomhet.navn,
                         virksomhet.kommune,
                         virksomhet.kommunenummer,
@@ -135,6 +135,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.opprettet
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
+                    JOIN virksomhet_naring on (virksomhet.id = virksomhet_naring.virksomhet) 
                     WHERE virksomhet.kommunenummer IN (${kommuner.joinToString(transform = { "?" })})
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
