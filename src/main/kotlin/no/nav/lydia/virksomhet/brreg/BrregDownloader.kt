@@ -48,6 +48,9 @@ class BrregDownloader(
                 reader.beginArray()
                 while (reader.hasNext()) {
                     val virksomhet = gson.fromJson<VirksomhetDto>(reader, VirksomhetDto::class.java)
+                    if (virksomhet == null) {
+                        continue
+                    }
                     try {
                         if (virksomhet.beliggenhetsadresse.postnummer == null) {
                             log.info("Virksomhet ${virksomhet.navn} med informasjon ${virksomhet}")
