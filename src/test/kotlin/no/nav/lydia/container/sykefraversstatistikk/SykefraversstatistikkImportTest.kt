@@ -5,12 +5,21 @@ import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
 import no.nav.lydia.helper.TestSted
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.brreg.BrregDownloader
+import no.nav.lydia.virksomhet.ssb.NæringsDownloader
+import no.nav.lydia.virksomhet.ssb.NæringsRepository
+import org.junit.AfterClass
+import org.junit.BeforeClass
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -20,6 +29,33 @@ class SykefraversstatistikkImportTest {
     val postgres = TestContainerHelper.postgresContainer
     val gson = GsonBuilder().create()
     val testOrgnr = "987654321"
+
+    companion object {
+        val httpMock = HttpMock()
+
+        @BeforeClass
+        @JvmStatic
+        fun setupMock() {
+            httpMock.start()
+            IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock)
+            IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock)
+            TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
+                NæringsDownloader(
+                    url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
+                    næringsRepository = NæringsRepository(dataSource = dataSource)).lastNedNæringer()
+
+                BrregDownloader(
+                    url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock),
+                    virksomhetRepository = VirksomhetRepository(dataSource = dataSource)).lastNed()
+            }
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun afterAll() {
+            httpMock.stop()
+        }
+    }
 
     @Test
     fun `importerte data skal kunne hentes ut og være like`() {

@@ -13,6 +13,7 @@ import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestSted
@@ -23,14 +24,18 @@ import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
+import no.nav.lydia.virksomhet.ssb.NæringsDownloader
+import no.nav.lydia.virksomhet.ssb.NæringsRepository
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
     val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+    val postgres = TestContainerHelper.postgresContainer
 
     companion object {
         val httpMock = HttpMock()
@@ -39,18 +44,19 @@ class SykefraversstatistikkApiTest {
         @JvmStatic
         fun beforeAll() {
             httpMock.start()
-            val postgres = TestContainerHelper.postgresContainer
-            val dataSource = postgres.getDataSource().apply {
-                postgres.cleanMigrate(this)
-            }
 
             TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
             TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.bergen)
 
-            val virksomhetRepository = VirksomhetRepository(dataSource)
-            val brregMockUrl = mockKallMotBrregUnderhenter()
-            BrregDownloader(url = brregMockUrl, virksomhetRepository = virksomhetRepository).lastNed()
+            TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
+                NæringsDownloader(
+                    url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
+                    næringsRepository = NæringsRepository(dataSource = dataSource)).lastNedNæringer()
 
+                BrregDownloader(
+                    url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock),
+                    virksomhetRepository = VirksomhetRepository(dataSource = dataSource)).lastNed()
+            }
         }
 
         @AfterClass
@@ -59,6 +65,7 @@ class SykefraversstatistikkApiTest {
             httpMock.stop()
         }
     }
+
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
@@ -207,80 +214,4 @@ class SykefraversstatistikkApiTest {
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
         kommuner shouldHaveSize 44
     }
-}
-
-fun mockKallMotBrregUnderhenter(): String {
-    val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
-    val brregMockUrl = SykefraversstatistikkApiTest.httpMock.url(lastNedPath)
-
-    val underEnheter =
-        """
-        [
-          {
-            "organisasjonsnummer" : "995858266",
-            "navn" : ":-) PROSJEKTER",
-            "organisasjonsform" : {
-              "kode" : "BEDR",
-              "beskrivelse" : "Bedrift",
-              "links" : [ ]
-            },
-            "registreringsdatoEnhetsregisteret" : "2010-08-25",
-            "registrertIMvaregisteret" : false,
-            "naeringskode1" : {
-              "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
-              "kode" : "70.220"
-            },
-            "antallAnsatte" : 1,
-            "overordnetEnhet" : "995849364",
-            "oppstartsdato" : "2010-07-01",
-            "beliggenhetsadresse" : {
-              "land" : "Norge",
-              "landkode" : "NO",
-              "postnummer" : "5034",
-              "poststed" : "BERGEN",
-              "adresse" : [ "Skanselien 37" ],
-              "kommune" : "BERGEN",
-              "kommunenummer" : "4601"
-            },
-            "links" : [ ]
-          },
-          {
-            "organisasjonsnummer" : "987654321",
-            "navn" : "1012 PROJECT AISTE CESNAUSKAITE",
-            "organisasjonsform" : {
-              "kode" : "BEDR",
-              "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
-              "links" : [ ]
-            },
-            "registreringsdatoEnhetsregisteret" : "2020-04-28",
-            "registrertIMvaregisteret" : false,
-            "naeringskode1" : {
-              "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
-              "kode" : "90.012"
-            },
-            "antallAnsatte" : 0,
-            "overordnetEnhet" : "924965304",
-            "oppstartsdato" : "2020-04-22",
-            "beliggenhetsadresse" : {
-              "land" : "Norge",
-              "landkode" : "NO",
-              "postnummer" : "0364",
-              "poststed" : "OSLO",
-              "adresse" : [ "Trudvangveien 5C" ],
-              "kommune" : "OSLO",
-              "kommunenummer" : "0301"
-            },
-            "links" : [ ]
-          }
-        ]
-        """.trimIndent()
-    SykefraversstatistikkApiTest.httpMock.wireMockServer.stubFor(
-        WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
-            .willReturn(
-                WireMock.ok()
-                    .withHeader(HttpHeaders.CONTENT_TYPE, BrregDownloader.underEnhetApplicationType)
-                    .withBody(Gzip.gzip(underEnheter))
-            )
-    )
-    return brregMockUrl
 }
