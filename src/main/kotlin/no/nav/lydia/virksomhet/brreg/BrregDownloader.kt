@@ -48,21 +48,23 @@ class BrregDownloader(
                 reader.beginArray()
                 while (reader.hasNext()) {
                     val virksomhet = gson.fromJson<VirksomhetDto>(reader, VirksomhetDto::class.java)
-                    if (virksomhet == null) {
-                        continue
-                    }
-                    try {
-                        if (virksomhet.beliggenhetsadresse.postnummer == null) {
-                            log.info("Virksomhet ${virksomhet.navn} med informasjon ${virksomhet}")
-                            continue
+                    when (virksomhet) {
+                        null -> {
+                            log.debug("Skipper lagring av virksomhet da den er null fra JsonReader")
                         }
-                        virksomhetRepository.insert(virksomhet = virksomhet)
-                    } catch (e: NullPointerException) {
-                        log.warn("Nullpointer et eller annet sted her er årsaken: ${e.cause?.message} og her er feilen: ${e.message} ${e.stackTraceToString()}")
+                        else -> {
+                            try {
+                                if (virksomhet.beliggenhetsadresse.erRelevant()) {
+                                    virksomhetRepository.insert(virksomhet = virksomhet)
+                                } else {
+                                    log.debug("Skipper lagring av virksomhet med orgnr:${virksomhet.organisasjonsnummer}")
+                                }
+                            } catch (e: Exception) {
+                                log.error("Lagring av virksomhet feilet", e)
+                            }
+                        }
                     }
-                    catch (e: Exception) {
-                        log.error("Lagring av virksomhet feilet", e)
-                    }
+
                 }
                 reader.endArray()
             }
