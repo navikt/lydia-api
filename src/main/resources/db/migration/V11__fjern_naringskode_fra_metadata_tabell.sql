@@ -1,0 +1,1 @@
+alter table virksomhet_statistikk_metadata drop column naring_kode;

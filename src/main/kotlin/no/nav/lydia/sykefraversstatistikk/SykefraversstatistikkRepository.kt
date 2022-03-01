@@ -59,25 +59,21 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         INSERT INTO virksomhet_statistikk_metadata(
                             orgnr,
                             kategori,
-                            sektor,
-                            naring_kode
+                            sektor
                         )
                         VALUES(
                             :orgnr,
                             :kategori,
-                            :sektor,
-                            :naring_kode
+                            :sektor
                         )
                         ON CONFLICT (orgnr) DO UPDATE SET
                             kategori = :kategori,
-                            sektor = :sektor,
-                            naring_kode = :naring_kode
+                            sektor = :sektor
                     """.trimIndent(),
                             mapOf(
                                 "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
                                 "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
-                                "sektor" to sykefraværsStatistikk.sektorSykefravær.kode,
-                                "naring_kode" to sykefraværsStatistikk.næring5SifferSykefravær.first().kode
+                                "sektor" to sykefraværsStatistikk.sektorSykefravær.kode
                             )
                         ).asUpdate
                     )
