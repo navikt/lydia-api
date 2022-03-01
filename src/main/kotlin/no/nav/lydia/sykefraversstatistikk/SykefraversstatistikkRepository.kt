@@ -111,12 +111,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
 
-    private fun filterVerdi(filterNavn: String, filterVerdier: Set<Any>) =
+    private fun filterVerdi(filterNavn: String, filterVerdier: Set<String>) =
         """
             $filterNavn (inkluderAlle, filterverdi) AS (
                     VALUES (
                         ${filterVerdier.isEmpty()},
-                        '{${filterVerdier.joinToString(transform = {"?"}, separator = ",")}}'::text[]
+                        '{${filterVerdier.joinToString(separator = ",")}}'::text[]
                     )    
                 )
         """.trimIndent()
@@ -126,10 +126,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         søkeparametere: Søkeparametere
     ): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
+            val tmpKommuneTabell = "kommuner"
+            val tmpNæringTabell = "naringer"
             val sql = """
                     WITH 
-                        ${filterVerdi("kommuner", kommuner)},
-                        ${filterVerdi("naringer", søkeparametere.næringsgruppeKoder)}
+                        ${filterVerdi(tmpKommuneTabell, kommuner)},
+                        ${filterVerdi(tmpNæringTabell, søkeparametere.næringsgruppeKoder)}
                     SELECT
                         DISTINCT virksomhet.orgnr,
                         virksomhet.navn,
@@ -148,12 +150,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) 
                     
                     WHERE (
-                        (SELECT inkluderAlle FROM kommuner) IS TRUE OR
-                        virksomhet.kommune in (select unnest(kommuner.filterverdi) FROM kommuner)
+                        (SELECT inkluderAlle FROM $tmpKommuneTabell) IS TRUE OR
+                        virksomhet.kommune in (select unnest($tmpKommuneTabell.filterverdi) FROM $tmpKommuneTabell)
                     )
                     AND (
-                        (SELECT inkluderAlle FROM naringer) IS TRUE OR
-                        vn.narings_kode in (select unnest(vn.filterverdi) FROM naringer)
+                        (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
+                        vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
                     )
                     
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}

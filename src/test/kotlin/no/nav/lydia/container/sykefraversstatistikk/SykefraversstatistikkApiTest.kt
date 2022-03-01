@@ -209,6 +209,21 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skal kunne hente virksomheter basert på næringskode`() {
+        val næringskode = "70.220"
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=${næringskode}")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+
+        result.fold(
+            success = { statistikk ->
+                statistikk shouldHaveSize 1
+            }, failure = {
+                fail(it.message)
+            })
+    }
+
+    @Test
     fun `kan hente kommuner basert på fylkesnummer`() {
         val fylkesnummer = listOf("46", "03") // Vestland og Oslo fylke
         val geografiService = GeografiService()
