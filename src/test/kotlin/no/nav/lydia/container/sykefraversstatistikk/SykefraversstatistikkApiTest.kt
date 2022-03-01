@@ -33,7 +33,6 @@ import kotlin.test.fail
 class SykefraversstatistikkApiTest {
     val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
-    val postgres = TestContainerHelper.postgresContainer
 
     companion object {
         val httpMock = HttpMock()

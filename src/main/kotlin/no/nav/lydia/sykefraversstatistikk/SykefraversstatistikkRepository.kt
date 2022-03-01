@@ -110,12 +110,26 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
+
+    private fun filterVerdi(filterNavn: String, filterVerdier: Set<Any>) =
+        """
+            $filterNavn (inkluderAlle, filterverdi) AS (
+                    VALUES (
+                        ${filterVerdier.isEmpty()},
+                        '{${filterVerdier.joinToString(transform = {"?"}, separator = ",")}}'::text[]
+                    )    
+                )
+        """.trimIndent()
+
     fun hentSykefraværIKommuner(
         kommuner: Set<String>,
         søkeparametere: Søkeparametere
     ): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
             val sql = """
+                    WITH 
+                        ${filterVerdi("kommuner", kommuner)},
+                        ${filterVerdi("naringer", søkeparametere.næringsgruppeKoder)}
                     SELECT
                         DISTINCT virksomhet.orgnr,
                         virksomhet.navn,
@@ -131,8 +145,17 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.opprettet
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
-                    JOIN virksomhet_naring on (virksomhet.id = virksomhet_naring.virksomhet) 
-                    WHERE virksomhet.kommunenummer IN (${kommuner.joinToString(transform = { "?" })})
+                    JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) 
+                    
+                    WHERE (
+                        (SELECT inkluderAlle FROM kommuner) IS TRUE OR
+                        virksomhet.kommune in (select unnest(kommuner.filterverdi) FROM kommuner)
+                    )
+                    AND (
+                        (SELECT inkluderAlle FROM naringer) IS TRUE OR
+                        vn.narings_kode in (select unnest(vn.filterverdi) FROM naringer)
+                    )
+                    
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
                 """.trimIndent()
