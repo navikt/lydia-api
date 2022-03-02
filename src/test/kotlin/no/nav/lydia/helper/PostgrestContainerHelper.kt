@@ -2,7 +2,6 @@ package no.nav.lydia.helper
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.lydia.getFlyway
 import no.nav.lydia.runMigration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,7 +11,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import java.sql.ResultSet
 import java.sql.Statement
-import javax.sql.DataSource
 
 class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(PostgrestContainerHelper::class.java)) {
     private val postgresNetworkAlias = "postgrescontainer"
@@ -46,17 +44,10 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
         resultSet.next()
         return resultSet
     }
-    fun performInsert(sql: String): Unit {
+    fun performInsert(sql: String){
         val statement: Statement = getDataSource().connection.createStatement()
         statement.execute(sql)
     }
-
-    fun cleanMigrate(dataSource: DataSource = getDataSource()) {
-        val flyway = getFlyway(dataSource)
-        flyway.clean()
-        flyway.migrate()
-    }
-
 
     fun envVars() = mapOf(
         "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST" to postgresNetworkAlias,

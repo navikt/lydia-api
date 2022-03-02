@@ -13,7 +13,7 @@ import no.nav.lydia.Security
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.lydiaRestApi
 import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.virksomhet.ssb.NæringsDownloader
@@ -52,7 +52,7 @@ class BrregDownloaderTest {
 
     companion object {
         val httpMock = HttpMock()
-        val postgres = TestContainerHelper.postgresContainer
+        val postgres = PostgrestContainerHelper()
 
         init {
             httpMock.start()

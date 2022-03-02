@@ -1,13 +1,18 @@
 package no.nav.lydia.ssb
 
-import com.github.tomakehurst.wiremock.client.WireMock
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.lydia.*
+import no.nav.lydia.AzureConfig
+import no.nav.lydia.Database
+import no.nav.lydia.Integrasjoner
+import no.nav.lydia.Kafka
+import no.nav.lydia.NaisEnvironment
+import no.nav.lydia.Security
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.PostgrestContainerHelper
+import no.nav.lydia.lydiaRestApi
 import no.nav.lydia.virksomhet.ssb.NÆRINGSIMPORT_URL
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -32,7 +37,7 @@ class NæringsDownloaderTest {
         }
     }
 
-    val postgres = TestContainerHelper.postgresContainer
+    val postgres = PostgrestContainerHelper()
     val næringMockUrl = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock)
 
     val naisEnvironment = NaisEnvironment(
