@@ -4,10 +4,17 @@ import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
-import no.nav.lydia.*
+import no.nav.lydia.AzureConfig
+import no.nav.lydia.Database
+import no.nav.lydia.Integrasjoner
+import no.nav.lydia.Kafka
+import no.nav.lydia.NaisEnvironment
+import no.nav.lydia.Security
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.lydiaRestApi
 import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.virksomhet.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsRepository
@@ -66,7 +73,6 @@ class BrregDownloaderTest {
 
     @Test
     fun `vi kan laste ned liste med underenheter fra Brreg flere ganger uten konflikt`() {
-        val næringskodeMock = "70.220"
         withTestApplication({
             lydiaRestApi(
                 naisEnvironment = naisEnvironment,
@@ -85,7 +91,7 @@ class BrregDownloaderTest {
                 val resultSetFraVirksomhetNæring =
                     postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
                 resultSetFraVirksomhetNæring.row shouldBe 1
-                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeMock
+                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeBedriftsrådgivning
 
                 val resultSetUtenPostnummer =
                     postgres.performQuery("select * from virksomhet where orgnr = '921972539'")
@@ -102,7 +108,7 @@ class BrregDownloaderTest {
                 val resultSetFraVirksomhetNæring =
                     postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
                 resultSetFraVirksomhetNæring.row shouldBe 1
-                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeMock
+                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeBedriftsrådgivning
             }
         }
     }

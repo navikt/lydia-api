@@ -7,6 +7,7 @@ import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
@@ -26,7 +27,6 @@ class SykefraversstatistikkImportTest {
     val kafkaContainer = TestContainerHelper.kafkaContainerHelper
     val postgres = TestContainerHelper.postgresContainer
     val gson = GsonBuilder().create()
-    val testOrgnr = "987654321"
 
     companion object {
         val httpMock = HttpMock()
@@ -58,7 +58,7 @@ class SykefraversstatistikkImportTest {
             key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
         )
 
-        val result = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$testOrgnr")
+        val result = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
             .withLydiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
@@ -81,14 +81,14 @@ class SykefraversstatistikkImportTest {
     fun `import av data er idempotent`() {
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
 
-        val førsteLagredeStatistikk = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$testOrgnr")
+        val førsteLagredeStatistikk = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
             .withLydiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .getOrElse { fail(it.message) }
 
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
 
-        val second = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$testOrgnr")
+        val second = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
             .withLydiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
@@ -111,7 +111,7 @@ class SykefraversstatistikkImportTest {
     fun `vi lagrer metadata ved import`() {
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
 
-        val rs = postgres.performQuery("SELECT * FROM virksomhet_statistikk_metadata WHERE orgnr = '$testOrgnr'")
+        val rs = postgres.performQuery("SELECT * FROM virksomhet_statistikk_metadata WHERE orgnr = '$orgnr_CESNAUSKAITE_oslo'")
 
         rs.row shouldBe 1
     }

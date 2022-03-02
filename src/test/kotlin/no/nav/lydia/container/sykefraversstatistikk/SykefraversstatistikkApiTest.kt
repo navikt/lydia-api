@@ -13,6 +13,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
+import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeScenekunst
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_smileyprosjekter_bergen
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestSted
@@ -147,7 +151,7 @@ class SykefraversstatistikkApiTest {
             success = { respons ->
                 respons.size shouldBe 1
                 val testVirksomhet = respons.first()
-                testVirksomhet.orgnr shouldBe "995858266"
+                testVirksomhet.orgnr shouldBe orgnr_smileyprosjekter_bergen
                 testVirksomhet.kommune.navn shouldBe "BERGEN"
                 testVirksomhet.kommune.nummer shouldBe kommunenummer
             }, failure = {
@@ -165,7 +169,7 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { apiResponse ->
                 val testVirksomhet = apiResponse.first()
-                testVirksomhet.orgnr shouldBe "995858266"
+                testVirksomhet.orgnr shouldBe orgnr_smileyprosjekter_bergen
                 testVirksomhet.kommune.navn shouldBe "BERGEN"
                 testVirksomhet.kommune.nummer shouldStartWith fylkesnummer
             }, failure = {
@@ -185,8 +189,45 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { sykefravær ->
                 sykefravær.map { it.orgnr } shouldContainExactly listOf(
-                    "995858266",
-                    "987654321"
+                    orgnr_smileyprosjekter_bergen,
+                    orgnr_CESNAUSKAITE_oslo
+                )
+            }, failure = {
+                fail(it.message)
+            })
+    }
+
+    @Test
+    fun `skal kunne hente alle virksomheter i en gitt næring`() {
+        val result =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=$næringskodeScenekunst")
+                .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+                .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+
+        result.fold(
+            success = { sykefravær ->
+                sykefravær.map { it.orgnr } shouldContainExactly listOf(
+                    orgnr_smileyprosjekter_bergen,
+                    orgnr_CESNAUSKAITE_oslo
+                )
+            }, failure = {
+                fail(it.message)
+            })
+    }
+
+    @Test
+    fun `skal kunne hente virksomheter filtrert på kommune og næring`() {
+        val oslo = "0301"
+        val nordreFollo = "3020"
+        val result =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?kommuner=$oslo,$nordreFollo&neringsgrupper=$næringskodeScenekunst,$næringskodeBedriftsrådgivning")
+                .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+                .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+
+        result.fold(
+            success = { sykefravær ->
+                sykefravær.map { it.orgnr } shouldContainExactly listOf(
+                    orgnr_CESNAUSKAITE_oslo
                 )
             }, failure = {
                 fail(it.message)
@@ -202,21 +243,6 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { respons ->
                 respons shouldHaveAtLeastSize 1
-            }, failure = {
-                fail(it.message)
-            })
-    }
-
-    @Test
-    fun `skal kunne hente virksomheter basert på næringskode`() {
-        val næringskode = "70.220"
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=${næringskode}")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
-
-        result.fold(
-            success = { statistikk ->
-                statistikk shouldHaveSize 1
             }, failure = {
                 fail(it.message)
             })
