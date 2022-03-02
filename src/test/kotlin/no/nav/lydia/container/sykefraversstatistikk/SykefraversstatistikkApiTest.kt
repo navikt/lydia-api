@@ -26,7 +26,6 @@ import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsRepository
 import org.junit.AfterClass
-import org.junit.BeforeClass
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -37,23 +36,22 @@ class SykefraversstatistikkApiTest {
     companion object {
         val httpMock = HttpMock()
 
-        @BeforeClass
-        @JvmStatic
-        fun beforeAll() {
+        init {
             httpMock.start()
-
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.bergen)
-
             TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
                 NæringsDownloader(
                     url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
-                    næringsRepository = NæringsRepository(dataSource = dataSource)).lastNedNæringer()
+                    næringsRepository = NæringsRepository(dataSource = dataSource)
+                ).lastNedNæringer()
 
                 BrregDownloader(
                     url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock),
-                    virksomhetRepository = VirksomhetRepository(dataSource = dataSource)).lastNed()
+                    virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+                ).lastNed()
             }
+
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.bergen)
         }
 
         @AfterClass
@@ -79,6 +77,7 @@ class SykefraversstatistikkApiTest {
                 fail(it.message)
             })
     }
+
     @Test
     fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel`() {
         val forventedeTapteDagsverk = listOf(20.0, 10.0)

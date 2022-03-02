@@ -18,8 +18,6 @@ import no.nav.lydia.virksomhet.brreg.BrregDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsRepository
 import org.junit.AfterClass
-import org.junit.BeforeClass
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -33,12 +31,8 @@ class SykefraversstatistikkImportTest {
     companion object {
         val httpMock = HttpMock()
 
-        @BeforeClass
-        @JvmStatic
-        fun setupMock() {
+        init {
             httpMock.start()
-            IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock)
-            IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock)
             TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
                 NæringsDownloader(
                     url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),

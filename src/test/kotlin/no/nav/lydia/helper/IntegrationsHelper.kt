@@ -3,11 +3,7 @@ package no.nav.lydia.helper
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
-import no.nav.lydia.container.sykefraversstatistikk.SykefraversstatistikkApiTest
-import no.nav.lydia.ssb.NæringsDownloaderTest
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import org.junit.AfterClass
-import org.junit.BeforeClass
 
 class IntegrationsHelper {
     companion object {
@@ -167,7 +163,31 @@ class IntegrationsHelper {
                       "kommunenummer" : "0301"
                     },
                     "links" : [ ]
-                  }
+                  },
+                  {
+                      "organisasjonsnummer" : "921972539",
+                      "navn" : "MANGLER POSTNUMMER",
+                      "organisasjonsform" : {
+                        "kode" : "AAFY",
+                        "beskrivelse" : "Underenhet til ikke-næringsdrivende",
+                        "links" : [ ]
+                      },
+                      "registreringsdatoEnhetsregisteret" : "2018-12-22",
+                      "registrertIMvaregisteret" : false,
+                      "naeringskode1" : {
+                        "beskrivelse" : "Butikkhandel med datamaskiner og utstyr til datamaskiner",
+                        "kode" : "47.410"
+                      },
+                      "antallAnsatte" : 0,
+                      "overordnetEnhet" : "921780583",
+                      "beliggenhetsadresse" : {
+                        "land" : "Tyskland",
+                        "landkode" : "DE",
+                        "poststed" : "60313 FRANKFURT AM MAIN",
+                        "adresse" : [ "Thurn-und-Taxis-Platz 6" ]
+                      },
+                      "links" : [ ]
+                    }
                 ]
                 """.trimIndent()
             httpMock.wireMockServer.stubFor(

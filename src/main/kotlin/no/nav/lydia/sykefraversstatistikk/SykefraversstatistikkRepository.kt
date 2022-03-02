@@ -82,41 +82,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentAltSykefravær(søkeparametere: Søkeparametere): List<SykefraversstatistikkVirksomhet> {
-        return using(sessionOf(dataSource)) { session ->
-            val sql = """
-                    SELECT
-                        statistikk.orgnr,
-                        virksomhet.navn,
-                        virksomhet.kommune,
-                        virksomhet.kommunenummer,
-                        statistikk.arstall,
-                        statistikk.kvartal,
-                        statistikk.antall_personer,
-                        statistikk.tapte_dagsverk,
-                        statistikk.mulige_dagsverk,
-                        statistikk.sykefraversprosent,
-                        statistikk.maskert,
-                        statistikk.opprettet
-                    FROM sykefravar_statistikk_virksomhet AS statistikk
-                    JOIN virksomhet USING (orgnr)
-                    ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
-                    LIMIT 20
-                """.trimIndent()
-            val query = queryOf(
-                statement = sql
-            ).map(this::mapRow).asList
-            session.run(query)
-        }
-    }
-
-
     private fun filterVerdi(filterNavn: String, filterVerdier: Set<String>) =
         """
             $filterNavn (inkluderAlle, filterverdi) AS (
                     VALUES (
                         ${filterVerdier.isEmpty()},
-                        '{${filterVerdier.joinToString(separator = ",")}}'::text[]
+                        :$filterNavn
                     )    
                 )
         """.trimIndent()
@@ -151,7 +122,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     
                     WHERE (
                         (SELECT inkluderAlle FROM $tmpKommuneTabell) IS TRUE OR
-                        virksomhet.kommune in (select unnest($tmpKommuneTabell.filterverdi) FROM $tmpKommuneTabell)
+                        virksomhet.kommunenummer in (select unnest($tmpKommuneTabell.filterverdi) FROM $tmpKommuneTabell)
                     )
                     AND (
                         (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
@@ -161,9 +132,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
                 """.trimIndent()
+
             val query = queryOf(
                 statement = sql,
-                *kommuner.toTypedArray(),
+                mapOf(
+                    tmpKommuneTabell to session.connection.underlying.createArrayOf("text", kommuner.toTypedArray()),
+                    tmpNæringTabell to session.connection.underlying.createArrayOf("text", søkeparametere.næringsgruppeKoder.toTypedArray()),
+                )
             ).map(this::mapRow).asList
             session.run(query)
         }
