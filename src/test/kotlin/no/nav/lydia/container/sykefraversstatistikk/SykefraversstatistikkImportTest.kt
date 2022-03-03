@@ -3,16 +3,16 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
+import io.kotest.inspectors.ElementPass
+import io.kotest.inspectors.buildAssertionError
 import io.kotest.inspectors.forExactly
+import io.kotest.inspectors.runTests
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
-import no.nav.lydia.helper.Melding
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
 import no.nav.lydia.sykefraversstatistikk.api.Periode
@@ -65,10 +65,11 @@ class SykefraversstatistikkImportTest {
                 .withLydiaToken()
                 .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
                 .fold(success = { osloAndreKvart ->
-                    osloAndreKvart.size shouldBeExactly 1
-                    osloAndreKvart.first().kvartal shouldBeExactly forrigePeriode.kvartal
-                    osloAndreKvart.first().arstall shouldBeExactly forrigePeriode.årstall
-                    osloAndreKvart.first().orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    osloAndreKvart.forExactlyOne {
+                        it.kvartal shouldBeExactly forrigePeriode.kvartal
+                        it.arstall shouldBeExactly forrigePeriode.årstall
+                        it.orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    }
                 }, failure = {
                     fail(it.message)
                 })
@@ -79,10 +80,16 @@ class SykefraversstatistikkImportTest {
                 .withLydiaToken()
                 .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
                 .fold(success = { osloAndreOgTredjeKvart ->
-                    osloAndreOgTredjeKvart.size shouldBeExactly 2
-                    osloAndreOgTredjeKvart.map { it.kvartal } shouldContainAll listOf(forrigePeriode.kvartal,gjeldenePeriode.kvartal)
-                    osloAndreOgTredjeKvart.map { it.arstall } shouldContainAll listOf(forrigePeriode.årstall, gjeldenePeriode.årstall)
-                    osloAndreOgTredjeKvart.map { it.orgnr } shouldContainAll listOf(orgnr_CESNAUSKAITE_oslo, orgnr_CESNAUSKAITE_oslo)
+                    osloAndreOgTredjeKvart.forExactlyOne {
+                        it.kvartal shouldBe forrigePeriode.kvartal
+                        it.arstall shouldBe forrigePeriode.årstall
+                        it.orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    }
+                    osloAndreOgTredjeKvart.forExactlyOne {
+                        it.kvartal shouldBe gjeldenePeriode.kvartal
+                        it.arstall shouldBe gjeldenePeriode.årstall
+                        it.orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    }
                 }, failure = {
                     fail(it.message)
                 })
@@ -101,7 +108,7 @@ class SykefraversstatistikkImportTest {
 
         result.fold(success = { dtos ->
             dtos.size shouldBeGreaterThanOrEqual 1
-            dtos.forExactly(1) { dto ->
+            dtos.forExactlyOne { dto ->
                 dto.orgnr shouldBe kafkaMelding.value.virksomhetSykefravær.orgnr
                 dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
                 dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal
@@ -131,15 +138,15 @@ class SykefraversstatistikkImportTest {
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
         second.fold(success = { dtos ->
-            dtos.size shouldBeExactly 1
-            val dto = dtos[0]
-            dto.orgnr shouldBe førsteLagredeStatistikk[0].orgnr
-            dto.arstall shouldBe førsteLagredeStatistikk[0].arstall
-            dto.kvartal shouldBe førsteLagredeStatistikk[0].kvartal
-            dto.sykefraversprosent shouldBe førsteLagredeStatistikk[0].sykefraversprosent
-            dto.antallPersoner shouldBe førsteLagredeStatistikk[0].antallPersoner
-            dto.muligeDagsverk shouldBe førsteLagredeStatistikk[0].muligeDagsverk
-            dto.tapteDagsverk shouldBe førsteLagredeStatistikk[0].tapteDagsverk
+            dtos.forExactlyOne { dto ->
+                dto.orgnr shouldBe førsteLagredeStatistikk[0].orgnr
+                dto.arstall shouldBe førsteLagredeStatistikk[0].arstall
+                dto.kvartal shouldBe førsteLagredeStatistikk[0].kvartal
+                dto.sykefraversprosent shouldBe førsteLagredeStatistikk[0].sykefraversprosent
+                dto.antallPersoner shouldBe førsteLagredeStatistikk[0].antallPersoner
+                dto.muligeDagsverk shouldBe førsteLagredeStatistikk[0].muligeDagsverk
+                dto.tapteDagsverk shouldBe førsteLagredeStatistikk[0].tapteDagsverk
+            }
         }, failure = {
             fail(it.message)
         })
