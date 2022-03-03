@@ -3,9 +3,7 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -84,8 +82,6 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel`() {
-        val forventedeTapteDagsverk = listOf(20.0, 10.0)
-
         val sorteringsnøkkel = "tapte_dagsverk"
 
         val (_, _, result1) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?sorteringsnokkel=$sorteringsnøkkel&sorteringsretning=desc")
@@ -94,8 +90,8 @@ class SykefraversstatistikkApiTest {
 
         result1.fold(
             success = { sykefraværsstatistikkVirksomhet ->
-                sykefraværsstatistikkVirksomhet.size shouldBeExactly 2
-                sykefraværsstatistikkVirksomhet.map { it.tapteDagsverk } shouldBe forventedeTapteDagsverk
+                val tapteDagsverk = sykefraværsstatistikkVirksomhet.map { it.tapteDagsverk }
+                tapteDagsverk shouldContainInOrder tapteDagsverk.sortedDescending()
             }, failure = {
                 fail(it.message)
             })
@@ -106,8 +102,8 @@ class SykefraversstatistikkApiTest {
 
         result2.fold(
             success = { sykefraværsstatistikkVirksomhet ->
-                sykefraværsstatistikkVirksomhet.size shouldBeExactly 2
-                sykefraværsstatistikkVirksomhet.map { it.tapteDagsverk } shouldBe forventedeTapteDagsverk.reversed()
+                val tapteDagsverk = sykefraværsstatistikkVirksomhet.map { it.tapteDagsverk }
+                tapteDagsverk shouldContainInOrder tapteDagsverk.sorted()
             }, failure = {
                 fail(it.message)
             })
@@ -188,10 +184,11 @@ class SykefraversstatistikkApiTest {
 
         result.fold(
             success = { sykefravær ->
-                sykefravær.map { it.orgnr } shouldContainExactly listOf(
+                sykefravær.map { it.orgnr }.toSet() shouldContainAll setOf(
                     orgnr_smileyprosjekter_bergen,
                     orgnr_CESNAUSKAITE_oslo
                 )
+                sykefravær.map { it.kommune.nummer.substring(0..1) }.toSet() shouldBe setOf("46", "03")
             }, failure = {
                 fail(it.message)
             })

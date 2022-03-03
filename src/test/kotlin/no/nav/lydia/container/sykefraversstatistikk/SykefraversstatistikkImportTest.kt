@@ -3,9 +3,16 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
+import io.kotest.inspectors.forAtLeastOne
+import io.kotest.inspectors.forExactly
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeExactly
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldHave
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
@@ -95,15 +102,16 @@ class SykefraversstatistikkImportTest {
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
         result.fold(success = { dtos ->
-            dtos.size shouldBeExactly 1
-            val dto = dtos[0]
-            dto.orgnr shouldBe kafkaMelding.value.virksomhetSykefravær.orgnr
-            dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
-            dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal
-            dto.sykefraversprosent shouldBe kafkaMelding.value.virksomhetSykefravær.prosent
-            dto.antallPersoner shouldBe kafkaMelding.value.virksomhetSykefravær.antallPersoner
-            dto.muligeDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.muligeDagsverk
-            dto.tapteDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.tapteDagsverk
+            dtos.size shouldBeGreaterThanOrEqual 1
+            dtos.forExactly(1) { dto ->
+                dto.orgnr shouldBe kafkaMelding.value.virksomhetSykefravær.orgnr
+                dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
+                dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal
+                dto.sykefraversprosent shouldBe kafkaMelding.value.virksomhetSykefravær.prosent
+                dto.antallPersoner shouldBe kafkaMelding.value.virksomhetSykefravær.antallPersoner
+                dto.muligeDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.muligeDagsverk
+                dto.tapteDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.tapteDagsverk
+            }
         }, failure = {
             fail(it.message)
         })
