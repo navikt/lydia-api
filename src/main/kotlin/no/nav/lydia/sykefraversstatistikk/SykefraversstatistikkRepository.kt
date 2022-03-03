@@ -92,8 +92,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                 )
         """.trimIndent()
 
-    fun hentSykefraværIKommuner(
-        kommuner: Set<String>,
+    fun hentSykefravær(
         søkeparametere: Søkeparametere
     ): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
@@ -101,7 +100,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             val tmpNæringTabell = "naringer"
             val sql = """
                     WITH 
-                        ${filterVerdi(tmpKommuneTabell, kommuner)},
+                        ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
                         ${filterVerdi(tmpNæringTabell, søkeparametere.næringsgruppeKoder)}
                     SELECT
                         DISTINCT virksomhet.orgnr,
@@ -136,7 +135,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             val query = queryOf(
                 statement = sql,
                 mapOf(
-                    tmpKommuneTabell to session.connection.underlying.createArrayOf("text", kommuner.toTypedArray()),
+                    tmpKommuneTabell to session.connection.underlying.createArrayOf("text", søkeparametere.kommunenummer.toTypedArray()),
                     tmpNæringTabell to session.connection.underlying.createArrayOf("text", søkeparametere.næringsgruppeKoder.toTypedArray()),
                 )
             ).map(this::mapRow).asList
@@ -160,7 +159,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         )
     }
 
-    fun hentSykefravær(orgnr: String): List<SykefraversstatistikkVirksomhet> {
+    fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """

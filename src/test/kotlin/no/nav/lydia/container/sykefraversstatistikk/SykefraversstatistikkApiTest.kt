@@ -211,6 +211,21 @@ class SykefraversstatistikkApiTest {
                 fail(it.message)
             })
     }
+    @Test
+    fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
+        val resultatMedTommeParametre =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
+                .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+                .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+
+
+        val resultatUtenParametre =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+                .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+                .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+
+        resultatMedTommeParametre.get() shouldContainAll resultatUtenParametre.get()
+    }
 
     @Test
     fun `skal kunne hente virksomheter filtrert på kommune og næring`() {

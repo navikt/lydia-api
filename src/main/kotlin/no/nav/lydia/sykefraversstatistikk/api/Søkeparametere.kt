@@ -1,26 +1,33 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import io.ktor.http.*
+import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 
 data class Søkeparametere(
-    val fylkesnummer: Set<String>,
     val kommunenummer: Set<String>,
     val næringsgruppeKoder: Set<String>,
     val sorteringsnøkkel: Sorteringsnøkkel,
     val sorteringsretning : Sorteringsretning
 ) {
     companion object {
-        fun from(queryParameters: Parameters): Søkeparametere =
+        fun from(queryParameters: Parameters, geografiService: GeografiService): Søkeparametere =
             Søkeparametere(
-                fylkesnummer = queryParameters["fylker"]?.split(",")?.toSet() ?: emptySet(),
-                kommunenummer = queryParameters["kommuner"]?.split(",")?.toSet() ?: emptySet(),
-                næringsgruppeKoder = queryParameters["neringsgrupper"]?.split(",")?.toSet() ?: emptySet(),
+                kommunenummer =  finnGyldigeKommunenummer(queryParameters, geografiService),
+                næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
                 sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters["sorteringsnokkel"]),
                 sorteringsretning = Sorteringsretning.from(queryParameters["sorteringsretning"])
             )
-    }
+        private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
+            geografiService.hentKommunerFraFylkerOgKommuner(
+                queryParameters["fylker"].tilUnikeVerdier(),
+                queryParameters["kommuner"].tilUnikeVerdier(),
+            )
+        private fun finnGyldigeNæringsgruppekoder(queryParameters: Parameters) =
+            queryParameters["neringsgrupper"].tilUnikeVerdier()
 
-    fun erTom() = fylkesnummer.isEmpty() && kommunenummer.isEmpty() && næringsgruppeKoder.isEmpty()
+        private fun String?.tilUnikeVerdier() : Set<String> =
+            this?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+    }
 }
 
 enum class Sorteringsnøkkel(private val verdi: String) {

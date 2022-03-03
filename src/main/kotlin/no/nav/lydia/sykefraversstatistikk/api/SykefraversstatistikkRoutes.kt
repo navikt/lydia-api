@@ -19,11 +19,8 @@ fun Route.sykefraversstatistikk(
     næringsRepository: NæringsRepository
 ) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        val søkeparametere = Søkeparametere.from(call.request.queryParameters)
-        val gyldigeKommunenummerISøk = geografiService.hentKommunerFraFylkerOgKommuner(
-            søkeparametere.fylkesnummer,
-            søkeparametere.kommunenummer)
-        val virksomheter = sykefraversstatistikkRepository.hentSykefraværIKommuner(gyldigeKommunenummerISøk, søkeparametere = søkeparametere).toDto()
+        val søkeparametere = Søkeparametere.from(call.request.queryParameters, geografiService)
+        val virksomheter = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere).toDto()
         call.respond(virksomheter)
     }
 
@@ -32,7 +29,7 @@ fun Route.sykefraversstatistikk(
             if (orgnummer == SykefraversstatistikkVirksomhetDto.dummySvar.orgnr) // TODO fjern når vi har data
                 call.respond(listOf(SykefraversstatistikkVirksomhetDto.dummySvar))
             else
-                call.respond(sykefraversstatistikkRepository.hentSykefravær(orgnummer).toDto())
+                call.respond(sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer).toDto())
         } ?:
             call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }
