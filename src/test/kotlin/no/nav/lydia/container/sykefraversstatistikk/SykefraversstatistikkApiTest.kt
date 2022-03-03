@@ -243,6 +243,26 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skal bare få statistikk for siste periode hvis periode er uspesifisert`() {
+        val gjeldendePeriode = Periode.gjeldenePeriode()
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloGjeldeneKvartal)
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal)
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+            .fold(success = { statistikk ->
+                statistikk.size shouldBeGreaterThan 0
+                statistikk.forAll {
+                    it.kvartal shouldBe gjeldendePeriode.kvartal
+                    it.arstall shouldBe gjeldendePeriode.årstall
+                }
+                }, failure = {
+                    fail(it.message)
+                }
+            )
+    }
+
+    @Test
     fun `skal kunne hente virksomheter for et bestemt år og kvartal`() {
         val forrigePeriode = Periode.forrigePeriode()
         TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloGjeldeneKvartal)
