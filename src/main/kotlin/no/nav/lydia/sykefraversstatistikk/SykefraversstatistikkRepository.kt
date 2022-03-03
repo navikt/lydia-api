@@ -127,6 +127,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
                         vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
                     )
+                    AND (
+                        statistikk.kvartal = :kvartal AND statistikk.arstall = :arstall
+                    )    
                     
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
@@ -137,6 +140,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                 mapOf(
                     tmpKommuneTabell to session.connection.underlying.createArrayOf("text", søkeparametere.kommunenummer.toTypedArray()),
                     tmpNæringTabell to session.connection.underlying.createArrayOf("text", søkeparametere.næringsgruppeKoder.toTypedArray()),
+                    "kvartal" to søkeparametere.periode.kvartal,
+                    "arstall" to søkeparametere.periode.årstall
                 )
             ).map(this::mapRow).asList
             session.run(query)
