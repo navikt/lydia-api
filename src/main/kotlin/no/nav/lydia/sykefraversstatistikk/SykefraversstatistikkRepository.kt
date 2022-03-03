@@ -82,40 +82,27 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentAltSykefravær(søkeparametere: Søkeparametere): List<SykefraversstatistikkVirksomhet> {
-        return using(sessionOf(dataSource)) { session ->
-            val sql = """
-                    SELECT
-                        statistikk.orgnr,
-                        virksomhet.navn,
-                        virksomhet.kommune,
-                        virksomhet.kommunenummer,
-                        statistikk.arstall,
-                        statistikk.kvartal,
-                        statistikk.antall_personer,
-                        statistikk.tapte_dagsverk,
-                        statistikk.mulige_dagsverk,
-                        statistikk.sykefraversprosent,
-                        statistikk.maskert,
-                        statistikk.opprettet
-                    FROM sykefravar_statistikk_virksomhet AS statistikk
-                    JOIN virksomhet USING (orgnr)
-                    ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
-                    LIMIT 20
-                """.trimIndent()
-            val query = queryOf(
-                statement = sql
-            ).map(this::mapRow).asList
-            session.run(query)
-        }
-    }
+    private fun filterVerdi(filterNavn: String, filterVerdier: Set<String>) =
+        """
+            $filterNavn (inkluderAlle, filterverdi) AS (
+                    VALUES (
+                        ${filterVerdier.isEmpty()},
+                        :$filterNavn
+                    )    
+                )
+        """.trimIndent()
 
     fun hentSykefraværIKommuner(
         kommuner: Set<String>,
         søkeparametere: Søkeparametere
     ): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
+            val tmpKommuneTabell = "kommuner"
+            val tmpNæringTabell = "naringer"
             val sql = """
+                    WITH 
+                        ${filterVerdi(tmpKommuneTabell, kommuner)},
+                        ${filterVerdi(tmpNæringTabell, søkeparametere.næringsgruppeKoder)}
                     SELECT
                         DISTINCT virksomhet.orgnr,
                         virksomhet.navn,
@@ -131,14 +118,27 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.opprettet
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
-                    JOIN virksomhet_naring on (virksomhet.id = virksomhet_naring.virksomhet) 
-                    WHERE virksomhet.kommunenummer IN (${kommuner.joinToString(transform = { "?" })})
+                    JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) 
+                    
+                    WHERE (
+                        (SELECT inkluderAlle FROM $tmpKommuneTabell) IS TRUE OR
+                        virksomhet.kommunenummer in (select unnest($tmpKommuneTabell.filterverdi) FROM $tmpKommuneTabell)
+                    )
+                    AND (
+                        (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
+                        vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
+                    )
+                    
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
                 """.trimIndent()
+
             val query = queryOf(
                 statement = sql,
-                *kommuner.toTypedArray(),
+                mapOf(
+                    tmpKommuneTabell to session.connection.underlying.createArrayOf("text", kommuner.toTypedArray()),
+                    tmpNæringTabell to session.connection.underlying.createArrayOf("text", søkeparametere.næringsgruppeKoder.toTypedArray()),
+                )
             ).map(this::mapRow).asList
             session.run(query)
         }

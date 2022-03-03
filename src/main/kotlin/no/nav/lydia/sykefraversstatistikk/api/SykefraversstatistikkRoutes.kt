@@ -20,11 +20,6 @@ fun Route.sykefraversstatistikk(
 ) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
         val søkeparametere = Søkeparametere.from(call.request.queryParameters)
-
-        if (søkeparametere.erTom()){
-            return@get call.respond(sykefraversstatistikkRepository.hentAltSykefravær(søkeparametere).toDto())
-        }
-
         val gyldigeKommunenummerISøk = geografiService.hentKommunerFraFylkerOgKommuner(
             søkeparametere.fylkesnummer,
             søkeparametere.kommunenummer)
