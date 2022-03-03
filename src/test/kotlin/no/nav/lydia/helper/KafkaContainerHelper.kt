@@ -94,8 +94,8 @@ class KafkaContainerHelper(
         return gson.fromJson(jsonFromResources, SykefraversstatistikkKafkaMelding::class.java)
     }
 
-    fun sendSykefraversstatistikkKafkaMelding(testSted: TestSted) {
-        val kafkaMelding = sykefraversstatistikkKafkaMelding(testSted.sted)
+    fun sendSykefraversstatistikkKafkaMelding(melding: Melding) {
+        val kafkaMelding = sykefraversstatistikkKafkaMelding(melding.melding)
         sendOgVentTilKonsumert(
             key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
         )
@@ -129,7 +129,8 @@ class KafkaContainerHelper(
 
 }
 
-enum class TestSted(val sted: String) {
+enum class Melding(val melding: String) {
     oslo("oslo"),
+    osloTredjeKvartal("oslo_tredje_kvartal"),
     bergen("bergen")
 }

@@ -19,7 +19,7 @@ import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_smileyprosjekter_bergen
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.TestSted
+import no.nav.lydia.helper.Melding
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
@@ -54,8 +54,8 @@ class SykefraversstatistikkApiTest {
                 ).lastNed()
             }
 
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(TestSted.bergen)
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.bergen)
         }
 
         @AfterClass

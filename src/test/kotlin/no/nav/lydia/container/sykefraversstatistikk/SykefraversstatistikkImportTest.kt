@@ -3,15 +3,16 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
+import no.nav.lydia.helper.Melding
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
-import no.nav.lydia.helper.TestSted
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -51,6 +52,37 @@ class SykefraversstatistikkImportTest {
         }
     }
 
+        @Test
+        fun `kan importere statistikk for flere kvartal`() {
+            kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.oslo)
+
+            lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
+                .withLydiaToken()
+                .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+                .fold(success = { osloAndreKvart ->
+                    osloAndreKvart.size shouldBeExactly 1
+                    osloAndreKvart.first().kvartal shouldBeExactly 2
+                    osloAndreKvart.first().arstall shouldBeExactly 2020
+                    osloAndreKvart.first().orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                }, failure = {
+                    fail(it.message)
+                })
+
+            kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.osloTredjeKvartal)
+
+            lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
+                .withLydiaToken()
+                .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+                .fold(success = { osloAndreOgTredjeKvart ->
+                    osloAndreOgTredjeKvart.size shouldBeExactly 2
+                    osloAndreOgTredjeKvart.map { it.kvartal } shouldContainAll listOf(2,3)
+                    osloAndreOgTredjeKvart.map { it.arstall } shouldContainAll listOf(2020, 2020)
+                    osloAndreOgTredjeKvart.map { it.orgnr } shouldContainAll listOf(orgnr_CESNAUSKAITE_oslo, orgnr_CESNAUSKAITE_oslo)
+                }, failure = {
+                    fail(it.message)
+                })
+        }
+
     @Test
     fun `importerte data skal kunne hentes ut og være like`() {
         val kafkaMelding = kafkaContainer.sykefraversstatistikkKafkaMelding()
@@ -79,14 +111,14 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `import av data er idempotent`() {
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
 
         val førsteLagredeStatistikk = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
             .withLydiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .getOrElse { fail(it.message) }
 
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
 
         val second = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
             .withLydiaToken()
@@ -109,7 +141,7 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `vi lagrer metadata ved import`() {
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(TestSted.oslo)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
 
         val rs = postgres.performQuery("SELECT * FROM virksomhet_statistikk_metadata WHERE orgnr = '$orgnr_CESNAUSKAITE_oslo'")
 
