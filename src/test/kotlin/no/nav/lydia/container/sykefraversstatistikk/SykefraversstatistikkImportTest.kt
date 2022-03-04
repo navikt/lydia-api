@@ -3,23 +3,19 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
-import io.kotest.inspectors.forAtLeastOne
+import io.kotest.inspectors.ElementPass
+import io.kotest.inspectors.buildAssertionError
 import io.kotest.inspectors.forExactly
-import io.kotest.matchers.collections.shouldContain
+import io.kotest.inspectors.runTests
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.ints.shouldBeExactly
-import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldHave
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
-import no.nav.lydia.helper.Melding
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
+import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -61,30 +57,39 @@ class SykefraversstatistikkImportTest {
 
         @Test
         fun `kan importere statistikk for flere kvartal`() {
-            kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.oslo)
+            val gjeldenePeriode = Periode.gjeldenePeriode()
+            val forrigePeriode = Periode.forrigePeriode()
+            kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.osloForrigeKvartal)
 
             lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
                 .withLydiaToken()
                 .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
                 .fold(success = { osloAndreKvart ->
-                    osloAndreKvart.size shouldBeExactly 1
-                    osloAndreKvart.first().kvartal shouldBeExactly 2
-                    osloAndreKvart.first().arstall shouldBeExactly 2020
-                    osloAndreKvart.first().orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    osloAndreKvart.forExactlyOne {
+                        it.kvartal shouldBeExactly forrigePeriode.kvartal
+                        it.arstall shouldBeExactly forrigePeriode.årstall
+                        it.orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    }
                 }, failure = {
                     fail(it.message)
                 })
 
-            kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.osloTredjeKvartal)
+            kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.osloGjeldeneKvartal)
 
             lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
                 .withLydiaToken()
                 .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
                 .fold(success = { osloAndreOgTredjeKvart ->
-                    osloAndreOgTredjeKvart.size shouldBeExactly 2
-                    osloAndreOgTredjeKvart.map { it.kvartal } shouldContainAll listOf(2,3)
-                    osloAndreOgTredjeKvart.map { it.arstall } shouldContainAll listOf(2020, 2020)
-                    osloAndreOgTredjeKvart.map { it.orgnr } shouldContainAll listOf(orgnr_CESNAUSKAITE_oslo, orgnr_CESNAUSKAITE_oslo)
+                    osloAndreOgTredjeKvart.forExactlyOne {
+                        it.kvartal shouldBe forrigePeriode.kvartal
+                        it.arstall shouldBe forrigePeriode.årstall
+                        it.orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    }
+                    osloAndreOgTredjeKvart.forExactlyOne {
+                        it.kvartal shouldBe gjeldenePeriode.kvartal
+                        it.arstall shouldBe gjeldenePeriode.årstall
+                        it.orgnr shouldBe orgnr_CESNAUSKAITE_oslo
+                    }
                 }, failure = {
                     fail(it.message)
                 })
@@ -92,7 +97,7 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `importerte data skal kunne hentes ut og være like`() {
-        val kafkaMelding = kafkaContainer.sykefraversstatistikkKafkaMelding()
+        val kafkaMelding = kafkaContainer.sykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal)
         kafkaContainer.sendOgVentTilKonsumert(
             key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
         )
@@ -103,7 +108,7 @@ class SykefraversstatistikkImportTest {
 
         result.fold(success = { dtos ->
             dtos.size shouldBeGreaterThanOrEqual 1
-            dtos.forExactly(1) { dto ->
+            dtos.forExactlyOne { dto ->
                 dto.orgnr shouldBe kafkaMelding.value.virksomhetSykefravær.orgnr
                 dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
                 dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal
@@ -119,29 +124,29 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `import av data er idempotent`() {
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal)
 
         val førsteLagredeStatistikk = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
             .withLydiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .getOrElse { fail(it.message) }
 
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal)
 
         val second = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_CESNAUSKAITE_oslo")
             .withLydiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
         second.fold(success = { dtos ->
-            dtos.size shouldBeExactly 1
-            val dto = dtos[0]
-            dto.orgnr shouldBe førsteLagredeStatistikk[0].orgnr
-            dto.arstall shouldBe førsteLagredeStatistikk[0].arstall
-            dto.kvartal shouldBe førsteLagredeStatistikk[0].kvartal
-            dto.sykefraversprosent shouldBe førsteLagredeStatistikk[0].sykefraversprosent
-            dto.antallPersoner shouldBe førsteLagredeStatistikk[0].antallPersoner
-            dto.muligeDagsverk shouldBe førsteLagredeStatistikk[0].muligeDagsverk
-            dto.tapteDagsverk shouldBe førsteLagredeStatistikk[0].tapteDagsverk
+            dtos.forExactlyOne { dto ->
+                dto.orgnr shouldBe førsteLagredeStatistikk[0].orgnr
+                dto.arstall shouldBe førsteLagredeStatistikk[0].arstall
+                dto.kvartal shouldBe førsteLagredeStatistikk[0].kvartal
+                dto.sykefraversprosent shouldBe førsteLagredeStatistikk[0].sykefraversprosent
+                dto.antallPersoner shouldBe førsteLagredeStatistikk[0].antallPersoner
+                dto.muligeDagsverk shouldBe førsteLagredeStatistikk[0].muligeDagsverk
+                dto.tapteDagsverk shouldBe førsteLagredeStatistikk[0].tapteDagsverk
+            }
         }, failure = {
             fail(it.message)
         })
@@ -149,7 +154,7 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `vi lagrer metadata ved import`() {
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal)
 
         val rs = postgres.performQuery("SELECT * FROM virksomhet_statistikk_metadata WHERE orgnr = '$orgnr_CESNAUSKAITE_oslo'")
 

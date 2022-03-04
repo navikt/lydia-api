@@ -6,6 +6,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 data class Søkeparametere(
     val kommunenummer: Set<String>,
     val næringsgruppeKoder: Set<String>,
+    val periode: Periode,
     val sorteringsnøkkel: Sorteringsnøkkel,
     val sorteringsretning : Sorteringsretning
 ) {
@@ -14,6 +15,7 @@ data class Søkeparametere(
             Søkeparametere(
                 kommunenummer =  finnGyldigeKommunenummer(queryParameters, geografiService),
                 næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
+                periode = Periode.from(queryParameters["kvartal"], queryParameters["arstall"]),
                 sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters["sorteringsnokkel"]),
                 sorteringsretning = Sorteringsretning.from(queryParameters["sorteringsretning"])
             )
@@ -27,6 +29,26 @@ data class Søkeparametere(
 
         private fun String?.tilUnikeVerdier() : Set<String> =
             this?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+    }
+}
+
+class Periode(val kvartal: Int, val årstall: Int) {
+    companion object {
+        fun from(kvartal: String?, årstall: String?) =
+            Periode(
+                kvartal = kvartal?.toInt() ?: sisteKvartal(),
+                årstall = årstall?.toInt() ?: sisteÅr())
+
+        private fun sisteKvartal() = 4
+        private fun sisteÅr() = 2021
+
+        fun gjeldenePeriode() =
+            Periode(kvartal = sisteKvartal(), årstall = sisteÅr())
+        fun forrigePeriode() =
+            when(sisteKvartal()) {
+                1 -> Periode(kvartal = 4, årstall = sisteÅr() - 1)
+                else -> Periode(kvartal = sisteKvartal() - 1, årstall = sisteÅr())
+            }
     }
 }
 

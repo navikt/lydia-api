@@ -2,26 +2,22 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.responseObject
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.*
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.ints.shouldBeExactly
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeScenekunst
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_smileyprosjekter_bergen
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.Melding
-import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
-import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
@@ -52,8 +48,8 @@ class SykefraversstatistikkApiTest {
                 ).lastNed()
             }
 
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.oslo)
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.bergen)
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloGjeldeneKvartal)
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.bergenGjeldeneKvartal)
         }
 
         @AfterClass
@@ -244,6 +240,46 @@ class SykefraversstatistikkApiTest {
             }, failure = {
                 fail(it.message)
             })
+    }
+
+    @Test
+    fun `skal bare få statistikk for siste periode hvis periode er uspesifisert`() {
+        val gjeldendePeriode = Periode.gjeldenePeriode()
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloGjeldeneKvartal)
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal)
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+            .fold(success = { statistikk ->
+                statistikk.size shouldBeGreaterThan 0
+                statistikk.forAll {
+                    it.kvartal shouldBe gjeldendePeriode.kvartal
+                    it.arstall shouldBe gjeldendePeriode.årstall
+                }
+                }, failure = {
+                    fail(it.message)
+                }
+            )
+    }
+
+    @Test
+    fun `skal kunne hente virksomheter for et bestemt år og kvartal`() {
+        val forrigePeriode = Periode.forrigePeriode()
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloGjeldeneKvartal)
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal)
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?arstall=${forrigePeriode.årstall}&kvartal=${forrigePeriode.kvartal}")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+            .fold(success = { statistikk ->
+                statistikk.size shouldBeGreaterThan 0
+                statistikk.forAll {
+                    it.kvartal shouldBe forrigePeriode.kvartal
+                    it.arstall shouldBe forrigePeriode.årstall
+                }
+                }, failure = {
+                    fail(it.message)
+                }
+            )
     }
 
     @Test

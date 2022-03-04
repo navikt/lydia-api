@@ -5,6 +5,9 @@ import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeoutOrNull
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_smileyprosjekter_bergen
+import no.nav.lydia.sykefraversstatistikk.api.Periode
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -89,13 +92,12 @@ class KafkaContainerHelper(
             StringSerializer()
         )
 
-    fun sykefraversstatistikkKafkaMelding(kommune: String = "oslo"): SykefraversstatistikkKafkaMelding {
-        val jsonFromResources = this::class.java.getResource("/json/sykefraværsstatistikk_kafka_melding_$kommune.json").readText()
-        return gson.fromJson(jsonFromResources, SykefraversstatistikkKafkaMelding::class.java)
+    fun sykefraversstatistikkKafkaMelding(melding: Melding): SykefraversstatistikkKafkaMelding {
+        return gson.fromJson(melding.melding, SykefraversstatistikkKafkaMelding::class.java)
     }
 
     fun sendSykefraversstatistikkKafkaMelding(melding: Melding) {
-        val kafkaMelding = sykefraversstatistikkKafkaMelding(melding.melding)
+        val kafkaMelding = sykefraversstatistikkKafkaMelding(melding)
         sendOgVentTilKonsumert(
             key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
         )
@@ -130,7 +132,280 @@ class KafkaContainerHelper(
 }
 
 enum class Melding(val melding: String) {
-    oslo("oslo"),
-    osloTredjeKvartal("oslo_tredje_kvartal"),
-    bergen("bergen")
+    osloForrigeKvartal(melding = """
+        {
+          "key": {
+            "orgnr": $orgnr_CESNAUSKAITE_oslo,
+            "kvartal": ${Periode.forrigePeriode().kvartal},
+            "årstall": ${Periode.forrigePeriode().årstall}
+          },
+          "value": {
+            "virksomhetSykefravær": {
+              "orgnr": "987654321",
+              "navn": "Virksomhet Oslo",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": 10.0,
+              "muligeDagsverk": 500.0,
+              "antallPersoner": 6,
+              "prosent": 2.0,
+              "erMaskert": false,
+              "kategori": "VIRKSOMHET"
+            },
+            "næring5SifferSykefravær": [
+              {
+                "kategori": "NÆRING5SIFFER",
+                "kode": "11000",
+                "årstall": ${Periode.forrigePeriode().årstall},
+                "kvartal": ${Periode.forrigePeriode().kvartal},
+                "tapteDagsverk": "40.0",
+                "muligeDagsverk": 4000.0,
+                "antallPersoner": 1250,
+                "prosent": 1.0,
+                "erMaskert": false
+              }
+            ],
+            "næringSykefravær": {
+              "kategori": "NÆRING2SIFFER",
+              "kode": "11",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": "100.0",
+              "muligeDagsverk": 5000.0,
+              "antallPersoner": 150,
+              "prosent": 2.0,
+              "erMaskert": false
+            },
+            "sektorSykefravær": {
+              "kategori": "SEKTOR",
+              "kode": "1",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": "1340.0",
+              "muligeDagsverk": 88000.0,
+              "antallPersoner": 33000,
+              "prosent": 1.5,
+              "erMaskert": false
+            },
+            "landSykefravær": {
+              "kategori": "LAND",
+              "kode": "NO",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": "10000000.0",
+              "muligeDagsverk": 500000000.0,
+              "antallPersoner": 2500000,
+              "prosent": 2.0,
+              "erMaskert": false
+            }
+          }
+        }
+    """.trimIndent()),
+    osloGjeldeneKvartal(melding = """
+        {
+          "key": {
+            "orgnr": $orgnr_CESNAUSKAITE_oslo,
+            "kvartal": ${Periode.gjeldenePeriode().kvartal},
+            "årstall": ${Periode.gjeldenePeriode().årstall}
+          },
+          "value": {
+            "virksomhetSykefravær": {
+              "orgnr": "987654321",
+              "navn": "Virksomhet Oslo",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": 10.0,
+              "muligeDagsverk": 500.0,
+              "antallPersoner": 6,
+              "prosent": 2.0,
+              "erMaskert": false,
+              "kategori": "VIRKSOMHET"
+            },
+            "næring5SifferSykefravær": [
+              {
+                "kategori": "NÆRING5SIFFER",
+                "kode": "11000",
+                "årstall": ${Periode.gjeldenePeriode().årstall},
+                "kvartal": ${Periode.gjeldenePeriode().kvartal},
+                "tapteDagsverk": "40.0",
+                "muligeDagsverk": 4000.0,
+                "antallPersoner": 1250,
+                "prosent": 1.0,
+                "erMaskert": false
+              }
+            ],
+            "næringSykefravær": {
+              "kategori": "NÆRING2SIFFER",
+              "kode": "11",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": "100.0",
+              "muligeDagsverk": 5000.0,
+              "antallPersoner": 150,
+              "prosent": 2.0,
+              "erMaskert": false
+            },
+            "sektorSykefravær": {
+              "kategori": "SEKTOR",
+              "kode": "1",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": "1340.0",
+              "muligeDagsverk": 88000.0,
+              "antallPersoner": 33000,
+              "prosent": 1.5,
+              "erMaskert": false
+            },
+            "landSykefravær": {
+              "kategori": "LAND",
+              "kode": "NO",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": "10000000.0",
+              "muligeDagsverk": 500000000.0,
+              "antallPersoner": 2500000,
+              "prosent": 2.0,
+              "erMaskert": false
+            }
+          }
+        }
+    """.trimIndent()),
+    bergenForrigeKvartal(melding = """
+        {
+          "key": {
+            "orgnr": $orgnr_smileyprosjekter_bergen,
+            "kvartal": ${Periode.forrigePeriode().kvartal},
+            "årstall": ${Periode.forrigePeriode().årstall}
+          },
+          "value": {
+            "virksomhetSykefravær": {
+              "orgnr": "995858266",
+              "navn": "Virksomhet Bergen",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": 20.0,
+              "muligeDagsverk": 500.0,
+              "antallPersoner": 6,
+              "prosent": 2.0,
+              "erMaskert": false,
+              "kategori": "VIRKSOMHET"
+            },
+            "næring5SifferSykefravær": [
+              {
+                "kategori": "NÆRING5SIFFER",
+                "kode": "11000",
+                "årstall": ${Periode.forrigePeriode().årstall},
+                "kvartal": ${Periode.forrigePeriode().kvartal},
+                "tapteDagsverk": "40.0",
+                "muligeDagsverk": 4000.0,
+                "antallPersoner": 1250,
+                "prosent": 1.0,
+                "erMaskert": false
+              }
+            ],
+            "næringSykefravær": {
+              "kategori": "NÆRING2SIFFER",
+              "kode": "11",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": "100.0",
+              "muligeDagsverk": 5000.0,
+              "antallPersoner": 150,
+              "prosent": 2.0,
+              "erMaskert": false
+            },
+            "sektorSykefravær": {
+              "kategori": "SEKTOR",
+              "kode": "1",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": "1340.0",
+              "muligeDagsverk": 88000.0,
+              "antallPersoner": 33000,
+              "prosent": 1.5,
+              "erMaskert": false
+            },
+            "landSykefravær": {
+              "kategori": "LAND",
+              "kode": "NO",
+              "årstall": ${Periode.forrigePeriode().årstall},
+              "kvartal": ${Periode.forrigePeriode().kvartal},
+              "tapteDagsverk": "10000000.0",
+              "muligeDagsverk": 500000000.0,
+              "antallPersoner": 2500000,
+              "prosent": 2.0,
+              "erMaskert": false
+            }
+          }
+        }
+    """.trimIndent()),
+    bergenGjeldeneKvartal(melding = """
+        {
+          "key": {
+            "orgnr": $orgnr_smileyprosjekter_bergen,
+            "kvartal": ${Periode.gjeldenePeriode().kvartal},
+            "årstall": ${Periode.gjeldenePeriode().årstall}
+          },
+          "value": {
+            "virksomhetSykefravær": {
+              "orgnr": "995858266",
+              "navn": "Virksomhet Bergen",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": 20.0,
+              "muligeDagsverk": 500.0,
+              "antallPersoner": 6,
+              "prosent": 2.0,
+              "erMaskert": false,
+              "kategori": "VIRKSOMHET"
+            },
+            "næring5SifferSykefravær": [
+              {
+                "kategori": "NÆRING5SIFFER",
+                "kode": "11000",
+                "årstall": ${Periode.gjeldenePeriode().årstall},
+                "kvartal": ${Periode.gjeldenePeriode().kvartal},
+                "tapteDagsverk": "40.0",
+                "muligeDagsverk": 4000.0,
+                "antallPersoner": 1250,
+                "prosent": 1.0,
+                "erMaskert": false
+              }
+            ],
+            "næringSykefravær": {
+              "kategori": "NÆRING2SIFFER",
+              "kode": "11",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": "100.0",
+              "muligeDagsverk": 5000.0,
+              "antallPersoner": 150,
+              "prosent": 2.0,
+              "erMaskert": false
+            },
+            "sektorSykefravær": {
+              "kategori": "SEKTOR",
+              "kode": "1",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": "1340.0",
+              "muligeDagsverk": 88000.0,
+              "antallPersoner": 33000,
+              "prosent": 1.5,
+              "erMaskert": false
+            },
+            "landSykefravær": {
+              "kategori": "LAND",
+              "kode": "NO",
+              "årstall": ${Periode.gjeldenePeriode().årstall},
+              "kvartal": ${Periode.gjeldenePeriode().kvartal},
+              "tapteDagsverk": "10000000.0",
+              "muligeDagsverk": 500000000.0,
+              "antallPersoner": 2500000,
+              "prosent": 2.0,
+              "erMaskert": false
+            }
+          }
+        }
+    """.trimIndent())
 }
