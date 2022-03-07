@@ -54,10 +54,9 @@ class BrregDownloader(
                         }
                         else -> {
                             try {
-                                if (virksomhet.beliggenhetsadresse.erRelevant()) {
-                                    virksomhetRepository.insert(virksomhet = virksomhet)
-                                } else {
-                                    log.debug("Skipper lagring av virksomhet med orgnr:${virksomhet.organisasjonsnummer}")
+                                virksomhet.beliggenhetsadresse?.let { adresse ->
+                                    if (adresse.erRelevant())
+                                        virksomhetRepository.insert(virksomhet = virksomhet)
                                 }
                             } catch (e: Exception) {
                                 log.error("Lagring av virksomhet feilet", e)

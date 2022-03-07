@@ -55,12 +55,12 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         mutableMapOf(
                             "orgnr" to virksomhet.organisasjonsnummer,
                             "navn" to virksomhet.navn,
-                            "land" to virksomhet.beliggenhetsadresse.land,
-                            "landkode" to virksomhet.beliggenhetsadresse.landkode,
-                            "postnummer" to virksomhet.beliggenhetsadresse.postnummer,
-                            "poststed" to virksomhet.beliggenhetsadresse.poststed,
-                            "kommune" to virksomhet.beliggenhetsadresse.kommune,
-                            "kommunenummer" to virksomhet.beliggenhetsadresse.kommunenummer,
+                            "land" to virksomhet.beliggenhetsadresse?.land,
+                            "landkode" to virksomhet.beliggenhetsadresse?.landkode,
+                            "postnummer" to virksomhet.beliggenhetsadresse?.postnummer,
+                            "poststed" to virksomhet.beliggenhetsadresse?.poststed,
+                            "kommune" to virksomhet.beliggenhetsadresse?.kommune,
+                            "kommunenummer" to virksomhet.beliggenhetsadresse?.kommunenummer,
                         ).apply {
                             this.putAll(virksomhet.hentNæringsgruppekoder())
                         },

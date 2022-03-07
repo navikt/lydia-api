@@ -33,11 +33,13 @@ class Kafka(
     val truststoreLocation: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
     val keystoreLocation: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
-    val groupId: String = "lydia-api-kafka-group-id",
-    val clientId: String = "lydia-api",
     val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
+    companion object {
+        const val groupId: String = "lydia-api-kafka-group-id"
+        const val clientId: String = "lydia-api"
+    }
     fun consumerProperties() =
         baseConsumerProperties().apply {
             // TODO: Finn smidigere måte å få tester til å kjøre

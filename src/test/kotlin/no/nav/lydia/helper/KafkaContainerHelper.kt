@@ -5,8 +5,9 @@ import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeoutOrNull
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_smileyprosjekter_bergen
+import no.nav.lydia.Kafka
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
@@ -117,8 +118,8 @@ class KafkaContainerHelper(
 
             withTimeoutOrNull(timeout) {
                 do {
-                    delay(timeMillis = 250L)
-                } while (consumerSinOffset("lydiaApiStatistikkConsumers") <= sendtMelding.offset())
+                    delay(timeMillis = 100L)
+                } while (consumerSinOffset(consumerGroup = Kafka.groupId) <= sendtMelding.offset())
             }
         }
     }
@@ -135,13 +136,13 @@ enum class Melding(val melding: String) {
     osloForrigeKvartal(melding = """
         {
           "key": {
-            "orgnr": $orgnr_CESNAUSKAITE_oslo,
+            "orgnr": $orgnr_oslo,
             "kvartal": ${Periode.forrigePeriode().kvartal},
             "årstall": ${Periode.forrigePeriode().årstall}
           },
           "value": {
             "virksomhetSykefravær": {
-              "orgnr": "987654321",
+              "orgnr": $orgnr_oslo,
               "navn": "Virksomhet Oslo",
               "årstall": ${Periode.forrigePeriode().årstall},
               "kvartal": ${Periode.forrigePeriode().kvartal},
@@ -204,13 +205,13 @@ enum class Melding(val melding: String) {
     osloGjeldeneKvartal(melding = """
         {
           "key": {
-            "orgnr": $orgnr_CESNAUSKAITE_oslo,
+            "orgnr": $orgnr_oslo,
             "kvartal": ${Periode.gjeldenePeriode().kvartal},
             "årstall": ${Periode.gjeldenePeriode().årstall}
           },
           "value": {
             "virksomhetSykefravær": {
-              "orgnr": "987654321",
+              "orgnr": $orgnr_oslo,
               "navn": "Virksomhet Oslo",
               "årstall": ${Periode.gjeldenePeriode().årstall},
               "kvartal": ${Periode.gjeldenePeriode().kvartal},
@@ -273,13 +274,13 @@ enum class Melding(val melding: String) {
     bergenForrigeKvartal(melding = """
         {
           "key": {
-            "orgnr": $orgnr_smileyprosjekter_bergen,
+            "orgnr": $orgnr_bergen,
             "kvartal": ${Periode.forrigePeriode().kvartal},
             "årstall": ${Periode.forrigePeriode().årstall}
           },
           "value": {
             "virksomhetSykefravær": {
-              "orgnr": "995858266",
+              "orgnr": $orgnr_bergen,
               "navn": "Virksomhet Bergen",
               "årstall": ${Periode.forrigePeriode().årstall},
               "kvartal": ${Periode.forrigePeriode().kvartal},
@@ -342,13 +343,13 @@ enum class Melding(val melding: String) {
     bergenGjeldeneKvartal(melding = """
         {
           "key": {
-            "orgnr": $orgnr_smileyprosjekter_bergen,
+            "orgnr": $orgnr_bergen,
             "kvartal": ${Periode.gjeldenePeriode().kvartal},
             "årstall": ${Periode.gjeldenePeriode().årstall}
           },
           "value": {
             "virksomhetSykefravær": {
-              "orgnr": "995858266",
+              "orgnr": $orgnr_bergen,
               "navn": "Virksomhet Bergen",
               "årstall": ${Periode.gjeldenePeriode().årstall},
               "kvartal": ${Periode.gjeldenePeriode().kvartal},

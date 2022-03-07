@@ -4,17 +4,14 @@ import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
-import no.nav.lydia.AzureConfig
-import no.nav.lydia.Database
-import no.nav.lydia.Integrasjoner
-import no.nav.lydia.Kafka
-import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.Security
+import no.nav.lydia.*
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_BELIGGENHETSADRESSE
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_POSTNUMMER
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
 import no.nav.lydia.helper.PostgrestContainerHelper
-import no.nav.lydia.lydiaRestApi
 import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.virksomhet.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsRepository
@@ -82,7 +79,7 @@ class BrregDownloaderTest {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
 
-                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '995858266'")
+                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '$orgnr_bergen'")
                 resultSet.row shouldBe 1
 
                 val id = resultSet.getLong("id")
@@ -94,15 +91,19 @@ class BrregDownloaderTest {
                 resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeBedriftsrådgivning
 
                 val resultSetUtenPostnummer =
-                    postgres.performQuery("select * from virksomhet where orgnr = '921972539'")
+                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_MANGLER_POSTNUMMER'")
                 resultSetUtenPostnummer.row shouldBe 0
+
+                val resultSetUtenBeliggenhetsadresse =
+                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_MANGLER_BELIGGENHETSADRESSE'")
+                resultSetUtenBeliggenhetsadresse.row shouldBe 0
             }
 
             // sjekk at næringer blir populert på nytt ved ny import av virksomheter
             postgres.performInsert("delete from virksomhet_naring")
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
-                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '995858266'")
+                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '$orgnr_bergen'")
                 resultSet.row shouldBe 1
                 val id = resultSet.getLong("id")
                 val resultSetFraVirksomhetNæring =

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class VirksomhetDto(
     val organisasjonsnummer: String,
     val navn: String,
-    val beliggenhetsadresse: Beliggenhetsadresse,
+    val beliggenhetsadresse: Beliggenhetsadresse?,
     val naeringskode1: NæringskodeBrreg,
     val naeringskode2: NæringskodeBrreg?,
     val naeringskode3: NæringskodeBrreg?,

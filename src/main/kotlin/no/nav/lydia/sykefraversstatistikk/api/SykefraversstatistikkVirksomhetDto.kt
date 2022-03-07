@@ -19,20 +19,6 @@ data class SykefraversstatistikkVirksomhetDto(
     val tapteDagsverk: Double
 ) {
     companion object {
-        val dummySvar = SykefraversstatistikkVirksomhetDto(
-            orgnr = "123456789",
-            virksomhetsnavn = "Sinnasnekkern",
-            kommune = Kommune("Oslo", "0301"),
-            sektor = "Bygg og anlegg",
-            neringsgruppe = "F - Bygge- og anleggsvirksomhet",
-            arstall = 2021,
-            kvartal = 4,
-            sykefraversprosent = 2.0,
-            antallPersoner = 10.0,
-            muligeDagsverk = 500.0,
-            tapteDagsverk = 10.0,
-        )
-
         fun List<SykefraversstatistikkVirksomhet>.toDto(): List<SykefraversstatistikkVirksomhetDto> =
             this.map { it.toDto() }
         

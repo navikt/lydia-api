@@ -5,17 +5,19 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.*
-import io.kotest.matchers.equality.shouldBeEqualToComparingFields
-import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeScenekunst
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_CESNAUSKAITE_oslo
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_smileyprosjekter_bergen
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
+import no.nav.lydia.helper.Melding
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
@@ -62,15 +64,17 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
-        val orgnum = "123456789"
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnum")
+        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr_bergen")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
 
         result.fold(
             success = { sykefraværsstatistikkVirksomhet ->
-                sykefraværsstatistikkVirksomhet.size shouldBeExactly 1
-                sykefraværsstatistikkVirksomhet[0] shouldBeEqualToComparingFields SykefraversstatistikkVirksomhetDto.dummySvar
+                sykefraværsstatistikkVirksomhet.forAll {
+                    it.orgnr shouldBe orgnr_bergen
+                    it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
+                    it.kommune.navn shouldBe "BERGEN"
+                }
             }, failure = {
                 fail(it.message)
             })
@@ -143,7 +147,7 @@ class SykefraversstatistikkApiTest {
             success = { respons ->
                 respons.size shouldBe 1
                 val testVirksomhet = respons.first()
-                testVirksomhet.orgnr shouldBe orgnr_smileyprosjekter_bergen
+                testVirksomhet.orgnr shouldBe orgnr_bergen
                 testVirksomhet.kommune.navn shouldBe "BERGEN"
                 testVirksomhet.kommune.nummer shouldBe kommunenummer
             }, failure = {
@@ -160,10 +164,11 @@ class SykefraversstatistikkApiTest {
 
         result.fold(
             success = { apiResponse ->
-                val testVirksomhet = apiResponse.first()
-                testVirksomhet.orgnr shouldBe orgnr_smileyprosjekter_bergen
-                testVirksomhet.kommune.navn shouldBe "BERGEN"
-                testVirksomhet.kommune.nummer shouldStartWith fylkesnummer
+                apiResponse.size shouldBeGreaterThanOrEqual 1
+                apiResponse.forAll { testVirksomhet ->
+                    testVirksomhet.kommune.navn shouldBe "BERGEN"
+                    testVirksomhet.kommune.nummer shouldStartWith fylkesnummer
+                }
             }, failure = {
                 fail(it.message)
             })
@@ -181,8 +186,8 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { sykefravær ->
                 sykefravær.map { it.orgnr }.toSet() shouldContainAll setOf(
-                    orgnr_smileyprosjekter_bergen,
-                    orgnr_CESNAUSKAITE_oslo
+                    orgnr_bergen,
+                    orgnr_oslo
                 )
                 sykefravær.map { it.kommune.nummer.substring(0..1) }.toSet() shouldBe setOf("46", "03")
             }, failure = {
@@ -200,8 +205,8 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { sykefravær ->
                 sykefravær.map { it.orgnr } shouldContainExactly listOf(
-                    orgnr_smileyprosjekter_bergen,
-                    orgnr_CESNAUSKAITE_oslo
+                    orgnr_bergen,
+                    orgnr_oslo
                 )
             }, failure = {
                 fail(it.message)
@@ -235,7 +240,7 @@ class SykefraversstatistikkApiTest {
         result.fold(
             success = { sykefravær ->
                 sykefravær.map { it.orgnr } shouldContainExactly listOf(
-                    orgnr_CESNAUSKAITE_oslo
+                    orgnr_oslo
                 )
             }, failure = {
                 fail(it.message)

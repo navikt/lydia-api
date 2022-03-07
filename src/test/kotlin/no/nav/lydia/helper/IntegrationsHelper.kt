@@ -8,8 +8,10 @@ import no.nav.lydia.virksomhet.brreg.BrregDownloader
 class IntegrationsHelper {
     companion object {
 
-        const val orgnr_smileyprosjekter_bergen = "995858266"
-        const val orgnr_CESNAUSKAITE_oslo = "987654321"
+        const val orgnr_bergen = "123456789"
+        const val orgnr_oslo = "987654321"
+        const val orgnr_MANGLER_POSTNUMMER = "123123123"
+        const val orgnr_MANGLER_BELIGGENHETSADRESSE = "321321321"
         const val næringskodeScenekunst = "90.012"
         const val næringskodeBedriftsrådgivning = "70.220"
 
@@ -111,8 +113,8 @@ class IntegrationsHelper {
             val underEnheter = """
                 [
                   {
-                    "organisasjonsnummer" : $orgnr_smileyprosjekter_bergen,
-                    "navn" : ":-) PROSJEKTER",
+                    "organisasjonsnummer" : $orgnr_bergen,
+                    "navn" : "Virksomhet Bergen",
                     "organisasjonsform" : {
                       "kode" : "BEDR",
                       "beskrivelse" : "Bedrift",
@@ -129,22 +131,22 @@ class IntegrationsHelper {
                       "kode" : $næringskodeScenekunst
                     },
                     "antallAnsatte" : 1,
-                    "overordnetEnhet" : "995849364",
+                    "overordnetEnhet" : "999888777",
                     "oppstartsdato" : "2010-07-01",
                     "beliggenhetsadresse" : {
                       "land" : "Norge",
                       "landkode" : "NO",
                       "postnummer" : "5034",
                       "poststed" : "BERGEN",
-                      "adresse" : [ "Skanselien 37" ],
+                      "adresse" : [ "Bergenveien 1" ],
                       "kommune" : "BERGEN",
                       "kommunenummer" : "4601"
                     },
                     "links" : [ ]
                   },
                   {
-                    "organisasjonsnummer" : $orgnr_CESNAUSKAITE_oslo,
-                    "navn" : "1012 PROJECT AISTE CESNAUSKAITE",
+                    "organisasjonsnummer" : $orgnr_oslo,
+                    "navn" : "Virksomhet Oslo",
                     "organisasjonsform" : {
                       "kode" : "BEDR",
                       "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
@@ -157,21 +159,21 @@ class IntegrationsHelper {
                       "kode" : $næringskodeScenekunst
                     },
                     "antallAnsatte" : 0,
-                    "overordnetEnhet" : "924965304",
+                    "overordnetEnhet" : "111222333",
                     "oppstartsdato" : "2020-04-22",
                     "beliggenhetsadresse" : {
                       "land" : "Norge",
                       "landkode" : "NO",
                       "postnummer" : "0364",
                       "poststed" : "OSLO",
-                      "adresse" : [ "Trudvangveien 5C" ],
+                      "adresse" : [ "Osloveien 1" ],
                       "kommune" : "OSLO",
                       "kommunenummer" : "0301"
                     },
                     "links" : [ ]
                   },
                   {
-                      "organisasjonsnummer" : "921972539",
+                      "organisasjonsnummer" : $orgnr_MANGLER_POSTNUMMER,
                       "navn" : "MANGLER POSTNUMMER",
                       "organisasjonsform" : {
                         "kode" : "AAFY",
@@ -185,13 +187,31 @@ class IntegrationsHelper {
                         "kode" : "47.410"
                       },
                       "antallAnsatte" : 0,
-                      "overordnetEnhet" : "921780583",
+                      "overordnetEnhet" : "222333444",
                       "beliggenhetsadresse" : {
                         "land" : "Tyskland",
                         "landkode" : "DE",
                         "poststed" : "60313 FRANKFURT AM MAIN",
-                        "adresse" : [ "Thurn-und-Taxis-Platz 6" ]
+                        "adresse" : [ "Tysklandveien 1" ]
                       },
+                      "links" : [ ]
+                    },
+                    { 
+                      "organisasjonsnummer" : $orgnr_MANGLER_BELIGGENHETSADRESSE,
+                      "navn" : "MANGLER BELIGGENHETSADRESSE",
+                      "organisasjonsform" : {
+                        "kode" : "AAFY",
+                        "beskrivelse" : "Underenhet til ikke-næringsdrivende",
+                        "links" : [ ]
+                      },
+                      "registreringsdatoEnhetsregisteret" : "2018-12-22",
+                      "registrertIMvaregisteret" : false,
+                      "naeringskode1" : {
+                        "beskrivelse" : "Butikkhandel med datamaskiner og utstyr til datamaskiner",
+                        "kode" : "47.410"
+                      },
+                      "antallAnsatte" : 0,
+                      "overordnetEnhet" : "444555666",
                       "links" : [ ]
                     }
                 ]
