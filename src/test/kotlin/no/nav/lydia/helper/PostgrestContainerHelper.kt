@@ -38,15 +38,19 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
         }
 
     fun performQuery(sql: String): ResultSet {
-        val statement: Statement = getDataSource().connection.createStatement()
-        statement.execute(sql)
-        val resultSet: ResultSet = statement.resultSet
-        resultSet.next()
-        return resultSet
+        getDataSource().use { dataSource ->
+            val statement: Statement = dataSource.connection.createStatement()
+            statement.execute(sql)
+            val resultSet: ResultSet = statement.resultSet
+            resultSet.next()
+            return resultSet
+        }
     }
-    fun performInsert(sql: String){
-        val statement: Statement = getDataSource().connection.createStatement()
-        statement.execute(sql)
+    fun performUpdate(sql: String){
+        getDataSource().use { dataSource ->
+            val statement: Statement = dataSource.connection.createStatement()
+            statement.execute(sql)
+        }
     }
 
     fun envVars() = mapOf(

@@ -10,6 +10,8 @@ class IntegrationsHelper {
 
         const val orgnr_bergen = "123456789"
         const val orgnr_oslo = "987654321"
+        const val orgnr_oslo_flere_adresser = "555555555"
+        const val orgnr_oslo_mangler_adresser = "666666666"
         const val orgnr_MANGLER_POSTNUMMER = "123123123"
         const val orgnr_MANGLER_BELIGGENHETSADRESSE = "321321321"
         const val næringskodeScenekunst = "90.012"
@@ -172,6 +174,61 @@ class IntegrationsHelper {
                     },
                     "links" : [ ]
                   },
+                  {
+                    "organisasjonsnummer" : $orgnr_oslo_flere_adresser,
+                    "navn" : "Virksomhet Oslo",
+                    "organisasjonsform" : {
+                      "kode" : "BEDR",
+                      "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
+                      "links" : [ ]
+                    },
+                    "registreringsdatoEnhetsregisteret" : "2020-04-28",
+                    "registrertIMvaregisteret" : false,
+                    "naeringskode1" : {
+                      "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
+                      "kode" : $næringskodeScenekunst
+                    },
+                    "antallAnsatte" : 0,
+                    "overordnetEnhet" : "111222333",
+                    "oppstartsdato" : "2020-04-22",
+                    "beliggenhetsadresse" : {
+                      "land" : "Norge",
+                      "landkode" : "NO",
+                      "postnummer" : "0364",
+                      "poststed" : "OSLO",
+                      "adresse" : [ "c/o Oslo Tigersen", "Osloveien 1" ],
+                      "kommune" : "OSLO",
+                      "kommunenummer" : "0301"
+                    },
+                    "links" : [ ]
+                  },
+                  {
+                    "organisasjonsnummer" : $orgnr_oslo_mangler_adresser,
+                    "navn" : "Virksomhet Oslo",
+                    "organisasjonsform" : {
+                      "kode" : "BEDR",
+                      "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
+                      "links" : [ ]
+                    },
+                    "registreringsdatoEnhetsregisteret" : "2020-04-28",
+                    "registrertIMvaregisteret" : false,
+                    "naeringskode1" : {
+                      "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
+                      "kode" : $næringskodeScenekunst
+                    },
+                    "antallAnsatte" : 0,
+                    "overordnetEnhet" : "111222333",
+                    "oppstartsdato" : "2020-04-22",
+                    "beliggenhetsadresse" : {
+                      "land" : "Norge",
+                      "landkode" : "NO",
+                      "postnummer" : "0364",
+                      "poststed" : "OSLO",
+                      "kommune" : "OSLO",
+                      "kommunenummer" : "0301"
+                    },
+                    "links" : [ ]
+                  },       
                   {
                       "organisasjonsnummer" : $orgnr_MANGLER_POSTNUMMER,
                       "navn" : "MANGLER POSTNUMMER",

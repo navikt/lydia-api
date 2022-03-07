@@ -22,6 +22,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 landkode,
                                 postnummer,
                                 poststed,
+                                adresse,
                                 kommune,
                                 kommunenummer
                                )
@@ -32,6 +33,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     :landkode,
                                     :postnummer,
                                     :poststed,
+                                    :adresse,
                                     :kommune,
                                     :kommunenummer
                                 ) 
@@ -41,6 +43,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     landkode = :landkode,
                                     postnummer = :postnummer,
                                     poststed = :poststed,
+                                    adresse = :adresse,
                                     kommune = :kommune,
                                     kommunenummer = :kommunenummer
                                 RETURNING id
@@ -59,6 +62,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                             "landkode" to virksomhet.beliggenhetsadresse?.landkode,
                             "postnummer" to virksomhet.beliggenhetsadresse?.postnummer,
                             "poststed" to virksomhet.beliggenhetsadresse?.poststed,
+                            "adresse" to session.connection.underlying.createArrayOf("text", virksomhet.beliggenhetsadresse?.adresse?.toTypedArray() ?: emptyArray()),
                             "kommune" to virksomhet.beliggenhetsadresse?.kommune,
                             "kommunenummer" to virksomhet.beliggenhetsadresse?.kommunenummer,
                         ).apply {
