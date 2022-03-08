@@ -50,7 +50,7 @@ dependencies {
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.8.9")
+    implementation("com.google.code.gson:gson:2.9.0")
 
     // Kafka
     implementation("org.apache.kafka:kafka-clients:2.8.0")
