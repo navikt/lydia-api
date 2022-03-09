@@ -26,7 +26,14 @@ data class NæringskodeBrreg(
 )
 
 @Serializable
-data class Beliggenhetsadresse(val land: String?, val landkode: String?, val postnummer: String?, val poststed: String?, val kommune: String?, val kommunenummer: String?) {
+data class Beliggenhetsadresse(
+    val land: String?,
+    val landkode: String?,
+    val postnummer: String?,
+    val poststed: String?,
+    val adresse: List<String>?,
+    val kommune: String?,
+    val kommunenummer: String?) {
     // TODO: hva definerer en relevant virksomhet i kontekst av beliggenhet
     fun erRelevant() =
         listOf(land, landkode, postnummer, poststed, kommune, kommunenummer).all { !it.isNullOrBlank() }

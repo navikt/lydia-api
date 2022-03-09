@@ -1,5 +1,6 @@
 package no.nav.lydia.brreg
 
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
@@ -11,17 +12,20 @@ import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsråd
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_BELIGGENHETSADRESSE
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_POSTNUMMER
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo_flere_adresser
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo_mangler_adresser
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.virksomhet.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsRepository
 import org.junit.AfterClass
 import java.net.URL
+import kotlin.test.AfterTest
 import kotlin.test.Test
 
 
 class BrregDownloaderTest {
-    val naisEnvironment = NaisEnvironment(
+    private val naisEnvironment = NaisEnvironment(
         database = Database(
             host = "",
             port = "",
@@ -68,6 +72,39 @@ class BrregDownloaderTest {
         }
     }
 
+    @AfterTest
+    fun cleanup() {
+        postgres.performUpdate("delete from virksomhet_naring")
+        postgres.performUpdate("delete from virksomhet")
+    }
+
+    @Test
+    fun `vi kan laste ned virksomheter med og uten adresser`() {
+        withTestApplication({
+            lydiaRestApi(
+                naisEnvironment = naisEnvironment,
+                dataSource = postgres.getDataSource()
+            )
+        }) {
+            with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
+                this.response.status() shouldBe OK
+
+                val resultSetFlereAdresser =
+                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_oslo_flere_adresser'")
+                resultSetFlereAdresser.row shouldBe 1
+                (resultSetFlereAdresser.getArray("adresse").array as? Array<out Any?>)
+                    ?.filterIsInstance<String>() shouldContainExactly listOf(
+                    "c/o Oslo Tigersen",
+                    "Osloveien 1"
+                )
+
+                val resultSetManglerAdresser =
+                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_oslo_mangler_adresser'")
+                resultSetManglerAdresser.row shouldBe 1
+            }
+        }
+    }
+
     @Test
     fun `vi kan laste ned liste med underenheter fra Brreg flere ganger uten konflikt`() {
         withTestApplication({
@@ -100,7 +137,7 @@ class BrregDownloaderTest {
             }
 
             // sjekk at næringer blir populert på nytt ved ny import av virksomheter
-            postgres.performInsert("delete from virksomhet_naring")
+            postgres.performUpdate("delete from virksomhet_naring")
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
                 val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '$orgnr_bergen'")

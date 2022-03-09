@@ -1,0 +1,1 @@
+alter table virksomhet add column adresse text[] not null default '{}';
