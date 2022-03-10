@@ -1,14 +1,16 @@
-package no.nav.lydia.ia.prosess
+package no.nav.lydia.ia.sak
 
 import java.time.LocalDateTime
 
-class IAProsess(
-    val id: String,
+class IASak(
+    val saksnummer: String,
     val orgnr: String,
-    val type: IAProsessType,
+    val type: IASakstype,
     val status: IAProsessStatus,
     val opprettet: LocalDateTime,
-    val opprettet_av: String
+    val opprettet_av: String,
+    val endret: LocalDateTime?,
+    val endretAv: String?
 ) {
 }
 
@@ -21,7 +23,7 @@ enum class IAProsessStatus {
   AVSLUTTET
 }
 
-enum class IAProsessType {
+enum class IASakstype {
     NAV_STOTTER,
     SELVBETJENT
 }
