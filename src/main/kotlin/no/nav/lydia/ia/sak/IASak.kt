@@ -6,21 +6,49 @@ class IASak(
     val saksnummer: String,
     val orgnr: String,
     val type: IASakstype,
-    val status: IAProsessStatus,
     val opprettet: LocalDateTime,
     val opprettet_av: String,
-    val endret: LocalDateTime?,
-    val endretAv: String?
+    var endret: LocalDateTime?,
+    var endretAv: String?,
+    var tilstand: ProsessTilstand = StartTilstand()
 ) {
+    val status: IAProsessStatus
+        get() = tilstand.status
+
+}
+
+abstract class ProsessTilstand(val status: IAProsessStatus) {
+    open fun IASak.prioritert(navIdent: String) {
+        throw IllegalStateException()
+    }
+
+
+}
+
+class StartTilstand: ProsessTilstand(
+    status = IAProsessStatus.NY
+) {
+    override fun IASak.prioritert(navIdent: String) {
+        tilstand = PrioritertTilstand()
+        endretAv = navIdent
+        endret = LocalDateTime.now()
+    }
+}
+
+class PrioritertTilstand : ProsessTilstand(
+    status = IAProsessStatus.PRIORITERT
+) {
+
 }
 
 enum class IAProsessStatus {
-  PRIORITERT,
-  TAKKET_NEI,
-  KARTLEGGING,
-  GJENNOMFORING,
-  EVALUERING,
-  AVSLUTTET
+    NY,
+    PRIORITERT,
+    TAKKET_NEI,
+    KARTLEGGING,
+    GJENNOMFORING,
+    EVALUERING,
+    AVSLUTTET,
 }
 
 enum class IASakstype {
