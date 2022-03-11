@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak
+package no.nav.lydia.ia.sak.domene
 
 import java.time.LocalDateTime
 
@@ -10,8 +10,8 @@ class IASak(
     val opprettet_av: String,
     var endret: LocalDateTime?,
     var endretAv: String?,
-    var tilstand: ProsessTilstand = StartTilstand()
 ) {
+    var tilstand: ProsessTilstand = StartTilstand()
     val status: IAProsessStatus
         get() = tilstand.status
 
@@ -22,10 +22,18 @@ abstract class ProsessTilstand(val status: IAProsessStatus) {
         throw IllegalStateException()
     }
 
-
+    companion object {
+        fun from(status: IAProsessStatus): ProsessTilstand {
+            return when (status) {
+                IAProsessStatus.NY -> StartTilstand()
+                IAProsessStatus.PRIORITERT -> PrioritertTilstand()
+                else -> throw IllegalStateException()
+            }
+        }
+    }
 }
 
-class StartTilstand: ProsessTilstand(
+class StartTilstand : ProsessTilstand(
     status = IAProsessStatus.NY
 ) {
     override fun IASak.prioritert(navIdent: String) {

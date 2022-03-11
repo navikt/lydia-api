@@ -3,6 +3,7 @@ package no.nav.lydia.helper
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.fuel.httpPost
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
@@ -43,10 +44,9 @@ class TestContainerHelper {
                 start()
             }
 
-        fun GenericContainer<*>.performGet(url: String): Request {
-            val baseurl = "http://${this.host}:${this.getMappedPort(8080)}"
-            return "$baseurl/$url".httpGet()
-        }
+        private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
+        fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
+        fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
 
         fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.lydiaApiToken)
     }

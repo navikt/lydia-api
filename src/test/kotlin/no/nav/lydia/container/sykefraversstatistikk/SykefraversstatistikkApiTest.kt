@@ -1,10 +1,16 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeOneOf
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -14,12 +20,21 @@ import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeScenekunst
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
 import no.nav.lydia.helper.Melding
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.sykefraversstatistikk.api.*
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
+import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
+import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
+import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
@@ -307,5 +322,20 @@ class SykefraversstatistikkApiTest {
         val geografiService = GeografiService()
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
         kommuner shouldHaveSize 44
+    }
+
+    @Test
+    fun `skal kunne prioritere en virksomhet`() {
+        val (_, _, result) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnr_oslo/$SAK_HENDELSE_SUB_PATH")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .jsonBody(VIRKSOMHET_PRIORITERES)
+            .responseObject<SaksHendelsestype>()
+
+        result.fold(
+            success = { respons ->
+                respons shouldBe VIRKSOMHET_PRIORITERES
+            }, failure = {
+                fail(it.message)
+            })
     }
 }
