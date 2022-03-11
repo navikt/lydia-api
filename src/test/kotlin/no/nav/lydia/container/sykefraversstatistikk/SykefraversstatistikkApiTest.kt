@@ -1,6 +1,8 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
+import com.github.guepardoapps.kulid.ULID
 import com.github.kittinunf.fuel.core.extensions.authentication
+import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -14,11 +16,16 @@ import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeScenekunst
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
+import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
 import no.nav.lydia.helper.Melding
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -27,6 +34,7 @@ import no.nav.lydia.virksomhet.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.ssb.NæringsRepository
 import org.junit.AfterClass
 import kotlin.test.Test
+import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
@@ -120,7 +128,8 @@ class SykefraversstatistikkApiTest {
                 filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
                 filterverdier.fylker[0].fylke.nummer shouldBe "03"
                 filterverdier.fylker[0].kommuner.size shouldBe 1
-                filterverdier.næringsgrupper.find { it.kode == "00.000" }.shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
+                filterverdier.næringsgrupper.find { it.kode == "00.000" }
+                    .shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
                 filterverdier.næringsgrupper.size shouldBe 4
                 filterverdier.næringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
             }, failure = {
@@ -212,6 +221,7 @@ class SykefraversstatistikkApiTest {
                 fail(it.message)
             })
     }
+
     @Test
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
@@ -307,5 +317,25 @@ class SykefraversstatistikkApiTest {
         val geografiService = GeografiService()
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
         kommuner shouldHaveSize 44
+    }
+
+    @Test
+    fun `skal kunne prioritere en virksomhet`() {
+        val (_, _, result) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .jsonBody(
+                IASakshendelseDto(
+                    orgnummer = orgnr_oslo,
+                    hendelsesType = VIRKSOMHET_PRIORITERES.name
+                )
+            )
+            .responseObject<String>()
+
+        result.fold(
+            success = { respons ->
+                assertTrue { ULID.isValid(ulid = respons) }
+            }, failure = {
+                fail(it.message)
+            })
     }
 }

@@ -21,7 +21,14 @@ class Database(
     val name: String = getEnvVar("NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE")
 )
 
-class Security(val azureConfig: AzureConfig = AzureConfig())
+class Security(
+    val azureConfig: AzureConfig = AzureConfig()
+) {
+    companion object {
+        const val NAV_IDENT_CLAIM = "NAVident"
+    }
+}
+
 class AzureConfig(
     val audience: String = getEnvVar("AZURE_APP_CLIENT_ID"),
     val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
@@ -40,10 +47,11 @@ class Kafka(
         const val groupId: String = "lydia-api-kafka-group-id"
         const val clientId: String = "lydia-api"
     }
+
     fun consumerProperties() =
         baseConsumerProperties().apply {
             // TODO: Finn smidigere måte å få tester til å kjøre
-            if (truststoreLocation.isNullOrBlank()) {
+            if (truststoreLocation.isBlank()) {
                 put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "PLAINTEXT")
                 put(SaslConfigs.SASL_MECHANISM, "PLAIN")
             } else {

@@ -4,29 +4,22 @@
 package no.nav.lydia
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.application.log
-import io.ktor.auth.Authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.jwt.JWTPrincipal
-import io.ktor.auth.jwt.jwt
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.StatusPages
-import io.ktor.http.HttpStatusCode
-import io.ktor.metrics.micrometer.MicrometerMetrics
-import io.ktor.response.respond
-import io.ktor.routing.IgnoreTrailingSlash
-import io.ktor.routing.routing
-import io.ktor.serialization.json
-import io.ktor.server.engine.addShutdownHook
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.engine.stop
-import io.ktor.server.netty.Netty
+import io.ktor.application.*
+import io.ktor.auth.*
+import io.ktor.auth.jwt.*
+import io.ktor.features.*
+import io.ktor.http.*
+import io.ktor.metrics.micrometer.*
+import io.ktor.response.*
+import io.ktor.routing.*
+import io.ktor.serialization.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.ia.sak.api.IASak_Rådgiver
+import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
@@ -105,9 +98,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
         }
     }
 
-    val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
-    val geografiService = GeografiService()
 
     routing {
         healthChecks()
@@ -121,9 +112,10 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                 næringsRepository = næringsRepository))
         authenticate {
             sykefraversstatistikk(
-                geografiService = geografiService,
-                sykefraversstatistikkRepository = sykefraversstatistikkRepository,
+                geografiService = GeografiService(),
+                sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
                 næringsRepository = næringsRepository)
+            IASak_Rådgiver(IASakRepository(dataSource = dataSource))
         }
     }
 }
