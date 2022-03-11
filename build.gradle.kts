@@ -13,6 +13,7 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -35,25 +36,28 @@ dependencies {
     implementation("io.ktor:ktor-serialization:$ktorVersion")
     implementation("io.ktor:ktor-auth:$ktorVersion")
     implementation("io.ktor:ktor-auth-jwt:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("net.logstash.logback:logstash-logback-encoder:7.0.1")
 
     // metrics
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.8.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.8.3")
 
     // Database
-    implementation("org.postgresql:postgresql:42.3.1")
+    implementation("org.postgresql:postgresql:42.3.3")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:8.4.3")
-    implementation("com.github.seratch:kotliquery:1.6.0")
+    implementation("org.flywaydb:flyway-core:8.5.1")
+    implementation("com.github.seratch:kotliquery:1.6.3")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     implementation("com.google.code.gson:gson:2.9.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:2.8.0")
+    implementation("org.apache.kafka:kafka-clients:3.1.0")
+
+    // ULID
+    implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
@@ -77,7 +81,7 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:0.4.1")
+    testImplementation("no.nav.security:mock-oauth2-server:0.4.4")
 
 }
 

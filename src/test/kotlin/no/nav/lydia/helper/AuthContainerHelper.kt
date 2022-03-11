@@ -8,6 +8,7 @@ import com.nimbusds.oauth2.sdk.TokenRequest
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic
 import com.nimbusds.oauth2.sdk.auth.Secret
 import com.nimbusds.oauth2.sdk.id.ClientID
+import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.security.mock.oauth2.OAuth2Config
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -24,6 +25,10 @@ import java.util.*
 
 
 class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
+    companion object {
+        const val NAV_IDENT = "X12345"
+    }
+
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
     private val mockOauth2Port: String = "8100"
     val mockOath2Server: GenericContainer<*>
@@ -37,7 +42,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-            builder.from("ghcr.io/navikt/mock-oauth2-server:0.4.3")
+            builder.from("ghcr.io/navikt/mock-oauth2-server:0.4.4")
                 .env(
                     mapOf(
                         "TZ" to TimeZone.getDefault().id,
@@ -59,7 +64,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                 lydiaApiToken = issueToken(
                     audience = audience,
                     claims = mapOf(
-                        "NAVident" to "X12345"
+                        NAV_IDENT_CLAIM to NAV_IDENT
                     )
                 ).serialize()
             }

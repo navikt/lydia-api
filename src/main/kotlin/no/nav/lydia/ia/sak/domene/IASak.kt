@@ -10,8 +10,8 @@ class IASak(
     val opprettet_av: String,
     var endret: LocalDateTime?,
     var endretAv: String?,
-) {
     var tilstand: ProsessTilstand = StartTilstand()
+) {
     val status: IAProsessStatus
         get() = tilstand.status
 
@@ -23,7 +23,7 @@ abstract class ProsessTilstand(val status: IAProsessStatus) {
     }
 
     companion object {
-        fun from(status: IAProsessStatus): ProsessTilstand {
+        fun iStatus(status: IAProsessStatus): ProsessTilstand {
             return when (status) {
                 IAProsessStatus.NY -> StartTilstand()
                 IAProsessStatus.PRIORITERT -> PrioritertTilstand()
@@ -56,7 +56,11 @@ enum class IAProsessStatus {
     KARTLEGGING,
     GJENNOMFORING,
     EVALUERING,
-    AVSLUTTET,
+    AVSLUTTET;
+
+    companion object {
+        fun avsluttedeStatuser() = listOf(TAKKET_NEI, AVSLUTTET)
+    }
 }
 
 enum class IASakstype {

@@ -2,7 +2,7 @@ drop table ia_prosess;
 
 create table ia_sak
 (
-    saksnummer      varchar(20) primary key,
+    saksnummer      varchar(26) primary key,
     orgnr           varchar(20) not null,
     type            varchar not null,
     status          varchar not null,
