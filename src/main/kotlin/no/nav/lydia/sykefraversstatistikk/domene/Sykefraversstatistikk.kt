@@ -1,5 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.domene
 
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import java.time.LocalDateTime
 
@@ -14,5 +15,6 @@ class SykefraversstatistikkVirksomhet(
     val muligeDagsverk: Double,
     val sykefraversprosent: Double,
     val maskert: Boolean,
-    val opprettet: LocalDateTime
+    val opprettet: LocalDateTime,
+    val status: IAProsessStatus?
 )

@@ -9,6 +9,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.db.IASakRepository
+import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakstype
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
@@ -25,6 +26,10 @@ fun Route.IASak_Rådgiver(
                 ident = navIdent,
                 type = IASakstype.NAV_STOTTER
             )
+
+            sak.behandleHendelse(IASakshendelse.fromDto(hendelse, navIdent))
+            iaSakRepository.oppdaterSak(sak = sak)
+
             call.respond(sak.saksnummer)
         } ?: call.respond(status = HttpStatusCode.BadRequest, "Fant ikke NAVident for innlogget bruker")
     }

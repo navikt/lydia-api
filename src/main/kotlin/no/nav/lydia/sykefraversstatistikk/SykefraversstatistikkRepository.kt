@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
@@ -114,10 +115,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.mulige_dagsverk,
                         statistikk.sykefraversprosent,
                         statistikk.maskert,
-                        statistikk.opprettet
+                        statistikk.opprettet,
+                        ia_sak.status
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
-                    JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) 
+                    LEFT JOIN ia_sak USING (orgnr)
+                    JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet)
                     
                     WHERE (
                         (SELECT inkluderAlle FROM $tmpKommuneTabell) IS TRUE OR
@@ -161,6 +164,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             sykefraversprosent = row.double("sykefraversprosent"),
             maskert = row.boolean("maskert"),
             opprettet = row.localDateTime("opprettet"),
+            status = row.stringOrNull("status")?.let {
+                IAProsessStatus.valueOf(it)
+            }
         )
     }
 

@@ -1,6 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 
@@ -16,8 +17,10 @@ data class SykefraversstatistikkVirksomhetDto(
     val sykefraversprosent: Double,
     val antallPersoner: Double,
     val muligeDagsverk: Double,
-    val tapteDagsverk: Double
+    val tapteDagsverk: Double,
+    val status: IAProsessStatus
 ) {
+
     companion object {
         fun List<SykefraversstatistikkVirksomhet>.toDto(): List<SykefraversstatistikkVirksomhetDto> =
             this.map { it.toDto() }
@@ -34,7 +37,8 @@ data class SykefraversstatistikkVirksomhetDto(
                 sykefraversprosent = this.sykefraversprosent,
                 antallPersoner = this.antallPersoner,
                 muligeDagsverk = this.muligeDagsverk,
-                tapteDagsverk = this.tapteDagsverk
+                tapteDagsverk = this.tapteDagsverk,
+                status = this.status ?: IAProsessStatus.IKKE_AKTIV
             )
     }
 }

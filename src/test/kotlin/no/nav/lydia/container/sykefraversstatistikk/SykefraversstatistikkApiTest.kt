@@ -5,6 +5,8 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
+import io.kotest.inspectors.shouldForAll
+import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.*
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -25,6 +27,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.PRIORITERT
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
@@ -320,8 +324,22 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `skal kunne prioritere en virksomhet`() {
-        val (_, _, result) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+    fun `skal kunne prioritere en virksomhet og vise status i listevisning`() {
+        val (_, _, listeResultatFørPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+
+        listeResultatFørPrioritering.fold(
+            success = { respons ->
+                respons shouldHaveAtLeastSize 1
+                respons.shouldForAll { sykefraversstatistikkVirksomhetDto ->
+                    sykefraversstatistikkVirksomhetDto.status shouldBe IKKE_AKTIV
+                }
+            }, failure = {
+                fail(it.message)
+            })
+
+        val (_, _, prioriteringResultat) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .jsonBody(
                 IASakshendelseDto(
@@ -331,9 +349,24 @@ class SykefraversstatistikkApiTest {
             )
             .responseObject<String>()
 
-        result.fold(
+        prioriteringResultat.fold(
             success = { respons ->
                 assertTrue { ULID.isValid(ulid = respons) }
+            }, failure = {
+                fail(it.message)
+            })
+
+        val (_, _, listeResultatEtterPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+
+        listeResultatEtterPrioritering.fold(
+            success = { respons ->
+                respons shouldHaveAtLeastSize 1
+                respons.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
+                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr_oslo
+                    sykefraversstatistikkVirksomhetDto.status shouldBe PRIORITERT
+                }
             }, failure = {
                 fail(it.message)
             })

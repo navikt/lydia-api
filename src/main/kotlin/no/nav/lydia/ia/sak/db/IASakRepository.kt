@@ -8,7 +8,6 @@ import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakstype
-import no.nav.lydia.ia.sak.domene.ProsessTilstand
 import javax.sql.DataSource
 
 class IASakRepository(val dataSource: DataSource) {
@@ -60,6 +59,28 @@ class IASakRepository(val dataSource: DataSource) {
             }
         }
 
+    fun oppdaterSak(sak: IASak) {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                UPDATE ia_sak SET
+                    status = :status,
+                    type = :type,
+                    endret_av = :endretAv,
+                    endret = :endret
+            """.trimIndent(),
+                    mapOf(
+                        "status" to sak.status.name,
+                        "type" to sak.type.name,
+                        "endret_av" to sak.endretAv,
+                        "endret" to sak.endret,
+                    )
+                ).asUpdate
+            )
+        }
+    }
+
     private fun mapRow(row: Row): IASak {
         return IASak(
             saksnummer = row.string("saksnummer"),
@@ -69,7 +90,7 @@ class IASakRepository(val dataSource: DataSource) {
             opprettet_av = row.string("opprettet_av"),
             endret = row.localDateTimeOrNull("endret"),
             endretAv = row.stringOrNull("endret_av"),
-            tilstand = ProsessTilstand.iStatus(IAProsessStatus.valueOf(row.string("status")))
+            status = IAProsessStatus.valueOf(row.string("status"))
         )
     }
 }
