@@ -186,9 +186,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.mulige_dagsverk,
                         statistikk.sykefraversprosent,
                         statistikk.maskert,
-                        statistikk.opprettet
+                        statistikk.opprettet,
+                        ia_sak.status
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
+                  LEFT JOIN ia_sak USING(orgnr)
                   WHERE (statistikk.orgnr = :orgnr)
                 """.trimIndent(),
                 paramMap = mapOf("orgnr" to orgnr)
