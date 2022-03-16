@@ -128,10 +128,10 @@ class SykefraversstatistikkApiTest {
                 filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
                 filterverdier.fylker[0].fylke.nummer shouldBe "03"
                 filterverdier.fylker[0].kommuner.size shouldBe 1
-                filterverdier.næringsgrupper.find { it.kode == "00.000" }
+                filterverdier.neringsgrupper.find { it.kode == "00.000" }
                     .shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
-                filterverdier.næringsgrupper.size shouldBe 4
-                filterverdier.næringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
+                filterverdier.neringsgrupper.size shouldBe 4
+                filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
             }, failure = {
                 fail(it.message)
             })

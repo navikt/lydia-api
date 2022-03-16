@@ -8,7 +8,7 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 @Serializable
 data class FilterverdierDto(
     val fylker: List<FylkeOgKommuner>,
-    val næringsgrupper: List<Næringsgruppe> = emptyList(),
+    val neringsgrupper: List<Næringsgruppe> = emptyList(),
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler()
 )
 

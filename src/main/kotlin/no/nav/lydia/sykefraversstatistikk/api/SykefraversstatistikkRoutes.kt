@@ -33,7 +33,7 @@ fun Route.sykefraversstatistikk(
         call.respond(
             FilterverdierDto(
                 fylker = geografiService.hentFylkerOgKommuner(),
-                næringsgrupper = næringsRepository.hentNæringer()
+                neringsgrupper = næringsRepository.hentNæringer()
             )
         )
     }
