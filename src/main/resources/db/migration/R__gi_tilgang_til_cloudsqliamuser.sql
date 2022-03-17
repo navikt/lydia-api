@@ -1,3 +1,5 @@
+-- ${flyway:timestamp}
+
 DO $$
     BEGIN
         CREATE ROLE cloudsqliamuser WITH NOLOGIN;
