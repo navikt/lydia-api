@@ -8,6 +8,7 @@ import no.nav.lydia.virksomhet.brreg.BrregDownloader
 class IntegrationsHelper {
     companion object {
 
+        const val virksomhetsnavn_bergen = "Virksomhet Bærgen"
         const val orgnr_bergen = "123456789"
         const val orgnr_oslo = "987654321"
         const val orgnr_oslo_flere_adresser = "555555555"
@@ -116,7 +117,7 @@ class IntegrationsHelper {
                 [
                   {
                     "organisasjonsnummer" : $orgnr_bergen,
-                    "navn" : "Virksomhet Bergen",
+                    "navn" : "$virksomhetsnavn_bergen",
                     "organisasjonsform" : {
                       "kode" : "BEDR",
                       "beskrivelse" : "Bedrift",

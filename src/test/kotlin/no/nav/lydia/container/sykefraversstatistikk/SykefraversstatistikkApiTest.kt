@@ -20,6 +20,7 @@ import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsråd
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeScenekunst
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
+import no.nav.lydia.helper.IntegrationsHelper.Companion.virksomhetsnavn_bergen
 import no.nav.lydia.helper.Melding
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -160,6 +161,7 @@ class SykefraversstatistikkApiTest {
             success = { respons ->
                 respons.size shouldBe 1
                 val testVirksomhet = respons.first()
+                testVirksomhet.virksomhetsnavn shouldBe virksomhetsnavn_bergen
                 testVirksomhet.orgnr shouldBe orgnr_bergen
                 testVirksomhet.kommune.navn shouldBe "BERGEN"
                 testVirksomhet.kommune.nummer shouldBe kommunenummer
