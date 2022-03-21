@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "1.6.7"
+    val ktorVersion = "1.6.8"
     val fuelVersion = "2.3.1"
     val testcontainersVersion = "1.16.3"
 
