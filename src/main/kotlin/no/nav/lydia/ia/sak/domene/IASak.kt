@@ -11,6 +11,7 @@ class IASak(
     val opprettet_av: String,
     var endret: LocalDateTime?,
     var endretAv: String?,
+    var endretAvHendelseId: String,
     status: IAProsessStatus
 ) {
     private var tilstand: ProsessTilstand
@@ -25,17 +26,20 @@ class IASak(
     fun behandleHendelse(hendelse: IASakshendelse) {
         when (hendelse.type) {
             VIRKSOMHET_PRIORITERES -> {
-                tilstand.prioritert(hendelse.navIdent)
+                tilstand.prioritert()
             }
             else -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
         }
+        endretAvHendelseId = hendelse.id
+        endretAv = hendelse.opprettetAv
+        endret = hendelse.opprettetTidspunkt
     }
 
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
-        open fun prioritert(navIdent: String) {
+        open fun prioritert() {
             throw IllegalStateException()
         }
     }
@@ -43,10 +47,8 @@ class IASak(
     private inner class StartTilstand : ProsessTilstand(
         status = IAProsessStatus.NY
     ) {
-        override fun prioritert(navIdent: String) {
+        override fun prioritert() {
             tilstand = PrioritertTilstand()
-            endretAv = navIdent
-            endret = LocalDateTime.now()
         }
     }
 

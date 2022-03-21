@@ -90,7 +90,7 @@ class IASakRepository(val dataSource: DataSource) {
             opprettet_av = row.string("opprettet_av"),
             endret = row.localDateTimeOrNull("endret"),
             endretAv = row.stringOrNull("endret_av"),
-            status = IAProsessStatus.valueOf(row.string("status"))
+            status = IAProsessStatus.valueOf(row.string("status")),
         )
     }
 }
