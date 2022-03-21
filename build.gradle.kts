@@ -38,6 +38,11 @@ dependencies {
     implementation("io.ktor:ktor-auth-jwt:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("net.logstash.logback:logstash-logback-encoder:7.0.1")
+    constraints {
+        implementation("com.fasterxml.jackson:jackson-bom:2.13.2") {
+            because("versjoner tidligere har dos sårbarhet; CWE-400, CVE-2020-36518, CVSS 7.5")
+        }
+    }
 
     // metrics
     implementation("io.ktor:ktor-metrics-micrometer:$ktorVersion")
