@@ -34,9 +34,9 @@ import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsRepository
+import no.nav.lydia.integrasjoner.brreg.BrregDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.assertTrue

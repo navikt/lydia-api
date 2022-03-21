@@ -1,4 +1,4 @@
-package no.nav.lydia.virksomhet.brreg
+package no.nav.lydia.integrasjoner.brreg
 
 import io.ktor.application.*
 import io.ktor.http.*

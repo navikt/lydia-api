@@ -1,4 +1,4 @@
-package no.nav.lydia.virksomhet.brreg
+package no.nav.lydia.integrasjoner.brreg
 
 import com.github.kittinunf.fuel.core.Headers
 import com.github.kittinunf.fuel.httpGet
@@ -28,7 +28,7 @@ class BrregDownloader(
         request[Headers.ACCEPT] = underEnhetApplicationType
         val (_, _, result) = request.response()
         val temporærFil = result.fold(success = {
-            val file = createTempFile(prefix = "${System.currentTimeMillis()}", suffix = "brreg-nedlasting.json");
+            val file = createTempFile(prefix = "${System.currentTimeMillis()}", suffix = "brreg-nedlasting.json")
             GZIPInputStream(it.inputStream())
                 .bufferedReader(UTF_8)
                 .useLines { lines ->
@@ -54,7 +54,7 @@ class BrregDownloader(
             JsonReader(InputStreamReader(file.inputStream())).use { reader ->
                 reader.beginArray()
                 while (reader.hasNext()) {
-                    val virksomhet = gson.fromJson<VirksomhetDto>(reader, VirksomhetDto::class.java)
+                    val virksomhet = gson.fromJson<BrregVirksomhetDto>(reader, BrregVirksomhetDto::class.java)
                     when (virksomhet) {
                         null -> {
                             log.debug("Skipper lagring av virksomhet da den er null fra JsonReader")

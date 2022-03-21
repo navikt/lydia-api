@@ -1,4 +1,4 @@
-package no.nav.lydia.virksomhet.ssb
+package no.nav.lydia.integrasjoner.ssb
 
 import com.github.kittinunf.fuel.httpGet
 import com.google.gson.GsonBuilder

@@ -13,7 +13,7 @@ import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.lydiaRestApi
-import no.nav.lydia.virksomhet.ssb.NÆRINGSIMPORT_URL
+import no.nav.lydia.integrasjoner.ssb.NÆRINGSIMPORT_URL
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.net.URL

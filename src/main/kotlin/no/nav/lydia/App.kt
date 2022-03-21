@@ -20,16 +20,17 @@ import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
+import no.nav.lydia.integrasjoner.brreg.BrregDownloader
+import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
+import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import no.nav.lydia.virksomhet.brreg.virksomhetsImport
-import no.nav.lydia.virksomhet.ssb.NæringsDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsRepository
-import no.nav.lydia.virksomhet.ssb.næringsImport
+import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -99,23 +100,29 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
     }
 
     val næringsRepository = NæringsRepository(dataSource = dataSource)
+    val virksomhetRepository = VirksomhetRepository(dataSource)
 
     routing {
         healthChecks()
         metrics()
-        virksomhetsImport(BrregDownloader(
+        virksomhetsImport(
+            BrregDownloader(
             url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
-            virksomhetRepository = VirksomhetRepository(dataSource)))
+            virksomhetRepository = virksomhetRepository
+            )
+        )
         næringsImport(
             næringsDownloader = NæringsDownloader(
                 url = naisEnvironment.integrasjoner.ssbNæringsUrl,
-                næringsRepository = næringsRepository))
+                næringsRepository = næringsRepository)
+        )
         authenticate {
             sykefraversstatistikk(
                 geografiService = GeografiService(),
                 sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
                 næringsRepository = næringsRepository)
             IASak_Rådgiver(IASakRepository(dataSource = dataSource))
+            virksomhet(virksomhetRepository = virksomhetRepository)
         }
     }
 }

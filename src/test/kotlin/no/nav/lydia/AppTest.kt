@@ -6,18 +6,19 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import org.junit.AfterClass
 import java.net.URL
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class AppTest {
     companion object {
-        val mockOAuth2Server = MockOAuth2Server().apply {
+        private val mockOAuth2Server = MockOAuth2Server().apply {
             start(port = 8100)
         }
-        val postgres = TestContainerHelper.postgresContainer
-        val dataSource = postgres.getDataSource().apply { runMigration(this) }
-        val naisEnvironment = NaisEnvironment(
+        private val postgres = TestContainerHelper.postgresContainer
+        private val dataSource = postgres.getDataSource().apply { runMigration(this) }
+        private val naisEnvironment = NaisEnvironment(
             database = Database(
                 host = "",
                 port = "",
@@ -41,6 +42,12 @@ class AppTest {
                 ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
                 brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned")
         )
+
+        @AfterClass
+        @JvmStatic
+        fun afterAll() {
+            mockOAuth2Server.shutdown()
+        }
     }
 
 
