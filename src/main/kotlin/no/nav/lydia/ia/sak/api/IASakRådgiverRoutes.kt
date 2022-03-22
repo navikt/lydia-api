@@ -9,10 +9,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.db.IASakRepository
-import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.domene.NyIASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakstype
+import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "/hendelse"
@@ -26,6 +23,21 @@ fun Route.IASak_Rådgiver(
             val sak = iaSakService.behandleHendelse(hendelseDto, navIdent)
             call.respond(sak.saksnummer)
         } ?: call.respond(status = HttpStatusCode.BadRequest, "Fant ikke NAVident for innlogget bruker")
+    }
+
+    get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
+        call.parameters["orgnummer"]?.let { orgnummer ->
+            val sak = iaSakService.hentIASakPåOrgnummer(orgnummer)?.toDto()
+            if (sak != null) call.respond(sak) else call.respond(HttpStatusCode.NotFound)
+        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
+    }
+
+    post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
+        call.parameters["orgnummer"]?.let { orgnummer ->
+            call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
+                call.respond(iaSakService.opprettIASak(orgnummer, navIdent).toDto())
+            }
+        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }
 }
 

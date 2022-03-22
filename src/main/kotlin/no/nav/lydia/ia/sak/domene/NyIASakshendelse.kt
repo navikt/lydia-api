@@ -4,39 +4,26 @@ import com.github.guepardoapps.kulid.ULID
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import java.time.LocalDateTime
 
-open class NyIASakshendelse(
+class IASakshendelse(
+    val id : String,
+    val opprettetTidspunkt: LocalDateTime,
     val saksnummer: String,
     val type: SaksHendelsestype,
     val orgnummer: String,
     val opprettetAv: String,
-    val forrigeHendelseId: String? = null,
-) {
+){
     companion object {
-        fun fromDto(dto: IASakshendelseDto, navIdent: String, saksnummer: String) =
-            NyIASakshendelse(
+        fun fromDto(dto: IASakshendelseDto, navIdent: String) =
+            IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = dto.saksnummer,
                 type = dto.hendelsesType,
                 orgnummer = dto.orgnummer,
                 opprettetAv = navIdent,
-                saksnummer = saksnummer,
             )
     }
 }
-
-class IASakshendelse(
-    val id : String,
-    val opprettetTidspunkt: LocalDateTime,
-    forrigeHendelseId: String?,
-    saksnummer: String,
-    type: SaksHendelsestype,
-    orgnummer: String,
-    opprettetAv: String,
-) : NyIASakshendelse(
-    saksnummer = saksnummer,
-    type = type,
-    orgnummer = orgnummer,
-    opprettetAv = opprettetAv,
-    forrigeHendelseId = forrigeHendelseId
-)
 
 enum class SaksHendelsestype{
     VIRKSOMHET_PRIORITERES,

@@ -11,7 +11,7 @@ class IASak(
     val opprettet_av: String,
     var endret: LocalDateTime?,
     var endretAv: String?,
-    var endretAvHendelseId: String,
+    var endretAvHendelseId: String?,
     status: IAProsessStatus
 ) {
     private var tilstand: ProsessTilstand
@@ -36,7 +36,6 @@ class IASak(
         endretAv = hendelse.opprettetAv
         endret = hendelse.opprettetTidspunkt
     }
-
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
         open fun prioritert() {

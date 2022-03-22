@@ -12,15 +12,14 @@ class IASakDto(
     var status: IAProsessStatus,
     val opprettet: LocalDateTime,
     val opprettet_av: String,
-    var endret: LocalDateTime?,
-    var endretAv: String?
+    val endret: LocalDateTime?,
+    val endretAv: String?,
+    val endretAvHendelseId: String?
 ) {
     companion object {
-        fun List<IASak>.toDto(): List<IASakDto> {
-            return this.map { iaSak -> iaSak.toDto() }
-        }
+        fun List<IASak>.toDto() = this.map { iaSak -> iaSak.toDto() }
 
-        private fun IASak.toDto() = IASakDto(
+        fun IASak.toDto() = IASakDto(
             saksnummer = this.saksnummer,
             orgnr = this.orgnr,
             type = this.type,
@@ -28,7 +27,8 @@ class IASakDto(
             opprettet = this.opprettet,
             opprettet_av = this.opprettet_av,
             endret = this.endret,
-            endretAv = this.endretAv
+            endretAv = this.endretAv,
+            endretAvHendelseId = this.endretAvHendelseId
         )
     }
 }

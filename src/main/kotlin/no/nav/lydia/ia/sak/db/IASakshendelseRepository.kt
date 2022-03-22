@@ -11,15 +11,7 @@ import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
 
-//    id              varchar primary key,
-//    saksnummer      varchar not null,
-//    orgnr           varchar(20) not null,
-//    type            varchar not null,
-//    forrige_hendelse_id varchar null,
-//    opprettet_av    varchar not null,
-//    opprettet       timestamp default current_timestamp,
-//
-    fun opprettHendelse(hendelse : NyIASakshendelse) =
+    fun opprettHendelse(hendelse : IASakshendelse) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("""
@@ -28,7 +20,6 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         saksnummer,
                         orgnr,
                         type,
-                        forrige_hendelse_id,
                         opprettet_av,
                         opprettet
                     )
@@ -37,7 +28,6 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         :saksnummer,
                         :orgnr,
                         :type,
-                        :forrige_hendelse_id,
                         :opprettet_av,
                         :opprettet
                     ) 
@@ -48,7 +38,6 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         "saksnummer" to hendelse.saksnummer,
                         "orgnr" to hendelse.orgnummer,
                         "type" to hendelse.type,
-                        "forrige_hendelse_id" to null,
                         "opprettet_av" to hendelse.opprettetAv,
                         "opprettet" to LocalDateTime.now()
                     )
@@ -64,7 +53,6 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             opprettetAv = row.string("navIdent"),
             saksnummer = row.string("saksnummer"),
             opprettetTidspunkt = row.localDateTime("opprettet"),
-            forrigeHendelseId = row.stringOrNull("forrige_hendelse_id")
         )
     }
 }
