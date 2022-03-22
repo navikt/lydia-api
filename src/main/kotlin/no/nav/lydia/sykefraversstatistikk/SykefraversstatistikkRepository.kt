@@ -135,7 +135,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     )
                     AND (
                         statistikk.kvartal = :kvartal AND statistikk.arstall = :arstall
-                    )    
+                    )
+                    AND (
+                        statistikk.sykefraversprosent BETWEEN :sykefraversprosentFra AND :sykefraversprosentTil
+                    )
                     
                     ${søkeparametere.status?.let { status ->
                         when (status) {
@@ -161,7 +164,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     tmpKommuneTabell to session.connection.underlying.createArrayOf("text", søkeparametere.kommunenummer.toTypedArray()),
                     tmpNæringTabell to session.connection.underlying.createArrayOf("text", søkeparametere.næringsgruppeKoder.toTypedArray()),
                     "kvartal" to søkeparametere.periode.kvartal,
-                    "arstall" to søkeparametere.periode.årstall
+                    "arstall" to søkeparametere.periode.årstall,
+                    "sykefraversprosentFra" to søkeparametere.sykefraværsperiode.fra,
+                    "sykefraversprosentTil" to søkeparametere.sykefraværsperiode.til
                 )
             ).map(this::mapRow).asList
             session.run(query)
