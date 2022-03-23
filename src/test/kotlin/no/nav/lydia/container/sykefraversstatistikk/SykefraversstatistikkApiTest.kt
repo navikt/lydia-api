@@ -9,7 +9,9 @@ import io.kotest.inspectors.shouldForAll
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.*
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -377,14 +379,28 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
-        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=3.0")
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=3.0&sykefraversprosentTil=")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .fold(
                 success = { statistikk ->
-                    statistikk.size shouldBe 1
+                    statistikk.size shouldBeGreaterThan 0
                     statistikk.forAll { sykefraversstatistikkVirksomhetDto ->
                         sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 3.0
+                    }
+                },
+                failure = {
+                    fail(it.message)
+                })
+
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=&sykefraversprosentTil=5.0")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+            .fold(
+                success = { statistikk ->
+                    statistikk.size shouldBeGreaterThan 0
+                    statistikk.forAll { sykefraversstatistikkVirksomhetDto ->
+                        sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual  5.0
                     }
                 },
                 failure = {

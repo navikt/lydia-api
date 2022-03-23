@@ -20,13 +20,13 @@ data class Søkeparametere(
                 periode = Periode.from(queryParameters["kvartal"], queryParameters["arstall"]),
                 sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters["sorteringsnokkel"]),
                 sorteringsretning = Sorteringsretning.from(queryParameters["sorteringsretning"]),
-                sykefraværsprosentFra = when (val fra = queryParameters["sykefraversprosentFra"]?.toDouble()) {
-                    0.0 -> null
-                    else -> fra
+                sykefraværsprosentFra = when (val fra = queryParameters["sykefraversprosentFra"]) {
+                    "" -> null
+                    else -> fra?.toDouble()
                 },
-                sykefraværsprosentTil = when (val til = queryParameters["sykefraversprosentTil"]?.toDouble()) {
-                    100.0 -> null
-                    else -> til
+                sykefraværsprosentTil = when (val til = queryParameters["sykefraversprosentTil"]) {
+                    "" -> null
+                    else -> til?.toDouble()
                 }
             )
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
