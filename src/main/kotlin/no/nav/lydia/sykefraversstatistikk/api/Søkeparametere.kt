@@ -8,7 +8,9 @@ data class Søkeparametere(
     val næringsgruppeKoder: Set<String>,
     val periode: Periode,
     val sorteringsnøkkel: Sorteringsnøkkel,
-    val sorteringsretning : Sorteringsretning
+    val sorteringsretning : Sorteringsretning,
+    val sykefraværsprosentFra: Double?,
+    val sykefraværsprosentTil: Double?
 ) {
     companion object {
         fun from(queryParameters: Parameters, geografiService: GeografiService): Søkeparametere =
@@ -17,7 +19,15 @@ data class Søkeparametere(
                 næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
                 periode = Periode.from(queryParameters["kvartal"], queryParameters["arstall"]),
                 sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters["sorteringsnokkel"]),
-                sorteringsretning = Sorteringsretning.from(queryParameters["sorteringsretning"])
+                sorteringsretning = Sorteringsretning.from(queryParameters["sorteringsretning"]),
+                sykefraværsprosentFra = when (val fra = queryParameters["sykefraversprosentFra"]?.toDouble()) {
+                    0.0 -> null
+                    else -> fra
+                },
+                sykefraværsprosentTil = when (val til = queryParameters["sykefraversprosentTil"]?.toDouble()) {
+                    100.0 -> null
+                    else -> til
+                }
             )
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
             geografiService.hentKommunerFraFylkerOgKommuner(
