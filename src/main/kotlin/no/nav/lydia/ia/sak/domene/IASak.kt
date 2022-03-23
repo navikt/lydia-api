@@ -8,10 +8,10 @@ class IASak(
     val orgnr: String,
     val type: IASakstype,
     val opprettet: LocalDateTime,
-    val opprettet_av: String,
+    val opprettetAv: String,
     var endret: LocalDateTime?,
     var endretAv: String?,
-    var endretAvHendelseId: String?,
+    var endretAvHendelseId: String,
     status: IAProsessStatus
 ) {
     private var tilstand: ProsessTilstand
@@ -74,10 +74,10 @@ class IASak(
                 orgnr = førsteHendelse.orgnummer,
                 type = IASakstype.NAV_STOTTER,
                 opprettet = førsteHendelse.opprettetTidspunkt,
-                opprettet_av = førsteHendelse.opprettetAv,
+                opprettetAv = førsteHendelse.opprettetAv,
                 endret = null,
                 endretAv = null,
-                endretAvHendelseId = null,
+                endretAvHendelseId = førsteHendelse.id,
                 status = IAProsessStatus.NY
             )
             resterendeHendelser.forEach(sak::behandleHendelse)

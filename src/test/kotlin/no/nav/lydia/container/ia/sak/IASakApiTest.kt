@@ -1,11 +1,8 @@
 package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
-import com.github.kittinunf.fuel.core.FuelError
 import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
-import io.kotest.inspectors.shouldForAll
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.*
 import io.kotest.matchers.shouldBe
@@ -19,12 +16,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.PRIORITERT
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.brreg.BrregDownloader
@@ -120,4 +114,5 @@ class IASakApiTest {
             .responseObject<IASakDto>().third.fold( success = { respons -> respons }, failure = {
                 fail(it.message)
             })
+
 }

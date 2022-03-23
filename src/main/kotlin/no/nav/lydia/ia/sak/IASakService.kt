@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.features.*
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
@@ -32,7 +31,7 @@ class IASakService(
             orgnr = sakshendelse.orgnummer,
             type = IASakstype.NAV_STOTTER,
             opprettet = sakshendelse.opprettetTidspunkt,
-            opprettet_av = sakshendelse.opprettetAv,
+            opprettetAv = sakshendelse.opprettetAv,
             endret = null,
             endretAv = null,
             endretAvHendelseId = sakshendelse.id,

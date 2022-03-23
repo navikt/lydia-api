@@ -1,12 +1,10 @@
 package no.nav.lydia.ia.sak.db
 
-import com.github.guepardoapps.kulid.ULID
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.*
-import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
@@ -26,7 +24,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             )
         }
 
-    fun     opprettHendelse(hendelse : IASakshendelse) =
+    fun opprettHendelse(hendelse : IASakshendelse) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("""
@@ -52,7 +50,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         "id" to hendelse.id,
                         "saksnummer" to hendelse.saksnummer,
                         "orgnr" to hendelse.orgnummer,
-                        "type" to hendelse.type,
+                        "type" to hendelse.type.name,
                         "opprettet_av" to hendelse.opprettetAv,
                         "opprettet" to hendelse.opprettetTidspunkt
                     )
@@ -65,7 +63,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             id = row.string("id"),
             type = SaksHendelsestype.valueOf(row.string("type")),
             orgnummer = row.string("orgnr"),
-            opprettetAv = row.string("navIdent"),
+            opprettetAv = row.string("opprettet_av"),
             saksnummer = row.string("saksnummer"),
             opprettetTidspunkt = row.localDateTime("opprettet"),
         )
