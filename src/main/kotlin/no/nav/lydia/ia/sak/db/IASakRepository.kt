@@ -9,7 +9,7 @@ import no.nav.lydia.ia.sak.domene.*
 import javax.sql.DataSource
 
 class IASakRepository(val dataSource: DataSource) {
-    fun opprettSak(orgnr: String, ident: String, type: IASakstype) : IASak =
+    fun lagreSak(iaSak: IASak): IASak =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -19,43 +19,101 @@ class IASakRepository(val dataSource: DataSource) {
                         orgnr,
                         type,
                         status,
-                        opprettet_av
+                        opprettet_av,
+                        opprettet
                     )
                     VALUES (
                         :saksnummer,
                         :orgnr,
                         :type,
                         :status,
-                        :opprettet_av
+                        :opprettet_av,
+                        :opprettet
                     )
                     returning *                            
                 """.trimMargin(),
                     mapOf(
-                        "saksnummer" to ULID.random(),
-                        "orgnr" to orgnr,
-                        "type" to type.name,
-                        "status" to IAProsessStatus.NY.name,
-                        "opprettet_av" to ident
+                        "saksnummer" to iaSak.saksnummer,
+                        "orgnr" to iaSak.orgnr,
+                        "type" to iaSak.type.name,
+                        "status" to iaSak.status.name,
+                        "opprettet_av" to iaSak.opprettet_av,
+                        "opprettet" to iaSak.opprettet
+                    )
+                ).map(this::mapRowToIASak).asSingle
+            )!!
+        }
+
+    fun oppdaterSak(iaSak: IASak): IASak =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    INSERT INTO ia_sak (
+                        saksnummer,
+                        orgnr,
+                        type,
+                        status,
+                        opprettet_av,
+                        opprettet
+                    )
+                    VALUES (
+                        :saksnummer,
+                        :orgnr,
+                        :type,
+                        :status,
+                        :opprettet_av,
+                        :opprettet
+                    )
+                    returning *                            
+                """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to iaSak.saksnummer,
+                        "orgnr" to iaSak.orgnr,
+                        "type" to iaSak.type.name,
+                        "status" to iaSak.status.name,
+                        "opprettet_av" to iaSak.opprettet_av,
+                        "opprettet" to iaSak.opprettet
                     )
                 ).map(this::mapRowToIASak).asSingle
             )!!
         }
 
 
-    fun hentIASakPåOrgnummer(orgnummer: String): IASak? = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
+    fun hentAktivSakForVirksomhet(orgnummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                SELECT *
+                    FROM ia_sak
+                    WHERE orgnr = :orgnr
+                    AND status NOT IN (:avsluttedeStatuser)
+                """.trimMargin(),
+                    mapOf(
+                        "orgnr" to orgnummer,
+                        "avsluttedeStatuser" to IAProsessStatus.avsluttedeStatuser()
+                            .joinToString(", ", transform = { status -> "'${status.name}'" })
+                    )
+                ).map(this::mapRowToIASak).asSingle
+            )
+        }
+
+    fun hentIASakPåOrgnummer(orgnummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
                 SELECT *
                     FROM ia_sak
                     WHERE orgnr = :orgnr 
                 """.trimMargin(),
-                mapOf(
-                    "orgnr" to orgnummer,
-                )
-            ).map(this::mapRowToIASak).asSingle
-        )
-    }
+                    mapOf(
+                        "orgnr" to orgnummer,
+                    )
+                ).map(this::mapRowToIASak).asList
+            )
+        }
 
     fun hentIASakPåSaksnummer(saksnummer: String): IASak? =
         using(sessionOf(dataSource)) { session ->
@@ -77,7 +135,8 @@ class IASakRepository(val dataSource: DataSource) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
-                    queryOf("""
+                    queryOf(
+                        """
                         INSERT INTO ia_sak_hendelse (
                             id,
                             saksnummer,
@@ -143,6 +202,7 @@ class IASakRepository(val dataSource: DataSource) {
             endretAvHendelseId = row.string("forrige_hendelse_id")
         )
     }
+
     private fun mapRowToIASakshendelse(row: Row): IASakshendelse {
         return IASakshendelse(
             id = row.string("id"),

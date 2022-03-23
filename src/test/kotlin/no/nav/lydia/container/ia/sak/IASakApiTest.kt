@@ -18,6 +18,7 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
@@ -85,8 +86,8 @@ class IASakApiTest {
                 fail(it.message)
             })
 
-        val saksnummer = prioriterVirksomhet(orgnummer = orgnr_oslo)
-        assertTrue(ULID.isValid(ulid = saksnummer))
+        val sak = prioriterVirksomhet(orgnummer = orgnr_oslo)
+        assertTrue(ULID.isValid(ulid = sak.saksnummer))
 
         val (_, _, listeResultatEtterPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -107,21 +108,16 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne spore endringene som har skjedd på en sak`() {
-        val saksnummer = prioriterVirksomhet(orgnummer = orgnr_bergen)
+        val sak = prioriterVirksomhet(orgnummer = orgnr_bergen)
         postgresContainer
-            .performQuery("select * from ia_sak_hendelse where saksnummer = '$saksnummer'")
+            .performQuery("select * from ia_sak_hendelse where saksnummer = '${sak.saksnummer}'")
             .row shouldBe 1
     }
 
-    private fun prioriterVirksomhet(orgnummer : String) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
-        .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-        .jsonBody(
-            IASakshendelseDto(
-                orgnummer = orgnummer,
-                hendelsesType = VIRKSOMHET_PRIORITERES.name
-            )
-        )
-        .responseObject<String>().third.fold( success = { respons -> respons }, failure = {
-            fail(it.message)
-        })
+    private fun prioriterVirksomhet(orgnummer : String) =
+        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<IASakDto>().third.fold( success = { respons -> respons }, failure = {
+                fail(it.message)
+            })
 }

@@ -65,9 +65,27 @@ class IASak(
                 else -> throw IllegalStateException()
             }
         }
+
+        fun fraHendelser(hendelser: List<IASakshendelse>): IASak {
+            val førsteHendelse = hendelser.first()
+            val resterendeHendelser = hendelser.minus(førsteHendelse)
+            val sak = IASak(
+                saksnummer = førsteHendelse.saksnummer,
+                orgnr = førsteHendelse.orgnummer,
+                type = IASakstype.NAV_STOTTER,
+                opprettet = førsteHendelse.opprettetTidspunkt,
+                opprettet_av = førsteHendelse.opprettetAv,
+                endret = null,
+                endretAv = null,
+                endretAvHendelseId = null,
+                status = IAProsessStatus.NY
+            )
+            resterendeHendelser.forEach(sak::behandleHendelse)
+
+            return sak
+        }
     }
 }
-
 
 
 enum class IAProsessStatus {

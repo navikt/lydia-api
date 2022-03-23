@@ -11,7 +11,22 @@ import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
 
-    fun opprettHendelse(hendelse : IASakshendelse) =
+    fun hentHendelser(saksnummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("""
+                    SELECT * FROM ia_sak_hendelse
+                    WHERE saksnummer = :saksnummer
+                    ORDER BY id ASC
+                """.trimIndent(),
+                mapOf(
+                    "saksnummer" to saksnummer
+                ))
+                .map(this::mapRow).asList
+            )
+        }
+
+    fun     opprettHendelse(hendelse : IASakshendelse) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("""
@@ -34,12 +49,12 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     returning *  
                 """.trimMargin(),
                     mapOf(
-                        "id" to ULID.random(),
+                        "id" to hendelse.id,
                         "saksnummer" to hendelse.saksnummer,
                         "orgnr" to hendelse.orgnummer,
                         "type" to hendelse.type,
                         "opprettet_av" to hendelse.opprettetAv,
-                        "opprettet" to LocalDateTime.now()
+                        "opprettet" to hendelse.opprettetTidspunkt
                     )
                 ).map(this::mapRow).asSingle
             )!!
