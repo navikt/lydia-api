@@ -24,7 +24,7 @@ class IASakService(
             opprettetAv = navIdent,
         )
 
-        iaSakshendelseRepository.opprettHendelse(sakshendelse)
+        iaSakshendelseRepository.lagreHendelse(sakshendelse)
 
         val sak = IASak(
             saksnummer = sakshendelse.saksnummer,
@@ -37,22 +37,18 @@ class IASakService(
             endretAvHendelseId = sakshendelse.id,
             status = IAProsessStatus.PRIORITERT
         )
-
-
         return iaSakRepository.lagreSak(sak)
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): IASak {
         val sakshendelse = IASakshendelse.fromDto(hendelseDto, navIdent)
         val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
-
-        // TODO: feilhåndter
-
-        val sak = IASak.fraHendelser(hendelser)
-
-        sak.behandleHendelse(sakshendelse)
-
-        iaSakshendelseRepository.opprettHendelse(sakshendelse)
-        return iaSakRepository.oppdaterSak(sak)
+        if (hendelser.isEmpty()) throw IllegalStateException("Her skal  man ikke havne om listen over hendelser er tom")
+        val sak = IASak.fraHendelser(hendelser).behandleHendelse(sakshendelse)
+        iaSakshendelseRepository.lagreHendelse(sakshendelse)
+        iaSakRepository.oppdaterSak(sak) // TODO - håndter feilende oppdatering?
+        return sak
     }
+
+    fun hentSaker(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)
 }

@@ -8,5 +8,5 @@ class IASakshendelseDto(
     val orgnummer: String,
     val saksnummer: String,
     val hendelsesType: SaksHendelsestype,
-    val forrigeHendelsesId: String?
+    val endretAvHendelsesId: String
 )

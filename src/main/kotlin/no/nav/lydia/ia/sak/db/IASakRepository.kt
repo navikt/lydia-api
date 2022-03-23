@@ -46,39 +46,37 @@ class IASakRepository(val dataSource: DataSource) {
             )!!
         }
 
-    fun oppdaterSak(iaSak: IASak): IASak =
+    fun oppdaterSak(iaSak: IASak) : Boolean =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                    INSERT INTO ia_sak (
-                        saksnummer,
-                        orgnr,
+                    UPDATE ia_sak (
                         type,
                         status,
-                        opprettet_av,
-                        opprettet
+                        endret_av,
+                        endret,
+                        endret_av_hendelse
                     )
                     VALUES (
-                        :saksnummer,
-                        :orgnr,
                         :type,
                         :status,
-                        :opprettet_av,
-                        :opprettet
+                        :endret_av,
+                        :endret,
+                        :endret_av_hendelse
                     )
-                    returning *                            
+                    WHERE saksnummer = :saksnummer                            
                 """.trimMargin(),
                     mapOf(
                         "saksnummer" to iaSak.saksnummer,
-                        "orgnr" to iaSak.orgnr,
                         "type" to iaSak.type.name,
                         "status" to iaSak.status.name,
-                        "opprettet_av" to iaSak.opprettetAv,
-                        "opprettet" to iaSak.opprettet
+                        "endret_av" to iaSak.endretAv,
+                        "endret" to iaSak.endret,
+                        "endret_av_hendelse" to iaSak.endretAvHendelseId
                     )
-                ).map(this::mapRowToIASak).asSingle
-            )!!
+                ).asUpdate
+            ) > 0
         }
 
     private fun mapRowToIASak(row: Row): IASak {
@@ -94,5 +92,21 @@ class IASakRepository(val dataSource: DataSource) {
             endretAvHendelseId = row.string("endret_av_hendelse")
         )
     }
+
+    fun hentSaker(orgnummer: String): List<IASak> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak
+                    WHERE orgnr = :orgnr
+                """.trimMargin(),
+                    mapOf(
+                        "orgnr" to orgnummer,
+                    )
+                ).map(this::mapRowToIASak).asList
+            )
+        }
 }
 

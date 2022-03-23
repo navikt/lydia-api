@@ -1,6 +1,8 @@
 package no.nav.lydia.ia.sak.domene
 
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_TAKKER_NEI
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class IASak(
@@ -15,6 +17,7 @@ class IASak(
     status: IAProsessStatus
 ) {
     private var tilstand: ProsessTilstand
+    private val log = LoggerFactory.getLogger(this.javaClass)
 
     init {
         tilstand = this.iStatus(status)
@@ -23,10 +26,13 @@ class IASak(
     val status: IAProsessStatus
         get() = tilstand.status
 
-    fun behandleHendelse(hendelse: IASakshendelse) {
+    fun behandleHendelse(hendelse: IASakshendelse) : IASak {
         when (hendelse.type) {
             VIRKSOMHET_PRIORITERES -> {
                 tilstand.prioritert()
+            }
+            VIRKSOMHET_TAKKER_NEI -> {
+                tilstand.takketNei()
             }
             else -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
@@ -35,11 +41,23 @@ class IASak(
         endretAvHendelseId = hendelse.id
         endretAv = hendelse.opprettetAv
         endret = hendelse.opprettetTidspunkt
+
+        return this
+    }
+
+    private fun håndterFeilState(){
+        log.info("Feil i systemet")
+        log.info(this.status.name)
+        throw IllegalStateException()
     }
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
         open fun prioritert() {
-            throw IllegalStateException()
+            håndterFeilState()
+        }
+        open fun takketNei() {
+
+            håndterFeilState()
         }
     }
 
@@ -54,8 +72,14 @@ class IASak(
     private inner class PrioritertTilstand : ProsessTilstand(
         status = IAProsessStatus.PRIORITERT
     ) {
-
+        override fun takketNei() {
+            tilstand = TakketNeiTilstand()
+        }
     }
+
+    private inner class TakketNeiTilstand : ProsessTilstand(
+        status = IAProsessStatus.TAKKET_NEI
+    )
 
     companion object {
         private fun IASak.iStatus(status: IAProsessStatus): ProsessTilstand {
@@ -81,7 +105,6 @@ class IASak(
                 status = IAProsessStatus.NY
             )
             resterendeHendelser.forEach(sak::behandleHendelse)
-
             return sak
         }
     }

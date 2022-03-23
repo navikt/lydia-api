@@ -25,6 +25,12 @@ fun Route.IASak_Rådgiver(
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }
 
+    get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
+        call.parameters["orgnummer"]?.let { orgnummer ->
+            call.respond(iaSakService.hentSaker(orgnummer).toDto())
+        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
+    }
+
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
@@ -35,4 +41,5 @@ fun Route.IASak_Rådgiver(
     }
 
 }
+
 

@@ -24,7 +24,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             )
         }
 
-    fun opprettHendelse(hendelse : IASakshendelse) =
+    fun lagreHendelse(hendelse : IASakshendelse) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("""

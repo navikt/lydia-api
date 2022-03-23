@@ -16,6 +16,8 @@ data class IASakDto(
     val endretAvHendelseId: String
 ) {
     companion object {
+        fun List<IASak>.toDto() = this.map { it.toDto() }
+
         fun IASak.toDto() = IASakDto(
             saksnummer = this.saksnummer,
             orgnr = this.orgnr,
