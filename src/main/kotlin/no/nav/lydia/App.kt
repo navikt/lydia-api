@@ -18,6 +18,7 @@ import io.ktor.server.netty.*
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -25,6 +26,7 @@ import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
+import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
@@ -121,7 +123,12 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                 geografiService = GeografiService(),
                 sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
                 næringsRepository = næringsRepository)
-            IASak_Rådgiver(IASakRepository(dataSource = dataSource))
+            IASak_Rådgiver(
+                iaSakService = IASakService(
+                    iaSakRepository = IASakRepository(dataSource = dataSource),
+                    iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
+                )
+            )
             virksomhet(virksomhetRepository = virksomhetRepository)
         }
     }
