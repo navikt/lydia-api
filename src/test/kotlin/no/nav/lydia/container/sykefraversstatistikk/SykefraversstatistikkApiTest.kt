@@ -315,7 +315,7 @@ class SykefraversstatistikkApiTest {
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
         kommuner shouldHaveSize 44
     }
-
+    
     @Test
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
         lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=3.0&sykefraversprosentTil=")
