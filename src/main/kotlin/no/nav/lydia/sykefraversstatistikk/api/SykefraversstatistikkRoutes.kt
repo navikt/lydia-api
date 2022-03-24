@@ -4,10 +4,11 @@ import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
-import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import org.slf4j.LoggerFactory
 
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
@@ -17,9 +18,12 @@ fun Route.sykefraversstatistikk(
     sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     næringsRepository: NæringsRepository
 ) {
+    val log = LoggerFactory.getLogger(this.javaClass)
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
+        val start = System.currentTimeMillis()
         val søkeparametere = Søkeparametere.from(call.request.queryParameters, geografiService)
         val virksomheter = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere).toDto()
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente virksomheter")
         call.respond(virksomheter)
     }
 
