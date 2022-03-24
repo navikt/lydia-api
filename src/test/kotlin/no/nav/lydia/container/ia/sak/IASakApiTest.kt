@@ -22,11 +22,11 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.integrasjoner.brreg.BrregDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsRepository
 import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.assertTrue

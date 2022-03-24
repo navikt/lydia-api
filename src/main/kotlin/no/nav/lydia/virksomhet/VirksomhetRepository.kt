@@ -3,12 +3,14 @@ package no.nav.lydia.virksomhet
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.virksomhet.brreg.VirksomhetDto
+import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
+import no.nav.lydia.virksomhet.api.VirksomhetDto
+import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
 
-    fun insert(virksomhet: VirksomhetDto) {
+    fun insert(virksomhet: BrregVirksomhetDto) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
@@ -52,7 +54,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 virksomhet,
                                 narings_kode 
                             )
-                            VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = {"((select id from virksomhetId), :${it}) "})}
+                            VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
                             ON CONFLICT DO NOTHING
                             """.trimMargin(),
                         mutableMapOf(
@@ -62,7 +64,10 @@ class VirksomhetRepository(val dataSource: DataSource) {
                             "landkode" to virksomhet.beliggenhetsadresse?.landkode,
                             "postnummer" to virksomhet.beliggenhetsadresse?.postnummer,
                             "poststed" to virksomhet.beliggenhetsadresse?.poststed,
-                            "adresse" to session.connection.underlying.createArrayOf("text", virksomhet.beliggenhetsadresse?.adresse?.toTypedArray() ?: emptyArray()),
+                            "adresse" to session.connection.underlying.createArrayOf(
+                                "text",
+                                virksomhet.beliggenhetsadresse?.adresse?.toTypedArray() ?: emptyArray()
+                            ),
                             "kommune" to virksomhet.beliggenhetsadresse?.kommune,
                             "kommunenummer" to virksomhet.beliggenhetsadresse?.kommunenummer,
                         ).apply {
@@ -73,4 +78,36 @@ class VirksomhetRepository(val dataSource: DataSource) {
             }
         }
     }
+
+    fun hentVirksomhet(orgnr: String) =
+        sessionOf(dataSource).use { session ->
+            session.run(queryOf(
+                """
+                    SELECT 
+                        virksomhet.orgnr,
+                        virksomhet.navn,
+                        virksomhet.adresse,
+                        string_agg(naring.kode || '-' || naring.navn, '€') AS naringer
+                    FROM virksomhet 
+                    JOIN virksomhet_naring ON (virksomhet.id = virksomhet_naring.virksomhet)
+                    JOIN naring ON (virksomhet_naring.narings_kode = naring.kode)
+                    WHERE virksomhet.orgnr = :orgnr
+                    GROUP BY 1,2,3
+                """.trimIndent(),
+                mapOf("orgnr" to orgnr)
+            ).map { row ->
+                VirksomhetDto(
+                    orgnr = orgnr,
+                    navn = row.string("navn"),
+                    adresse = row.array<String>("adresse").toList(),
+                    neringsgrupper = row.string("naringer")
+                        .split("€")
+                        .map { naring ->
+                            Næringsgruppe(
+                                kode = naring.split("-")[0],
+                                navn = naring.split("-")[1]
+                            )
+                        })
+            }.asSingle)
+        }
 }

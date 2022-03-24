@@ -1,4 +1,4 @@
-package no.nav.lydia.virksomhet.ssb
+package no.nav.lydia.integrasjoner.ssb
 
 import io.ktor.application.*
 import io.ktor.http.*

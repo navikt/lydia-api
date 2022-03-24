@@ -3,12 +3,14 @@ package no.nav.lydia.helper
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
-import no.nav.lydia.virksomhet.brreg.BrregDownloader
+import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 
 class IntegrationsHelper {
     companion object {
 
         const val virksomhetsnavn_bergen = "Virksomhet Bærgen"
+        const val virksomhetsnavn_oslo = "Virksomhet Oslo"
+        val adresser_oslo = listOf("c/o Oslo Tigersen", "Osloveien 1", "0977 Oslo")
         const val orgnr_bergen = "123456789"
         const val orgnr_oslo = "987654321"
         const val orgnr_oslo_flere_adresser = "555555555"
@@ -149,7 +151,7 @@ class IntegrationsHelper {
                   },
                   {
                     "organisasjonsnummer" : $orgnr_oslo,
-                    "navn" : "Virksomhet Oslo",
+                    "navn" : "$virksomhetsnavn_oslo",
                     "organisasjonsform" : {
                       "kode" : "BEDR",
                       "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
@@ -177,7 +179,7 @@ class IntegrationsHelper {
                   },
                   {
                     "organisasjonsnummer" : $orgnr_oslo_flere_adresser,
-                    "navn" : "Virksomhet Oslo",
+                    "navn" : "$virksomhetsnavn_oslo",
                     "organisasjonsform" : {
                       "kode" : "BEDR",
                       "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",
@@ -189,6 +191,10 @@ class IntegrationsHelper {
                       "beskrivelse" : "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst",
                       "kode" : $næringskodeScenekunst
                     },
+                    "naeringskode2" : {
+                      "beskrivelse" : "Bedriftsrådgivning og annen administrativ rådgivning",
+                      "kode" : $næringskodeBedriftsrådgivning
+                    },
                     "antallAnsatte" : 0,
                     "overordnetEnhet" : "111222333",
                     "oppstartsdato" : "2020-04-22",
@@ -197,7 +203,7 @@ class IntegrationsHelper {
                       "landkode" : "NO",
                       "postnummer" : "0364",
                       "poststed" : "OSLO",
-                      "adresse" : [ "c/o Oslo Tigersen", "Osloveien 1" ],
+                      "adresse" : [ ${adresser_oslo.joinToString(separator = ",", transform = {str -> "\"$str\""})} ],
                       "kommune" : "OSLO",
                       "kommunenummer" : "0301"
                     },
@@ -205,7 +211,7 @@ class IntegrationsHelper {
                   },
                   {
                     "organisasjonsnummer" : $orgnr_oslo_mangler_adresser,
-                    "navn" : "Virksomhet Oslo",
+                    "navn" : "$virksomhetsnavn_oslo",
                     "organisasjonsform" : {
                       "kode" : "BEDR",
                       "beskrivelse" : "Underenhet til næringsdrivende og offentlig forvaltning",

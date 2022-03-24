@@ -5,6 +5,9 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.*
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -23,9 +26,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsRepository
+import no.nav.lydia.integrasjoner.brreg.BrregDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.fail
@@ -311,5 +314,36 @@ class SykefraversstatistikkApiTest {
         val geografiService = GeografiService()
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
         kommuner shouldHaveSize 44
+    }
+
+    @Test
+    fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=3.0&sykefraversprosentTil=")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+            .fold(
+                success = { statistikk ->
+                    statistikk.size shouldBeGreaterThan 0
+                    statistikk.forAll { sykefraversstatistikkVirksomhetDto ->
+                        sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 3.0
+                    }
+                },
+                failure = {
+                    fail(it.message)
+                })
+
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=&sykefraversprosentTil=5.0")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+            .fold(
+                success = { statistikk ->
+                    statistikk.size shouldBeGreaterThan 0
+                    statistikk.forAll { sykefraversstatistikkVirksomhetDto ->
+                        sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual  5.0
+                    }
+                },
+                failure = {
+                    fail(it.message)
+                })
     }
 }

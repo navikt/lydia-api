@@ -218,7 +218,7 @@ enum class Melding(val melding: String) {
               "tapteDagsverk": 10.0,
               "muligeDagsverk": 500.0,
               "antallPersoner": 6,
-              "prosent": 2.0,
+              "prosent": 7.0,
               "erMaskert": false,
               "kategori": "VIRKSOMHET"
             },

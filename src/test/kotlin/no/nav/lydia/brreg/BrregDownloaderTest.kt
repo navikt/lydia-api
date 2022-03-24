@@ -8,6 +8,7 @@ import io.ktor.server.testing.*
 import no.nav.lydia.*
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.IntegrationsHelper.Companion.adresser_oslo
 import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_BELIGGENHETSADRESSE
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_POSTNUMMER
@@ -15,9 +16,9 @@ import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo_flere_adresser
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo_mangler_adresser
 import no.nav.lydia.helper.PostgrestContainerHelper
-import no.nav.lydia.virksomhet.brreg.VIRKSOMHETSIMPORT_PATH
-import no.nav.lydia.virksomhet.ssb.NæringsDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsRepository
+import no.nav.lydia.integrasjoner.brreg.VIRKSOMHETSIMPORT_PATH
+import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import org.junit.AfterClass
 import java.net.URL
 import kotlin.test.AfterTest
@@ -93,10 +94,7 @@ class BrregDownloaderTest {
                     postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_oslo_flere_adresser'")
                 resultSetFlereAdresser.row shouldBe 1
                 (resultSetFlereAdresser.getArray("adresse").array as? Array<out Any?>)
-                    ?.filterIsInstance<String>() shouldContainExactly listOf(
-                    "c/o Oslo Tigersen",
-                    "Osloveien 1"
-                )
+                    ?.filterIsInstance<String>() shouldContainExactly adresser_oslo
 
                 val resultSetManglerAdresser =
                     postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_oslo_mangler_adresser'")

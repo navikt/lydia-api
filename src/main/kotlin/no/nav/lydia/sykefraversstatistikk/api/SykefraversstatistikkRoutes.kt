@@ -7,7 +7,7 @@ import io.ktor.routing.*
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
-import no.nav.lydia.virksomhet.ssb.NæringsRepository
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"

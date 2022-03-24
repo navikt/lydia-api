@@ -14,9 +14,9 @@ import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import no.nav.lydia.virksomhet.brreg.BrregDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsDownloader
-import no.nav.lydia.virksomhet.ssb.NæringsRepository
+import no.nav.lydia.integrasjoner.brreg.BrregDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.fail
@@ -35,7 +35,8 @@ class SykefraversstatistikkImportTest {
             TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
                 NæringsDownloader(
                     url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
-                    næringsRepository = NæringsRepository(dataSource = dataSource)).lastNedNæringer()
+                    næringsRepository = NæringsRepository(dataSource = dataSource)
+                ).lastNedNæringer()
 
                 BrregDownloader(
                     url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock),

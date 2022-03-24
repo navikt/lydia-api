@@ -134,6 +134,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.kvartal = :kvartal AND statistikk.arstall = :arstall
                     )    
                     
+                    ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
+                    ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
+                    
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     LIMIT 20
                 """.trimIndent()
