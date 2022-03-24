@@ -15,6 +15,7 @@ import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -82,7 +83,7 @@ class IASakApiTest {
                 fail(it.message)
             })
 
-        val sak = prioriterVirksomhet(orgnummer = orgnr_oslo)
+        val sak = opprettSakForVirksomhet(orgnummer = orgnr_oslo)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
 
         val (_, _, listeResultatEtterPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
@@ -94,7 +95,7 @@ class IASakApiTest {
                 respons shouldHaveAtLeastSize 1
                 respons.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
                     sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr_oslo
-                    sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.PRIORITERT
+                    sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.NY
                 }
             }, failure = {
                 fail(it.message)
@@ -104,22 +105,36 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne spore endringene som har skjedd på en sak`() {
-        val sak = prioriterVirksomhet(orgnummer = orgnr_bergen)
+        val sak = opprettSakForVirksomhet(orgnummer = orgnr_bergen)
+
         val iaSaker = hentIASaker(orgnr_bergen)
         iaSaker.forAtLeastOne {
             it.orgnr shouldBe orgnr_bergen
-            it.status shouldBe IAProsessStatus.PRIORITERT
+            it.status shouldBe IAProsessStatus.NY
             it.opprettetAv shouldBe NAV_IDENT
             it.saksnummer shouldBe sak.saksnummer
         }
 
-        val nyHendelseDto = IASakshendelseDto(
+        val prioriteringsHendelseDto = IASakshendelseDto(
+            orgnummer = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            hendelsesType = SaksHendelsestype.VIRKSOMHET_PRIORITERES,
+            endretAvHendelsesId = sak.endretAvHendelseId
+        )
+        val sakEtterPrioritering = nyHendelsePåSak(prioriteringsHendelseDto).also {
+            it.orgnr shouldBe orgnr_bergen
+            it.saksnummer shouldBe sak.saksnummer
+            it.status shouldBe IAProsessStatus.PRIORITERT
+            it.opprettetAv shouldBe sak.opprettetAv
+            it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
+        }
+        val takketNeiHendelseDto = IASakshendelseDto(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
             hendelsesType = SaksHendelsestype.VIRKSOMHET_TAKKER_NEI,
-            endretAvHendelsesId = sak.endretAvHendelseId
+            endretAvHendelsesId = sakEtterPrioritering.endretAvHendelseId
         )
-        nyHendelsePåSak(nyHendelseDto).also {
+        nyHendelsePåSak(takketNeiHendelseDto).also {
             it.orgnr shouldBe orgnr_bergen
             it.saksnummer shouldBe sak.saksnummer
             it.status shouldBe IAProsessStatus.TAKKET_NEI
@@ -136,7 +151,7 @@ class IASakApiTest {
             })
 
 
-    private fun prioriterVirksomhet(orgnummer : String) =
+    private fun opprettSakForVirksomhet(orgnummer : String) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<IASakDto>().third.fold( success = { respons -> respons }, failure = {

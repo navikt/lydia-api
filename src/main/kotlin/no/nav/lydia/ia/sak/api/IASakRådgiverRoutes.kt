@@ -35,8 +35,12 @@ fun Route.IASak_Rådgiver(
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
         call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
-            val sak = iaSakService.behandleHendelse(hendelseDto, navIdent)
-            call.respond(sak.saksnummer)
+            when (val sak = iaSakService.behandleHendelse(hendelseDto, navIdent)) {
+                null ->
+                    call.respond(HttpStatusCode.NotAcceptable)
+                else ->
+                    call.respond(sak.toDto())
+            }
         } ?: call.respond(status = HttpStatusCode.BadRequest, "Fant ikke NAVident for innlogget bruker")
     }
 

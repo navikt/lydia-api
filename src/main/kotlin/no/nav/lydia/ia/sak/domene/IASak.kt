@@ -56,7 +56,6 @@ class IASak(
             håndterFeilState()
         }
         open fun takketNei() {
-
             håndterFeilState()
         }
     }
@@ -86,6 +85,7 @@ class IASak(
             return when (status) {
                 IAProsessStatus.NY -> StartTilstand()
                 IAProsessStatus.PRIORITERT -> PrioritertTilstand()
+                IAProsessStatus.TAKKET_NEI -> TakketNeiTilstand()
                 else -> throw IllegalStateException()
             }
         }
@@ -96,7 +96,7 @@ class IASak(
             val sak = IASak(
                 saksnummer = førsteHendelse.saksnummer,
                 orgnr = førsteHendelse.orgnummer,
-                type = IASakstype.NAV_STOTTER,
+                type = IASakstype.NAV_STOTTER, // TODO: skal ligge på hendelsen
                 opprettet = førsteHendelse.opprettetTidspunkt,
                 opprettetAv = førsteHendelse.opprettetAv,
                 endret = null,

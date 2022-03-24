@@ -2,7 +2,6 @@ package no.nav.lydia.ia.sak.domene
 
 import com.github.guepardoapps.kulid.ULID
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
 import java.time.LocalDateTime
 
 class IASakshendelse(
@@ -19,10 +18,7 @@ class IASakshendelse(
             return IASakshendelse(
                 id = id,
                 opprettetTidspunkt = LocalDateTime.now(),
-                saksnummer = when (dto.hendelsesType) {
-                    VIRKSOMHET_PRIORITERES -> id
-                    else -> dto.saksnummer
-                },
+                saksnummer = dto.saksnummer,
                 type = dto.hendelsesType,
                 orgnummer = dto.orgnummer,
                 opprettetAv = navIdent,
@@ -33,7 +29,7 @@ class IASakshendelse(
 }
 
 enum class SaksHendelsestype{
-    NY_SAK,
+    OPPRETT_SAK_FOR_VIRKSOMHET,
     VIRKSOMHET_PRIORITERES,
     VIRKSOMHET_AKSEPTERER_BISTAND,
     VIRKSOMHET_TAKKER_NEI
