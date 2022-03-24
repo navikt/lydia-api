@@ -1,5 +1,7 @@
 package no.nav.lydia.ia.sak.db
 
+import arrow.core.Either
+import arrow.core.rightIfNotNull
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -46,7 +48,7 @@ class IASakRepository(val dataSource: DataSource) {
             )!!
         }
 
-    fun oppdaterSak(iaSak: IASak) =
+    fun oppdaterSak(iaSak: IASak) : Either<Exception, IASak> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -70,7 +72,7 @@ class IASakRepository(val dataSource: DataSource) {
                         "endret_av_hendelse" to iaSak.endretAvHendelseId
                     )
                 ).map(this::mapRowToIASak).asSingle
-            )
+            ).rightIfNotNull { Exception("Fikk ikke til å oppdatere") }
         }
 
     private fun mapRowToIASak(row: Row): IASak {

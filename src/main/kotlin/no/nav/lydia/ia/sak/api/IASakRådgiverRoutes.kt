@@ -1,5 +1,7 @@
 package no.nav.lydia.ia.sak.api
 
+import arrow.core.Either
+import arrow.core.right
 import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.auth.jwt.*
@@ -35,11 +37,11 @@ fun Route.IASak_Rådgiver(
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
         call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
-            when (val sak = iaSakService.behandleHendelse(hendelseDto, navIdent)) {
-                null ->
+            when (val sakEither = iaSakService.behandleHendelse(hendelseDto, navIdent)) {
+                is Either.Left ->
                     call.respond(HttpStatusCode.NotAcceptable)
-                else ->
-                    call.respond(sak.toDto())
+                is Either.Right ->
+                    call.respond(sakEither.value.toDto())
             }
         } ?: call.respond(status = HttpStatusCode.BadRequest, "Fant ikke NAVident for innlogget bruker")
     }

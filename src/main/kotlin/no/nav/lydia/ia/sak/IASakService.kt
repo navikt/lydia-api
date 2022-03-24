@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak
 
+import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -37,10 +38,10 @@ class IASakService(
         return iaSakRepository.lagreSak(sak)
     }
 
-    fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): IASak? {
+    fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): Either<Exception, IASak> {
         val sakshendelse = IASakshendelse.fromDto(hendelseDto, navIdent)
         val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
-        if (hendelser.isEmpty()) throw IllegalStateException("Her skal  man ikke havne om listen over hendelser er tom")
+        if (hendelser.isEmpty()) return Either.Left(IllegalStateException("Her skal  man ikke havne om listen over hendelser er tom"))
         val sak = IASak.fraHendelser(hendelser).behandleHendelse(sakshendelse)
         iaSakshendelseRepository.lagreHendelse(sakshendelse)
         return iaSakRepository.oppdaterSak(sak)
