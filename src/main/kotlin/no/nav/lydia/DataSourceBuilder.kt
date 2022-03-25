@@ -1,6 +1,7 @@
 package no.nav.lydia
 
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.lydia.appstatus.Metrics
 import org.flywaydb.core.Flyway
 import org.postgresql.ds.PGSimpleDataSource
 import javax.sql.DataSource
@@ -18,6 +19,8 @@ fun createDataSource(database: Database): DataSource {
         idleTimeout = 100000
         connectionTimeout = 100000
         maxLifetime = 300000
+    }.also {
+        it.metricRegistry = Metrics.appMicrometerRegistry
     }
 }
 

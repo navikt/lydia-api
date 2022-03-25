@@ -43,9 +43,10 @@ class AppContainerTest {
 
         assert(response.isSuccessful)
         result.fold(success = { metrikker ->
-            metrikker.shouldContain("process_cpu_usage")
-            metrikker.shouldContain("jvm_memory_used_bytes")
-            metrikker.shouldContain("ktor_http_server_requests_active")
+            metrikker shouldContain "process_cpu_usage"
+            metrikker shouldContain "jvm_memory_used_bytes"
+            metrikker shouldContain "ktor_http_server_requests_active"
+            metrikker shouldContain "hikaricp_connections_acquire_seconds_count"
         }, failure = {
             fail("")
         }
