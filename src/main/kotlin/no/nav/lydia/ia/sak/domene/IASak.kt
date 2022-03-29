@@ -26,7 +26,7 @@ class IASak(
     val status: IAProsessStatus
         get() = tilstand.status
 
-    fun behandleHendelse(hendelse: IASakshendelse) : IASak {
+    fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.type) {
             VIRKSOMHET_PRIORITERES -> {
                 tilstand.prioritert()
@@ -45,7 +45,7 @@ class IASak(
         return this
     }
 
-    private fun håndterFeilState(){
+    private fun håndterFeilState() {
         log.info("Feil i systemet")
         log.info(this.status.name)
         throw IllegalStateException()
@@ -55,6 +55,7 @@ class IASak(
         open fun prioritert() {
             håndterFeilState()
         }
+
         open fun takketNei() {
             håndterFeilState()
         }
@@ -122,7 +123,15 @@ enum class IAProsessStatus {
     IKKE_AKTIV;
 
     companion object {
-        fun avsluttedeStatuser() = listOf(TAKKET_NEI, AVSLUTTET)
+        fun filtrerbareStatuser() = listOf(
+            IKKE_AKTIV,
+            PRIORITERT,
+            TAKKET_NEI,
+            KARTLEGGING,
+            GJENNOMFORING,
+//            EVALUERING, // TODO: Ikke i MVP
+            AVSLUTTET
+        )
     }
 }
 

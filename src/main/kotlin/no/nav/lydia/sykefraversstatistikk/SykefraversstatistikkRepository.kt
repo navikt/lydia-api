@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
@@ -134,6 +135,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.kvartal = :kvartal AND statistikk.arstall = :arstall
                     )    
                     
+                    ${søkeparametere.status?.let { status ->
+                        when (status) {
+                            IKKE_AKTIV -> " AND ia_sak.status IS NULL"
+                            else -> " AND ia_sak.status = '$status'"
+                        }} ?: ""
+                    }
                     ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
                     ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
                     

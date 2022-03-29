@@ -1,11 +1,11 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.*
-import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -23,12 +23,23 @@ import no.nav.lydia.helper.IntegrationsHelper.Companion.virksomhetsnavn_bergen
 import no.nav.lydia.helper.Melding
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.IA_STATUS
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_FRA
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_TIL
 import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.fail
@@ -42,7 +53,7 @@ class SykefraversstatistikkApiTest {
 
         init {
             httpMock.start()
-            TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
+            postgresContainer.getDataSource().use { dataSource ->
                 NæringsDownloader(
                     url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
                     næringsRepository = NæringsRepository(dataSource = dataSource)
@@ -128,6 +139,7 @@ class SykefraversstatistikkApiTest {
                     .shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
                 filterverdier.neringsgrupper.size shouldBe 4
                 filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
+                filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
             }, failure = {
                 fail(it.message)
             })
@@ -268,9 +280,9 @@ class SykefraversstatistikkApiTest {
                     it.kvartal shouldBe gjeldendePeriode.kvartal
                     it.arstall shouldBe gjeldendePeriode.årstall
                 }
-                }, failure = {
-                    fail(it.message)
-                }
+            }, failure = {
+                fail(it.message)
+            }
             )
     }
 
@@ -288,9 +300,9 @@ class SykefraversstatistikkApiTest {
                     it.kvartal shouldBe forrigePeriode.kvartal
                     it.arstall shouldBe forrigePeriode.årstall
                 }
-                }, failure = {
-                    fail(it.message)
-                }
+            }, failure = {
+                fail(it.message)
+            }
             )
     }
 
@@ -315,12 +327,63 @@ class SykefraversstatistikkApiTest {
         val kommuner = geografiService.hentKommunerFraFylkesnummer(fylkesnummer)
         kommuner shouldHaveSize 44
     }
-    
+
     @Test
-    fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
-        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=3.0&sykefraversprosentTil=")
+    fun `skal kunne filtrere virksomheter på status`() {
+        postgresContainer.performUpdate("DELETE FROM ia_sak")
+
+        sykefraværFiltrertPå(status = IAProsessStatus.PRIORITERT.name)
+            .fold(success = { virksomheter ->
+                    virksomheter.size shouldBe 0
+                },
+                failure = { fail(it.message) })
+
+        val orgnummer = orgnr_oslo
+        val sak = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
+
+        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .jsonBody(
+                IASakshendelseDto(
+                    orgnummer = orgnummer,
+                    saksnummer = sak.saksnummer,
+                    hendelsesType = SaksHendelsestype.VIRKSOMHET_PRIORITERES,
+                    endretAvHendelsesId = sak.endretAvHendelseId
+                )
+            )
+            .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
+
+        sykefraværFiltrertPå(status = IAProsessStatus.PRIORITERT.name)
+            .fold(success = { virksomheter ->
+                    virksomheter.size shouldBe 1
+                },
+                failure = { fail(it.message) })
+
+        sykefraværFiltrertPå(status = IAProsessStatus.IKKE_AKTIV.name)
+            .fold(success = { virksomheter ->
+                    virksomheter.size shouldBe 1
+            },
+            failure = { fail(it.message)} )
+    }
+
+    private fun sykefraværFiltrertPå(
+        status: String = "",
+        sykefraværsProsentFra: String = "",
+        sykefraværsProsentTil: String = ""
+    ) =
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?" +
+                "$IA_STATUS=${status}" +
+                "&$SYKEFRAVÆRSPROSENT_FRA=${sykefraværsProsentFra}" +
+                "&$SYKEFRAVÆRSPROSENT_TIL=${sykefraværsProsentTil}"
+            )
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+
+    @Test
+    fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
+        sykefraværFiltrertPå(sykefraværsProsentFra = "3.0")
             .fold(
                 success = { statistikk ->
                     statistikk.size shouldBeGreaterThan 0
@@ -332,14 +395,12 @@ class SykefraversstatistikkApiTest {
                     fail(it.message)
                 })
 
-        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH?sykefraversprosentFra=&sykefraversprosentTil=5.0")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
+       sykefraværFiltrertPå(sykefraværsProsentTil = "5.0")
             .fold(
                 success = { statistikk ->
                     statistikk.size shouldBeGreaterThan 0
                     statistikk.forAll { sykefraversstatistikkVirksomhetDto ->
-                        sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual  5.0
+                        sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 5.0
                     }
                 },
                 failure = {

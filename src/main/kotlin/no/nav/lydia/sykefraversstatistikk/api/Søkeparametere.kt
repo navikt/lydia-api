@@ -1,6 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import io.ktor.http.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 
 data class Søkeparametere(
@@ -10,24 +11,27 @@ data class Søkeparametere(
     val sorteringsnøkkel: Sorteringsnøkkel,
     val sorteringsretning : Sorteringsretning,
     val sykefraværsprosentFra: Double?,
-    val sykefraværsprosentTil: Double?
+    val sykefraværsprosentTil: Double?,
+    val status: IAProsessStatus?
 ) {
     companion object {
+        const val KVARTAL = "kvartal"
+        const val ÅRSTALL = "arstall"
+        const val SORTERINGSNØKKEL = "sorteringsnokkel"
+        const val SORTERINGSRETNING = "sorteringsretning"
+        const val SYKEFRAVÆRSPROSENT_FRA = "sykefraversprosentFra"
+        const val SYKEFRAVÆRSPROSENT_TIL = "sykefraversprosentTil"
+        const val IA_STATUS = "iaStatus"
         fun from(queryParameters: Parameters, geografiService: GeografiService): Søkeparametere =
             Søkeparametere(
                 kommunenummer =  finnGyldigeKommunenummer(queryParameters, geografiService),
                 næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
-                periode = Periode.from(queryParameters["kvartal"], queryParameters["arstall"]),
-                sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters["sorteringsnokkel"]),
-                sorteringsretning = Sorteringsretning.from(queryParameters["sorteringsretning"]),
-                sykefraværsprosentFra = when (val fra = queryParameters["sykefraversprosentFra"]) {
-                    "" -> null
-                    else -> fra?.toDouble()
-                },
-                sykefraværsprosentTil = when (val til = queryParameters["sykefraversprosentTil"]) {
-                    "" -> null
-                    else -> til?.toDouble()
-                }
+                periode = Periode.from(queryParameters[KVARTAL].tomSomNull(), queryParameters[ÅRSTALL]),
+                sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
+                sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
+                sykefraværsprosentFra = queryParameters[SYKEFRAVÆRSPROSENT_FRA].tomSomNull()?.toDouble(),
+                sykefraværsprosentTil = queryParameters[SYKEFRAVÆRSPROSENT_TIL].tomSomNull()?.toDouble(),
+                status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) }
             )
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
             geografiService.hentKommunerFraFylkerOgKommuner(
@@ -39,6 +43,8 @@ data class Søkeparametere(
 
         private fun String?.tilUnikeVerdier() : Set<String> =
             this?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
+
+        private fun String?.tomSomNull() = this?.ifBlank { null }
     }
 }
 

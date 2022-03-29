@@ -6,13 +6,16 @@ import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.lydia.helper.*
 import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
 import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
+import no.nav.lydia.helper.Melding
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
@@ -25,7 +28,8 @@ import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.sykefraversstatistikk.api.*
+import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.junit.AfterClass
 import kotlin.test.Test
@@ -41,7 +45,7 @@ class IASakApiTest {
 
         init {
             httpMock.start()
-            TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
+            postgresContainer.getDataSource().use { dataSource ->
                 NæringsDownloader(
                     url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
                     næringsRepository = NæringsRepository(dataSource = dataSource)
@@ -68,6 +72,8 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne prioritere en virksomhet og vise status i listevisning`() {
+        postgresContainer.performUpdate("DELETE FROM ia_sak")
+
         val (_, _, listeResultatFørPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
