@@ -7,6 +7,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
+import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
@@ -98,8 +99,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
     fun hentSykefravær(
         søkeparametere: Søkeparametere
-    ): List<SykefraversstatistikkVirksomhet> {
-        return using(sessionOf(dataSource)) { session ->
+    ): ListResponse<SykefraversstatistikkVirksomhet> {
+        val sykefraværMedAntal = using(sessionOf(dataSource)) { session ->
             val tmpKommuneTabell = "kommuner"
             val tmpNæringTabell = "naringer"
             val sql = """
@@ -119,7 +120,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.sykefraversprosent,
                         statistikk.maskert,
                         statistikk.opprettet,
-                        ia_sak.status
+                        ia_sak.status,
+                        COUNT(*) OVER() AS total
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
                     LEFT JOIN ia_sak USING (orgnr)
@@ -161,9 +163,14 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             ).map(this::mapRow).asList
             session.run(query)
         }
+
+        val sykefraværStatistikk = sykefraværMedAntal.map { it.first }
+        val totaltAntall = sykefraværMedAntal.firstOrNull()?.second ?: 0
+
+        return ListResponse(data = sykefraværStatistikk, total = totaltAntall)
     }
 
-    private fun mapRow(row: Row): SykefraversstatistikkVirksomhet {
+    private fun mapRow(row: Row): Pair<SykefraversstatistikkVirksomhet, Int> {
         return SykefraversstatistikkVirksomhet(
             virksomhetsnavn = row.string("navn"),
             kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
@@ -179,7 +186,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             status = row.stringOrNull("status")?.let {
                 IAProsessStatus.valueOf(it)
             }
-        )
+        ) to row.int("total")
     }
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
@@ -199,7 +206,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.sykefraversprosent,
                         statistikk.maskert,
                         statistikk.opprettet,
-                        ia_sak.status
+                        ia_sak.status,
+                        COUNT(*) OVER() AS total
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
@@ -207,7 +215,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                 """.trimIndent(),
                 paramMap = mapOf("orgnr" to orgnr)
             ).map(this::mapRow).asList
-            session.run(query)
+            session.run(query).map { it.first }
         }
     }
 

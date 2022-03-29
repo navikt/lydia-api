@@ -28,6 +28,7 @@ import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -69,19 +70,18 @@ class IASakApiTest {
     }
 
 
-
     @Test
     fun `skal kunne prioritere en virksomhet og vise status i listevisning`() {
         postgresContainer.performUpdate("DELETE FROM ia_sak")
 
         val (_, _, listeResultatFørPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>()
 
         listeResultatFørPrioritering.fold(
-            success = { respons ->
-                respons shouldHaveAtLeastSize 1
-                respons.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
+            success = { response ->
+                response.data shouldHaveAtLeastSize 1
+                response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
                     sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr_oslo
                     sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
                 }
@@ -94,12 +94,12 @@ class IASakApiTest {
 
         val (_, _, listeResultatEtterPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>()
 
         listeResultatEtterPrioritering.fold(
-            success = { respons ->
-                respons shouldHaveAtLeastSize 1
-                respons.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
+            success = { response ->
+                response.data shouldHaveAtLeastSize 1
+                response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
                     sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr_oslo
                     sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.NY
                 }
@@ -152,15 +152,15 @@ class IASakApiTest {
     private fun hentIASaker(orgnummer: String) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<List<IASakDto>>().third.fold( success = { respons -> respons }, failure = {
+            .responseObject<List<IASakDto>>().third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
 
 
-    private fun opprettSakForVirksomhet(orgnummer : String) =
+    private fun opprettSakForVirksomhet(orgnummer: String) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<IASakDto>().third.fold( success = { respons -> respons }, failure = {
+            .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
 
@@ -168,7 +168,7 @@ class IASakApiTest {
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .jsonBody(hendelseDto)
-            .responseObject<IASakDto>().third.fold( success = { respons -> respons }, failure = {
+            .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
 
