@@ -17,6 +17,9 @@ data class Søkeparametere(
     companion object {
         const val KVARTAL = "kvartal"
         const val ÅRSTALL = "arstall"
+        const val KOMMUNER = "kommuner"
+        const val FYLKER = "fylker"
+        const val NÆRINGSGRUPPER = "neringsgrupper"
         const val SORTERINGSNØKKEL = "sorteringsnokkel"
         const val SORTERINGSRETNING = "sorteringsretning"
         const val SYKEFRAVÆRSPROSENT_FRA = "sykefraversprosentFra"
@@ -26,7 +29,7 @@ data class Søkeparametere(
             Søkeparametere(
                 kommunenummer =  finnGyldigeKommunenummer(queryParameters, geografiService),
                 næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
-                periode = Periode.from(queryParameters[KVARTAL].tomSomNull(), queryParameters[ÅRSTALL]),
+                periode = Periode.from(queryParameters[KVARTAL].tomSomNull(), queryParameters[ÅRSTALL].tomSomNull()),
                 sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
                 sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
                 sykefraværsprosentFra = queryParameters[SYKEFRAVÆRSPROSENT_FRA].tomSomNull()?.toDouble(),
@@ -35,11 +38,11 @@ data class Søkeparametere(
             )
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
             geografiService.hentKommunerFraFylkerOgKommuner(
-                queryParameters["fylker"].tilUnikeVerdier(),
-                queryParameters["kommuner"].tilUnikeVerdier(),
+                queryParameters[FYLKER].tilUnikeVerdier(),
+                queryParameters[KOMMUNER].tilUnikeVerdier(),
             )
         private fun finnGyldigeNæringsgruppekoder(queryParameters: Parameters) =
-            queryParameters["neringsgrupper"].tilUnikeVerdier()
+            queryParameters[NÆRINGSGRUPPER].tilUnikeVerdier()
 
         private fun String?.tilUnikeVerdier() : Set<String> =
             this?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
