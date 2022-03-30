@@ -100,7 +100,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     fun hentSykefravær(
         søkeparametere: Søkeparametere
     ): ListResponse<SykefraversstatistikkVirksomhet> {
-        val sykefraværMedAntal = using(sessionOf(dataSource)) { session ->
+        val sykefraværMedAntall = using(sessionOf(dataSource)) { session ->
             val tmpKommuneTabell = "kommuner"
             val tmpNæringTabell = "naringer"
             val sql = """
@@ -164,10 +164,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-        val sykefraværStatistikk = sykefraværMedAntal.map { it.first }
-        val totaltAntall = sykefraværMedAntal.firstOrNull()?.second ?: 0
+        val sykefraværsStatistikk = sykefraværMedAntall.map { it.first }
+        val totaltAntallVirksomheter = sykefraværMedAntall.firstOrNull()?.second ?: 0
 
-        return ListResponse(data = sykefraværStatistikk, total = totaltAntall)
+        return ListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
     }
 
     private fun mapRow(row: Row): Pair<SykefraversstatistikkVirksomhet, Int> {
