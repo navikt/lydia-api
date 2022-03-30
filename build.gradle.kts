@@ -64,6 +64,10 @@ dependencies {
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
+    // Funksjonelle operatorer
+    implementation("io.arrow-kt:arrow-core:1.0.1")
+
+
     // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
