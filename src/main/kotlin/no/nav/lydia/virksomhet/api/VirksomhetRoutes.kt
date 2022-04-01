@@ -11,7 +11,7 @@ const val VIRKSOMHET_PATH = "virksomhet"
 fun Route.virksomhet(virksomhetRepository: VirksomhetRepository) {
     get("$VIRKSOMHET_PATH/{orgnr}") {
         call.parameters["orgnr"]?.let { orgnr ->
-            when (val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnr)) {
+            when (val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnr)?.toDto()) {
                 null -> call.respond(HttpStatusCode.NotFound)
                 else -> call.respond(HttpStatusCode.OK, virksomhet)
             }

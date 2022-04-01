@@ -104,6 +104,8 @@ class VirksomhetApiTest {
                 dto.orgnr shouldBe orgnr_oslo_flere_adresser
                 dto.navn shouldBe virksomhetsnavn_oslo
                 dto.adresse shouldContainInOrder adresser_oslo
+                dto.postnummer shouldBe "0364"
+                dto.poststed shouldBe "OSLO"
                 dto.neringsgrupper shouldHaveSize 2
             }
         }

@@ -4,8 +4,8 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
-import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.virksomhet.domene.Virksomhet
 import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
@@ -84,9 +84,16 @@ class VirksomhetRepository(val dataSource: DataSource) {
             session.run(queryOf(
                 """
                     SELECT 
+                        virksomhet.id,
                         virksomhet.orgnr,
                         virksomhet.navn,
                         virksomhet.adresse,
+                        virksomhet.postnummer,
+                        virksomhet.poststed,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        virksomhet.land,
+                        virksomhet.landkode,
                         string_agg(naring.kode || '-' || naring.navn, '€') AS naringer
                     FROM virksomhet 
                     JOIN virksomhet_naring ON (virksomhet.id = virksomhet_naring.virksomhet)
@@ -96,11 +103,18 @@ class VirksomhetRepository(val dataSource: DataSource) {
                 """.trimIndent(),
                 mapOf("orgnr" to orgnr)
             ).map { row ->
-                VirksomhetDto(
+                Virksomhet(
+                    id = row.long("id"),
                     orgnr = orgnr,
                     navn = row.string("navn"),
                     adresse = row.array<String>("adresse").toList(),
-                    neringsgrupper = row.string("naringer")
+                    postnummer = row.int("postnummer"),
+                    poststed = row.string("poststed"),
+                    kommune = row.string("kommune"),
+                    kommunenummer = row.string("kommunenummer"),
+                    land = row.string("land"),
+                    landkode = row.string("landkode"),
+                    næringsgrupper = row.string("naringer")
                         .split("€")
                         .map { naring ->
                             Næringsgruppe(
