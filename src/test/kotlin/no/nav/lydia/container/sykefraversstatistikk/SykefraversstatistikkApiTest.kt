@@ -39,6 +39,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.IA_STATU
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.KOMMUNER
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.KVARTAL
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.NÆRINGSGRUPPER
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SIDE
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SORTERINGSNØKKEL
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SORTERINGSRETNING
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_FRA
@@ -303,6 +304,16 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skalaklsjhaISKD` () {
+
+
+
+        hentSykefravær(side = "1", success = { response ->
+
+        })
+    }
+
+    @Test
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
         hentSykefravær(sykefraværsprosentFra = "3.0", success = { response ->
             response.data shouldHaveAtLeastSize 1
@@ -330,7 +341,8 @@ class SykefraversstatistikkApiTest {
         sorteringsretning: String = "",
         sykefraværsprosentFra: String = "",
         sykefraværsprosentTil: String = "",
-        iaStatus: String = ""
+        iaStatus: String = "",
+        side: String = ""
     ) =
         lydiaApiContainer.performGet(
             "$SYKEFRAVERSSTATISTIKK_PATH" +
@@ -343,7 +355,8 @@ class SykefraversstatistikkApiTest {
                     "&$SORTERINGSRETNING=$sorteringsretning" +
                     "&$SYKEFRAVÆRSPROSENT_FRA=$sykefraværsprosentFra" +
                     "&$SYKEFRAVÆRSPROSENT_TIL=$sykefraværsprosentTil" +
-                    "&$IA_STATUS=$iaStatus"
+                    "&$IA_STATUS=$iaStatus" +
+                    "&$SIDE=$side"
         )
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>().third
