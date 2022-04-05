@@ -90,11 +90,11 @@ class KafkaContainerHelper(
             StringSerializer()
         )
 
-    fun sykefraversstatistikkKafkaMelding(melding: Melding): SykefraversstatistikkKafkaMelding {
-        return gson.fromJson(melding.melding, SykefraversstatistikkKafkaMelding::class.java)
+    fun sykefraversstatistikkKafkaMelding(melding: String): SykefraversstatistikkKafkaMelding {
+        return gson.fromJson(melding, SykefraversstatistikkKafkaMelding::class.java)
     }
 
-    fun sendSykefraversstatistikkKafkaMelding(melding: Melding) {
+    fun sendSykefraversstatistikkKafkaMelding(melding: String) {
         val kafkaMelding = sykefraversstatistikkKafkaMelding(melding)
         sendOgVentTilKonsumert(
             key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)

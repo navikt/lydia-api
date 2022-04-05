@@ -8,12 +8,8 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.*
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.IntegrationsHelper.Companion.adresser_oslo
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo_flere_adresser
-import no.nav.lydia.helper.IntegrationsHelper.Companion.virksomhetsnavn_oslo
-import no.nav.lydia.helper.PostgrestContainerHelper
+import no.nav.lydia.helper.*
+import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -49,34 +45,38 @@ class VirksomhetApiTest {
             consumerLoopDelay = 200L
         ), integrasjoner = Integrasjoner(
             ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
-            brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned")
+            brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned"
+        )
     )
 
     companion object {
-        private val httpMock = HttpMock()
         private val postgres = PostgrestContainerHelper()
         private val mockOAuth2Server = MockOAuth2Server().apply {
             start(port = 8100)
         }
 
         init {
-            httpMock.start()
-            postgres.getDataSource().use { dataSource ->
-                NæringsDownloader(
-                    url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
-                    næringsRepository = NæringsRepository(dataSource = dataSource)
-                ).lastNedNæringer()
-                BrregDownloader(
-                    url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock),
-                    virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-                ).lastNed()
+            val testData = TestData(initsialiserStandardVirksomheter = true)
+            HttpMock().also { httpMock ->
+                httpMock.start()
+                postgres.getDataSource().use { dataSource ->
+                    NæringsDownloader(
+                        url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
+                        næringsRepository = NæringsRepository(dataSource = dataSource)
+                    ).lastNedNæringer()
+
+                    BrregDownloader(
+                        url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData),
+                        virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+                    ).lastNed()
+                }
+                httpMock.stop()
             }
         }
 
         @AfterClass
         @JvmStatic
         fun afterAll() {
-            httpMock.stop()
             mockOAuth2Server.shutdown()
         }
     }
@@ -95,17 +95,17 @@ class VirksomhetApiTest {
                 dataSource = postgres.getDataSource()
             )
         }) {
-            with(handleRequest(HttpMethod.Get, "$VIRKSOMHET_PATH/$orgnr_oslo_flere_adresser") {
+            with(handleRequest(HttpMethod.Get, "$VIRKSOMHET_PATH/${OSLO_FLERE_ADRESSER.orgnr}") {
                 addHeader(HttpHeaders.Authorization, "Bearer $token")
             }) {
                 assertNotNull(response.content)
                 val dto = Json.decodeFromString<VirksomhetDto>(response.content!!)
 
-                dto.orgnr shouldBe orgnr_oslo_flere_adresser
-                dto.navn shouldBe virksomhetsnavn_oslo
-                dto.adresse shouldContainInOrder adresser_oslo
-                dto.postnummer shouldBe "0364"
-                dto.poststed shouldBe "OSLO"
+                dto.orgnr shouldBe OSLO_FLERE_ADRESSER.orgnr
+                dto.navn shouldBe OSLO_FLERE_ADRESSER.navn
+                dto.adresse shouldContainInOrder OSLO_FLERE_ADRESSER.beliggenhet?.adresse!!
+                dto.postnummer shouldBe OSLO_FLERE_ADRESSER.beliggenhet?.postnummer
+                dto.poststed shouldBe OSLO_FLERE_ADRESSER.beliggenhet?.poststed
                 dto.neringsgrupper shouldHaveSize 2
             }
         }

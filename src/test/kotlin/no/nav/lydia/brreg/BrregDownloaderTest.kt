@@ -8,14 +8,14 @@ import io.ktor.server.testing.*
 import no.nav.lydia.*
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.IntegrationsHelper.Companion.adresser_oslo
-import no.nav.lydia.helper.IntegrationsHelper.Companion.næringskodeBedriftsrådgivning
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_BELIGGENHETSADRESSE
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_MANGLER_POSTNUMMER
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo_flere_adresser
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo_mangler_adresser
 import no.nav.lydia.helper.PostgrestContainerHelper
+import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
+import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
+import no.nav.lydia.helper.TestVirksomhet.Companion.MANGLER_BELIGGENHETSADRESSE
+import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
+import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_MANGLER_ADRESSER
+import no.nav.lydia.helper.TestVirksomhet.Companion.UTENLANDSK
 import no.nav.lydia.integrasjoner.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -48,11 +48,12 @@ class BrregDownloaderTest {
             consumerLoopDelay = 200L
         ), integrasjoner = Integrasjoner(
             ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
-            brregUnderEnhetUrl = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock)
+            brregUnderEnhetUrl = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData)
         )
     )
 
     companion object {
+        val testData = TestData(initsialiserStandardVirksomheter = true)
         val httpMock = HttpMock()
         val postgres = PostgrestContainerHelper()
 
@@ -60,7 +61,7 @@ class BrregDownloaderTest {
             httpMock.start()
             postgres.getDataSource().use { dataSource ->
                 NæringsDownloader(
-                    url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
+                    url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
                     næringsRepository = NæringsRepository(dataSource = dataSource)
                 ).lastNedNæringer()
             }
@@ -91,13 +92,13 @@ class BrregDownloaderTest {
                 this.response.status() shouldBe OK
 
                 val resultSetFlereAdresser =
-                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_oslo_flere_adresser'")
+                    postgres.performQuery("select * from virksomhet where orgnr = '${OSLO_FLERE_ADRESSER.orgnr}'")
                 resultSetFlereAdresser.row shouldBe 1
                 (resultSetFlereAdresser.getArray("adresse").array as? Array<out Any?>)
-                    ?.filterIsInstance<String>() shouldContainExactly adresser_oslo
+                    ?.filterIsInstance<String>() shouldContainExactly OSLO_FLERE_ADRESSER.beliggenhet?.adresse!!
 
                 val resultSetManglerAdresser =
-                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_oslo_mangler_adresser'")
+                    postgres.performQuery("select * from virksomhet where orgnr = '${OSLO_MANGLER_ADRESSER.orgnr}'")
                 resultSetManglerAdresser.row shouldBe 1
             }
         }
@@ -114,7 +115,7 @@ class BrregDownloaderTest {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
 
-                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '$orgnr_bergen'")
+                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '${BERGEN.orgnr}'")
                 resultSet.row shouldBe 1
 
                 val id = resultSet.getLong("id")
@@ -123,14 +124,14 @@ class BrregDownloaderTest {
                 val resultSetFraVirksomhetNæring =
                     postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
                 resultSetFraVirksomhetNæring.row shouldBe 1
-                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeBedriftsrådgivning
+                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe BEDRIFTSRÅDGIVNING.kode
 
                 val resultSetUtenPostnummer =
-                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_MANGLER_POSTNUMMER'")
+                    postgres.performQuery("select * from virksomhet where orgnr = '${UTENLANDSK.orgnr}'")
                 resultSetUtenPostnummer.row shouldBe 0
 
                 val resultSetUtenBeliggenhetsadresse =
-                    postgres.performQuery("select * from virksomhet where orgnr = '$orgnr_MANGLER_BELIGGENHETSADRESSE'")
+                    postgres.performQuery("select * from virksomhet where orgnr = '${MANGLER_BELIGGENHETSADRESSE.orgnr}'")
                 resultSetUtenBeliggenhetsadresse.row shouldBe 0
             }
 
@@ -138,13 +139,13 @@ class BrregDownloaderTest {
             postgres.performUpdate("delete from virksomhet_naring")
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
-                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '$orgnr_bergen'")
+                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '${BERGEN.orgnr}'")
                 resultSet.row shouldBe 1
                 val id = resultSet.getLong("id")
                 val resultSetFraVirksomhetNæring =
                     postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
                 resultSetFraVirksomhetNæring.row shouldBe 1
-                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe næringskodeBedriftsrådgivning
+                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe BEDRIFTSRÅDGIVNING.kode
             }
         }
     }

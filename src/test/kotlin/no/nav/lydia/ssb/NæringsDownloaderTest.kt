@@ -9,9 +9,8 @@ import no.nav.lydia.Integrasjoner
 import no.nav.lydia.Kafka
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.Security
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.PostgrestContainerHelper
+import no.nav.lydia.helper.*
+import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
 import no.nav.lydia.lydiaRestApi
 import no.nav.lydia.integrasjoner.ssb.NÆRINGSIMPORT_URL
 import org.junit.AfterClass
@@ -38,7 +37,8 @@ class NæringsDownloaderTest {
     }
 
     val postgres = PostgrestContainerHelper()
-    val næringMockUrl = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock)
+    val testData = TestData(initsialiserStandardVirksomheter = true)
+    val næringMockUrl = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData)
 
     val naisEnvironment = NaisEnvironment(
         database = Database(
@@ -71,10 +71,10 @@ class NæringsDownloaderTest {
             with(handleRequest(HttpMethod.Get, NÆRINGSIMPORT_URL)) {
                 this.response.status() shouldBe HttpStatusCode.OK
 
-                val rs = postgres.performQuery("select * from naring where kode = '01.120'")
+                val rs = postgres.performQuery("select * from naring where kode = '${SCENEKUNST.kode}'")
                 rs.row shouldBe 1
-                rs.getString("navn") shouldBe "Dyrking av ris"
-                rs.getString("kort_navn") shouldBe "Dyrk. av ris"
+                rs.getString("navn") shouldBe SCENEKUNST.navn
+                rs.getString("kort_navn") shouldBe "Kortnavn for ${SCENEKUNST.kode}"
             }
         }
     }
