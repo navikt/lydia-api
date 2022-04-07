@@ -37,7 +37,7 @@ class NæringsDownloaderTest {
     }
 
     val postgres = PostgrestContainerHelper()
-    val testData = TestData(initsialiserStandardVirksomheter = true)
+    val testData = TestData(inkluderStandardVirksomheter = true)
     val næringMockUrl = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData)
 
     val naisEnvironment = NaisEnvironment(

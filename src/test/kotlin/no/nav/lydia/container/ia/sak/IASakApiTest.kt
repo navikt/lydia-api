@@ -43,7 +43,7 @@ class IASakApiTest {
 
     companion object {
         init {
-            val testData = TestData(initsialiserStandardVirksomheter = true)
+            val testData = TestData(inkluderStandardVirksomheter = true)
             HttpMock().also { httpMock ->
                 httpMock.start()
                 postgresContainer.getDataSource().use { dataSource ->

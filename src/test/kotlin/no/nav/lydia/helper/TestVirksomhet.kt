@@ -3,6 +3,7 @@ package no.nav.lydia.helper
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import kotlin.random.Random
 
 class TestVirksomhet(
     val orgnr: String,
@@ -15,6 +16,7 @@ class TestVirksomhet(
     val næringskode3 = næringsgrupper.getOrNull(2)
 
     companion object {
+        val DYRKING_AV_RIS = Næringsgruppe(kode = "01.120", navn = "Dyrking av ris")
         val SCENEKUNST =
             Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
         val BEDRIFTSRÅDGIVNING =
@@ -78,7 +80,18 @@ class TestVirksomhet(
             )
         )
 
-        fun beliggenhet(
+        val tilfeldigGenerator = Random(1)
+        fun nyVirksomhet(): TestVirksomhet {
+            val orgnr = (800000000 .. 899999999).random(tilfeldigGenerator).toString() // tilfeldige virksomheter har orgnummer som starter på 8
+            return TestVirksomhet(
+                orgnr = orgnr,
+                navn = "Navn $orgnr",
+                næringsgrupper = listOf(DYRKING_AV_RIS),
+                beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))
+            )
+        }
+
+        private fun beliggenhet(
             land: String = "Norge",
             landkode: String = "NO",
             kommune: Kommune?,

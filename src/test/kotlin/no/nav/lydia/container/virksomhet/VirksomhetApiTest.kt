@@ -56,7 +56,7 @@ class VirksomhetApiTest {
         }
 
         init {
-            val testData = TestData(initsialiserStandardVirksomheter = true)
+            val testData = TestData(inkluderStandardVirksomheter = true)
             HttpMock().also { httpMock ->
                 httpMock.start()
                 postgres.getDataSource().use { dataSource ->
@@ -104,8 +104,8 @@ class VirksomhetApiTest {
                 dto.orgnr shouldBe OSLO_FLERE_ADRESSER.orgnr
                 dto.navn shouldBe OSLO_FLERE_ADRESSER.navn
                 dto.adresse shouldContainInOrder OSLO_FLERE_ADRESSER.beliggenhet?.adresse!!
-                dto.postnummer shouldBe OSLO_FLERE_ADRESSER.beliggenhet?.postnummer
-                dto.poststed shouldBe OSLO_FLERE_ADRESSER.beliggenhet?.poststed
+                dto.postnummer shouldBe OSLO_FLERE_ADRESSER.beliggenhet.postnummer
+                dto.poststed shouldBe OSLO_FLERE_ADRESSER.beliggenhet.poststed
                 dto.neringsgrupper shouldHaveSize 2
             }
         }

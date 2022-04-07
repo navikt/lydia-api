@@ -115,7 +115,7 @@ class KafkaContainerHelper(
 
             withTimeoutOrNull(timeout) {
                 do {
-                    delay(timeMillis = 100L)
+                    delay(timeMillis = 10L)
                 } while (consumerSinOffset(consumerGroup = Kafka.groupId) <= sendtMelding.offset())
             }
         }

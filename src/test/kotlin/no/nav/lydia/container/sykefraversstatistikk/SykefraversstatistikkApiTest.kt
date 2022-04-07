@@ -9,8 +9,10 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.*
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
@@ -44,6 +46,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SORTERIN
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SORTERINGSRETNING
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_FRA
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_TIL
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ÅRSTALL
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -56,7 +59,7 @@ class SykefraversstatistikkApiTest {
 
     companion object {
         init {
-            val testData = TestData(initsialiserStandardVirksomheter = true)
+            val testData = TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 100)
             HttpMock().also { httpMock ->
                 httpMock.start()
                 postgresContainer.getDataSource().use { dataSource ->
@@ -125,7 +128,7 @@ class SykefraversstatistikkApiTest {
                 filterverdier.fylker[0].kommuner.size shouldBe 1
                 filterverdier.neringsgrupper.find { it.kode == "00.000" }
                     .shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
-                filterverdier.neringsgrupper.size shouldBe 3
+                filterverdier.neringsgrupper.size shouldBe 4
                 filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
                 filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
             }, failure = { fail(it.message) })
@@ -173,11 +176,11 @@ class SykefraversstatistikkApiTest {
         val kommunenummer = "0301" // Oslo kommune
 
         hentSykefravær(fylker = fylkesnummer, kommuner = kommunenummer, success = { response ->
-            response.data.map { it.orgnr }.toSet() shouldContainAll setOf(
-                BERGEN.orgnr,
-                OSLO.orgnr
-            )
-            response.data.map { it.kommune.nummer.substring(0..1) }.toSet() shouldBe setOf("46", "03")
+            response.data.forAll {
+                setOf("46", "03").forAtLeastOne { fylke ->
+                    it.kommune.nummer.substring(0..1) shouldBe fylke
+                }
+            }
         })
     }
 
@@ -216,7 +219,12 @@ class SykefraversstatistikkApiTest {
             kommuner = "$oslo,$nordreFollo",
             næringsgrupper = "${SCENEKUNST.kode},${BEDRIFTSRÅDGIVNING.kode}",
             success = { response ->
-                response.data.map { it.orgnr } shouldContainExactly listOf(OSLO.orgnr)
+                response.data shouldHaveAtLeastSize 1
+                response.data.forAll {
+                    listOf(oslo,nordreFollo).forAtLeastOne { knr ->
+                        it.kommune.nummer shouldBe knr
+                    }
+                }
             })
     }
 
@@ -264,13 +272,9 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere virksomheter på status`() {
-        postgresContainer.performUpdate("DELETE FROM ia_sak")
-
-        hentSykefravær(iaStatus = IAProsessStatus.PRIORITERT.name, success = { response ->
-            response.data shouldHaveSize 0
-        })
-
         val orgnummer = OSLO.orgnr
+        postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
+
         val sak = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
@@ -288,20 +292,30 @@ class SykefraversstatistikkApiTest {
             .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
         hentSykefravær(iaStatus = IAProsessStatus.PRIORITERT.name, success = { response ->
-            response.data shouldHaveSize 1
+            response.data shouldHaveAtLeastSize 1
+            response.data.forAll {
+                it.status shouldBe IAProsessStatus.PRIORITERT
+            }
         })
 
         hentSykefravær(iaStatus = IAProsessStatus.IKKE_AKTIV.name, success = { response ->
-            response.data shouldHaveSize 1
+            response.data.forAll {
+                it.status shouldBe IAProsessStatus.IKKE_AKTIV
+                it.orgnr shouldNotBe orgnummer
+            }
         })
     }
 
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
-
-
         hentSykefravær(side = "1", success = { response ->
+            response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
+            response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
+        })
 
+        hentSykefravær(side = "2", success = { response ->
+            response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
+            response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
         })
     }
 

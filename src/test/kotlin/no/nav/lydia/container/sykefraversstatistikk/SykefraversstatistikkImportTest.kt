@@ -29,7 +29,7 @@ class SykefraversstatistikkImportTest {
 
     companion object {
         init {
-            val testData = TestData(initsialiserStandardVirksomheter = false)
+            val testData = TestData(inkluderStandardVirksomheter = false)
             HttpMock().also { httpMock ->
                 httpMock.start()
                 testData.lagData(virksomhet = OSLO, perioder = listOf())

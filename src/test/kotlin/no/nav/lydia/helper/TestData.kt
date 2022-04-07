@@ -4,14 +4,15 @@ import com.google.gson.Gson
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 
 class TestData(
-    initsialiserStandardVirksomheter: Boolean = false
+    inkluderStandardVirksomheter: Boolean = false,
+    antallTilfeldigeVirksomheter: Int = 0
 ) {
     private val kafkaMeldinger = mutableSetOf<String>()
     private val næringer = mutableSetOf<String>()
     private val brregVirksomheter = mutableSetOf<String>()
 
     init {
-        if (initsialiserStandardVirksomheter) {
+        if (inkluderStandardVirksomheter) {
             lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()))
             lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "7.0")
 
@@ -20,13 +21,20 @@ class TestData(
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.UTENLANDSK, perioder = listOf())
         }
+        genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
+    }
+
+    private fun genererTilfeldigeVirksomheter(antallVirksomheter: Int) {
+        (0 .. antallVirksomheter).forEach { _ ->
+            lagData(TestVirksomhet.nyVirksomhet(), listOf(Periode.gjeldenePeriode()))
+        }
     }
 
     fun lagData(
         virksomhet: TestVirksomhet,
         perioder: List<Periode>,
         sykefraværsProsent: String = "2.0"
-    ): TestData {
+    ) {
         perioder.forEach { periode ->
             kafkaMeldinger.add(lagKafkaMelding(orgnr = virksomhet.orgnr, periode = periode, navn = virksomhet.navn, sykefraværsProsent = sykefraværsProsent))
         }
@@ -34,7 +42,6 @@ class TestData(
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
         }
         brregVirksomheter.add(virksomhet.brregJson())
-        return this
     }
 
     fun sykefraværsStatistikkMeldinger() =
@@ -86,20 +93,6 @@ enum class Melding(val melding: String) {
         melding = lagKafkaMelding(
             orgnr = TestVirksomhet.OSLO.orgnr,
             navn = TestVirksomhet.OSLO.navn,
-            periode = Periode.gjeldenePeriode()
-        )
-    ),
-    bergenForrigeKvartal(
-        melding = lagKafkaMelding(
-            orgnr = TestVirksomhet.BERGEN.orgnr,
-            navn = TestVirksomhet.BERGEN.navn,
-            periode = Periode.forrigePeriode()
-        )
-    ),
-    bergenGjeldeneKvartal(
-        melding = lagKafkaMelding(
-            orgnr = TestVirksomhet.BERGEN.orgnr,
-            navn = TestVirksomhet.BERGEN.navn,
             periode = Periode.gjeldenePeriode()
         )
     )

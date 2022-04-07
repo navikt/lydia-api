@@ -53,7 +53,7 @@ class BrregDownloaderTest {
     )
 
     companion object {
-        val testData = TestData(initsialiserStandardVirksomheter = true)
+        val testData = TestData(inkluderStandardVirksomheter = true)
         val httpMock = HttpMock()
         val postgres = PostgrestContainerHelper()
 
