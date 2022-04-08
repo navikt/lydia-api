@@ -15,14 +15,11 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
@@ -91,7 +88,7 @@ class SykefraversstatistikkApiTest {
         val orgnr = BERGEN.orgnr
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 
         result.fold(
             success = { sykefraværsstatistikkVirksomhet ->
@@ -122,7 +119,7 @@ class SykefraversstatistikkApiTest {
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<FilterverdierDto>()
+            .responseObject<FilterverdierDto>(localDateTimeTypeAdapter)
 
         result.fold(
             success = { filterverdier ->
@@ -202,13 +199,13 @@ class SykefraversstatistikkApiTest {
         val resultatMedTommeParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
                 .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-                .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>().third
+                .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
 
         val resultatUtenParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
                 .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-                .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>().third
+                .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
         resultatMedTommeParametre.get().data shouldContainAll resultatUtenParametre.get().data
     }
@@ -280,7 +277,7 @@ class SykefraversstatistikkApiTest {
 
         val sak = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
+            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -292,7 +289,7 @@ class SykefraversstatistikkApiTest {
                     endretAvHendelsesId = sak.endretAvHendelseId
                 ),
             )
-            .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
+            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
         hentSykefravær(iaStatus = IAProsessStatus.VURDERES.name, success = { response ->
             response.data shouldHaveAtLeastSize 1
@@ -388,6 +385,6 @@ class SykefraversstatistikkApiTest {
                     "&$SIDE=$side"
         )
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>().third
+            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
             .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
 }

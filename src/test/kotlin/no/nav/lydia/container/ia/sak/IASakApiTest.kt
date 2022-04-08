@@ -43,10 +43,6 @@ class IASakApiTest {
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     companion object {
-        val localDateTimeTypeAdapter: Gson = GsonBuilder()
-            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeTypeAdapter.nullSafe())
-            .create()
-
         init {
             val testData = TestData(inkluderStandardVirksomheter = true)
             HttpMock().also { httpMock ->
