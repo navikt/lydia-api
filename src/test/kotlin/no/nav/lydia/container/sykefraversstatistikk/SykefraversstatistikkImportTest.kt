@@ -3,6 +3,7 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
+import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
@@ -105,7 +106,7 @@ class SykefraversstatistikkImportTest {
 
         result.fold(success = { dtos ->
             dtos.size shouldBeGreaterThanOrEqual 1
-            dtos.forExactlyOne { dto ->
+            dtos.forAtLeastOne { dto ->
                 dto.orgnr shouldBe kafkaMelding.value.virksomhetSykefravær.orgnr
                 dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
                 dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal

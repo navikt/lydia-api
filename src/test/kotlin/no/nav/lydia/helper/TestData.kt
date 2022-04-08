@@ -13,7 +13,7 @@ class TestData(
 
     init {
         if (inkluderStandardVirksomheter) {
-            lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()))
+            lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), antallPersoner = 6)
             lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "7.0")
 
             lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf())
