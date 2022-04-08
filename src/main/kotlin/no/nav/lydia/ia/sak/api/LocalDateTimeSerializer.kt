@@ -1,11 +1,14 @@
 package no.nav.lydia.ia.sak.api
 
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonSerializationContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.time.LocalDateTime
+
 
 object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     override val descriptor = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)

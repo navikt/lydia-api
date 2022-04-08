@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.api
 
+
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
@@ -20,7 +21,8 @@ class IASakshendelseOppsummeringDto(
     val saksnummer: String,
     val hendelsestype: SaksHendelsestype,
     val opprettetAv: String,
-//    val opprettetTidspunkt: LocalDateTime, // TODO: må finne ut hvordan man serialiserer LocalDateTime
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val opprettetTidspunkt: LocalDateTime,
 
 ){
     companion object {
@@ -32,9 +34,8 @@ class IASakshendelseOppsummeringDto(
             saksnummer= this.saksnummer,
             hendelsestype= this.hendelsesType,
             opprettetAv= this.opprettetAv,
-//            opprettetTidspunkt= this.opprettetTidspunkt,
+            opprettetTidspunkt= this.opprettetTidspunkt,
         )
     }
 }
-
 

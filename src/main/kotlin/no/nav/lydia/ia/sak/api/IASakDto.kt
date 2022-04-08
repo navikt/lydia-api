@@ -4,6 +4,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakstype
 import kotlinx.serialization.Serializable
+import java.time.LocalDateTime
 
 @Serializable
 data class IASakDto(
@@ -12,6 +13,8 @@ data class IASakDto(
     val type: IASakstype,
     var status: IAProsessStatus,
     val opprettetAv: String,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,
     val endretAvHendelseId: String
 ) {
@@ -24,6 +27,7 @@ data class IASakDto(
             type = this.type,
             status = this.status,
             opprettetAv = this.opprettetAv,
+            opprettetTidspunkt = this.opprettet,
             endretAv = this.endretAv,
             endretAvHendelseId = this.endretAvHendelseId
         )

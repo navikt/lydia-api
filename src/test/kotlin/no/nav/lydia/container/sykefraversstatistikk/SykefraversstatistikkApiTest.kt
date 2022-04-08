@@ -290,7 +290,7 @@ class SykefraversstatistikkApiTest {
                     saksnummer = sak.saksnummer,
                     hendelsesType = SaksHendelsestype.VIRKSOMHET_VURDERES,
                     endretAvHendelsesId = sak.endretAvHendelseId
-                )
+                ),
             )
             .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
