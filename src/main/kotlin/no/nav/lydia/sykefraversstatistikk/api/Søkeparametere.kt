@@ -12,9 +12,12 @@ data class Søkeparametere(
     val sorteringsretning : Sorteringsretning,
     val sykefraværsprosentFra: Double?,
     val sykefraværsprosentTil: Double?,
-    val status: IAProsessStatus?
+    val status: IAProsessStatus?,
+    val side: Int
 ) {
     companion object {
+        const val VIRKSOMHETER_PER_SIDE = 50
+
         const val KVARTAL = "kvartal"
         const val ÅRSTALL = "arstall"
         const val KOMMUNER = "kommuner"
@@ -25,6 +28,7 @@ data class Søkeparametere(
         const val SYKEFRAVÆRSPROSENT_FRA = "sykefraversprosentFra"
         const val SYKEFRAVÆRSPROSENT_TIL = "sykefraversprosentTil"
         const val IA_STATUS = "iaStatus"
+        const val SIDE = "side"
         fun from(queryParameters: Parameters, geografiService: GeografiService): Søkeparametere =
             Søkeparametere(
                 kommunenummer =  finnGyldigeKommunenummer(queryParameters, geografiService),
@@ -34,7 +38,8 @@ data class Søkeparametere(
                 sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
                 sykefraværsprosentFra = queryParameters[SYKEFRAVÆRSPROSENT_FRA].tomSomNull()?.toDouble(),
                 sykefraværsprosentTil = queryParameters[SYKEFRAVÆRSPROSENT_TIL].tomSomNull()?.toDouble(),
-                status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) }
+                status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
+                side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1
             )
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
             geografiService.hentKommunerFraFylkerOgKommuner(
@@ -49,6 +54,9 @@ data class Søkeparametere(
 
         private fun String?.tomSomNull() = this?.ifBlank { null }
     }
+
+    fun virksomheterPerSide() = VIRKSOMHETER_PER_SIDE
+    fun offset() = (side - 1) * VIRKSOMHETER_PER_SIDE
 }
 
 class Periode(val kvartal: Int, val årstall: Int) {

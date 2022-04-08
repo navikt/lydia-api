@@ -14,8 +14,6 @@ import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
-    private val ANTALL_VIRKSOMHETER_LIMIT = 50
-
     fun insert(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -149,7 +147,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
                     
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
-                    LIMIT $ANTALL_VIRKSOMHETER_LIMIT
+                    
+                    LIMIT ${søkeparametere.virksomheterPerSide()}
+                    OFFSET ${søkeparametere.offset()}
                 """.trimIndent()
 
             val query = queryOf(

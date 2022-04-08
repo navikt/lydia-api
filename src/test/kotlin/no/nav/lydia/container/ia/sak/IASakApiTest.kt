@@ -12,13 +12,14 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_bergen
-import no.nav.lydia.helper.IntegrationsHelper.Companion.orgnr_oslo
-import no.nav.lydia.helper.Melding
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
+import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -32,7 +33,6 @@ import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -42,30 +42,27 @@ class IASakApiTest {
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     companion object {
-        val httpMock = HttpMock()
-
         init {
-            httpMock.start()
-            postgresContainer.getDataSource().use { dataSource ->
-                NæringsDownloader(
-                    url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock),
-                    næringsRepository = NæringsRepository(dataSource = dataSource)
-                ).lastNedNæringer()
+            val testData = TestData(inkluderStandardVirksomheter = true)
+            HttpMock().also { httpMock ->
+                httpMock.start()
+                postgresContainer.getDataSource().use { dataSource ->
+                    NæringsDownloader(
+                        url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
+                        næringsRepository = NæringsRepository(dataSource = dataSource)
+                    ).lastNedNæringer()
 
-                BrregDownloader(
-                    url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock),
-                    virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-                ).lastNed()
+                    BrregDownloader(
+                        url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData),
+                        virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+                    ).lastNed()
+                }
+                httpMock.stop()
             }
 
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.osloGjeldeneKvartal)
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(Melding.bergenGjeldeneKvartal)
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun afterAll() {
-            httpMock.stop()
+            testData.sykefraværsStatistikkMeldinger().forEach { melding ->
+                kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(melding)
+            }
         }
     }
 
@@ -82,14 +79,14 @@ class IASakApiTest {
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr_oslo
+                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe OSLO.orgnr
                     sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
                 }
             }, failure = {
                 fail(it.message)
             })
 
-        val sak = opprettSakForVirksomhet(orgnummer = orgnr_oslo)
+        val sak = opprettSakForVirksomhet(orgnummer = OSLO.orgnr)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
 
         val (_, _, listeResultatEtterPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
@@ -100,7 +97,7 @@ class IASakApiTest {
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr_oslo
+                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe OSLO.orgnr
                     sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.NY
                 }
             }, failure = {
@@ -111,11 +108,11 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne spore endringene som har skjedd på en sak`() {
-        val sak = opprettSakForVirksomhet(orgnummer = orgnr_bergen)
+        val sak = opprettSakForVirksomhet(orgnummer = BERGEN.orgnr)
 
-        val iaSaker = hentIASaker(orgnr_bergen)
+        val iaSaker = hentIASaker(BERGEN.orgnr)
         iaSaker.forAtLeastOne {
-            it.orgnr shouldBe orgnr_bergen
+            it.orgnr shouldBe BERGEN.orgnr
             it.status shouldBe IAProsessStatus.NY
             it.opprettetAv shouldBe NAV_IDENT
             it.saksnummer shouldBe sak.saksnummer
@@ -128,7 +125,7 @@ class IASakApiTest {
             endretAvHendelsesId = sak.endretAvHendelseId
         )
         val sakEtterPrioritering = nyHendelsePåSak(prioriteringsHendelseDto).also {
-            it.orgnr shouldBe orgnr_bergen
+            it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
             it.status shouldBe IAProsessStatus.PRIORITERT
             it.opprettetAv shouldBe sak.opprettetAv
@@ -141,7 +138,7 @@ class IASakApiTest {
             endretAvHendelsesId = sakEtterPrioritering.endretAvHendelseId
         )
         nyHendelsePåSak(takketNeiHendelseDto).also {
-            it.orgnr shouldBe orgnr_bergen
+            it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
             it.status shouldBe IAProsessStatus.TAKKET_NEI
             it.opprettetAv shouldBe sak.opprettetAv
