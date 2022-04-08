@@ -317,6 +317,11 @@ class SykefraversstatistikkApiTest {
             response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
             response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
         })
+
+        hentSykefravær(side = "3", success = { response ->
+            response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
+            response.data shouldHaveAtMostSize VIRKSOMHETER_PER_SIDE - 1
+        })
     }
 
     @Test
