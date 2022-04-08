@@ -92,14 +92,16 @@ enum class Melding(val melding: String) {
         melding = lagKafkaMelding(
             orgnr = TestVirksomhet.OSLO.orgnr,
             navn = TestVirksomhet.OSLO.navn,
-            periode = Periode.forrigePeriode()
+            periode = Periode.forrigePeriode(),
+            antallPersoner = 6
         )
     ),
     osloGjeldeneKvartal(
         melding = lagKafkaMelding(
             orgnr = TestVirksomhet.OSLO.orgnr,
             navn = TestVirksomhet.OSLO.navn,
-            periode = Periode.gjeldenePeriode()
+            periode = Periode.gjeldenePeriode(),
+            antallPersoner = 6
         )
     )
 }
