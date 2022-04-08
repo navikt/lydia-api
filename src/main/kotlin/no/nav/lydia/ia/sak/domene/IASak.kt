@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.domene
 
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -34,7 +33,10 @@ class IASak(
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
                 tilstand.ikkeAktuell()
             }
-            else -> {
+            VIRKSOMHET_SKAL_KONTAKTES -> {
+                tilstand.kontaktes()
+            }
+            OPPRETT_SAK_FOR_VIRKSOMHET -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
         }
@@ -59,6 +61,10 @@ class IASak(
         open fun ikkeAktuell() {
             håndterFeilState()
         }
+
+        open fun kontaktes() {
+            håndterFeilState()
+        }
     }
 
     private inner class StartTilstand : ProsessTilstand(
@@ -75,6 +81,17 @@ class IASak(
         override fun ikkeAktuell() {
             tilstand = IkkeAktuellTilstand()
         }
+
+        override fun kontaktes() {
+            tilstand = KontaktesTilstand()
+        }
+    }
+    private inner class KontaktesTilstand : ProsessTilstand(
+        status = IAProsessStatus.KONTAKTES
+    ) {
+        override fun ikkeAktuell() {
+            tilstand = IkkeAktuellTilstand()
+        }
     }
 
     private inner class IkkeAktuellTilstand : ProsessTilstand(
@@ -87,7 +104,8 @@ class IASak(
                 IAProsessStatus.NY -> StartTilstand()
                 IAProsessStatus.VURDERES -> VurderesTilstand()
                 IAProsessStatus.IKKE_AKTUELL -> IkkeAktuellTilstand()
-                else -> throw IllegalStateException()
+                IAProsessStatus.KONTAKTES -> KontaktesTilstand()
+                IAProsessStatus.IKKE_AKTIV -> throw IllegalStateException()
             }
         }
 

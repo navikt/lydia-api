@@ -31,5 +31,6 @@ class IASakshendelse(
 enum class SaksHendelsestype{
     OPPRETT_SAK_FOR_VIRKSOMHET,
     VIRKSOMHET_VURDERES,
+    VIRKSOMHET_SKAL_KONTAKTES,
     VIRKSOMHET_ER_IKKE_AKTUELL
 }

@@ -4,6 +4,7 @@ import com.github.guepardoapps.kulid.ULID
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
+import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -26,6 +27,8 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -66,10 +69,27 @@ class IASakApiTest {
         }
     }
 
+    @Test
+    fun `skal kunne sette en virksomhet i kontaktes status`() {
+        val orgnr = OSLO.orgnr
+        postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
+
+        val sak = opprettSakForVirksomhet(orgnummer = orgnr)
+
+        shouldFail {
+            nyHendelsePåSak(sak, VIRKSOMHET_SKAL_KONTAKTES) // skal ikke kunne sette status kontaktes før den er vurdert
+        }
+
+        nyHendelsePåSak(nyHendelsePåSak(sak, VIRKSOMHET_VURDERES), VIRKSOMHET_SKAL_KONTAKTES).also{
+            it.status shouldBe IAProsessStatus.KONTAKTES
+        }
+    }
+
 
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
-        postgresContainer.performUpdate("DELETE FROM ia_sak")
+        val orgnr = OSLO.orgnr
+        postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
 
         val (_, _, listeResultatFørVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -79,14 +99,14 @@ class IASakApiTest {
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe OSLO.orgnr
+                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr
                     sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
                 }
             }, failure = {
                 fail(it.message)
             })
 
-        val sak = opprettSakForVirksomhet(orgnummer = OSLO.orgnr)
+        val sak = opprettSakForVirksomhet(orgnummer = orgnr)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
 
         val (_, _, listeResultatEtterVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
@@ -97,7 +117,7 @@ class IASakApiTest {
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe OSLO.orgnr
+                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr
                     sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.NY
                 }
             }, failure = {
@@ -118,26 +138,15 @@ class IASakApiTest {
             it.saksnummer shouldBe sak.saksnummer
         }
 
-        val vurderesHendelseDto = IASakshendelseDto(
-            orgnummer = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            hendelsesType = SaksHendelsestype.VIRKSOMHET_VURDERES,
-            endretAvHendelsesId = sak.endretAvHendelseId
-        )
-        val sakEtterAtVirksomhetErVurdert = nyHendelsePåSak(vurderesHendelseDto).also {
+        val sakEtterAtVirksomhetErVurdert = nyHendelsePåSak(sak, VIRKSOMHET_VURDERES).also {
             it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
             it.status shouldBe IAProsessStatus.VURDERES
             it.opprettetAv shouldBe sak.opprettetAv
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
         }
-        val ikkeAktuellHendelseDto = IASakshendelseDto(
-            orgnummer = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            hendelsesType = SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
-            endretAvHendelsesId = sakEtterAtVirksomhetErVurdert.endretAvHendelseId
-        )
-        nyHendelsePåSak(ikkeAktuellHendelseDto).also {
+
+        nyHendelsePåSak(sakEtterAtVirksomhetErVurdert, SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL).also {
             it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
             it.status shouldBe IAProsessStatus.IKKE_AKTUELL
@@ -161,10 +170,14 @@ class IASakApiTest {
                 fail(it.message)
             })
 
-    private fun nyHendelsePåSak(hendelseDto: IASakshendelseDto) =
+    private fun nyHendelsePåSak(sak: IASakDto, hendelsestype: SaksHendelsestype) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
-            .jsonBody(hendelseDto)
+            .jsonBody(IASakshendelseDto(
+                orgnummer = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                hendelsesType = hendelsestype,
+                endretAvHendelsesId = sak.endretAvHendelseId))
             .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
