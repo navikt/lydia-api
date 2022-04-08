@@ -50,7 +50,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         "id" to hendelse.id,
                         "saksnummer" to hendelse.saksnummer,
                         "orgnr" to hendelse.orgnummer,
-                        "type" to hendelse.type.name,
+                        "type" to hendelse.hendelsesType.name,
                         "opprettet_av" to hendelse.opprettetAv,
                         "opprettet" to hendelse.opprettetTidspunkt
                     )
@@ -61,7 +61,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
     private fun mapRow(row: Row): IASakshendelse {
         return IASakshendelse(
             id = row.string("id"),
-            type = SaksHendelsestype.valueOf(row.string("type")),
+            hendelsesType = SaksHendelsestype.valueOf(row.string("type")),
             orgnummer = row.string("orgnr"),
             opprettetAv = row.string("opprettet_av"),
             saksnummer = row.string("saksnummer"),

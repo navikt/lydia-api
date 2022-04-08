@@ -11,9 +11,11 @@ import io.ktor.routing.*
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
+import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "/hendelse"
+val SAK_HENDELSER_SUB_PATH = "/hendelser"
 
 fun Route.IASak_Rådgiver(
     iaSakService: IASakService
@@ -32,6 +34,11 @@ fun Route.IASak_Rådgiver(
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }
 
+    get("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/{saksnummer}") {
+        call.parameters["saksnummer"]?.let { saksnummer ->
+            call.respond(iaSakService.hentHendelserForSak(saksnummer).toDto())
+        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i hendelsene til denne saken")
+    }
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()

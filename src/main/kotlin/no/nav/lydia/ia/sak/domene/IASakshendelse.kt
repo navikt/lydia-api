@@ -8,7 +8,7 @@ class IASakshendelse(
     val id : String,
     val opprettetTidspunkt: LocalDateTime,
     val saksnummer: String,
-    val type: SaksHendelsestype,
+    val hendelsesType: SaksHendelsestype,
     val orgnummer: String,
     val opprettetAv: String,
 ){
@@ -19,7 +19,7 @@ class IASakshendelse(
                 id = id,
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = dto.saksnummer,
-                type = dto.hendelsesType,
+                hendelsesType = dto.hendelsesType,
                 orgnummer = dto.orgnummer,
                 opprettetAv = navIdent,
             )

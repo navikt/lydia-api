@@ -58,7 +58,7 @@ class IASakTest {
             id = id,
             opprettetTidspunkt = LocalDateTime.now(),
             saksnummer = id,
-            type = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
+            hendelsesType = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
             orgnummer = orgnummer,
             opprettetAv = navIdent,
         )
@@ -69,7 +69,7 @@ class IASakTest {
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
             saksnummer = saksnummer,
-            type = type,
+            hendelsesType = type,
             orgnummer = orgnummer,
             opprettetAv = navIdent,
         )

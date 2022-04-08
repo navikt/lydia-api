@@ -7,6 +7,7 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -21,14 +22,10 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -155,6 +152,21 @@ class IASakApiTest {
         }
     }
 
+    @Test
+    fun `skal kunne hente en oppsummering av alle hendelsene som har skjedd på en sak`(){
+        opprettSakForVirksomhet(orgnummer = BERGEN.orgnr).also { sak ->
+            val sakVurderes = sak.nyHendelse(VIRKSOMHET_VURDERES)
+            val sakKontaktes = sakVurderes.nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            val sakIkkeAktuell = sakKontaktes.nyHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
+            val alleHendelsesTyper = listOf(OPPRETT_SAK_FOR_VIRKSOMHET, VIRKSOMHET_VURDERES, VIRKSOMHET_SKAL_KONTAKTES, VIRKSOMHET_ER_IKKE_AKTUELL)
+            hentHendelserPåSak(sakIkkeAktuell.saksnummer).also { oppsummering ->
+                oppsummering.map { it.hendelsestype } shouldContainExactly alleHendelsesTyper
+                // TODO: sjekk at oppsummering.first().opprettetTidspunkt er sak.opprettetTidspunkt
+                // TODO: sjekk at oppsummering.last().opprettetTidspunkt er sakIkkeAktuell.opprettetTidspunkt
+            }
+        }
+    }
+
     private fun hentIASaker(orgnummer: String) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
@@ -162,6 +174,12 @@ class IASakApiTest {
                 fail(it.message)
             })
 
+    private fun hentHendelserPåSak(saksnummer: String) =
+        lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")
+            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .responseObject<List<IASakshendelseOppsummeringDto>>().third.fold(success = { respons -> respons }, failure = {
+                fail(it.message)
+            })
 
     private fun opprettSakForVirksomhet(orgnummer: String) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
@@ -182,4 +200,5 @@ class IASakApiTest {
                 fail(it.message)
             })
 
+    private fun IASakDto.nyHendelse(hendelsestype: SaksHendelsestype) = nyHendelsePåSak(this, hendelsestype)
 }

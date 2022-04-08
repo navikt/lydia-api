@@ -20,7 +20,7 @@ class IASakService(
             id = id,
             opprettetTidspunkt = LocalDateTime.now(),
             saksnummer = id,
-            type = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
+            hendelsesType = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
             orgnummer = orgnummer,
             opprettetAv = navIdent,
         )
@@ -49,4 +49,7 @@ class IASakService(
     }
 
     fun hentSaker(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)
+
+    fun hentHendelserForSak(saksnummer: String): List<IASakshendelse> = iaSakshendelseRepository.hentHendelser(saksnummer)
+
 }

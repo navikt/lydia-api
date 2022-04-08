@@ -26,7 +26,7 @@ class IASak(
         get() = tilstand.status
 
     fun behandleHendelse(hendelse: IASakshendelse): IASak {
-        when (hendelse.type) {
+        when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES -> {
                 tilstand.vurderes()
             }
