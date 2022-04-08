@@ -33,10 +33,16 @@ class TestData(
     fun lagData(
         virksomhet: TestVirksomhet,
         perioder: List<Periode>,
-        sykefraværsProsent: String = "2.0"
+        sykefraværsProsent: String = "2.0",
+        antallPersoner: Int = (5 .. 1000).random()
     ) {
         perioder.forEach { periode ->
-            kafkaMeldinger.add(lagKafkaMelding(orgnr = virksomhet.orgnr, periode = periode, navn = virksomhet.navn, sykefraværsProsent = sykefraværsProsent))
+            kafkaMeldinger.add(lagKafkaMelding(
+                orgnr = virksomhet.orgnr,
+                periode = periode,
+                navn = virksomhet.navn,
+                sykefraværsProsent = sykefraværsProsent,
+                antallPersoner = antallPersoner))
         }
         virksomhet.næringsgrupper.forEach { næring ->
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
@@ -114,7 +120,8 @@ fun lagKafkaMelding(
     orgnr: String,
     navn: String,
     periode: Periode,
-    sykefraværsProsent: String = "2.0") =
+    sykefraværsProsent: String = "2.0",
+    antallPersoner: Int = 6) =
     """
         {
           "key": {
@@ -130,7 +137,7 @@ fun lagKafkaMelding(
               "kvartal": ${periode.kvartal},
               "tapteDagsverk": 20.0,
               "muligeDagsverk": 500.0,
-              "antallPersoner": 6,
+              "antallPersoner": $antallPersoner,
               "prosent": $sykefraværsProsent,
               "erMaskert": false,
               "kategori": "VIRKSOMHET"

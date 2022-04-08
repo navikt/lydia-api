@@ -10,6 +10,7 @@ import io.kotest.matchers.collections.*
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeInRange
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -36,6 +37,8 @@ import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.api.*
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_FRA
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_TIL
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.FYLKER
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.IA_STATUS
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.KOMMUNER
@@ -341,6 +344,17 @@ class SykefraversstatistikkApiTest {
         })
     }
 
+    @Test
+    fun `skal kunne filtrere virksomheter basert på antall ansatte`() {
+        val ansatteFra = 5
+        val ansatteTil = 100
+        hentSykefravær(ansatteFra = ansatteFra.toString(), ansatteTil = ansatteTil.toString(), success = {response ->
+            response.data.forAll {
+                it.antallPersoner shouldBeInRange (ansatteFra .. ansatteTil)
+            }
+        })
+    }
+
     private fun hentSykefravær(
         success: (ListResponse<SykefraversstatistikkVirksomhetDto>) -> Unit,
         kvartal: String = "",
@@ -352,6 +366,8 @@ class SykefraversstatistikkApiTest {
         sorteringsretning: String = "",
         sykefraværsprosentFra: String = "",
         sykefraværsprosentTil: String = "",
+        ansatteFra: String = "",
+        ansatteTil: String = "",
         iaStatus: String = "",
         side: String = ""
     ) =
@@ -366,6 +382,8 @@ class SykefraversstatistikkApiTest {
                     "&$SORTERINGSRETNING=$sorteringsretning" +
                     "&$SYKEFRAVÆRSPROSENT_FRA=$sykefraværsprosentFra" +
                     "&$SYKEFRAVÆRSPROSENT_TIL=$sykefraværsprosentTil" +
+                    "&$ANSATTE_FRA=$ansatteFra" +
+                    "&$ANSATTE_TIL=$ansatteTil" +
                     "&$IA_STATUS=$iaStatus" +
                     "&$SIDE=$side"
         )

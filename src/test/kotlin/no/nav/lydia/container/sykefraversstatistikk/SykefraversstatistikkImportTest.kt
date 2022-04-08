@@ -110,7 +110,7 @@ class SykefraversstatistikkImportTest {
                 dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
                 dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal
                 dto.sykefraversprosent shouldBe kafkaMelding.value.virksomhetSykefravær.prosent
-                dto.antallPersoner shouldBe kafkaMelding.value.virksomhetSykefravær.antallPersoner
+                dto.antallPersoner shouldBe kafkaMelding.value.virksomhetSykefravær.antallPersoner.toInt()
                 dto.muligeDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.muligeDagsverk
                 dto.tapteDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.tapteDagsverk
             }

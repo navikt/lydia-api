@@ -15,7 +15,7 @@ data class SykefraversstatistikkVirksomhetDto(
     val arstall: Int,
     val kvartal: Int,
     val sykefraversprosent: Double,
-    val antallPersoner: Double,
+    val antallPersoner: Int,
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
     val status: IAProsessStatus
@@ -38,7 +38,7 @@ data class SykefraversstatistikkVirksomhetDto(
                 arstall = this.arstall,
                 kvartal = this.kvartal,
                 sykefraversprosent = this.sykefraversprosent,
-                antallPersoner = this.antallPersoner,
+                antallPersoner = this.antallPersoner.toInt(),
                 muligeDagsverk = this.muligeDagsverk,
                 tapteDagsverk = this.tapteDagsverk,
                 status = this.status ?: IAProsessStatus.IKKE_AKTIV
