@@ -285,16 +285,16 @@ class SykefraversstatistikkApiTest {
                 IASakshendelseDto(
                     orgnummer = orgnummer,
                     saksnummer = sak.saksnummer,
-                    hendelsesType = SaksHendelsestype.VIRKSOMHET_PRIORITERES,
+                    hendelsesType = SaksHendelsestype.VIRKSOMHET_VURDERES,
                     endretAvHendelsesId = sak.endretAvHendelseId
                 )
             )
             .responseObject<IASakDto>().third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
-        hentSykefravær(iaStatus = IAProsessStatus.PRIORITERT.name, success = { response ->
+        hentSykefravær(iaStatus = IAProsessStatus.VURDERES.name, success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll {
-                it.status shouldBe IAProsessStatus.PRIORITERT
+                it.status shouldBe IAProsessStatus.VURDERES
             }
         })
 

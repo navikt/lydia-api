@@ -14,39 +14,39 @@ class IASakTest {
     }
 
     @Test
-    fun `skal kunne prioritere en virksomhet`() {
+    fun `skal kunne merke at en virksomhet skal vurderes`() {
         val sak = nyIASak(orgnummer = orgnummer, navIdent = navIdent1)
 
-        val prioriteringsHendelse = nyHendelse(
-            SaksHendelsestype.VIRKSOMHET_PRIORITERES,
+        val vurderingsHendelse = nyHendelse(
+            SaksHendelsestype.VIRKSOMHET_VURDERES,
             saksnummer = sak.saksnummer,
             orgnummer = sak.orgnr,
             navIdent = navIdent2
         )
-        sak.behandleHendelse(prioriteringsHendelse)
-        sak.endretAv shouldBe prioriteringsHendelse.opprettetAv
-        sak.endret shouldBe prioriteringsHendelse.opprettetTidspunkt
-        sak.saksnummer shouldBe prioriteringsHendelse.saksnummer
-        sak.endretAvHendelseId shouldBe prioriteringsHendelse.id
-        sak.status shouldBe IAProsessStatus.PRIORITERT
+        sak.behandleHendelse(vurderingsHendelse)
+        sak.endretAv shouldBe vurderingsHendelse.opprettetAv
+        sak.endret shouldBe vurderingsHendelse.opprettetTidspunkt
+        sak.saksnummer shouldBe vurderingsHendelse.saksnummer
+        sak.endretAvHendelseId shouldBe vurderingsHendelse.id
+        sak.status shouldBe IAProsessStatus.VURDERES
     }
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
         val h1 = nyFørsteHendelse(orgnummer = orgnummer, navIdent = navIdent1)
         val h2 = nyHendelse(
-            SaksHendelsestype.VIRKSOMHET_PRIORITERES,
+            SaksHendelsestype.VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
             navIdent = navIdent2
         )
         val h3 = nyHendelse(
-            SaksHendelsestype.VIRKSOMHET_TAKKER_NEI,
+            SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
             navIdent = navIdent2
         )
         val sak = IASak.fraHendelser(listOf(h1, h2, h3))
-        sak.status shouldBe IAProsessStatus.TAKKET_NEI
+        sak.status shouldBe IAProsessStatus.IKKE_AKTUELL
         sak.opprettetAv shouldBe h1.opprettetAv
         sak.endretAv shouldBe h3.opprettetAv
         sak.endretAvHendelseId shouldBe h3.id

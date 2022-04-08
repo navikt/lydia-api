@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.domene
 
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_PRIORITERES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_TAKKER_NEI
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -28,11 +28,11 @@ class IASak(
 
     fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.type) {
-            VIRKSOMHET_PRIORITERES -> {
-                tilstand.prioritert()
+            VIRKSOMHET_VURDERES -> {
+                tilstand.vurderes()
             }
-            VIRKSOMHET_TAKKER_NEI -> {
-                tilstand.takketNei()
+            VIRKSOMHET_ER_IKKE_AKTUELL -> {
+                tilstand.ikkeAktuell()
             }
             else -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
@@ -52,11 +52,11 @@ class IASak(
     }
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
-        open fun prioritert() {
+        open fun vurderes() {
             håndterFeilState()
         }
 
-        open fun takketNei() {
+        open fun ikkeAktuell() {
             håndterFeilState()
         }
     }
@@ -64,29 +64,29 @@ class IASak(
     private inner class StartTilstand : ProsessTilstand(
         status = IAProsessStatus.NY
     ) {
-        override fun prioritert() {
-            tilstand = PrioritertTilstand()
+        override fun vurderes() {
+            tilstand = VurderesTilstand()
         }
     }
 
-    private inner class PrioritertTilstand : ProsessTilstand(
-        status = IAProsessStatus.PRIORITERT
+    private inner class VurderesTilstand : ProsessTilstand(
+        status = IAProsessStatus.VURDERES
     ) {
-        override fun takketNei() {
-            tilstand = TakketNeiTilstand()
+        override fun ikkeAktuell() {
+            tilstand = IkkeAktuellTilstand()
         }
     }
 
-    private inner class TakketNeiTilstand : ProsessTilstand(
-        status = IAProsessStatus.TAKKET_NEI
+    private inner class IkkeAktuellTilstand : ProsessTilstand(
+        status = IAProsessStatus.IKKE_AKTUELL
     )
 
     companion object {
         private fun IASak.iStatus(status: IAProsessStatus): ProsessTilstand {
             return when (status) {
                 IAProsessStatus.NY -> StartTilstand()
-                IAProsessStatus.PRIORITERT -> PrioritertTilstand()
-                IAProsessStatus.TAKKET_NEI -> TakketNeiTilstand()
+                IAProsessStatus.VURDERES -> VurderesTilstand()
+                IAProsessStatus.IKKE_AKTUELL -> IkkeAktuellTilstand()
                 else -> throw IllegalStateException()
             }
         }
@@ -111,26 +111,19 @@ class IASak(
     }
 }
 
-
 enum class IAProsessStatus {
     NY,
-    PRIORITERT,
-    TAKKET_NEI,
-    KARTLEGGING,
-    GJENNOMFORING,
-    EVALUERING,
-    AVSLUTTET,
-    IKKE_AKTIV;
+    IKKE_AKTIV,
+    VURDERES,
+    KONTAKTES,
+    IKKE_AKTUELL;
 
     companion object {
         fun filtrerbareStatuser() = listOf(
             IKKE_AKTIV,
-            PRIORITERT,
-            TAKKET_NEI,
-            KARTLEGGING,
-            GJENNOMFORING,
-//            EVALUERING, // TODO: Ikke i MVP
-            AVSLUTTET
+            VURDERES,
+            KONTAKTES,
+            IKKE_AKTUELL
         )
     }
 }

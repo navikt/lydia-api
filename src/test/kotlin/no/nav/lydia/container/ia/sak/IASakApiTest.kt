@@ -68,14 +68,14 @@ class IASakApiTest {
 
 
     @Test
-    fun `skal kunne prioritere en virksomhet og vise status i listevisning`() {
+    fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
         postgresContainer.performUpdate("DELETE FROM ia_sak")
 
-        val (_, _, listeResultatFørPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+        val (_, _, listeResultatFørVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>()
 
-        listeResultatFørPrioritering.fold(
+        listeResultatFørVirksomhetVurderes.fold(
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -89,11 +89,11 @@ class IASakApiTest {
         val sak = opprettSakForVirksomhet(orgnummer = OSLO.orgnr)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
 
-        val (_, _, listeResultatEtterPrioritering) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+        val (_, _, listeResultatEtterVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
             .authentication().bearer(mockOAuth2Server.lydiaApiToken)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>()
 
-        listeResultatEtterPrioritering.fold(
+        listeResultatEtterVirksomhetVurderes.fold(
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -118,29 +118,29 @@ class IASakApiTest {
             it.saksnummer shouldBe sak.saksnummer
         }
 
-        val prioriteringsHendelseDto = IASakshendelseDto(
+        val vurderesHendelseDto = IASakshendelseDto(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            hendelsesType = SaksHendelsestype.VIRKSOMHET_PRIORITERES,
+            hendelsesType = SaksHendelsestype.VIRKSOMHET_VURDERES,
             endretAvHendelsesId = sak.endretAvHendelseId
         )
-        val sakEtterPrioritering = nyHendelsePåSak(prioriteringsHendelseDto).also {
+        val sakEtterAtVirksomhetErVurdert = nyHendelsePåSak(vurderesHendelseDto).also {
             it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
-            it.status shouldBe IAProsessStatus.PRIORITERT
+            it.status shouldBe IAProsessStatus.VURDERES
             it.opprettetAv shouldBe sak.opprettetAv
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
         }
-        val takketNeiHendelseDto = IASakshendelseDto(
+        val ikkeAktuellHendelseDto = IASakshendelseDto(
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
-            hendelsesType = SaksHendelsestype.VIRKSOMHET_TAKKER_NEI,
-            endretAvHendelsesId = sakEtterPrioritering.endretAvHendelseId
+            hendelsesType = SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
+            endretAvHendelsesId = sakEtterAtVirksomhetErVurdert.endretAvHendelseId
         )
-        nyHendelsePåSak(takketNeiHendelseDto).also {
+        nyHendelsePåSak(ikkeAktuellHendelseDto).also {
             it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
-            it.status shouldBe IAProsessStatus.TAKKET_NEI
+            it.status shouldBe IAProsessStatus.IKKE_AKTUELL
             it.opprettetAv shouldBe sak.opprettetAv
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
         }
