@@ -51,8 +51,8 @@ class IASak(
         return this
     }
 
-    private fun håndterFeilState() {
-        log.info("Feil i systemet")
+    private fun håndterFeilState(grunn : String = "Feil i systemet") {
+        log.info(grunn)
         log.info(this.status.name)
         throw IllegalStateException()
     }
@@ -87,6 +87,9 @@ class IASak(
         }
 
         override fun kontaktes() {
+            if (eidAv.isNullOrEmpty()){
+                håndterFeilState("En virksomhet kan ikke kontaktes før saken har en eier")
+            }
             tilstand = KontaktesTilstand()
         }
     }

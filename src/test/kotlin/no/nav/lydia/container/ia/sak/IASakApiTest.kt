@@ -66,18 +66,29 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
-        val orgnr = OSLO.orgnr
-        postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
+        opprettSakForVirksomhet(orgnummer = OSLO.orgnr)
+            .nyHendelse(VIRKSOMHET_VURDERES)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .also {
+                it.status shouldBe IAProsessStatus.KONTAKTES
+            }
+    }
 
-        val sak = opprettSakForVirksomhet(orgnummer = orgnr)
-
-        shouldFail {
-            nyHendelsePåSak(sak, VIRKSOMHET_SKAL_KONTAKTES) // skal ikke kunne sette status kontaktes før den er vurdert
-        }
-
-        nyHendelsePåSak(nyHendelsePåSak(sak, VIRKSOMHET_VURDERES), VIRKSOMHET_SKAL_KONTAKTES).also {
-            it.status shouldBe IAProsessStatus.KONTAKTES
-        }
+    @Test
+    fun `en virksomhet skal ikke kunne kontaktes før saken har et eierskap`() {
+        opprettSakForVirksomhet(orgnummer = OSLO.orgnr)
+            .nyHendelse(VIRKSOMHET_VURDERES)
+            .also {
+                shouldFail {
+                    it.nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+                }
+            }
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .also {
+                it.status shouldBe IAProsessStatus.KONTAKTES
+            }
     }
 
 
@@ -153,12 +164,15 @@ class IASakApiTest {
     @Test
     fun `skal kunne hente en oppsummering av alle hendelsene som har skjedd på en sak`() {
         opprettSakForVirksomhet(orgnummer = BERGEN.orgnr).also { sak ->
-            val sakVurderes = sak.nyHendelse(VIRKSOMHET_VURDERES)
-            val sakKontaktes = sakVurderes.nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            val sakIkkeAktuell = sakKontaktes.nyHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
+            val sakIkkeAktuell = sak
+                .nyHendelse(VIRKSOMHET_VURDERES)
+                .nyHendelse(TA_EIERSKAP_I_SAK)
+                .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+                .nyHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
             val alleHendelsesTyper = listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
+                TA_EIERSKAP_I_SAK,
                 VIRKSOMHET_SKAL_KONTAKTES,
                 VIRKSOMHET_ER_IKKE_AKTUELL
             )
