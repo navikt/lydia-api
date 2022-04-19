@@ -31,12 +31,13 @@ class IASakService(
             type = IASakstype.NAV_STOTTER, // TODO: dette burde ligger på hendelsen
             opprettet = nySakshendelse.opprettetTidspunkt,
             opprettetAv = nySakshendelse.opprettetAv,
+            eidAv = null,
             endret = null,
             endretAv = null,
             endretAvHendelseId = nySakshendelse.id,
             status = IAProsessStatus.NY
         )
-        return iaSakRepository.lagreSak(sak)
+        return iaSakRepository.opprettSak(sak)
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): Either<IASakError, IASak> {

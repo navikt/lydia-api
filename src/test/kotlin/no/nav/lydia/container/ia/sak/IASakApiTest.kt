@@ -4,18 +4,16 @@ import com.github.guepardoapps.kulid.ULID
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.helper.*
-import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT
+import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_X12345
+import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_Y54321
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
@@ -33,7 +31,6 @@ import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
-import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -90,7 +87,7 @@ class IASakApiTest {
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
 
         val (_, _, listeResultatFørVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 
         listeResultatFørVirksomhetVurderes.fold(
@@ -108,7 +105,7 @@ class IASakApiTest {
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
 
         val (_, _, listeResultatEtterVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 
         listeResultatEtterVirksomhetVurderes.fold(
@@ -132,7 +129,7 @@ class IASakApiTest {
         iaSaker.forAtLeastOne {
             it.orgnr shouldBe BERGEN.orgnr
             it.status shouldBe IAProsessStatus.NY
-            it.opprettetAv shouldBe NAV_IDENT
+            it.opprettetAv shouldBe NAV_IDENT_X12345
             it.saksnummer shouldBe sak.saksnummer
         }
 
@@ -175,16 +172,39 @@ class IASakApiTest {
         }
     }
 
+    @Test
+    fun `skal kunne ta eierskap i en sak`() {
+        opprettSakForVirksomhet(OSLO.orgnr).also { sak ->
+            val sakEtterVurderes = sak.nyHendelse(VIRKSOMHET_VURDERES)
+            sakEtterVurderes.eidAv shouldBe null
+
+            val sakEtterTattEierskap = sakEtterVurderes.nyHendelse(TA_EIERSKAP_I_SAK)
+            sakEtterTattEierskap.eidAv shouldBe NAV_IDENT_X12345
+
+            sakEtterTattEierskap.nyHendelse(TA_EIERSKAP_I_SAK, mockOAuth2Server.lydiaApiTokenY).also {
+                it.eidAv shouldBe NAV_IDENT_Y54321
+            }.also {
+                hentHendelserPåSak(it.saksnummer).map { hendelse -> hendelse.hendelsestype }.shouldContainExactly(
+                    OPPRETT_SAK_FOR_VIRKSOMHET,
+                    VIRKSOMHET_VURDERES,
+                    TA_EIERSKAP_I_SAK,
+                    TA_EIERSKAP_I_SAK
+                )
+            }
+
+        }
+    }
+
     private fun hentIASaker(orgnummer: String) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
             .responseObject<List<IASakDto>>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
 
     private fun hentHendelserPåSak(saksnummer: String) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
             .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter).third.fold(
                 success = { respons -> respons },
                 failure = {
@@ -193,14 +213,14 @@ class IASakApiTest {
 
     private fun opprettSakForVirksomhet(orgnummer: String) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
             .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
 
-    private fun nyHendelsePåSak(sak: IASakDto, hendelsestype: SaksHendelsestype) =
+    private fun nyHendelsePåSak(sak: IASakDto, hendelsestype: SaksHendelsestype, token: String = mockOAuth2Server.lydiaApiTokenX) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
-            .authentication().bearer(mockOAuth2Server.lydiaApiToken)
+            .authentication().bearer(token)
             .jsonBody(
                 IASakshendelseDto(
                     orgnummer = sak.orgnr,
@@ -214,5 +234,6 @@ class IASakApiTest {
                 fail(it.message)
             })
 
-    private fun IASakDto.nyHendelse(hendelsestype: SaksHendelsestype) = nyHendelsePåSak(this, hendelsestype)
+    private fun IASakDto.nyHendelse(hendelsestype: SaksHendelsestype, token: String = mockOAuth2Server.lydiaApiTokenX) =
+        nyHendelsePåSak(this, hendelsestype, token)
 }

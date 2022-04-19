@@ -16,6 +16,7 @@ data class IASakDto(
     @Serializable(with = LocalDateTimeSerializer::class)
     val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,
+    val eidAv: String?,
     val endretAvHendelseId: String
 ) {
     companion object {
@@ -29,6 +30,7 @@ data class IASakDto(
             opprettetAv = this.opprettetAv,
             opprettetTidspunkt = this.opprettet,
             endretAv = this.endretAv,
+            eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId
         )
     }

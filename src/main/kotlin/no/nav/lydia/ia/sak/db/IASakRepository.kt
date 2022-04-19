@@ -12,7 +12,7 @@ import javax.sql.DataSource
 
 class IASakRepository(val dataSource: DataSource) {
 
-    fun lagreSak(iaSak: IASak): IASak =
+    fun opprettSak(iaSak: IASak): IASak =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -61,6 +61,7 @@ class IASakRepository(val dataSource: DataSource) {
                         status = :status,
                         endret_av = :endret_av,
                         endret = :endret,
+                        eid_av = :eidAv,
                         endret_av_hendelse = :endret_av_hendelse
                     WHERE saksnummer = :saksnummer
                     RETURNING *
@@ -71,6 +72,7 @@ class IASakRepository(val dataSource: DataSource) {
                         "status" to iaSak.status.name,
                         "endret_av" to iaSak.endretAv,
                         "endret" to iaSak.endret,
+                        "eidAv" to iaSak.eidAv,
                         "endret_av_hendelse" to iaSak.endretAvHendelseId
                     )
                 ).map(this::mapRowToIASak).asSingle
@@ -87,7 +89,8 @@ class IASakRepository(val dataSource: DataSource) {
             endret = row.localDateTimeOrNull("endret"),
             endretAv = row.stringOrNull("endret_av"),
             status = IAProsessStatus.valueOf(row.string("status")),
-            endretAvHendelseId = row.string("endret_av_hendelse")
+            endretAvHendelseId = row.string("endret_av_hendelse"),
+            eidAv = row.stringOrNull("eid_av")
         )
     }
 

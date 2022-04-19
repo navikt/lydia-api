@@ -48,7 +48,7 @@ class TestContainerHelper {
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
 
-        fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.lydiaApiToken)
+        fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.lydiaApiTokenX)
     }
 
 }
