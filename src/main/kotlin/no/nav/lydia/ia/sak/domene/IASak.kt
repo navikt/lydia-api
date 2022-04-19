@@ -10,6 +10,7 @@ class IASak(
     val type: IASakstype,
     val opprettet: LocalDateTime,
     val opprettetAv: String,
+    var eidAv: String?,
     var endret: LocalDateTime?,
     var endretAv: String?,
     var endretAvHendelseId: String,
@@ -35,6 +36,9 @@ class IASak(
             }
             VIRKSOMHET_SKAL_KONTAKTES -> {
                 tilstand.kontaktes()
+            }
+            TA_EIERSKAP_I_SAK -> {
+                eidAv = hendelse.opprettetAv
             }
             OPPRETT_SAK_FOR_VIRKSOMHET -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
@@ -118,6 +122,7 @@ class IASak(
                 type = IASakstype.NAV_STOTTER, // TODO: skal ligge på hendelsen
                 opprettet = førsteHendelse.opprettetTidspunkt,
                 opprettetAv = førsteHendelse.opprettetAv,
+                eidAv = null,
                 endret = null,
                 endretAv = null,
                 endretAvHendelseId = førsteHendelse.id,

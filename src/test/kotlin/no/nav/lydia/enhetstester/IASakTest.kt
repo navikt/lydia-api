@@ -8,9 +8,9 @@ import kotlin.test.Test
 
 class IASakTest {
     companion object {
-        val orgnummer = "123456789"
-        val navIdent1 = "A123456"
-        val navIdent2 = "B123456"
+        const val orgnummer = "123456789"
+        const val navIdent1 = "A123456"
+        const val navIdent2 = "B123456"
     }
 
     @Test
@@ -85,7 +85,8 @@ class IASakTest {
                 endretAvHendelseId = sakshendelse.id,
                 status = IAProsessStatus.NY,
                 endret = null,
-                endretAv = null
+                endretAv = null,
+                eidAv = null
             )
         }
     }

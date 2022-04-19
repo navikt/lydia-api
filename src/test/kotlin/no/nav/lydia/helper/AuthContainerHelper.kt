@@ -26,7 +26,8 @@ import java.util.*
 
 class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
     companion object {
-        const val NAV_IDENT = "X12345"
+        const val NAV_IDENT_X12345 = "X12345"
+        const val NAV_IDENT_Y54321 = "Y54321"
     }
 
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
@@ -38,7 +39,8 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val issuerUrl = "$tokenEndpointUrl/$issuerName"
     private val jwksUri = "$issuerUrl/jwks"
     private val audience = "lydia-api"
-    val lydiaApiToken: String
+    val lydiaApiTokenX: String
+    val lydiaApiTokenY: String
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
@@ -61,10 +63,16 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                 start()
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
-                lydiaApiToken = issueToken(
+                lydiaApiTokenX = issueToken(
                     audience = audience,
                     claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT
+                        NAV_IDENT_CLAIM to NAV_IDENT_X12345
+                    )
+                ).serialize()
+                lydiaApiTokenY = issueToken(
+                    audience = audience,
+                    claims = mapOf(
+                        NAV_IDENT_CLAIM to NAV_IDENT_Y54321
                     )
                 ).serialize()
             }
