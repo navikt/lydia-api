@@ -4,29 +4,37 @@
 package no.nav.lydia
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
-import io.ktor.features.*
-import io.ktor.http.*
-import io.ktor.metrics.micrometer.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.serialization.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.application.log
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.engine.addShutdownHook
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.stop
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
+import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.routing
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
+import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
-import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
@@ -87,16 +95,16 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                     }
                     JWTPrincipal(credentials.payload)
                 } catch (e: Throwable) {
-                    log.error("Feil under autentisering")
-                    log.error(e.message)
+                    application.log.error("Feil under autentisering")
+                    application.log.error(e.message)
                     null
                 }
             }
         }
     }
     install(StatusPages) {
-        exception<Throwable> { cause ->
-            log.error("Det har skjedd en feil bro!", cause)
+        exception<Throwable> { call, cause ->
+            call.application.log.error("Det har skjedd en feil bro!", cause)
             call.respond(HttpStatusCode.InternalServerError)
         }
     }
