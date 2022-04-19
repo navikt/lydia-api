@@ -3,7 +3,6 @@ package no.nav.lydia.integrasjoner.ssb
 import com.github.kittinunf.fuel.httpGet
 import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
-import io.ktor.util.*
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
@@ -33,7 +32,7 @@ class NæringsDownloader(
                         }
                     }
                 } catch (e: Exception) {
-                    log.error(exception = e)
+                    log.error("Noe gikk galt under nedlasting av næringer", e)
                 }
             }, failure = {
                 log.error("Feil ved nedlastning av næringer (${it.message})", it.exception)

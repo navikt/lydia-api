@@ -1,9 +1,10 @@
 package no.nav.lydia.virksomhet.api
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import no.nav.lydia.virksomhet.VirksomhetRepository
 
 const val VIRKSOMHET_PATH = "virksomhet"
