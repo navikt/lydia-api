@@ -9,6 +9,7 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.helper.*
@@ -206,6 +207,17 @@ class IASakApiTest {
                 )
             }
 
+        }
+    }
+
+    @Test
+    fun `skal få gyldige neste hendelser i retur`() {
+        opprettSakForVirksomhet(OSLO.orgnr).also { sak ->
+            sak.gyldigeNesteHendelser shouldHaveSize 0
+
+            sak.nyHendelse(VIRKSOMHET_VURDERES).also {
+                it.gyldigeNesteHendelser shouldContainExactly listOf(VIRKSOMHET_ER_IKKE_AKTUELL, TA_EIERSKAP_I_SAK)
+            }
         }
     }
 

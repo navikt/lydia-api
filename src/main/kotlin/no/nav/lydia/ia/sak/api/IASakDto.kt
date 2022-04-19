@@ -4,6 +4,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakstype
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import java.time.LocalDateTime
 
 @Serializable
@@ -17,7 +18,8 @@ data class IASakDto(
     val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,
     val eidAv: String?,
-    val endretAvHendelseId: String
+    val endretAvHendelseId: String,
+    val gyldigeNesteHendelser : List<SaksHendelsestype>
 ) {
     companion object {
         fun List<IASak>.toDto() = this.map { it.toDto() }
@@ -31,7 +33,8 @@ data class IASakDto(
             opprettetTidspunkt = this.opprettet,
             endretAv = this.endretAv,
             eidAv = this.eidAv,
-            endretAvHendelseId = this.endretAvHendelseId
+            endretAvHendelseId = this.endretAvHendelseId,
+            gyldigeNesteHendelser = this.gyldigeHendelser
         )
     }
 }

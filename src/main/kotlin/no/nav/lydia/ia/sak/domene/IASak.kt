@@ -26,6 +26,20 @@ class IASak(
     val status: IAProsessStatus
         get() = tilstand.status
 
+    val gyldigeHendelser: List<SaksHendelsestype>
+        get() = when(tilstand) {
+            is StartTilstand -> listOf()
+            is VurderesTilstand -> {
+                if (eidAv != null)
+                    listOf(VIRKSOMHET_ER_IKKE_AKTUELL, VIRKSOMHET_SKAL_KONTAKTES)
+                else
+                    listOf(VIRKSOMHET_ER_IKKE_AKTUELL, TA_EIERSKAP_I_SAK)
+            }
+            is KontaktesTilstand -> listOf(VIRKSOMHET_ER_IKKE_AKTUELL)
+            is IkkeAktuellTilstand -> listOf()
+            else -> throw IllegalStateException() // TODO: finn ut hvorfor vi trenger else, skriv oss bort
+        }
+
     fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES -> {
