@@ -9,7 +9,6 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.helper.*
@@ -68,7 +67,6 @@ class IASakApiTest {
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
         opprettSakForVirksomhet(orgnummer = OSLO.orgnr)
-            .nyHendelse(VIRKSOMHET_VURDERES)
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .also {
@@ -79,7 +77,6 @@ class IASakApiTest {
     @Test
     fun `en virksomhet skal ikke kunne kontaktes før saken har et eierskap`() {
         opprettSakForVirksomhet(orgnummer = OSLO.orgnr)
-            .nyHendelse(VIRKSOMHET_VURDERES)
             .also {
                 shouldFail {
                     it.nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -125,7 +122,7 @@ class IASakApiTest {
                 response.data shouldHaveAtLeastSize 1
                 response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
                     sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr
-                    sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.NY
+                    sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.VURDERES
                 }
             }, failure = {
                 fail(it.message)
@@ -140,20 +137,12 @@ class IASakApiTest {
         val iaSaker = hentIASaker(BERGEN.orgnr)
         iaSaker.forAtLeastOne {
             it.orgnr shouldBe BERGEN.orgnr
-            it.status shouldBe IAProsessStatus.NY
+            it.status shouldBe IAProsessStatus.VURDERES
             it.opprettetAv shouldBe NAV_IDENT_X12345
             it.saksnummer shouldBe sak.saksnummer
         }
 
-        val sakEtterAtVirksomhetErVurdert = nyHendelsePåSak(sak, VIRKSOMHET_VURDERES).also {
-            it.orgnr shouldBe BERGEN.orgnr
-            it.saksnummer shouldBe sak.saksnummer
-            it.status shouldBe IAProsessStatus.VURDERES
-            it.opprettetAv shouldBe sak.opprettetAv
-            it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
-        }
-
-        nyHendelsePåSak(sakEtterAtVirksomhetErVurdert, VIRKSOMHET_ER_IKKE_AKTUELL).also {
+        nyHendelsePåSak(sak, VIRKSOMHET_ER_IKKE_AKTUELL).also {
             it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
             it.status shouldBe IAProsessStatus.IKKE_AKTUELL
@@ -166,7 +155,6 @@ class IASakApiTest {
     fun `skal kunne hente en oppsummering av alle hendelsene som har skjedd på en sak`() {
         opprettSakForVirksomhet(orgnummer = BERGEN.orgnr).also { sak ->
             val sakIkkeAktuell = sak
-                .nyHendelse(VIRKSOMHET_VURDERES)
                 .nyHendelse(TA_EIERSKAP_I_SAK)
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
@@ -190,10 +178,9 @@ class IASakApiTest {
     @Test
     fun `skal kunne ta eierskap i en sak`() {
         opprettSakForVirksomhet(OSLO.orgnr).also { sak ->
-            val sakEtterVurderes = sak.nyHendelse(VIRKSOMHET_VURDERES)
-            sakEtterVurderes.eidAv shouldBe null
+            sak.eidAv shouldBe null
 
-            val sakEtterTattEierskap = sakEtterVurderes.nyHendelse(TA_EIERSKAP_I_SAK)
+            val sakEtterTattEierskap = sak.nyHendelse(TA_EIERSKAP_I_SAK)
             sakEtterTattEierskap.eidAv shouldBe NAV_IDENT_X12345
 
             sakEtterTattEierskap.nyHendelse(TA_EIERSKAP_I_SAK, mockOAuth2Server.lydiaApiTokenY).also {
@@ -213,11 +200,7 @@ class IASakApiTest {
     @Test
     fun `skal få gyldige neste hendelser i retur`() {
         opprettSakForVirksomhet(OSLO.orgnr).also { sak ->
-            sak.gyldigeNesteHendelser shouldHaveSize 0
-
-            sak.nyHendelse(VIRKSOMHET_VURDERES).also {
-                it.gyldigeNesteHendelser shouldContainExactly listOf(VIRKSOMHET_ER_IKKE_AKTUELL, TA_EIERSKAP_I_SAK)
-            }
+            sak.gyldigeNesteHendelser shouldContainExactly listOf(VIRKSOMHET_ER_IKKE_AKTUELL, TA_EIERSKAP_I_SAK)
         }
     }
 

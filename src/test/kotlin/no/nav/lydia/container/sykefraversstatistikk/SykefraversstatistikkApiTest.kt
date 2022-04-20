@@ -1,7 +1,6 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -25,11 +24,8 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -275,20 +271,8 @@ class SykefraversstatistikkApiTest {
         val orgnummer = OSLO.orgnr
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
 
-        val sak = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
+        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
-            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = { fail(it.message) })
-
-        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
-            .jsonBody(
-                IASakshendelseDto(
-                    orgnummer = orgnummer,
-                    saksnummer = sak.saksnummer,
-                    hendelsesType = SaksHendelsestype.VIRKSOMHET_VURDERES,
-                    endretAvHendelsesId = sak.endretAvHendelseId
-                ),
-            )
             .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
         hentSykefravær(iaStatus = IAProsessStatus.VURDERES.name, success = { response ->

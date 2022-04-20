@@ -1,15 +1,13 @@
 package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
@@ -25,7 +23,10 @@ fun Route.IASak_Rådgiver(
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         call.parameters["orgnummer"]?.let { orgnummer ->
             call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
-                call.respond(iaSakService.opprettSak(orgnummer, navIdent).toDto())
+                when(val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, navIdent)) {
+                    is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
+                    is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
+                }
             }
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }

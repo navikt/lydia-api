@@ -14,17 +14,17 @@ class IASakService(
     private val iaSakshendelseRepository: IASakshendelseRepository
 ) {
 
-    fun opprettSak(orgnummer: String, navIdent: String): IASak {
-        val id = ULID.random()
-        val nySakshendelse = IASakshendelse(
-            id = id,
+    fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<IASakError, IASak> {
+        val saksnummer = ULID.random()
+        val nySakshendelse = iaSakshendelseRepository.lagreHendelse(IASakshendelse(
+            id = saksnummer,
             opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = id,
+            saksnummer = saksnummer,
             hendelsesType = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
             orgnummer = orgnummer,
             opprettetAv = navIdent,
-        )
-        iaSakshendelseRepository.lagreHendelse(nySakshendelse)
+        ))
+
         val sak = IASak(
             saksnummer = nySakshendelse.saksnummer,
             orgnr = nySakshendelse.orgnummer,
@@ -37,7 +37,21 @@ class IASakService(
             endretAvHendelseId = nySakshendelse.id,
             status = IAProsessStatus.NY
         )
-        return iaSakRepository.opprettSak(sak)
+        val lagretSak = iaSakRepository.opprettSak(sak)
+
+        val vurderHendelse = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = saksnummer,
+            hendelsesType = SaksHendelsestype.VIRKSOMHET_VURDERES,
+            orgnummer = orgnummer,
+            opprettetAv = navIdent
+        )
+        val sakEtterVurdering = lagretSak.behandleHendelse(
+            iaSakshendelseRepository.lagreHendelse(vurderHendelse)
+        )
+
+        return iaSakRepository.oppdaterSak(sakEtterVurdering)
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): Either<IASakError, IASak> {
