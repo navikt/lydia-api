@@ -25,7 +25,7 @@ class IASakTest {
         )
         sak.behandleHendelse(vurderingsHendelse)
         sak.endretAv shouldBe vurderingsHendelse.opprettetAv
-        sak.endret shouldBe vurderingsHendelse.opprettetTidspunkt
+        sak.endretTidspunkt shouldBe vurderingsHendelse.opprettetTidspunkt
         sak.saksnummer shouldBe vurderingsHendelse.saksnummer
         sak.endretAvHendelseId shouldBe vurderingsHendelse.id
         sak.status shouldBe IAProsessStatus.VURDERES
@@ -80,11 +80,11 @@ class IASakTest {
                 saksnummer = sakshendelse.saksnummer,
                 orgnr = orgnummer,
                 type = IASakstype.NAV_STOTTER,
-                opprettet = sakshendelse.opprettetTidspunkt,
+                opprettetTidspunkt = sakshendelse.opprettetTidspunkt,
                 opprettetAv = sakshendelse.opprettetAv,
                 endretAvHendelseId = sakshendelse.id,
                 status = IAProsessStatus.NY,
-                endret = null,
+                endretTidspunkt = null,
                 endretAv = null,
                 eidAv = null
             )

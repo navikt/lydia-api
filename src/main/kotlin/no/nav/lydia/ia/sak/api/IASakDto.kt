@@ -17,6 +17,8 @@ data class IASakDto(
     @Serializable(with = LocalDateTimeSerializer::class)
     val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val endretTidspunkt: LocalDateTime?,
     val eidAv: String?,
     val endretAvHendelseId: String,
     val gyldigeNesteHendelser : List<SaksHendelsestype>
@@ -30,8 +32,9 @@ data class IASakDto(
             type = this.type,
             status = this.status,
             opprettetAv = this.opprettetAv,
-            opprettetTidspunkt = this.opprettet,
+            opprettetTidspunkt = this.opprettetTidspunkt,
             endretAv = this.endretAv,
+            endretTidspunkt = this.endretTidspunkt,
             eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId,
             gyldigeNesteHendelser = this.gyldigeHendelser

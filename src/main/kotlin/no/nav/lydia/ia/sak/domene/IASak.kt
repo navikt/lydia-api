@@ -8,10 +8,10 @@ class IASak(
     val saksnummer: String,
     val orgnr: String,
     val type: IASakstype,
-    val opprettet: LocalDateTime,
+    val opprettetTidspunkt: LocalDateTime,
     val opprettetAv: String,
     var eidAv: String?,
-    var endret: LocalDateTime?,
+    var endretTidspunkt: LocalDateTime?,
     var endretAv: String?,
     var endretAvHendelseId: String,
     status: IAProsessStatus
@@ -60,7 +60,7 @@ class IASak(
         }
         endretAvHendelseId = hendelse.id
         endretAv = hendelse.opprettetAv
-        endret = hendelse.opprettetTidspunkt
+        endretTidspunkt = hendelse.opprettetTidspunkt
 
         return this
     }
@@ -137,10 +137,10 @@ class IASak(
                 saksnummer = førsteHendelse.saksnummer,
                 orgnr = førsteHendelse.orgnummer,
                 type = IASakstype.NAV_STOTTER, // TODO: skal ligge på hendelsen
-                opprettet = førsteHendelse.opprettetTidspunkt,
+                opprettetTidspunkt = førsteHendelse.opprettetTidspunkt,
                 opprettetAv = førsteHendelse.opprettetAv,
                 eidAv = null,
-                endret = null,
+                endretTidspunkt = null,
                 endretAv = null,
                 endretAvHendelseId = førsteHendelse.id,
                 status = IAProsessStatus.NY

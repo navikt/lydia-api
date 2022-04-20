@@ -29,10 +29,10 @@ class IASakService(
             saksnummer = nySakshendelse.saksnummer,
             orgnr = nySakshendelse.orgnummer,
             type = IASakstype.NAV_STOTTER, // TODO: dette burde ligger på hendelsen
-            opprettet = nySakshendelse.opprettetTidspunkt,
+            opprettetTidspunkt = nySakshendelse.opprettetTidspunkt,
             opprettetAv = nySakshendelse.opprettetAv,
             eidAv = null,
-            endret = null,
+            endretTidspunkt = null,
             endretAv = null,
             endretAvHendelseId = nySakshendelse.id,
             status = IAProsessStatus.NY

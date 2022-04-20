@@ -43,7 +43,7 @@ class IASakRepository(val dataSource: DataSource) {
                         "type" to iaSak.type.name,
                         "status" to iaSak.status.name,
                         "opprettet_av" to iaSak.opprettetAv,
-                        "opprettet" to iaSak.opprettet,
+                        "opprettet" to iaSak.opprettetTidspunkt,
                         "endret_av_hendelse" to iaSak.endretAvHendelseId
                     )
                 ).map(this::mapRowToIASak).asSingle
@@ -71,7 +71,7 @@ class IASakRepository(val dataSource: DataSource) {
                         "type" to iaSak.type.name,
                         "status" to iaSak.status.name,
                         "endret_av" to iaSak.endretAv,
-                        "endret" to iaSak.endret,
+                        "endret" to iaSak.endretTidspunkt,
                         "eidAv" to iaSak.eidAv,
                         "endret_av_hendelse" to iaSak.endretAvHendelseId
                     )
@@ -84,9 +84,9 @@ class IASakRepository(val dataSource: DataSource) {
             saksnummer = row.string("saksnummer"),
             orgnr = row.string("orgnr"),
             type = IASakstype.valueOf(row.string("type")),
-            opprettet = row.localDateTime("opprettet"),
+            opprettetTidspunkt = row.localDateTime("opprettet"),
             opprettetAv = row.string("opprettet_av"),
-            endret = row.localDateTimeOrNull("endret"),
+            endretTidspunkt = row.localDateTimeOrNull("endret"),
             endretAv = row.stringOrNull("endret_av"),
             status = IAProsessStatus.valueOf(row.string("status")),
             endretAvHendelseId = row.string("endret_av_hendelse"),
