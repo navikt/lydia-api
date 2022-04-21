@@ -235,7 +235,7 @@ class IASakApiTest {
                     orgnummer = sak.orgnr,
                     saksnummer = sak.saksnummer,
                     hendelsesType = hendelsestype,
-                    endretAvHendelsesId = sak.endretAvHendelseId
+                    endretAvHendelseId = sak.endretAvHendelseId
                 ),
                 localDateTimeTypeAdapter
             )

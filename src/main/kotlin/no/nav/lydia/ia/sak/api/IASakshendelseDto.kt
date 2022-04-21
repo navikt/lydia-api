@@ -11,7 +11,7 @@ class IASakshendelseDto(
     val orgnummer: String,
     val saksnummer: String,
     val hendelsesType: SaksHendelsestype,
-    val endretAvHendelsesId: String
+    val endretAvHendelseId: String
 )
 
 @Serializable
