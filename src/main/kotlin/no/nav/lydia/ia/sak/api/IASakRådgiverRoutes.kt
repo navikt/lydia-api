@@ -57,11 +57,13 @@ fun Route.IASak_Rådgiver(
 
 sealed class IASakError {
     object PrøvdeÅLeggeTilHendelsePåTomSak : IASakError()
+    object PrøvdeÅLeggeTilHendelsePåGammelSak : IASakError()
     object FikkIkkeOppdatertSak : IASakError()
 
     fun tilHTTPStatuskode() =
         when (this) {
-            is PrøvdeÅLeggeTilHendelsePåTomSak -> HttpStatusCode.NotAcceptable
-            is FikkIkkeOppdatertSak -> HttpStatusCode.InternalServerError
+            PrøvdeÅLeggeTilHendelsePåTomSak -> HttpStatusCode.NotAcceptable
+            PrøvdeÅLeggeTilHendelsePåGammelSak -> HttpStatusCode.Conflict
+            FikkIkkeOppdatertSak -> HttpStatusCode.InternalServerError
         }
 }

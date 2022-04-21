@@ -204,6 +204,21 @@ class IASakApiTest {
         }
     }
 
+    @Test
+    fun `skal ikke kunne legge til hendelser på en sak som er oppdatert av en annen hendelse`() {
+        opprettSakForVirksomhet(OSLO.orgnr).also { sak ->
+            val gammelSakshendelse = IASakshendelseDto(
+                orgnummer = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
+                endretAvHendelseId = "ugyldig ID"
+            )
+            shouldFail {
+                nyHendelse(gammelSakshendelse)
+            }
+        }
+    }
+
     private fun hentIASaker(orgnummer: String) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
@@ -223,6 +238,17 @@ class IASakApiTest {
     private fun opprettSakForVirksomhet(orgnummer: String) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
+                fail(it.message)
+            })
+
+    private fun nyHendelse(sakshendelse: IASakshendelseDto, token: String = mockOAuth2Server.lydiaApiTokenX) =
+        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+            .authentication().bearer(token)
+            .jsonBody(
+                sakshendelse,
+                localDateTimeTypeAdapter
+            )
             .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })

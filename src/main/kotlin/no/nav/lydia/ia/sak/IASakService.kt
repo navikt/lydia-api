@@ -58,6 +58,8 @@ class IASakService(
         val sakshendelse = IASakshendelse.fromDto(hendelseDto, navIdent)
         val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
         if (hendelser.isEmpty()) return Either.Left(IASakError.PrøvdeÅLeggeTilHendelsePåTomSak)
+        if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.PrøvdeÅLeggeTilHendelsePåGammelSak)
+
         val sak = IASak.fraHendelser(hendelser).behandleHendelse(sakshendelse)
         iaSakshendelseRepository.lagreHendelse(sakshendelse)
         return iaSakRepository.oppdaterSak(sak)
