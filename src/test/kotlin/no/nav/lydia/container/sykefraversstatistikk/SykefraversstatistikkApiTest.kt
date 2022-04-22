@@ -143,7 +143,7 @@ class SykefraversstatistikkApiTest {
         val kommunenummer = "4601" // Brønnøy kommune i Bergen
         val virksomhet = BERGEN
         hentSykefravær(kommuner = kommunenummer, success = { response ->
-            response.data shouldHaveSize 1
+            response.data shouldHaveAtLeastSize  1
             response.data.forAtLeastOne { testVirksomhet ->
                 testVirksomhet.virksomhetsnavn shouldBe virksomhet.navn
                 testVirksomhet.orgnr shouldBe virksomhet.orgnr
@@ -183,7 +183,7 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne hente alle virksomheter i en gitt næring`() {
         hentSykefravær(næringsgrupper = SCENEKUNST.kode, success = { response ->
-            response.data.map { it.orgnr } shouldContainExactly listOf(
+            response.data.map { it.orgnr } shouldContainAll listOf(
                 BERGEN.orgnr,
                 OSLO.orgnr
             )

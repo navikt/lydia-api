@@ -119,6 +119,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet,
                         ia_sak.status,
+                        ia_sak.eid_av,
                         COUNT(*) OVER() AS total
                     FROM sykefravar_statistikk_virksomhet AS statistikk
                     JOIN virksomhet USING (orgnr)
@@ -178,24 +179,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         return ListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
     }
 
-    private fun mapRow(row: Row): Pair<SykefraversstatistikkVirksomhet, Int> {
-        return SykefraversstatistikkVirksomhet(
-            virksomhetsnavn = row.string("navn"),
-            kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
-            orgnr = row.string("orgnr"),
-            arstall = row.int("arstall"),
-            kvartal = row.int("kvartal"),
-            antallPersoner = row.double("antall_personer"),
-            tapteDagsverk = row.double("tapte_dagsverk"),
-            muligeDagsverk = row.double("mulige_dagsverk"),
-            sykefraversprosent = row.double("sykefraversprosent"),
-            maskert = row.boolean("maskert"),
-            opprettet = row.localDateTime("opprettet"),
-            status = row.stringOrNull("status")?.let {
-                IAProsessStatus.valueOf(it)
-            }
-        ) to row.int("total")
-    }
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
         return using(sessionOf(dataSource)) { session ->
@@ -215,6 +198,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet,
                         ia_sak.status,
+                        ia_sak.eid_av,
                         COUNT(*) OVER() AS total
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
@@ -227,4 +211,23 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
+    private fun mapRow(row: Row): Pair<SykefraversstatistikkVirksomhet, Int> {
+        return SykefraversstatistikkVirksomhet(
+            virksomhetsnavn = row.string("navn"),
+            kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
+            orgnr = row.string("orgnr"),
+            arstall = row.int("arstall"),
+            kvartal = row.int("kvartal"),
+            antallPersoner = row.double("antall_personer"),
+            tapteDagsverk = row.double("tapte_dagsverk"),
+            muligeDagsverk = row.double("mulige_dagsverk"),
+            sykefraversprosent = row.double("sykefraversprosent"),
+            maskert = row.boolean("maskert"),
+            opprettet = row.localDateTime("opprettet"),
+            status = row.stringOrNull("status")?.let {
+                IAProsessStatus.valueOf(it)
+            },
+            eidAv = row.stringOrNull("eid_av")
+        ) to row.int("total")
+    }
 }

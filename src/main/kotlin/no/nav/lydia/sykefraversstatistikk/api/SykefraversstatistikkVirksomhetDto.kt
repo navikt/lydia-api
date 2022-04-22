@@ -18,7 +18,8 @@ data class SykefraversstatistikkVirksomhetDto(
     val antallPersoner: Int,
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
-    val status: IAProsessStatus
+    val status: IAProsessStatus,
+    val eidAv: String?
 ) {
 
     companion object {
@@ -41,7 +42,8 @@ data class SykefraversstatistikkVirksomhetDto(
                 antallPersoner = this.antallPersoner.toInt(),
                 muligeDagsverk = this.muligeDagsverk,
                 tapteDagsverk = this.tapteDagsverk,
-                status = this.status ?: IAProsessStatus.IKKE_AKTIV
+                status = this.status ?: IAProsessStatus.IKKE_AKTIV,
+                eidAv = this.eidAv
             )
     }
 }

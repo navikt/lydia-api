@@ -16,5 +16,6 @@ class SykefraversstatistikkVirksomhet(
     val sykefraversprosent: Double,
     val maskert: Boolean,
     val opprettet: LocalDateTime,
-    val status: IAProsessStatus?
+    val status: IAProsessStatus?,
+    val eidAv: String?
 )
