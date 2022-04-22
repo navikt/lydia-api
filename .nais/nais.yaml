@@ -45,6 +45,9 @@ spec:
       claims:
         groups:
           - id: {{azureAdGroup}}
+          - id: {{fiaSuperbrukerGroup}}
+          - id: {{fiaSaksbehandlerGroup}}
+          - id: {{fiaLesetilgangGroup}}
         extra:
           - "NAVident"
   gcp:
