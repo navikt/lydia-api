@@ -8,6 +8,7 @@ import com.nimbusds.oauth2.sdk.TokenRequest
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic
 import com.nimbusds.oauth2.sdk.auth.Secret
 import com.nimbusds.oauth2.sdk.id.ClientID
+import no.nav.lydia.Security.Companion.GROUPS_CLAIM
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.security.mock.oauth2.OAuth2Config
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
@@ -26,8 +27,10 @@ import java.util.*
 
 class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
     companion object {
-        const val NAV_IDENT_X12345 = "X12345"
-        const val NAV_IDENT_Y54321 = "Y54321"
+        const val NAV_IDENT_SAKSBEHANDLER_1_X12345 = "X12345"
+        const val NAV_IDENT_SAKSBEHANDLER_2_Y54321 = "Y54321"
+        const val NAV_IDENT_SUPERBRUKER_S54321 = "S54321"
+        const val NAV_IDENT_LESEBRUKER_L54321 = "L54321"
     }
 
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
@@ -39,11 +42,13 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val issuerUrl = "$tokenEndpointUrl/$issuerName"
     private val jwksUri = "$issuerUrl/jwks"
     private val audience = "lydia-api"
-    val superbrukerGroupId = "ensuperbrukerGroupId"
-    val saksbehandlerGroupId = "ensaksbehandlerGroupId"
-    val lesetilgangGroupId = "enlesetilgangGroupId"
-    val lydiaApiTokenX: String
-    val lydiaApiTokenY: String
+    private val superbrukerGroupId = "ensuperbrukerGroupId"
+    private val saksbehandlerGroupId = "ensaksbehandlerGroupId"
+    private val lesetilgangGroupId = "enlesetilgangGroupId"
+    val saksbehandlerToken1: String
+    val saksbehandlerToken2: String
+    val superbrukerToken: String
+    val lesebrukerToken: String
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
@@ -66,16 +71,32 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                 start()
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
-                lydiaApiTokenX = issueToken(
+                saksbehandlerToken1 = issueToken(
                     audience = audience,
                     claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT_X12345
+                        NAV_IDENT_CLAIM to NAV_IDENT_SAKSBEHANDLER_1_X12345,
+                        GROUPS_CLAIM to listOf(saksbehandlerGroupId)
                     )
                 ).serialize()
-                lydiaApiTokenY = issueToken(
+                saksbehandlerToken2 = issueToken(
                     audience = audience,
                     claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT_Y54321
+                        NAV_IDENT_CLAIM to NAV_IDENT_SAKSBEHANDLER_2_Y54321,
+                        GROUPS_CLAIM to listOf(saksbehandlerGroupId)
+                    )
+                ).serialize()
+                superbrukerToken = issueToken(
+                    audience = audience,
+                    claims = mapOf(
+                        NAV_IDENT_CLAIM to NAV_IDENT_SUPERBRUKER_S54321,
+                        GROUPS_CLAIM to listOf(superbrukerGroupId)
+                    )
+                ).serialize()
+                lesebrukerToken = issueToken(
+                    audience = audience,
+                    claims = mapOf(
+                        NAV_IDENT_CLAIM to NAV_IDENT_SUPERBRUKER_S54321,
+                        GROUPS_CLAIM to listOf(lesetilgangGroupId)
                     )
                 ).serialize()
             }

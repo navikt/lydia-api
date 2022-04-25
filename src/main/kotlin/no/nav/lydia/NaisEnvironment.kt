@@ -26,6 +26,7 @@ class Security(
 ) {
     companion object {
         const val NAV_IDENT_CLAIM = "NAVident"
+        const val GROUPS_CLAIM = "groups"
     }
 }
 

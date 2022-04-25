@@ -39,6 +39,7 @@ import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+import no.nav.lydia.tilgangskontroll.TilgangskontrollService
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.concurrent.TimeUnit
@@ -135,7 +136,8 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                 iaSakService = IASakService(
                     iaSakRepository = IASakRepository(dataSource = dataSource),
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
-                )
+                ),
+                tilgangskontrollService = TilgangskontrollService(naisEnvironment.security.azureConfig)
             )
             virksomhet(virksomhetRepository = virksomhetRepository)
         }
