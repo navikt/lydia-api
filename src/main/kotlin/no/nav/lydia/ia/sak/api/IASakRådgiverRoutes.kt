@@ -12,28 +12,30 @@ import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
-import no.nav.lydia.tilgangskontroll.TilgangskontrollService
+import no.nav.lydia.tilgangskontroll.Rådgiver
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "/hendelse"
 val SAK_HENDELSER_SUB_PATH = "/hendelser"
 
 fun Route.IASak_Rådgiver(
-    iaSakService: IASakService,
-    tilgangskontrollService: TilgangskontrollService
+    iaSakService: IASakService
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         call.parameters["orgnummer"]?.let { orgnummer ->
-            call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
-                if (!tilgangskontrollService.harSuperbrukertilgang()){
-                    call.respond(HttpStatusCode.Unauthorized)
-                } else {
-                    when(val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, navIdent)) {
-                        is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
-                        is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
+            Rådgiver.from(call).fold(
+                ifLeft = { rådgiverError -> call.respond(rådgiverError.tilHTTPStatuskode()) },
+                ifRight = { rådgiver ->
+                    if (rådgiver.harGruppe("gruppe")) { //TODO Fixme
+                        when (val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)) {
+                            is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
+                            is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
+                        }
+                    } else {
+                        call.respond(HttpStatusCode.Forbidden, "Innlogget bruker har ikke lov til dette")
                     }
                 }
-            }
+            )
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }
 
