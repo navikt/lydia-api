@@ -67,3 +67,9 @@ spec:
       value: "1000"
     - name: SSB_NARINGS_URL
       value: "https://data.ssb.no/api/klass/v1//versions/30.json?language=nb"
+    - name: FIA_SUPERBRUKER_GROUP_ID
+      value: {{fiaSuperbrukerGroup}}
+    - name: FIA_SAKSBEHANDLER_GROUP_ID
+      value: {{fiaSaksbehandlerGroup}}
+    - name: FIA_LESETILGANG_GROUP_ID
+      value: {{fiaLesetilgangGroup}}

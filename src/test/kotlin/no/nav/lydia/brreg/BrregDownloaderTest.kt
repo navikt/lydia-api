@@ -5,7 +5,12 @@ import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
-import no.nav.lydia.*
+import no.nav.lydia.AzureConfig
+import no.nav.lydia.Database
+import no.nav.lydia.Integrasjoner
+import no.nav.lydia.Kafka
+import no.nav.lydia.NaisEnvironment
+import no.nav.lydia.Security
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
@@ -19,6 +24,7 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.UTENLANDSK
 import no.nav.lydia.integrasjoner.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.lydiaRestApi
 import org.junit.AfterClass
 import java.net.URL
 import kotlin.test.AfterTest
@@ -37,7 +43,10 @@ class BrregDownloaderTest {
             AzureConfig(
                 audience = "lydia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
-                issuer = "http://localhost:8100/default"
+                issuer = "http://localhost:8100/default",
+                superbrukerGroupId = "123",
+                saksbehandlerGroupId = "456",
+                lesetilgangGroupId = "789"
             )
         ), kafka = Kafka(
             brokers = "",

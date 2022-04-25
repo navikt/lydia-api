@@ -32,7 +32,10 @@ class Security(
 class AzureConfig(
     val audience: String = getEnvVar("AZURE_APP_CLIENT_ID"),
     val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
-    val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
+    val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
+    val superbrukerGroupId: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),
+    val saksbehandlerGroupId: String = getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID"),
+    val lesetilgangGroupId: String = getEnvVar("FIA_LESETILGANG_GROUP_ID")
 )
 
 class Kafka(

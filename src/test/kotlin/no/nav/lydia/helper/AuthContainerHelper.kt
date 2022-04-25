@@ -39,6 +39,9 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val issuerUrl = "$tokenEndpointUrl/$issuerName"
     private val jwksUri = "$issuerUrl/jwks"
     private val audience = "lydia-api"
+    val superbrukerGroupId = "ensuperbrukerGroupId"
+    val saksbehandlerGroupId = "ensaksbehandlerGroupId"
+    val lesetilgangGroupId = "enlesetilgangGroupId"
     val lydiaApiTokenX: String
     val lydiaApiTokenY: String
 
@@ -106,7 +109,10 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     fun envVars() = mapOf(
         "AZURE_APP_CLIENT_ID" to audience,
         "AZURE_OPENID_CONFIG_ISSUER" to issuerUrl,
-        "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri
+        "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri,
+        "FIA_SUPERBRUKER_GROUP_ID" to superbrukerGroupId,
+        "FIA_SAKSBEHANDLER_GROUP_ID" to saksbehandlerGroupId,
+        "FIA_LESETILGANG_GROUP_ID" to lesetilgangGroupId
     )
 
 }

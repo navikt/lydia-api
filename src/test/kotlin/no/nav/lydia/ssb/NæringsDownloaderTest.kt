@@ -9,10 +9,13 @@ import no.nav.lydia.Integrasjoner
 import no.nav.lydia.Kafka
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.Security
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.PostgrestContainerHelper
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
-import no.nav.lydia.lydiaRestApi
 import no.nav.lydia.integrasjoner.ssb.NÆRINGSIMPORT_URL
+import no.nav.lydia.lydiaRestApi
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.net.URL
@@ -51,7 +54,10 @@ class NæringsDownloaderTest {
             AzureConfig(
                 audience = "lydia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
-                issuer = "http://localhost:8100/default"
+                issuer = "http://localhost:8100/default",
+                superbrukerGroupId = "123",
+                saksbehandlerGroupId = "456",
+                lesetilgangGroupId = "789"
             )
         ), kafka = Kafka(
             brokers = "",

@@ -29,8 +29,11 @@ class AppTest {
                 AzureConfig(
                     audience = "lydia-api",
                     jwksUri = URL("http://localhost:8100/default/jwks"),
-                    issuer = "http://localhost:8100/default"
-                )
+                    issuer = "http://localhost:8100/default",
+                    superbrukerGroupId = "123",
+                    saksbehandlerGroupId = "456",
+                    lesetilgangGroupId = "789"
+        )
             ), kafka = Kafka(
                 brokers = "",
                 truststoreLocation = "",
