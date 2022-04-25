@@ -12,20 +12,26 @@ import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
+import no.nav.lydia.tilgangskontroll.TilgangskontrollService
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "/hendelse"
 val SAK_HENDELSER_SUB_PATH = "/hendelser"
 
 fun Route.IASak_Rådgiver(
-    iaSakService: IASakService
+    iaSakService: IASakService,
+    tilgangskontrollService: TilgangskontrollService
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         call.parameters["orgnummer"]?.let { orgnummer ->
             call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
-                when(val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, navIdent)) {
-                    is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
-                    is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
+                if (!tilgangskontrollService.harSuperbrukertilgang()){
+                    call.respond(HttpStatusCode.Unauthorized)
+                } else {
+                    when(val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, navIdent)) {
+                        is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
+                        is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
+                    }
                 }
             }
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")

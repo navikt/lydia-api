@@ -83,7 +83,7 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
         val orgnr = BERGEN.orgnr
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 
         result.fold(
@@ -114,7 +114,7 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
             .responseObject<FilterverdierDto>(localDateTimeTypeAdapter)
 
         result.fold(
@@ -194,13 +194,13 @@ class SykefraversstatistikkApiTest {
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
-                .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+                .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
 
         val resultatUtenParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
-                .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+                .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
         resultatMedTommeParametre.get().data shouldContainAll resultatUtenParametre.get().data
@@ -272,7 +272,7 @@ class SykefraversstatistikkApiTest {
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
 
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
             .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
         hentSykefravær(iaStatus = IAProsessStatus.VURDERES.name, success = { response ->
@@ -368,7 +368,7 @@ class SykefraversstatistikkApiTest {
                     "&$IA_STATUS=$iaStatus" +
                     "&$SIDE=$side"
         )
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
             .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
 }
