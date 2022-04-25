@@ -95,38 +95,25 @@ class IASakApiTest {
         val orgnr = OSLO.orgnr
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
 
-        val (_, _, listeResultatFørVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
-            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
-
-        listeResultatFørVirksomhetVurderes.fold(
-            success = { response ->
-                response.data shouldHaveAtLeastSize 1
-                response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr
-                    sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
-                }
-            }, failure = {
-                fail(it.message)
-            })
+        hentSykefraværsstatistikk().also { listeFørVirksomhetVurderes ->
+            listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
+            listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
+                sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr
+                sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
+            }
+        }
 
         val sak = opprettSakForVirksomhet(orgnummer = orgnr)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
 
-        val (_, _, listeResultatEtterVirksomhetVurderes) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
-            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
+        hentSykefraværsstatistikk().also { listeEtterVirksomhetVurderes ->
+            listeEtterVirksomhetVurderes.data shouldHaveAtLeastSize 1
+            listeEtterVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
+                sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr
+                sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.VURDERES
+            }
+        }
 
-        listeResultatEtterVirksomhetVurderes.fold(
-            success = { response ->
-                response.data shouldHaveAtLeastSize 1
-                response.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                    sykefraversstatistikkVirksomhetDto.orgnr shouldBe orgnr
-                    sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.VURDERES
-                }
-            }, failure = {
-                fail(it.message)
-            })
     }
 
 
@@ -271,4 +258,14 @@ class IASakApiTest {
 
     private fun IASakDto.nyHendelse(hendelsestype: SaksHendelsestype, token: String = mockOAuth2Server.lydiaApiTokenX) =
         nyHendelsePåSak(this, hendelsestype, token)
+
+    private fun hentSykefraværsstatistikk() = lydiaApiContainer.performGet("${SYKEFRAVERSSTATISTIKK_PATH}/")
+        .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+        .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(
+            localDateTimeTypeAdapter
+        ).third.fold(
+                success = { respons -> respons },
+                failure = {
+                    fail(it.message)
+            })
 }
