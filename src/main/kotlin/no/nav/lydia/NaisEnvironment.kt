@@ -1,5 +1,6 @@
 package no.nav.lydia
 
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
@@ -34,10 +35,16 @@ class AzureConfig(
     val audience: String = getEnvVar("AZURE_APP_CLIENT_ID"),
     val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
     val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
-    val superbrukerGroupId: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),
-    val saksbehandlerGroupId: String = getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID"),
-    val lesetilgangGroupId: String = getEnvVar("FIA_LESETILGANG_GROUP_ID")
-)
+) {
+    companion object {
+        enum class Tilgang(val gruppeId : String){
+            LESE(getEnvVar("FIA_LESETILGANG_GROUP_ID")),
+            SAKSBEHANDLER(getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID")),
+            SUPERBRUKER(getEnvVar("FIA_LESETILGANG_GROUP_ID"))
+        }
+
+    }
+}
 
 class Kafka(
     val brokers: String = getEnvVar("KAFKA_BROKERS"),

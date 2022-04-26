@@ -8,6 +8,9 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.lydia.AzureConfig
+import no.nav.lydia.AzureConfig.Companion.Tilgang.LESE
+import no.nav.lydia.AzureConfig.Companion.Tilgang.SUPERBRUKER
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
@@ -19,14 +22,14 @@ val SAK_HENDELSE_SUB_PATH = "/hendelse"
 val SAK_HENDELSER_SUB_PATH = "/hendelser"
 
 fun Route.IASak_Rådgiver(
-    iaSakService: IASakService
+    iaSakService: IASakService,
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.UgyldigOrgnummer.tilHTTPStatuskode())
         Rådgiver.from(call).fold(
             ifLeft = { rådgiverError -> call.respond(rådgiverError.tilHTTPStatuskode()) },
             ifRight = { rådgiver ->
-                if (rådgiver.harGruppe("gruppe")) { //TODO Fixme
+                if (rådgiver.harTilgang(SUPERBRUKER)) {
                     when (val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)) {
                         is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
                         is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())

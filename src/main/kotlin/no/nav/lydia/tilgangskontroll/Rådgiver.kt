@@ -5,6 +5,8 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import no.nav.lydia.AzureConfig
+import no.nav.lydia.AzureConfig.Companion.Tilgang
 import no.nav.lydia.Security
 
 class Rådgiver(val navIdent: String, private val grupper: List<String>) {
@@ -20,7 +22,7 @@ class Rådgiver(val navIdent: String, private val grupper: List<String>) {
         }
     }
 
-    fun harGruppe(gruppe: String) = grupper.contains(gruppe)
+    fun harTilgang(tilgang : Tilgang) = grupper.contains(tilgang.gruppeId)
 }
 
 sealed class RådgiverError {
