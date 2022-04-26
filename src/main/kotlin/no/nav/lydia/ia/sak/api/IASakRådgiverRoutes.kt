@@ -22,21 +22,20 @@ fun Route.IASak_Rådgiver(
     iaSakService: IASakService
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
-        call.parameters["orgnummer"]?.let { orgnummer ->
-            Rådgiver.from(call).fold(
-                ifLeft = { rådgiverError -> call.respond(rådgiverError.tilHTTPStatuskode()) },
-                ifRight = { rådgiver ->
-                    if (rådgiver.harGruppe("gruppe")) { //TODO Fixme
-                        when (val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)) {
-                            is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
-                            is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
-                        }
-                    } else {
-                        call.respond(HttpStatusCode.Forbidden, "Innlogget bruker har ikke lov til dette")
+        val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.UgyldigOrgnummer.tilHTTPStatuskode())
+        Rådgiver.from(call).fold(
+            ifLeft = { rådgiverError -> call.respond(rådgiverError.tilHTTPStatuskode()) },
+            ifRight = { rådgiver ->
+                if (rådgiver.harGruppe("gruppe")) { //TODO Fixme
+                    when (val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)) {
+                        is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
+                        is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
                     }
+                } else {
+                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker har ikke lov til dette")
                 }
-            )
-        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
+            }
+        )
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
@@ -67,11 +66,13 @@ sealed class IASakError {
     object PrøvdeÅLeggeTilHendelsePåTomSak : IASakError()
     object PrøvdeÅLeggeTilHendelsePåGammelSak : IASakError()
     object FikkIkkeOppdatertSak : IASakError()
+    object UgyldigOrgnummer : IASakError()
 
     fun tilHTTPStatuskode() =
         when (this) {
             PrøvdeÅLeggeTilHendelsePåTomSak -> HttpStatusCode.NotAcceptable
             PrøvdeÅLeggeTilHendelsePåGammelSak -> HttpStatusCode.Conflict
+            UgyldigOrgnummer -> HttpStatusCode.BadRequest
             FikkIkkeOppdatertSak -> HttpStatusCode.InternalServerError
         }
 }
