@@ -8,9 +8,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.lydia.AzureConfig
-import no.nav.lydia.AzureConfig.Companion.Tilgang.LESE
-import no.nav.lydia.AzureConfig.Companion.Tilgang.SUPERBRUKER
+import no.nav.lydia.FiaRoller
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
@@ -23,13 +21,14 @@ val SAK_HENDELSER_SUB_PATH = "/hendelser"
 
 fun Route.IASak_Rådgiver(
     iaSakService: IASakService,
+    fiaRoller: FiaRoller
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.UgyldigOrgnummer.tilHTTPStatuskode())
-        Rådgiver.from(call).fold(
+        Rådgiver.from(call = call, fiaRoller = fiaRoller).fold(
             ifLeft = { rådgiverError -> call.respond(rådgiverError.tilHTTPStatuskode()) },
             ifRight = { rådgiver ->
-                if (rådgiver.harTilgang(SUPERBRUKER)) {
+                if (rådgiver.erSuperbruker()) {
                     when (val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)) {
                         is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
                         is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
@@ -63,7 +62,6 @@ fun Route.IASak_Rådgiver(
         } ?: call.respond(status = HttpStatusCode.BadRequest, "Fant ikke NAVident for innlogget bruker")
     }
 }
-
 
 sealed class IASakError {
     object PrøvdeÅLeggeTilHendelsePåTomSak : IASakError()
