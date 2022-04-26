@@ -128,7 +128,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                 iaSakService = IASakService(
                     iaSakRepository = IASakRepository(dataSource = dataSource),
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
-                )
+                ), fiaRoller = naisEnvironment.security.fiaRoller
             )
             virksomhet(virksomhetRepository = virksomhetRepository)
         }

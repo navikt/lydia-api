@@ -13,6 +13,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SAKSBEHANDLER_1_X12345
 import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SAKSBEHANDLER_2_Y54321
+import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SUPERBRUKER_S54321
 import no.nav.lydia.helper.HttpMock
 import no.nav.lydia.helper.IntegrationsHelper
 import no.nav.lydia.helper.TestContainerHelper
@@ -102,7 +103,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
-        val orgnr = OSLO.orgnr
+        val orgnr = BERGEN.orgnr
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
 
         hentSykefraværsstatistikk().also { listeFørVirksomhetVurderes ->
@@ -143,7 +144,7 @@ class IASakApiTest {
         iaSaker.forAtLeastOne {
             it.orgnr shouldBe BERGEN.orgnr
             it.status shouldBe IAProsessStatus.VURDERES
-            it.opprettetAv shouldBe NAV_IDENT_SAKSBEHANDLER_1_X12345
+            it.opprettetAv shouldBe NAV_IDENT_SUPERBRUKER_S54321
             it.saksnummer shouldBe sak.saksnummer
         }
 
@@ -188,7 +189,7 @@ class IASakApiTest {
             val sakEtterTattEierskap = sak.nyHendelse(TA_EIERSKAP_I_SAK)
             sakEtterTattEierskap.eidAv shouldBe NAV_IDENT_SAKSBEHANDLER_1_X12345
 
-            sakEtterTattEierskap.nyHendelse(TA_EIERSKAP_I_SAK, mockOAuth2Server.superbrukerToken).also {
+            sakEtterTattEierskap.nyHendelse(TA_EIERSKAP_I_SAK, mockOAuth2Server.saksbehandlerToken2).also {
                 it.eidAv shouldBe NAV_IDENT_SAKSBEHANDLER_2_Y54321
             }.also {
                 hentHendelserPåSak(it.saksnummer).map { hendelse -> hendelse.hendelsestype }.shouldContainExactly(
@@ -251,7 +252,7 @@ class IASakApiTest {
 
     private fun opprettSakForVirksomhet(
         orgnummer: String,
-        token: String = mockOAuth2Server.saksbehandlerToken1,
+        token: String = mockOAuth2Server.superbrukerToken,
     ): IASakDto = opprettSakForVirksomhetRespons(orgnummer, token).third.fold(
             success = { respons -> respons },
             failure = { fail(it.message )}

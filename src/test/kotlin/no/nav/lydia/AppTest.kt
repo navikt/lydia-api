@@ -29,11 +29,12 @@ class AppTest {
                 AzureConfig(
                     audience = "lydia-api",
                     jwksUri = URL("http://localhost:8100/default/jwks"),
-                    issuer = "http://localhost:8100/default",
+                    issuer = "http://localhost:8100/default"
+                ), fiaRoller = FiaRoller(
                     superbrukerGroupId = "123",
                     saksbehandlerGroupId = "456",
                     lesetilgangGroupId = "789"
-        )
+                )
             ), kafka = Kafka(
                 brokers = "",
                 truststoreLocation = "",
@@ -43,7 +44,8 @@ class AppTest {
                 consumerLoopDelay = 200L
             ), integrasjoner = Integrasjoner(
                 ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
-                brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned")
+                brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned"
+            )
         )
 
         @AfterClass

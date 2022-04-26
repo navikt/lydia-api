@@ -7,6 +7,7 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
 import no.nav.lydia.AzureConfig
 import no.nav.lydia.Database
+import no.nav.lydia.FiaRoller
 import no.nav.lydia.Integrasjoner
 import no.nav.lydia.Kafka
 import no.nav.lydia.NaisEnvironment
@@ -44,6 +45,7 @@ class BrregDownloaderTest {
                 audience = "lydia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
                 issuer = "http://localhost:8100/default",
+            ), fiaRoller = FiaRoller(
                 superbrukerGroupId = "123",
                 saksbehandlerGroupId = "456",
                 lesetilgangGroupId = "789"
@@ -57,7 +59,10 @@ class BrregDownloaderTest {
             consumerLoopDelay = 200L
         ), integrasjoner = Integrasjoner(
             ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
-            brregUnderEnhetUrl = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData)
+            brregUnderEnhetUrl = IntegrationsHelper.mockKallMotBrregUnderhenter(
+                httpMock = httpMock,
+                testData = testData
+            )
         )
     )
 

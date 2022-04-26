@@ -5,6 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.lydia.AzureConfig
 import no.nav.lydia.Database
+import no.nav.lydia.FiaRoller
 import no.nav.lydia.Integrasjoner
 import no.nav.lydia.Kafka
 import no.nav.lydia.NaisEnvironment
@@ -54,7 +55,8 @@ class NæringsDownloaderTest {
             AzureConfig(
                 audience = "lydia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
-                issuer = "http://localhost:8100/default",
+                issuer = "http://localhost:8100/default"
+            ), fiaRoller = FiaRoller(
                 superbrukerGroupId = "123",
                 saksbehandlerGroupId = "456",
                 lesetilgangGroupId = "789"

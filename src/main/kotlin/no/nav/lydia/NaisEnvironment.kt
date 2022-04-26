@@ -1,6 +1,5 @@
 package no.nav.lydia
 
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
@@ -23,7 +22,8 @@ class Database(
 )
 
 class Security(
-    val azureConfig: AzureConfig = AzureConfig()
+    val azureConfig: AzureConfig = AzureConfig(),
+    val fiaRoller: FiaRoller = FiaRoller()
 ) {
     companion object {
         const val NAV_IDENT_CLAIM = "NAVident"
@@ -34,17 +34,14 @@ class Security(
 class AzureConfig(
     val audience: String = getEnvVar("AZURE_APP_CLIENT_ID"),
     val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
-    val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
-) {
-    companion object {
-        enum class Tilgang(val gruppeId : String){
-            LESE(getEnvVar("FIA_LESETILGANG_GROUP_ID")),
-            SAKSBEHANDLER(getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID")),
-            SUPERBRUKER(getEnvVar("FIA_LESETILGANG_GROUP_ID"))
-        }
+    val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
+)
 
-    }
-}
+class FiaRoller(
+    val superbrukerGroupId: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),
+    val saksbehandlerGroupId: String = getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID"),
+    val lesetilgangGroupId: String = getEnvVar("FIA_LESETILGANG_GROUP_ID")
+)
 
 class Kafka(
     val brokers: String = getEnvVar("KAFKA_BROKERS"),
