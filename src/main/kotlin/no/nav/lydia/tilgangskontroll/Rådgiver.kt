@@ -1,6 +1,8 @@
 package no.nav.lydia.tilgangskontroll
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
 import io.ktor.http.*
 import io.ktor.server.application.*
 import no.nav.lydia.FiaRoller
@@ -15,6 +17,15 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
             val grupper = call.azureADGrupper() ?: return Either.Left(RådgiverError.FantIngenADGrupper)
             return Either.Right(Rådgiver(navIdent = navIdent, fiaRoller = fiaRoller, rådgiversGrupper = grupper))
         }
+
+
+        fun <T> somSuperbruker(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
+            somRådgiver(call, fiaRoller, block = { rådgiver ->
+                if (rådgiver.erSuperbruker()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
+            })
+
+        private fun <T> somRådgiver(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
+            from(call = call, fiaRoller = fiaRoller).flatMap(block)
     }
 
     fun erSuperbruker() = tilgang.harSuperbrukerTilgang()
@@ -29,6 +40,7 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
 }
 
 object RådgiverError {
+    val IkkeAutorisert = Feil("Ikke autorisert", HttpStatusCode.Forbidden)
     val FantIkkeNavIdent = Feil("Fant ikke NAV-ident på tokenet", HttpStatusCode.Forbidden)
     val FantIngenADGrupper = Feil("Fant ingen AD-grupper på tokenet", HttpStatusCode.Forbidden)
 }
