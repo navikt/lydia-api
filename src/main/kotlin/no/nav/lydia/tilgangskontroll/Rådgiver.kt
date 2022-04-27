@@ -24,6 +24,11 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
                 if (rådgiver.erSuperbruker()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
+        fun <T> somBrukerMedSaksbehandlertilgang(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
+            somRådgiver(call, fiaRoller, block = { rådgiver ->
+                if (rådgiver.erSaksbehandler()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
+            })
+
         private fun <T> somRådgiver(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
             from(call = call, fiaRoller = fiaRoller).flatMap(block)
     }

@@ -135,6 +135,15 @@ class IASakApiTest {
         opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.superbrukerToken).second.statusCode shouldBe 201
     }
 
+    @Test
+    fun `en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
+        val orgnummer = OSLO.orgnr
+        opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also {
+            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerToken).second.statusCode shouldBe 403
+            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 201
+        }
+    }
+
 
     @Test
     fun `skal kunne spore endringene som har skjedd på en sak`() {
@@ -269,23 +278,31 @@ class IASakApiTest {
                 fail(it.message)
             })
 
+    private fun nyHendelsePåSakMedRespons(
+        sak: IASakDto,
+        hendelsestype: SaksHendelsestype,
+        token: String = mockOAuth2Server.saksbehandlerToken1
+    ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+        .authentication().bearer(token)
+        .jsonBody(
+            IASakshendelseDto(
+                orgnummer = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                hendelsesType = hendelsestype,
+                endretAvHendelseId = sak.endretAvHendelseId
+            ),
+            localDateTimeTypeAdapter
+        )
+        .responseObject<IASakDto>(localDateTimeTypeAdapter)
+
+
     private fun nyHendelsePåSak(
         sak: IASakDto,
         hendelsestype: SaksHendelsestype,
         token: String = mockOAuth2Server.saksbehandlerToken1
     ) =
-        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
-            .authentication().bearer(token)
-            .jsonBody(
-                IASakshendelseDto(
-                    orgnummer = sak.orgnr,
-                    saksnummer = sak.saksnummer,
-                    hendelsesType = hendelsestype,
-                    endretAvHendelseId = sak.endretAvHendelseId
-                ),
-                localDateTimeTypeAdapter
-            )
-            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
+        nyHendelsePåSakMedRespons(sak, hendelsestype, token)
+            .third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
 

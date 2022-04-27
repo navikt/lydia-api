@@ -3,16 +3,14 @@ package no.nav.lydia.ia.sak.api
 import arrow.core.Either
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
+import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandlertilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
@@ -49,12 +47,14 @@ fun Route.IASak_Rådgiver(
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
-        call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
-            when (val sakEither = iaSakService.behandleHendelse(hendelseDto, navIdent)) {
-                is Either.Left -> call.respond(sakEither.value.httpStatusCode, sakEither.value.feilmelding)
-                is Either.Right -> call.respond(sakEither.value.toDto())
+        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+            iaSakService.behandleHendelse(hendelseDto, navIdent = rådgiver.navIdent)
+        }.also {
+            when (it) {
+                is Either.Left -> call.respond(it.value.httpStatusCode, it.value.feilmelding)
+                is Either.Right -> call.respond(HttpStatusCode.Created, it.value.toDto())
             }
-        } ?: call.respond(status = HttpStatusCode.BadRequest, "Fant ikke NAVident for innlogget bruker")
+        }
     }
 }
 
