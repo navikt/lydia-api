@@ -45,7 +45,6 @@ spec:
       allowAllUsers: false
       claims:
         groups:
-          - id: {{azureAdGroup}}
           - id: {{fiaSuperbrukerGroup}}
           - id: {{fiaSaksbehandlerGroup}}
           - id: {{fiaLesetilgangGroup}}
