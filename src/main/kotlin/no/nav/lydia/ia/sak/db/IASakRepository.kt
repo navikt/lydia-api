@@ -77,7 +77,7 @@ class IASakRepository(val dataSource: DataSource) {
                         "endret_av_hendelse" to iaSak.endretAvHendelseId
                     )
                 ).map(this::mapRowToIASak).asSingle
-            ).rightIfNotNull { IASakError.FikkIkkeOppdatertSak }
+            ).rightIfNotNull { IASakError.`fikk ikke oppdatert sak` }
         }
 
     private fun mapRowToIASak(row: Row): IASak {

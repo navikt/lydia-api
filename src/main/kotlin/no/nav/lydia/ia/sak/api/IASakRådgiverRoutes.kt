@@ -1,8 +1,6 @@
 package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
-import arrow.core.flatMap
-import arrow.core.left
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -15,7 +13,7 @@ import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
-import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "/hendelse"
@@ -26,14 +24,14 @@ fun Route.IASak_Rådgiver(
     fiaRoller: FiaRoller
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.UgyldigOrgnummer.httpStatusCode)
-        val resultatEither = Rådgiver.from(call = call, fiaRoller = fiaRoller).flatMap { rådgiver: Rådgiver ->
-            if (rådgiver.erSuperbruker()) iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)
-            else IASakError.IkkeAutorisert.left()
-        }
-        when (resultatEither) {
-            is Either.Left -> call.respond(resultatEither.value.httpStatusCode)
-            is Either.Right -> call.respond(resultatEither.value.toDto())
+        val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        somSuperbruker(call = call, fiaRoller = fiaRoller) { superbruker ->
+            iaSakService.opprettSakOgMerkSomVurdert(orgnummer, superbruker.navIdent)
+        }.also {
+            when (it) {
+                is Either.Left -> call.respond(it.value.httpStatusCode)
+                is Either.Right -> call.respond(HttpStatusCode.Created, it.value.toDto())
+            }
         }
     }
 
@@ -63,9 +61,10 @@ fun Route.IASak_Rådgiver(
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode)
 
 object IASakError{
-    val IkkeAutorisert = Feil("Feil", HttpStatusCode.Forbidden)
-    val PrøvdeÅLeggeTilHendelsePåTomSak = Feil("Feil", HttpStatusCode.Forbidden)
-    val PrøvdeÅLeggeTilHendelsePåGammelSak = Feil("Feil", HttpStatusCode.Forbidden)
-    val FikkIkkeOppdatertSak = Feil("Feil", HttpStatusCode.Forbidden)
-    val UgyldigOrgnummer = Feil("Feil", HttpStatusCode.Forbidden)
+    val `prøvde å legge til en hendelse på en tom sak` =
+        Feil("Prøvde å legge til en hendelse på en tom sak", HttpStatusCode.Forbidden)
+    val `prøvde å legge til en hendelse på en gammel sak` = Feil(
+        "Prøvde å legge til hendelse på gammel sak", HttpStatusCode.Forbidden)
+    val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdater sak", HttpStatusCode.Forbidden)
+    val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.Forbidden)
 }

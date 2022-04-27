@@ -58,8 +58,8 @@ class IASakService(
     fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): Either<Feil, IASak> {
         val sakshendelse = IASakshendelse.fromDto(hendelseDto, navIdent)
         val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
-        if (hendelser.isEmpty()) return Either.Left(IASakError.PrøvdeÅLeggeTilHendelsePåTomSak)
-        if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.PrøvdeÅLeggeTilHendelsePåGammelSak)
+        if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
+        if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
 
         val sak = IASak.fraHendelser(hendelser).behandleHendelse(sakshendelse)
         iaSakshendelseRepository.lagreHendelse(sakshendelse)
