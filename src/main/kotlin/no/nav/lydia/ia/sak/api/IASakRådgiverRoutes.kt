@@ -1,6 +1,8 @@
 package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -24,20 +26,15 @@ fun Route.IASak_Rådgiver(
     fiaRoller: FiaRoller
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.UgyldigOrgnummer.tilHTTPStatuskode())
-        Rådgiver.from(call = call, fiaRoller = fiaRoller).fold(
-            ifLeft = { rådgiverError -> call.respond(rådgiverError.tilHTTPStatuskode()) },
-            ifRight = { rådgiver ->
-                if (rådgiver.erSuperbruker()) {
-                    when (val either = iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)) {
-                        is Either.Left -> call.respond(either.value.tilHTTPStatuskode())
-                        is Either.Right -> call.respond(HttpStatusCode.Created, either.value.toDto())
-                    }
-                } else {
-                    call.respond(HttpStatusCode.Forbidden, "Innlogget bruker har ikke lov til dette")
-                }
-            }
-        )
+        val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.UgyldigOrgnummer.httpStatusCode)
+        val resultatEither = Rådgiver.from(call = call, fiaRoller = fiaRoller).flatMap { rådgiver: Rådgiver ->
+            if (rådgiver.erSuperbruker()) iaSakService.opprettSakOgMerkSomVurdert(orgnummer, rådgiver.navIdent)
+            else IASakError.IkkeAutorisert.left()
+        }
+        when (resultatEither) {
+            is Either.Left -> call.respond(resultatEither.value.httpStatusCode)
+            is Either.Right -> call.respond(resultatEither.value.toDto())
+        }
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
@@ -56,24 +53,19 @@ fun Route.IASak_Rådgiver(
         val hendelseDto = call.receive<IASakshendelseDto>()
         call.principal<JWTPrincipal>()?.payload?.claims?.get(NAV_IDENT_CLAIM)?.asString()?.let { navIdent ->
             when (val sakEither = iaSakService.behandleHendelse(hendelseDto, navIdent)) {
-                is Either.Left -> call.respond(sakEither.value.tilHTTPStatuskode())
+                is Either.Left -> call.respond(sakEither.value.httpStatusCode, sakEither.value.feilmelding)
                 is Either.Right -> call.respond(sakEither.value.toDto())
             }
         } ?: call.respond(status = HttpStatusCode.BadRequest, "Fant ikke NAVident for innlogget bruker")
     }
 }
 
-sealed class IASakError {
-    object PrøvdeÅLeggeTilHendelsePåTomSak : IASakError()
-    object PrøvdeÅLeggeTilHendelsePåGammelSak : IASakError()
-    object FikkIkkeOppdatertSak : IASakError()
-    object UgyldigOrgnummer : IASakError()
+class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode)
 
-    fun tilHTTPStatuskode() =
-        when (this) {
-            PrøvdeÅLeggeTilHendelsePåTomSak -> HttpStatusCode.NotAcceptable
-            PrøvdeÅLeggeTilHendelsePåGammelSak -> HttpStatusCode.Conflict
-            UgyldigOrgnummer -> HttpStatusCode.BadRequest
-            FikkIkkeOppdatertSak -> HttpStatusCode.InternalServerError
-        }
+object IASakError{
+    val IkkeAutorisert = Feil("Feil", HttpStatusCode.Forbidden)
+    val PrøvdeÅLeggeTilHendelsePåTomSak = Feil("Feil", HttpStatusCode.Forbidden)
+    val PrøvdeÅLeggeTilHendelsePåGammelSak = Feil("Feil", HttpStatusCode.Forbidden)
+    val FikkIkkeOppdatertSak = Feil("Feil", HttpStatusCode.Forbidden)
+    val UgyldigOrgnummer = Feil("Feil", HttpStatusCode.Forbidden)
 }
