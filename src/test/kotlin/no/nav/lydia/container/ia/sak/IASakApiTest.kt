@@ -144,6 +144,21 @@ class IASakApiTest {
         }
     }
 
+    @Test
+    fun `en sak skal ikke kunne oppdateres av andre enn de som eier den`() {
+        val orgnummer = OSLO.orgnr
+        opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also { sak ->
+            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also { sakEtterTattEierskap ->
+                nyHendelsePåSakMedRespons(
+                    sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken2)
+                    .second.statusCode shouldBe 403
+                nyHendelsePåSakMedRespons(
+                    sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken1)
+                    .second.statusCode shouldBe 201
+            }
+        }
+    }
+
 
     @Test
     fun `skal kunne spore endringene som har skjedd på en sak`() {
@@ -157,11 +172,12 @@ class IASakApiTest {
             it.saksnummer shouldBe sak.saksnummer
         }
 
-        nyHendelsePåSak(sak, VIRKSOMHET_ER_IKKE_AKTUELL).also {
+        nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also {
             it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
-            it.status shouldBe IAProsessStatus.IKKE_AKTUELL
+            it.status shouldBe IAProsessStatus.VURDERES
             it.opprettetAv shouldBe sak.opprettetAv
+            it.eidAv shouldBe NAV_IDENT_SAKSBEHANDLER_1_X12345
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
         }
     }

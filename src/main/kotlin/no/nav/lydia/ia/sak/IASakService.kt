@@ -62,6 +62,8 @@ class IASakService(
         if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
 
         val sak = IASak.fraHendelser(hendelser).behandleHendelse(sakshendelse)
+        if (sak.eidAv != navIdent) return Either.Left(IASakError.`kan ikke endre sak man ikke selv er eier av`)
+
         iaSakshendelseRepository.lagreHendelse(sakshendelse)
         return iaSakRepository.oppdaterSak(sak)
     }

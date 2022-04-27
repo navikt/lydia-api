@@ -61,6 +61,8 @@ fun Route.IASak_Rådgiver(
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode)
 
 object IASakError{
+    val `kan ikke endre sak man ikke selv er eier av` =
+        Feil("Kan ikke endre sak man ikke selv er eier av", HttpStatusCode.Forbidden)
     val `prøvde å legge til en hendelse på en tom sak` =
         Feil("Prøvde å legge til en hendelse på en tom sak", HttpStatusCode.Forbidden)
     val `prøvde å legge til en hendelse på en gammel sak` = Feil(
