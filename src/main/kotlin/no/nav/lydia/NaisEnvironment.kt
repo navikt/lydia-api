@@ -11,7 +11,19 @@ class NaisEnvironment(
     val security: Security = Security(),
     val kafka: Kafka = Kafka(),
     val integrasjoner: Integrasjoner = Integrasjoner()
-)
+) {
+    companion object {
+        enum class Environment {
+            PROD_GCP, DEV_GCP, LOKALT
+        }
+        fun miljø() =  when (getEnvVar("NAIS_CLUSTER_NAME")) {
+            "prod-gcp" -> Environment.PROD_GCP
+            "dev-gcp" -> Environment.DEV_GCP
+            "lokal" -> Environment.LOKALT
+            else -> throw IllegalStateException("Ukjent miljø")
+        }
+    }
+}
 
 class Database(
     val host: String = getEnvVar("NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST"),

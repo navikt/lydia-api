@@ -5,6 +5,9 @@ import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import no.nav.lydia.AuditType
+import no.nav.lydia.Tilgang
+import no.nav.lydia.auditLog
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
@@ -30,6 +33,7 @@ fun Route.sykefraversstatistikk(
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {
         call.parameters["orgnummer"]?.let { orgnummer ->
+            auditLog(orgnr = orgnummer, AuditType.access, Tilgang.Ja) // TODO: TILGANGSKONTROLL
             call.respond(sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer).toDto())
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }
