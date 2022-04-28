@@ -6,6 +6,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.*
 import javax.sql.DataSource
@@ -50,7 +51,7 @@ class IASakRepository(val dataSource: DataSource) {
             )!!
         }
 
-    fun oppdaterSak(iaSak: IASak) : Either<IASakError, IASak> =
+    fun oppdaterSak(iaSak: IASak) : Either<Feil, IASak> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -76,7 +77,7 @@ class IASakRepository(val dataSource: DataSource) {
                         "endret_av_hendelse" to iaSak.endretAvHendelseId
                     )
                 ).map(this::mapRowToIASak).asSingle
-            ).rightIfNotNull { IASakError.FikkIkkeOppdatertSak }
+            ).rightIfNotNull { IASakError.`fikk ikke oppdatert sak` }
         }
 
     private fun mapRowToIASak(row: Row): IASak {

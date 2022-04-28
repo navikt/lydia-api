@@ -11,16 +11,27 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.lydia.helper.*
-import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_X12345
-import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_Y54321
+import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SAKSBEHANDLER_1_X12345
+import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SAKSBEHANDLER_2_Y54321
+import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SUPERBRUKER_S54321
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.localDateTimeTypeAdapter
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSER_SUB_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
@@ -92,7 +103,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
-        val orgnr = OSLO.orgnr
+        val orgnr = BERGEN.orgnr
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
 
         hentSykefraværsstatistikk().also { listeFørVirksomhetVurderes ->
@@ -116,6 +127,38 @@ class IASakApiTest {
 
     }
 
+    @Test
+    fun `en virksomhet skal bare kunne vurderes for oppfølging av en superbruker`() {
+        val orgnr = OSLO.orgnr
+        opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.lesebrukerToken).second.statusCode shouldBe 403
+        opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 403
+        opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.superbrukerToken).second.statusCode shouldBe 201
+    }
+
+    @Test
+    fun `en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
+        val orgnummer = OSLO.orgnr
+        opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also {
+            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerToken).second.statusCode shouldBe 403
+            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 201
+        }
+    }
+
+    @Test
+    fun `en sak skal ikke kunne oppdateres av andre enn de som eier den`() {
+        val orgnummer = OSLO.orgnr
+        opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also { sak ->
+            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also { sakEtterTattEierskap ->
+                nyHendelsePåSakMedRespons(
+                    sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken2)
+                    .second.statusCode shouldBe 403
+                nyHendelsePåSakMedRespons(
+                    sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken1)
+                    .second.statusCode shouldBe 201
+            }
+        }
+    }
+
 
     @Test
     fun `skal kunne spore endringene som har skjedd på en sak`() {
@@ -125,15 +168,16 @@ class IASakApiTest {
         iaSaker.forAtLeastOne {
             it.orgnr shouldBe BERGEN.orgnr
             it.status shouldBe IAProsessStatus.VURDERES
-            it.opprettetAv shouldBe NAV_IDENT_X12345
+            it.opprettetAv shouldBe NAV_IDENT_SUPERBRUKER_S54321
             it.saksnummer shouldBe sak.saksnummer
         }
 
-        nyHendelsePåSak(sak, VIRKSOMHET_ER_IKKE_AKTUELL).also {
+        nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also {
             it.orgnr shouldBe BERGEN.orgnr
             it.saksnummer shouldBe sak.saksnummer
-            it.status shouldBe IAProsessStatus.IKKE_AKTUELL
+            it.status shouldBe IAProsessStatus.VURDERES
             it.opprettetAv shouldBe sak.opprettetAv
+            it.eidAv shouldBe NAV_IDENT_SAKSBEHANDLER_1_X12345
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
         }
     }
@@ -168,10 +212,10 @@ class IASakApiTest {
             sak.eidAv shouldBe null
 
             val sakEtterTattEierskap = sak.nyHendelse(TA_EIERSKAP_I_SAK)
-            sakEtterTattEierskap.eidAv shouldBe NAV_IDENT_X12345
+            sakEtterTattEierskap.eidAv shouldBe NAV_IDENT_SAKSBEHANDLER_1_X12345
 
-            sakEtterTattEierskap.nyHendelse(TA_EIERSKAP_I_SAK, mockOAuth2Server.lydiaApiTokenY).also {
-                it.eidAv shouldBe NAV_IDENT_Y54321
+            sakEtterTattEierskap.nyHendelse(TA_EIERSKAP_I_SAK, mockOAuth2Server.saksbehandlerToken2).also {
+                it.eidAv shouldBe NAV_IDENT_SAKSBEHANDLER_2_Y54321
             }.also {
                 hentHendelserPåSak(it.saksnummer).map { hendelse -> hendelse.hendelsestype }.shouldContainExactly(
                     OPPRETT_SAK_FOR_VIRKSOMHET,
@@ -206,30 +250,40 @@ class IASakApiTest {
         }
     }
 
-    private fun hentIASaker(orgnummer: String) =
+    private fun hentIASaker(orgnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
-            .responseObject<List<IASakDto>>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
-                fail(it.message)
-            })
+            .authentication().bearer(token = token)
+            .responseObject<List<IASakDto>>(localDateTimeTypeAdapter).third.fold(
+                success = { respons -> respons },
+                failure = {
+                    fail(it.message)
+                })
 
-    private fun hentHendelserPåSak(saksnummer: String) =
+    private fun hentHendelserPåSak(saksnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(token = token)
             .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter).third.fold(
                 success = { respons -> respons },
                 failure = {
                     fail(it.message)
                 })
 
-    private fun opprettSakForVirksomhet(orgnummer: String) =
-        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
-            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
-                fail(it.message)
-            })
+    private fun opprettSakForVirksomhetRespons(
+        orgnummer: String,
+        token : String
+    ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
+            .authentication().bearer(token = token)
+            .responseObject<IASakDto>(localDateTimeTypeAdapter)
 
-    private fun nyHendelse(sakshendelse: IASakshendelseDto, token: String = mockOAuth2Server.lydiaApiTokenX) =
+    private fun opprettSakForVirksomhet(
+        orgnummer: String,
+        token: String = mockOAuth2Server.superbrukerToken,
+    ): IASakDto = opprettSakForVirksomhetRespons(orgnummer, token).third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message )}
+        )
+
+    private fun nyHendelse(sakshendelse: IASakshendelseDto, token: String = mockOAuth2Server.saksbehandlerToken1) =
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
             .authentication().bearer(token)
             .jsonBody(
@@ -240,32 +294,48 @@ class IASakApiTest {
                 fail(it.message)
             })
 
-    private fun nyHendelsePåSak(sak: IASakDto, hendelsestype: SaksHendelsestype, token: String = mockOAuth2Server.lydiaApiTokenX) =
-        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
-            .authentication().bearer(token)
-            .jsonBody(
-                IASakshendelseDto(
-                    orgnummer = sak.orgnr,
-                    saksnummer = sak.saksnummer,
-                    hendelsesType = hendelsestype,
-                    endretAvHendelseId = sak.endretAvHendelseId
-                ),
-                localDateTimeTypeAdapter
-            )
-            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = {
+    private fun nyHendelsePåSakMedRespons(
+        sak: IASakDto,
+        hendelsestype: SaksHendelsestype,
+        token: String = mockOAuth2Server.saksbehandlerToken1
+    ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+        .authentication().bearer(token)
+        .jsonBody(
+            IASakshendelseDto(
+                orgnummer = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                hendelsesType = hendelsestype,
+                endretAvHendelseId = sak.endretAvHendelseId
+            ),
+            localDateTimeTypeAdapter
+        )
+        .responseObject<IASakDto>(localDateTimeTypeAdapter)
+
+
+    private fun nyHendelsePåSak(
+        sak: IASakDto,
+        hendelsestype: SaksHendelsestype,
+        token: String = mockOAuth2Server.saksbehandlerToken1
+    ) =
+        nyHendelsePåSakMedRespons(sak, hendelsestype, token)
+            .third.fold(success = { respons -> respons }, failure = {
                 fail(it.message)
             })
 
-    private fun IASakDto.nyHendelse(hendelsestype: SaksHendelsestype, token: String = mockOAuth2Server.lydiaApiTokenX) =
+    private fun IASakDto.nyHendelse(
+        hendelsestype: SaksHendelsestype,
+        token: String = mockOAuth2Server.saksbehandlerToken1
+    ) =
         nyHendelsePåSak(this, hendelsestype, token)
 
-    private fun hentSykefraværsstatistikk() = lydiaApiContainer.performGet("${SYKEFRAVERSSTATISTIKK_PATH}/")
-        .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
-        .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(
-            localDateTimeTypeAdapter
-        ).third.fold(
+    private fun hentSykefraværsstatistikk(token: String = mockOAuth2Server.saksbehandlerToken1) =
+        lydiaApiContainer.performGet("${SYKEFRAVERSSTATISTIKK_PATH}/")
+            .authentication().bearer(token = token)
+            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(
+                localDateTimeTypeAdapter
+            ).third.fold(
                 success = { respons -> respons },
                 failure = {
                     fail(it.message)
-            })
+                })
 }

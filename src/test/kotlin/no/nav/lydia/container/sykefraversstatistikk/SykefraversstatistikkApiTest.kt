@@ -5,7 +5,12 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeOneOf
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveAtMostSize
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -14,22 +19,31 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
+import no.nav.lydia.helper.localDateTimeTypeAdapter
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.sykefraversstatistikk.api.*
+import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
+import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
+import no.nav.lydia.sykefraversstatistikk.api.ListResponse
+import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_FRA
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_TIL
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.FYLKER
@@ -83,7 +97,7 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
         val orgnr = BERGEN.orgnr
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 
         result.fold(
@@ -114,7 +128,7 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
             .responseObject<FilterverdierDto>(localDateTimeTypeAdapter)
 
         result.fold(
@@ -194,13 +208,13 @@ class SykefraversstatistikkApiTest {
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
-                .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+                .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
 
         val resultatUtenParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
-                .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+                .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
         resultatMedTommeParametre.get().data shouldContainAll resultatUtenParametre.get().data
@@ -272,7 +286,7 @@ class SykefraversstatistikkApiTest {
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
 
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.superbrukerToken)
             .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = { fail(it.message) })
 
         hentSykefravær(iaStatus = IAProsessStatus.VURDERES.name, success = { response ->
@@ -368,7 +382,7 @@ class SykefraversstatistikkApiTest {
                     "&$IA_STATUS=$iaStatus" +
                     "&$SIDE=$side"
         )
-            .authentication().bearer(mockOAuth2Server.lydiaApiTokenX)
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
             .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
 }

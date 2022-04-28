@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -14,7 +15,7 @@ class IASakService(
     private val iaSakshendelseRepository: IASakshendelseRepository
 ) {
 
-    fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<IASakError, IASak> {
+    fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
         val saksnummer = ULID.random()
         val nySakshendelse = iaSakshendelseRepository.lagreHendelse(IASakshendelse(
             id = saksnummer,
@@ -54,13 +55,15 @@ class IASakService(
         return iaSakRepository.oppdaterSak(sakEtterVurdering)
     }
 
-    fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): Either<IASakError, IASak> {
+    fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): Either<Feil, IASak> {
         val sakshendelse = IASakshendelse.fromDto(hendelseDto, navIdent)
         val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
-        if (hendelser.isEmpty()) return Either.Left(IASakError.PrøvdeÅLeggeTilHendelsePåTomSak)
-        if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.PrøvdeÅLeggeTilHendelsePåGammelSak)
+        if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
+        if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
 
         val sak = IASak.fraHendelser(hendelser).behandleHendelse(sakshendelse)
+        if (sak.eidAv != navIdent) return Either.Left(IASakError.`kan ikke endre sak man ikke selv er eier av`)
+
         iaSakshendelseRepository.lagreHendelse(sakshendelse)
         return iaSakRepository.oppdaterSak(sak)
     }
