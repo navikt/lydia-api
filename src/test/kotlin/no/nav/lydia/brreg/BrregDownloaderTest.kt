@@ -63,7 +63,8 @@ class BrregDownloaderTest {
                 httpMock = httpMock,
                 testData = testData
             )
-        )
+        ),
+        cluster = "lokal"
     )
 
     companion object {

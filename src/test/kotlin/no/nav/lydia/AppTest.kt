@@ -45,7 +45,8 @@ class AppTest {
             ), integrasjoner = Integrasjoner(
                 ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
                 brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned"
-            )
+            ),
+            cluster = "lokal"
         )
 
         @AfterClass

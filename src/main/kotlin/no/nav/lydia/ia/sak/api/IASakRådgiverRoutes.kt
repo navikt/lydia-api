@@ -35,18 +35,13 @@ fun Route.IASak_Rådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         call.parameters["orgnummer"]?.let { orgnummer ->
-            auditLog(orgnr = orgnummer, auditType = AuditType.access, tilgang = Tilgang.Ja) // TODO: TILGANGSKONTROLL
             call.respond(iaSakService.hentSaker(orgnummer).toDto())
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }
 
     get("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/{saksnummer}") {
         call.parameters["saksnummer"]?.let { saksnummer ->
-            val hendelser = iaSakService.hentHendelserForSak(saksnummer).toDto()
-            hendelser.map { it.orgnummer }.firstOrNull()?.let { orgnr ->
-                auditLog(orgnr = orgnr, auditType = AuditType.access, tilgang = Tilgang.Ja, sakId = saksnummer) // TODO: TILGANGSKONTROLL
-            }
-            call.respond(hendelser)
+            call.respond(iaSakService.hentHendelserForSak(saksnummer).toDto())
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i hendelsene til denne saken")
     }
 

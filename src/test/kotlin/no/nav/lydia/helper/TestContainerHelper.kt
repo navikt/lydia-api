@@ -38,7 +38,8 @@ class TestContainerHelper {
                     .plus(mapOf(
                         "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned",
                         "CONSUMER_LOOP_DELAY" to "10",
-                        "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json"
+                        "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json",
+                        "NAIS_CLUSTER_NAME" to "lokal",
                     ))))
             .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
                 start()

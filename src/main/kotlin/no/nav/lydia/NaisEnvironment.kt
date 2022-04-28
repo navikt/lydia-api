@@ -10,18 +10,22 @@ class NaisEnvironment(
     val database: Database = Database(),
     val security: Security = Security(),
     val kafka: Kafka = Kafka(),
-    val integrasjoner: Integrasjoner = Integrasjoner()
+    val integrasjoner: Integrasjoner = Integrasjoner(),
+    cluster: String = getEnvVar("NAIS_CLUSTER_NAME")
 ) {
     companion object {
         enum class Environment {
             PROD_GCP, DEV_GCP, LOKALT
         }
-        fun miljø() =  when (getEnvVar("NAIS_CLUSTER_NAME")) {
-            "prod-gcp" -> Environment.PROD_GCP
-            "dev-gcp" -> Environment.DEV_GCP
-            "lokal" -> Environment.LOKALT
-            else -> throw IllegalStateException("Ukjent miljø")
-        }
+    }
+
+    private val cluster = cluster
+    val miljø: Environment
+        get() = when (cluster) {
+        "prod-gcp" -> Environment.PROD_GCP
+        "dev-gcp" -> Environment.DEV_GCP
+        "lokal" -> Environment.LOKALT
+        else -> throw IllegalStateException("Ukjent miljø")
     }
 }
 
