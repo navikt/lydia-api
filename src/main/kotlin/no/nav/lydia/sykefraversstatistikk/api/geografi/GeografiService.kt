@@ -91,8 +91,8 @@ class GeografiService {
             .toMutableList()
         return fylkerMappetMedKommuner
             .apply {
-                add(FylkeOgKommuner(Fylke("Øst-Viken", "Ø30"), alleKommuner.filter { it.nummer in ØST_VIKEN_KOMMUNENR }))
-                add(FylkeOgKommuner(Fylke("Vest-Viken", "V30"), alleKommuner.filter { it.nummer in VEST_VIKEN_KOMMUNENR }))
+                add(FylkeOgKommuner(Fylke("Øst-Viken", "Ø30"), alleKommuner.filter { it.nummer in ØST_VIKEN_KOMMUNENR }.map { it.copy(nummer = "Ø${it.nummer}") }))
+                add(FylkeOgKommuner(Fylke("Vest-Viken", "V30"), alleKommuner.filter { it.nummer in VEST_VIKEN_KOMMUNENR }.map { it.copy(nummer = "V${it.nummer}") }))
             }
     }
 
