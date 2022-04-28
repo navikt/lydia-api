@@ -63,7 +63,6 @@ class GeografiService {
             "3019", // VESTBY
             "3018", // VÅLER
             "3021", // ÅS
-            "3054" // LUNNER
         )
 
         @OptIn(ExperimentalSerializationApi::class)
@@ -92,8 +91,8 @@ class GeografiService {
             .toMutableList()
         return fylkerMappetMedKommuner
             .apply {
-                add(FylkeOgKommuner(Fylke("Øst-Viken", "30"), alleKommuner.filter { it.nummer in ØST_VIKEN_KOMMUNENR }))
-                add(FylkeOgKommuner(Fylke("Vest-Viken", "30"), alleKommuner.filter { it.nummer in VEST_VIKEN_KOMMUNENR }))
+                add(FylkeOgKommuner(Fylke("Øst-Viken", "Ø30"), alleKommuner.filter { it.nummer in ØST_VIKEN_KOMMUNENR }))
+                add(FylkeOgKommuner(Fylke("Vest-Viken", "V30"), alleKommuner.filter { it.nummer in VEST_VIKEN_KOMMUNENR }))
             }
     }
 
