@@ -19,9 +19,7 @@ class NaisEnvironment(
         }
     }
 
-    private val cluster = cluster
-    val miljø: Environment
-        get() = when (cluster) {
+    val miljø = when (cluster) {
         "prod-gcp" -> Environment.PROD_GCP
         "dev-gcp" -> Environment.DEV_GCP
         "lokal" -> Environment.LOKALT
