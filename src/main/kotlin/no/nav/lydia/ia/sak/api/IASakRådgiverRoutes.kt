@@ -20,8 +20,8 @@ import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandl
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
-val SAK_HENDELSE_SUB_PATH = "/hendelse"
-val SAK_HENDELSER_SUB_PATH = "/hendelser"
+val SAK_HENDELSE_SUB_PATH = "hendelse"
+val SAK_HENDELSER_SUB_PATH = "hendelser"
 
 fun Route.IASak_Rådgiver(
     iaSakService: IASakService,
@@ -37,7 +37,7 @@ fun Route.IASak_Rådgiver(
                 call = call,
                 either = iaSakEither,
                 orgnummer = orgnummer,
-                auditType = AuditType.update,
+                auditType = AuditType.create,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.orNull()
             )
         }.also { iaSakEither ->

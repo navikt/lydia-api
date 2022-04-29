@@ -92,15 +92,14 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                         GROUPS_CLAIM to listOf(superbrukerGroupId)
                     )
                 ).serialize()
-                lesebrukerToken = issueToken(
-                    audience = audience,
-                    claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT_SUPERBRUKER_S54321,
-                        GROUPS_CLAIM to listOf(lesetilgangGroupId)
-                    )
-                ).serialize()
+                lesebrukerToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_L54321)
             }
     }
+
+    fun genererLesebrukerToken(navIdent: String) = issueToken(claims = mapOf(
+            NAV_IDENT_CLAIM to navIdent,
+            GROUPS_CLAIM to listOf(lesetilgangGroupId)
+        )).serialize()
 
     private fun issueToken(
         issuerId: String = issuerName,

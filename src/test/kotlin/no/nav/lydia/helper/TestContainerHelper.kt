@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
+import io.kotest.matchers.string.shouldContain
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
@@ -50,6 +51,6 @@ class TestContainerHelper {
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
 
         fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.saksbehandlerToken1)
+        infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
     }
-
 }
