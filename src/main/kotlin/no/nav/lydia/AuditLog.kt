@@ -1,11 +1,15 @@
 package no.nav.lydia
 
+import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.util.pipeline.*
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.PROD_GCP
+import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.tilgangskontroll.navIdent
 import org.slf4j.LoggerFactory
 
@@ -53,9 +57,45 @@ class AuditLog(val miljø: Environment) {
         }
     }
 
+    fun auditloggEither(
+        call: ApplicationCall,
+        either: Either<Feil, IASakDto>,
+        orgnummer: String,
+        saksnummer: String?,
+        auditType: AuditType
+    ) {
+        val tillat = when (either) {
+            is Either.Left -> either.value.httpStatusCode.tilTillat()
+            else -> Tillat.Ja
+        }
+
+        call.navIdent()?.let { navIdent ->
+            log(
+                navIdent = navIdent,
+                uri = call.request.uri,
+                method = call.request.httpMethod.value,
+                orgnummer = orgnummer,
+                auditType = auditType,
+                tillat = tillat,
+                saksnummer = saksnummer
+            )
+        }
+    }
+
+    fun HttpStatusCode.tilTillat() =
+        when (this) {
+            HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized -> Tillat.Nei
+            else -> Tillat.Ja
+        }
 }
 
-fun PipelineContext<Unit, ApplicationCall>.auditLog(auditLog: AuditLog, orgnummer: String, auditType: AuditType, tillat: Tillat, saksnummer: String? = null) {
+fun PipelineContext<Unit, ApplicationCall>.auditLog(
+    auditLog: AuditLog,
+    orgnummer: String,
+    auditType: AuditType,
+    tillat: Tillat,
+    saksnummer: String? = null
+) {
     call.navIdent()?.let { navIdent ->
         auditLog.log(
             navIdent = navIdent,
@@ -64,6 +104,7 @@ fun PipelineContext<Unit, ApplicationCall>.auditLog(auditLog: AuditLog, orgnumme
             orgnummer = orgnummer,
             auditType = auditType,
             tillat = tillat,
-            saksnummer = saksnummer)
+            saksnummer = saksnummer
+        )
     }
 }

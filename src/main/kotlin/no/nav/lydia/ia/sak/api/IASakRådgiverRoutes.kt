@@ -7,7 +7,11 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.lydia.*
+import no.nav.lydia.AuditLog
+import no.nav.lydia.AuditType
+import no.nav.lydia.FiaRoller
+import no.nav.lydia.Tillat
+import no.nav.lydia.auditLog
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
@@ -28,27 +32,18 @@ fun Route.IASak_Rådgiver(
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         somSuperbruker(call = call, fiaRoller = fiaRoller) { superbruker ->
             iaSakService.opprettSakOgMerkSomVurdert(orgnummer, superbruker.navIdent).map { it.toDto(superbruker) }
-        }.also {
-            when (it) {
-                is Either.Left -> {
-                    when (it.value.httpStatusCode) {
-                        HttpStatusCode.Forbidden -> auditLog(
-                            auditLog = auditLog,
-                            orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Nei
-                        )
-                    }
-                    call.respond(it.value.httpStatusCode)
-                }
-                is Either.Right -> {
-                    auditLog(
-                        auditLog = auditLog,
-                        orgnummer = orgnummer,
-                        auditType = AuditType.create,
-                        tillat = Tillat.Ja,
-                        saksnummer = it.value.saksnummer
-                    )
-                    call.respond(HttpStatusCode.Created, it.value)
-                }
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.update,
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.orNull()
+            )
+        }.also { iaSakEither ->
+            when (iaSakEither) {
+                is Either.Left -> call.respond(iaSakEither.value.httpStatusCode)
+                is Either.Right -> call.respond(HttpStatusCode.Created, iaSakEither.value)
             }
         }
     }
@@ -61,7 +56,7 @@ fun Route.IASak_Rådgiver(
             auditLog(auditLog = auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
             call.respond(it).right()
         }.mapLeft {
-            call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i hendelsene til denne saken")
+            call.respond(HttpStatusCode.NotFound, "Fant ingen saker for denne virksomheten")
         }
     }
 
@@ -86,24 +81,17 @@ fun Route.IASak_Rådgiver(
         somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
             iaSakService.behandleHendelse(hendelseDto, rådgiver = rådgiver).map { it.toDto(rådgiver) }
         }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = hendelseDto.orgnummer,
+                auditType = AuditType.update,
+                saksnummer = hendelseDto.saksnummer
+            )
+        }.also {
             when (it) {
-                is Either.Left -> {
-                    when (it.value.httpStatusCode) {
-                        HttpStatusCode.Forbidden -> auditLog(
-                            auditLog = auditLog,
-                            orgnummer = hendelseDto.orgnummer, auditType = AuditType.update, tillat = Tillat.Nei,
-                            saksnummer = hendelseDto.saksnummer
-                        )
-                    }
-                    call.respond(it.value.httpStatusCode, it.value.feilmelding)
-                }
-                is Either.Right -> {
-                    auditLog(
-                        auditLog = auditLog, orgnummer = hendelseDto.orgnummer, auditType = AuditType.update,
-                        tillat = Tillat.Ja, saksnummer = hendelseDto.saksnummer
-                    )
-                    call.respond(HttpStatusCode.Created, it.value)
-                }
+                is Either.Left -> call.respond(it.value.httpStatusCode, it.value.feilmelding)
+                is Either.Right -> call.respond(HttpStatusCode.Created, it.value)
             }
         }
     }
@@ -111,7 +99,7 @@ fun Route.IASak_Rådgiver(
 
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode)
 
-object IASakError{
+object IASakError {
     val `prøvde å utføre en ugyldig hendelse` =
         Feil("Denne hendelsen er ugyldig", HttpStatusCode.UnprocessableEntity)
     val `prøvde å legge til en hendelse på en tom sak` =
