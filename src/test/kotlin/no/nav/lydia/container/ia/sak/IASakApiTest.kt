@@ -7,6 +7,7 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
@@ -151,7 +152,7 @@ class IASakApiTest {
             nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also { sakEtterTattEierskap ->
                 nyHendelsePåSakMedRespons(
                     sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken2)
-                    .second.statusCode shouldBe 403
+                    .second.statusCode shouldBe 422
                 nyHendelsePåSakMedRespons(
                     sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken1)
                     .second.statusCode shouldBe 201
@@ -229,9 +230,16 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal få gyldige neste hendelser i retur`() {
-        opprettSakForVirksomhet(OSLO.orgnr).also { sak ->
-            sak.gyldigeNesteHendelser shouldContainExactly listOf(VIRKSOMHET_ER_IKKE_AKTUELL, TA_EIERSKAP_I_SAK)
+    fun `skal få gyldige neste hendelser i retur - avhengig av hvem man er`() {
+        opprettSakForVirksomhet(OSLO.orgnr, token = mockOAuth2Server.superbrukerToken).also { sak ->
+            hentIASaker(sak.orgnr, token = mockOAuth2Server.saksbehandlerToken1).filter { it.saksnummer == sak.saksnummer }
+                .forEach {
+                    it.gyldigeNesteHendelser shouldContainExactly listOf(TA_EIERSKAP_I_SAK)
+                }
+            hentIASaker(OSLO.orgnr, token = mockOAuth2Server.lesebrukerToken).filter { it.saksnummer == sak.saksnummer }
+                .forEach {
+                    it.gyldigeNesteHendelser.shouldBeEmpty()
+                }
         }
     }
 

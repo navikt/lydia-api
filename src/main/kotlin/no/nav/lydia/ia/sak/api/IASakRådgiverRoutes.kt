@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
+import arrow.core.right
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -10,6 +11,7 @@ import no.nav.lydia.*
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
+import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandlertilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 
@@ -25,7 +27,7 @@ fun Route.IASak_Rådgiver(
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         somSuperbruker(call = call, fiaRoller = fiaRoller) { superbruker ->
-            iaSakService.opprettSakOgMerkSomVurdert(orgnummer, superbruker.navIdent)
+            iaSakService.opprettSakOgMerkSomVurdert(orgnummer, superbruker.navIdent).map { it.toDto(superbruker) }
         }.also {
             when (it) {
                 is Either.Left -> {
@@ -45,17 +47,22 @@ fun Route.IASak_Rådgiver(
                         tillat = Tillat.Ja,
                         saksnummer = it.value.saksnummer
                     )
-                    call.respond(HttpStatusCode.Created, it.value.toDto())
+                    call.respond(HttpStatusCode.Created, it.value)
                 }
             }
         }
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
-        call.parameters["orgnummer"]?.let { orgnummer ->
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+            iaSakService.hentSaker(orgnummer).toDto(rådgiver = rådgiver).right()
+        }.map {
             auditLog(auditLog = auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
-            call.respond(iaSakService.hentSaker(orgnummer).toDto())
-        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
+            call.respond(it).right()
+        }.mapLeft {
+            call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i hendelsene til denne saken")
+        }
     }
 
     get("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/{saksnummer}") {
@@ -77,7 +84,7 @@ fun Route.IASak_Rådgiver(
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
         somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            iaSakService.behandleHendelse(hendelseDto, navIdent = rådgiver.navIdent)
+            iaSakService.behandleHendelse(hendelseDto, rådgiver = rådgiver).map { it.toDto(rådgiver) }
         }.also {
             when (it) {
                 is Either.Left -> {
@@ -95,7 +102,7 @@ fun Route.IASak_Rådgiver(
                         auditLog = auditLog, orgnummer = hendelseDto.orgnummer, auditType = AuditType.update,
                         tillat = Tillat.Ja, saksnummer = hendelseDto.saksnummer
                     )
-                    call.respond(HttpStatusCode.Created, it.value.toDto())
+                    call.respond(HttpStatusCode.Created, it.value)
                 }
             }
         }
@@ -104,9 +111,9 @@ fun Route.IASak_Rådgiver(
 
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode)
 
-object IASakError {
-    val `kan ikke endre sak man ikke selv er eier av` =
-        Feil("Kan ikke endre sak man ikke selv er eier av", HttpStatusCode.Forbidden)
+object IASakError{
+    val `prøvde å utføre en ugyldig hendelse` =
+        Feil("Denne hendelsen er ugyldig", HttpStatusCode.UnprocessableEntity)
     val `prøvde å legge til en hendelse på en tom sak` =
         Feil("Prøvde å legge til en hendelse på en tom sak", HttpStatusCode.Forbidden)
     val `prøvde å legge til en hendelse på en gammel sak` = Feil(

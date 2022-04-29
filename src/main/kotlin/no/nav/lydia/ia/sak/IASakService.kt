@@ -8,6 +8,7 @@ import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
 
 class IASakService(
@@ -55,15 +56,17 @@ class IASakService(
         return iaSakRepository.oppdaterSak(sakEtterVurdering)
     }
 
-    fun behandleHendelse(hendelseDto: IASakshendelseDto, navIdent: String): Either<Feil, IASak> {
-        val sakshendelse = IASakshendelse.fromDto(hendelseDto, navIdent)
+    fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {
+        val sakshendelse = IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
         val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
         if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
         if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
-
-        val sak = IASak.fraHendelser(hendelser).behandleHendelse(sakshendelse)
-        if (sak.eidAv != navIdent) return Either.Left(IASakError.`kan ikke endre sak man ikke selv er eier av`)
-
+        val sak = IASak.fraHendelser(hendelser)
+        if (sak.kanUtføreHendelse(saksHendelsestype = hendelseDto.hendelsesType, rådgiver = rådgiver))
+            sak.behandleHendelse(sakshendelse)
+        else {
+            return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
+        }
         iaSakshendelseRepository.lagreHendelse(sakshendelse)
         return iaSakRepository.oppdaterSak(sak)
     }

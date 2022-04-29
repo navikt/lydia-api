@@ -6,10 +6,12 @@ import arrow.core.left
 import io.ktor.http.*
 import io.ktor.server.application.*
 import no.nav.lydia.FiaRoller
+import no.nav.lydia.exceptions.UatorisertException
 import no.nav.lydia.ia.sak.api.Feil
 
 class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: List<String>) {
     private val tilgang = Tilgang(fiaRoller, rådgiversGrupper)
+    val rolle get() = grupperTilRolle()
 
     companion object {
         fun from(call: ApplicationCall, fiaRoller: FiaRoller): Either<Feil, Rådgiver> {
@@ -17,7 +19,6 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
             val grupper = call.azureADGrupper() ?: return Either.Left(RådgiverError.FantIngenADGrupper)
             return Either.Right(Rådgiver(navIdent = navIdent, fiaRoller = fiaRoller, rådgiversGrupper = grupper))
         }
-
 
         fun <T> somSuperbruker(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
             somRådgiver(call, fiaRoller, block = { rådgiver ->
@@ -38,6 +39,12 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
             from(call = call, fiaRoller = fiaRoller).flatMap(block)
     }
 
+    private fun grupperTilRolle() : Rolle =
+        if      (erSuperbruker()) Rolle.SUPERBRUKER
+        else if (erSaksbehandler()) Rolle.SAKSBEHANDLER
+        else if (erLesebruker()) Rolle.LESE
+        else throw UatorisertException()
+
     fun erSuperbruker() = tilgang.harSuperbrukerTilgang()
     fun erSaksbehandler() = tilgang.harSaksbehandlerTilgang()
     fun erLesebruker() = tilgang.harLeseTilgang()
@@ -46,6 +53,12 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
         fun harSuperbrukerTilgang() = rådgiversGrupper.contains(fiaRoller.superbrukerGroupId)
         fun harSaksbehandlerTilgang() = rådgiversGrupper.contains(fiaRoller.saksbehandlerGroupId) || harSuperbrukerTilgang()
         fun harLeseTilgang() = rådgiversGrupper.contains(fiaRoller.lesetilgangGroupId) || harSaksbehandlerTilgang()
+    }
+
+    enum class Rolle {
+        LESE,
+        SAKSBEHANDLER,
+        SUPERBRUKER
     }
 }
 

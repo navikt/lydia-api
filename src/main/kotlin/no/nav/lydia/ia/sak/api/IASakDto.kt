@@ -5,6 +5,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakstype
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
 
 @Serializable
@@ -24,9 +25,9 @@ data class IASakDto(
     val gyldigeNesteHendelser : List<SaksHendelsestype>
 ) {
     companion object {
-        fun List<IASak>.toDto() = this.map { it.toDto() }
+        fun List<IASak>.toDto(rådgiver: Rådgiver) = this.map { it.toDto(rådgiver) }
 
-        fun IASak.toDto() = IASakDto(
+        fun IASak.toDto(rådgiver: Rådgiver) = IASakDto(
             saksnummer = this.saksnummer,
             orgnr = this.orgnr,
             type = this.type,
@@ -37,7 +38,7 @@ data class IASakDto(
             endretTidspunkt = this.endretTidspunkt,
             eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId,
-            gyldigeNesteHendelser = this.gyldigeHendelser
+            gyldigeNesteHendelser = this.gyldigeNesteHendelser(rådgiver)
         )
     }
 }

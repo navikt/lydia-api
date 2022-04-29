@@ -19,6 +19,7 @@ import io.ktor.server.routing.*
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.exceptions.UatorisertException
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -97,9 +98,14 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            call.application.log.error("Det har skjedd en feil bro!", cause)
+            call.application.log.error("Det har skjedd en feil", cause)
             call.respond(HttpStatusCode.InternalServerError)
         }
+        exception<UatorisertException> { call, cause ->
+            call.application.log.error("Ikke autorisert", cause)
+            call.respond(HttpStatusCode.Forbidden)
+        }
+
     }
 
     val næringsRepository = NæringsRepository(dataSource = dataSource)

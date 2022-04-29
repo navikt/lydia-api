@@ -1,6 +1,8 @@
 package no.nav.lydia.ia.sak.domene
 
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -26,19 +28,11 @@ class IASak(
     val status: IAProsessStatus
         get() = tilstand.status
 
-    val gyldigeHendelser: List<SaksHendelsestype>
-        get() = when(tilstand) {
-            is StartTilstand -> listOf()
-            is VurderesTilstand -> {
-                if (eidAv != null)
-                    listOf(VIRKSOMHET_ER_IKKE_AKTUELL, VIRKSOMHET_SKAL_KONTAKTES)
-                else
-                    listOf(VIRKSOMHET_ER_IKKE_AKTUELL, TA_EIERSKAP_I_SAK)
-            }
-            is KontaktesTilstand -> listOf(VIRKSOMHET_ER_IKKE_AKTUELL)
-            is IkkeAktuellTilstand -> listOf()
-            else -> throw IllegalStateException() // TODO: finn ut hvorfor vi trenger else, skriv oss bort
-        }
+    fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
+
+    fun kanUtføreHendelse(saksHendelsestype: SaksHendelsestype, rådgiver: Rådgiver) = gyldigeNesteHendelser(rådgiver).contains(saksHendelsestype)
+
+    private fun erEierAvSak(rådgiver: Rådgiver) = eidAv == rådgiver.navIdent
 
     fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
@@ -65,7 +59,7 @@ class IASak(
         return this
     }
 
-    private fun håndterFeilState(grunn : String = "Feil i systemet") {
+    private fun håndterFeilState(grunn: String = "Feil i systemet") {
         log.info(grunn)
         log.info(this.status.name)
         throw IllegalStateException()
@@ -83,6 +77,8 @@ class IASak(
         open fun kontaktes() {
             håndterFeilState()
         }
+
+        abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype>
     }
 
     private inner class StartTilstand : ProsessTilstand(
@@ -91,6 +87,8 @@ class IASak(
         override fun vurderes() {
             tilstand = VurderesTilstand()
         }
+
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> = listOf()
     }
 
     private inner class VurderesTilstand : ProsessTilstand(
@@ -101,23 +99,45 @@ class IASak(
         }
 
         override fun kontaktes() {
-            if (eidAv.isNullOrEmpty()){
+            if (eidAv.isNullOrEmpty()) {
                 håndterFeilState("En virksomhet kan ikke kontaktes før saken har en eier")
             }
             tilstand = KontaktesTilstand()
         }
+
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
+            return when (rådgiver.rolle) {
+                LESE -> emptyList()
+                SAKSBEHANDLER, SUPERBRUKER -> {
+                    if (erEierAvSak(rådgiver)) return listOf(VIRKSOMHET_SKAL_KONTAKTES, VIRKSOMHET_ER_IKKE_AKTUELL)
+                    else return listOf(TA_EIERSKAP_I_SAK)
+                }}
+        }
+
     }
+
     private inner class KontaktesTilstand : ProsessTilstand(
         status = IAProsessStatus.KONTAKTES
     ) {
         override fun ikkeAktuell() {
             tilstand = IkkeAktuellTilstand()
         }
+
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
+            return when (rådgiver.rolle) {
+                LESE -> emptyList()
+                SAKSBEHANDLER, SUPERBRUKER -> {
+                    if (erEierAvSak(rådgiver)) return listOf(VIRKSOMHET_ER_IKKE_AKTUELL)
+                    else return listOf(TA_EIERSKAP_I_SAK)
+                }}
+        }
     }
 
     private inner class IkkeAktuellTilstand : ProsessTilstand(
         status = IAProsessStatus.IKKE_AKTUELL
-    )
+    ) {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> = listOf()
+    }
 
     companion object {
         private fun IASak.iStatus(status: IAProsessStatus): ProsessTilstand {
