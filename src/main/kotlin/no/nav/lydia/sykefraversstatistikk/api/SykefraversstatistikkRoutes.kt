@@ -4,6 +4,10 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import no.nav.lydia.AuditLog
+import no.nav.lydia.AuditType
+import no.nav.lydia.Tillat
+import no.nav.lydia.auditLog
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
@@ -16,7 +20,8 @@ val FILTERVERDIER_PATH = "filterverdier"
 fun Route.sykefraversstatistikk(
     geografiService: GeografiService,
     sykefraversstatistikkRepository: SykefraversstatistikkRepository,
-    næringsRepository: NæringsRepository
+    næringsRepository: NæringsRepository,
+    auditLog: AuditLog
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
@@ -29,6 +34,7 @@ fun Route.sykefraversstatistikk(
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {
         call.parameters["orgnummer"]?.let { orgnummer ->
+            auditLog(auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
             call.respond(sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer).toDto())
         } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
     }

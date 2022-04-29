@@ -104,6 +104,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
 
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource)
+    val auditLog = AuditLog(naisEnvironment.miljø)
 
     routing {
         healthChecks()
@@ -123,14 +124,15 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
             sykefraversstatistikk(
                 geografiService = GeografiService(),
                 sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-                næringsRepository = næringsRepository)
+                næringsRepository = næringsRepository, auditLog = auditLog)
             IASak_Rådgiver(
                 iaSakService = IASakService(
                     iaSakRepository = IASakRepository(dataSource = dataSource),
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
-                ), fiaRoller = naisEnvironment.security.fiaRoller
+                ), fiaRoller = naisEnvironment.security.fiaRoller,
+                auditLog = auditLog
             )
-            virksomhet(virksomhetRepository = virksomhetRepository)
+            virksomhet(virksomhetRepository = virksomhetRepository, auditLog = auditLog)
         }
     }
 }
