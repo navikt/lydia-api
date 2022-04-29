@@ -109,7 +109,9 @@ class GeografiService {
         kommunenummerISøk: Set<String>
     ): Set<String> {
         val alleKommunenummer = alleKommuner.associateBy { it.nummer }
-        val kommunerFraFylkesnummer = hentKommunerFraFylkesnummer(fylkesnummerISøk.toList())
+        val fylkesNummereFraKSøk = kommunenummerISøk.map { k -> k.take(2) }
+        val faktiskeFylkesNummereÅSøkeFra = fylkesnummerISøk.filter { fn -> !fylkesNummereFraKSøk.contains(fn) }
+        val kommunerFraFylkesnummer = hentKommunerFraFylkesnummer(faktiskeFylkesNummereÅSøkeFra.toList())
         return setOf(
             *kommunenummerISøk.filter { kommunenummer -> alleKommunenummer.containsKey(kommunenummer) }.toTypedArray(),
             *kommunerFraFylkesnummer.map { it.nummer }.toTypedArray()
