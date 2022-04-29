@@ -70,7 +70,8 @@ class NæringsDownloaderTest {
             consumerLoopDelay = 200L
         ), integrasjoner = Integrasjoner(
             ssbNæringsUrl = næringMockUrl,
-            brregUnderEnhetUrl = "")
+            brregUnderEnhetUrl = ""),
+        cluster = "lokal"
     )
 
     @Test
