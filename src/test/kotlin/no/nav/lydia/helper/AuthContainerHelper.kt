@@ -26,14 +26,6 @@ import java.util.*
 
 
 class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
-    companion object {
-        const val NAV_IDENT_SAKSBEHANDLER_1_X12345 = "X12345"
-        const val NAV_IDENT_SAKSBEHANDLER_2_Y54321 = "Y54321"
-        const val NAV_IDENT_SUPERBRUKER_S54321 = "S54321"
-        const val NAV_IDENT_LESEBRUKER_1_L54321 = "L54321"
-        const val NAV_IDENT_LESEBRUKER_AUDIT_A54321 = "A54321"
-        const val NAV_IDENT_UGYLDIG_ROLLE_U54321 = "U54321"
-    }
 
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
     private val mockOauth2Port: String = "8100"
@@ -44,16 +36,19 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val issuerUrl = "$tokenEndpointUrl/$issuerName"
     private val jwksUri = "$issuerUrl/jwks"
     private val audience = "lydia-api"
+
     private val superbrukerGroupId = "ensuperbrukerGroupId"
     private val saksbehandlerGroupId = "ensaksbehandlerGroupId"
     private val lesetilgangGroupId = "enlesetilgangGroupId"
     private val ugyldigRolleGroupId = "enHeltAnnenRolleGroupId"
-    val saksbehandlerToken1: String
-    val saksbehandlerToken2: String
-    val superbrukerToken: String
-    val lesebrukerToken: String
-    val lesebrukerAuditToken: String
-    val brukerMedUgyldigRolleToken: String
+
+    val lesebruker : TestBruker
+    val lesebrukerAudit : TestBruker
+    val saksbehandler1 : TestBruker
+    val saksbehandler2 : TestBruker
+    val superbruker1 : TestBruker
+    val superbruker2 : TestBruker
+    val brukerUtenTilgangsrolle : TestBruker
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
@@ -76,43 +71,25 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                 start()
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
-                saksbehandlerToken1 = issueToken(
-                    audience = audience,
-                    claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT_SAKSBEHANDLER_1_X12345,
-                        GROUPS_CLAIM to listOf(saksbehandlerGroupId)
-                    )
-                ).serialize()
-                saksbehandlerToken2 = issueToken(
-                    audience = audience,
-                    claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT_SAKSBEHANDLER_2_Y54321,
-                        GROUPS_CLAIM to listOf(saksbehandlerGroupId)
-                    )
-                ).serialize()
-                superbrukerToken = issueToken(
-                    audience = audience,
-                    claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT_SUPERBRUKER_S54321,
-                        GROUPS_CLAIM to listOf(superbrukerGroupId)
-                    )
-                ).serialize()
-                lesebrukerToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_1_L54321)
-                lesebrukerAuditToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_AUDIT_A54321)
-                brukerMedUgyldigRolleToken = issueToken(
-                    audience = audience,
-                    claims = mapOf(
-                        NAV_IDENT_CLAIM to NAV_IDENT_UGYLDIG_ROLLE_U54321,
-                        GROUPS_CLAIM to listOf(ugyldigRolleGroupId)
-                    )
-                ).serialize()
+                lesebruker = TestBruker("L54321", lesetilgangGroupId)
+                lesebrukerAudit = TestBruker("A54321", lesetilgangGroupId)
+                saksbehandler1 = TestBruker("X12345", saksbehandlerGroupId)
+                saksbehandler2 = TestBruker("Y54321", saksbehandlerGroupId)
+                superbruker1 = TestBruker("S54321", superbrukerGroupId)
+                superbruker2 = TestBruker("S22222", superbrukerGroupId)
+                brukerUtenTilgangsrolle = TestBruker("U54321", ugyldigRolleGroupId)
             }
     }
 
-    fun genererLesebrukerToken(navIdent: String) = issueToken(audience = audience, claims = mapOf(
-            NAV_IDENT_CLAIM to navIdent,
-            GROUPS_CLAIM to listOf(lesetilgangGroupId)
-        )).serialize()
+    inner class TestBruker(val navIdent : String, gruppe : String) {
+        val token = issueToken(
+            audience = audience,
+            claims = mapOf(
+                NAV_IDENT_CLAIM to navIdent,
+                GROUPS_CLAIM to listOf(gruppe)
+            )
+        ).serialize()
+    }
 
     private fun issueToken(
         issuerId: String = issuerName,

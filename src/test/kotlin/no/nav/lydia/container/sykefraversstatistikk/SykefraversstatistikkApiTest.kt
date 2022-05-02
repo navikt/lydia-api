@@ -93,7 +93,7 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
         val orgnr = BERGEN.orgnr
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr")
-            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
+            .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 
         result.fold(
@@ -117,7 +117,7 @@ class SykefraversstatistikkApiTest {
             },
             sorteringsnokkel = sorteringsnøkkel,
             sorteringsretning = "desc",
-            token = mockOAuth2Server.saksbehandlerToken1
+            token = mockOAuth2Server.saksbehandler1.token
         )
 
         hentSykefravær(success = { response ->
@@ -129,7 +129,7 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
-            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
+            .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
             .responseObject<FilterverdierDto>(localDateTimeTypeAdapter)
 
         result.fold(
@@ -209,13 +209,13 @@ class SykefraversstatistikkApiTest {
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
-                .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
+                .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
 
         val resultatUtenParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
-                .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
+                .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
         resultatMedTommeParametre.get().data shouldContainAll resultatUtenParametre.get().data
@@ -237,7 +237,7 @@ class SykefraversstatistikkApiTest {
             },
             kommuner = "$oslo,$nordreFollo",
             næringsgrupper = "${SCENEKUNST.kode},${BEDRIFTSRÅDGIVNING.kode}",
-            token = mockOAuth2Server.saksbehandlerToken1
+            token = mockOAuth2Server.saksbehandler1.token
         )
     }
 
@@ -266,7 +266,7 @@ class SykefraversstatistikkApiTest {
             },
             kvartal = forrigePeriode.kvartal.toString(),
             årstall = forrigePeriode.årstall.toString(),
-            token = mockOAuth2Server.saksbehandlerToken1
+            token = mockOAuth2Server.saksbehandler1.token
         )
     }
 
@@ -291,7 +291,7 @@ class SykefraversstatistikkApiTest {
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
 
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.superbrukerToken)
+            .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) })
@@ -363,19 +363,19 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {
-        hentSykefraværRespons(token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
-        hentSykefraværRespons(token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
-        hentSykefraværRespons(token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
-        hentSykefraværRespons(token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+        hentSykefraværRespons(token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
+        hentSykefraværRespons(token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 200
+        hentSykefraværRespons(token = mockOAuth2Server.superbruker1.token).statuskode() shouldBe 200
+        hentSykefraværRespons(token = mockOAuth2Server.brukerUtenTilgangsrolle.token).statuskode() shouldBe 403
     }
 
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk for en virksomhet`() {
         val orgnr = BERGEN.orgnr
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.superbruker1.token).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.brukerUtenTilgangsrolle.token).statuskode() shouldBe 403
     }
 
 
@@ -394,7 +394,7 @@ class SykefraversstatistikkApiTest {
         ansatteTil: String = "",
         iaStatus: String = "",
         side: String = "",
-        token: String = mockOAuth2Server.saksbehandlerToken1
+        token: String = mockOAuth2Server.saksbehandler1.token
     ) =
         hentSykefraværRespons(
             kvartal = kvartal,
@@ -429,7 +429,7 @@ class SykefraversstatistikkApiTest {
         ansatteTil: String = "",
         iaStatus: String = "",
         side: String = "",
-        token: String = mockOAuth2Server.saksbehandlerToken1
+        token: String = mockOAuth2Server.saksbehandler1.token
     ) =
         lydiaApiContainer.performGet(
             SYKEFRAVERSSTATISTIKK_PATH +
@@ -453,7 +453,7 @@ class SykefraversstatistikkApiTest {
 
     private fun hentSykefraværForVirksomhetRespons(
         orgnummer: String,
-        token: String = mockOAuth2Server.saksbehandlerToken1
+        token: String = mockOAuth2Server.saksbehandler1.token
     ) =
         lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer")
             .authentication().bearer(token)
