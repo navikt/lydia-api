@@ -30,7 +30,8 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
         const val NAV_IDENT_SAKSBEHANDLER_1_X12345 = "X12345"
         const val NAV_IDENT_SAKSBEHANDLER_2_Y54321 = "Y54321"
         const val NAV_IDENT_SUPERBRUKER_S54321 = "S54321"
-        const val NAV_IDENT_LESEBRUKER_L54321 = "L54321"
+        const val NAV_IDENT_LESEBRUKER_1_L54321 = "L54321"
+        const val NAV_IDENT_LESEBRUKER_AUDIT_A54321 = "A54321"
     }
 
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
@@ -49,6 +50,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     val saksbehandlerToken2: String
     val superbrukerToken: String
     val lesebrukerToken: String
+    val lesebrukerAuditToken: String
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
@@ -92,11 +94,12 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                         GROUPS_CLAIM to listOf(superbrukerGroupId)
                     )
                 ).serialize()
-                lesebrukerToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_L54321)
+                lesebrukerToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_1_L54321)
+                lesebrukerAuditToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_AUDIT_A54321)
             }
     }
 
-    fun genererLesebrukerToken(navIdent: String) = issueToken(claims = mapOf(
+    fun genererLesebrukerToken(navIdent: String) = issueToken(audience = audience, claims = mapOf(
             NAV_IDENT_CLAIM to navIdent,
             GROUPS_CLAIM to listOf(lesetilgangGroupId)
         )).serialize()

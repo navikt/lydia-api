@@ -14,18 +14,29 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_LESEBRUKER_AUDIT_A54321
 import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SAKSBEHANDLER_1_X12345
 import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SAKSBEHANDLER_2_Y54321
 import no.nav.lydia.helper.AuthContainerHelper.Companion.NAV_IDENT_SUPERBRUKER_S54321
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.localDateTimeTypeAdapter
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSER_SUB_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
@@ -134,9 +145,8 @@ class IASakApiTest {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also {
             lydiaApiContainer shouldContainLog auditLog(navIdent = NAV_IDENT_SUPERBRUKER_S54321, orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Ja, saksnummer = it.saksnummer)
-            val lesebrukerNavident = "auditlogger"
-            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.genererLesebrukerToken(lesebrukerNavident)).second.statusCode shouldBe 403
-            lydiaApiContainer shouldContainLog auditLog(navIdent = lesebrukerNavident, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Nei, saksnummer = it.saksnummer)
+            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerAuditToken).second.statusCode shouldBe 403
+            lydiaApiContainer shouldContainLog auditLog(navIdent = NAV_IDENT_LESEBRUKER_AUDIT_A54321, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Nei, saksnummer = it.saksnummer)
             nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 201
             lydiaApiContainer shouldContainLog auditLog(navIdent = NAV_IDENT_SAKSBEHANDLER_1_X12345, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Ja, saksnummer = it.saksnummer)
         }
