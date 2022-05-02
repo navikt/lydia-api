@@ -5,12 +5,7 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldBeOneOf
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainInOrder
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveAtMostSize
-import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -19,31 +14,24 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.TestContainerHelper
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
-import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
-import no.nav.lydia.helper.localDateTimeTypeAdapter
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
-import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
-import no.nav.lydia.sykefraversstatistikk.api.ListResponse
-import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_FRA
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_TIL
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.FYLKER
@@ -108,6 +96,16 @@ class SykefraversstatistikkApiTest {
                     it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
                 }
             }, failure = { fail(it.message) })
+    }
+
+    @Test
+    fun `feil format på organisasjonsnummer burde returnere bad request`() {
+        val (_, response, _) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/12")
+            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
+            .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
+
+        response.statusCode shouldBe BadRequest.value
+        lydiaApiContainer shouldContainLog "secureLog".toRegex()
     }
 
     @Test

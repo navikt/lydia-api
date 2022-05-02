@@ -21,6 +21,7 @@ class BrregDownloader(
     }
 
     val log = LoggerFactory.getLogger(this.javaClass)
+    val secureLog = LoggerFactory.getLogger("secureLog")
 
     fun lastNed() {
         val request =
@@ -72,7 +73,8 @@ class BrregDownloader(
                                 }
                             } catch (e: Exception) {
                                 feilendeBedrifter++
-                                log.error("Lagring av virksomhet feilet", e)
+                                log.error("Lagring av virksomhet feilet, sjekk securelogs for mer info.")
+                                secureLog.error("Lagring av virksomhet feilet", e)
                             }
                         }
                     }

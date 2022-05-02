@@ -72,3 +72,5 @@ spec:
       value: {{fiaSaksbehandlerGroup}}
     - name: FIA_LESETILGANG_GROUP_ID
       value: {{fiaLesetilgangGroup}}
+  secureLogs:
+    enabled: true

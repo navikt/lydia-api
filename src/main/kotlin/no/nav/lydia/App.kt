@@ -20,6 +20,7 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UatorisertException
+import no.nav.lydia.exceptions.UgyldigFormatException
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -35,6 +36,7 @@ import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.api.virksomhet
+import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -63,6 +65,8 @@ fun startLydiaBackend() {
 }
 
 fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataSource) {
+    val secureLog = LoggerFactory.getLogger("secureLog")
+
     install(ContentNegotiation) {
         json()
     }
@@ -89,8 +93,8 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                     }
                     JWTPrincipal(credentials.payload)
                 } catch (e: Throwable) {
-                    application.log.error("Feil under autentisering")
-                    application.log.error(e.message)
+                    application.log.error("Feil under autentisering. Sjekk securelogs for mer info.")
+                    secureLog.error(e.message)
                     null
                 }
             }
@@ -98,12 +102,25 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            call.application.log.error("Det har skjedd en feil", cause)
-            call.respond(HttpStatusCode.InternalServerError)
-        }
-        exception<UatorisertException> { call, cause ->
-            call.application.log.error("Ikke autorisert", cause)
-            call.respond(HttpStatusCode.Forbidden)
+            when (cause) {
+                is UgyldigFormatException -> {
+                    call.application.log.error("${cause.message}. Sjekk securelogs for mer info.")
+                    secureLog.error(cause.message, cause)
+                    call.respond(HttpStatusCode.BadRequest)
+                }
+                is UatorisertException -> {
+                    call.application.log.error("Ikke autorisert. Sjekk securelogs for mer info.")
+                    secureLog.error("Ikke autorisert.", cause)
+                    call.respond(HttpStatusCode.Forbidden)
+                }
+                else -> {
+                    call.application.log.error("Det har skjedd en feil. Sjekk securelogs for mer info.")
+                    secureLog.error("Det har skjedd en feil.", cause)
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+
+
         }
 
     }
@@ -117,8 +134,8 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
         metrics()
         virksomhetsImport(
             BrregDownloader(
-            url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
-            virksomhetRepository = virksomhetRepository
+                url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
+                virksomhetRepository = virksomhetRepository
             )
         )
         næringsImport(

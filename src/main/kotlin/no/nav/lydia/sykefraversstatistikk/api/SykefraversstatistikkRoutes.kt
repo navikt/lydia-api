@@ -1,6 +1,5 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -12,6 +11,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
+import no.nav.lydia.virksomhet.domene.Orgnummer
 import org.slf4j.LoggerFactory
 
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
@@ -33,10 +33,9 @@ fun Route.sykefraversstatistikk(
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {
-        call.parameters["orgnummer"]?.let { orgnummer ->
-            auditLog(auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
-            call.respond(sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer).toDto())
-        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
+        val orgnummer = Orgnummer(call.parameters["orgnummer"])
+        auditLog(auditLog, orgnummer = orgnummer.toString(), auditType = AuditType.access, tillat = Tillat.Ja)
+        call.respond(sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer.toString()).toDto())
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
