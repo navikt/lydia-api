@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import javax.sql.DataSource
 
@@ -140,6 +141,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     AND (
                         statistikk.sykefraversprosent BETWEEN :sykefraversprosentFra AND :sykefraversprosentTil
                     )
+                    AND ( statistikk.orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") {s -> "\'$s\'"}} )
                     
                     ${søkeparametere.status?.let { status ->
                         when (status) {
@@ -203,9 +205,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
-                  WHERE (statistikk.orgnr = :orgnr)
+                  WHERE (statistikk.orgnr = :orgnr) AND statistikk.orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") {s -> "\'$s\'"}}
                 """.trimIndent(),
-                paramMap = mapOf("orgnr" to orgnr)
+                paramMap = mapOf(
+                    "orgnr" to orgnr
+                )
             ).map(this::mapRow).asList
             session.run(query).map { it.first }
         }

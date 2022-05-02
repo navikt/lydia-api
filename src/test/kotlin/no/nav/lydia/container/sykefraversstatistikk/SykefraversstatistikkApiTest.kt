@@ -11,6 +11,7 @@ import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -19,15 +20,22 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.HttpMock
+import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
+import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
+import no.nav.lydia.helper.localDateTimeTypeAdapter
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -344,6 +352,15 @@ class SykefraversstatistikkApiTest {
                 sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 5.0
             }
         }, sykefraværsprosentTil = "5.0")
+    }
+
+    @Test
+    fun `skal ikke kunne hente sykefravær for navenheter`() {
+        hentSykefravær(success = {
+            it.data.map { it.orgnr } shouldNotContain TestVirksomhet.NAV_KONTOR.orgnr
+            val rs = postgresContainer.performQuery("select * from sykefravar_statistikk_virksomhet where orgnr = '${TestVirksomhet.NAV_KONTOR.orgnr}'")
+            rs.row shouldBe 1
+        }, ansatteFra = "999", kommuner = "${KOMMUNE_OSLO.nummer}}")
     }
 
     @Test
