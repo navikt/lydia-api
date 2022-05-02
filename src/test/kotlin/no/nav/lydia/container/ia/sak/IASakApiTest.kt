@@ -133,7 +133,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `en virksomhet skal bare kunne vurderes for oppfølging av en superbruker`() {
+    fun `tilgangskontroll - en virksomhet skal bare kunne vurderes for oppfølging av en superbruker`() {
         val orgnr = OSLO.orgnr
         opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.lesebrukerToken).second.statusCode shouldBe 403
         opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 403
@@ -141,7 +141,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
+    fun `tilgangskontroll - en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also {
             lydiaApiContainer shouldContainLog auditLog(navIdent = NAV_IDENT_SUPERBRUKER_S54321, orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Ja, saksnummer = it.saksnummer)
@@ -153,7 +153,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `en sak skal ikke kunne oppdateres av andre enn de som eier den`() {
+    fun `tilgangskontroll - en sak skal ikke kunne oppdateres av andre enn de som eier den`() {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also { sak ->
             nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also { sakEtterTattEierskap ->
@@ -167,6 +167,16 @@ class IASakApiTest {
         }
     }
 
+    @Test
+    fun `tilgangskontroll - en sak uten eier skal kunne vises av alle roller`() {
+        val orgnummer = OSLO.orgnr
+        opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also { sak ->
+           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebrukerToken).second.statusCode shouldBe 200
+           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 200
+           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbrukerToken).second.statusCode shouldBe 200
+           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerMedUgyldigRolleToken).second.statusCode shouldBe 403
+        }
+    }
 
     @Test
     fun `skal kunne spore endringene som har skjedd på en sak`() {
@@ -277,13 +287,16 @@ class IASakApiTest {
             saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" }).toRegex()
 
     private fun hentIASaker(orgnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
-        lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(token = token)
-            .responseObject<List<IASakDto>>(localDateTimeTypeAdapter).third.fold(
+        hentIASakerRespons(orgnummer = orgnummer, token = token).third.fold(
                 success = { respons -> respons },
                 failure = {
                     fail(it.message)
                 })
+
+    private fun hentIASakerRespons(orgnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
+        lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
+            .authentication().bearer(token = token)
+            .responseObject<List<IASakDto>>(localDateTimeTypeAdapter)
 
     private fun hentHendelserPåSak(saksnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")

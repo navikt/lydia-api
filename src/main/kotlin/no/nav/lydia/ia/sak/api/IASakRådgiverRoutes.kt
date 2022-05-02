@@ -56,7 +56,7 @@ fun Route.IASak_Rådgiver(
             auditLog(auditLog = auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
             call.respond(it).right()
         }.mapLeft {
-            call.respond(HttpStatusCode.NotFound, "Fant ingen saker for denne virksomheten")
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
 

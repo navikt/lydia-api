@@ -32,6 +32,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
         const val NAV_IDENT_SUPERBRUKER_S54321 = "S54321"
         const val NAV_IDENT_LESEBRUKER_1_L54321 = "L54321"
         const val NAV_IDENT_LESEBRUKER_AUDIT_A54321 = "A54321"
+        const val NAV_IDENT_UGYLDIG_ROLLE_U54321 = "U54321"
     }
 
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
@@ -46,11 +47,13 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val superbrukerGroupId = "ensuperbrukerGroupId"
     private val saksbehandlerGroupId = "ensaksbehandlerGroupId"
     private val lesetilgangGroupId = "enlesetilgangGroupId"
+    private val ugyldigRolleGroupId = "enHeltAnnenRolleGroupId"
     val saksbehandlerToken1: String
     val saksbehandlerToken2: String
     val superbrukerToken: String
     val lesebrukerToken: String
     val lesebrukerAuditToken: String
+    val brukerMedUgyldigRolleToken: String
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
@@ -96,6 +99,13 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                 ).serialize()
                 lesebrukerToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_1_L54321)
                 lesebrukerAuditToken = genererLesebrukerToken(NAV_IDENT_LESEBRUKER_AUDIT_A54321)
+                brukerMedUgyldigRolleToken = issueToken(
+                    audience = audience,
+                    claims = mapOf(
+                        NAV_IDENT_CLAIM to NAV_IDENT_UGYLDIG_ROLLE_U54321,
+                        GROUPS_CLAIM to listOf(ugyldigRolleGroupId)
+                    )
+                ).serialize()
             }
     }
 
