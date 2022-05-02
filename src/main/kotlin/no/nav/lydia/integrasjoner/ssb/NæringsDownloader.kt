@@ -15,6 +15,8 @@ class NæringsDownloader(
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     fun lastNedNæringer() {
+        val start = System.currentTimeMillis()
+        log.info("Starter å importere næringer fra ssb")
         url.httpGet()
             .response().third
             .fold(success = { bytes ->
@@ -30,6 +32,7 @@ class NæringsDownloader(
                             val næringsDto = gson.fromJson<NæringsDto>(reader, NæringsDto::class.java)
                             næringsRepository.settInn(næringsDto)
                         }
+                        log.info("Ferdig med å importere næringer fra ssb etter ${System.currentTimeMillis() - start}ms")
                     }
                 } catch (e: Exception) {
                     log.error("Noe gikk galt under nedlasting av næringer", e)
