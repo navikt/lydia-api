@@ -19,19 +19,15 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
-import no.nav.lydia.helper.localDateTimeTypeAdapter
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -114,15 +110,20 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel`() {
         val sorteringsnøkkel = "tapte_dagsverk"
 
-        hentSykefravær(sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "desc", success = { response ->
-            val tapteDagsverk = response.data.map { it.tapteDagsverk }
-            tapteDagsverk shouldContainInOrder tapteDagsverk.sortedDescending()
-        })
+        hentSykefravær(
+            success = { response ->
+                val tapteDagsverk = response.data.map { it.tapteDagsverk }
+                tapteDagsverk shouldContainInOrder tapteDagsverk.sortedDescending()
+            },
+            sorteringsnokkel = sorteringsnøkkel,
+            sorteringsretning = "desc",
+            token = mockOAuth2Server.saksbehandlerToken1
+        )
 
-        hentSykefravær(sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc", success = { response ->
+        hentSykefravær(success = { response ->
             val tapteDagsverk = response.data.map { it.tapteDagsverk }
             tapteDagsverk shouldContainInOrder tapteDagsverk.sorted()
-        })
+        }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
     }
 
     @Test
@@ -156,28 +157,28 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente alle virksomheter i Bergen kommune`() {
         val kommunenummer = "4601" // Brønnøy kommune i Bergen
         val virksomhet = BERGEN
-        hentSykefravær(kommuner = kommunenummer, success = { response ->
-            response.data shouldHaveAtLeastSize  1
+        hentSykefravær(success = { response ->
+            response.data shouldHaveAtLeastSize 1
             response.data.forAtLeastOne { testVirksomhet ->
                 testVirksomhet.virksomhetsnavn shouldBe virksomhet.navn
                 testVirksomhet.orgnr shouldBe virksomhet.orgnr
                 testVirksomhet.kommune.navn shouldBe virksomhet.beliggenhet?.kommune
                 testVirksomhet.kommune.nummer shouldBe virksomhet.beliggenhet?.kommunenummer
             }
-        })
+        }, kommuner = kommunenummer)
     }
 
     @Test
     fun `skal kunne hente alle virksomheter i Vestland fylke`() {
         val fylkesnummer = "46"
 
-        hentSykefravær(fylker = fylkesnummer, success = { response ->
+        hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { testVirksomhet ->
                 testVirksomhet.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
                 testVirksomhet.kommune.nummer shouldStartWith fylkesnummer
             }
-        })
+        }, fylker = fylkesnummer)
     }
 
     @Test
@@ -185,23 +186,23 @@ class SykefraversstatistikkApiTest {
         val fylkesnummer = "46" // Vestland fylke
         val kommunenummer = "0301" // Oslo kommune
 
-        hentSykefravær(fylker = fylkesnummer, kommuner = kommunenummer, success = { response ->
+        hentSykefravær(success = { response ->
             response.data.forAll {
                 setOf("46", "03").forAtLeastOne { fylke ->
                     it.kommune.nummer.substring(0..1) shouldBe fylke
                 }
             }
-        })
+        }, kommuner = kommunenummer, fylker = fylkesnummer)
     }
 
     @Test
     fun `skal kunne hente alle virksomheter i en gitt næring`() {
-        hentSykefravær(næringsgrupper = SCENEKUNST.kode, success = { response ->
+        hentSykefravær(success = { response ->
             response.data.map { it.orgnr } shouldContainAll listOf(
                 BERGEN.orgnr,
                 OSLO.orgnr
             )
-        })
+        }, næringsgrupper = SCENEKUNST.kode)
     }
 
     @Test
@@ -226,16 +227,18 @@ class SykefraversstatistikkApiTest {
         val nordreFollo = "3020"
 
         hentSykefravær(
-            kommuner = "$oslo,$nordreFollo",
-            næringsgrupper = "${SCENEKUNST.kode},${BEDRIFTSRÅDGIVNING.kode}",
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.forAll {
-                    listOf(oslo,nordreFollo).forAtLeastOne { knr ->
+                    listOf(oslo, nordreFollo).forAtLeastOne { knr ->
                         it.kommune.nummer shouldBe knr
                     }
                 }
-            })
+            },
+            kommuner = "$oslo,$nordreFollo",
+            næringsgrupper = "${SCENEKUNST.kode},${BEDRIFTSRÅDGIVNING.kode}",
+            token = mockOAuth2Server.saksbehandlerToken1
+        )
     }
 
     @Test
@@ -254,15 +257,17 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente virksomheter for et bestemt år og kvartal`() {
         val forrigePeriode = Periode.forrigePeriode()
         hentSykefravær(
-            årstall = forrigePeriode.årstall.toString(),
-            kvartal = forrigePeriode.kvartal.toString(),
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
                 response.data.forAll {
                     it.kvartal shouldBe forrigePeriode.kvartal
                     it.arstall shouldBe forrigePeriode.årstall
                 }
-            })
+            },
+            kvartal = forrigePeriode.kvartal.toString(),
+            årstall = forrigePeriode.årstall.toString(),
+            token = mockOAuth2Server.saksbehandlerToken1
+        )
     }
 
     @Test
@@ -287,68 +292,92 @@ class SykefraversstatistikkApiTest {
 
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.superbrukerToken)
-            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(success = { respons -> respons }, failure = { fail(it.message) })
+            .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) })
 
-        hentSykefravær(iaStatus = IAProsessStatus.VURDERES.name, success = { response ->
+        hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll {
                 it.status shouldBe IAProsessStatus.VURDERES
             }
-        })
+        }, iaStatus = IAProsessStatus.VURDERES.name)
 
-        hentSykefravær(iaStatus = IAProsessStatus.IKKE_AKTIV.name, success = { response ->
+        hentSykefravær(success = { response ->
             response.data.forAll {
                 it.status shouldBe IAProsessStatus.IKKE_AKTIV
                 it.orgnr shouldNotBe orgnummer
             }
-        })
+        }, iaStatus = IAProsessStatus.IKKE_AKTIV.name)
     }
 
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
-        hentSykefravær(side = "1", success = { response ->
+        hentSykefravær(success = { response ->
             response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
             response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
-        })
+        }, side = "1")
 
-        hentSykefravær(side = "2", success = { response ->
+        hentSykefravær(success = { response ->
             response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
             response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
-        })
+        }, side = "2")
 
-        hentSykefravær(side = "3", success = { response ->
+        hentSykefravær(success = { response ->
             response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
             response.data shouldHaveAtMostSize VIRKSOMHETER_PER_SIDE - 1
-        })
+        }, side = "3")
     }
 
     @Test
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
-        hentSykefravær(sykefraværsprosentFra = "3.0", success = { response ->
+        hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { sykefraversstatistikkVirksomhetDto ->
                 sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 3.0
             }
-        })
+        }, sykefraværsprosentFra = "3.0")
 
-        hentSykefravær(sykefraværsprosentTil = "5.0", success = { response ->
+        hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { sykefraversstatistikkVirksomhetDto ->
                 sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 5.0
             }
-        })
+        }, sykefraværsprosentTil = "5.0")
     }
 
     @Test
     fun `skal kunne filtrere virksomheter basert på antall ansatte`() {
         val ansatteFra = 5
         val ansatteTil = 100
-        hentSykefravær(ansatteFra = ansatteFra.toString(), ansatteTil = ansatteTil.toString(), success = {response ->
-            response.data.forAll {
-                it.antallPersoner shouldBeInRange (ansatteFra .. ansatteTil)
-            }
-        })
+        hentSykefravær(
+            success = { response ->
+                response.data.forAll {
+                    it.antallPersoner shouldBeInRange (ansatteFra..ansatteTil)
+                }
+            },
+            ansatteFra = ansatteFra.toString(),
+            ansatteTil = ansatteTil.toString(),
+        )
     }
+
+    @Test
+    fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {
+        hentSykefraværRespons(token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
+        hentSykefraværRespons(token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
+        hentSykefraværRespons(token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
+        hentSykefraværRespons(token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+    }
+
+    @Test
+    fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk for en virksomhet`() {
+        val orgnr = BERGEN.orgnr
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+    }
+
 
     private fun hentSykefravær(
         success: (ListResponse<SykefraversstatistikkVirksomhetDto>) -> Unit,
@@ -364,10 +393,46 @@ class SykefraversstatistikkApiTest {
         ansatteFra: String = "",
         ansatteTil: String = "",
         iaStatus: String = "",
-        side: String = ""
+        side: String = "",
+        token: String = mockOAuth2Server.saksbehandlerToken1
+    ) =
+        hentSykefraværRespons(
+            kvartal = kvartal,
+            årstall = årstall,
+            kommuner = kommuner,
+            fylker = fylker,
+            næringsgrupper = næringsgrupper,
+            sorteringsnokkel = sorteringsnokkel,
+            sorteringsretning = sorteringsretning,
+            sykefraværsprosentFra = sykefraværsprosentFra,
+            sykefraværsprosentTil = sykefraværsprosentTil,
+            ansatteFra = ansatteFra,
+            ansatteTil = ansatteTil,
+            iaStatus = iaStatus,
+            side = side,
+            token = token
+        ).third
+            .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
+
+
+    private fun hentSykefraværRespons(
+        kvartal: String = "",
+        årstall: String = "",
+        kommuner: String = "",
+        fylker: String = "",
+        næringsgrupper: String = "",
+        sorteringsnokkel: String = "",
+        sorteringsretning: String = "",
+        sykefraværsprosentFra: String = "",
+        sykefraværsprosentTil: String = "",
+        ansatteFra: String = "",
+        ansatteTil: String = "",
+        iaStatus: String = "",
+        side: String = "",
+        token: String = mockOAuth2Server.saksbehandlerToken1
     ) =
         lydiaApiContainer.performGet(
-            "$SYKEFRAVERSSTATISTIKK_PATH" +
+            SYKEFRAVERSSTATISTIKK_PATH +
                     "?$KVARTAL=$kvartal" +
                     "&$ÅRSTALL=$årstall" +
                     "&$KOMMUNER=$kommuner" +
@@ -382,7 +447,16 @@ class SykefraversstatistikkApiTest {
                     "&$IA_STATUS=$iaStatus" +
                     "&$SIDE=$side"
         )
-            .authentication().bearer(mockOAuth2Server.saksbehandlerToken1)
-            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
-            .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
+            .authentication().bearer(token)
+            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
+
+
+    private fun hentSykefraværForVirksomhetRespons(
+        orgnummer: String,
+        token: String = mockOAuth2Server.saksbehandlerToken1
+    ) =
+        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer")
+            .authentication().bearer(token)
+            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
+
 }

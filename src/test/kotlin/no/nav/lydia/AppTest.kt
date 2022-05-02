@@ -97,28 +97,4 @@ class AppTest {
             }
         }
     }
-
-    @Test
-    fun `innlogget nav ansatt skal kunne nå beskyttede endepunkt`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
-            val token = mockOAuth2Server.issueToken(
-                audience = "lydia-api", claims = mapOf(
-                    "NAVident" to "X12345"
-                )
-            ).serialize()
-
-            with(handleRequest(HttpMethod.Get, SYKEFRAVERSSTATISTIKK_PATH) {
-                addHeader(HttpHeaders.Authorization, "Bearer $token")
-            }) {
-                assertEquals(HttpStatusCode.OK, response.status())
-            }
-
-            // Kaller samme endepunkt bare med en trailing slash foran
-            with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/") {
-                addHeader(HttpHeaders.Authorization, "Bearer $token")
-            }) {
-                assertEquals(HttpStatusCode.OK, response.status())
-            }
-        }
-    }
 }

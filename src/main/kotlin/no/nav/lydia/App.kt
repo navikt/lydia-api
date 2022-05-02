@@ -117,20 +117,24 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
         metrics()
         virksomhetsImport(
             BrregDownloader(
-            url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
-            virksomhetRepository = virksomhetRepository
+                url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
+                virksomhetRepository = virksomhetRepository
             )
         )
         næringsImport(
             næringsDownloader = NæringsDownloader(
                 url = naisEnvironment.integrasjoner.ssbNæringsUrl,
-                næringsRepository = næringsRepository)
+                næringsRepository = næringsRepository
+            )
         )
         authenticate {
             sykefraversstatistikk(
                 geografiService = GeografiService(),
                 sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-                næringsRepository = næringsRepository, auditLog = auditLog)
+                næringsRepository = næringsRepository,
+                auditLog = auditLog,
+                fiaRoller = naisEnvironment.security.fiaRoller
+            )
             IASak_Rådgiver(
                 iaSakService = IASakService(
                     iaSakRepository = IASakRepository(dataSource = dataSource),

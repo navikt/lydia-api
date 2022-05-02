@@ -1,16 +1,16 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
+import arrow.core.right
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.lydia.AuditLog
-import no.nav.lydia.AuditType
-import no.nav.lydia.Tillat
-import no.nav.lydia.auditLog
+import no.nav.lydia.*
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
+import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import org.slf4j.LoggerFactory
 
@@ -21,22 +21,31 @@ fun Route.sykefraversstatistikk(
     geografiService: GeografiService,
     sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     næringsRepository: NæringsRepository,
-    auditLog: AuditLog
+    auditLog: AuditLog,
+    fiaRoller: FiaRoller,
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        val start = System.currentTimeMillis()
-        val søkeparametere = Søkeparametere.from(call.request.queryParameters, geografiService)
-        val virksomheter = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere).toDto()
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente virksomheter")
-        call.respond(virksomheter)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+            val start = System.currentTimeMillis()
+            val søkeparametere = Søkeparametere.from(call.request.queryParameters, geografiService)
+            val sykefraværsstatistikkVirksomheter =
+                sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
+            log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente virksomheter")
+            sykefraværsstatistikkVirksomheter.right()
+        }.map { sykefraværsstatistikkVirksomheter ->
+            call.respond(sykefraværsstatistikkVirksomheter.toDto()).right()
+        }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {
-        call.parameters["orgnummer"]?.let { orgnummer ->
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
             auditLog(auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
-            call.respond(sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer).toDto())
-        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i orgnummer")
+            sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer).right()
+        }
+            .map { sykefraværsstatistikk -> call.respond(sykefraværsstatistikk.toDto()) }
+            .mapLeft { feil -> call.respond(feil.httpStatusCode, feil.feilmelding) }
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
@@ -47,4 +56,9 @@ fun Route.sykefraversstatistikk(
             )
         )
     }
+}
+
+
+object SykefraværsstatistikkError {
+    val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
 }
