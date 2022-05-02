@@ -1,5 +1,6 @@
 package no.nav.lydia.helper
 
+import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import io.kotest.inspectors.forExactly
@@ -11,3 +12,5 @@ inline fun <T, C : Collection<T>> C.forExactlyOne(fn: (T) -> Unit): C = this.for
 val localDateTimeTypeAdapter: Gson = GsonBuilder()
     .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeTypeAdapter.nullSafe())
     .create()
+
+fun <T> ResponseResultOf<T>.statuskode() = this.second.statusCode

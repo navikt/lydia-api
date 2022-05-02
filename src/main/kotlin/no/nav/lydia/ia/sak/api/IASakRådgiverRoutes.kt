@@ -61,8 +61,10 @@ fun Route.IASak_Rådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/{saksnummer}") {
-        call.parameters["saksnummer"]?.let { saksnummer ->
-            val hendelser = iaSakService.hentHendelserForSak(saksnummer)
+        val saksnummer = call.parameters["saksnummer"] ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+            iaSakService.hentHendelserForSak(saksnummer).right()
+        }.map { hendelser ->
             hendelser.map { it.orgnummer }.firstOrNull()?.let { orgnummer ->
                 auditLog(
                     auditLog = auditLog,
@@ -72,8 +74,10 @@ fun Route.IASak_Rådgiver(
                     saksnummer = saksnummer
                 )
             }
-            call.respond(hendelser.toDto())
-        } ?: call.respond(HttpStatusCode.InternalServerError, "Fikk ikke tak i hendelsene til denne saken")
+            call.respond(hendelser.toDto()).right()
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
     }
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
@@ -103,10 +107,11 @@ object IASakError {
     val `prøvde å utføre en ugyldig hendelse` =
         Feil("Denne hendelsen er ugyldig", HttpStatusCode.UnprocessableEntity)
     val `prøvde å legge til en hendelse på en tom sak` =
-        Feil("Prøvde å legge til en hendelse på en tom sak", HttpStatusCode.Forbidden)
+        Feil("Prøvde å legge til en hendelse på en tom sak", HttpStatusCode.Conflict)
     val `prøvde å legge til en hendelse på en gammel sak` = Feil(
-        "Prøvde å legge til hendelse på gammel sak", HttpStatusCode.Forbidden
+        "Prøvde å legge til hendelse på gammel sak", HttpStatusCode.Conflict
     )
-    val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdater sak", HttpStatusCode.Forbidden)
-    val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.Forbidden)
+    val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
+    val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
+    val `ugyldig saksnummer` = Feil("Ugyldig saksnummer", HttpStatusCode.BadRequest)
 }

@@ -31,6 +31,7 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.localDateTimeTypeAdapter
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
@@ -135,9 +136,9 @@ class IASakApiTest {
     @Test
     fun `tilgangskontroll - en virksomhet skal bare kunne vurderes for oppfølging av en superbruker`() {
         val orgnr = OSLO.orgnr
-        opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.lesebrukerToken).second.statusCode shouldBe 403
-        opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 403
-        opprettSakForVirksomhetRespons(orgnr, token = mockOAuth2Server.superbrukerToken).second.statusCode shouldBe 201
+        opprettSakForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 403
+        opprettSakForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 403
+        opprettSakForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 201
     }
 
     @Test
@@ -145,9 +146,9 @@ class IASakApiTest {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also {
             lydiaApiContainer shouldContainLog auditLog(navIdent = NAV_IDENT_SUPERBRUKER_S54321, orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Ja, saksnummer = it.saksnummer)
-            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerAuditToken).second.statusCode shouldBe 403
+            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerAuditToken).statuskode() shouldBe 403
             lydiaApiContainer shouldContainLog auditLog(navIdent = NAV_IDENT_LESEBRUKER_AUDIT_A54321, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Nei, saksnummer = it.saksnummer)
-            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 201
+            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 201
             lydiaApiContainer shouldContainLog auditLog(navIdent = NAV_IDENT_SAKSBEHANDLER_1_X12345, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Ja, saksnummer = it.saksnummer)
         }
     }
@@ -159,22 +160,45 @@ class IASakApiTest {
             nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also { sakEtterTattEierskap ->
                 nyHendelsePåSakMedRespons(
                     sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken2)
-                    .second.statusCode shouldBe 422
+                    .statuskode() shouldBe 422
                 nyHendelsePåSakMedRespons(
                     sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandlerToken1)
-                    .second.statusCode shouldBe 201
+                    .statuskode() shouldBe 201
             }
         }
     }
 
     @Test
-    fun `tilgangskontroll - en sak uten eier skal kunne vises av alle roller`() {
+    fun `tilgangskontroll - en sak UTEN eier skal kunne vises av alle med tilgangsrolle`() {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also { sak ->
-           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebrukerToken).second.statusCode shouldBe 200
-           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.saksbehandlerToken1).second.statusCode shouldBe 200
-           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbrukerToken).second.statusCode shouldBe 200
-           hentIASakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerMedUgyldigRolleToken).second.statusCode shouldBe 403
+            hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
+            hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
+            hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
+            hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+
+            hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
+            hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
+            hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
+            hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+        }
+    }
+
+    @Test
+    fun `tilgangskontroll - en sak MED eier skal kunne vises av alle med tilgangsrolle`() {
+        val orgnummer = OSLO.orgnr
+        opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbrukerToken).also { sak ->
+            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandlerToken1).also {
+                hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
+                hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
+                hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
+                hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+
+                hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.lesebrukerToken).statuskode() shouldBe 200
+                hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.saksbehandlerToken1).statuskode() shouldBe 200
+                hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.superbrukerToken).statuskode() shouldBe 200
+                hentHendelserPåSakRespons(saksnummer = sak.saksnummer, token = mockOAuth2Server.brukerMedUgyldigRolleToken).statuskode() shouldBe 403
+            }
         }
     }
 
@@ -182,7 +206,7 @@ class IASakApiTest {
     fun `skal kunne spore endringene som har skjedd på en sak`() {
         val sak = opprettSakForVirksomhet(orgnummer = BERGEN.orgnr)
 
-        val iaSaker = hentIASaker(BERGEN.orgnr)
+        val iaSaker = hentSaker(BERGEN.orgnr)
         iaSaker.forAtLeastOne {
             it.orgnr shouldBe BERGEN.orgnr
             it.status shouldBe IAProsessStatus.VURDERES
@@ -249,11 +273,11 @@ class IASakApiTest {
     @Test
     fun `skal få gyldige neste hendelser i retur - avhengig av hvem man er`() {
         opprettSakForVirksomhet(OSLO.orgnr, token = mockOAuth2Server.superbrukerToken).also { sak ->
-            hentIASaker(sak.orgnr, token = mockOAuth2Server.saksbehandlerToken1).filter { it.saksnummer == sak.saksnummer }
+            hentSaker(sak.orgnr, token = mockOAuth2Server.saksbehandlerToken1).filter { it.saksnummer == sak.saksnummer }
                 .forEach {
                     it.gyldigeNesteHendelser shouldContainExactly listOf(TA_EIERSKAP_I_SAK)
                 }
-            hentIASaker(OSLO.orgnr, token = mockOAuth2Server.lesebrukerToken).filter { it.saksnummer == sak.saksnummer }
+            hentSaker(OSLO.orgnr, token = mockOAuth2Server.lesebrukerToken).filter { it.saksnummer == sak.saksnummer }
                 .forEach {
                     it.gyldigeNesteHendelser.shouldBeEmpty()
                 }
@@ -286,22 +310,27 @@ class IASakApiTest {
             "flexString1=$tillat" +
             saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" }).toRegex()
 
-    private fun hentIASaker(orgnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
-        hentIASakerRespons(orgnummer = orgnummer, token = token).third.fold(
+    private fun hentSaker(orgnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
+        hentSakerRespons(orgnummer = orgnummer, token = token).third.fold(
                 success = { respons -> respons },
                 failure = {
                     fail(it.message)
                 })
 
-    private fun hentIASakerRespons(orgnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
+    private fun hentSakerRespons(orgnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(token = token)
             .responseObject<List<IASakDto>>(localDateTimeTypeAdapter)
 
-    private fun hentHendelserPåSak(saksnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
+    private fun hentHendelserPåSakRespons(saksnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
         lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")
             .authentication().bearer(token = token)
-            .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter).third.fold(
+            .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter)
+    
+
+    
+    private fun hentHendelserPåSak(saksnummer: String, token: String = mockOAuth2Server.saksbehandlerToken1) =
+       hentHendelserPåSakRespons(saksnummer = saksnummer, token = token).third.fold(
                 success = { respons -> respons },
                 failure = {
                     fail(it.message)
