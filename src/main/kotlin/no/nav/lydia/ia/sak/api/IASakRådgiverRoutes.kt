@@ -2,13 +2,11 @@ package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
 import arrow.core.right
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
@@ -64,7 +62,7 @@ fun Route.IASak_Rådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
             iaSakService.hentHendelserForSak(saksnummer).right()
         }.map { hendelser ->
             hendelser.map { it.orgnummer }.firstOrNull()?.let { orgnummer ->

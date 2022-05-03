@@ -93,7 +93,11 @@ class TestVirksomhet(
             )
         )
 
-        val tilfeldigGenerator = Random(1)
+        private val tilfeldigGenerator = Random(1)
+        val TESTVIRKSOMHET_FOR_IMPORT = nyVirksomhet()
+        val TESTVIRKSOMHET_FOR_STATUSFILTER = nyVirksomhet()
+        val TESTVIRKSOMHET_FOR_GRUNNLAG = nyVirksomhet()
+
         fun nyVirksomhet(): TestVirksomhet {
             val orgnr = (800000000 .. 899999999).random(tilfeldigGenerator).toString() // tilfeldige virksomheter har orgnummer som starter på 8
             return TestVirksomhet(

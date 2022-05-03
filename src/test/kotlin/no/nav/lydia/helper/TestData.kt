@@ -21,6 +21,9 @@ class TestData(
             lagData(virksomhet = TestVirksomhet.OSLO_MANGLER_ADRESSER, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.UTENLANDSK, perioder = listOf())
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT, emptyList())
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER, listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "6.0")
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG, listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), antallPersoner = 42, sykefraværsProsent = "6.0")
         }
         genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
     }
@@ -89,18 +92,18 @@ class TestData(
 
 
 enum class Melding(val melding: String) {
-    osloForrigeKvartal(
+    testVirksomhetForrigeKvartal(
         melding = lagKafkaMelding(
-            orgnr = TestVirksomhet.OSLO.orgnr,
-            navn = TestVirksomhet.OSLO.navn,
+            orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
+            navn = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.navn,
             periode = Periode.forrigePeriode(),
             antallPersoner = 6
         )
     ),
-    osloGjeldeneKvartal(
+    testVirksomhetGjeldeneKvartal(
         melding = lagKafkaMelding(
-            orgnr = TestVirksomhet.OSLO.orgnr,
-            navn = TestVirksomhet.OSLO.navn,
+            orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
+            navn = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.navn,
             periode = Periode.gjeldenePeriode(),
             antallPersoner = 6
         )

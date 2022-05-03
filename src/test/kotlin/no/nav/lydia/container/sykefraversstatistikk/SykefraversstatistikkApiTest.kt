@@ -15,55 +15,40 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.ints.shouldBeInRange
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
+import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.localDateTimeTypeAdapter
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.integrasjoner.brreg.BrregDownloader
-import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
-import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_FRA
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ANSATTE_TIL
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.FYLKER
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.IA_STATUS
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.KOMMUNER
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.KVARTAL
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.NÆRINGSGRUPPER
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SIDE
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SORTERINGSNØKKEL
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SORTERINGSRETNING
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_FRA
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.SYKEFRAVÆRSPROSENT_TIL
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.ÅRSTALL
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
-import no.nav.lydia.virksomhet.VirksomhetRepository
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -71,47 +56,16 @@ class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
-    companion object {
-        init {
-            val testData = TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 100)
-            HttpMock().also { httpMock ->
-                httpMock.start()
-                postgresContainer.getDataSource().use { dataSource ->
-                    NæringsDownloader(
-                        url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
-                        næringsRepository = NæringsRepository(dataSource = dataSource)
-                    ).lastNedNæringer()
-
-                    BrregDownloader(
-                        url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData),
-                        virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-                    ).lastNed()
-                }
-                httpMock.stop()
-            }
-
-            testData.sykefraværsStatistikkMeldinger().forEach { melding ->
-                kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(melding)
-            }
-        }
-    }
-
-
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
         val orgnr = BERGEN.orgnr
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr")
-            .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
-            .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
-
-        result.fold(
-            success = { sykefraværsstatistikkVirksomhet ->
-                sykefraværsstatistikkVirksomhet.forAll {
+        hentSykefraværForVirksomhet(orgnummer = orgnr)
+            .also { it.size shouldBeGreaterThanOrEqual 1 }
+            .forEach{
                     it.orgnr shouldBe orgnr
                     it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
                     it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
                 }
-            }, failure = { fail(it.message) })
     }
 
     @Test
@@ -295,7 +249,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere virksomheter på status`() {
-        val orgnummer = OSLO.orgnr
+        val orgnummer = TESTVIRKSOMHET_FOR_STATUSFILTER.orgnr
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
 
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
@@ -394,86 +348,4 @@ class SykefraversstatistikkApiTest {
         hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.superbruker1.token).statuskode() shouldBe 200
         hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.brukerUtenTilgangsrolle.token).statuskode() shouldBe 403
     }
-
-
-    private fun hentSykefravær(
-        success: (ListResponse<SykefraversstatistikkVirksomhetDto>) -> Unit,
-        kvartal: String = "",
-        årstall: String = "",
-        kommuner: String = "",
-        fylker: String = "",
-        næringsgrupper: String = "",
-        sorteringsnokkel: String = "",
-        sorteringsretning: String = "",
-        sykefraværsprosentFra: String = "",
-        sykefraværsprosentTil: String = "",
-        ansatteFra: String = "",
-        ansatteTil: String = "",
-        iaStatus: String = "",
-        side: String = "",
-        token: String = mockOAuth2Server.saksbehandler1.token
-    ) =
-        hentSykefraværRespons(
-            kvartal = kvartal,
-            årstall = årstall,
-            kommuner = kommuner,
-            fylker = fylker,
-            næringsgrupper = næringsgrupper,
-            sorteringsnokkel = sorteringsnokkel,
-            sorteringsretning = sorteringsretning,
-            sykefraværsprosentFra = sykefraværsprosentFra,
-            sykefraværsprosentTil = sykefraværsprosentTil,
-            ansatteFra = ansatteFra,
-            ansatteTil = ansatteTil,
-            iaStatus = iaStatus,
-            side = side,
-            token = token
-        ).third
-            .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
-
-
-    private fun hentSykefraværRespons(
-        kvartal: String = "",
-        årstall: String = "",
-        kommuner: String = "",
-        fylker: String = "",
-        næringsgrupper: String = "",
-        sorteringsnokkel: String = "",
-        sorteringsretning: String = "",
-        sykefraværsprosentFra: String = "",
-        sykefraværsprosentTil: String = "",
-        ansatteFra: String = "",
-        ansatteTil: String = "",
-        iaStatus: String = "",
-        side: String = "",
-        token: String = mockOAuth2Server.saksbehandler1.token
-    ) =
-        lydiaApiContainer.performGet(
-            SYKEFRAVERSSTATISTIKK_PATH +
-                    "?$KVARTAL=$kvartal" +
-                    "&$ÅRSTALL=$årstall" +
-                    "&$KOMMUNER=$kommuner" +
-                    "&$FYLKER=$fylker" +
-                    "&$NÆRINGSGRUPPER=$næringsgrupper" +
-                    "&$SORTERINGSNØKKEL=$sorteringsnokkel" +
-                    "&$SORTERINGSRETNING=$sorteringsretning" +
-                    "&$SYKEFRAVÆRSPROSENT_FRA=$sykefraværsprosentFra" +
-                    "&$SYKEFRAVÆRSPROSENT_TIL=$sykefraværsprosentTil" +
-                    "&$ANSATTE_FRA=$ansatteFra" +
-                    "&$ANSATTE_TIL=$ansatteTil" +
-                    "&$IA_STATUS=$iaStatus" +
-                    "&$SIDE=$side"
-        )
-            .authentication().bearer(token)
-            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
-
-
-    private fun hentSykefraværForVirksomhetRespons(
-        orgnummer: String,
-        token: String = mockOAuth2Server.saksbehandler1.token
-    ) =
-        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer")
-            .authentication().bearer(token)
-            .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
-
 }
