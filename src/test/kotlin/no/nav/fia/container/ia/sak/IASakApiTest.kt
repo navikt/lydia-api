@@ -49,7 +49,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class IASakApiTest {
-    val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
+    val fiaApiContainer = TestContainerHelper.fiaApiContainer
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     companion object {
@@ -141,11 +141,11 @@ class IASakApiTest {
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker1.token).also {
-            lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.superbruker1.navIdent, orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Ja, saksnummer = it.saksnummer)
+            fiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.superbruker1.navIdent, orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Ja, saksnummer = it.saksnummer)
             nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerAudit.token).statuskode() shouldBe 403
-            lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.lesebrukerAudit.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Nei, saksnummer = it.saksnummer)
+            fiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.lesebrukerAudit.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Nei, saksnummer = it.saksnummer)
             nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 201
-            lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.saksbehandler1.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Ja, saksnummer = it.saksnummer)
+            fiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.saksbehandler1.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Ja, saksnummer = it.saksnummer)
         }
     }
 
@@ -312,7 +312,7 @@ class IASakApiTest {
     }
 
     private fun auditLog(navIdent: String, orgnummer: String, auditType: AuditType, tillat: Tillat, saksnummer: String? = null) =
-        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|INFO|end=[0-9]\\+ " +
+        ("CEF:0\\|fia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|fia-api\\|INFO|end=[0-9]\\+ " +
             "suid=$navIdent " +
             "duid=$orgnummer " +
             "sproc=.{26} " +
@@ -330,12 +330,12 @@ class IASakApiTest {
                 })
 
     private fun hentSakerRespons(orgnummer: String, token: String = mockOAuth2Server.saksbehandler1.token) =
-        lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
+        fiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(token = token)
             .responseObject<List<IASakDto>>(localDateTimeTypeAdapter)
 
     private fun hentHendelserPåSakRespons(saksnummer: String, token: String = mockOAuth2Server.saksbehandler1.token) =
-        lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")
+        fiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")
             .authentication().bearer(token = token)
             .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter)
     
@@ -351,7 +351,7 @@ class IASakApiTest {
     private fun opprettSakForVirksomhetRespons(
         orgnummer: String,
         token : String
-    ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
+    ) = fiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(token = token)
             .responseObject<IASakDto>(localDateTimeTypeAdapter)
 
@@ -364,7 +364,7 @@ class IASakApiTest {
         )
 
     private fun nyHendelse(sakshendelse: IASakshendelseDto, token: String = mockOAuth2Server.saksbehandler1.token) =
-        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+        fiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
             .authentication().bearer(token)
             .jsonBody(
                 sakshendelse,
@@ -378,7 +378,7 @@ class IASakApiTest {
         sak: IASakDto,
         hendelsestype: SaksHendelsestype,
         token: String = mockOAuth2Server.saksbehandler1.token
-    ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+    ) = fiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
         .authentication().bearer(token)
         .jsonBody(
             IASakshendelseDto(
@@ -409,7 +409,7 @@ class IASakApiTest {
         nyHendelsePåSak(this, hendelsestype, token)
 
     private fun hentSykefraværsstatistikk(token: String = mockOAuth2Server.saksbehandler1.token) =
-        lydiaApiContainer.performGet("${SYKEFRAVERSSTATISTIKK_PATH}/")
+        fiaApiContainer.performGet("${SYKEFRAVERSSTATISTIKK_PATH}/")
             .authentication().bearer(token = token)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(
                 localDateTimeTypeAdapter

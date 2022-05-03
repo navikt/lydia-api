@@ -111,13 +111,13 @@ testing {
 
 application {
     // Define the main class for the application.
-    mainClass.set("no.nav.lydia.AppKt")
+    mainClass.set("no.nav.fia.AppKt")
 }
 
 tasks{
     shadowJar {
         manifest {
-            attributes(Pair("Main-Class", "no.nav.lydia.AppKt"))
+            attributes(Pair("Main-Class", "no.nav.fia.AppKt"))
         }
     }
 

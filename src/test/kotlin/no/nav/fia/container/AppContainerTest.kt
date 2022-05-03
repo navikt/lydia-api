@@ -9,19 +9,19 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 class AppContainerTest {
-    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
+    private val fiaApiContainer = TestContainerHelper.fiaApiContainer
     private val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
     fun `kaller isAlive`() {
-        val (_, response, _) = lydiaApiContainer.performGet("internal/isalive")
+        val (_, response, _) = fiaApiContainer.performGet("internal/isalive")
             .responseString()
 
         assert(response.isSuccessful)
     }
 
     @Test
-    fun `lydia skal ha satt opp databasen`() {
+    fun `fia skal ha satt opp databasen`() {
         val resultSet = postgresContainer.performQuery(
             """
             SELECT EXISTS(
@@ -37,8 +37,8 @@ class AppContainerTest {
     }
 
     @Test
-    fun `lydia skal kunne gi oss metrikker`() {
-        val (_, response, result) = lydiaApiContainer.performGet("metrics")
+    fun `fia skal kunne gi oss metrikker`() {
+        val (_, response, result) = fiaApiContainer.performGet("metrics")
             .responseString()
 
         assert(response.isSuccessful)

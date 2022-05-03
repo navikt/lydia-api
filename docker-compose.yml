@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   backend:
-    container_name: lydia-api
+    container_name: fia-api
     depends_on:
       - postgres,kafka
     build:
@@ -68,18 +68,18 @@ services:
       PORT: 9021
 
   frontend:
-    container_name: lydia-radgiver-frontend
+    container_name: fia-radgiver-frontend
     depends_on:
       - backend
-    image: ghcr.io/navikt/lydia-radgiver-frontend:latest
+    image: ghcr.io/navikt/fia-radgiver-frontend:latest
     environment:
       SERVER_PORT: 8090
       AZURE_APP_CLIENT_ID: notfound
-      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: https://fakedings.dev-gcp.nais.io/fake/aad?NAVIdent=A123456&aud=lydia-radgiver-frontend-lokal
+      AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: https://fakedings.dev-gcp.nais.io/fake/aad?NAVIdent=A123456&aud=fia-radgiver-frontend-lokal
       AZURE_APP_CLIENT_SECRET: secret
       AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
       AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
-      LYDIA_API_URI: http://lydia-api:8080
+      FIA_API_URI: http://fia-api:8080
       NAIS_CLUSTER_NAME: lokal
       NAIS_NAMESPACE: pia
     ports:

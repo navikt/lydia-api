@@ -9,7 +9,7 @@ import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import no.nav.fia.helper.*
 import no.nav.fia.helper.TestContainerHelper.Companion.performGet
-import no.nav.fia.helper.TestContainerHelper.Companion.withLydiaToken
+import no.nav.fia.helper.TestContainerHelper.Companion.withFiaToken
 import no.nav.fia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.fia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.fia.integrasjoner.brreg.BrregDownloader
@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraversstatistikkImportTest {
-    private val lydiaApi = TestContainerHelper.lydiaApiContainer
+    private val fiaApi = TestContainerHelper.fiaApiContainer
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
     private val postgres = TestContainerHelper.postgresContainer
     private val gson = GsonBuilder().create()
@@ -59,8 +59,8 @@ class SykefraversstatistikkImportTest {
         val forrigePeriode = Periode.forrigePeriode()
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.osloForrigeKvartal.melding)
 
-        lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
-            .withLydiaToken()
+        fiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
+            .withFiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .fold(success = { osloAndreKvart ->
                 osloAndreKvart.forExactlyOne {
@@ -74,8 +74,8 @@ class SykefraversstatistikkImportTest {
 
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.osloGjeldeneKvartal.melding)
 
-        lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
-            .withLydiaToken()
+        fiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
+            .withFiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .fold(success = { osloAndreOgTredjeKvart ->
                 osloAndreOgTredjeKvart.forExactlyOne {
@@ -100,8 +100,8 @@ class SykefraversstatistikkImportTest {
             key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
         )
 
-        val result = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
-            .withLydiaToken()
+        val result = fiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
+            .withFiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
         result.fold(success = { dtos ->
@@ -124,15 +124,15 @@ class SykefraversstatistikkImportTest {
     fun `import av data er idempotent`() {
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal.melding)
 
-        val førsteLagredeStatistikk = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
-            .withLydiaToken()
+        val førsteLagredeStatistikk = fiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
+            .withFiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .getOrElse { fail(it.message) }
 
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.osloForrigeKvartal.melding)
 
-        val second = lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
-            .withLydiaToken()
+        val second = fiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${OSLO.orgnr}")
+            .withFiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
 
         second.fold(success = { dtos ->

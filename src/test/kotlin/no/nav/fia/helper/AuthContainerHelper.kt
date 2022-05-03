@@ -35,7 +35,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val tokenEndpointUrl = "http://$mockOauth2NetworkAlias:$mockOauth2Port"
     private val issuerUrl = "$tokenEndpointUrl/$issuerName"
     private val jwksUri = "$issuerUrl/jwks"
-    private val audience = "lydia-api"
+    private val audience = "fia-api"
 
     private val superbrukerGroupId = "ensuperbrukerGroupId"
     private val saksbehandlerGroupId = "ensaksbehandlerGroupId"

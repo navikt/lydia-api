@@ -36,7 +36,7 @@ class AuditLog(val miljø: Environment) {
         saksnummer: String?
     ) {
         val logstring =
-            "CEF:0|lydia-api|auditLog|1.0|audit:${auditType.name}|lydia-api|INFO|end=${System.currentTimeMillis()} " +
+            "CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|INFO|end=${System.currentTimeMillis()} " +
                     "suid=$navIdent " +
                     "duid=$orgnummer " +
                     "sproc=${ULID.random()} " +

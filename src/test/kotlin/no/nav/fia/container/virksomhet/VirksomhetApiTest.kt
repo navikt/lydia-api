@@ -22,7 +22,7 @@ import no.nav.fia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.fia.integrasjoner.brreg.BrregDownloader
 import no.nav.fia.integrasjoner.ssb.NæringsDownloader
 import no.nav.fia.integrasjoner.ssb.NæringsRepository
-import no.nav.fia.lydiaRestApi
+import no.nav.fia.fiaRestApi
 import no.nav.fia.virksomhet.VirksomhetRepository
 import no.nav.fia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.fia.virksomhet.api.VirksomhetDto
@@ -42,7 +42,7 @@ class VirksomhetApiTest {
             name = "",
         ), security = Security(
             AzureConfig(
-                audience = "lydia-api",
+                audience = "fia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
                 issuer = "http://localhost:8100/default"
             ), fiaRoller = FiaRoller(
@@ -99,13 +99,13 @@ class VirksomhetApiTest {
     @Test
     fun `skal kunne hente ut opplysninger om en virksomhet`() {
         val token = mockOAuth2Server.issueToken(
-            audience = "lydia-api", claims = mapOf(
+            audience = "fia-api", claims = mapOf(
                 "NAVident" to "X12345"
             )
         ).serialize()
 
         withTestApplication({
-            lydiaRestApi(
+            fiaRestApi(
                 naisEnvironment = naisEnvironment,
                 dataSource = postgres.getDataSource()
             )

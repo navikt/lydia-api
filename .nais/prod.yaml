@@ -1,5 +1,5 @@
 ingresses:
-- "https://lydia-api.intern.nav.no"
+- "https://fia-api.intern.nav.no"
 kafkaPool: nav-prod
 statistikkTopic: arbeidsgiver.sykefravarsstatistikk-v1
 fiaSuperbrukerGroup: f71a0eed-1e59-4b19-ae13-6c1af824fe8e

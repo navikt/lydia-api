@@ -16,7 +16,7 @@ import no.nav.fia.helper.PostgrestContainerHelper
 import no.nav.fia.helper.TestData
 import no.nav.fia.helper.TestVirksomhet.Companion.SCENEKUNST
 import no.nav.fia.integrasjoner.ssb.NÆRINGSIMPORT_URL
-import no.nav.fia.lydiaRestApi
+import no.nav.fia.fiaRestApi
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.net.URL
@@ -53,7 +53,7 @@ class NæringsDownloaderTest {
             name = "",
         ), security = Security(
             AzureConfig(
-                audience = "lydia-api",
+                audience = "fia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
                 issuer = "http://localhost:8100/default"
             ), fiaRoller = FiaRoller(
@@ -76,7 +76,7 @@ class NæringsDownloaderTest {
 
     @Test
     fun `kan laste ned og hente ut næringer`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
+        withTestApplication({ fiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
             with(handleRequest(HttpMethod.Get, NÆRINGSIMPORT_URL)) {
                 this.response.status() shouldBe HttpStatusCode.OK
 

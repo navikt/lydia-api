@@ -68,7 +68,7 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
-    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
+    private val fiaApiContainer = TestContainerHelper.fiaApiContainer
     private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     companion object {
@@ -100,7 +100,7 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
         val orgnr = BERGEN.orgnr
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr")
+        val (_, _, result) = fiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnr")
             .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 
@@ -136,7 +136,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
+        val (_, _, result) = fiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
             .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
             .responseObject<FilterverdierDto>(localDateTimeTypeAdapter)
 
@@ -155,7 +155,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `uautorisert kall mot sykefraværendepunktet skal returnere 401`() {
-        val request = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
+        val request = fiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
         val (_, response, _) = request.responseString()
 
         response.statusCode shouldBe 401
@@ -216,13 +216,13 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
-            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
+            fiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
 
         val resultatUtenParametre =
-            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+            fiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter).third
 
@@ -298,7 +298,7 @@ class SykefraversstatistikkApiTest {
         val orgnummer = OSLO.orgnr
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
 
-        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
+        fiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(
                 success = { respons -> respons },
@@ -448,7 +448,7 @@ class SykefraversstatistikkApiTest {
         side: String = "",
         token: String = mockOAuth2Server.saksbehandler1.token
     ) =
-        lydiaApiContainer.performGet(
+        fiaApiContainer.performGet(
             SYKEFRAVERSSTATISTIKK_PATH +
                     "?$KVARTAL=$kvartal" +
                     "&$ÅRSTALL=$årstall" +
@@ -472,7 +472,7 @@ class SykefraversstatistikkApiTest {
         orgnummer: String,
         token: String = mockOAuth2Server.saksbehandler1.token
     ) =
-        lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer")
+        fiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer")
             .authentication().bearer(token)
             .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
 

@@ -4,18 +4,25 @@
 package no.nav.fia
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.engine.*
-import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.application.log
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.engine.addShutdownHook
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.stop
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
+import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.routing
 import no.nav.fia.appstatus.Metrics
 import no.nav.fia.appstatus.healthChecks
 import no.nav.fia.appstatus.metrics
@@ -39,10 +46,10 @@ import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 fun main() {
-    startLydiaBackend()
+    startFiaBackend()
 }
 
-fun startLydiaBackend() {
+fun startFiaBackend() {
     val naisEnv = NaisEnvironment()
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
@@ -53,7 +60,7 @@ fun startLydiaBackend() {
     )
 
     embeddedServer(Netty, port = 8080) {
-        lydiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource)
+        fiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource)
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
@@ -62,7 +69,7 @@ fun startLydiaBackend() {
     }.start(wait = true)
 }
 
-fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataSource) {
+fun Application.fiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataSource) {
     install(ContentNegotiation) {
         json()
     }

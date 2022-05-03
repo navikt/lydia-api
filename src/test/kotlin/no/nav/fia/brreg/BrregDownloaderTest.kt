@@ -25,7 +25,7 @@ import no.nav.fia.helper.TestVirksomhet.Companion.UTENLANDSK
 import no.nav.fia.integrasjoner.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.fia.integrasjoner.ssb.NæringsDownloader
 import no.nav.fia.integrasjoner.ssb.NæringsRepository
-import no.nav.fia.lydiaRestApi
+import no.nav.fia.fiaRestApi
 import org.junit.AfterClass
 import java.net.URL
 import kotlin.test.AfterTest
@@ -42,7 +42,7 @@ class BrregDownloaderTest {
             name = "",
         ), security = Security(
             AzureConfig(
-                audience = "lydia-api",
+                audience = "fia-api",
                 jwksUri = URL("http://localhost:8100/default/jwks"),
                 issuer = "http://localhost:8100/default",
             ), fiaRoller = FiaRoller(
@@ -98,7 +98,7 @@ class BrregDownloaderTest {
     @Test
     fun `vi kan laste ned virksomheter med og uten adresser`() {
         withTestApplication({
-            lydiaRestApi(
+            fiaRestApi(
                 naisEnvironment = naisEnvironment,
                 dataSource = postgres.getDataSource()
             )
@@ -122,7 +122,7 @@ class BrregDownloaderTest {
     @Test
     fun `vi kan laste ned liste med underenheter fra Brreg flere ganger uten konflikt`() {
         withTestApplication({
-            lydiaRestApi(
+            fiaRestApi(
                 naisEnvironment = naisEnvironment,
                 dataSource = postgres.getDataSource()
             )

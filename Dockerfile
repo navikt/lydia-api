@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17-alpine
 
-COPY build/libs/lydia-api-all.jar app.jar
+COPY build/libs/fia-api-all.jar app.jar
 
 ENV TZ="Europe/Oslo"
 

@@ -66,8 +66,8 @@ class Kafka(
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
     companion object {
-        const val groupId: String = "lydia-api-kafka-group-id"
-        const val clientId: String = "lydia-api"
+        const val groupId: String = "fia-api-kafka-group-id"
+        const val clientId: String = "fia-api"
     }
 
     fun consumerProperties() =

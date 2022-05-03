@@ -1,4 +1,4 @@
-name: "Build and deploy lydia-api"
+name: "Build and deploy fia-api"
 on:
   push:
     branches:

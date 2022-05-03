@@ -26,12 +26,12 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
-        val lydiaApiContainer: GenericContainer<*> = GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
+        val fiaApiContainer: GenericContainer<*> = GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
             .dependsOn(kafkaContainerHelper.kafkaContainer, postgresContainer.postgresContainer, oauth2ServerContainer.mockOath2Server)
-            .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
+            .withLogConsumer(Slf4jLogConsumer(log).withPrefix("fiaApiContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withExposedPorts(8080)
-            .withCreateContainerCmdModifier { cmd -> cmd.withName("lydia-${System.currentTimeMillis()}") }
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("fia-${System.currentTimeMillis()}") }
             .withEnv(
                 postgresContainer.envVars()
                     .plus(oauth2ServerContainer.envVars())
@@ -50,7 +50,7 @@ class TestContainerHelper {
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
 
-        fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+        fun Request.withFiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
     }
 }
