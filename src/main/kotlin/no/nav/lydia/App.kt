@@ -142,7 +142,11 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                 ), fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog
             )
-            virksomhet(virksomhetRepository = virksomhetRepository, auditLog = auditLog)
+            virksomhet(
+                virksomhetRepository = virksomhetRepository,
+                auditLog = auditLog,
+                fiaRoller = naisEnvironment.security.fiaRoller
+            )
         }
     }
 }

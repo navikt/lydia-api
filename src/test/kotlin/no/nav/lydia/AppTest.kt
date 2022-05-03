@@ -79,7 +79,7 @@ class AppTest {
     }
 
     @Test
-    fun `uautorisert kall mot beskyttet endepunkt skal returnere 401`() {
+    fun `uautentisert kall mot beskyttet endepunkt skal returnere 401`() {
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
