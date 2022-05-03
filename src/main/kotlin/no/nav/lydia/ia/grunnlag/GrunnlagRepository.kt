@@ -7,7 +7,7 @@ import kotliquery.using
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
-class SykefraversstatistikkGrunnlagRepository(val dataSource: DataSource) {
+class GrunnlagRepository(val dataSource: DataSource) {
 
     fun insert(sykefraversstatistikkGrunnlagListe: List<SykefraversstatistikkGrunnlag>) {
         using(sessionOf(dataSource)) { session ->
@@ -26,7 +26,7 @@ class SykefraversstatistikkGrunnlagRepository(val dataSource: DataSource) {
                         antall_personer,
                         tapte_dagsverk,
                         mulige_dagsverk,
-                        sykefraversprosent,
+                        prosent,
                         maskert
                        )
                         VALUES(
@@ -76,7 +76,7 @@ class SykefraversstatistikkGrunnlagRepository(val dataSource: DataSource) {
                         antall_personer,
                         tapte_dagsverk,
                         mulige_dagsverk,
-                        sykefraversprosent,
+                        prosent,
                         maskert,
                         opprettet
                   FROM sykefravar_statistikk_grunnlag
@@ -100,7 +100,7 @@ class SykefraversstatistikkGrunnlagRepository(val dataSource: DataSource) {
             antallPersoner = row.double("antall_personer"),
             tapteDagsverk = row.double("tapte_dagsverk"),
             muligeDagsverk = row.double("mulige_dagsverk"),
-            sykefraversprosent = row.double("sykefraversprosent"),
+            sykefraversprosent = row.double("prosent"),
             maskert = row.boolean("maskert"),
             opprettet = row.localDateTime("opprettet")
         )
