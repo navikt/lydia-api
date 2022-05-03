@@ -8,7 +8,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakstype
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
 class IASakRepository(val dataSource: DataSource) {
@@ -103,6 +106,7 @@ class IASakRepository(val dataSource: DataSource) {
                     SELECT *
                     FROM ia_sak
                     WHERE orgnr = :orgnr
+                    AND orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") { s -> "\'$s\'"}}
                 """.trimMargin(),
                     mapOf(
                         "orgnr" to orgnummer,

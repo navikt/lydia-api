@@ -7,7 +7,12 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.IASakstype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
 
@@ -17,6 +22,9 @@ class IASakService(
 ) {
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
+        if (NavEnheter.enheterSomSkalSkjermes.contains(orgnummer)) {
+            return Either.Left(IASakError.`Kan ikke oppdatere sak på NAV-kontor`)
+        }
         val saksnummer = ULID.random()
         val nySakshendelse = iaSakshendelseRepository.lagreHendelse(IASakshendelse(
             id = saksnummer,
@@ -57,6 +65,9 @@ class IASakService(
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {
+        if (NavEnheter.enheterSomSkalSkjermes.contains(hendelseDto.orgnummer)) {
+            return Either.Left(IASakError.`Kan ikke oppdatere sak på NAV-kontor`)
+        }
         val sakshendelse = IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
         val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
         if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)

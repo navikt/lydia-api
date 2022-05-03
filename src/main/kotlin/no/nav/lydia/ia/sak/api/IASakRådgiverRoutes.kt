@@ -2,11 +2,13 @@ package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
 import arrow.core.right
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
@@ -42,7 +44,7 @@ fun Route.IASak_Rådgiver(
             )
         }.also { iaSakEither ->
             when (iaSakEither) {
-                is Either.Left -> call.respond(iaSakEither.value.httpStatusCode)
+                is Either.Left -> call.respond(iaSakEither.value.httpStatusCode, iaSakEither.value.feilmelding)
                 is Either.Right -> call.respond(HttpStatusCode.Created, iaSakEither.value)
             }
         }
@@ -113,5 +115,6 @@ object IASakError {
     )
     val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
+    val `Kan ikke oppdatere sak på NAV-kontor` = Feil("Kan ikke oppdatere saker på NAV-kontorer", HttpStatusCode.UnprocessableEntity)
     val `ugyldig saksnummer` = Feil("Ugyldig saksnummer", HttpStatusCode.BadRequest)
 }

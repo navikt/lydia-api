@@ -4,7 +4,9 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
@@ -15,6 +17,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                 queryOf("""
                     SELECT * FROM ia_sak_hendelse
                     WHERE saksnummer = :saksnummer
+                    AND orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") { s -> "\'$s\'"}}
                     ORDER BY id ASC
                 """.trimIndent(),
                 mapOf(
