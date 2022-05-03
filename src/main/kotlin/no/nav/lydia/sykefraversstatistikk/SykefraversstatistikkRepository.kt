@@ -215,6 +215,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
+    // Ny metode: kopier statistikk til ny tabell
+
     private fun mapRow(row: Row): Pair<SykefraversstatistikkVirksomhet, Int> {
         return SykefraversstatistikkVirksomhet(
             virksomhetsnavn = row.string("navn"),

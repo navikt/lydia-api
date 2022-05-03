@@ -38,6 +38,7 @@ class IASak(
         when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES -> {
                 tilstand.vurderes()
+                // Trigge lagring av sporingsinfo her
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
                 tilstand.ikkeAktuell()
