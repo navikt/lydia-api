@@ -20,6 +20,8 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UatorisertException
+import no.nav.lydia.ia.grunnlag.GrunnlagRepository
+import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -109,7 +111,9 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
     }
 
     val næringsRepository = NæringsRepository(dataSource = dataSource)
-    val virksomhetRepository = VirksomhetRepository(dataSource)
+    val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+    val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource)
+    val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
 
     routing {
@@ -130,7 +134,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
         authenticate {
             sykefraversstatistikk(
                 geografiService = GeografiService(),
-                sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
+                sykefraversstatistikkRepository = sykefraversstatistikkRepository,
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
                 fiaRoller = naisEnvironment.security.fiaRoller
@@ -138,8 +142,13 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
             IASak_Rådgiver(
                 iaSakService = IASakService(
                     iaSakRepository = IASakRepository(dataSource = dataSource),
-                    iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
-                ), fiaRoller = naisEnvironment.security.fiaRoller,
+                    iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+                    grunnlagService = GrunnlagService(
+                        grunnlagRepository = grunnlagRepository,
+                        sykefraversstatistikkRepository = sykefraversstatistikkRepository
+                    )
+                ),
+                fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog
             )
             virksomhet(virksomhetRepository = virksomhetRepository, auditLog = auditLog)
