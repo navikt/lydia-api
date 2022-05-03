@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
+import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
@@ -18,7 +19,8 @@ import java.time.LocalDateTime
 
 class IASakService(
     private val iaSakRepository: IASakRepository,
-    private val iaSakshendelseRepository: IASakshendelseRepository
+    private val iaSakshendelseRepository: IASakshendelseRepository,
+    private val grunnlagService: GrunnlagService
 ) {
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
@@ -60,7 +62,7 @@ class IASakService(
         val sakEtterVurdering = lagretSak.behandleHendelse(
             iaSakshendelseRepository.lagreHendelse(vurderHendelse)
         )
-
+        sakEtterVurdering.lagreGrunnlag(grunnlagService)
         return iaSakRepository.oppdaterSak(sakEtterVurdering)
     }
 

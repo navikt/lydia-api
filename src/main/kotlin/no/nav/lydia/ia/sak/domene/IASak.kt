@@ -1,8 +1,15 @@
 package no.nav.lydia.ia.sak.domene
 
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.grunnlag.GrunnlagService
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
 import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.LESE
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SAKSBEHANDLER
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SUPERBRUKER
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -16,7 +23,7 @@ class IASak(
     var endretTidspunkt: LocalDateTime?,
     var endretAv: String?,
     var endretAvHendelseId: String,
-    status: IAProsessStatus
+    status: IAProsessStatus,
 ) {
     private var tilstand: ProsessTilstand
     private val log = LoggerFactory.getLogger(this.javaClass)
@@ -28,6 +35,8 @@ class IASak(
     val status: IAProsessStatus
         get() = tilstand.status
 
+    fun lagreGrunnlag(grunnlagService: GrunnlagService) = tilstand.lagreGrunnlag(grunnlagService)
+
     fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
 
     fun kanUtføreHendelse(saksHendelsestype: SaksHendelsestype, rådgiver: Rådgiver) = gyldigeNesteHendelser(rådgiver).contains(saksHendelsestype)
@@ -38,7 +47,6 @@ class IASak(
         when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES -> {
                 tilstand.vurderes()
-                // Trigge lagring av sporingsinfo her
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
                 tilstand.ikkeAktuell()
@@ -79,6 +87,10 @@ class IASak(
             håndterFeilState()
         }
 
+        open fun lagreGrunnlag(grunnlagService: GrunnlagService) {
+
+        }
+
         abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype>
     }
 
@@ -105,6 +117,8 @@ class IASak(
             }
             tilstand = KontaktesTilstand()
         }
+
+        override fun lagreGrunnlag(grunnlagService: GrunnlagService) = grunnlagService.lagreGrunnlag(orgnr, saksnummer, endretAvHendelseId)
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
             return when (rådgiver.rolle) {
