@@ -41,11 +41,14 @@ fun Route.sykefraversstatistikk(
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
-            auditLog(auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
             sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnummer).right()
+        }.also {
+            auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
+        }.map {
+            sykefraværsstatistikk -> call.respond(sykefraværsstatistikk.toDto())
+        }.mapLeft { feil ->
+            call.respond(feil.httpStatusCode, feil.feilmelding)
         }
-            .map { sykefraværsstatistikk -> call.respond(sykefraværsstatistikk.toDto()) }
-            .mapLeft { feil -> call.respond(feil.httpStatusCode, feil.feilmelding) }
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
