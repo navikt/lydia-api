@@ -2,7 +2,7 @@ package no.nav.lydia
 
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.security.mock.oauth2.MockOAuth2Server
@@ -16,7 +16,7 @@ class AppTest {
         private val mockOAuth2Server = MockOAuth2Server().apply {
             start(port = 8100)
         }
-        private val postgres = TestContainerHelper.postgresContainer
+        private val postgres = PostgrestContainerHelper()
         private val dataSource = postgres.getDataSource().apply { runMigration(this) }
         private val naisEnvironment = NaisEnvironment(
             database = Database(

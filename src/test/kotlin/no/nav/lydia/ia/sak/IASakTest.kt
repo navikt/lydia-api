@@ -1,8 +1,12 @@
-package no.nav.lydia.enhetstester
+package no.nav.lydia.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.IASakstype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import java.time.LocalDateTime
 import kotlin.test.Test
 

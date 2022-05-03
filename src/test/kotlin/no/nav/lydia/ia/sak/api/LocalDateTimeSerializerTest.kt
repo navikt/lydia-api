@@ -1,9 +1,8 @@
-package no.nav.lydia.enhetstester
+package no.nav.lydia.ia.sak.api
 
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.Json.Default.decodeFromString
-import no.nav.lydia.ia.sak.api.LocalDateTimeSerializer
 import java.time.LocalDateTime
 import java.time.Month.JANUARY
 import kotlin.test.Test
