@@ -9,7 +9,6 @@ import io.ktor.util.pipeline.*
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.PROD_GCP
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.tilgangskontroll.navIdent
 import org.slf4j.LoggerFactory
 
@@ -59,9 +58,9 @@ class AuditLog(val miljø: Environment) {
 
     fun auditloggEither(
         call: ApplicationCall,
-        either: Either<Feil, IASakDto>,
+        either: Either<Feil, Any>,
         orgnummer: String,
-        saksnummer: String?,
+        saksnummer: String? = null,
         auditType: AuditType
     ) {
         val tillat = when (either) {

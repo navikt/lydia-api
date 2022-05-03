@@ -5,7 +5,9 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.lydia.*
+import no.nav.lydia.AuditLog
+import no.nav.lydia.AuditType
+import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
@@ -22,8 +24,9 @@ fun Route.virksomhet(
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
             virksomhetRepository.hentVirksomhet(orgnr = orgnummer)?.toDto().rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
+        }.also {
+            auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map {
-            auditLog(auditLog = auditLog, orgnummer = orgnummer, auditType = AuditType.access, tillat = Tillat.Ja)
             call.respond(HttpStatusCode.OK, it)
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
