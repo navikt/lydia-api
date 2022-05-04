@@ -7,11 +7,12 @@ import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import java.time.LocalDateTime
 
 @Serializable
-class IASakshendelseDto(
+open class IASakshendelseDto(
     val orgnummer: String,
     val saksnummer: String,
     val hendelsesType: SaksHendelsestype,
-    val endretAvHendelseId: String
+    val endretAvHendelseId: String,
+    val payload: String?
 )
 
 @Serializable

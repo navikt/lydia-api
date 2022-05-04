@@ -70,18 +70,20 @@ class IASakService(
         if (NavEnheter.enheterSomSkalSkjermes.contains(hendelseDto.orgnummer)) {
             return Either.Left(IASakError.`Kan ikke oppdatere sak på NAV-kontor`)
         }
-        val sakshendelse = IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
-        val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
-        if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
-        if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
-        val sak = IASak.fraHendelser(hendelser)
-        if (sak.kanUtføreHendelse(saksHendelsestype = hendelseDto.hendelsesType, rådgiver = rådgiver))
-            sak.behandleHendelse(sakshendelse)
-        else {
-            return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
-        }
-        iaSakshendelseRepository.lagreHendelse(sakshendelse)
-        return iaSakRepository.oppdaterSak(sak)
+        return IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
+            .map { sakshendelse ->
+                val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
+                if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
+                if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
+                val sak = IASak.fraHendelser(hendelser)
+                if (sak.kanUtføreHendelse(saksHendelsestype = hendelseDto.hendelsesType, rådgiver = rådgiver))
+                    sak.behandleHendelse(sakshendelse)
+                else {
+                    return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
+                }
+                iaSakshendelseRepository.lagreHendelse(sakshendelse)
+                return iaSakRepository.oppdaterSak(sak)
+            }
     }
 
     fun hentSaker(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)

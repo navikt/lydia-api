@@ -43,13 +43,19 @@ class IASak(
 
     private fun erEierAvSak(rådgiver: Rådgiver) = eidAv == rådgiver.navIdent
 
+    fun behandleHendelse(hendelse: AvslagsHendelse): IASak {
+        tilstand.behandleHendelse(hendelse = hendelse)
+
+        return this
+    }
+
     fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES -> {
                 tilstand.vurderes()
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
-                tilstand.ikkeAktuell()
+                throw IllegalStateException("Burde ikke behnadle en IKKE_AKTUELL hendelse her")
             }
             VIRKSOMHET_SKAL_KONTAKTES -> {
                 tilstand.kontaktes()
@@ -85,6 +91,17 @@ class IASak(
 
         open fun kontaktes() {
             håndterFeilState()
+        }
+
+        open fun behandleHendelse(hendelse: AvslagsHendelse) {
+            ikkeAktuell()
+            oppdaterStandardFelter(hendelse = hendelse)
+        }
+
+        private fun oppdaterStandardFelter(hendelse: IASakshendelse) {
+            endretAvHendelseId = hendelse.id
+            endretAv = hendelse.opprettetAv
+            endretTidspunkt = hendelse.opprettetTidspunkt
         }
 
         open fun lagreGrunnlag(grunnlagService: GrunnlagService) {
