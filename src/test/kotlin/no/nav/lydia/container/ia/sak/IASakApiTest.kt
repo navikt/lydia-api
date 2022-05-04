@@ -9,8 +9,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.lydia.AuditType
-import no.nav.lydia.Tillat
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSak
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
@@ -22,8 +20,6 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.forExactlyOne
@@ -35,7 +31,6 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
-    val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     @Test
@@ -67,8 +62,6 @@ class IASakApiTest {
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
         val orgnr = BERGEN.orgnr
-        postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
-
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -76,10 +69,8 @@ class IASakApiTest {
                 sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
             }
         })
-
         val sak = opprettSakForVirksomhet(orgnummer = orgnr)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
-
         hentSykefravær(success = { listeEtterVirksomhetVurderes ->
             listeEtterVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeEtterVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
