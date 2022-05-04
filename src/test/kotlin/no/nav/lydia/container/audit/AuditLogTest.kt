@@ -1,15 +1,12 @@
 package no.nav.lydia.container.virksomhet
 
 import com.github.kittinunf.fuel.core.Request
-import io.kotest.matchers.shouldBe
-import io.ktor.client.request.*
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
-import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import kotlin.test.Test
 
@@ -121,13 +118,13 @@ class AuditLogTest {
         tillat: Tillat,
         saksnummer: String? = null
     ) =
-        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|INFO|end=[0-9]\\+ " +
+        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|INFO\\|end=[0-9]+ " +
                 "suid=$navIdent " +
                 "duid=$orgnummer " +
                 "sproc=.{26} " +
                 "requestMethod=${request.method} " +
                 "request=${request.url.path} " +
                 "flexString1Label=Decision " +
-                "flexString1=$tillat" +
-                saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" }).toRegex()
+                "flexString1=${tillat.tillat}" +
+                (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "")).toRegex()
 }
