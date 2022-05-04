@@ -105,5 +105,6 @@ fun PipelineContext<Unit, ApplicationCall>.auditLog(
             tillat = tillat,
             saksnummer = saksnummer
         )
+        println("Auditlogger fra $navIdent")
     }
 }

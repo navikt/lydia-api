@@ -102,11 +102,8 @@ class IASakApiTest {
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker1.token).also {
-            lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.superbruker1.navIdent, orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Ja, saksnummer = it.saksnummer)
             nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerAudit.token).statuskode() shouldBe 403
-            lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.lesebrukerAudit.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Nei, saksnummer = it.saksnummer)
             nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 201
-            lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.saksbehandler1.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Ja, saksnummer = it.saksnummer)
         }
     }
 
@@ -271,15 +268,4 @@ class IASakApiTest {
             }
         }
     }
-
-    private fun auditLog(navIdent: String, orgnummer: String, auditType: AuditType, tillat: Tillat, saksnummer: String? = null) =
-        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|INFO|end=[0-9]\\+ " +
-            "suid=$navIdent " +
-            "duid=$orgnummer " +
-            "sproc=.{26} " +
-            "requestMethod=POST " +
-            "request=/iasak/radgiver/hendelse " +
-            "flexString1Label=Decision " +
-            "flexString1=$tillat" +
-            saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" }).toRegex()
 }
