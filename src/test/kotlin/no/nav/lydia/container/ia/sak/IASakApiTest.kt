@@ -32,6 +32,7 @@ import kotlin.test.assertTrue
 
 class IASakApiTest {
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+    val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
@@ -62,6 +63,8 @@ class IASakApiTest {
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
         val orgnr = BERGEN.orgnr
+        postgresContainer.performUpdate("DELETE FROM sykefravar_statistikk_grunnlag WHERE orgnr = '$orgnr'")
+        postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
