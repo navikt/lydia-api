@@ -33,7 +33,8 @@ class IASak(
 
     fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
 
-    fun kanUtføreHendelse(saksHendelsestype: SaksHendelsestype, rådgiver: Rådgiver) = gyldigeNesteHendelser(rådgiver).contains(saksHendelsestype)
+    fun kanUtføreHendelse(saksHendelsestype: SaksHendelsestype, rådgiver: Rådgiver) =
+        gyldigeNesteHendelser(rådgiver).map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }.contains(saksHendelsestype)
 
     private fun erEierAvSak(rådgiver: Rådgiver) = eidAv == rådgiver.navIdent
 
@@ -43,7 +44,7 @@ class IASak(
                 tilstand.vurderes()
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
-                when(hendelse){
+                when (hendelse) {
                     is VirksomhetIkkeAktuellHendelse -> tilstand.behandleHendelse(hendelse = hendelse)
                     else -> tilstand.ikkeAktuell() // TODO...
                 }
@@ -92,7 +93,7 @@ class IASak(
 
         }
 
-        abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype>
+        abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse>
 
         protected fun oppdaterStandardFelter(hendelse: IASakshendelse) {
             endretAvHendelseId = hendelse.id
@@ -108,7 +109,7 @@ class IASak(
             tilstand = VurderesTilstand()
         }
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> = listOf()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = listOf()
     }
 
     private inner class VurderesTilstand : ProsessTilstand(
@@ -130,15 +131,20 @@ class IASak(
             tilstand = KontaktesTilstand()
         }
 
-        override fun lagreGrunnlag(grunnlagService: GrunnlagService) = grunnlagService.lagreGrunnlag(orgnr, saksnummer, endretAvHendelseId)
+        override fun lagreGrunnlag(grunnlagService: GrunnlagService) =
+            grunnlagService.lagreGrunnlag(orgnr, saksnummer, endretAvHendelseId)
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
                 LESE -> emptyList()
                 SAKSBEHANDLER, SUPERBRUKER -> {
-                    if (erEierAvSak(rådgiver)) return listOf(VIRKSOMHET_SKAL_KONTAKTES, VIRKSOMHET_ER_IKKE_AKTUELL)
-                    else return listOf(TA_EIERSKAP_I_SAK)
-                }}
+                    if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
+                    )
+                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
         }
 
     }
@@ -146,6 +152,7 @@ class IASak(
     private inner class KontaktesTilstand : ProsessTilstand(
         status = IAProsessStatus.KONTAKTES
     ) {
+
         override fun ikkeAktuell() {
             tilstand = IkkeAktuellTilstand()
         }
@@ -155,20 +162,21 @@ class IASak(
             super.oppdaterStandardFelter(hendelse = hendelse)
         }
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
                 LESE -> emptyList()
                 SAKSBEHANDLER, SUPERBRUKER -> {
-                    if (erEierAvSak(rådgiver)) return listOf(VIRKSOMHET_ER_IKKE_AKTUELL)
-                    else return listOf(TA_EIERSKAP_I_SAK)
-                }}
+                    if (erEierAvSak(rådgiver)) return listOf(GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL))
+                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
         }
     }
 
     private inner class IkkeAktuellTilstand : ProsessTilstand(
         status = IAProsessStatus.IKKE_AKTUELL
     ) {
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> = listOf()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
     }
 
     companion object {

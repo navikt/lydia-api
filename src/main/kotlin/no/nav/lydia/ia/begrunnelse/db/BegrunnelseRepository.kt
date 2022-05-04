@@ -1,11 +1,6 @@
 package no.nav.lydia.ia.begrunnelse.db
 
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
-import no.nav.lydia.createDataSource
-import no.nav.lydia.ia.begrunnelse.domene.Begrunnelse
-import no.nav.lydia.ia.sak.domene.Årsak
+import no.nav.lydia.ia.begrunnelse.domene.Årsak
 import javax.sql.DataSource
 
 class BegrunnelseRepository(val dataSource: DataSource) {

@@ -1,12 +1,19 @@
 package no.nav.lydia.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
+import io.kotest.inspectors.shouldForAtLeastOne
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.FiaRoller
+import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakstype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
 import kotlin.test.Test
 
@@ -15,6 +22,31 @@ class IASakTest {
         const val orgnummer = "123456789"
         const val navIdent1 = "A123456"
         const val navIdent2 = "B123456"
+        const val navIdent3 = "C123456"
+
+        val fiaroller = FiaRoller(
+            superbrukerGroupId = "123",
+            saksbehandlerGroupId = "456",
+            lesetilgangGroupId = "789"
+        )
+
+        val superbruker1 = Rådgiver(
+            navIdent = navIdent1,
+            fiaRoller = fiaroller,
+            rådgiversGrupper = listOf(fiaroller.superbrukerGroupId)
+        )
+
+        val saksbehandler2 = Rådgiver(
+            navIdent = navIdent2,
+            fiaRoller = fiaroller,
+            rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
+        )
+
+        val saksbehandler3 = Rådgiver(
+            navIdent = navIdent3,
+            fiaRoller = fiaroller,
+            rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
+        )
     }
 
     @Test
@@ -22,7 +54,7 @@ class IASakTest {
         val sak = nyIASak(orgnummer = orgnummer, navIdent = navIdent1)
 
         val vurderingsHendelse = nyHendelse(
-            SaksHendelsestype.VIRKSOMHET_VURDERES,
+            VIRKSOMHET_VURDERES,
             saksnummer = sak.saksnummer,
             orgnummer = sak.orgnr,
             navIdent = navIdent2
@@ -34,11 +66,12 @@ class IASakTest {
         sak.endretAvHendelseId shouldBe vurderingsHendelse.id
         sak.status shouldBe IAProsessStatus.VURDERES
     }
+
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
         val h1 = nyFørsteHendelse(orgnummer = orgnummer, navIdent = navIdent1)
         val h2 = nyHendelse(
-            SaksHendelsestype.VIRKSOMHET_VURDERES,
+            VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
             navIdent = navIdent2
@@ -56,19 +89,49 @@ class IASakTest {
         sak.endretAvHendelseId shouldBe h3.id
     }
 
-    private fun nyFørsteHendelse(orgnummer: String, navIdent: String) : IASakshendelse {
+    @Test
+    fun `skal få en liste over gyldige begrunnelser for når en virksomhet ikke er aktuell`() {
+        Rådgiver
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, navIdent = superbruker1.navIdent)
+        val h2_vurderes = nyHendelse(
+            VIRKSOMHET_VURDERES,
+            saksnummer = h1_ny_sak.saksnummer,
+            orgnummer = h1_ny_sak.orgnummer,
+            navIdent = superbruker1.navIdent
+        )
+        val h3_ta_eierskap = nyHendelse(
+            TA_EIERSKAP_I_SAK,
+            saksnummer = h1_ny_sak.saksnummer,
+            orgnummer = h1_ny_sak.orgnummer,
+            navIdent = saksbehandler2.navIdent
+        )
+        val sak = IASak.fraHendelser(listOf(h1_ny_sak, h2_vurderes, h3_ta_eierskap))
+        sak.gyldigeNesteHendelser(rådgiver = saksbehandler2)
+            .shouldForAtLeastOne {
+                it.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                it.gyldigeÅrsaker shouldContainAll listOf(
+                    ÅrsakType.ARBEIDSGIVER_TAKKET_NEI,
+                    ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
+                )
+            }.shouldForAtLeastOne {
+                it.saksHendelsestype shouldBe VIRKSOMHET_SKAL_KONTAKTES
+                it.gyldigeÅrsaker.shouldBeEmpty()
+            }
+    }
+
+    private fun nyFørsteHendelse(orgnummer: String, navIdent: String): IASakshendelse {
         val id = ULID.random()
         return IASakshendelse(
             id = id,
             opprettetTidspunkt = LocalDateTime.now(),
             saksnummer = id,
-            hendelsesType = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
+            hendelsesType = OPPRETT_SAK_FOR_VIRKSOMHET,
             orgnummer = orgnummer,
             opprettetAv = navIdent,
         )
     }
 
-    private fun nyHendelse(type : SaksHendelsestype, saksnummer: String, orgnummer : String, navIdent: String) =
+    private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
         IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -78,7 +141,7 @@ class IASakTest {
             opprettetAv = navIdent,
         )
 
-    private fun nyIASak(orgnummer : String, navIdent : String) : IASak {
+    private fun nyIASak(orgnummer: String, navIdent: String): IASak {
         return nyFørsteHendelse(orgnummer, navIdent).let { sakshendelse ->
             IASak(
                 saksnummer = sakshendelse.saksnummer,

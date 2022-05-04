@@ -2,6 +2,7 @@ package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.assertions.shouldFail
+import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -29,10 +30,13 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
+import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
+import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType.HAR_IKKE_TID_NÅ
+import no.nav.lydia.ia.begrunnelse.domene.Årsak
+import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.sak.domene.Årsak
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -209,7 +213,7 @@ class IASakApiTest {
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-                    payload = Årsak(type = "årsakType", begrunnelser = listOf("begrunnelsetper")).toJson()
+                    payload = Årsak( type = ARBEIDSGIVER_TAKKET_NEI, begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)).toJson()
                 )
             val alleHendelsesTyper = listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
@@ -251,7 +255,9 @@ class IASakApiTest {
         opprettSakForVirksomhet(OSLO.orgnr, token = mockOAuth2Server.superbruker1.token).also { sak ->
             hentSaker(sak.orgnr, token = mockOAuth2Server.saksbehandler1.token).filter { it.saksnummer == sak.saksnummer }
                 .forEach {
-                    it.gyldigeNesteHendelser shouldContainExactly listOf(TA_EIERSKAP_I_SAK)
+                    it.gyldigeNesteHendelser.forAll {
+                        it.saksHendelsestype shouldBe TA_EIERSKAP_I_SAK
+                    }
                 }
             hentSaker(OSLO.orgnr, token = mockOAuth2Server.lesebruker.token).filter { it.saksnummer == sak.saksnummer }
                 .forEach {
