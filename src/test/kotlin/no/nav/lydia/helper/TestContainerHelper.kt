@@ -11,12 +11,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSER_SUB_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
@@ -26,6 +21,8 @@ import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
+import no.nav.lydia.virksomhet.api.VirksomhetDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
@@ -301,5 +298,21 @@ class StatistikkHelper{
         ) =
             hentSykefraværForVirksomhetRespons(orgnummer = orgnummer, token = token).third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
+    }
+}
+
+class VirksomhetHelper {
+    companion object {
+        fun hentVirksomhetsinformasjonRespons(orgnummer: String, token: String) =
+            lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
+                .authentication().bearer(token)
+                .responseObject<VirksomhetDto>()
+
+        fun hentVirksomhetsinformasjon(orgnummer: String, token: String) =
+            hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
+                .third.fold(
+                    success = { response -> response },
+                    failure = { fail(it.message) }
+                )
     }
 }
