@@ -49,41 +49,45 @@ class AuditLogTest {
     @Test
     fun `auditlogger oppdatering av IA-sak`() {
         val orgnummer = TestVirksomhet.OSLO.orgnr
-        SakHelper.opprettSakForVirksomhetRespons(orgnummer, token = mockOAuth2Server.superbruker1.token).also {
+        SakHelper.opprettSakForVirksomhetRespons(orgnummer, token = mockOAuth2Server.superbruker1.token).also { responsForOpprettSakForVirksomhetMedSuperbruker ->
+            val iaSak = responsForOpprettSakForVirksomhetMedSuperbruker.third.get()
             lydiaApiContainer shouldContainLog auditLog(
-                request = it.first,
+                request = responsForOpprettSakForVirksomhetMedSuperbruker.first,
                 navIdent = mockOAuth2Server.superbruker1.navIdent,
                 orgnummer = orgnummer,
                 auditType = AuditType.create,
                 tillat = Tillat.Ja,
-                saksnummer = it.third.get().saksnummer
+                saksnummer = iaSak.saksnummer
             )
             SakHelper.nyHendelsePåSakMedRespons(
-                it.third.get(),
+                iaSak,
                 SaksHendelsestype.TA_EIERSKAP_I_SAK,
                 token = mockOAuth2Server.lesebrukerAudit.token
-            )
-            lydiaApiContainer shouldContainLog auditLog(
-                request  = it.first,
-                navIdent = mockOAuth2Server.lesebrukerAudit.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.update,
-                tillat = Tillat.Nei,
-                saksnummer = it.third.get().saksnummer
-            )
+            ).also { responsPåTaEierskapMedLesebruker ->
+                lydiaApiContainer shouldContainLog auditLog(
+                    request  = responsPåTaEierskapMedLesebruker.first,
+                    navIdent = mockOAuth2Server.lesebrukerAudit.navIdent,
+                    orgnummer = orgnummer,
+                    auditType = AuditType.update,
+                    tillat = Tillat.Nei,
+                    saksnummer = iaSak.saksnummer
+                )
+            }
+
             SakHelper.nyHendelsePåSakMedRespons(
-                it.third.get(),
+                iaSak,
                 SaksHendelsestype.TA_EIERSKAP_I_SAK,
                 token = mockOAuth2Server.saksbehandler1.token
-            )
-            lydiaApiContainer shouldContainLog auditLog(
-                request = it.first,
-                navIdent = mockOAuth2Server.saksbehandler1.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.update,
-                tillat = Tillat.Ja,
-                saksnummer = it.third.get().saksnummer
-            )
+            ).also { responsPåTaEierskapMedSaksbehandler ->
+                lydiaApiContainer shouldContainLog auditLog(
+                    request = responsPåTaEierskapMedSaksbehandler.first,
+                    navIdent = mockOAuth2Server.saksbehandler1.navIdent,
+                    orgnummer = orgnummer,
+                    auditType = AuditType.update,
+                    tillat = Tillat.Ja,
+                    saksnummer = iaSak.saksnummer
+                )
+            }
         }
     }
 
