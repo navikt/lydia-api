@@ -17,12 +17,12 @@ open class IASakshendelse(
     val saksnummer: String,
     val hendelsesType: SaksHendelsestype,
     val orgnummer: String,
-    val opprettetAv: String,
+    val opprettetAv: String
 ) {
     companion object {
         fun fromDto(dto: IASakshendelseDto, navIdent: String) =
             when (dto.hendelsesType) {
-                SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL -> AvslagsHendelse.fromDto(dto, navIdent)
+                SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, navIdent)
                 else -> IASakshendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
@@ -35,11 +35,10 @@ open class IASakshendelse(
     }
 }
 
-class AvslagsHendelse(
+class VirksomhetIkkeAktuellHendelse(
     id: String,
     opprettetTidspunkt: LocalDateTime,
     saksnummer: String,
-    hendelsesType: SaksHendelsestype,
     orgnummer: String,
     opprettetAv: String,
     årsak: Årsak
@@ -47,33 +46,45 @@ class AvslagsHendelse(
     id,
     opprettetTidspunkt = opprettetTidspunkt,
     saksnummer = saksnummer,
-    hendelsesType = hendelsesType,
+    hendelsesType = SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
     orgnummer = orgnummer,
     opprettetAv = opprettetAv
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, navIdent: String): Either<Feil, AvslagsHendelse> =
+        fun fromDto(dto: IASakshendelseDto, navIdent: String): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
                 try {
                     val årsak = Json.decodeFromString<Årsak>(dto.payload)
-                    AvslagsHendelse(
+                    VirksomhetIkkeAktuellHendelse(
                         id = ULID.random(),
                         opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = dto.saksnummer,
-                        hendelsesType = dto.hendelsesType,
                         orgnummer = dto.orgnummer,
                         opprettetAv = navIdent,
                         årsak = årsak
                     ).right()
                 } catch (e: Exception) {
-                   SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
+                    SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
                 }
             } ?: SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
     }
 }
 
+class VurderesHendelse(
+    iaSakshendelseDto: IASakshendelseDto,
+    opprettetAv: String,
+) : IASakshendelse(
+    id = ULID.random(),
+    opprettetTidspunkt = LocalDateTime.now(),
+    saksnummer = iaSakshendelseDto.saksnummer,
+    hendelsesType = iaSakshendelseDto.hendelsesType,
+    orgnummer = iaSakshendelseDto.orgnummer,
+    opprettetAv = opprettetAv
+)
+
 object SaksHendelseFeil {
-    val `kunne ikke deserialisere årsak` =  Feil(feilmelding = "Kunne ikke deserialisere årsak", httpStatusCode = HttpStatusCode.BadRequest)
+    val `kunne ikke deserialisere årsak` =
+        Feil(feilmelding = "Kunne ikke deserialisere årsak", httpStatusCode = HttpStatusCode.BadRequest)
 }
 
 @kotlinx.serialization.Serializable

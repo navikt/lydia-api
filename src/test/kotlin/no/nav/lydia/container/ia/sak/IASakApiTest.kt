@@ -20,6 +20,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
+import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
@@ -31,6 +32,7 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.sak.domene.Årsak
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -103,9 +105,9 @@ class IASakApiTest {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker1.token).also {
             lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.superbruker1.navIdent, orgnummer = orgnummer, auditType = AuditType.create, tillat = Tillat.Ja, saksnummer = it.saksnummer)
-            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerAudit.token).statuskode() shouldBe 403
+            nyHendelsePåSakMedRespons(sak = it, hendelsestype = TA_EIERSKAP_I_SAK, token = mockOAuth2Server.lesebrukerAudit.token).statuskode() shouldBe 403
             lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.lesebrukerAudit.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Nei, saksnummer = it.saksnummer)
-            nyHendelsePåSakMedRespons(it, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 201
+            nyHendelsePåSakMedRespons(sak = it, hendelsestype = TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 201
             lydiaApiContainer shouldContainLog auditLog(navIdent = mockOAuth2Server.saksbehandler1.navIdent, orgnummer = orgnummer, auditType = AuditType.update, tillat = Tillat.Ja, saksnummer = it.saksnummer)
         }
     }
@@ -114,12 +116,14 @@ class IASakApiTest {
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av andre enn de som eier den`() {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
-            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also { sakEtterTattEierskap ->
+            nyHendelsePåSak(
+                sak = sak,
+                hendelsestype = TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also { sakEtterTattEierskap ->
                 nyHendelsePåSakMedRespons(
-                    sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandler2.token)
+                    sak = sakEtterTattEierskap, hendelsestype = VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandler2.token)
                     .statuskode() shouldBe 422
                 nyHendelsePåSakMedRespons(
-                    sakEtterTattEierskap, VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandler1.token)
+                    sak = sakEtterTattEierskap, hendelsestype = VIRKSOMHET_SKAL_KONTAKTES, token = mockOAuth2Server.saksbehandler1.token)
                     .statuskode() shouldBe 201
             }
         }
@@ -203,7 +207,7 @@ class IASakApiTest {
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-                .nyHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
+                .nyHendelse(VIRKSOMHET_ER_IKKE_AKTUELL, Årsak(type = "årsakType", begrunnelser = listOf("begrunnelsetper")).toJson())
             val alleHendelsesTyper = listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
@@ -226,18 +230,14 @@ class IASakApiTest {
         opprettSakForVirksomhet(OSLO.orgnr).also { sak ->
             sak.eidAv shouldBe null
 
-            val sakEtterTattEierskap = sak.nyHendelse(TA_EIERSKAP_I_SAK)
+            val sakEtterTattEierskap = sak.nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK)
             sakEtterTattEierskap.eidAv shouldBe mockOAuth2Server.saksbehandler1.navIdent
 
-            sakEtterTattEierskap.nyHendelse(TA_EIERSKAP_I_SAK, mockOAuth2Server.saksbehandler2.token).also {
+            sakEtterTattEierskap.nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = mockOAuth2Server.saksbehandler2.token
+            ).also {
                 it.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
-            }.also {
-                hentHendelserPåSak(it.saksnummer).map { hendelse -> hendelse.hendelsestype }.shouldContainExactly(
-                    OPPRETT_SAK_FOR_VIRKSOMHET,
-                    VIRKSOMHET_VURDERES,
-                    TA_EIERSKAP_I_SAK,
-                    TA_EIERSKAP_I_SAK
-                )
             }
 
         }

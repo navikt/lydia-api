@@ -12,7 +12,7 @@ open class IASakshendelseDto(
     val saksnummer: String,
     val hendelsesType: SaksHendelsestype,
     val endretAvHendelseId: String,
-    val payload: String?
+    val payload: String? = null
 )
 
 @Serializable

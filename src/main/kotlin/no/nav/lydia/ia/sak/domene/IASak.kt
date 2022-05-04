@@ -1,15 +1,9 @@
 package no.nav.lydia.ia.sak.domene
 
 import no.nav.lydia.ia.grunnlag.GrunnlagService
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.LESE
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SAKSBEHANDLER
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SUPERBRUKER
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -43,19 +37,16 @@ class IASak(
 
     private fun erEierAvSak(rådgiver: Rådgiver) = eidAv == rådgiver.navIdent
 
-    fun behandleHendelse(hendelse: AvslagsHendelse): IASak {
-        tilstand.behandleHendelse(hendelse = hendelse)
-
-        return this
-    }
-
     fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES -> {
                 tilstand.vurderes()
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
-                throw IllegalStateException("Burde ikke behnadle en IKKE_AKTUELL hendelse her")
+                when(hendelse){
+                    is VirksomhetIkkeAktuellHendelse -> tilstand.behandleHendelse(hendelse = hendelse)
+                    else -> tilstand.ikkeAktuell() // TODO...
+                }
             }
             VIRKSOMHET_SKAL_KONTAKTES -> {
                 tilstand.kontaktes()
@@ -93,15 +84,8 @@ class IASak(
             håndterFeilState()
         }
 
-        open fun behandleHendelse(hendelse: AvslagsHendelse) {
-            ikkeAktuell()
-            oppdaterStandardFelter(hendelse = hendelse)
-        }
-
-        private fun oppdaterStandardFelter(hendelse: IASakshendelse) {
-            endretAvHendelseId = hendelse.id
-            endretAv = hendelse.opprettetAv
-            endretTidspunkt = hendelse.opprettetTidspunkt
+        open fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
+            håndterFeilState()
         }
 
         open fun lagreGrunnlag(grunnlagService: GrunnlagService) {
@@ -109,6 +93,12 @@ class IASak(
         }
 
         abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype>
+
+        protected fun oppdaterStandardFelter(hendelse: IASakshendelse) {
+            endretAvHendelseId = hendelse.id
+            endretAv = hendelse.opprettetAv
+            endretTidspunkt = hendelse.opprettetTidspunkt
+        }
     }
 
     private inner class StartTilstand : ProsessTilstand(
@@ -126,6 +116,11 @@ class IASak(
     ) {
         override fun ikkeAktuell() {
             tilstand = IkkeAktuellTilstand()
+        }
+
+        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
+            ikkeAktuell()
+            super.oppdaterStandardFelter(hendelse = hendelse)
         }
 
         override fun kontaktes() {
@@ -153,6 +148,11 @@ class IASak(
     ) {
         override fun ikkeAktuell() {
             tilstand = IkkeAktuellTilstand()
+        }
+
+        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
+            ikkeAktuell()
+            super.oppdaterStandardFelter(hendelse = hendelse)
         }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
