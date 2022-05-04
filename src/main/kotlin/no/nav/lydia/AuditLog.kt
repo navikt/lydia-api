@@ -2,10 +2,12 @@ package no.nav.lydia
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.util.pipeline.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
+import io.ktor.util.pipeline.PipelineContext
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.PROD_GCP
 import no.nav.lydia.ia.sak.api.Feil
@@ -24,6 +26,10 @@ enum class Tillat(val tillat: String) {
 class AuditLog(val miljø: Environment) {
     private val auditLog = LoggerFactory.getLogger("auditLog")
     private val fiaLog = LoggerFactory.getLogger(this::class.java)
+
+    companion object {
+        internal val NOT_AVAILABLE = "N/A"
+    }
 
     fun log(
         navIdent: String,

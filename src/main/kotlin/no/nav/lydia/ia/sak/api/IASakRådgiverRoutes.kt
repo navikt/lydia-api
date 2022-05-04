@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
 import arrow.core.right
+import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -10,10 +11,9 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.nav.lydia.AuditLog
+import no.nav.lydia.AuditLog.Companion.NOT_AVAILABLE
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.Tillat
-import no.nav.lydia.auditLog
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
@@ -73,22 +73,27 @@ fun Route.IASak_Rådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
+        if (!ULID.isValid(saksnummer)) {
+            return@get call.respond(IASakError.`ugyldig saksnummer`)
+        }
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
             iaSakService.hentHendelserForSak(saksnummer).right()
-        }.map { hendelser ->
-            hendelser.map { it.orgnummer }.firstOrNull()?.let { orgnummer ->
-                auditLog(
-                    auditLog = auditLog,
-                    orgnummer = orgnummer,
-                    auditType = AuditType.access,
-                    tillat = Tillat.Ja,
-                    saksnummer = saksnummer
-                )
-            }
-            call.respond(hendelser.toDto()).right()
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }.also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = either.fold(
+                    ifLeft = { NOT_AVAILABLE },
+                    ifRight = { hendelser -> hendelser.map { it.orgnummer }.firstOrNull() ?: NOT_AVAILABLE }),
+                saksnummer = saksnummer,
+                auditType = AuditType.access
+            )
         }
+            .map { hendelser ->
+                call.respond(hendelser.toDto()).right()
+            }.mapLeft {
+                call.respond(status = it.httpStatusCode, message = it.feilmelding)
+            }
     }
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
