@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.domene
 
+import kotlinx.serialization.Serializable
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
@@ -54,14 +55,13 @@ class VirksomhetIkkeAktuellHendelse(
         fun fromDto(dto: IASakshendelseDto, navIdent: String): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
                 try {
-                    val årsak = Json.decodeFromString<Årsak>(dto.payload)
                     VirksomhetIkkeAktuellHendelse(
                         id = ULID.random(),
                         opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = dto.saksnummer,
                         orgnummer = dto.orgnummer,
                         opprettetAv = navIdent,
-                        årsak = årsak
+                        årsak = Json.decodeFromString(dto.payload)
                     ).right()
                 } catch (e: Exception) {
                     SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
@@ -70,24 +70,12 @@ class VirksomhetIkkeAktuellHendelse(
     }
 }
 
-class VurderesHendelse(
-    iaSakshendelseDto: IASakshendelseDto,
-    opprettetAv: String,
-) : IASakshendelse(
-    id = ULID.random(),
-    opprettetTidspunkt = LocalDateTime.now(),
-    saksnummer = iaSakshendelseDto.saksnummer,
-    hendelsesType = iaSakshendelseDto.hendelsesType,
-    orgnummer = iaSakshendelseDto.orgnummer,
-    opprettetAv = opprettetAv
-)
-
 object SaksHendelseFeil {
     val `kunne ikke deserialisere årsak` =
         Feil(feilmelding = "Kunne ikke deserialisere årsak", httpStatusCode = HttpStatusCode.BadRequest)
 }
 
-@kotlinx.serialization.Serializable
+@Serializable
 class Årsak(val type: String, val begrunnelser: List<String>)
 
 enum class SaksHendelsestype {

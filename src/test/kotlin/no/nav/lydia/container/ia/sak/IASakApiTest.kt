@@ -207,7 +207,10 @@ class IASakApiTest {
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-                .nyHendelse(VIRKSOMHET_ER_IKKE_AKTUELL, Årsak(type = "årsakType", begrunnelser = listOf("begrunnelsetper")).toJson())
+                .nyHendelse(
+                    hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                    payload = Årsak(type = "årsakType", begrunnelser = listOf("begrunnelsetper")).toJson()
+                )
             val alleHendelsesTyper = listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
