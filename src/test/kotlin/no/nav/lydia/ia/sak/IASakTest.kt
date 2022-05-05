@@ -6,13 +6,9 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.ia.årsak.domene.ÅrsakType
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakstype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
 import kotlin.test.Test
@@ -22,7 +18,6 @@ class IASakTest {
         const val orgnummer = "123456789"
         const val navIdent1 = "A123456"
         const val navIdent2 = "B123456"
-        const val navIdent3 = "C123456"
 
         val fiaroller = FiaRoller(
             superbrukerGroupId = "123",
@@ -38,12 +33,6 @@ class IASakTest {
 
         val saksbehandler2 = Rådgiver(
             navIdent = navIdent2,
-            fiaRoller = fiaroller,
-            rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
-        )
-
-        val saksbehandler3 = Rådgiver(
-            navIdent = navIdent3,
             fiaRoller = fiaroller,
             rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
         )
@@ -77,7 +66,7 @@ class IASakTest {
             navIdent = navIdent2
         )
         val h3 = nyHendelse(
-            SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
+            VIRKSOMHET_ER_IKKE_AKTUELL,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
             navIdent = navIdent2
@@ -110,7 +99,7 @@ class IASakTest {
             .shouldForAtLeastOne {
                 it.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                 it.gyldigeÅrsaker shouldContainAll listOf(
-                    ÅrsakType.ARBEIDSGIVER_TAKKET_NEI,
+                    ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                     ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
                 )
             }.shouldForAtLeastOne {

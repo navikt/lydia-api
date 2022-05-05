@@ -11,7 +11,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.types.shouldBeTypeOf
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSak
@@ -28,21 +27,18 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_TID_NÅ
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.VirksomhetIkkeAktuellHendelseOppsummeringDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -320,8 +316,8 @@ class IASakApiTest {
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
-                        type = ARBEIDSGIVER_TAKKET_NEI,
-                        begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
                     ).toJson()
                 )
             val alleHendelsesTyper = listOf(
@@ -386,16 +382,14 @@ class IASakApiTest {
                     .shouldForAtLeastOne { gyldigHendelse ->
                         gyldigHendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                         gyldigHendelse.gyldigeÅrsaker shouldContainAll listOf(
-                            ARBEIDSGIVER_TAKKET_NEI,
-                            NAV_IGANGSETTER_IKKE_TILTAK
+                            NAV_IGANGSETTER_IKKE_TILTAK,
+                            VIRKSOMHETEN_TAKKET_NEI
                         )
                         gyldigHendelse.gyldigeÅrsaker.find { it == NAV_IGANGSETTER_IKKE_TILTAK }?.let { årsakType ->
-                            årsakType.begrunnelser shouldHaveAtLeastSize 4
                             årsakType.begrunnelser shouldContainAll NAV_IGANGSETTER_IKKE_TILTAK.begrunnelser
                         }
-                        gyldigHendelse.gyldigeÅrsaker.find { it == ARBEIDSGIVER_TAKKET_NEI }?.let { årsakType ->
-                            årsakType.begrunnelser shouldHaveAtLeastSize 4
-                            årsakType.begrunnelser shouldContainAll ARBEIDSGIVER_TAKKET_NEI.begrunnelser
+                        gyldigHendelse.gyldigeÅrsaker.find { it == VIRKSOMHETEN_TAKKET_NEI }?.let { årsakType ->
+                            årsakType.begrunnelser shouldContainAll VIRKSOMHETEN_TAKKET_NEI.begrunnelser
 
                         }
                     }.shouldForAtLeastOne {
@@ -407,7 +401,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne se valgte begrunnelser for når en virksomhet ikke er aktuell`() {
-        val begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)
+        val begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
         opprettSakForVirksomhet(orgnummer = BERGEN.orgnr).also { sak ->
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -415,7 +409,7 @@ class IASakApiTest {
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
-                        type = ARBEIDSGIVER_TAKKET_NEI,
+                        type = VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = begrunnelser
                     ).toJson()
                 )
