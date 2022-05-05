@@ -2,11 +2,14 @@ package no.nav.lydia.container.audit
 
 import com.github.guepardoapps.kulid.ULID
 import com.github.kittinunf.fuel.core.Request
-import no.nav.lydia.AuditLog.Companion.NOT_AVAILABLE
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.StatistikkHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import kotlin.test.Test
 
@@ -136,10 +139,11 @@ class AuditLogTest {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
                     navIdent = mockOAuth2Server.brukerUtenTilgangsrolle.navIdent,
-                    orgnummer = NOT_AVAILABLE, // Vi auditlogger ikke hvilket orgnummer man ikke hadde tilgang til
+                    orgnummer = null, // Vi auditlogger ikke hvilket orgnummer man ikke hadde tilgang til
                     auditType = AuditType.access,
                     tillat = Tillat.Nei,
-                    saksnummer = sak.saksnummer
+                    saksnummer = sak.saksnummer,
+                    severity = "WARN"
                 )
             }
     }
@@ -151,9 +155,10 @@ class AuditLogTest {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
                 navIdent = mockOAuth2Server.superbruker1.navIdent,
-                orgnummer = NOT_AVAILABLE,
+                orgnummer = null,
                 auditType = AuditType.access,
                 tillat = Tillat.Ja,
+                severity = "WARN"
             )
         }
     }
@@ -220,14 +225,15 @@ class AuditLogTest {
     private fun auditLog(
         request: Request,
         navIdent: String,
-        orgnummer: String,
+        orgnummer: String?,
         auditType: AuditType,
         tillat: Tillat,
-        saksnummer: String? = null
+        saksnummer: String? = null,
+        severity: String = "INFO"
     ) =
-        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|INFO\\|end=[0-9]+ " +
+        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|$severity\\|end=[0-9]+ " +
                 "suid=$navIdent " +
-                "duid=$orgnummer " +
+                (orgnummer?.let { "duid=$it " } ?: "") +
                 "sproc=.{26} " +
                 "requestMethod=${request.method} " +
                 "request=${request.url.path} " +

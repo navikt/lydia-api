@@ -11,7 +11,6 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.nav.lydia.AuditLog
-import no.nav.lydia.AuditLog.Companion.NOT_AVAILABLE
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.IASakService
@@ -83,8 +82,8 @@ fun Route.IASak_Rådgiver(
                 call = call,
                 either = either,
                 orgnummer = either.fold(
-                    ifLeft = { NOT_AVAILABLE },
-                    ifRight = { hendelser -> hendelser.map { it.orgnummer }.firstOrNull() ?: NOT_AVAILABLE }),
+                    ifLeft = { null },
+                    ifRight = { hendelser -> hendelser.map { it.orgnummer }.firstOrNull() }),
                 saksnummer = saksnummer,
                 auditType = AuditType.access
             )

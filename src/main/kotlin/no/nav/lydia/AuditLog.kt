@@ -27,23 +27,20 @@ class AuditLog(val miljø: Environment) {
     private val auditLog = LoggerFactory.getLogger("auditLog")
     private val fiaLog = LoggerFactory.getLogger(this::class.java)
 
-    companion object {
-        internal val NOT_AVAILABLE = "N/A"
-    }
-
     fun log(
         navIdent: String,
         uri: String,
         method: String,
-        orgnummer: String,
+        orgnummer: String?,
         auditType: AuditType,
         tillat: Tillat,
         saksnummer: String?
     ) {
+        val severity = if (orgnummer.isNullOrEmpty()) "WARN" else "INFO"
         val logstring =
-            "CEF:0|lydia-api|auditLog|1.0|audit:${auditType.name}|lydia-api|INFO|end=${System.currentTimeMillis()} " +
+            "CEF:0|lydia-api|auditLog|1.0|audit:${auditType.name}|lydia-api|$severity|end=${System.currentTimeMillis()} " +
                     "suid=$navIdent " +
-                    "duid=$orgnummer " +
+                    (orgnummer?.let { "duid=$it " } ?: "") +
                     "sproc=${ULID.random()} " +
                     "requestMethod=$method " +
                     "request=${
@@ -66,7 +63,7 @@ class AuditLog(val miljø: Environment) {
     fun auditloggEither(
         call: ApplicationCall,
         either: Either<Feil, Any>,
-        orgnummer: String,
+        orgnummer: String?,
         saksnummer: String? = null,
         auditType: AuditType
     ) {
