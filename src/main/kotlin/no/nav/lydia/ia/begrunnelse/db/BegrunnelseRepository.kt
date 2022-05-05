@@ -1,6 +1,6 @@
 package no.nav.lydia.ia.begrunnelse.db
 
-import no.nav.lydia.ia.begrunnelse.domene.Årsak
+import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
 import javax.sql.DataSource
 
 class BegrunnelseRepository(val dataSource: DataSource) {
@@ -20,5 +20,5 @@ class BegrunnelseRepository(val dataSource: DataSource) {
 //            } }.asList)
 //        }
 //    }
-    fun hentBegrunnelser() = listOf<Årsak>()
+    fun hentBegrunnelser() = listOf<ValgtÅrsak>()
 }

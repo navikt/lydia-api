@@ -32,7 +32,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
 import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType.HAR_IKKE_TID_NÅ
-import no.nav.lydia.ia.begrunnelse.domene.Årsak
+import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
 import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -213,7 +213,7 @@ class IASakApiTest {
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-                    payload = Årsak( type = ARBEIDSGIVER_TAKKET_NEI, begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)).toJson()
+                    payload = ValgtÅrsak( type = ARBEIDSGIVER_TAKKET_NEI, begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)).toJson()
                 )
             val alleHendelsesTyper = listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,

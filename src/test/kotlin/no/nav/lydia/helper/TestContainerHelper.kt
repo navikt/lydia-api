@@ -13,7 +13,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.begrunnelse.domene.Årsak
+import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
@@ -219,7 +219,7 @@ class SakHelper {
         ) =
             nyHendelsePåSak(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
-        fun Årsak.toJson() = Json.encodeToString(value = this)
+        fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
     }
 }
 

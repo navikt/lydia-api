@@ -8,7 +8,7 @@ import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import no.nav.lydia.ia.begrunnelse.domene.Årsak
+import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
 import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
@@ -45,7 +45,7 @@ class VirksomhetIkkeAktuellHendelse(
     saksnummer: String,
     orgnummer: String,
     opprettetAv: String,
-    årsak: Årsak
+    valgtÅrsak: ValgtÅrsak
 ) : IASakshendelse(
     id,
     opprettetTidspunkt = opprettetTidspunkt,
@@ -64,7 +64,7 @@ class VirksomhetIkkeAktuellHendelse(
                         saksnummer = dto.saksnummer,
                         orgnummer = dto.orgnummer,
                         opprettetAv = navIdent,
-                        årsak = Json.decodeFromString(dto.payload)
+                        valgtÅrsak = Json.decodeFromString(dto.payload)
                     ).right()
                 } catch (e: Exception) {
                     SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
@@ -91,7 +91,7 @@ class GyldigHendelse(
     val saksHendelsestype: SaksHendelsestype
 ) {
     val gyldigeÅrsaker: List<ÅrsakType> = when (saksHendelsestype) {
-        VIRKSOMHET_ER_IKKE_AKTUELL -> Årsak.from(saksHendelsestype)
+        VIRKSOMHET_ER_IKKE_AKTUELL -> ÅrsakType.from(saksHendelsestype)
         else -> emptyList()
     }
 }

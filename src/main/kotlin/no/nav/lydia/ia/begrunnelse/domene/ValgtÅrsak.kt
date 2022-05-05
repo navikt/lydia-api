@@ -23,16 +23,13 @@ enum class ÅrsakType(val navn: String, val begrunnelser: List<BegrunnelseType>)
             BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
             BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
         )
-    )
-}
+    );
 
-@kotlinx.serialization.Serializable
-class Årsak(val type: ÅrsakType, val begrunnelser: List<BegrunnelseType>) {
     companion object {
         fun from(saksHendelsestype: SaksHendelsestype) = when (saksHendelsestype) {
             SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL -> listOf(
-                ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
-                ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
+                NAV_IGANGSETTER_IKKE_TILTAK,
+                ARBEIDSGIVER_TAKKET_NEI
             )
             else -> emptyList()
         }
@@ -51,6 +48,11 @@ enum class BegrunnelseType(val navn: String) {
     HAR_IKKE_TID_NÅ("Har ikke tid nå til å gjennomføre prosjektet/tiltaket"),
     GJENNOMFØRER_TILTAK_PÅ_EGENHÅND("Ønsker å gjennomføre tiltak på egenhånd"),
     GJENNOMFØRER_TILTAK_MED_BHT("Ønsker å gjennomføre tiltak med BHT")
+}
+
+@kotlinx.serialization.Serializable
+class ValgtÅrsak(val type: ÅrsakType, val begrunnelser: List<BegrunnelseType>) {
+
 }
 
 class Begrunnelse(val id: Int, val navn: String) {
