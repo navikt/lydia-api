@@ -37,6 +37,7 @@ import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
 import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
 import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.VirksomhetIkkeAktuellHendelseOppsummeringDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import kotlin.test.Test
@@ -75,6 +76,7 @@ class IASakApiTest {
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
         val orgnr = BERGEN.orgnr
+        postgresContainer.performUpdate("DELETE FROM sykefravar_statistikk_grunnlag WHERE orgnr = '$orgnr'")
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
 
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
@@ -413,13 +415,12 @@ class IASakApiTest {
                         begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)
                     ).toJson()
                 )
-
-            hentHendelserPåSak(sakIkkeAktuell.saksnummer).also { oppsummering ->
-                oppsummering.forAtLeastOne { hendelseOppsummering ->
+            hentHendelserPåSak(sakIkkeAktuell.saksnummer)
+                .forAtLeastOne { hendelseOppsummering ->
+                    hendelseOppsummering.javaClass shouldBe VirksomhetIkkeAktuellHendelseOppsummeringDto
                     hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                    hendelseOppsummering.opprettetTidspunkt shouldBe sakIkkeAktuell.opprettetTidspunkt
+                    hendelseOppsummering.opprettetTidspunkt shouldBe sakIkkeAktuell.endretTidspunkt
                 }
-            }
         }
     }
 
