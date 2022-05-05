@@ -13,6 +13,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakstype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.årsak.api.ÅrsakService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
@@ -20,7 +21,8 @@ import java.time.LocalDateTime
 class IASakService(
     private val iaSakRepository: IASakRepository,
     private val iaSakshendelseRepository: IASakshendelseRepository,
-    private val grunnlagService: GrunnlagService
+    private val grunnlagService: GrunnlagService,
+    private val årsakService : ÅrsakService
 ) {
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
@@ -82,6 +84,7 @@ class IASakService(
                     return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
                 }
                 iaSakshendelseRepository.lagreHendelse(sakshendelse)
+                årsakService.lagreÅrsak(sakshendelse)
                 return iaSakRepository.oppdaterSak(sak)
             }
     }

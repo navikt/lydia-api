@@ -2,7 +2,7 @@ package no.nav.lydia.ia.sak.api
 
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse

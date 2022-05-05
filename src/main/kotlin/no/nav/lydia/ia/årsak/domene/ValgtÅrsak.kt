@@ -1,6 +1,7 @@
-package no.nav.lydia.ia.begrunnelse.domene
+package no.nav.lydia.ia.årsak.domene
 
-import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType.HAR_IKKE_KAPASITET
+import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 
 enum class ÅrsakType(val navn: String, val begrunnelser: List<BegrunnelseType>) {
@@ -50,9 +51,5 @@ enum class BegrunnelseType(val navn: String) {
     GJENNOMFØRER_TILTAK_MED_BHT("Ønsker å gjennomføre tiltak med BHT")
 }
 
-@kotlinx.serialization.Serializable
+@Serializable
 class ValgtÅrsak(val type: ÅrsakType, val begrunnelser: List<BegrunnelseType>)
-
-class Begrunnelse(val id: Int, val navn: String) {
-
-}

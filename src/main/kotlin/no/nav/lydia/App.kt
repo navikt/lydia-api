@@ -26,6 +26,8 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.årsak.api.ÅrsakService
+import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
@@ -114,6 +116,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource)
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
+    val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
 
     routing {
@@ -146,7 +149,8 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                     grunnlagService = GrunnlagService(
                         grunnlagRepository = grunnlagRepository,
                         sykefraversstatistikkRepository = sykefraversstatistikkRepository
-                    )
+                    ),
+                    årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ),
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog

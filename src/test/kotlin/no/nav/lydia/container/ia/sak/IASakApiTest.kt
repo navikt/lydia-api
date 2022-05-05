@@ -11,6 +11,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeTypeOf
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSak
@@ -27,19 +28,21 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType.HAR_IKKE_TID_NÅ
-import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
-import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
-import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_TID_NÅ
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.VirksomhetIkkeAktuellHendelseOppsummeringDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -404,6 +407,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne se valgte begrunnelser for når en virksomhet ikke er aktuell`() {
+        val begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)
         opprettSakForVirksomhet(orgnummer = BERGEN.orgnr).also { sak ->
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -412,14 +416,21 @@ class IASakApiTest {
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
                         type = ARBEIDSGIVER_TAKKET_NEI,
-                        begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)
+                        begrunnelser = begrunnelser
                     ).toJson()
                 )
             hentHendelserPåSak(sakIkkeAktuell.saksnummer)
                 .forAtLeastOne { hendelseOppsummering ->
-                    hendelseOppsummering.javaClass shouldBe VirksomhetIkkeAktuellHendelseOppsummeringDto
                     hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                     hendelseOppsummering.opprettetTidspunkt shouldBe sakIkkeAktuell.endretTidspunkt
+                    postgresContainer.performQuery(
+                        "select * from hendelse_begrunnelse where hendelse_id = '${hendelseOppsummering.id}'"
+                    ).also { rs ->
+                        rs.row shouldBe 1
+                        rs.getString("begrunnelse") shouldBe begrunnelser.first().navn
+                        rs.next()
+                        rs.getString("begrunnelse") shouldBe begrunnelser[1].navn
+                    }
                 }
         }
     }

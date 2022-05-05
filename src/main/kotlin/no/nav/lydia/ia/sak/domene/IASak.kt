@@ -89,9 +89,7 @@ class IASak(
             håndterFeilState()
         }
 
-        open fun lagreGrunnlag(grunnlagService: GrunnlagService) {
-
-        }
+        open fun lagreGrunnlag(grunnlagService: GrunnlagService) {}
 
         abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse>
 

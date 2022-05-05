@@ -2,17 +2,14 @@ package no.nav.lydia.ia.sak.api
 
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.should
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
-import io.micrometer.core.instrument.config.validate.Validated.Either
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.SakHelper.Companion.toJson
-import no.nav.lydia.ia.begrunnelse.domene.BegrunnelseType
-import no.nav.lydia.ia.begrunnelse.domene.ValgtÅrsak
-import no.nav.lydia.ia.begrunnelse.domene.ÅrsakType
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
