@@ -51,9 +51,7 @@ enum class BegrunnelseType(val navn: String) {
 }
 
 @kotlinx.serialization.Serializable
-class ValgtÅrsak(val type: ÅrsakType, val begrunnelser: List<BegrunnelseType>) {
-
-}
+class ValgtÅrsak(val type: ÅrsakType, val begrunnelser: List<BegrunnelseType>)
 
 class Begrunnelse(val id: Int, val navn: String) {
 

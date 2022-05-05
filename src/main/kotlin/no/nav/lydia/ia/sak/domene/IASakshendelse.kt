@@ -45,7 +45,7 @@ class VirksomhetIkkeAktuellHendelse(
     saksnummer: String,
     orgnummer: String,
     opprettetAv: String,
-    valgtÅrsak: ValgtÅrsak
+    val valgtÅrsak: ValgtÅrsak
 ) : IASakshendelse(
     id,
     opprettetTidspunkt = opprettetTidspunkt,
