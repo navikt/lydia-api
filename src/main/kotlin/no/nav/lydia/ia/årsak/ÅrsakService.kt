@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.årsak.api
+package no.nav.lydia.ia.årsak
 
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse

@@ -13,7 +13,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakstype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.årsak.api.ÅrsakService
+import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime

@@ -26,7 +26,7 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.årsak.api.ÅrsakService
+import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
