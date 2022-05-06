@@ -6,9 +6,16 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.IASakstype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.årsak.domene.ÅrsakType
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
+import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
 import kotlin.test.Test
@@ -97,10 +104,27 @@ class IASakTest {
         sak.gyldigeNesteHendelser(rådgiver = saksbehandler2)
             .shouldForAtLeastOne {
                 it.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                it.gyldigeÅrsaker shouldContainAll listOf(
-                    ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
-                    ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
-                )
+                it.gyldigeÅrsaker.shouldForAtLeastOne {
+                    it.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
+                    it.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
+                    it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                        MANGLER_PARTSGRUPPE,
+                        IKKE_TILFREDSSTILLENDE_SAMARBEID,
+                        FOR_LAVT_SYKEFRAVÆR,
+                        IKKE_TID,
+                        BEHOV_UTENFOR_IA_AVTALEN,
+                        MINDRE_VIRKSOMHET
+                    )
+                }
+                it.gyldigeÅrsaker.shouldForAtLeastOne {
+                    it.type shouldBe VIRKSOMHETEN_TAKKET_NEI
+                    it.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
+                    it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                        HAR_IKKE_KAPASITET,
+                        GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
+                        GJENNOMFØRER_TILTAK_MED_BHT
+                    )
+                }
             }.shouldForAtLeastOne {
                 it.saksHendelsestype shouldBe VIRKSOMHET_SKAL_KONTAKTES
                 it.gyldigeÅrsaker.shouldBeEmpty()

@@ -1,6 +1,7 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.jsonBody
 import com.github.kittinunf.fuel.gson.responseObject
@@ -13,7 +14,12 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSER_SUB_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -182,20 +188,32 @@ class SakHelper {
             sak: IASakDto,
             hendelsestype: SaksHendelsestype,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-            payload: String? = null,
-        ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
-            .authentication().bearer(token)
-            .jsonBody(
-                IASakshendelseDto(
-                    orgnummer = sak.orgnr,
-                    saksnummer = sak.saksnummer,
-                    hendelsesType = hendelsestype,
-                    endretAvHendelseId = sak.endretAvHendelseId,
-                    payload = payload
-                ),
-                localDateTimeTypeAdapter
-            )
-            .responseObject<IASakDto>(localDateTimeTypeAdapter)
+            payload: String? = null
+        ): ResponseResultOf<IASakDto> {
+            val request = nyHendelsePåSakRequest(token, sak, hendelsestype, payload)
+            return request.responseObject<IASakDto>(localDateTimeTypeAdapter)
+        }
+
+        public fun nyHendelsePåSakRequest(
+            token: String,
+            sak: IASakDto,
+            hendelsestype: SaksHendelsestype,
+            payload: String?
+        ): Request {
+            val request = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+                .authentication().bearer(token)
+                .jsonBody(
+                    IASakshendelseDto(
+                        orgnummer = sak.orgnr,
+                        saksnummer = sak.saksnummer,
+                        hendelsesType = hendelsestype,
+                        endretAvHendelseId = sak.endretAvHendelseId,
+                        payload = payload
+                    ),
+                    localDateTimeTypeAdapter
+                )
+            return request
+        }
 
 
         fun nyHendelsePåSak(

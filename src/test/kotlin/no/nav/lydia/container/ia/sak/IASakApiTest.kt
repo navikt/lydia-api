@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -19,6 +20,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakRequest
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
@@ -32,8 +34,8 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
+import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -356,24 +358,112 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = BERGEN.orgnr)
             .nyHendelse(TA_EIERSKAP_I_SAK).also { sakEtterTattEierskap ->
                 sakEtterTattEierskap.gyldigeNesteHendelser
-                    .shouldForAtLeastOne { gyldigHendelse ->
-                        gyldigHendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                        gyldigHendelse.gyldigeÅrsaker shouldContainAll listOf(
-                            NAV_IGANGSETTER_IKKE_TILTAK,
-                            VIRKSOMHETEN_TAKKET_NEI
-                        )
-                        gyldigHendelse.gyldigeÅrsaker.find { it == NAV_IGANGSETTER_IKKE_TILTAK }?.let { årsakType ->
-                            årsakType.begrunnelser shouldContainAll NAV_IGANGSETTER_IKKE_TILTAK.begrunnelser
+                    .shouldForAtLeastOne {
+                        it.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                        it.gyldigeÅrsaker.shouldForAtLeastOne {
+                            it.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
+                            it.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
+                            it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                                MANGLER_PARTSGRUPPE,
+                                IKKE_TILFREDSSTILLENDE_SAMARBEID,
+                                FOR_LAVT_SYKEFRAVÆR,
+                                IKKE_TID,
+                                BEHOV_UTENFOR_IA_AVTALEN,
+                                MINDRE_VIRKSOMHET
+                            )
                         }
-                        gyldigHendelse.gyldigeÅrsaker.find { it == VIRKSOMHETEN_TAKKET_NEI }?.let { årsakType ->
-                            årsakType.begrunnelser shouldContainAll VIRKSOMHETEN_TAKKET_NEI.begrunnelser
-
+                        it.gyldigeÅrsaker.shouldForAtLeastOne {
+                            it.type shouldBe VIRKSOMHETEN_TAKKET_NEI
+                            it.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
+                            it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                                HAR_IKKE_KAPASITET,
+                                GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
+                                GJENNOMFØRER_TILTAK_MED_BHT
+                            )
                         }
                     }.shouldForAtLeastOne {
                         it.saksHendelsestype shouldBe VIRKSOMHET_SKAL_KONTAKTES
                         it.gyldigeÅrsaker.shouldBeEmpty()
                     }
             }
+    }
+
+    @Test
+    fun `skal få korrekt json for listen med mulige årsaker og begrunnelser`() {
+        val sakForVirksomhet = opprettSakForVirksomhet(orgnummer = BERGEN.orgnr)
+
+        val sakJson = nyHendelsePåSakRequest(
+            sak = sakForVirksomhet,
+            hendelsestype = TA_EIERSKAP_I_SAK,
+            payload = null,
+            token = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
+        ).responseString().third.get()
+
+        sakJson.shouldEqualSpecifiedJson(
+            """
+              {
+                  "gyldigeNesteHendelser": [
+                    {
+                      "saksHendelsestype": "VIRKSOMHET_SKAL_KONTAKTES",
+                      "gyldigeÅrsaker": []
+                    },
+                    {
+                      "saksHendelsestype": "VIRKSOMHET_ER_IKKE_AKTUELL",
+                      "gyldigeÅrsaker": [
+                        {
+                          "type": "NAV_IGANGSETTER_IKKE_TILTAK",
+                          "navn": "NAV starter ikke samarbeid med virksomheten fordi",
+                          "begrunnelser": [
+                            {
+                              "type": "MANGLER_PARTSGRUPPE",
+                              "navn": "Virksomheten mangler partsgruppe"
+                            },
+                            {
+                              "type": "IKKE_TILFREDSSTILLENDE_SAMARBEID",
+                              "navn": "Virksomheten har ikke tilfredstillende samarbeid med partsgruppen"
+                            },
+                            {
+                              "type": "FOR_LAVT_SYKEFRAVÆR",
+                              "navn": "Virksomheten er vurdert til å ha for lavt sykefravær"
+                            },
+                            {
+                              "type": "IKKE_TID",
+                              "navn": "NAV vurderer at virksomheten ikke ønsker å sette av tilstrekkelig tid til samarbeidet"
+                            },
+                            {
+                              "type": "BEHOV_UTENFOR_IA_AVTALEN",
+                              "navn": "Bestillingen og behovet fra virksomheten er utenfor vårt mandat iht IA-avtalen"
+                            },
+                            {
+                              "type": "MINDRE_VIRKSOMHET",
+                              "navn": "Virksomheten har et høyt sykefravær, men er en mindre virksomhet (færre ansatte)"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "VIRKSOMHETEN_TAKKET_NEI",
+                          "navn": "Virksomheten har takket nei",
+                          "begrunnelser": [
+                            {
+                              "type": "HAR_IKKE_KAPASITET",
+                              "navn": "Har ikke tid, eller kapasitet nå til å gjennomføre samarbeidet med NAV"
+                            },
+                            {
+                              "type": "GJENNOMFØRER_TILTAK_PÅ_EGENHÅND",
+                              "navn": "Virksomheten vil gjøre tiltak på egenhånd"
+                            },
+                            {
+                              "type": "GJENNOMFØRER_TILTAK_MED_BHT",
+                              "navn": "Virksomheten vil gjennomføre tiltak sammen med BHT"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+              }
+            """.trimIndent()
+        )
     }
 
     @Test

@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak.domene
 
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 import org.slf4j.LoggerFactory
@@ -36,8 +37,8 @@ class IASak(
     fun kanUtføreHendelse(hendelse: IASakshendelse, rådgiver: Rådgiver) = when (hendelse) {
         is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(rådgiver)
             .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
-            .filter { it == hendelse.valgtÅrsak.type }
-            .any { hendelse.valgtÅrsak.begrunnelser.isNotEmpty().and(it.begrunnelser.containsAll(hendelse.valgtÅrsak.begrunnelser))}
+            .filter { it.type == hendelse.valgtÅrsak.type }
+            .any { hendelse.valgtÅrsak.begrunnelser.isNotEmpty().and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))}
         else ->
             gyldigeNesteHendelser(rådgiver)
                 .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }

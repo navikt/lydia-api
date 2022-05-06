@@ -8,11 +8,11 @@ import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import java.time.LocalDateTime
 
 open class IASakshendelse(
@@ -90,8 +90,8 @@ enum class SaksHendelsestype {
 class GyldigHendelse(
     val saksHendelsestype: SaksHendelsestype
 ) {
-    val gyldigeÅrsaker: List<ÅrsakType> = when (saksHendelsestype) {
-        VIRKSOMHET_ER_IKKE_AKTUELL -> ÅrsakType.from(saksHendelsestype)
+    val gyldigeÅrsaker: List<GyldigÅrsak> = when (saksHendelsestype) {
+        VIRKSOMHET_ER_IKKE_AKTUELL -> GyldigÅrsak.from(saksHendelsestype)
         else -> emptyList()
     }
 }
