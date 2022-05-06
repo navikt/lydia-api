@@ -26,8 +26,8 @@ class HendelseSerialiseringTest {
             hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
             endretAvHendelseId = ULID.random(),
             payload = ValgtÅrsak(
-                type = ÅrsakType.ARBEIDSGIVER_TAKKET_NEI,
-                begrunnelser = listOf(BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT, BegrunnelseType.HAR_IKKE_TID_NÅ)
+                type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = listOf(BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT, BegrunnelseType.HAR_IKKE_KAPASITET)
             ).toJson()
         )
         val hendelseJson = Json.encodeToString(hendelseDto)

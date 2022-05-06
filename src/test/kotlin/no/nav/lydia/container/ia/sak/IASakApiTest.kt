@@ -31,10 +31,10 @@ import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_TID_NÅ
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -291,8 +291,8 @@ class IASakApiTest {
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
-                        type = ARBEIDSGIVER_TAKKET_NEI,
-                        begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
                     ).toJson()
                 )
             val alleHendelsesTyper = listOf(
@@ -357,16 +357,14 @@ class IASakApiTest {
                     .shouldForAtLeastOne { gyldigHendelse ->
                         gyldigHendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                         gyldigHendelse.gyldigeÅrsaker shouldContainAll listOf(
-                            ARBEIDSGIVER_TAKKET_NEI,
-                            NAV_IGANGSETTER_IKKE_TILTAK
+                            NAV_IGANGSETTER_IKKE_TILTAK,
+                            VIRKSOMHETEN_TAKKET_NEI
                         )
                         gyldigHendelse.gyldigeÅrsaker.find { it == NAV_IGANGSETTER_IKKE_TILTAK }?.let { årsakType ->
-                            årsakType.begrunnelser shouldHaveAtLeastSize 4
                             årsakType.begrunnelser shouldContainAll NAV_IGANGSETTER_IKKE_TILTAK.begrunnelser
                         }
-                        gyldigHendelse.gyldigeÅrsaker.find { it == ARBEIDSGIVER_TAKKET_NEI }?.let { årsakType ->
-                            årsakType.begrunnelser shouldHaveAtLeastSize 4
-                            årsakType.begrunnelser shouldContainAll ARBEIDSGIVER_TAKKET_NEI.begrunnelser
+                        gyldigHendelse.gyldigeÅrsaker.find { it == VIRKSOMHETEN_TAKKET_NEI }?.let { årsakType ->
+                            årsakType.begrunnelser shouldContainAll VIRKSOMHETEN_TAKKET_NEI.begrunnelser
 
                         }
                     }.shouldForAtLeastOne {
@@ -378,7 +376,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne se valgte begrunnelser for når en virksomhet ikke er aktuell`() {
-        val begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_TID_NÅ)
+        val begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
         opprettSakForVirksomhet(orgnummer = BERGEN.orgnr).also { sak ->
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -386,7 +384,7 @@ class IASakApiTest {
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
-                        type = ARBEIDSGIVER_TAKKET_NEI,
+                        type = VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = begrunnelser
                     ).toJson()
                 )
