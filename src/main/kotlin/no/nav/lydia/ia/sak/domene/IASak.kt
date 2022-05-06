@@ -1,15 +1,9 @@
 package no.nav.lydia.ia.sak.domene
 
 import no.nav.lydia.ia.grunnlag.GrunnlagService
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.LESE
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SAKSBEHANDLER
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SUPERBRUKER
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -39,7 +33,16 @@ class IASak(
 
     fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
 
-    fun kanUtføreHendelse(saksHendelsestype: SaksHendelsestype, rådgiver: Rådgiver) = gyldigeNesteHendelser(rådgiver).contains(saksHendelsestype)
+    fun kanUtføreHendelse(hendelse: IASakshendelse, rådgiver: Rådgiver) = when (hendelse) {
+        is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(rådgiver)
+            .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
+            .filter { it == hendelse.valgtÅrsak.type }
+            .any { hendelse.valgtÅrsak.begrunnelser.isNotEmpty().and(it.begrunnelser.containsAll(hendelse.valgtÅrsak.begrunnelser))}
+        else ->
+            gyldigeNesteHendelser(rådgiver)
+                .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
+                .contains(hendelse.hendelsesType)
+    }
 
     private fun erEierAvSak(rådgiver: Rådgiver) = eidAv == rådgiver.navIdent
 
@@ -49,7 +52,10 @@ class IASak(
                 tilstand.vurderes()
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
-                tilstand.ikkeAktuell()
+                when (hendelse) {
+                    is VirksomhetIkkeAktuellHendelse -> tilstand.behandleHendelse(hendelse = hendelse)
+                    else -> tilstand.ikkeAktuell() // TODO...
+                }
             }
             VIRKSOMHET_SKAL_KONTAKTES -> {
                 tilstand.kontaktes()
@@ -87,11 +93,19 @@ class IASak(
             håndterFeilState()
         }
 
-        open fun lagreGrunnlag(grunnlagService: GrunnlagService) {
-
+        open fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
+            håndterFeilState()
         }
 
-        abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype>
+        open fun lagreGrunnlag(grunnlagService: GrunnlagService) {}
+
+        abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse>
+
+        protected fun oppdaterStandardFelter(hendelse: IASakshendelse) {
+            endretAvHendelseId = hendelse.id
+            endretAv = hendelse.opprettetAv
+            endretTidspunkt = hendelse.opprettetTidspunkt
+        }
     }
 
     private inner class StartTilstand : ProsessTilstand(
@@ -101,7 +115,7 @@ class IASak(
             tilstand = VurderesTilstand()
         }
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> = listOf()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = listOf()
     }
 
     private inner class VurderesTilstand : ProsessTilstand(
@@ -111,6 +125,11 @@ class IASak(
             tilstand = IkkeAktuellTilstand()
         }
 
+        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
+            ikkeAktuell()
+            super.oppdaterStandardFelter(hendelse = hendelse)
+        }
+
         override fun kontaktes() {
             if (eidAv.isNullOrEmpty()) {
                 håndterFeilState("En virksomhet kan ikke kontaktes før saken har en eier")
@@ -118,15 +137,20 @@ class IASak(
             tilstand = KontaktesTilstand()
         }
 
-        override fun lagreGrunnlag(grunnlagService: GrunnlagService) = grunnlagService.lagreGrunnlag(orgnr, saksnummer, endretAvHendelseId)
+        override fun lagreGrunnlag(grunnlagService: GrunnlagService) =
+            grunnlagService.lagreGrunnlag(orgnr, saksnummer, endretAvHendelseId)
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
                 LESE -> emptyList()
                 SAKSBEHANDLER, SUPERBRUKER -> {
-                    if (erEierAvSak(rådgiver)) return listOf(VIRKSOMHET_SKAL_KONTAKTES, VIRKSOMHET_ER_IKKE_AKTUELL)
-                    else return listOf(TA_EIERSKAP_I_SAK)
-                }}
+                    if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
+                    )
+                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
         }
 
     }
@@ -134,24 +158,31 @@ class IASak(
     private inner class KontaktesTilstand : ProsessTilstand(
         status = IAProsessStatus.KONTAKTES
     ) {
+
         override fun ikkeAktuell() {
             tilstand = IkkeAktuellTilstand()
         }
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> {
+        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
+            ikkeAktuell()
+            super.oppdaterStandardFelter(hendelse = hendelse)
+        }
+
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
                 LESE -> emptyList()
                 SAKSBEHANDLER, SUPERBRUKER -> {
-                    if (erEierAvSak(rådgiver)) return listOf(VIRKSOMHET_ER_IKKE_AKTUELL)
-                    else return listOf(TA_EIERSKAP_I_SAK)
-                }}
+                    if (erEierAvSak(rådgiver)) return listOf(GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL))
+                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
         }
     }
 
     private inner class IkkeAktuellTilstand : ProsessTilstand(
         status = IAProsessStatus.IKKE_AKTUELL
     ) {
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<SaksHendelsestype> = listOf()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
     }
 
     companion object {

@@ -7,12 +7,15 @@ import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import io.kotest.matchers.string.shouldContain
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -154,7 +157,7 @@ class SakHelper {
         fun opprettSakForVirksomhet(
             orgnummer: String,
             token: String = oauth2ServerContainer.superbruker1.token,
-        ): IASakDto = opprettSakForVirksomhetRespons(orgnummer, token).third.fold(
+        ): IASakDto = opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = token).third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) }
         )
@@ -166,8 +169,8 @@ class SakHelper {
             lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
                 .authentication().bearer(token)
                 .jsonBody(
-                    sakshendelse,
-                    localDateTimeTypeAdapter
+                    src = sakshendelse,
+                    gson = localDateTimeTypeAdapter
                 )
                 .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(
                     success = { respons -> respons },
@@ -178,7 +181,8 @@ class SakHelper {
         fun nyHendelsePåSakMedRespons(
             sak: IASakDto,
             hendelsestype: SaksHendelsestype,
-            token: String = oauth2ServerContainer.saksbehandler1.token
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            payload: String? = null,
         ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
             .authentication().bearer(token)
             .jsonBody(
@@ -186,7 +190,8 @@ class SakHelper {
                     orgnummer = sak.orgnr,
                     saksnummer = sak.saksnummer,
                     hendelsesType = hendelsestype,
-                    endretAvHendelseId = sak.endretAvHendelseId
+                    endretAvHendelseId = sak.endretAvHendelseId,
+                    payload = payload
                 ),
                 localDateTimeTypeAdapter
             )
@@ -196,18 +201,29 @@ class SakHelper {
         fun nyHendelsePåSak(
             sak: IASakDto,
             hendelsestype: SaksHendelsestype,
-            token: String = oauth2ServerContainer.saksbehandler1.token
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            payload: String? = null,
         ) =
-            nyHendelsePåSakMedRespons(sak, hendelsestype, token)
+            nyHendelsePåSakMedRespons(sak = sak, hendelsestype = hendelsestype, payload = payload, token = token)
                 .third.fold(success = { respons -> respons }, failure = {
                     fail(it.message)
                 })
 
         fun IASakDto.nyHendelse(
             hendelsestype: SaksHendelsestype,
-            token: String = oauth2ServerContainer.saksbehandler1.token
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            payload: String? = null
         ) =
-            nyHendelsePåSak(this, hendelsestype, token)
+            nyHendelsePåSak(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
+
+        fun IASakDto.nyHendelseRespons(
+            hendelsestype: SaksHendelsestype,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            payload: String? = null
+        ) =
+            nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
+
+        fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
     }
 }
 
