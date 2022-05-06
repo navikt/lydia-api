@@ -78,7 +78,7 @@ class IASakService(
                 if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
                 if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
                 val sak = IASak.fraHendelser(hendelser)
-                if (sak.kanUtføreHendelse(saksHendelsestype = hendelseDto.hendelsesType, rådgiver = rådgiver))
+                if (sak.kanUtføreHendelse(hendelse = sakshendelse, rådgiver = rådgiver))
                     sak.behandleHendelse(sakshendelse)
                 else {
                     return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)

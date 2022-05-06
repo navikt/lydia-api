@@ -33,8 +33,16 @@ class IASak(
 
     fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
 
-    fun kanUtføreHendelse(saksHendelsestype: SaksHendelsestype, rådgiver: Rådgiver) =
-        gyldigeNesteHendelser(rådgiver).map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }.contains(saksHendelsestype)
+    fun kanUtføreHendelse(hendelse: IASakshendelse, rådgiver: Rådgiver) = when (hendelse) {
+        is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(rådgiver)
+            .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
+            .filter { it == hendelse.valgtÅrsak.type }
+            .any { hendelse.valgtÅrsak.begrunnelser.isNotEmpty().and(it.begrunnelser.containsAll(hendelse.valgtÅrsak.begrunnelser))}
+        else ->
+            gyldigeNesteHendelser(rådgiver)
+                .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
+                .contains(hendelse.hendelsesType)
+    }
 
     private fun erEierAvSak(rådgiver: Rådgiver) = eidAv == rådgiver.navIdent
 

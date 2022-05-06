@@ -80,7 +80,6 @@ class IASakTest {
 
     @Test
     fun `skal få en liste over gyldige begrunnelser for når en virksomhet ikke er aktuell`() {
-        Rådgiver
         val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, navIdent = superbruker1.navIdent)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,

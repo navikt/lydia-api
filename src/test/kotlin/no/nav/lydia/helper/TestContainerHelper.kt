@@ -216,6 +216,13 @@ class SakHelper {
         ) =
             nyHendelsePåSak(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
+        fun IASakDto.nyHendelseRespons(
+            hendelsestype: SaksHendelsestype,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            payload: String? = null
+        ) =
+            nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
+
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
     }
 }

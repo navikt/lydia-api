@@ -11,6 +11,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.ktor.http.*
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSak
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
@@ -18,6 +19,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
@@ -416,6 +418,35 @@ class IASakApiTest {
             shouldFail {
                 nyHendelse(gammelSakshendelse)
             }
+        }
+    }
+
+    @Test
+    fun `for å sette en sak til ikke aktuell må man ha en begrunnelse`() {
+        opprettSakForVirksomhet(orgnummer = BERGEN.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelseRespons(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = emptyList()
+                ).toJson()
+            ).statuskode() shouldBe HttpStatusCode.UnprocessableEntity.value
+    }
+
+    @Test
+    fun `en sak skal bare godta gyldige begrunnelser`() {
+        val sak = opprettSakForVirksomhet(orgnummer = BERGEN.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        shouldFail {
+            sak.nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                payload = """
+                    {"type":"VIRKSOMHETEN_TAKKET_NEI","begrunnelser":["IKKE_ET_FAKTISK_TILTAK"]}
+                """.trimIndent()
+            )
         }
     }
 }
