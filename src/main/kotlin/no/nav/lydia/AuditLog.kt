@@ -2,10 +2,12 @@ package no.nav.lydia
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.util.pipeline.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
+import io.ktor.util.pipeline.PipelineContext
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.PROD_GCP
 import no.nav.lydia.ia.sak.api.Feil
@@ -29,15 +31,16 @@ class AuditLog(val miljø: Environment) {
         navIdent: String,
         uri: String,
         method: String,
-        orgnummer: String,
+        orgnummer: String?,
         auditType: AuditType,
         tillat: Tillat,
         saksnummer: String?
     ) {
+        val severity = if (orgnummer.isNullOrEmpty()) "WARN" else "INFO"
         val logstring =
-            "CEF:0|lydia-api|auditLog|1.0|audit:${auditType.name}|lydia-api|INFO|end=${System.currentTimeMillis()} " +
+            "CEF:0|lydia-api|auditLog|1.0|audit:${auditType.name}|lydia-api|$severity|end=${System.currentTimeMillis()} " +
                     "suid=$navIdent " +
-                    "duid=$orgnummer " +
+                    (orgnummer?.let { "duid=$it " } ?: "") +
                     "sproc=${ULID.random()} " +
                     "requestMethod=$method " +
                     "request=${
@@ -52,14 +55,15 @@ class AuditLog(val miljø: Environment) {
 
         when (miljø) {
             PROD_GCP -> auditLog.info(logstring)
-            else -> fiaLog.info(logstring)
+            Environment.DEV_GCP -> Unit
+            Environment.LOKALT -> fiaLog.info(logstring)
         }
     }
 
     fun auditloggEither(
         call: ApplicationCall,
         either: Either<Feil, Any>,
-        orgnummer: String,
+        orgnummer: String?,
         saksnummer: String? = null,
         auditType: AuditType
     ) {
@@ -105,5 +109,6 @@ fun PipelineContext<Unit, ApplicationCall>.auditLog(
             tillat = tillat,
             saksnummer = saksnummer
         )
+        println("Auditlogger fra $navIdent")
     }
 }

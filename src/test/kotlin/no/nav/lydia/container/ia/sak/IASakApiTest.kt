@@ -11,9 +11,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.types.shouldBeTypeOf
-import no.nav.lydia.AuditType
-import no.nav.lydia.Tillat
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSak
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
@@ -26,29 +23,24 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_TID_NÅ
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.ARBEIDSGIVER_TAKKET_NEI
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.VirksomhetIkkeAktuellHendelseOppsummeringDto
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
-    val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+    val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
@@ -81,7 +73,6 @@ class IASakApiTest {
         val orgnr = BERGEN.orgnr
         postgresContainer.performUpdate("DELETE FROM sykefravar_statistikk_grunnlag WHERE orgnr = '$orgnr'")
         postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnr'")
-
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -89,10 +80,8 @@ class IASakApiTest {
                 sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
             }
         })
-
         val sak = opprettSakForVirksomhet(orgnummer = orgnr)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
-
         hentSykefravær(success = { listeEtterVirksomhetVurderes ->
             listeEtterVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeEtterVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -124,37 +113,19 @@ class IASakApiTest {
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
         val orgnummer = OSLO.orgnr
         opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker1.token).also {
-            lydiaApiContainer shouldContainLog auditLog(
-                navIdent = mockOAuth2Server.superbruker1.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                tillat = Tillat.Ja,
-                saksnummer = it.saksnummer
-            )
+
             nyHendelsePåSakMedRespons(
                 sak = it,
                 hendelsestype = TA_EIERSKAP_I_SAK,
                 token = mockOAuth2Server.lesebrukerAudit.token
             ).statuskode() shouldBe 403
-            lydiaApiContainer shouldContainLog auditLog(
-                navIdent = mockOAuth2Server.lesebrukerAudit.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.update,
-                tillat = Tillat.Nei,
-                saksnummer = it.saksnummer
-            )
+
             nyHendelsePåSakMedRespons(
                 sak = it,
                 hendelsestype = TA_EIERSKAP_I_SAK,
                 token = mockOAuth2Server.saksbehandler1.token
             ).statuskode() shouldBe 201
-            lydiaApiContainer shouldContainLog auditLog(
-                navIdent = mockOAuth2Server.saksbehandler1.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.update,
-                tillat = Tillat.Ja,
-                saksnummer = it.saksnummer
-            )
+
         }
     }
 
@@ -449,21 +420,4 @@ class IASakApiTest {
             }
         }
     }
-
-    private fun auditLog(
-        navIdent: String,
-        orgnummer: String,
-        auditType: AuditType,
-        tillat: Tillat,
-        saksnummer: String? = null
-    ) =
-        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|INFO|end=[0-9]\\+ " +
-                "suid=$navIdent " +
-                "duid=$orgnummer " +
-                "sproc=.{26} " +
-                "requestMethod=POST " +
-                "request=/iasak/radgiver/hendelse " +
-                "flexString1Label=Decision " +
-                "flexString1=$tillat" +
-                saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" }).toRegex()
 }
