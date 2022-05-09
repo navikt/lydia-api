@@ -446,7 +446,7 @@ class IASakApiTest {
                           "begrunnelser": [
                             {
                               "type": "HAR_IKKE_KAPASITET",
-                              "navn": "Har ikke tid, eller kapasitet nå til å gjennomføre samarbeidet med NAV"
+                              "navn": "Har ikke tid eller kapasitet nå til å gjennomføre samarbeidet med NAV"
                             },
                             {
                               "type": "GJENNOMFØRER_TILTAK_PÅ_EGENHÅND",
