@@ -138,9 +138,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     AND (
                         statistikk.kvartal = :kvartal AND statistikk.arstall = :arstall
                     )
-                    AND (
-                        statistikk.sykefraversprosent BETWEEN :sykefraversprosentFra AND :sykefraversprosentTil
-                    )
                     AND ( statistikk.orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") {s -> "\'$s\'"}} )
                     
                     ${søkeparametere.status?.let { status ->
@@ -149,12 +146,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                             else -> " AND ia_sak.status = '$status'"
                         }} ?: ""
                     }
+                    
                     ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
                     ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
                     
                     ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
                     ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
-                    
+
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     
                     LIMIT ${søkeparametere.virksomheterPerSide()}

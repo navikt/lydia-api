@@ -61,11 +61,11 @@ class SykefraversstatistikkApiTest {
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhet(orgnummer = orgnr)
             .also { it.size shouldBeGreaterThanOrEqual 1 }
-            .forEach{
-                    it.orgnr shouldBe orgnr
-                    it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
-                    it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
-                }
+            .forEach {
+                it.orgnr shouldBe orgnr
+                it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
+                it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
+            }
     }
 
     @Test
@@ -306,6 +306,26 @@ class SykefraversstatistikkApiTest {
                 sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 5.0
             }
         }, sykefraværsprosentTil = "5.0")
+
+        hentSykefravær(success = { response ->
+            response.data shouldHaveAtLeastSize 1
+            response.data.forAll { sykefraversstatistikkVirksomhetDto ->
+                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 2.0
+                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 6.0
+            }
+        }, sykefraværsprosentFra = "2.0", sykefraværsprosentTil = "6.0")
+
+        hentSykefravær(success = { response ->
+            response.data shouldHaveAtLeastSize 1
+            response.data.forAll { sykefraversstatistikkVirksomhetDto ->
+                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 2.0
+                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 7.0
+            }.forAtLeastOne { sykefraversstatistikkVirksomhetDto ->
+                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBe 7.0
+            }.forAtLeastOne { sykefraversstatistikkVirksomhetDto ->
+                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBe 2.0
+            }
+        }, sykefraværsprosentFra = "", sykefraværsprosentTil = "")
     }
 
     @Test
