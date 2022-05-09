@@ -54,7 +54,7 @@ enum class BegrunnelseType(val navn: String) {
     IKKE_TID(navn = "NAV vurderer at virksomheten ikke ønsker å sette av tilstrekkelig tid til samarbeidet"),
     BEHOV_UTENFOR_IA_AVTALEN(navn = "Bestillingen og behovet fra virksomheten er utenfor vårt mandat iht IA-avtalen"),
 
-    HAR_IKKE_KAPASITET(navn = "Har ikke tid, eller kapasitet nå til å gjennomføre samarbeidet med NAV"),
+    HAR_IKKE_KAPASITET(navn = "Har ikke tid eller kapasitet nå til å gjennomføre samarbeidet med NAV"),
     GJENNOMFØRER_TILTAK_PÅ_EGENHÅND(navn = "Virksomheten vil gjøre tiltak på egenhånd"),
     GJENNOMFØRER_TILTAK_MED_BHT(navn = "Virksomheten vil gjennomføre tiltak sammen med BHT")
 }
