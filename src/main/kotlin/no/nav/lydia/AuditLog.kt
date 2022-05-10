@@ -2,12 +2,9 @@ package no.nav.lydia
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
-import io.ktor.server.request.httpMethod
-import io.ktor.server.request.uri
-import io.ktor.util.pipeline.PipelineContext
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.PROD_GCP
 import no.nav.lydia.ia.sak.api.Feil
@@ -24,7 +21,7 @@ enum class Tillat(val tillat: String) {
 }
 
 class AuditLog(val miljø: Environment) {
-    private val auditLog = LoggerFactory.getLogger("auditLog")
+    private val auditLog = LoggerFactory.getLogger("auditLogger")
     private val fiaLog = LoggerFactory.getLogger(this::class.java)
 
     fun log(
@@ -90,25 +87,4 @@ class AuditLog(val miljø: Environment) {
             HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized -> Tillat.Nei
             else -> Tillat.Ja
         }
-}
-
-fun PipelineContext<Unit, ApplicationCall>.auditLog(
-    auditLog: AuditLog,
-    orgnummer: String,
-    auditType: AuditType,
-    tillat: Tillat,
-    saksnummer: String? = null
-) {
-    call.navIdent()?.let { navIdent ->
-        auditLog.log(
-            navIdent = navIdent,
-            uri = call.request.uri,
-            method = call.request.httpMethod.value,
-            orgnummer = orgnummer,
-            auditType = auditType,
-            tillat = tillat,
-            saksnummer = saksnummer
-        )
-        println("Auditlogger fra $navIdent")
-    }
 }
