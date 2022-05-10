@@ -112,7 +112,6 @@ class IASakTest {
                         IKKE_TILFREDSSTILLENDE_SAMARBEID,
                         FOR_LAVT_SYKEFRAVÆR,
                         IKKE_TID,
-                        BEHOV_UTENFOR_IA_AVTALEN,
                         MINDRE_VIRKSOMHET
                     )
                 }

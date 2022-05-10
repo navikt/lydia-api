@@ -368,7 +368,6 @@ class IASakApiTest {
                                 IKKE_TILFREDSSTILLENDE_SAMARBEID,
                                 FOR_LAVT_SYKEFRAVÆR,
                                 IKKE_TID,
-                                BEHOV_UTENFOR_IA_AVTALEN,
                                 MINDRE_VIRKSOMHET
                             )
                         }
@@ -429,10 +428,6 @@ class IASakApiTest {
                             {
                               "type": "IKKE_TID",
                               "navn": "NAV vurderer at virksomheten ikke ønsker å sette av tilstrekkelig tid til samarbeidet"
-                            },
-                            {
-                              "type": "BEHOV_UTENFOR_IA_AVTALEN",
-                              "navn": "Bestillingen og behovet fra virksomheten er utenfor vårt mandat iht IA-avtalen"
                             },
                             {
                               "type": "MINDRE_VIRKSOMHET",

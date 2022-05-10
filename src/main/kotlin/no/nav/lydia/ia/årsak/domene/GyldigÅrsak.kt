@@ -15,7 +15,6 @@ class GyldigÅrsak(val type: ÅrsakType, val navn: String = type.navn, val begru
                         BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID,
                         BegrunnelseType.FOR_LAVT_SYKEFRAVÆR,
                         BegrunnelseType.IKKE_TID,
-                        BegrunnelseType.BEHOV_UTENFOR_IA_AVTALEN,
                         BegrunnelseType.MINDRE_VIRKSOMHET
                     ).somGyldigeBegrunnelser()
                 ),
@@ -52,7 +51,6 @@ enum class BegrunnelseType(val navn: String) {
     FOR_LAVT_SYKEFRAVÆR(navn = "Virksomheten er vurdert til å ha for lavt sykefravær"),
     MINDRE_VIRKSOMHET(navn = "Virksomheten har et høyt sykefravær, men er en mindre virksomhet (færre ansatte)"),
     IKKE_TID(navn = "NAV vurderer at virksomheten ikke ønsker å sette av tilstrekkelig tid til samarbeidet"),
-    BEHOV_UTENFOR_IA_AVTALEN(navn = "Bestillingen og behovet fra virksomheten er utenfor vårt mandat iht IA-avtalen"),
 
     HAR_IKKE_KAPASITET(navn = "Har ikke tid eller kapasitet nå til å gjennomføre samarbeidet med NAV"),
     GJENNOMFØRER_TILTAK_PÅ_EGENHÅND(navn = "Virksomheten vil gjøre tiltak på egenhånd"),
