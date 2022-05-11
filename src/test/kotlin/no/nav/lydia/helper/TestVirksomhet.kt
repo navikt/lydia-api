@@ -99,7 +99,9 @@ class TestVirksomhet(
         val TESTVIRKSOMHET_FOR_STATUSFILTER = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_GRUNNLAG = nyVirksomhet()
 
-        fun nyVirksomhet(): TestVirksomhet {
+        fun nyVirksomhet(
+            beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))
+        ): TestVirksomhet {
             val orgnr = (800000000 .. 899999999).random(tilfeldigGenerator).toString() // tilfeldige virksomheter har orgnummer som starter på 8
 
             val næringer = when((1..6).random()) {
@@ -112,17 +114,17 @@ class TestVirksomhet(
                 orgnr = orgnr,
                 navn = "Navn $orgnr",
                 næringsgrupper = næringer,
-                beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))
+                beliggenhet = beliggenhet
             )
         }
 
-        private fun beliggenhet(
+        fun beliggenhet(
             land: String = "Norge",
             landkode: String = "NO",
             kommune: Kommune?,
             postnummer: String? = "1234",
             poststed: String? = "POSTSTED",
-            adresse: List<String>?,
+            adresse: List<String>? = listOf("adresse"),
         ) =
             Beliggenhetsadresse(
                 land = land,

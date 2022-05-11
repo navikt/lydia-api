@@ -85,26 +85,7 @@ class TestContainerHelper {
                 }
 
         init {
-            val testData = TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 500)
-            HttpMock().also { httpMock ->
-                httpMock.start()
-                postgresContainer.getDataSource().use { dataSource ->
-                    NæringsDownloader(
-                        url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
-                        næringsRepository = NæringsRepository(dataSource = dataSource)
-                    ).lastNedNæringer()
-
-                    BrregDownloader(
-                        url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData),
-                        virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-                    ).lastNed()
-                }
-                httpMock.stop()
-            }
-
-            testData.sykefraværsStatistikkMeldinger().forEach { melding ->
-                kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(melding)
-            }
+            VirksomhetHelper.lastInnStandardTestdata()
         }
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
@@ -348,5 +329,38 @@ class VirksomhetHelper {
                     success = { response -> response },
                     failure = { fail(it.message) }
                 )
+
+        fun nyttOrgnummer() = lastInnNyVirksomhet().orgnr
+
+        fun lastInnNyVirksomhet(nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet()): TestVirksomhet {
+            lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet))
+            return nyVirksomhet
+        }
+
+        fun lastInnStandardTestdata() {
+            lastInnTestdata(TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 500))
+        }
+
+        private fun lastInnTestdata(testData: TestData) {
+            HttpMock().also { httpMock ->
+                httpMock.start()
+                TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
+                    NæringsDownloader(
+                        url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
+                        næringsRepository = NæringsRepository(dataSource = dataSource)
+                    ).lastNedNæringer()
+
+                    BrregDownloader(
+                        url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData),
+                        virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+                    ).lastNed()
+                }
+                httpMock.stop()
+            }
+
+            testData.sykefraværsStatistikkMeldinger().forEach { melding ->
+                TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(melding)
+            }
+        }
     }
 }
