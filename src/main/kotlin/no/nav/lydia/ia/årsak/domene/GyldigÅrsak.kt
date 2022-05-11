@@ -41,19 +41,18 @@ class GyldigBegrunnelse(val type: BegrunnelseType, val navn: String = type.navn)
 }
 
 enum class ÅrsakType(val navn: String) {
-    NAV_IGANGSETTER_IKKE_TILTAK(navn = "NAV starter ikke samarbeid med virksomheten fordi"),
+    NAV_IGANGSETTER_IKKE_TILTAK(navn = "NAV har besluttet å ikke starte samarbeid"),
     VIRKSOMHETEN_TAKKET_NEI(navn = "Virksomheten har takket nei");
 }
 
 enum class BegrunnelseType(val navn: String) {
     MANGLER_PARTSGRUPPE(navn = "Virksomheten mangler partsgruppe"),
-    IKKE_TILFREDSSTILLENDE_SAMARBEID(navn = "Virksomheten har ikke tilfredstillende samarbeid med partsgruppen"),
+    IKKE_TILFREDSSTILLENDE_SAMARBEID(navn = "Virksomheten har ikke tilfredsstillende samarbeid med partsgruppen"),
     FOR_LAVT_SYKEFRAVÆR(navn = "Virksomheten er vurdert til å ha for lavt sykefravær"),
     MINDRE_VIRKSOMHET(navn = "Virksomheten har et høyt sykefravær, men er en mindre virksomhet (færre ansatte)"),
     IKKE_TID(navn = "NAV vurderer at virksomheten ikke ønsker å sette av tilstrekkelig tid til samarbeidet"),
 
-    HAR_IKKE_KAPASITET(navn = "Har ikke tid eller kapasitet nå til å gjennomføre samarbeidet med NAV"),
-    GJENNOMFØRER_TILTAK_PÅ_EGENHÅND(navn = "Virksomheten vil gjøre tiltak på egenhånd"),
+    HAR_IKKE_KAPASITET(navn = "Virksomheten har ikke tid eller kapasitet nå til å samarbeide med NAV"),
+    GJENNOMFØRER_TILTAK_PÅ_EGENHÅND(navn = "Virksomheten vil gjøre tiltak på egen hånd"),
     GJENNOMFØRER_TILTAK_MED_BHT(navn = "Virksomheten vil gjennomføre tiltak sammen med BHT")
 }
-
