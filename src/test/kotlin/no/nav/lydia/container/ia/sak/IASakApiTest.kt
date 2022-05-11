@@ -97,6 +97,23 @@ class IASakApiTest {
     }
 
     @Test
+    fun `skal ikke kunne opprette to saker på en virksomhet i første MVP (Men bør kunne gjøre det på sikt)`() {
+        val orgnrUtenSak = postgresContainer.performQuery(
+            "select orgnr from virksomhet where orgnr not in (select orgnr from ia_sak)"
+        ).getString("orgnr")
+
+        opprettSakForVirksomhetRespons(
+            orgnummer = orgnrUtenSak,
+            token = mockOAuth2Server.superbruker1.token
+        ).statuskode() shouldBe 201
+
+        opprettSakForVirksomhetRespons(
+            orgnummer = orgnrUtenSak,
+            token = mockOAuth2Server.superbruker1.token
+        ).statuskode() shouldBe 501
+    }
+
+    @Test
     fun `tilgangskontroll - en virksomhet skal bare kunne vurderes for oppfølging av en superbruker`() {
         val orgnr = OSLO.orgnr
         opprettSakForVirksomhetRespons(
