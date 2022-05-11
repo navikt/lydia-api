@@ -428,45 +428,45 @@ class IASakApiTest {
                       "gyldigeÅrsaker": [
                         {
                           "type": "NAV_IGANGSETTER_IKKE_TILTAK",
-                          "navn": "NAV starter ikke samarbeid med virksomheten fordi",
+                          "navn": "${NAV_IGANGSETTER_IKKE_TILTAK.navn}",
                           "begrunnelser": [
                             {
                               "type": "MANGLER_PARTSGRUPPE",
-                              "navn": "Virksomheten mangler partsgruppe"
+                              "navn": "${MANGLER_PARTSGRUPPE.navn}"
                             },
                             {
                               "type": "IKKE_TILFREDSSTILLENDE_SAMARBEID",
-                              "navn": "Virksomheten har ikke tilfredstillende samarbeid med partsgruppen"
+                              "navn": "${IKKE_TILFREDSSTILLENDE_SAMARBEID.navn}"
                             },
                             {
                               "type": "FOR_LAVT_SYKEFRAVÆR",
-                              "navn": "Virksomheten er vurdert til å ha for lavt sykefravær"
+                              "navn": "${FOR_LAVT_SYKEFRAVÆR.navn}"
                             },
                             {
                               "type": "IKKE_TID",
-                              "navn": "NAV vurderer at virksomheten ikke ønsker å sette av tilstrekkelig tid til samarbeidet"
+                              "navn": "${IKKE_TID.navn}"
                             },
                             {
                               "type": "MINDRE_VIRKSOMHET",
-                              "navn": "Virksomheten har et høyt sykefravær, men er en mindre virksomhet (færre ansatte)"
+                              "navn": "${MINDRE_VIRKSOMHET.navn}"
                             }
                           ]
                         },
                         {
                           "type": "VIRKSOMHETEN_TAKKET_NEI",
-                          "navn": "Virksomheten har takket nei",
+                          "navn": "${VIRKSOMHETEN_TAKKET_NEI.navn}",
                           "begrunnelser": [
                             {
                               "type": "HAR_IKKE_KAPASITET",
-                              "navn": "Har ikke tid eller kapasitet nå til å gjennomføre samarbeidet med NAV"
+                              "navn": "${HAR_IKKE_KAPASITET.navn}"
                             },
                             {
                               "type": "GJENNOMFØRER_TILTAK_PÅ_EGENHÅND",
-                              "navn": "Virksomheten vil gjøre tiltak på egenhånd"
+                              "navn": "${GJENNOMFØRER_TILTAK_PÅ_EGENHÅND.navn}"
                             },
                             {
                               "type": "GJENNOMFØRER_TILTAK_MED_BHT",
-                              "navn": "Virksomheten vil gjennomføre tiltak sammen med BHT"
+                              "navn": "${GJENNOMFØRER_TILTAK_MED_BHT.navn}"
                             }
                           ]
                         }
