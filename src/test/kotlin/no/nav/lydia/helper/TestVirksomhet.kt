@@ -21,6 +21,7 @@ class TestVirksomhet(
             Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
+        private val NÆRINGER_LISTE = listOf(DYRKING_AV_RIS, SCENEKUNST, BEDRIFTSRÅDGIVNING)
         val KOMMUNE_OSLO = Kommune(navn = "OSLO", nummer = "0301")
         val KOMMUNE_BERGEN = Kommune(navn = "BERGEN", nummer = "4601")
 
@@ -98,23 +99,32 @@ class TestVirksomhet(
         val TESTVIRKSOMHET_FOR_STATUSFILTER = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_GRUNNLAG = nyVirksomhet()
 
-        fun nyVirksomhet(): TestVirksomhet {
+        fun nyVirksomhet(
+            beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))
+        ): TestVirksomhet {
             val orgnr = (800000000 .. 899999999).random(tilfeldigGenerator).toString() // tilfeldige virksomheter har orgnummer som starter på 8
+
+            val næringer = when((1..6).random()) {
+                1,2,3 -> listOf(NÆRINGER_LISTE[(0..2).random()])
+                4,5 -> listOf(NÆRINGER_LISTE[(0..2).random()], NÆRINGER_LISTE[(0..2).random()]) // TODO
+                else -> NÆRINGER_LISTE
+            }
+
             return TestVirksomhet(
                 orgnr = orgnr,
                 navn = "Navn $orgnr",
-                næringsgrupper = listOf(DYRKING_AV_RIS),
-                beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))
+                næringsgrupper = næringer,
+                beliggenhet = beliggenhet
             )
         }
 
-        private fun beliggenhet(
+        fun beliggenhet(
             land: String = "Norge",
             landkode: String = "NO",
             kommune: Kommune?,
             postnummer: String? = "1234",
             poststed: String? = "POSTSTED",
-            adresse: List<String>?,
+            adresse: List<String>? = listOf("adresse"),
         ) =
             Beliggenhetsadresse(
                 land = land,

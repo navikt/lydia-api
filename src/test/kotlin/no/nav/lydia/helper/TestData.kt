@@ -7,6 +7,15 @@ class TestData(
     inkluderStandardVirksomheter: Boolean = false,
     antallTilfeldigeVirksomheter: Int = 0
 ) {
+    companion object {
+        fun fraVirksomhet(virksomhet: TestVirksomhet) =
+            TestData().lagData(
+                virksomhet = virksomhet,
+                perioder = listOf(Periode.gjeldenePeriode()),
+                sykefraværsProsent = (1 .. 20).random().toDouble().toString()
+            )
+    }
+
     private val kafkaMeldinger = mutableSetOf<String>()
     private val næringer = mutableSetOf<String>()
     private val brregVirksomheter = mutableSetOf<String>()
@@ -39,7 +48,7 @@ class TestData(
         perioder: List<Periode>,
         sykefraværsProsent: String = "2.0",
         antallPersoner: Int = (5 .. 1000).random()
-    ) {
+    ): TestData {
         perioder.forEach { periode ->
             kafkaMeldinger.add(lagKafkaMelding(
                 orgnr = virksomhet.orgnr,
@@ -52,6 +61,8 @@ class TestData(
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
         }
         brregVirksomheter.add(virksomhet.brregJson())
+
+        return this
     }
 
     fun sykefraværsStatistikkMeldinger() =

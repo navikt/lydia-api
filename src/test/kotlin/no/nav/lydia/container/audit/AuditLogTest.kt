@@ -6,6 +6,7 @@ import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import kotlin.test.Test
 
@@ -15,42 +16,58 @@ class AuditLogTest {
 
     @Test
     fun `auditlogger opprettelse av IA-sak`() {
-        val orgnummer = TestVirksomhet.OSLO.orgnr
-        SakHelper.opprettSakForVirksomhetRespons(orgnummer, token = mockOAuth2Server.superbruker1.token).also {
-            lydiaApiContainer shouldContainLog auditLog(
-                request = it.first,
-                navIdent = mockOAuth2Server.superbruker1.navIdent,
+        nyttOrgnummer().also { orgnummer ->
+            SakHelper.opprettSakForVirksomhetRespons(
                 orgnummer = orgnummer,
-                auditType = AuditType.create,
-                tillat = Tillat.Ja,
-                saksnummer = it.third.get().saksnummer
-            )
-        }
-        SakHelper.opprettSakForVirksomhetRespons(orgnummer, token = mockOAuth2Server.saksbehandler1.token).also {
-            lydiaApiContainer shouldContainLog auditLog(
-                request = it.first,
-                navIdent = mockOAuth2Server.saksbehandler1.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                tillat = Tillat.Nei,
-            )
-        }
-        SakHelper.opprettSakForVirksomhetRespons(orgnummer, token = mockOAuth2Server.brukerUtenTilgangsrolle.token)
-            .also {
+                token = mockOAuth2Server.superbruker1.token
+            ).also {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
-                    navIdent = mockOAuth2Server.brukerUtenTilgangsrolle.navIdent,
+                    navIdent = mockOAuth2Server.superbruker1.navIdent,
+                    orgnummer = orgnummer,
+                    auditType = AuditType.create,
+                    tillat = Tillat.Ja,
+                    saksnummer = it.third.get().saksnummer
+                )
+            }
+        }
+
+        nyttOrgnummer().also { orgnummer ->
+            SakHelper.opprettSakForVirksomhetRespons(
+                orgnummer = orgnummer,
+                token = mockOAuth2Server.saksbehandler1.token
+            ).also {
+                lydiaApiContainer shouldContainLog auditLog(
+                    request = it.first,
+                    navIdent = mockOAuth2Server.saksbehandler1.navIdent,
                     orgnummer = orgnummer,
                     auditType = AuditType.create,
                     tillat = Tillat.Nei,
                 )
             }
+        }
+
+        nyttOrgnummer().also { orgnummer ->
+            SakHelper.opprettSakForVirksomhetRespons(
+                orgnummer = orgnummer,
+                token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+            )
+                .also {
+                    lydiaApiContainer shouldContainLog auditLog(
+                        request = it.first,
+                        navIdent = mockOAuth2Server.brukerUtenTilgangsrolle.navIdent,
+                        orgnummer = orgnummer,
+                        auditType = AuditType.create,
+                        tillat = Tillat.Nei,
+                    )
+                }
+        }
     }
 
     @Test
     fun `auditlogger oppdatering av IA-sak`() {
-        val orgnummer = TestVirksomhet.OSLO.orgnr
-        SakHelper.opprettSakForVirksomhetRespons(orgnummer, token = mockOAuth2Server.superbruker1.token)
+        val orgnummer = nyttOrgnummer()
+        SakHelper.opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
             .also { responsForOpprettSakForVirksomhetMedSuperbruker ->
                 val iaSak = responsForOpprettSakForVirksomhetMedSuperbruker.third.get()
                 lydiaApiContainer shouldContainLog auditLog(
@@ -118,8 +135,8 @@ class AuditLogTest {
 
     @Test
     fun `auditlogger uthenting av hendelser på IA-sak på et gyldig saksnummer`() {
-        val orgnummer = TestVirksomhet.BERGEN.orgnr
-        val sak = SakHelper.opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker1.token)
+        val orgnummer = nyttOrgnummer()
+        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
         SakHelper.hentHendelserPåSakRespons(sak.saksnummer, token = mockOAuth2Server.superbruker1.token).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,

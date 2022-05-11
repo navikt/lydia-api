@@ -28,6 +28,8 @@ class IASakService(
     fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
         if (NavEnheter.enheterSomSkalSkjermes.contains(orgnummer)) {
             return Either.Left(IASakError.`Kan ikke oppdatere sak på NAV-kontor`)
+        }else if (iaSakRepository.hentSaker(orgnummer).isNotEmpty()){
+            return Either.Left(IASakError.`støtter ikke flere saker for en virksomhet ennå`)
         }
         val saksnummer = ULID.random()
         val nySakshendelse = iaSakshendelseRepository.lagreHendelse(IASakshendelse(
