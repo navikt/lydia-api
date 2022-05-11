@@ -73,7 +73,7 @@ class TestContainerHelper {
                                 .plus(
                                     mapOf(
                                         "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned",
-                                        "CONSUMER_LOOP_DELAY" to "10",
+                                        "CONSUMER_LOOP_DELAY" to "1",
                                         "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json",
                                         "NAIS_CLUSTER_NAME" to "lokal",
                                     )
@@ -85,7 +85,7 @@ class TestContainerHelper {
                 }
 
         init {
-            val testData = TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 100)
+            val testData = TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 500)
             HttpMock().also { httpMock ->
                 httpMock.start()
                 postgresContainer.getDataSource().use { dataSource ->
@@ -194,7 +194,7 @@ class SakHelper {
             return request.responseObject<IASakDto>(localDateTimeTypeAdapter)
         }
 
-        public fun nyHendelsePåSakRequest(
+        fun nyHendelsePåSakRequest(
             token: String,
             sak: IASakDto,
             hendelsestype: SaksHendelsestype,

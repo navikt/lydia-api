@@ -5,18 +5,13 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldBeOneOf
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainInOrder
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveAtMostSize
-import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.ints.shouldBeInRange
+import io.kotest.matchers.ints.shouldBeLessThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -33,7 +28,6 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
-import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.localDateTimeTypeAdapter
@@ -41,12 +35,7 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
-import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
-import no.nav.lydia.sykefraversstatistikk.api.ListResponse
-import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import kotlin.test.Test
@@ -160,10 +149,13 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne hente alle virksomheter i en gitt næring`() {
         hentSykefravær(success = { response ->
-            response.data.map { it.orgnr } shouldContainAll listOf(
-                BERGEN.orgnr,
-                OSLO.orgnr
-            )
+            response.data.forAll {
+                postgresContainer.performQuery("""
+                        SELECT * FROM virksomhet AS v JOIN virksomhet_naring AS vn ON (v.id = vn.virksomhet)
+                        WHERE v.orgnr = '${it.orgnr}' AND vn.narings_kode = '${SCENEKUNST.kode}'
+                    """.trimIndent()
+                ).row shouldBe 1
+            }
         }, næringsgrupper = SCENEKUNST.kode)
     }
 
@@ -276,19 +268,22 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
         hentSykefravær(success = { response ->
-            response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
+            val total = response.total
+            total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
             response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
+
+            val faktiskTotal = postgresContainer.performQuery("SELECT count(*) AS faktiskTotal FROM virksomhet")
+                .getInt("faktiskTotal")
+            total shouldBeLessThanOrEqual faktiskTotal
+
+            val antallSider = total/50
+            (2..antallSider).map { it.toString() }.forEach { side ->
+                hentSykefravær(success = { response ->
+                    response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
+                    response.data shouldHaveAtLeastSize 1
+                }, side = side)
+            }
         }, side = "1")
-
-        hentSykefravær(success = { response ->
-            response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
-            response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
-        }, side = "2")
-
-        hentSykefravær(success = { response ->
-            response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
-            response.data shouldHaveAtMostSize VIRKSOMHETER_PER_SIDE - 1
-        }, side = "3")
     }
 
     @Test

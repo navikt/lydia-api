@@ -21,6 +21,7 @@ class TestVirksomhet(
             Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
+        private val NÆRINGER_LISTE = listOf(DYRKING_AV_RIS, SCENEKUNST, BEDRIFTSRÅDGIVNING)
         val KOMMUNE_OSLO = Kommune(navn = "OSLO", nummer = "0301")
         val KOMMUNE_BERGEN = Kommune(navn = "BERGEN", nummer = "4601")
 
@@ -100,10 +101,17 @@ class TestVirksomhet(
 
         fun nyVirksomhet(): TestVirksomhet {
             val orgnr = (800000000 .. 899999999).random(tilfeldigGenerator).toString() // tilfeldige virksomheter har orgnummer som starter på 8
+
+            val næringer = when((1..6).random()) {
+                1,2,3 -> listOf(NÆRINGER_LISTE[(0..2).random()])
+                4,5 -> listOf(NÆRINGER_LISTE[(0..2).random()], NÆRINGER_LISTE[(0..2).random()]) // TODO
+                else -> NÆRINGER_LISTE
+            }
+
             return TestVirksomhet(
                 orgnr = orgnr,
                 navn = "Navn $orgnr",
-                næringsgrupper = listOf(DYRKING_AV_RIS),
+                næringsgrupper = næringer,
                 beliggenhet = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))
             )
         }

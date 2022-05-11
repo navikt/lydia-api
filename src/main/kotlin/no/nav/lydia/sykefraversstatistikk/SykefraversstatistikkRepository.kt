@@ -107,7 +107,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
                         ${filterVerdi(tmpNæringTabell, søkeparametere.næringsgruppeKoder)}
                     SELECT
-                        DISTINCT virksomhet.orgnr,
+                        virksomhet.orgnr,
                         virksomhet.navn,
                         virksomhet.kommune,
                         virksomhet.kommunenummer,
@@ -152,7 +152,21 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     
                     ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
                     ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
-
+                    GROUP BY 
+                        virksomhet.orgnr,
+                        virksomhet.navn,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        statistikk.arstall,
+                        statistikk.kvartal,
+                        statistikk.antall_personer,
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet,
+                        ia_sak.status,
+                        ia_sak.eid_av
                     ORDER BY statistikk.${søkeparametere.sorteringsnøkkel} ${søkeparametere.sorteringsretning}
                     
                     LIMIT ${søkeparametere.virksomheterPerSide()}
