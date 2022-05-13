@@ -94,7 +94,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.kommunenummer,
                         virksomhet.land,
                         virksomhet.landkode,
-                        string_agg(naring.kode || '-' || naring.navn, '€') AS naringer
+                        string_agg(naring.kode || '∞' || naring.navn, '€') AS naringer
                     FROM virksomhet 
                     JOIN virksomhet_naring ON (virksomhet.id = virksomhet_naring.virksomhet)
                     JOIN naring ON (virksomhet_naring.narings_kode = naring.kode)
@@ -118,8 +118,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         .split("€")
                         .map { naring ->
                             Næringsgruppe(
-                                kode = naring.split("-")[0],
-                                navn = naring.split("-")[1]
+                                kode = naring.split("∞")[0],
+                                navn = naring.split("∞")[1]
                             )
                         })
             }.asSingle)

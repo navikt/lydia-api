@@ -100,15 +100,10 @@ class TestVirksomhet(
         val TESTVIRKSOMHET_FOR_GRUNNLAG = nyVirksomhet()
 
         fun nyVirksomhet(
-            beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse"))
+            beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
+            næringer: List<Næringsgruppe> = tilfeldigeNæringsgrupper()
         ): TestVirksomhet {
             val orgnr = (800000000 .. 899999999).random(tilfeldigGenerator).toString() // tilfeldige virksomheter har orgnummer som starter på 8
-
-            val næringer = when((1..6).random()) {
-                1,2,3 -> listOf(NÆRINGER_LISTE[(0..2).random()])
-                4,5 -> listOf(NÆRINGER_LISTE[(0..2).random()], NÆRINGER_LISTE[(0..2).random()]) // TODO
-                else -> NÆRINGER_LISTE
-            }
 
             return TestVirksomhet(
                 orgnr = orgnr,
@@ -117,6 +112,13 @@ class TestVirksomhet(
                 beliggenhet = beliggenhet
             )
         }
+
+        private fun tilfeldigeNæringsgrupper() =
+            when ((1..6).random()) {
+                1, 2, 3 -> listOf(NÆRINGER_LISTE[(0..2).random()])
+                4, 5 -> listOf(NÆRINGER_LISTE[(0..2).random()], NÆRINGER_LISTE[(0..2).random()]) // TODO
+                else -> NÆRINGER_LISTE
+            }
 
         fun beliggenhet(
             land: String = "Norge",
