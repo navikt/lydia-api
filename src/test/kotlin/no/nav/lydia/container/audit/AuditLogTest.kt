@@ -244,7 +244,7 @@ class AuditLogTest {
         saksnummer: String? = null,
         severity: String = "INFO"
     ) =
-        ("CEF:0\\|lydia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|lydia-api\\|$severity\\|end=[0-9]+ " +
+        ("CEF:0\\|fia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|fia-api\\|$severity\\|end=[0-9]+ " +
                 "suid=$navIdent " +
                 (orgnummer?.let { "duid=$it " } ?: "") +
                 "sproc=.{26} " +

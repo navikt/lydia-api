@@ -35,7 +35,7 @@ class AuditLog(val miljø: Environment) {
     ) {
         val severity = if (orgnummer.isNullOrEmpty()) "WARN" else "INFO"
         val logstring =
-            "CEF:0|lydia-api|auditLog|1.0|audit:${auditType.name}|lydia-api|$severity|end=${System.currentTimeMillis()} " +
+            "CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=${System.currentTimeMillis()} " +
                     "suid=$navIdent " +
                     (orgnummer?.let { "duid=$it " } ?: "") +
                     "sproc=${ULID.random()} " +
