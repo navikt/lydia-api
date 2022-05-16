@@ -53,7 +53,7 @@ spec:
           - "NAVident"
   gcp:
     sqlInstances:
-    - type: POSTGRES_12
+    - type: {{dbVersion}}
       diskAutoresize: {{dbAutoresizeDisk}}
       tier: {{dbTier}}
       databases:
