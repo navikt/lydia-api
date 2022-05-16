@@ -20,9 +20,10 @@ services:
       AZURE_APP_CLIENT_ID: notfound
       AZURE_OPENID_CONFIG_JWKS_URI: https://fakedings.dev-gcp.nais.io/fake/jwks
       AZURE_OPENID_CONFIG_ISSUER: https://fakedings.dev-gcp.nais.io/fake
-      FIA_SUPERBRUKER_GROUP_ID: superbrukerGroupId,
-      FIA_SAKSBEHANDLER_GROUP_ID: saksbehandlerGroupId,
+      FIA_SUPERBRUKER_GROUP_ID: superbrukerGroupId
+      FIA_SAKSBEHANDLER_GROUP_ID: saksbehandlerGroupId
       FIA_LESETILGANG_GROUP_ID: lesetilgangGroupId
+      TEAM_PIA_GROUP_ID: lesetilgangGroupId
       TZ: Europe/Oslo
       STATISTIKK_TOPIC: hei123
       KAFKA_TRUSTSTORE_PATH: ""

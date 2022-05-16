@@ -5,17 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
-import no.nav.lydia.AzureConfig
-import no.nav.lydia.Database
-import no.nav.lydia.FiaRoller
-import no.nav.lydia.Integrasjoner
-import no.nav.lydia.Kafka
-import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.Security
-import no.nav.lydia.helper.HttpMock
-import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.MANGLER_BELIGGENHETSADRESSE
@@ -26,66 +17,20 @@ import no.nav.lydia.integrasjoner.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.lydiaRestApi
-import org.junit.AfterClass
-import java.net.URL
 import kotlin.test.AfterTest
 import kotlin.test.Test
 
 
 class BrregDownloaderTest {
-    private val naisEnvironment = NaisEnvironment(
-        database = Database(
-            host = "",
-            port = "",
-            username = "",
-            password = "",
-            name = "",
-        ), security = Security(
-            AzureConfig(
-                audience = "lydia-api",
-                jwksUri = URL("http://localhost:8100/default/jwks"),
-                issuer = "http://localhost:8100/default",
-            ), fiaRoller = FiaRoller(
-                superbrukerGroupId = "123",
-                saksbehandlerGroupId = "456",
-                lesetilgangGroupId = "789"
-            )
-        ), kafka = Kafka(
-            brokers = "",
-            truststoreLocation = "",
-            keystoreLocation = "",
-            credstorePassword = "",
-            statistikkTopic = "",
-            consumerLoopDelay = 200L
-        ), integrasjoner = Integrasjoner(
-            ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
-            brregUnderEnhetUrl = IntegrationsHelper.mockKallMotBrregUnderhenter(
-                httpMock = httpMock,
-                testData = testData
-            )
-        ),
-        cluster = "lokal"
-    )
+    private val naisEnvironment = KtorTestHelper.ktorNaisEnvironment
+    val postgres = PostgrestContainerHelper()
 
-    companion object {
-        val testData = TestData(inkluderStandardVirksomheter = true)
-        val httpMock = HttpMock()
-        val postgres = PostgrestContainerHelper()
-
-        init {
-            httpMock.start()
-            postgres.getDataSource().use { dataSource ->
-                NæringsDownloader(
-                    url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
-                    næringsRepository = NæringsRepository(dataSource = dataSource)
-                ).lastNedNæringer()
-            }
-        }
-
-        @AfterClass
-        @JvmStatic
-        fun afterAll() {
-            httpMock.stop()
+    init {
+        postgres.getDataSource().use { dataSource ->
+            NæringsDownloader(
+                url = naisEnvironment.integrasjoner.ssbNæringsUrl,
+                næringsRepository = NæringsRepository(dataSource = dataSource)
+            ).lastNedNæringer()
         }
     }
 
