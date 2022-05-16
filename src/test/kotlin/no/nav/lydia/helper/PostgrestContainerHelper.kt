@@ -16,7 +16,7 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
     private val postgresNetworkAlias = "postgrescontainer"
     val lydiaDbName = "lydia-api-container-db"
     val postgresContainer: PostgreSQLContainer<*> =
-        PostgreSQLContainer("postgres:12")
+        PostgreSQLContainer("postgres:14")
             .withLogConsumer(
                 Slf4jLogConsumer(log).withPrefix(postgresNetworkAlias).withSeparateOutputStreams()
             )
