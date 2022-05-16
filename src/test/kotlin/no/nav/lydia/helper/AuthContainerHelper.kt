@@ -40,6 +40,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val superbrukerGroupId = "ensuperbrukerGroupId"
     private val saksbehandlerGroupId = "ensaksbehandlerGroupId"
     private val lesetilgangGroupId = "enlesetilgangGroupId"
+    private val teamPiaGroupId = "enTeamPiaGroupId"
     private val ugyldigRolleGroupId = "enHeltAnnenRolleGroupId"
 
     val lesebruker : TestBruker
@@ -122,7 +123,8 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
         "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri,
         "FIA_SUPERBRUKER_GROUP_ID" to superbrukerGroupId,
         "FIA_SAKSBEHANDLER_GROUP_ID" to saksbehandlerGroupId,
-        "FIA_LESETILGANG_GROUP_ID" to lesetilgangGroupId
+        "FIA_LESETILGANG_GROUP_ID" to lesetilgangGroupId,
+        "TEAM_PIA_GROUP_ID" to teamPiaGroupId
     )
 
 }

@@ -48,6 +48,7 @@ spec:
           - id: {{fiaSuperbrukerGroup}}
           - id: {{fiaSaksbehandlerGroup}}
           - id: {{fiaLesetilgangGroup}}
+          - id: {{teamPiaGroup}}
         extra:
           - "NAVident"
   gcp:
@@ -74,3 +75,5 @@ spec:
       value: {{fiaSaksbehandlerGroup}}
     - name: FIA_LESETILGANG_GROUP_ID
       value: {{fiaLesetilgangGroup}}
+    - name: TEAM_PIA_GROUP_ID
+      value: {{teamPiaGroup}}

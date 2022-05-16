@@ -2,58 +2,18 @@ package no.nav.lydia
 
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.security.mock.oauth2.MockOAuth2Server
-import org.junit.AfterClass
-import java.net.URL
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class AppTest {
     companion object {
-        private val mockOAuth2Server = MockOAuth2Server().apply {
-            start(port = 8100)
-        }
         private val postgres = PostgrestContainerHelper()
         private val dataSource = postgres.getDataSource().apply { runMigration(this) }
-        private val naisEnvironment = NaisEnvironment(
-            database = Database(
-                host = "",
-                port = "",
-                username = "",
-                password = "",
-                name = "",
-            ), security = Security(
-                AzureConfig(
-                    audience = "lydia-api",
-                    jwksUri = URL("http://localhost:8100/default/jwks"),
-                    issuer = "http://localhost:8100/default"
-                ), fiaRoller = FiaRoller(
-                    superbrukerGroupId = "123",
-                    saksbehandlerGroupId = "456",
-                    lesetilgangGroupId = "789"
-                )
-            ), kafka = Kafka(
-                brokers = "",
-                truststoreLocation = "",
-                keystoreLocation = "",
-                credstorePassword = "",
-                statistikkTopic = "",
-                consumerLoopDelay = 200L
-            ), integrasjoner = Integrasjoner(
-                ssbNæringsUrl = "/naringmock/api/klass/v1/30/json",
-                brregUnderEnhetUrl = "/brregmock/enhetsregisteret/api/underenheter/lastned"
-            ),
-            cluster = "lokal"
-        )
-
-        @AfterClass
-        @JvmStatic
-        fun afterAll() {
-            mockOAuth2Server.shutdown()
-        }
+        private val naisEnvironment = KtorTestHelper.ktorNaisEnvironment
     }
 
 

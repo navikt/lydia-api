@@ -4,9 +4,8 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 
-// Porten bør ikke være på 8080 for å kollidere med appen
-class HttpMock(portNumber: Int = 6969) {
-    val wireMockServer: WireMockServer = WireMockServer(WireMockConfiguration.options().port(portNumber))
+class HttpMock {
+    val wireMockServer: WireMockServer = WireMockServer(WireMockConfiguration.options().dynamicPort())
 
     fun start(): HttpMock {
         if (!wireMockServer.isRunning) {

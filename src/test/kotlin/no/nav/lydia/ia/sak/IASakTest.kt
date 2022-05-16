@@ -29,7 +29,8 @@ class IASakTest {
         val fiaroller = FiaRoller(
             superbrukerGroupId = "123",
             saksbehandlerGroupId = "456",
-            lesetilgangGroupId = "789"
+            lesetilgangGroupId = "789",
+            teamPiaGroupId = "1011"
         )
 
         val superbruker1 = Rådgiver(
