@@ -1,15 +1,18 @@
 package no.nav.lydia.integrasjoner.brreg
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 val VIRKSOMHETSIMPORT_PATH = "internal/virksomhetsimport"
 
 fun Route.virksomhetsImport(brregDownloader: BrregDownloader) {
     get(VIRKSOMHETSIMPORT_PATH) {
+        if (BrregDownloader.KJØRER_IMPORT.get()) {
+            call.application.log.warn("Kjører allerede import av bedrifter.")
+            return@get call.respond(HttpStatusCode.Conflict)
+        }
         brregDownloader.lastNed()
         call.respond(HttpStatusCode.OK)
     }

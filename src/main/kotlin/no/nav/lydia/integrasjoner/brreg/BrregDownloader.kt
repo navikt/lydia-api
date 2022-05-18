@@ -11,6 +11,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.GZIPInputStream
 import kotlin.io.path.*
 
@@ -21,16 +22,19 @@ class BrregDownloader(
 ) {
     companion object {
         const val underEnhetApplicationType = "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8"
+        var KJØRER_IMPORT = AtomicBoolean(false)
     }
 
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun lastNed() {
+        KJØRER_IMPORT.set(true)
         val brregKomprimert = lagreTilFil(lastNedUnderEnheterSomZip(), "brreg-nedlasting.json.gz")
         val brregUkomprimert = unzipFil(brregKomprimert)
         brregKomprimert.deleteIfExists()
         importerVirksomheterFraFil(brregUkomprimert)
         brregUkomprimert.deleteIfExists()
+        KJØRER_IMPORT.set(false)
     }
 
     private fun lastNedUnderEnheterSomZip(): ByteArray {
