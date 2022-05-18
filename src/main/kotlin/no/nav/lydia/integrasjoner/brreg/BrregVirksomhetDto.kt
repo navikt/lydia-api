@@ -1,22 +1,25 @@
 package no.nav.lydia.integrasjoner.brreg
 
 import kotlinx.serialization.Serializable
+import no.nav.lydia.virksomhet.domene.Næringsgruppe
 
 @Serializable
 data class BrregVirksomhetDto(
     val organisasjonsnummer: String,
     val navn: String,
     val beliggenhetsadresse: Beliggenhetsadresse?,
-    val naeringskode1: NæringskodeBrreg,
+    val naeringskode1: NæringskodeBrreg?,
     val naeringskode2: NæringskodeBrreg?,
     val naeringskode3: NæringskodeBrreg?,
 
     ){
     fun hentNæringsgruppekoder() = mutableMapOf(
-        "naeringskode1" to naeringskode1.kode).apply {
+        "naeringskode1" to hentNæringskode1()).apply {
             naeringskode2?.let { this["naeringskode2"] = it.kode }
             naeringskode3?.let { this["naeringskode3"] = it.kode }
     }
+
+    private fun hentNæringskode1() = (naeringskode1?.kode ?: Næringsgruppe.UOPPGITT.kode)
 }
 
 @Serializable
