@@ -19,7 +19,6 @@ repositories {
 dependencies {
     val ktorVersion = "2.0.0"
     val fuelVersion = "2.3.1"
-    val testcontainersVersion = "1.16.3"
 
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -78,11 +77,12 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.1.0"
+    val kotestVerstion = "5.3.0"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
+    val testcontainersVersion = "1.17.1"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
@@ -91,11 +91,11 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
-    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.32.0")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.33.2")
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:0.4.4")
+    testImplementation("no.nav.security:mock-oauth2-server:0.4.8")
 
 }
 
