@@ -11,7 +11,8 @@ data class VirksomhetDto(
     val adresse: List<String>,
     val postnummer: String,
     val poststed: String,
-    val neringsgrupper: List<Næringsgruppe>
+    val neringsgrupper: List<Næringsgruppe>,
+    val sektor: String
 )
 
 fun Virksomhet.toDto() = VirksomhetDto(
@@ -21,4 +22,14 @@ fun Virksomhet.toDto() = VirksomhetDto(
     postnummer = this.postnummer.toString().padStart(length = 4, padChar = '0'),
     poststed = this.poststed,
     neringsgrupper = this.næringsgrupper,
+    sektor = sektorKodeTilBeskrivelse()
 )
+
+fun Virksomhet.sektorKodeTilBeskrivelse(): String {
+    return when (sektor) {
+        "1" -> "Statlig forvaltning"
+        "2" -> "Kommunal forvaltning"
+        "3" -> "Privat og offentlig næringsvirksomhet"
+        else -> "Ukjent"
+    }
+}

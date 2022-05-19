@@ -26,7 +26,7 @@ class TestData(
             lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "7.0")
 
             lagData(virksomhet = TestVirksomhet.NAV_KONTOR, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), antallPersoner = 1001)
-            lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf())
+            lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(Periode.gjeldenePeriode()))
             lagData(virksomhet = TestVirksomhet.OSLO_MANGLER_ADRESSER, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.UTENLANDSK, perioder = listOf())
@@ -39,7 +39,10 @@ class TestData(
 
     private fun genererTilfeldigeVirksomheter(antallVirksomheter: Int) {
         (0 .. antallVirksomheter).forEach { _ ->
-            lagData(TestVirksomhet.nyVirksomhet(), listOf(Periode.gjeldenePeriode()))
+            lagData(
+                virksomhet = TestVirksomhet.nyVirksomhet(),
+                perioder = listOf(Periode.gjeldenePeriode()),
+                sektor = (0..3).random().toString())
         }
     }
 
@@ -47,7 +50,8 @@ class TestData(
         virksomhet: TestVirksomhet,
         perioder: List<Periode>,
         sykefraværsProsent: String = "2.0",
-        antallPersoner: Int = (5 .. 1000).random()
+        antallPersoner: Int = (5 .. 1000).random(),
+        sektor: String = "1"
     ): TestData {
         perioder.forEach { periode ->
             kafkaMeldinger.add(lagKafkaMelding(
@@ -55,7 +59,8 @@ class TestData(
                 periode = periode,
                 navn = virksomhet.navn,
                 sykefraværsProsent = sykefraværsProsent,
-                antallPersoner = antallPersoner))
+                antallPersoner = antallPersoner,
+                sektor = sektor))
         }
         virksomhet.næringsgrupper.forEach { næring ->
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
@@ -108,7 +113,8 @@ enum class Melding(val melding: String) {
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
             navn = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.navn,
             periode = Periode.forrigePeriode(),
-            antallPersoner = 6
+            antallPersoner = 6,
+            sektor = "1"
         )
     ),
     testVirksomhetGjeldeneKvartal(
@@ -116,7 +122,8 @@ enum class Melding(val melding: String) {
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
             navn = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.navn,
             periode = Periode.gjeldenePeriode(),
-            antallPersoner = 6
+            antallPersoner = 6,
+            sektor = "1"
         )
     )
 }
@@ -138,7 +145,8 @@ fun lagKafkaMelding(
     navn: String,
     periode: Periode,
     sykefraværsProsent: String = "2.0",
-    antallPersoner: Int = 6) =
+    antallPersoner: Int = 6,
+    sektor: String) =
     """
         {
           "key": {
@@ -185,7 +193,7 @@ fun lagKafkaMelding(
             },
             "sektorSykefravær": {
               "kategori": "SEKTOR",
-              "kode": "1",
+              "kode": "$sektor",
               "årstall": ${periode.årstall},
               "kvartal": ${periode.kvartal},
               "tapteDagsverk": "1340.0",

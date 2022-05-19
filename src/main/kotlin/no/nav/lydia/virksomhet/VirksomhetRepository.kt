@@ -94,12 +94,17 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.kommunenummer,
                         virksomhet.land,
                         virksomhet.landkode,
+                        virksomhet_statistikk_metadata.sektor,
                         string_agg(naring.kode || '∞' || naring.navn, '€') AS naringer
                     FROM virksomhet 
                     JOIN virksomhet_naring ON (virksomhet.id = virksomhet_naring.virksomhet)
                     JOIN naring ON (virksomhet_naring.narings_kode = naring.kode)
+                    LEFT JOIN virksomhet_statistikk_metadata USING (orgnr)
                     WHERE virksomhet.orgnr = :orgnr
-                    GROUP BY 1,2,3
+                    GROUP BY
+                        virksomhet.id,
+                        virksomhet.orgnr,
+                        virksomhet_statistikk_metadata.sektor
                 """.trimIndent(),
                 mapOf("orgnr" to orgnr)
             ).map { row ->
@@ -121,7 +126,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 kode = naring.split("∞")[0],
                                 navn = naring.split("∞")[1]
                             )
-                        })
+                        },
+                    sektor = row.stringOrNull("sektor"))
             }.asSingle)
         }
 }

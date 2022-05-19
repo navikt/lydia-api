@@ -26,6 +26,7 @@ class VirksomhetApiTest {
         virksomhet.postnummer shouldBe OSLO_FLERE_ADRESSER.beliggenhet.postnummer
         virksomhet.poststed shouldBe OSLO_FLERE_ADRESSER.beliggenhet.poststed
         virksomhet.neringsgrupper shouldHaveSize 2
+        virksomhet.sektor shouldBe "Statlig forvaltning"
     }
 
     @Test

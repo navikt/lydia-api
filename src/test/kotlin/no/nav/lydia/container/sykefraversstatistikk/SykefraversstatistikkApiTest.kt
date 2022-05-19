@@ -91,7 +91,7 @@ class SykefraversstatistikkApiTest {
                 filterverdier.fylker[0].kommuner.size shouldBe 1
                 filterverdier.neringsgrupper.find { it.kode == Næringsgruppe.UOPPGITT.kode }
                     .shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
-                filterverdier.neringsgrupper.size shouldBe 4
+                filterverdier.neringsgrupper.size shouldBeGreaterThan 1
                 filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
                 filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
             }, failure = { fail(it.message) })
