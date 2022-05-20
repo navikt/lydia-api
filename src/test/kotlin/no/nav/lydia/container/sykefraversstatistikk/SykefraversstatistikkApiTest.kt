@@ -313,11 +313,6 @@ class SykefraversstatistikkApiTest {
 
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
-            response.data.forAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBe 7.0
-            }.forAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBe 2.0
-            }
         }, sykefraværsprosentFra = "", sykefraværsprosentTil = "")
     }
 
