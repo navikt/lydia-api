@@ -20,29 +20,33 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.transaction { tx ->
                 sykefraværsStatistikkListe.forEach { sykefraværsStatistikk ->
                     tx.run(
-                        queryOf(
-                            """
-                       INSERT INTO sykefravar_statistikk_virksomhet(
-                        orgnr,
-                        arstall,
-                        kvartal,
-                        antall_personer,
-                        tapte_dagsverk,
-                        mulige_dagsverk,
-                        sykefraversprosent,
-                        maskert
-                       )
+                        queryOf("""
+                        INSERT INTO sykefravar_statistikk_virksomhet(
+                            orgnr,
+                            arstall,
+                            kvartal,
+                            antall_personer,
+                            tapte_dagsverk,
+                            mulige_dagsverk,
+                            sykefraversprosent,
+                            maskert
+                        )
                         VALUES(
-                        :orgnr,
-                        :arstall,
-                        :kvartal,
-                        :antall_personer,
-                        :tapte_dagsverk,
-                        :mulige_dagsverk,
-                        :sykefraversprosent,
-                        :maskert
+                            :orgnr,
+                            :arstall,
+                            :kvartal,
+                            :antall_personer,
+                            :tapte_dagsverk,
+                            :mulige_dagsverk,
+                            :sykefraversprosent,
+                            :maskert
                         ) 
-                        ON CONFLICT DO NOTHING
+                        ON CONFLICT ON CONSTRAINT sykefravar_periode DO UPDATE SET
+                            antall_personer = :antall_personer,
+                            tapte_dagsverk = :tapte_dagsverk,
+                            mulige_dagsverk = :mulige_dagsverk,
+                            sykefraversprosent = :sykefraversprosent,
+                            maskert = :maskert
                         """.trimMargin(),
                             mapOf(
                                 "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,

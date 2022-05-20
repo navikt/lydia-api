@@ -198,7 +198,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal bare få statistikk for siste periode hvis periode er uspesifisert`() {
-        val gjeldendePeriode = Periode.gjeldenePeriode()
+        val gjeldendePeriode = Periode.gjeldendePeriode()
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll {

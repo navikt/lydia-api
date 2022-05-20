@@ -341,7 +341,7 @@ class VirksomhetHelper {
             lastInnTestdata(TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 500))
         }
 
-        private fun lastInnTestdata(testData: TestData) {
+        fun lastInnTestdata(testData: TestData) {
             HttpMock().also { httpMock ->
                 httpMock.start()
                 TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->

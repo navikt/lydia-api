@@ -92,7 +92,7 @@ class Periode(val kvartal: Int, val årstall: Int) {
         private fun sisteKvartal() = 4
         private fun sisteÅr() = 2021
 
-        fun gjeldenePeriode() =
+        fun gjeldendePeriode() =
             Periode(kvartal = sisteKvartal(), årstall = sisteÅr())
         fun forrigePeriode() =
             when(sisteKvartal()) {

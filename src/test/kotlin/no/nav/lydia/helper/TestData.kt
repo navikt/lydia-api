@@ -2,6 +2,7 @@ package no.nav.lydia.helper
 
 import com.google.gson.Gson
 import no.nav.lydia.sykefraversstatistikk.api.Periode
+import kotlin.random.Random
 
 class TestData(
     inkluderStandardVirksomheter: Boolean = false,
@@ -11,7 +12,7 @@ class TestData(
         fun fraVirksomhet(virksomhet: TestVirksomhet) =
             TestData().lagData(
                 virksomhet = virksomhet,
-                perioder = listOf(Periode.gjeldenePeriode()),
+                perioder = listOf(Periode.gjeldendePeriode()),
                 sykefraværsProsent = (1 .. 20).random().toDouble().toString()
             )
     }
@@ -22,17 +23,17 @@ class TestData(
 
     init {
         if (inkluderStandardVirksomheter) {
-            lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), antallPersoner = 6)
-            lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "7.0")
+            lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 6)
+            lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "7.0")
 
-            lagData(virksomhet = TestVirksomhet.NAV_KONTOR, perioder = listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), antallPersoner = 1001)
-            lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(Periode.gjeldenePeriode()))
+            lagData(virksomhet = TestVirksomhet.NAV_KONTOR, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 1001)
+            lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(Periode.gjeldendePeriode()))
             lagData(virksomhet = TestVirksomhet.OSLO_MANGLER_ADRESSER, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.UTENLANDSK, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT, emptyList())
-            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER, listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "6.0")
-            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG, listOf(Periode.gjeldenePeriode(), Periode.forrigePeriode()), antallPersoner = 42, sykefraværsProsent = "6.0")
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "6.0")
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 42, sykefraværsProsent = "6.0")
         }
         genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
     }
@@ -41,7 +42,7 @@ class TestData(
         (0 .. antallVirksomheter).forEach { _ ->
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
-                perioder = listOf(Periode.gjeldenePeriode()),
+                perioder = listOf(Periode.gjeldendePeriode()),
                 sektor = (0..3).random().toString())
         }
     }
@@ -51,6 +52,7 @@ class TestData(
         perioder: List<Periode>,
         sykefraværsProsent: String = "2.0",
         antallPersoner: Int = (5 .. 1000).random(),
+        tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
         sektor: String = "1"
     ): TestData {
         perioder.forEach { periode ->
@@ -60,6 +62,7 @@ class TestData(
                 navn = virksomhet.navn,
                 sykefraværsProsent = sykefraværsProsent,
                 antallPersoner = antallPersoner,
+                tapteDagsverk = tapteDagsverk,
                 sektor = sektor))
         }
         virksomhet.næringsgrupper.forEach { næring ->
@@ -121,7 +124,7 @@ enum class Melding(val melding: String) {
         melding = lagKafkaMelding(
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
             navn = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.navn,
-            periode = Periode.gjeldenePeriode(),
+            periode = Periode.gjeldendePeriode(),
             antallPersoner = 6,
             sektor = "1"
         )
@@ -146,6 +149,7 @@ fun lagKafkaMelding(
     periode: Periode,
     sykefraværsProsent: String = "2.0",
     antallPersoner: Int = 6,
+    tapteDagsverk: Double = 20.0,
     sektor: String) =
     """
         {
@@ -160,7 +164,7 @@ fun lagKafkaMelding(
               "navn": "$navn",
               "årstall": ${periode.årstall},
               "kvartal": ${periode.kvartal},
-              "tapteDagsverk": 20.0,
+              "tapteDagsverk": ${tapteDagsverk},
               "muligeDagsverk": 500.0,
               "antallPersoner": $antallPersoner,
               "prosent": $sykefraværsProsent,
