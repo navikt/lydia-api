@@ -46,7 +46,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                             tapte_dagsverk = :tapte_dagsverk,
                             mulige_dagsverk = :mulige_dagsverk,
                             sykefraversprosent = :sykefraversprosent,
-                            maskert = :maskert
+                            maskert = :maskert,
+                            endret = now()
                         """.trimMargin(),
                             mapOf(
                                 "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,

@@ -1,11 +1,14 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
+import arrow.core.Either
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
 import io.kotest.inspectors.forAtLeastOne
+import io.kotest.matchers.date.shouldBeBefore
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -14,6 +17,8 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_IMPORT
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import java.sql.ResultSet
+import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -115,6 +120,8 @@ class SykefraversstatistikkImportTest {
             it.antallPersoner shouldBe 100
             it.tapteDagsverk shouldBe 20.0
         }
+        hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getOrNull("endret").shouldBeNull()
+
         val opppdatertStatistikk = lagKafkaMelding(
             orgnr = virksomhet.orgnr,
             navn = virksomhet.navn,
@@ -130,7 +137,21 @@ class SykefraversstatistikkImportTest {
             it.antallPersoner shouldBe 1337
             it.tapteDagsverk shouldBe 16.0
         }
+
+        hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getTimestamp("endret")
+            .toLocalDateTime() shouldBeBefore LocalDateTime.now()
     }
+
+    private fun hentKolonneFraSykefraværsstatistikk(virksomhet: TestVirksomhet, kolonneNavn: String) =
+        postgres.performQuery(
+            """
+                select $kolonneNavn from sykefravar_statistikk_virksomhet 
+                where 
+                orgnr = '${virksomhet.orgnr}' and
+                arstall = ${Periode.gjeldendePeriode().årstall} and
+                kvartal = ${Periode.gjeldendePeriode().kvartal}
+            """.trimIndent()
+        )
 
 
     private fun hentSykefraværsstatistikk(orgnr: String) =
@@ -138,5 +159,10 @@ class SykefraversstatistikkImportTest {
             .withLydiaToken()
             .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
             .getOrElse { fail(it.message) }
+
+
+    private fun ResultSet.getOrNull(columnLabel: String): Any? = Either.catch {
+        this.getObject(columnLabel)
+    }.orNull()
 }
 
