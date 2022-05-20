@@ -50,9 +50,8 @@ object StatistikkConsumer : CoroutineScope {
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
-                        if (records.count() > 0){
-                            logger.info("Fant ${records.count()} nye meldinger")
-                        }
+                        if (records.count() < 1) continue
+                        logger.info("Fant ${records.count()} nye meldinger")
                         val sykefraværsstatistikkListe = records.map {
                             gson.fromJson(
                                 it.value(),
