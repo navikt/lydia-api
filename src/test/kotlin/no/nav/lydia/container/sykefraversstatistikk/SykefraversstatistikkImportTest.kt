@@ -5,10 +5,10 @@ import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
 import com.google.gson.GsonBuilder
 import io.kotest.inspectors.forAtLeastOne
-import io.kotest.matchers.date.shouldBeBefore
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -18,7 +18,6 @@ import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import java.sql.ResultSet
-import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -138,8 +137,7 @@ class SykefraversstatistikkImportTest {
             it.tapteDagsverk shouldBe 16.0
         }
 
-        hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getTimestamp("endret")
-            .toLocalDateTime() shouldBeBefore LocalDateTime.now()
+        hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getOrNull("endret").shouldNotBeNull()
     }
 
     private fun hentKolonneFraSykefraværsstatistikk(virksomhet: TestVirksomhet, kolonneNavn: String) =
