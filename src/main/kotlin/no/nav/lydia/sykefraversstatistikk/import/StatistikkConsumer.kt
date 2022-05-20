@@ -15,7 +15,6 @@ import kotlin.coroutines.CoroutineContext
 
 object StatistikkConsumer : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    private val BULK_SIZE = 50
     lateinit var job: Job
     lateinit var kafka: Kafka
 
@@ -54,16 +53,15 @@ object StatistikkConsumer : CoroutineScope {
                         if (records.count() > 0){
                             logger.info("Fant ${records.count()} nye meldinger")
                         }
-                        records.map {
+                        val sykefraværsstatistikkListe = records.map {
                             gson.fromJson(
                                 it.value(),
                                 SykefraversstatistikkImportDto::class.java
                             )
-                        }.chunked(size = BULK_SIZE).forEach { sykefraværsStatistikkListe ->
-                            // TODO: Feilhåndtering (og alarmering?)
-                            sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
-                            logger.info("Lagret ${sykefraværsStatistikkListe.count()} meldinger")
                         }
+                        // TODO: Feilhåndtering (og alarmering?)
+                        sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsstatistikkListe)
+                        logger.info("Lagret ${sykefraværsstatistikkListe.count()} meldinger")
 
                         consumer.commitSync()
                     } catch (e: RetriableException) {
