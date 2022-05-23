@@ -1,6 +1,7 @@
 package no.nav.lydia.helper
 
-import SykefraversstatistikkKafkaMelding
+import Key
+import SykefraversstatistikkImportDto
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -67,7 +68,7 @@ class KafkaContainerHelper(
         "STATISTIKK_TOPIC" to statistikkTopic
     )
 
-    private fun KafkaContainer.createTopic(vararg topics: String) {
+    private fun createTopic(vararg topics: String) {
         val newTopics = topics
             .map { topic -> NewTopic(topic, 1, 1.toShort()) }
         adminClient.createTopics(newTopics)
@@ -90,36 +91,39 @@ class KafkaContainerHelper(
             StringSerializer()
         )
 
-    fun sykefraversstatistikkKafkaMelding(melding: String): SykefraversstatistikkKafkaMelding {
-        return gson.fromJson(melding, SykefraversstatistikkKafkaMelding::class.java)
-    }
-
-    fun sendSykefraversstatistikkKafkaMelding(melding: String) {
-        val kafkaMelding = sykefraversstatistikkKafkaMelding(melding)
-        sendOgVentTilKonsumert(
-            key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
-        )
-    }
-
-    fun sendOgVentTilKonsumert(topic: String = statistikkTopic,
-        key: String, value: String, timeout: Duration = Duration.ofSeconds(5)
-    ) {
+    fun sendIBulkOgVentTilKonsumert(importDtoer: List<SykefraversstatistikkImportDto>) {
         runBlocking {
-            val sendtMelding = kafkaProducer.send(
-                ProducerRecord(
-                    topic,
-                    key,
-                    value
-                )
-            ).get()
-
-            withTimeoutOrNull(timeout) {
-                do {
-                    delay(timeMillis = 10L)
-                } while (consumerSinOffset(consumerGroup = Kafka.groupId) <= sendtMelding.offset())
+            val sendteMeldinger = importDtoer.map { melding ->
+                kafkaProducer.send(melding.tilProducerRecord()).get()
             }
+            ventTilKonsumert(sendteMeldinger.last().offset())
         }
     }
+
+    fun sendSykefraversstatistikkKafkaMelding(importDto: SykefraversstatistikkImportDto) {
+        runBlocking {
+            val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
+            ventTilKonsumert(sendtMelding.offset())
+        }
+    }
+
+    private fun SykefraversstatistikkImportDto.tilProducerRecord() =
+        ProducerRecord(
+            statistikkTopic, gson.toJson(
+                Key(
+                    orgnr = virksomhetSykefravær.orgnr,
+                    årstall = virksomhetSykefravær.årstall,
+                    kvartal = virksomhetSykefravær.kvartal
+                ),
+            ), gson.toJson(this)
+        )
+
+    private suspend fun ventTilKonsumert(offset: Long) =
+        withTimeoutOrNull(Duration.ofSeconds(5)) {
+            do {
+                delay(timeMillis = 10L)
+            } while (consumerSinOffset(consumerGroup = Kafka.groupId) <= offset)
+        }
 
     private fun consumerSinOffset(consumerGroup: String): Long {
         val offsetMetadata = adminClient.listConsumerGroupOffsets(consumerGroup)

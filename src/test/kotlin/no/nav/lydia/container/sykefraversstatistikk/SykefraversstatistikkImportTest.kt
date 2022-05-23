@@ -3,7 +3,6 @@ package no.nav.lydia.container.sykefraversstatistikk
 import arrow.core.Either
 import com.github.kittinunf.fuel.gson.responseObject
 import com.github.kittinunf.result.getOrElse
-import com.google.gson.GsonBuilder
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
@@ -25,13 +24,12 @@ class SykefraversstatistikkImportTest {
     private val lydiaApi = TestContainerHelper.lydiaApiContainer
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
     private val postgres = TestContainerHelper.postgresContainer
-    private val gson = GsonBuilder().create()
 
     @Test
     fun `kan importere statistikk for flere kvartal`() {
         val gjeldendePeriode = Periode.gjeldendePeriode()
         val forrigePeriode = Periode.forrigePeriode()
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.testVirksomhetForrigeKvartal.melding)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
 
         hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
             .forExactlyOne {
@@ -40,7 +38,7 @@ class SykefraversstatistikkImportTest {
                 it.orgnr shouldBe TESTVIRKSOMHET_FOR_IMPORT.orgnr
             }
 
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = Melding.testVirksomhetGjeldeneKvartal.melding)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = SykefraværsstatistikkTestData.testVirksomhetGjeldeneKvartal.sykefraværsstatistikkImportDto)
 
         val osloAndreOgTredjeKvart = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
         osloAndreOgTredjeKvart.forExactlyOne {
@@ -57,30 +55,27 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `importerte data skal kunne hentes ut og være like`() {
-        val kafkaMelding =
-            kafkaContainer.sykefraversstatistikkKafkaMelding(Melding.testVirksomhetForrigeKvartal.melding)
-        kafkaContainer.sendOgVentTilKonsumert(
-            key = gson.toJson(kafkaMelding.key), value = gson.toJson(kafkaMelding.value)
-        )
+        val sykefraværsstatistikk = SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(sykefraværsstatistikk)
 
         val dtos = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
         dtos.size shouldBeGreaterThanOrEqual 1
         dtos.forAtLeastOne { dto ->
-            dto.orgnr shouldBe kafkaMelding.value.virksomhetSykefravær.orgnr
-            dto.arstall shouldBe kafkaMelding.value.virksomhetSykefravær.årstall
-            dto.kvartal shouldBe kafkaMelding.value.virksomhetSykefravær.kvartal
-            dto.sykefraversprosent shouldBe kafkaMelding.value.virksomhetSykefravær.prosent
-            dto.antallPersoner shouldBe kafkaMelding.value.virksomhetSykefravær.antallPersoner.toInt()
-            dto.muligeDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.muligeDagsverk
-            dto.tapteDagsverk shouldBe kafkaMelding.value.virksomhetSykefravær.tapteDagsverk
+            dto.orgnr shouldBe sykefraværsstatistikk.virksomhetSykefravær.orgnr
+            dto.arstall shouldBe sykefraværsstatistikk.virksomhetSykefravær.årstall
+            dto.kvartal shouldBe sykefraværsstatistikk.virksomhetSykefravær.kvartal
+            dto.sykefraversprosent shouldBe sykefraværsstatistikk.virksomhetSykefravær.prosent
+            dto.antallPersoner shouldBe sykefraværsstatistikk.virksomhetSykefravær.antallPersoner.toInt()
+            dto.muligeDagsverk shouldBe sykefraværsstatistikk.virksomhetSykefravær.muligeDagsverk
+            dto.tapteDagsverk shouldBe sykefraværsstatistikk.virksomhetSykefravær.tapteDagsverk
         }
     }
 
     @Test
     fun `import av data er idempotent`() {
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.testVirksomhetForrigeKvartal.melding)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
         val førsteLagredeStatistikk = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.testVirksomhetForrigeKvartal.melding)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
         val andreLagredeStatistikk = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
         andreLagredeStatistikk.forExactlyOne { dto ->
             dto.orgnr shouldBe førsteLagredeStatistikk[0].orgnr
@@ -95,7 +90,7 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `vi lagrer metadata ved import`() {
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(Melding.testVirksomhetForrigeKvartal.melding)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
 
         val rs =
             postgres.performQuery("SELECT * FROM virksomhet_statistikk_metadata WHERE orgnr = '${TESTVIRKSOMHET_FOR_IMPORT.orgnr}'")
@@ -109,9 +104,9 @@ class SykefraversstatistikkImportTest {
         val originalStatistikk = TestData().lagData(
             virksomhet = virksomhet,
             perioder = listOf(Periode.gjeldendePeriode()),
-            antallPersoner = 100,
+            antallPersoner = 100.0,
             tapteDagsverk = 20.0,
-            sykefraværsProsent = "2.0"
+            sykefraværsProsent = 2.0
         )
         VirksomhetHelper.lastInnTestdata(originalStatistikk)
         hentSykefraværsstatistikk(virksomhet.orgnr).forExactlyOne {
@@ -121,14 +116,13 @@ class SykefraversstatistikkImportTest {
         }
         hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getOrNull("endret").shouldBeNull()
 
-        val opppdatertStatistikk = lagKafkaMelding(
+        val opppdatertStatistikk = lagSykefraværsstatistikkImportDto(
             orgnr = virksomhet.orgnr,
-            navn = virksomhet.navn,
             periode = Periode.gjeldendePeriode(),
-            sykefraværsProsent = "3.0",
-            antallPersoner = 1337,
+            sykefraværsProsent = 3.0,
+            antallPersoner = 1337.0,
             tapteDagsverk = 16.0,
-            sektor = "3"
+            sektor = 3
         )
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(opppdatertStatistikk)
         hentSykefraværsstatistikk(virksomhet.orgnr).forExactlyOne {
@@ -143,16 +137,15 @@ class SykefraversstatistikkImportTest {
     @Test
     fun `skal importere sykefraværsstatistikk for sektor`() {
         val orgnr = "111111111"
-        val sektorKode = "3"
+        val sektorKode = 3
         val periode = Periode(kvartal = 1, årstall = 1971)
-        val melding = lagKafkaMelding(
+        val melding = lagSykefraværsstatistikkImportDto(
             orgnr = orgnr,
-            navn = "EnEnEn",
             periode = periode,
-            antallPersoner = 100,
+            antallPersoner = 100.0,
             sektor = sektorKode
         )
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = melding)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
         postgres.performQuery(
             """
             select * from sykefravar_statistikk_sektor
@@ -160,7 +153,7 @@ class SykefraversstatistikkImportTest {
             arstall = ${periode.årstall} AND
             kvartal = ${periode.kvartal}
             """.trimIndent()
-        ).getString("sektor_kode") shouldBe sektorKode
+        ).getString("sektor_kode") shouldBe sektorKode.toString()
     }
 
 

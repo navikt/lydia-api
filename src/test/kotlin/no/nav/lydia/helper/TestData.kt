@@ -1,5 +1,11 @@
 package no.nav.lydia.helper
 
+import LandSykefravær
+import Næring5SifferSykefravær
+import NæringSykefravær
+import SektorSykefravær
+import SykefraversstatistikkImportDto
+import VirksomhetSykefravær
 import com.google.gson.Gson
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import kotlin.random.Random
@@ -13,27 +19,27 @@ class TestData(
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(Periode.gjeldendePeriode()),
-                sykefraværsProsent = (1 .. 20).random().toDouble().toString()
+                sykefraværsProsent = (1 .. 20).random().toDouble()
             )
     }
 
-    private val kafkaMeldinger = mutableSetOf<String>()
+    private val kafkaMeldinger = mutableSetOf<SykefraversstatistikkImportDto>()
     private val næringer = mutableSetOf<String>()
     private val brregVirksomheter = mutableSetOf<String>()
 
     init {
         if (inkluderStandardVirksomheter) {
-            lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 6)
-            lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "7.0")
+            lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 6.0)
+            lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = 7.0)
 
-            lagData(virksomhet = TestVirksomhet.NAV_KONTOR, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 1001)
+            lagData(virksomhet = TestVirksomhet.NAV_KONTOR, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 1001.0)
             lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(Periode.gjeldendePeriode()))
             lagData(virksomhet = TestVirksomhet.OSLO_MANGLER_ADRESSER, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.UTENLANDSK, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT, emptyList())
-            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = "6.0")
-            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 42, sykefraværsProsent = "6.0")
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = 6.0)
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 42.0, sykefraværsProsent = 6.0)
         }
         genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
     }
@@ -43,27 +49,29 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
                 perioder = listOf(Periode.gjeldendePeriode()),
-                sektor = (0..3).random().toString())
+                sektor = (0..3).random())
         }
     }
 
     fun lagData(
         virksomhet: TestVirksomhet,
         perioder: List<Periode>,
-        sykefraværsProsent: String = "2.0",
-        antallPersoner: Int = (5 .. 1000).random(),
+        sykefraværsProsent: Double = 2.0,
+        antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
-        sektor: String = "1"
+        sektor: Int = 1
     ): TestData {
         perioder.forEach { periode ->
-            kafkaMeldinger.add(lagKafkaMelding(
-                orgnr = virksomhet.orgnr,
-                periode = periode,
-                navn = virksomhet.navn,
-                sykefraværsProsent = sykefraværsProsent,
-                antallPersoner = antallPersoner,
-                tapteDagsverk = tapteDagsverk,
-                sektor = sektor))
+            kafkaMeldinger.add(
+                lagSykefraværsstatistikkImportDto(
+                    orgnr = virksomhet.orgnr,
+                    periode = periode,
+                    sykefraværsProsent = sykefraværsProsent,
+                    antallPersoner = antallPersoner,
+                    tapteDagsverk = tapteDagsverk,
+                    sektor = sektor
+                )
+            )
         }
         virksomhet.næringsgrupper.forEach { næring ->
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
@@ -110,23 +118,21 @@ class TestData(
 }
 
 
-enum class Melding(val melding: String) {
+enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto : SykefraversstatistikkImportDto) {
     testVirksomhetForrigeKvartal(
-        melding = lagKafkaMelding(
+        sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            navn = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.navn,
             periode = Periode.forrigePeriode(),
-            antallPersoner = 6,
-            sektor = "1"
+            antallPersoner = 6.0,
+            sektor = 1
         )
     ),
     testVirksomhetGjeldeneKvartal(
-        melding = lagKafkaMelding(
+        sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            navn = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.navn,
             periode = Periode.gjeldendePeriode(),
-            antallPersoner = 6,
-            sektor = "1"
+            antallPersoner = 6.0,
+            sektor = 1
         )
     )
 }
@@ -143,83 +149,71 @@ fun lagSsbNæringInnslag(kode: String, navn: String) =
         }
     """.trimIndent()
 
-fun lagKafkaMelding(
+fun lagSykefraværsstatistikkImportDto(
     orgnr: String,
-    navn: String,
     periode: Periode,
-    sykefraværsProsent: String = "2.0",
-    antallPersoner: Int = 6,
+    sykefraværsProsent: Double = 2.0,
+    antallPersoner: Double = 6.0,
     tapteDagsverk: Double = 20.0,
-    sektor: String) =
-    """
-        {
-          "key": {
-            "orgnr": "$orgnr",
-            "kvartal": ${periode.kvartal},
-            "årstall": ${periode.årstall}
-          },
-          "value": {
-            "virksomhetSykefravær": {
-              "orgnr": "$orgnr",
-              "navn": "$navn",
-              "årstall": ${periode.årstall},
-              "kvartal": ${periode.kvartal},
-              "tapteDagsverk": ${tapteDagsverk},
-              "muligeDagsverk": 500.0,
-              "antallPersoner": $antallPersoner,
-              "prosent": $sykefraværsProsent,
-              "erMaskert": false,
-              "kategori": "VIRKSOMHET"
-            },
-            "næring5SifferSykefravær": [
-              {
-                "kategori": "NÆRING5SIFFER",
-                "kode": "11000",
-                "årstall": ${periode.årstall},
-                "kvartal": ${periode.kvartal},
-                "tapteDagsverk": "40.0",
-                "muligeDagsverk": 4000.0,
-                "antallPersoner": 1250,
-                "prosent": 1.0,
-                "erMaskert": false
-              }
-            ],
-            "næringSykefravær": {
-              "kategori": "NÆRING2SIFFER",
-              "kode": "11",
-              "årstall": ${periode.årstall},
-              "kvartal": ${periode.kvartal},
-              "tapteDagsverk": "100.0",
-              "muligeDagsverk": 5000.0,
-              "antallPersoner": 150,
-              "prosent": 2.0,
-              "erMaskert": false
-            },
-            "sektorSykefravær": {
-              "kategori": "SEKTOR",
-              "kode": "$sektor",
-              "årstall": ${periode.årstall},
-              "kvartal": ${periode.kvartal},
-              "tapteDagsverk": "1340.0",
-              "muligeDagsverk": 88000.0,
-              "antallPersoner": 33000,
-              "prosent": 1.5,
-              "erMaskert": false
-            },
-            "landSykefravær": {
-              "kategori": "LAND",
-              "kode": "NO",
-              "årstall": ${periode.årstall},
-              "kvartal": ${periode.kvartal},
-              "tapteDagsverk": "10000000.0",
-              "muligeDagsverk": 500000000.0,
-              "antallPersoner": 2500000,
-              "prosent": 2.0,
-              "erMaskert": false
-            }
-          }
-        }
-    """.trimIndent()
+    sektor: Int
+) =
+    SykefraversstatistikkImportDto(
+        virksomhetSykefravær = VirksomhetSykefravær(
+            årstall = periode.årstall,
+            kvartal = periode.kvartal,
+            orgnr = orgnr,
+            prosent = sykefraværsProsent,
+            antallPersoner = antallPersoner,
+            tapteDagsverk = tapteDagsverk,
+            muligeDagsverk = 500.0,
+            maskert = false,
+            kategori = "VIRKSOMHET"
+        ),
+        sektorSykefravær = SektorSykefravær(
+            årstall = periode.årstall,
+            kvartal = periode.kvartal,
+            kode = sektor,
+            prosent = 1.5,
+            tapteDagsverk = 1340.0,
+            muligeDagsverk = 8000.0,
+            antallPersoner = 33000.0,
+            maskert = false,
+            kategori = "SEKTOR"
+        ),
+        landSykefravær = LandSykefravær(
+            årstall = periode.årstall,
+            kvartal = periode.kvartal,
+            prosent = 2.0,
+            kode = "NO",
+            tapteDagsverk = 10000000.0,
+            muligeDagsverk = 500000000.0,
+            antallPersoner = 2500000.0,
+            maskert = false,
+            kategori = "LAND"
+        ),
+        næringSykefravær = NæringSykefravær(
+            årstall = periode.årstall,
+            kvartal = periode.kvartal,
+            kode = 11,
+            tapteDagsverk = 100.0,
+            muligeDagsverk = 5000.0,
+            antallPersoner = 150.0,
+            prosent = 2.0,
+            maskert = false,
+            kategori = "NÆRING2SIFFER"
+        ),
+        næring5SifferSykefravær = listOf(Næring5SifferSykefravær(
+            årstall = periode.årstall,
+            kvartal = periode.kvartal,
+            kode = 11000,
+            tapteDagsverk = 40.0,
+            muligeDagsverk = 4000.0,
+            antallPersoner = 1250.0,
+            prosent = 1.0,
+            maskert = false,
+            kategori = "NÆRING5SIFFER"
+        )),
+    )
 
 fun TestVirksomhet.brregJson() =
     """

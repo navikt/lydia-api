@@ -280,8 +280,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 }
 
 private fun TransactionalSession.insertSektorstatistikk(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) {
-    sykefraværsStatistikkListe.map { it.sektorSykefravær }.toSet()
-        .forEach { sektorStatistikk ->
+    sykefraværsStatistikkListe.map { it.sektorSykefravær }.toSet().forEach { sektorStatistikk ->
         run(
             queryOf(
                 """

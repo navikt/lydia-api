@@ -357,10 +357,7 @@ class VirksomhetHelper {
                 }
                 httpMock.stop()
             }
-
-            testData.sykefraværsStatistikkMeldinger().forEach { melding ->
-                TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkKafkaMelding(melding)
-            }
+            TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(testData.sykefraværsStatistikkMeldinger().toList())
         }
     }
 }
