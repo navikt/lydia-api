@@ -1,14 +1,14 @@
 package no.nav.lydia.ia.grunnlag
 
-import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 
 class GrunnlagService(
     val grunnlagRepository: GrunnlagRepository,
-    val sykefraversstatistikkRepository: SykefraversstatistikkRepository
+    val sykefraværsstatistikkService: SykefraværsstatistikkService
 ) {
 
     fun lagreGrunnlag(orgnr: String, saksnummer: String, hendelseId: String) {
-        val gjeldendeSykefravarsstatistikkForVirksomheten = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        val gjeldendeSykefravarsstatistikkForVirksomheten = sykefraværsstatistikkService.hentSykefraværForVirksomhet(orgnr = orgnr)
         grunnlagRepository.insert(
             SykefraversstatistikkGrunnlag.from(
                 saksnummer = saksnummer,

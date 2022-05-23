@@ -26,14 +26,15 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASak_Rådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
+import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
@@ -53,7 +54,11 @@ fun startLydiaBackend() {
 
     statistikkConsumer(
         kafka = naisEnv.kafka,
-        sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource)
+        sykefraværsstatistikkService = SykefraværsstatistikkService(
+            sykefraversstatistikkRepository = SykefraversstatistikkRepository(
+                dataSource = dataSource
+            )
+        )
     )
 
     embeddedServer(Netty, port = 8080) {
@@ -114,7 +119,8 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
 
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-    val sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource)
+    val sykefraværsstatistikkService =
+        SykefraværsstatistikkService(sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource))
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
@@ -137,7 +143,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
         authenticate {
             sykefraversstatistikk(
                 geografiService = GeografiService(),
-                sykefraversstatistikkRepository = sykefraversstatistikkRepository,
+                sykefraværsstatistikkService = sykefraværsstatistikkService,
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
                 fiaRoller = naisEnvironment.security.fiaRoller
@@ -148,7 +154,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
                     grunnlagService = GrunnlagService(
                         grunnlagRepository = grunnlagRepository,
-                        sykefraversstatistikkRepository = sykefraversstatistikkRepository
+                        sykefraværsstatistikkService = sykefraværsstatistikkService
                     ),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ),
@@ -164,9 +170,9 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
     }
 }
 
-fun statistikkConsumer(kafka: Kafka, sykefraversstatistikkRepository: SykefraversstatistikkRepository) =
+fun statistikkConsumer(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) =
     StatistikkConsumer.apply {
-        create(kafka = kafka, sykefraversstatistikkRepository = sykefraversstatistikkRepository)
+        create(kafka = kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
         run()
     }
 

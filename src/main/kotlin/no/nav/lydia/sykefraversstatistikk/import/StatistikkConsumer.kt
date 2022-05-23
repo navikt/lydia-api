@@ -2,9 +2,13 @@ package no.nav.lydia.sykefraversstatistikk.import
 
 import SykefraversstatistikkImportDto
 import com.google.gson.GsonBuilder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import no.nav.lydia.Kafka
-import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -19,7 +23,7 @@ object StatistikkConsumer : CoroutineScope {
     lateinit var kafka: Kafka
 
     // TODO: Er det greit å holde en datasource oppe i en coroutine scope?
-    lateinit var sykefraversstatistikkRepository: SykefraversstatistikkRepository
+    lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -28,11 +32,11 @@ object StatistikkConsumer : CoroutineScope {
         Runtime.getRuntime().addShutdownHook(Thread(StatistikkConsumer::cancel))
     }
 
-    fun create(kafka: Kafka, sykefraversstatistikkRepository: SykefraversstatistikkRepository) {
+    fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
         logger.info("Creating kafka consumer job")
         this.job = Job()
         this.kafka = kafka
-        this.sykefraversstatistikkRepository = sykefraversstatistikkRepository
+        this.sykefraværsstatistikkService = sykefraværsstatistikkService
         logger.info("Created kafka consumer job")
     }
 
@@ -59,7 +63,7 @@ object StatistikkConsumer : CoroutineScope {
                             )
                         }
                         // TODO: Feilhåndtering (og alarmering?)
-                        sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsstatistikkListe)
+                        sykefraværsstatistikkService.lagre(sykefraværsstatistikkListe = sykefraværsstatistikkListe)
                         logger.info("Lagret ${sykefraværsstatistikkListe.count()} meldinger")
 
                         consumer.commitSync()

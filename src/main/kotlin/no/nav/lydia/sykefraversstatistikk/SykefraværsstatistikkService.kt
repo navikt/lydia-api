@@ -1,0 +1,31 @@
+package no.nav.lydia.sykefraversstatistikk
+
+import SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.api.ListResponse
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
+import org.slf4j.LoggerFactory
+
+class SykefraværsstatistikkService(val sykefraversstatistikkRepository: SykefraversstatistikkRepository) {
+    val log = LoggerFactory.getLogger(this.javaClass)
+
+    fun lagre(sykefraværsstatistikkListe: List<SykefraversstatistikkImportDto>) =
+        sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsstatistikkListe)
+
+    fun hentSykefravær(
+        søkeparametere: Søkeparametere
+    ): ListResponse<SykefraversstatistikkVirksomhet> {
+        val start = System.currentTimeMillis()
+        val sykefravær = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter, total: ${sykefravær.total}")
+        return sykefravær
+    }
+
+    fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
+        val start = System.currentTimeMillis()
+        val sykefraværForVirksomhet = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
+        return sykefraværForVirksomhet
+    }
+
+}
