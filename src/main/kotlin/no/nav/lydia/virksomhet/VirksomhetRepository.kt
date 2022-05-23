@@ -113,7 +113,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     orgnr = orgnr,
                     navn = row.string("navn"),
                     adresse = row.array<String>("adresse").toList(),
-                    postnummer = row.int("postnummer"),
+                    postnummer = row.string("postnummer"),
                     poststed = row.string("poststed"),
                     kommune = row.string("kommune"),
                     kommunenummer = row.string("kommunenummer"),

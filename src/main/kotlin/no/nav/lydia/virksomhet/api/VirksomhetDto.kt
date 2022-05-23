@@ -19,7 +19,7 @@ fun Virksomhet.toDto() = VirksomhetDto(
     orgnr = this.orgnr,
     navn = this.navn,
     adresse = this.adresse,
-    postnummer = this.postnummer.toString().padStart(length = 4, padChar = '0'),
+    postnummer = this.postnummer,
     poststed = this.poststed,
     neringsgrupper = this.næringsgrupper,
     sektor = sektorKodeTilBeskrivelse()

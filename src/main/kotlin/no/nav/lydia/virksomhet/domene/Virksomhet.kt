@@ -5,7 +5,7 @@ data class Virksomhet (
     val orgnr: String,
     val navn: String,
     val adresse: List<String>,
-    val postnummer: Int,
+    val postnummer: String,
     val poststed: String,
     val kommune: String,
     val kommunenummer: String,
