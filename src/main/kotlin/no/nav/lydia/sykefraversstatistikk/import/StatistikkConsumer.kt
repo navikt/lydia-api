@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import no.nav.lydia.Kafka
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -41,7 +42,6 @@ object StatistikkConsumer : CoroutineScope {
     }
 
     fun run() {
-        val gson = GsonBuilder().create()
         launch {
             KafkaConsumer(
                 kafka.consumerProperties(),
@@ -56,15 +56,9 @@ object StatistikkConsumer : CoroutineScope {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         if (records.count() < 1) continue
                         logger.info("Fant ${records.count()} nye meldinger")
-                        val sykefraværsstatistikkListe = records.map {
-                            gson.fromJson(
-                                it.value(),
-                                SykefraversstatistikkImportDto::class.java
-                            )
-                        }
                         // TODO: Feilhåndtering (og alarmering?)
-                        sykefraværsstatistikkService.lagre(sykefraværsstatistikkListe = sykefraværsstatistikkListe)
-                        logger.info("Lagret ${sykefraværsstatistikkListe.count()} meldinger")
+                        sykefraværsstatistikkService.lagre(sykefraværsstatistikkListe = records.toSykefraversstatistikkImportDto())
+                        logger.info("Lagret ${records.count()} meldinger")
 
                         consumer.commitSync()
                     } catch (e: RetriableException) {
@@ -75,6 +69,16 @@ object StatistikkConsumer : CoroutineScope {
                 }
 
             }
+        }
+    }
+
+    fun ConsumerRecords<String, String>.toSykefraversstatistikkImportDto(): List<SykefraversstatistikkImportDto> {
+        val gson = GsonBuilder().create()
+        return this.map {
+            gson.fromJson(
+                it.value(),
+                SykefraversstatistikkImportDto::class.java
+            )
         }
     }
 

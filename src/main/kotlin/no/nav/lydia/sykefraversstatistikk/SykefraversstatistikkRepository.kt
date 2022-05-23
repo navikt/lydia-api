@@ -2,6 +2,7 @@ package no.nav.lydia.sykefraversstatistikk
 
 import SykefraversstatistikkImportDto
 import kotliquery.Row
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -18,9 +19,16 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     fun insert(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                sykefraværsStatistikkListe.forEach { sykefraværsStatistikk ->
-                    tx.run(
-                        queryOf("""
+                tx.insertVirksomhetsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
+            }
+        }
+    }
+
+    private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) =
+        sykefraværsStatistikkListe.forEach { sykefraværsStatistikk ->
+            run(
+                queryOf(
+                    """
                         INSERT INTO sykefravar_statistikk_virksomhet(
                             orgnr,
                             arstall,
@@ -49,22 +57,22 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                             maskert = :maskert,
                             endret = now()
                         """.trimMargin(),
-                            mapOf(
-                                "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
-                                "arstall" to sykefraværsStatistikk.virksomhetSykefravær.årstall,
-                                "kvartal" to sykefraværsStatistikk.virksomhetSykefravær.kvartal,
-                                "antall_personer" to sykefraværsStatistikk.virksomhetSykefravær.antallPersoner,
-                                "tapte_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.tapteDagsverk,
-                                "mulige_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.muligeDagsverk,
-                                "sykefraversprosent" to sykefraværsStatistikk.virksomhetSykefravær.prosent,
-                                "maskert" to sykefraværsStatistikk.virksomhetSykefravær.maskert
-                            )
-                        ).asUpdate
+                    mapOf(
+                        "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
+                        "arstall" to sykefraværsStatistikk.virksomhetSykefravær.årstall,
+                        "kvartal" to sykefraværsStatistikk.virksomhetSykefravær.kvartal,
+                        "antall_personer" to sykefraværsStatistikk.virksomhetSykefravær.antallPersoner,
+                        "tapte_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.tapteDagsverk,
+                        "mulige_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.muligeDagsverk,
+                        "sykefraversprosent" to sykefraværsStatistikk.virksomhetSykefravær.prosent,
+                        "maskert" to sykefraværsStatistikk.virksomhetSykefravær.maskert
                     )
+                ).asUpdate
+            )
 
-                    tx.run(
-                        queryOf(
-                            """
+            run(
+                queryOf(
+                    """
                         INSERT INTO virksomhet_statistikk_metadata(
                             orgnr,
                             kategori,
@@ -79,17 +87,14 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                             kategori = :kategori,
                             sektor = :sektor
                     """.trimIndent(),
-                            mapOf(
-                                "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
-                                "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
-                                "sektor" to sykefraværsStatistikk.sektorSykefravær.kode
-                            )
-                        ).asUpdate
+                    mapOf(
+                        "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
+                        "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
+                        "sektor" to sykefraværsStatistikk.sektorSykefravær.kode
                     )
-                }
-            }
+                ).asUpdate
+            )
         }
-    }
 
     private fun filterVerdi(filterNavn: String, filterVerdier: Set<String>) =
         """
@@ -143,14 +148,22 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     AND (
                         statistikk.kvartal = :kvartal AND statistikk.arstall = :arstall
                     )
-                    AND ( statistikk.orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") {s -> "\'$s\'"}} )
+                    AND ( statistikk.orgnr NOT in ${
+                NavEnheter.enheterSomSkalSkjermes.joinToString(
+                    prefix = "(",
+                    postfix = ")",
+                    separator = ","
+                ) { s -> "\'$s\'" }
+            } )
                     
-                    ${søkeparametere.status?.let { status ->
-                        when (status) {
-                            IKKE_AKTIV -> " AND ia_sak.status IS NULL"
-                            else -> " AND ia_sak.status = '$status'"
-                        }} ?: ""
+                    ${
+                søkeparametere.status?.let { status ->
+                    when (status) {
+                        IKKE_AKTIV -> " AND ia_sak.status IS NULL"
+                        else -> " AND ia_sak.status = '$status'"
                     }
+                } ?: ""
+            }
                     
                     ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
                     ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
@@ -181,8 +194,14 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             val query = queryOf(
                 statement = sql,
                 mapOf(
-                    tmpKommuneTabell to session.connection.underlying.createArrayOf("text", søkeparametere.kommunenummer.toTypedArray()),
-                    tmpNæringTabell to session.connection.underlying.createArrayOf("text", søkeparametere.næringsgruppeKoder.toTypedArray()),
+                    tmpKommuneTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        søkeparametere.kommunenummer.toTypedArray()
+                    ),
+                    tmpNæringTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        søkeparametere.næringsgruppeKoder.toTypedArray()
+                    ),
                     "kvartal" to søkeparametere.periode.kvartal,
                     "arstall" to søkeparametere.periode.årstall,
                     "sykefraversprosentFra" to søkeparametere.sykefraværsperiode.fra,
@@ -222,7 +241,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
-                  WHERE (statistikk.orgnr = :orgnr) AND statistikk.orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") {s -> "\'$s\'"}}
+                  WHERE (statistikk.orgnr = :orgnr) AND statistikk.orgnr NOT in ${
+                    NavEnheter.enheterSomSkalSkjermes.joinToString(
+                        prefix = "(",
+                        postfix = ")",
+                        separator = ","
+                    ) { s -> "\'$s\'" }
+                }
                 """.trimIndent(),
                 paramMap = mapOf(
                     "orgnr" to orgnr
