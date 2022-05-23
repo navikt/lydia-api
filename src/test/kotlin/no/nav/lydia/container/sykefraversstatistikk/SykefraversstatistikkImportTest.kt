@@ -140,6 +140,30 @@ class SykefraversstatistikkImportTest {
         hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getOrNull("endret").shouldNotBeNull()
     }
 
+    @Test
+    fun `skal importere sykefraværsstatistikk for sektor`() {
+        val orgnr = "111111111"
+        val sektorKode = "3"
+        val periode = Periode(kvartal = 1, årstall = 1971)
+        val melding = lagKafkaMelding(
+            orgnr = orgnr,
+            navn = "EnEnEn",
+            periode = periode,
+            antallPersoner = 100,
+            sektor = sektorKode
+        )
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(melding = melding)
+        postgres.performQuery(
+            """
+            select * from sykefravar_statistikk_sektor
+            where sektor_kode = $sektorKode AND
+            arstall = ${periode.årstall} AND
+            kvartal = ${periode.kvartal}
+            """.trimIndent()
+        ).getString("sektor_kode") shouldBe sektorKode
+    }
+
+
     private fun hentKolonneFraSykefraværsstatistikk(virksomhet: TestVirksomhet, kolonneNavn: String) =
         postgres.performQuery(
             """

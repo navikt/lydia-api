@@ -20,6 +20,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertVirksomhetsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
+                tx.insertSektorstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
             }
         }
     }
@@ -276,4 +277,48 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             eidAv = row.stringOrNull("eid_av")
         ) to row.int("total")
     }
+}
+
+private fun TransactionalSession.insertSektorstatistikk(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) {
+    sykefraværsStatistikkListe.map { it.sektorSykefravær }.toSet()
+        .forEach { sektorStatistikk ->
+        run(
+            queryOf(
+                """
+                    INSERT INTO sykefravar_statistikk_sektor(
+                        arstall,
+                        kvartal,
+                        sektor_kode,
+                        antall_personer,
+                        tapte_dagsverk,
+                        mulige_dagsverk,
+                        prosent,
+                        maskert
+                    )
+                    VALUES(
+                        :arstall,
+                        :kvartal,
+                        :sektor_kode,
+                        :antall_personer,
+                        :tapte_dagsverk,
+                        :mulige_dagsverk,
+                        :prosent,
+                        :maskert
+                    )
+                    ON CONFLICT DO NOTHING
+                """.trimIndent(),
+                mapOf(
+                    "arstall" to sektorStatistikk.årstall,
+                    "kvartal" to sektorStatistikk.kvartal,
+                    "sektor_kode" to sektorStatistikk.kode,
+                    "antall_personer" to sektorStatistikk.antallPersoner,
+                    "tapte_dagsverk" to sektorStatistikk.tapteDagsverk,
+                    "mulige_dagsverk" to sektorStatistikk.muligeDagsverk,
+                    "prosent" to sektorStatistikk.prosent,
+                    "maskert" to sektorStatistikk.maskert,
+                )
+            ).asUpdate
+        )
+    }
+
 }
