@@ -19,10 +19,8 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
-import org.testcontainers.images.builder.ImageFromDockerfile
 import java.net.URI
 import java.util.*
-
 
 
 class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
@@ -35,7 +33,8 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val tokenEndpointUrl = "http://$mockOauth2NetworkAlias:$mockOauth2Port"
     private val issuerUrl = "$tokenEndpointUrl/$issuerName"
     private val jwksUri = "$issuerUrl/jwks"
-    private val audience = "lydia-api"
+    private val lydiaAudience = "lydia-api"
+    private val frackendAudience = "lydia-radgiver-frontend"
 
     private val superbrukerGroupId = "ensuperbrukerGroupId"
     private val saksbehandlerGroupId = "ensaksbehandlerGroupId"
@@ -51,38 +50,40 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     val superbruker2 : TestBruker
     val brukerUtenTilgangsrolle : TestBruker
 
+    val superbruker1Frackend : TestBruker
+
     init {
-        mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-            builder.from("ghcr.io/navikt/mock-oauth2-server:0.4.8")
-                .env(
-                    mapOf(
-                        "TZ" to TimeZone.getDefault().id,
-                        "SERVER_PORT" to mockOauth2Port,
-                        "SERVER_HOSTNAME" to mockOauth2NetworkAlias
-                    )
-                )
-        })
+        mockOath2Server = GenericContainer("ghcr.io/navikt/mock-oauth2-server:0.4.8")
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("oAuthContainer").withSeparateOutputStreams())
             .withNetwork(network)
             .withNetworkAliases(mockOauth2NetworkAlias)
             .withCreateContainerCmdModifier { cmd -> cmd.withName("$mockOauth2NetworkAlias-${System.currentTimeMillis()}") }
+            .withEnv(
+                mapOf(
+                    "TZ" to TimeZone.getDefault().id,
+                    "SERVER_PORT" to mockOauth2Port,
+                    "SERVER_HOSTNAME" to mockOauth2NetworkAlias
+                )
+            )
             .waitingFor(
                 HostPortWaitStrategy()
             ).apply {
                 start()
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
-                lesebruker = TestBruker("L54321", lesetilgangGroupId)
-                lesebrukerAudit = TestBruker("A54321", lesetilgangGroupId)
-                saksbehandler1 = TestBruker("X12345", saksbehandlerGroupId)
-                saksbehandler2 = TestBruker("Y54321", saksbehandlerGroupId)
-                superbruker1 = TestBruker("S54321", superbrukerGroupId)
-                superbruker2 = TestBruker("S22222", superbrukerGroupId)
-                brukerUtenTilgangsrolle = TestBruker("U54321", ugyldigRolleGroupId)
+                lesebruker = TestBruker("L54321", lesetilgangGroupId, lydiaAudience)
+                lesebrukerAudit = TestBruker("A54321", lesetilgangGroupId, lydiaAudience)
+                saksbehandler1 = TestBruker("X12345", saksbehandlerGroupId, lydiaAudience)
+                saksbehandler2 = TestBruker("Y54321", saksbehandlerGroupId, lydiaAudience)
+                superbruker1 = TestBruker("S54321", superbrukerGroupId, lydiaAudience)
+                superbruker2 = TestBruker("S22222", superbrukerGroupId, lydiaAudience)
+                brukerUtenTilgangsrolle = TestBruker("U54321", ugyldigRolleGroupId, lydiaAudience)
+
+                superbruker1Frackend = TestBruker("S54321", superbrukerGroupId, frackendAudience)
             }
     }
 
-    inner class TestBruker(val navIdent : String, gruppe : String) {
+    inner class TestBruker(val navIdent: String, gruppe: String, audience: String) {
         val token = issueToken(
             audience = audience,
             claims = mapOf(
@@ -95,7 +96,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private fun issueToken(
         issuerId: String = issuerName,
         subject: String = UUID.randomUUID().toString(),
-        audience: String = this.audience,
+        audience: String,
         claims: Map<String, Any> = emptyMap(),
         expiry: Long = 3600
     ): SignedJWT {
@@ -117,14 +118,22 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
         return config.tokenProvider.accessToken(tokenRequest, issuerUrl.toHttpUrl(), tokenCallback, null)
     }
 
-    fun envVars() = mapOf(
-        "AZURE_APP_CLIENT_ID" to audience,
+    fun envVarsLydiaApi() = mapOf(
+        "AZURE_APP_CLIENT_ID" to lydiaAudience,
         "AZURE_OPENID_CONFIG_ISSUER" to issuerUrl,
         "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri,
         "FIA_SUPERBRUKER_GROUP_ID" to superbrukerGroupId,
         "FIA_SAKSBEHANDLER_GROUP_ID" to saksbehandlerGroupId,
         "FIA_LESETILGANG_GROUP_ID" to lesetilgangGroupId,
         "TEAM_PIA_GROUP_ID" to teamPiaGroupId
+    )
+
+    fun envVarsFrackend() = mapOf(
+        "AZURE_APP_CLIENT_ID" to frackendAudience,
+        "AZURE_APP_CLIENT_SECRET" to "secret",
+        "AZURE_OPENID_CONFIG_ISSUER" to issuerUrl,
+        "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri,
+        "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to tokenEndpointUrl
     )
 
 }

@@ -32,13 +32,16 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
+import org.openqa.selenium.chrome.ChromeOptions
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testcontainers.containers.BrowserWebDriverContainer
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.util.*
 import kotlin.io.path.Path
 import kotlin.test.fail
 
@@ -54,6 +57,8 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
+        val lydiaApiNetworkAlias = "lydiaApiContainer"
+        val lydiaApiPort = 8080
         val lydiaApiContainer: GenericContainer<*> =
             GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
                 .dependsOn(
@@ -61,17 +66,21 @@ class TestContainerHelper {
                     postgresContainer.postgresContainer,
                     oauth2ServerContainer.mockOath2Server
                 )
-                .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
+                .withLogConsumer(Slf4jLogConsumer(log).withPrefix(lydiaApiNetworkAlias).withSeparateOutputStreams())
                 .withNetwork(network)
-                .withExposedPorts(8080)
+                .withNetworkAliases(lydiaApiNetworkAlias)
+                .withExposedPorts(lydiaApiPort)
                 .withCreateContainerCmdModifier { cmd -> cmd.withName("lydia-${System.currentTimeMillis()}") }
                 .withEnv(
                     postgresContainer.envVars()
-                        .plus(oauth2ServerContainer.envVars())
+                        .plus(oauth2ServerContainer.envVarsLydiaApi())
                         .plus(
                             kafkaContainerHelper.envVars()
                                 .plus(
                                     mapOf(
+                                        "TZ" to TimeZone.getDefault().id,
+                                        "SERVER_HOSTNAME" to lydiaApiNetworkAlias,
+                                        "SERVER_PORT" to "$lydiaApiPort",
                                         "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned",
                                         "CONSUMER_LOOP_DELAY" to "1",
                                         "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json",
@@ -84,11 +93,54 @@ class TestContainerHelper {
                     start()
                 }
 
+        val frackendNetworkAlias = "frackendContainer"
+        val frackendPort = 8081
+        val frackendContainer: GenericContainer<*> =
+            GenericContainer("ghcr.io/navikt/lydia-radgiver-frontend")
+                .dependsOn(
+                    lydiaApiContainer
+                )
+                .withLogConsumer(Slf4jLogConsumer(log).withPrefix(frackendNetworkAlias).withSeparateOutputStreams())
+                .withNetwork(network)
+                .withNetworkAliases(frackendNetworkAlias)
+                .withExposedPorts(frackendPort)
+                .withCreateContainerCmdModifier { cmd -> cmd.withName("frackend-${System.currentTimeMillis()}") }
+                .withEnv(
+                    oauth2ServerContainer.envVarsFrackend().plus(
+                        mapOf(
+                            "TZ" to TimeZone.getDefault().id,
+                            "NAIS_NAMESPACE" to "pia",
+                            "NAIS_CLUSTER_NAME" to "utvikler",
+                            "SERVER_HOSTNAME" to frackendNetworkAlias,
+                            "SERVER_PORT" to "$frackendPort",
+                            "LYDIA_API_URI" to "http://$lydiaApiNetworkAlias:$lydiaApiPort",
+                        )
+                    )
+                )
+                .waitingFor(HttpWaitStrategy().forPath("/internal/isReady"))
+                .apply {
+                    start()
+                }
+
+        val chromeContainerNetworkAlias = "chromeWebDriverContainer"
+        val chromeWebDriverContainer = BrowserWebDriverContainer()
+            .withCapabilities(ChromeOptions())
+            .dependsOn(
+                frackendContainer
+            )
+            .withLogConsumer(Slf4jLogConsumer(log).withPrefix(chromeContainerNetworkAlias).withSeparateOutputStreams())
+            .withNetwork(network)
+            .withNetworkAliases(chromeContainerNetworkAlias)
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("chromeContainer-${System.currentTimeMillis()}") }
+            .apply { start() }
+
         init {
             VirksomhetHelper.lastInnStandardTestdata()
         }
 
-        private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
+        private fun GenericContainer<*>.buildUrl(url: String) =
+            "http://${this.host}:${this.getMappedPort(lydiaApiPort)}/$url"
+
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
 
@@ -226,7 +278,7 @@ class SakHelper {
     }
 }
 
-class StatistikkHelper{
+class StatistikkHelper {
     companion object {
         fun hentSykefravær(
             success: (ListResponse<SykefraversstatistikkVirksomhetDto>) -> Unit,

@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.0.0"
+    val ktorVersion = "2.0.1"
     val fuelVersion = "2.3.1"
 
     // Align versions of all Kotlin components
@@ -27,7 +27,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // This dependency is used by the application.
-    implementation("com.google.guava:guava:31.0.1-jre")
+    implementation("com.google.guava:guava:31.1-jre")
 
     // ktor
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -39,7 +39,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.2.11")
-    implementation("net.logstash.logback:logstash-logback-encoder:7.0.1")
+    implementation("net.logstash.logback:logstash-logback-encoder:7.1.1")
     constraints {
         implementation("com.fasterxml.jackson:jackson-bom:2.13.2") {
             because("versjoner tidligere har dos sårbarhet; CWE-400, CVE-2020-36518, CVSS 7.5")
@@ -48,13 +48,13 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.8.3")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.9.0")
 
     // Database
-    implementation("org.postgresql:postgresql:42.3.3")
+    implementation("org.postgresql:postgresql:42.3.4")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:8.5.4")
-    implementation("com.github.seratch:kotliquery:1.6.3")
+    implementation("org.flywaydb:flyway-core:8.5.10")
+    implementation("com.github.seratch:kotliquery:1.7.0")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
@@ -67,7 +67,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:1.0.1")
+    implementation("io.arrow-kt:arrow-core:1.1.2")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
@@ -96,6 +96,11 @@ dependencies {
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:0.4.8")
+
+    // GUI-testing
+    testImplementation("org.seleniumhq.selenium:selenium-chrome-driver:4.1.4")
+    testImplementation("org.seleniumhq.selenium:selenium-remote-driver:4.1.4")
+    testImplementation("org.testcontainers:selenium:1.17.1")
 
 }
 
