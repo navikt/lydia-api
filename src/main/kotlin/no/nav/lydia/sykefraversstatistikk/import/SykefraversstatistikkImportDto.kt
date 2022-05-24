@@ -3,7 +3,7 @@ data class NæringSykefravær (
     val prosent : Double,
     val muligeDagsverk : Double,
     val årstall : Int,
-    val kode : Int,
+    val kode : String,
     val antallPersoner : Double,
     val kategori : String,
     val tapteDagsverk : Double,
@@ -15,7 +15,7 @@ data class Næring5SifferSykefravær (
     val prosent : Double,
     val muligeDagsverk : Double,
     val årstall : Int,
-    val kode : Int,
+    val kode : String,
     val antallPersoner : Double,
     val kategori : String,
     val tapteDagsverk : Double,
@@ -51,7 +51,7 @@ data class SektorSykefravær (
     val prosent : Double,
     val muligeDagsverk : Double,
     val årstall : Int,
-    val kode : Int,
+    val kode : String,
     val antallPersoner : Double,
     val kategori : String,
     val tapteDagsverk : Double,
@@ -70,9 +70,4 @@ data class Key (
     val kvartal : Int,
     val årstall : Int,
     val orgnr : String
-)
-
-data class SykefraversstatistikkKafkaMelding (
-    val value : SykefraversstatistikkImportDto,
-    val key : Key
 )

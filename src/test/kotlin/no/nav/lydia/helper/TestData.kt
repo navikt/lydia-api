@@ -49,7 +49,7 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
                 perioder = listOf(Periode.gjeldendePeriode()),
-                sektor = (0..3).random())
+                sektor = (0..3).random().toString())
         }
     }
 
@@ -59,7 +59,7 @@ class TestData(
         sykefraværsProsent: Double = 2.0,
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
-        sektor: Int = 1
+        sektor: String = "1"
     ): TestData {
         perioder.forEach { periode ->
             kafkaMeldinger.add(
@@ -124,7 +124,7 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto : 
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
             periode = Periode.forrigePeriode(),
             antallPersoner = 6.0,
-            sektor = 1
+            sektor = "1"
         )
     ),
     testVirksomhetGjeldeneKvartal(
@@ -132,7 +132,7 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto : 
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
             periode = Periode.gjeldendePeriode(),
             antallPersoner = 6.0,
-            sektor = 1
+            sektor = "1"
         )
     )
 }
@@ -155,7 +155,7 @@ fun lagSykefraværsstatistikkImportDto(
     sykefraværsProsent: Double = 2.0,
     antallPersoner: Double = 6.0,
     tapteDagsverk: Double = 20.0,
-    sektor: Int
+    sektor: String
 ) =
     SykefraversstatistikkImportDto(
         virksomhetSykefravær = VirksomhetSykefravær(
@@ -194,7 +194,7 @@ fun lagSykefraværsstatistikkImportDto(
         næringSykefravær = NæringSykefravær(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
-            kode = 11,
+            kode = "11",
             tapteDagsverk = 100.0,
             muligeDagsverk = 5000.0,
             antallPersoner = 150.0,
@@ -205,7 +205,7 @@ fun lagSykefraværsstatistikkImportDto(
         næring5SifferSykefravær = listOf(Næring5SifferSykefravær(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
-            kode = 11000,
+            kode = "11000",
             tapteDagsverk = 40.0,
             muligeDagsverk = 4000.0,
             antallPersoner = 1250.0,

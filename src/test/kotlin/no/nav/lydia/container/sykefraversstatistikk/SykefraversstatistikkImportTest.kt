@@ -122,7 +122,7 @@ class SykefraversstatistikkImportTest {
             sykefraværsProsent = 3.0,
             antallPersoner = 1337.0,
             tapteDagsverk = 16.0,
-            sektor = 3
+            sektor = "3"
         )
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(opppdatertStatistikk)
         hentSykefraværsstatistikk(virksomhet.orgnr).forExactlyOne {
@@ -137,7 +137,7 @@ class SykefraversstatistikkImportTest {
     @Test
     fun `skal importere sykefraværsstatistikk for sektor`() {
         val orgnr = "111111111"
-        val sektorKode = 3
+        val sektorKode = "3"
         val periode = Periode(kvartal = 1, årstall = 1971)
         val melding = lagSykefraværsstatistikkImportDto(
             orgnr = orgnr,
@@ -149,11 +149,11 @@ class SykefraversstatistikkImportTest {
         postgres.performQuery(
             """
             select * from sykefravar_statistikk_sektor
-            where sektor_kode = $sektorKode AND
+            where sektor_kode = '$sektorKode' AND
             arstall = ${periode.årstall} AND
             kvartal = ${periode.kvartal}
             """.trimIndent()
-        ).getString("sektor_kode") shouldBe sektorKode.toString()
+        ).getString("sektor_kode") shouldBe sektorKode
     }
 
 

@@ -72,7 +72,7 @@ object StatistikkConsumer : CoroutineScope {
         }
     }
 
-    fun ConsumerRecords<String, String>.toSykefraversstatistikkImportDto(): List<SykefraversstatistikkImportDto> {
+    private fun ConsumerRecords<String, String>.toSykefraversstatistikkImportDto(): List<SykefraversstatistikkImportDto> {
         val gson = GsonBuilder().create()
         return this.map {
             gson.fromJson(
