@@ -5,7 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
-import no.nav.lydia.helper.TestVirksomhet.Companion.SCENEKUNST
+import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.integrasjoner.ssb.NÆRINGSIMPORT_URL
 import no.nav.lydia.lydiaRestApi
 import kotlin.test.Test

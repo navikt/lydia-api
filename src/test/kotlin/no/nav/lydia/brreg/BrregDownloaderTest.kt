@@ -7,7 +7,7 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
-import no.nav.lydia.helper.TestVirksomhet.Companion.BEDRIFTSRÅDGIVNING
+import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.MANGLER_BELIGGENHETSADRESSE
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
