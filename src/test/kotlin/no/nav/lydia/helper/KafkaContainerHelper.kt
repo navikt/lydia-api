@@ -1,12 +1,16 @@
 package no.nav.lydia.helper
 
-import no.nav.lydia.sykefraversstatistikk.import.Key
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeoutOrNull
 import no.nav.lydia.Kafka
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
+import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
+import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
+import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
+import no.nav.lydia.sykefraversstatistikk.import.Key
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -131,24 +135,31 @@ class KafkaContainerHelper(
         return offsetMetadata[offsetMetadata.keys.firstOrNull()]?.offset() ?: -1
     }
 
-    fun sendKafkameldingSomString() {
-        kafkaProducer.send(ProducerRecord(
-            statistikkTopic,
-            """
+    fun sendKafkameldingSomString(
+        orgnr: String = "900000111",
+        næringskode: String = NÆRING_JORDBRUK,
+        næringsundergruppe: String = DYRKING_AV_KORN.kode,
+        landKode: String = LANDKODE_NO,
+        sektorkode: String = SEKTOR_STATLIG_FORVALTNING
+    ) {
+        kafkaProducer.send(
+            ProducerRecord(
+                statistikkTopic,
+                """
             {
                 "kvartal": 1,
                 "årstall": 2019,
-                "orgnr": "900000111"
+                "orgnr": "$orgnr"
             }
             """.trimIndent(),
-            """
+                """
              {
                 "næringSykefravær": {
                   "kvartal": 1,
                   "prosent": 5.0,
                   "muligeDagsverk": 100.0,
                   "årstall": 2019,
-                  "kode": "11",
+                  "kode": "$næringskode",
                   "antallPersoner": 10.0,
                   "kategori": "NÆRING2SIFFER",
                   "tapteDagsverk": 5.0,
@@ -160,7 +171,7 @@ class KafkaContainerHelper(
                     "prosent": 5.0,
                     "muligeDagsverk": 100.0,
                     "årstall": 2019,
-                    "kode": "11000",
+                    "kode": "$næringsundergruppe",
                     "antallPersoner": 10.0,
                     "kategori": "NÆRING5SIFFER",
                     "tapteDagsverk": 5.0,
@@ -173,7 +184,7 @@ class KafkaContainerHelper(
                   "muligeDagsverk": 100.0,
                   "årstall": 2019,
                   "antallPersoner": 10.0,
-                  "orgnr": "900000111",
+                  "orgnr": "$orgnr",
                   "tapteDagsverk": 5.0,
                   "maskert": false,
                   "kategori": "VIRKSOMHET"
@@ -183,7 +194,7 @@ class KafkaContainerHelper(
                   "prosent": 5.0,
                   "muligeDagsverk": 100.0,
                   "årstall": 2019,
-                  "kode": "NO",
+                  "kode": "$landKode",
                   "antallPersoner": 10.0,
                   "kategori": "LAND",
                   "tapteDagsverk": 5.0,
@@ -194,14 +205,16 @@ class KafkaContainerHelper(
                   "prosent": 5.0,
                   "muligeDagsverk": 100.0,
                   "årstall": 2019,
-                  "kode": "1",
+                  "kode": "$sektorkode",
                   "antallPersoner": 10.0,
                   "kategori": "SEKTOR",
                   "tapteDagsverk": 5.0,
                   "maskert": false
                 }
               }   
-            """.trimIndent())).get()
+            """.trimIndent()
+            )
+        ).get()
     }
 
 }

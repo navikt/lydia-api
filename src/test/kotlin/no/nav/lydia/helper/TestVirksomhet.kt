@@ -1,5 +1,8 @@
 package no.nav.lydia.helper
 
+import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
+import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -16,11 +19,7 @@ class TestVirksomhet(
     val næringskode3 = næringsgrupper.getOrNull(2)
 
     companion object {
-        val DYRKING_AV_RIS = Næringsgruppe(kode = "01.120", navn = "Dyrking av ris")
-        val SCENEKUNST =
-            Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
-        val BEDRIFTSRÅDGIVNING =
-            Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
+
         private val NÆRINGER_LISTE = listOf(DYRKING_AV_RIS, SCENEKUNST, BEDRIFTSRÅDGIVNING)
         val KOMMUNE_OSLO = Kommune(navn = "OSLO", nummer = "0301")
         val KOMMUNE_BERGEN = Kommune(navn = "BERGEN", nummer = "4601")

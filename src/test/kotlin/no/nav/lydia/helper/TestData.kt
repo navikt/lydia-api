@@ -1,8 +1,17 @@
 package no.nav.lydia.helper
 
 import com.google.gson.Gson
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
+import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
+import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.import.*
+import no.nav.lydia.sykefraversstatistikk.import.LandSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.NæringSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.NæringskodeSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.SektorSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.import.SykefraværsstatistikkForVirksomhet
+import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.random.Random
 
 class TestData(
@@ -10,12 +19,29 @@ class TestData(
     antallTilfeldigeVirksomheter: Int = 0
 ) {
     companion object {
+        const val LANDKODE_NO = "NO"
+        const val SEKTOR_STATLIG_FORVALTNING = "1"
+        const val SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET = "3"
+        const val NÆRING_JORDBRUK = "01"
+        const val NÆRING_SKOGBRUK = "02"
+
+        val DYRKING_AV_KORN = Næringsgruppe(kode = "$NÆRING_JORDBRUK.110", navn = "Dyrking av korn, unntatt ris")
+        val DYRKING_AV_RIS = Næringsgruppe(kode = "$NÆRING_JORDBRUK.120", navn = "Dyrking av ris")
+
+        val SKOGSKJØTSEL = Næringsgruppe(kode = "$NÆRING_SKOGBRUK.100", navn = "Skogskjøtsel")
+        val AVVIRKNING = Næringsgruppe(kode = "$NÆRING_SKOGBRUK.200", navn = "Avvirkning")
+        val SCENEKUNST =
+            Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
+        val BEDRIFTSRÅDGIVNING =
+            Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
+
         fun fraVirksomhet(virksomhet: TestVirksomhet) =
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(Periode.gjeldendePeriode()),
                 sykefraværsProsent = (1 .. 20).random().toDouble()
             )
+
     }
 
     private val kafkaMeldinger = mutableSetOf<SykefraversstatistikkImportDto>()
@@ -54,7 +80,7 @@ class TestData(
         sykefraværsProsent: Double = 2.0,
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
-        sektor: String = "1"
+        sektor: String = SEKTOR_STATLIG_FORVALTNING
     ): TestData {
         perioder.forEach { periode ->
             kafkaMeldinger.add(
@@ -146,11 +172,15 @@ fun lagSsbNæringInnslag(kode: String, navn: String) =
 
 fun lagSykefraværsstatistikkImportDto(
     orgnr: String,
+
     periode: Periode,
     sykefraværsProsent: Double = 2.0,
     antallPersoner: Double = 6.0,
     tapteDagsverk: Double = 20.0,
-    sektor: String
+    sektor: String,
+    landKode: String = LANDKODE_NO,
+    næring2siffer: String = NÆRING_JORDBRUK,
+    næring5siffer: String = DYRKING_AV_KORN.kode,
 ) =
     SykefraversstatistikkImportDto(
         virksomhetSykefravær = SykefraværsstatistikkForVirksomhet(
@@ -179,7 +209,7 @@ fun lagSykefraværsstatistikkImportDto(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
             prosent = 2.0,
-            kode = "NO",
+            kode = landKode,
             tapteDagsverk = 10000000.0,
             muligeDagsverk = 500000000.0,
             antallPersoner = 2500000.0,
@@ -189,7 +219,7 @@ fun lagSykefraværsstatistikkImportDto(
         næringSykefravær = NæringSykefravær(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
-            kode = "11",
+            kode = næring2siffer,
             tapteDagsverk = 100.0,
             muligeDagsverk = 5000.0,
             antallPersoner = 150.0,
@@ -201,7 +231,7 @@ fun lagSykefraværsstatistikkImportDto(
             NæringskodeSykefravær(
                 årstall = periode.årstall,
                 kvartal = periode.kvartal,
-                kode = "11000",
+                kode = næring5siffer,
                 tapteDagsverk = 40.0,
                 muligeDagsverk = 4000.0,
                 antallPersoner = 1250.0,

@@ -9,10 +9,22 @@ import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.SykefraværsstatistikkTestData
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
+import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
+import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
+import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
+import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
+import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_IMPORT
+import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.lagSykefraværsstatistikkImportDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
@@ -136,30 +148,34 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `skal kunne importere aggregert sykefraværsstatistikk for sektor, næring og land`() {
-        val orgnr = "111111111"
-        val sektorKode = "3"
-        val periode = Periode(kvartal = 1, årstall = 1971)
+        val virksomhet = TestVirksomhet.nyVirksomhet()
+        val periode1971 = Periode(kvartal = 1, årstall = 1971)
         val melding = lagSykefraværsstatistikkImportDto(
-            orgnr = orgnr,
-            periode = periode,
+            orgnr = virksomhet.orgnr,
+            periode = periode1971,
             antallPersoner = 100.0,
-            sektor = sektorKode
+            sektor = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
+            næring2siffer = NÆRING_JORDBRUK,
+            næring5siffer = DYRKING_AV_RIS.kode,
+            landKode = LANDKODE_NO
         )
+
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
-        hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = sektorKode, periode = periode) shouldBe sektorKode
-        hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = "11", periode = periode) shouldBe "11"
-        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = "11000", periode = periode) shouldBe "11000"
-        hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = "NO", periode = periode) shouldBe "NO"
+
+        hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET, periode = periode1971) shouldBe SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
+        hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = NÆRING_JORDBRUK, periode = periode1971) shouldBe NÆRING_JORDBRUK
+        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = DYRKING_AV_RIS.kode, periode = periode1971) shouldBe DYRKING_AV_RIS.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode1971) shouldBe LANDKODE_NO
     }
 
     @Test
     fun `sjekk at importmodel er riktig`() {
         val periode = Periode(kvartal = 1, årstall = 2019)
         kafkaContainer.sendKafkameldingSomString()
-        hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = "1", periode = periode) shouldBe "1"
-        hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = "11", periode = periode) shouldBe "11"
-        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = "11000", periode = periode) shouldBe "11000"
-        hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = "NO", periode = periode) shouldBe "NO"
+        hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = SEKTOR_STATLIG_FORVALTNING, periode = periode) shouldBe SEKTOR_STATLIG_FORVALTNING
+        hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = NÆRING_JORDBRUK, periode = periode) shouldBe NÆRING_JORDBRUK
+        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = DYRKING_AV_KORN.kode, periode = periode) shouldBe DYRKING_AV_KORN.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode) shouldBe LANDKODE_NO
     }
 
     private fun hentStatistikk(
