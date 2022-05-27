@@ -1,67 +1,84 @@
-data class NæringSykefravær (
-    val kvartal : Int,
-    val prosent : Double,
-    val muligeDagsverk : Double,
-    val årstall : Int,
-    val kode : String,
-    val antallPersoner : Double,
-    val kategori : String,
-    val tapteDagsverk : Double,
-    val maskert : Boolean
-)
+package no.nav.lydia.sykefraversstatistikk.import
 
-data class Næring5SifferSykefravær (
-    val kvartal : Int,
-    val prosent : Double,
-    val muligeDagsverk : Double,
-    val årstall : Int,
-    val kode : String,
-    val antallPersoner : Double,
-    val kategori : String,
-    val tapteDagsverk : Double,
-    val maskert : Boolean
-)
+abstract class KvartalsvisSykefraværsstatistikk{
+    abstract val kvartal : Int
+    abstract val årstall : Int
+    abstract val prosent : Double
+    abstract val muligeDagsverk : Double
+    abstract val antallPersoner : Double
+    abstract val tapteDagsverk : Double
+    abstract val maskert : Boolean
+    abstract val kategori : String
+}
 
-data class VirksomhetSykefravær (
-    val kvartal : Int,
-    val prosent : Double,
-    val muligeDagsverk : Double,
-    val årstall : Int,
-    val antallPersoner : Double,
-    val orgnr : String,
-    val tapteDagsverk : Double,
-    val maskert : Boolean,
-    val kategori : String
-)
+sealed class AggregertSykefraværsstatistikk: KvartalsvisSykefraværsstatistikk() {
+    abstract val kode: String
+}
 
-data class LandSykefravær (
-    val kvartal : Int,
-    val prosent : Double,
-    val muligeDagsverk : Double,
-    val årstall : Int,
-    val kode : String,
-    val antallPersoner : Double,
-    val kategori : String,
-    val tapteDagsverk : Double,
-    val maskert : Boolean
-)
+data class NæringSykefravær(
+    override val kvartal : Int,
+    override val årstall : Int,
+    override val prosent : Double,
+    override val muligeDagsverk : Double,
+    override val antallPersoner : Double,
+    override val tapteDagsverk : Double,
+    override val maskert : Boolean,
+    override val kategori : String,
+    override val kode: String
+): AggregertSykefraværsstatistikk()
 
-data class SektorSykefravær (
-    val kvartal : Int,
-    val prosent : Double,
-    val muligeDagsverk : Double,
-    val årstall : Int,
-    val kode : String,
-    val antallPersoner : Double,
-    val kategori : String,
-    val tapteDagsverk : Double,
-    val maskert : Boolean
-)
+data class NæringskodeSykefravær(
+    override val kvartal : Int,
+    override val årstall : Int,
+    override val prosent : Double,
+    override val muligeDagsverk : Double,
+    override val antallPersoner : Double,
+    override val tapteDagsverk : Double,
+    override val maskert : Boolean,
+    override val kategori : String,
+    override val kode: String
+): AggregertSykefraværsstatistikk()
+
+data class SektorSykefravær(
+    override val kvartal : Int,
+    override val årstall : Int,
+    override val prosent : Double,
+    override val muligeDagsverk : Double,
+    override val antallPersoner : Double,
+    override val tapteDagsverk : Double,
+    override val maskert : Boolean,
+    override val kategori : String,
+    override val kode: String
+): AggregertSykefraværsstatistikk()
+
+data class LandSykefravær(
+    override val kvartal : Int,
+    override val årstall : Int,
+    override val prosent : Double,
+    override val muligeDagsverk : Double,
+    override val antallPersoner : Double,
+    override val tapteDagsverk : Double,
+    override val maskert : Boolean,
+    override val kategori : String,
+    override val kode: String
+): AggregertSykefraværsstatistikk()
+
+data class SykefraværsstatistikkForVirksomhet(
+    override val kvartal : Int,
+    override val årstall : Int,
+    override val prosent : Double,
+    override val muligeDagsverk : Double,
+    override val antallPersoner : Double,
+    override val tapteDagsverk : Double,
+    override val maskert : Boolean,
+    override val kategori : String,
+    val orgnr: String
+): KvartalsvisSykefraværsstatistikk()
 
 data class SykefraversstatistikkImportDto (
     val næringSykefravær : NæringSykefravær,
-    val næring5SifferSykefravær: List<Næring5SifferSykefravær>,
-    val virksomhetSykefravær : VirksomhetSykefravær,
+    val næring5SifferSykefravær: List<NæringskodeSykefravær>,
+    val virksomhetSykefravær : SykefraværsstatistikkForVirksomhet,
     val landSykefravær : LandSykefravær,
     val sektorSykefravær : SektorSykefravær
 )

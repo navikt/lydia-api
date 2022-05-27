@@ -1,11 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk
 
-import SykefraversstatistikkImportDto
-import kotliquery.Row
-import kotliquery.TransactionalSession
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
+import kotliquery.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.sykefraversstatistikk.api.ListResponse
@@ -13,6 +8,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
+import no.nav.lydia.sykefraversstatistikk.import.*
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
@@ -20,82 +16,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertVirksomhetsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
-                tx.insertSektorstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.sektorSykefravær }.toSet())
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.næringSykefravær }.toSet())
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.flatMap { it.næring5SifferSykefravær }.toSet())
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.landSykefravær }.toSet())
             }
         }
     }
-
-    private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) =
-        sykefraværsStatistikkListe.forEach { sykefraværsStatistikk ->
-            run(
-                queryOf(
-                    """
-                        INSERT INTO sykefravar_statistikk_virksomhet(
-                            orgnr,
-                            arstall,
-                            kvartal,
-                            antall_personer,
-                            tapte_dagsverk,
-                            mulige_dagsverk,
-                            sykefraversprosent,
-                            maskert
-                        )
-                        VALUES(
-                            :orgnr,
-                            :arstall,
-                            :kvartal,
-                            :antall_personer,
-                            :tapte_dagsverk,
-                            :mulige_dagsverk,
-                            :sykefraversprosent,
-                            :maskert
-                        ) 
-                        ON CONFLICT ON CONSTRAINT sykefravar_periode DO UPDATE SET
-                            antall_personer = :antall_personer,
-                            tapte_dagsverk = :tapte_dagsverk,
-                            mulige_dagsverk = :mulige_dagsverk,
-                            sykefraversprosent = :sykefraversprosent,
-                            maskert = :maskert,
-                            endret = now()
-                        """.trimMargin(),
-                    mapOf(
-                        "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
-                        "arstall" to sykefraværsStatistikk.virksomhetSykefravær.årstall,
-                        "kvartal" to sykefraværsStatistikk.virksomhetSykefravær.kvartal,
-                        "antall_personer" to sykefraværsStatistikk.virksomhetSykefravær.antallPersoner,
-                        "tapte_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.tapteDagsverk,
-                        "mulige_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.muligeDagsverk,
-                        "sykefraversprosent" to sykefraværsStatistikk.virksomhetSykefravær.prosent,
-                        "maskert" to sykefraværsStatistikk.virksomhetSykefravær.maskert
-                    )
-                ).asUpdate
-            )
-
-            run(
-                queryOf(
-                    """
-                        INSERT INTO virksomhet_statistikk_metadata(
-                            orgnr,
-                            kategori,
-                            sektor
-                        )
-                        VALUES(
-                            :orgnr,
-                            :kategori,
-                            :sektor
-                        )
-                        ON CONFLICT (orgnr) DO UPDATE SET
-                            kategori = :kategori,
-                            sektor = :sektor
-                    """.trimIndent(),
-                    mapOf(
-                        "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
-                        "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
-                        "sektor" to sykefraværsStatistikk.sektorSykefravær.kode
-                    )
-                ).asUpdate
-            )
-        }
 
     private fun filterVerdi(filterNavn: String, filterVerdier: Set<String>) =
         """
@@ -279,15 +206,101 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 }
 
-private fun TransactionalSession.insertSektorstatistikk(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) {
-    sykefraværsStatistikkListe.map { it.sektorSykefravær }.toSet().forEach { sektorStatistikk ->
+private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) =
+    sykefraværsStatistikkListe.forEach { sykefraværsStatistikk ->
         run(
             queryOf(
                 """
-                    INSERT INTO sykefravar_statistikk_sektor(
+                        INSERT INTO sykefravar_statistikk_virksomhet(
+                            orgnr,
+                            arstall,
+                            kvartal,
+                            antall_personer,
+                            tapte_dagsverk,
+                            mulige_dagsverk,
+                            sykefraversprosent,
+                            maskert
+                        )
+                        VALUES(
+                            :orgnr,
+                            :arstall,
+                            :kvartal,
+                            :antall_personer,
+                            :tapte_dagsverk,
+                            :mulige_dagsverk,
+                            :sykefraversprosent,
+                            :maskert
+                        ) 
+                        ON CONFLICT ON CONSTRAINT sykefravar_periode DO UPDATE SET
+                            antall_personer = :antall_personer,
+                            tapte_dagsverk = :tapte_dagsverk,
+                            mulige_dagsverk = :mulige_dagsverk,
+                            sykefraversprosent = :sykefraversprosent,
+                            maskert = :maskert,
+                            endret = now()
+                        """.trimMargin(),
+                mapOf(
+                    "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
+                    "arstall" to sykefraværsStatistikk.virksomhetSykefravær.årstall,
+                    "kvartal" to sykefraværsStatistikk.virksomhetSykefravær.kvartal,
+                    "antall_personer" to sykefraværsStatistikk.virksomhetSykefravær.antallPersoner,
+                    "tapte_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.tapteDagsverk,
+                    "mulige_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.muligeDagsverk,
+                    "sykefraversprosent" to sykefraværsStatistikk.virksomhetSykefravær.prosent,
+                    "maskert" to sykefraværsStatistikk.virksomhetSykefravær.maskert
+                )
+            ).asUpdate
+        )
+
+        run(
+            queryOf(
+                """
+                        INSERT INTO virksomhet_statistikk_metadata(
+                            orgnr,
+                            kategori,
+                            sektor
+                        )
+                        VALUES(
+                            :orgnr,
+                            :kategori,
+                            :sektor
+                        )
+                        ON CONFLICT (orgnr) DO UPDATE SET
+                            kategori = :kategori,
+                            sektor = :sektor
+                    """.trimIndent(),
+                mapOf(
+                    "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
+                    "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
+                    "sektor" to sykefraværsStatistikk.sektorSykefravær.kode
+                )
+            ).asUpdate
+        )
+    }
+
+private fun AggregertSykefraværsstatistikk.tilTabellnavn() = when(this) {
+    is NæringSykefravær -> "sykefravar_statistikk_naring"
+    is NæringskodeSykefravær -> "sykefravar_statistikk_naringskode"
+    is SektorSykefravær -> "sykefravar_statistikk_sektor"
+    is LandSykefravær -> "sykefravar_statistikk_land"
+}
+
+private fun AggregertSykefraværsstatistikk.tilKolonnenavn() = when(this) {
+    is NæringSykefravær -> "naring"
+    is NæringskodeSykefravær -> "naringskode"
+    is SektorSykefravær -> "sektor_kode"
+    is LandSykefravær -> "land"
+}
+
+private fun TransactionalSession.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe: Collection<AggregertSykefraværsstatistikk>) =
+    sykefraværsStatistikkListe.forEach { sykefraværsstatistikk ->
+        run(
+            queryOf(
+                """
+                    INSERT INTO ${sykefraværsstatistikk.tilTabellnavn()}(
                         arstall,
                         kvartal,
-                        sektor_kode,
+                        ${sykefraværsstatistikk.tilKolonnenavn()},
                         antall_personer,
                         tapte_dagsverk,
                         mulige_dagsverk,
@@ -297,7 +310,7 @@ private fun TransactionalSession.insertSektorstatistikk(sykefraværsStatistikkLi
                     VALUES(
                         :arstall,
                         :kvartal,
-                        :sektor_kode,
+                        :kode,
                         :antall_personer,
                         :tapte_dagsverk,
                         :mulige_dagsverk,
@@ -307,17 +320,15 @@ private fun TransactionalSession.insertSektorstatistikk(sykefraværsStatistikkLi
                     ON CONFLICT DO NOTHING
                 """.trimIndent(),
                 mapOf(
-                    "arstall" to sektorStatistikk.årstall,
-                    "kvartal" to sektorStatistikk.kvartal,
-                    "sektor_kode" to sektorStatistikk.kode,
-                    "antall_personer" to sektorStatistikk.antallPersoner,
-                    "tapte_dagsverk" to sektorStatistikk.tapteDagsverk,
-                    "mulige_dagsverk" to sektorStatistikk.muligeDagsverk,
-                    "prosent" to sektorStatistikk.prosent,
-                    "maskert" to sektorStatistikk.maskert,
+                    "arstall" to sykefraværsstatistikk.årstall,
+                    "kvartal" to sykefraværsstatistikk.kvartal,
+                    "kode" to sykefraværsstatistikk.kode,
+                    "antall_personer" to sykefraværsstatistikk.antallPersoner,
+                    "tapte_dagsverk" to sykefraværsstatistikk.tapteDagsverk,
+                    "mulige_dagsverk" to sykefraværsstatistikk.muligeDagsverk,
+                    "prosent" to sykefraværsstatistikk.prosent,
+                    "maskert" to sykefraværsstatistikk.maskert,
                 )
             ).asUpdate
         )
     }
-
-}

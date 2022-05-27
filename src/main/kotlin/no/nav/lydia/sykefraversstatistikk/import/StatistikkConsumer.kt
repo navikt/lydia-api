@@ -1,6 +1,5 @@
 package no.nav.lydia.sykefraversstatistikk.import
 
-import SykefraversstatistikkImportDto
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

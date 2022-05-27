@@ -135,7 +135,7 @@ class SykefraversstatistikkImportTest {
     }
 
     @Test
-    fun `skal importere sykefraværsstatistikk for sektor`() {
+    fun `skal kunne importere aggregert sykefraværsstatistikk for sektor, næring og land`() {
         val orgnr = "111111111"
         val sektorKode = "3"
         val periode = Periode(kvartal = 1, årstall = 1971)
@@ -146,15 +146,34 @@ class SykefraversstatistikkImportTest {
             sektor = sektorKode
         )
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
-        postgres.performQuery(
-            """
-            select * from sykefravar_statistikk_sektor
-            where sektor_kode = '$sektorKode' AND
-            arstall = ${periode.årstall} AND
-            kvartal = ${periode.kvartal}
-            """.trimIndent()
-        ).getString("sektor_kode") shouldBe sektorKode
+        hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = sektorKode, periode = periode) shouldBe sektorKode
+        hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = "11", periode = periode) shouldBe "11"
+        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = "11000", periode = periode) shouldBe "11000"
+        hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = "NO", periode = periode) shouldBe "NO"
     }
+
+    @Test
+    fun `sjekk at importmodel er riktig`() {
+        val periode = Periode(kvartal = 1, årstall = 2019)
+        kafkaContainer.sendKafkameldingSomString()
+        hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = "1", periode = periode) shouldBe "1"
+        hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = "11", periode = periode) shouldBe "11"
+        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = "11000", periode = periode) shouldBe "11000"
+        hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = "NO", periode = periode) shouldBe "NO"
+    }
+
+    private fun hentStatistikk(
+        tabell: String,
+        kolonne: String,
+        kode: String,
+        periode: Periode
+    ) = postgres.performQuery("""
+            select $kolonne
+            from $tabell
+            where $kolonne = '$kode' and
+            arstall = ${periode.årstall} and
+            kvartal = ${periode.kvartal}
+        """.trimIndent()).getOrNull(kolonne)
 
 
     private fun hentKolonneFraSykefraværsstatistikk(virksomhet: TestVirksomhet, kolonneNavn: String) =
@@ -180,4 +199,3 @@ class SykefraversstatistikkImportTest {
         this.getObject(columnLabel)
     }.orNull()
 }
-

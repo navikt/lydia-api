@@ -1,13 +1,8 @@
 package no.nav.lydia.helper
 
-import LandSykefravær
-import Næring5SifferSykefravær
-import NæringSykefravær
-import SektorSykefravær
-import SykefraversstatistikkImportDto
-import VirksomhetSykefravær
 import com.google.gson.Gson
 import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraversstatistikk.import.*
 import kotlin.random.Random
 
 class TestData(
@@ -158,7 +153,7 @@ fun lagSykefraværsstatistikkImportDto(
     sektor: String
 ) =
     SykefraversstatistikkImportDto(
-        virksomhetSykefravær = VirksomhetSykefravær(
+        virksomhetSykefravær = SykefraværsstatistikkForVirksomhet(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
             orgnr = orgnr,
@@ -202,17 +197,18 @@ fun lagSykefraværsstatistikkImportDto(
             maskert = false,
             kategori = "NÆRING2SIFFER"
         ),
-        næring5SifferSykefravær = listOf(Næring5SifferSykefravær(
-            årstall = periode.årstall,
-            kvartal = periode.kvartal,
-            kode = "11000",
-            tapteDagsverk = 40.0,
-            muligeDagsverk = 4000.0,
-            antallPersoner = 1250.0,
-            prosent = 1.0,
-            maskert = false,
-            kategori = "NÆRING5SIFFER"
-        )),
+        næring5SifferSykefravær = listOf(
+            NæringskodeSykefravær(
+                årstall = periode.årstall,
+                kvartal = periode.kvartal,
+                kode = "11000",
+                tapteDagsverk = 40.0,
+                muligeDagsverk = 4000.0,
+                antallPersoner = 1250.0,
+                prosent = 1.0,
+                maskert = false,
+                kategori = "NÆRING5SIFFER")
+        ),
     )
 
 fun TestVirksomhet.brregJson() =

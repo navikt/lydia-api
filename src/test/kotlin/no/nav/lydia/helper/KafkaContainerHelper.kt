@@ -1,7 +1,7 @@
 package no.nav.lydia.helper
 
-import Key
-import SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.import.Key
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -129,6 +129,79 @@ class KafkaContainerHelper(
         val offsetMetadata = adminClient.listConsumerGroupOffsets(consumerGroup)
             .partitionsToOffsetAndMetadata().get()
         return offsetMetadata[offsetMetadata.keys.firstOrNull()]?.offset() ?: -1
+    }
+
+    fun sendKafkameldingSomString() {
+        kafkaProducer.send(ProducerRecord(
+            statistikkTopic,
+            """
+            {
+                "kvartal": 1,
+                "årstall": 2019,
+                "orgnr": "900000111"
+            }
+            """.trimIndent(),
+            """
+             {
+                "næringSykefravær": {
+                  "kvartal": 1,
+                  "prosent": 5.0,
+                  "muligeDagsverk": 100.0,
+                  "årstall": 2019,
+                  "kode": "11",
+                  "antallPersoner": 10.0,
+                  "kategori": "NÆRING2SIFFER",
+                  "tapteDagsverk": 5.0,
+                  "maskert": false
+                },
+                "næring5SifferSykefravær": [
+                  {
+                    "kvartal": 1,
+                    "prosent": 5.0,
+                    "muligeDagsverk": 100.0,
+                    "årstall": 2019,
+                    "kode": "11000",
+                    "antallPersoner": 10.0,
+                    "kategori": "NÆRING5SIFFER",
+                    "tapteDagsverk": 5.0,
+                    "maskert": false
+                  }
+                ],
+                "virksomhetSykefravær": {
+                  "kvartal": 1,
+                  "prosent": 5.0,
+                  "muligeDagsverk": 100.0,
+                  "årstall": 2019,
+                  "antallPersoner": 10.0,
+                  "orgnr": "900000111",
+                  "tapteDagsverk": 5.0,
+                  "maskert": false,
+                  "kategori": "VIRKSOMHET"
+                },
+                "landSykefravær": {
+                  "kvartal": 1,
+                  "prosent": 5.0,
+                  "muligeDagsverk": 100.0,
+                  "årstall": 2019,
+                  "kode": "NO",
+                  "antallPersoner": 10.0,
+                  "kategori": "LAND",
+                  "tapteDagsverk": 5.0,
+                  "maskert": false
+                },
+                "sektorSykefravær": {
+                  "kvartal": 1,
+                  "prosent": 5.0,
+                  "muligeDagsverk": 100.0,
+                  "årstall": 2019,
+                  "kode": "1",
+                  "antallPersoner": 10.0,
+                  "kategori": "SEKTOR",
+                  "tapteDagsverk": 5.0,
+                  "maskert": false
+                }
+              }   
+            """.trimIndent())).get()
     }
 
 }
