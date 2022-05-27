@@ -1,6 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk
 
-import SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
