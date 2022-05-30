@@ -14,12 +14,15 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
 import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestData.Companion.AVVIRKNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
+import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
+import no.nav.lydia.helper.TestData.Companion.SKOGSKJØTSEL
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_IMPORT
 import no.nav.lydia.helper.VirksomhetHelper
@@ -155,8 +158,8 @@ class SykefraversstatistikkImportTest {
             periode = periode1971,
             antallPersoner = 100.0,
             sektor = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
-            næring2siffer = NÆRING_JORDBRUK,
-            næring5siffer = DYRKING_AV_RIS.kode,
+            næring = NÆRING_JORDBRUK,
+            næringsundergrupper = listOf(DYRKING_AV_RIS.kode),
             landKode = LANDKODE_NO
         )
 
@@ -166,6 +169,29 @@ class SykefraversstatistikkImportTest {
         hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = NÆRING_JORDBRUK, periode = periode1971) shouldBe NÆRING_JORDBRUK
         hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = DYRKING_AV_RIS.kode, periode = periode1971) shouldBe DYRKING_AV_RIS.kode
         hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode1971) shouldBe LANDKODE_NO
+    }
+
+    @Test
+    fun `skal kunne importere aggregert sykefraværsstatistikk for virksomheter med flere næringsundergrupper`() {
+        val virksomhet = TestVirksomhet.nyVirksomhet()
+        val periode1972 = Periode(kvartal = 1, årstall = 1972)
+        val melding = lagSykefraværsstatistikkImportDto(
+            orgnr = virksomhet.orgnr,
+            periode = periode1972,
+            antallPersoner = 100.0,
+            sektor = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
+            næring = NÆRING_SKOGBRUK,
+            næringsundergrupper = listOf(AVVIRKNING.kode, SKOGSKJØTSEL.kode),
+            landKode = LANDKODE_NO
+        )
+
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
+
+        hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET, periode = periode1972) shouldBe SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
+        hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = NÆRING_SKOGBRUK, periode = periode1972) shouldBe NÆRING_SKOGBRUK
+        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = AVVIRKNING.kode, periode = periode1972) shouldBe AVVIRKNING.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = SKOGSKJØTSEL.kode, periode = periode1972) shouldBe SKOGSKJØTSEL.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode1972) shouldBe LANDKODE_NO
     }
 
     @Test

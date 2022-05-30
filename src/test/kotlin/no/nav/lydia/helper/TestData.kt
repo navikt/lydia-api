@@ -179,8 +179,8 @@ fun lagSykefraværsstatistikkImportDto(
     tapteDagsverk: Double = 20.0,
     sektor: String,
     landKode: String = LANDKODE_NO,
-    næring2siffer: String = NÆRING_JORDBRUK,
-    næring5siffer: String = DYRKING_AV_KORN.kode,
+    næring: String = NÆRING_JORDBRUK,
+    næringsundergrupper: List<String> = listOf(DYRKING_AV_KORN.kode),
 ) =
     SykefraversstatistikkImportDto(
         virksomhetSykefravær = SykefraværsstatistikkForVirksomhet(
@@ -219,7 +219,7 @@ fun lagSykefraværsstatistikkImportDto(
         næringSykefravær = NæringSykefravær(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
-            kode = næring2siffer,
+            kode = næring,
             tapteDagsverk = 100.0,
             muligeDagsverk = 5000.0,
             antallPersoner = 150.0,
@@ -227,18 +227,18 @@ fun lagSykefraværsstatistikkImportDto(
             maskert = false,
             kategori = "NÆRING2SIFFER"
         ),
-        næring5SifferSykefravær = listOf(
+        næring5SifferSykefravær = næringsundergrupper.map { næringsundergruppe ->
             NæringskodeSykefravær(
                 årstall = periode.årstall,
                 kvartal = periode.kvartal,
-                kode = næring5siffer,
+                kode = næringsundergruppe,
                 tapteDagsverk = 40.0,
                 muligeDagsverk = 4000.0,
                 antallPersoner = 1250.0,
                 prosent = 1.0,
                 maskert = false,
                 kategori = "NÆRING5SIFFER")
-        ),
+        }
     )
 
 fun TestVirksomhet.brregJson() =
