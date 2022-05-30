@@ -11,12 +11,12 @@ import kotlin.random.Random
 class TestVirksomhet(
     val orgnr: String,
     val navn: String,
-    val næringsgrupper: List<Næringsgruppe>,
+    val næringsundergrupper: List<Næringsgruppe>,
     val beliggenhet: Beliggenhetsadresse?
 ) {
-    val næringskode1 = næringsgrupper.first()
-    val næringskode2 = næringsgrupper.getOrNull(1)
-    val næringskode3 = næringsgrupper.getOrNull(2)
+    val næringsundergruppe1 = næringsundergrupper.first()
+    val næringsundergruppe2 = næringsundergrupper.getOrNull(1)
+    val næringsundergruppe3 = næringsundergrupper.getOrNull(2)
 
     companion object {
 
@@ -27,7 +27,7 @@ class TestVirksomhet(
         val OSLO = TestVirksomhet(
             orgnr = "987654321",
             navn = "Virksomhet Oslo",
-            næringsgrupper = listOf(SCENEKUNST),
+            næringsundergrupper = listOf(SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_OSLO,
                 adresse = listOf("Osloveien 1")
@@ -36,7 +36,7 @@ class TestVirksomhet(
         val OSLO_FLERE_ADRESSER = TestVirksomhet(
             orgnr = "555555555",
             navn = "Virksomhet Oslo Flere Adresser",
-            næringsgrupper = listOf(SCENEKUNST, BEDRIFTSRÅDGIVNING),
+            næringsundergrupper = listOf(SCENEKUNST, BEDRIFTSRÅDGIVNING),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_OSLO,
                 adresse = listOf("c/o Oslo Tigersen", "Osloveien 1", "0977 Oslo")
@@ -45,7 +45,7 @@ class TestVirksomhet(
         val OSLO_MANGLER_ADRESSER = TestVirksomhet(
             orgnr = "666666666",
             navn = "Virksomhet Oslo Mangler Adresser",
-            næringsgrupper = listOf(SCENEKUNST),
+            næringsundergrupper = listOf(SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_OSLO,
                 adresse = null
@@ -54,7 +54,7 @@ class TestVirksomhet(
         val UTENLANDSK = TestVirksomhet(
             orgnr = "123123123",
             navn = "Utenlandsk Virksomhet",
-            næringsgrupper = listOf(SCENEKUNST),
+            næringsundergrupper = listOf(SCENEKUNST),
             beliggenhet = beliggenhet(
                 land = "Tyskland",
                 landkode = "DE",
@@ -67,7 +67,7 @@ class TestVirksomhet(
         val NAV_KONTOR = TestVirksomhet(
             orgnr = "984247664",
             navn = "NAV Arbeidslivssenter Oslo",
-            næringsgrupper = listOf(SCENEKUNST),
+            næringsundergrupper = listOf(SCENEKUNST),
             beliggenhet = beliggenhet(
                 landkode = "NO",
                 land = "Norge",
@@ -80,13 +80,13 @@ class TestVirksomhet(
         val MANGLER_BELIGGENHETSADRESSE = TestVirksomhet(
             orgnr = "321321321",
             navn = "Mangler beliggenhetsadresse",
-            næringsgrupper = listOf(SCENEKUNST),
+            næringsundergrupper = listOf(SCENEKUNST),
             beliggenhet = null
         )
         val BERGEN = TestVirksomhet(
             orgnr = "123456789",
             navn = "Virksomhet Bærgen",
-            næringsgrupper = listOf(BEDRIFTSRÅDGIVNING, SCENEKUNST),
+            næringsundergrupper = listOf(BEDRIFTSRÅDGIVNING, SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_BERGEN,
                 adresse = listOf("Bergenveien 1")
@@ -107,7 +107,7 @@ class TestVirksomhet(
             return TestVirksomhet(
                 orgnr = orgnr,
                 navn = "Navn $orgnr",
-                næringsgrupper = næringer,
+                næringsundergrupper = næringer,
                 beliggenhet = beliggenhet
             )
         }
