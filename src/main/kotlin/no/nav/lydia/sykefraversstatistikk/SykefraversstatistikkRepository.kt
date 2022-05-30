@@ -1,6 +1,10 @@
 package no.nav.lydia.sykefraversstatistikk
 
-import kotliquery.*
+import kotliquery.Row
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.sykefraversstatistikk.api.ListResponse
@@ -8,7 +12,12 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
-import no.nav.lydia.sykefraversstatistikk.import.*
+import no.nav.lydia.sykefraversstatistikk.import.AggregertSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.LandSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.NæringSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.NæringsundergruppeSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.SektorSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
@@ -280,14 +289,14 @@ private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatist
 
 private fun AggregertSykefraværsstatistikk.tilTabellnavn() = when(this) {
     is NæringSykefravær -> "sykefravar_statistikk_naring"
-    is NæringskodeSykefravær -> "sykefravar_statistikk_naringskode"
+    is NæringsundergruppeSykefravær -> "sykefravar_statistikk_naringsundergruppe"
     is SektorSykefravær -> "sykefravar_statistikk_sektor"
     is LandSykefravær -> "sykefravar_statistikk_land"
 }
 
 private fun AggregertSykefraværsstatistikk.tilKolonnenavn() = when(this) {
     is NæringSykefravær -> "naring"
-    is NæringskodeSykefravær -> "naringskode"
+    is NæringsundergruppeSykefravær -> "naringsundergruppe"
     is SektorSykefravær -> "sektor_kode"
     is LandSykefravær -> "land"
 }

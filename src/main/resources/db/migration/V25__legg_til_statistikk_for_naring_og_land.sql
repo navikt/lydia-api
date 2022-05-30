@@ -14,21 +14,21 @@ create table sykefravar_statistikk_naring
 );
 create index idx_naring_sykefravar_statistikk_naring on sykefravar_statistikk_naring(naring);
 
-create table sykefravar_statistikk_naringskode
+create table sykefravar_statistikk_naringsundergruppe
 (
     id              serial      primary key,
     arstall         smallint    not null,
     kvartal         smallint    not null,
-    naringskode     varchar     not null,
+    naringsundergruppe     varchar     not null,
     antall_personer decimal     not null,
     tapte_dagsverk  decimal     not null,
     mulige_dagsverk decimal     not null,
     prosent         decimal     not null,
     maskert         boolean     not null,
     opprettet       timestamp   default current_timestamp,
-    constraint naringskode_periode unique (naringskode, arstall, kvartal)
+    constraint naringsundergruppe_periode unique (naringsundergruppe, arstall, kvartal)
 );
-create index idx_naringskode_sykefravar_statistikk_naringskode on sykefravar_statistikk_naringskode(naringskode);
+create index idx_naringsundergruppe_sykefravar_statistikk_naringsundergruppe on sykefravar_statistikk_naringsundergruppe(naringsundergruppe);
 
 create table sykefravar_statistikk_land
 (
@@ -44,4 +44,4 @@ create table sykefravar_statistikk_land
     opprettet       timestamp   default current_timestamp,
     constraint land_periode unique (land, arstall, kvartal)
 );
-create index idx_naringskode_sykefravar_statistikk_land on sykefravar_statistikk_land(land);
+create index idx_land_sykefravar_statistikk_land on sykefravar_statistikk_land(land);

@@ -167,7 +167,7 @@ class SykefraversstatistikkImportTest {
 
         hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET, periode = periode1971) shouldBe SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
         hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = NÆRING_JORDBRUK, periode = periode1971) shouldBe NÆRING_JORDBRUK
-        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = DYRKING_AV_RIS.kode, periode = periode1971) shouldBe DYRKING_AV_RIS.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_naringsundergruppe", kolonne = "naringsundergruppe", kode = DYRKING_AV_RIS.kode, periode = periode1971) shouldBe DYRKING_AV_RIS.kode
         hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode1971) shouldBe LANDKODE_NO
     }
 
@@ -189,8 +189,8 @@ class SykefraversstatistikkImportTest {
 
         hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET, periode = periode1972) shouldBe SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
         hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = NÆRING_SKOGBRUK, periode = periode1972) shouldBe NÆRING_SKOGBRUK
-        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = AVVIRKNING.kode, periode = periode1972) shouldBe AVVIRKNING.kode
-        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = SKOGSKJØTSEL.kode, periode = periode1972) shouldBe SKOGSKJØTSEL.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_naringsundergruppe", kolonne = "naringsundergruppe", kode = AVVIRKNING.kode, periode = periode1972) shouldBe AVVIRKNING.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_naringsundergruppe", kolonne = "naringsundergruppe", kode = SKOGSKJØTSEL.kode, periode = periode1972) shouldBe SKOGSKJØTSEL.kode
         hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode1972) shouldBe LANDKODE_NO
     }
 
@@ -200,7 +200,7 @@ class SykefraversstatistikkImportTest {
         kafkaContainer.sendKafkameldingSomString()
         hentStatistikk(tabell = "sykefravar_statistikk_sektor", kolonne = "sektor_kode", kode = SEKTOR_STATLIG_FORVALTNING, periode = periode) shouldBe SEKTOR_STATLIG_FORVALTNING
         hentStatistikk(tabell = "sykefravar_statistikk_naring", kolonne = "naring", kode = NÆRING_JORDBRUK, periode = periode) shouldBe NÆRING_JORDBRUK
-        hentStatistikk(tabell = "sykefravar_statistikk_naringskode", kolonne = "naringskode", kode = DYRKING_AV_KORN.kode, periode = periode) shouldBe DYRKING_AV_KORN.kode
+        hentStatistikk(tabell = "sykefravar_statistikk_naringsundergruppe", kolonne = "naringsundergruppe", kode = DYRKING_AV_KORN.kode, periode = periode) shouldBe DYRKING_AV_KORN.kode
         hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode) shouldBe LANDKODE_NO
     }
 

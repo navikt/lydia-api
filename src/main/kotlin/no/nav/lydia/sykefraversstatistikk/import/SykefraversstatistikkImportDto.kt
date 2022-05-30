@@ -27,7 +27,7 @@ data class NæringSykefravær(
     override val kode: String
 ): AggregertSykefraværsstatistikk()
 
-data class NæringskodeSykefravær(
+data class NæringsundergruppeSykefravær(
     override val kvartal : Int,
     override val årstall : Int,
     override val prosent : Double,
@@ -77,7 +77,7 @@ data class SykefraværsstatistikkForVirksomhet(
 
 data class SykefraversstatistikkImportDto (
     val næringSykefravær : NæringSykefravær,
-    val næring5SifferSykefravær: List<NæringskodeSykefravær>,
+    val næring5SifferSykefravær: List<NæringsundergruppeSykefravær>,
     val virksomhetSykefravær : SykefraværsstatistikkForVirksomhet,
     val landSykefravær : LandSykefravær,
     val sektorSykefravær : SektorSykefravær

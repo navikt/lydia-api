@@ -8,9 +8,9 @@ data class BrregVirksomhetDto(
     val organisasjonsnummer: String,
     val navn: String,
     val beliggenhetsadresse: Beliggenhetsadresse?,
-    val naeringskode1: NæringskodeBrreg?,
-    val naeringskode2: NæringskodeBrreg?,
-    val naeringskode3: NæringskodeBrreg?,
+    val naeringskode1: NæringsundergruppeBrreg?,
+    val naeringskode2: NæringsundergruppeBrreg?,
+    val naeringskode3: NæringsundergruppeBrreg?,
 
     ){
     fun hentNæringsgruppekoder() = mutableMapOf(
@@ -23,7 +23,7 @@ data class BrregVirksomhetDto(
 }
 
 @Serializable
-data class NæringskodeBrreg(
+data class NæringsundergruppeBrreg(
     val beskrivelse: String,
     val kode: String
 )

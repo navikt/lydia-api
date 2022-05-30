@@ -7,7 +7,7 @@ import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.LandSykefravær
 import no.nav.lydia.sykefraversstatistikk.import.NæringSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.NæringskodeSykefravær
+import no.nav.lydia.sykefraversstatistikk.import.NæringsundergruppeSykefravær
 import no.nav.lydia.sykefraversstatistikk.import.SektorSykefravær
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import no.nav.lydia.sykefraversstatistikk.import.SykefraværsstatistikkForVirksomhet
@@ -94,7 +94,7 @@ class TestData(
                 )
             )
         }
-        virksomhet.næringsgrupper.forEach { næring ->
+        virksomhet.næringsundergrupper.forEach { næring ->
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
         }
         brregVirksomheter.add(virksomhet.brregJson())
@@ -228,7 +228,7 @@ fun lagSykefraværsstatistikkImportDto(
             kategori = "NÆRING2SIFFER"
         ),
         næring5SifferSykefravær = næringsundergrupper.map { næringsundergruppe ->
-            NæringskodeSykefravær(
+            NæringsundergruppeSykefravær(
                 årstall = periode.årstall,
                 kvartal = periode.kvartal,
                 kode = næringsundergruppe,
@@ -254,10 +254,10 @@ fun TestVirksomhet.brregJson() =
             "registreringsdatoEnhetsregisteret" : "2010-08-25",
             "registrertIMvaregisteret" : false,
             "naeringskode1" : {
-              "beskrivelse" : "${næringskode1.navn}",
-              "kode" : "${næringskode1.kode}"
+              "beskrivelse" : "${næringsundergruppe1.navn}",
+              "kode" : "${næringsundergruppe1.kode}"
             },            
-            ${næringskode2?.let { 
+            ${næringsundergruppe2?.let { 
                 """
                     "naeringskode2" : {
                       "beskrivelse" : "${it.navn}",
@@ -265,7 +265,7 @@ fun TestVirksomhet.brregJson() =
                     },                     
                 """.trimIndent()
             } ?: ""}
-            ${næringskode3?.let { 
+            ${næringsundergruppe3?.let { 
                 """
                     "naeringskode3" : {
                       "beskrivelse" : "${it.navn}",
