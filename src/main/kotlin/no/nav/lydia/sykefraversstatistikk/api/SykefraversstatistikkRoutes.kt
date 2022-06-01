@@ -27,7 +27,7 @@ fun Route.sykefraversstatistikk(
 ) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
-            val søkeparametere = Søkeparametere.from(call.request.queryParameters, geografiService)
+            val søkeparametere = Søkeparametere.from(call, geografiService)
             val sykefraværsstatistikkVirksomheter =
                 sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere)
             sykefraværsstatistikkVirksomheter.right()
