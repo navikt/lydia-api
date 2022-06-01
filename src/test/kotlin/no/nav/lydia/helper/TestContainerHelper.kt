@@ -243,6 +243,7 @@ class StatistikkHelper{
             ansatteTil: String = "",
             iaStatus: String = "",
             side: String = "",
+            kunMineVirksomheter : Boolean = false,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             hentSykefraværRespons(
@@ -259,6 +260,7 @@ class StatistikkHelper{
                 ansatteTil = ansatteTil,
                 iaStatus = iaStatus,
                 side = side,
+                kunMineVirksomheter = kunMineVirksomheter,
                 token = token
             ).third
                 .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
@@ -278,6 +280,7 @@ class StatistikkHelper{
             ansatteTil: String = "",
             iaStatus: String = "",
             side: String = "",
+            kunMineVirksomheter : Boolean = false,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             lydiaApiContainer.performGet(
@@ -294,7 +297,8 @@ class StatistikkHelper{
                         "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
                         "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
                         "&${Søkeparametere.IA_STATUS}=$iaStatus" +
-                        "&${Søkeparametere.SIDE}=$side"
+                        "&${Søkeparametere.SIDE}=$side" +
+                        "&${Søkeparametere.KUN_MINE_VIRKSOMHETER}=$kunMineVirksomheter"
             )
                 .authentication().bearer(token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)

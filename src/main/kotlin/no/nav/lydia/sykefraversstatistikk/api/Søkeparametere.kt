@@ -1,8 +1,10 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import io.ktor.http.Parameters
+import io.ktor.server.application.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
+import no.nav.lydia.tilgangskontroll.navIdent
 
 data class Søkeparametere(
     val kommunenummer: Set<String>,
@@ -10,13 +12,14 @@ data class Søkeparametere(
     val periode: Periode,
     val sykefraværsperiode: Sykefraværsperiode,
     val sorteringsnøkkel: Sorteringsnøkkel,
-    val sorteringsretning : Sorteringsretning,
+    val sorteringsretning: Sorteringsretning,
     val sykefraværsprosentFra: Double?,
     val sykefraværsprosentTil: Double?,
     val ansatteFra: Int?,
     val ansatteTil: Int?,
     val status: IAProsessStatus?,
-    val side: Int
+    val side: Int,
+    val navIdenter: Set<String>
 ) {
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 50
@@ -34,30 +37,41 @@ data class Søkeparametere(
         const val ANSATTE_TIL = "ansatteTil"
         const val IA_STATUS = "iaStatus"
         const val SIDE = "side"
-        fun from(queryParameters: Parameters, geografiService: GeografiService): Søkeparametere =
-            Søkeparametere(
-                kommunenummer =  finnGyldigeKommunenummer(queryParameters, geografiService),
-                næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
-                sykefraværsperiode = Sykefraværsperiode.from(queryParameters),
-                periode = Periode.from(queryParameters[KVARTAL].tomSomNull(), queryParameters[ÅRSTALL].tomSomNull()),
-                sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
-                sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
-                sykefraværsprosentFra = queryParameters[SYKEFRAVÆRSPROSENT_FRA].tomSomNull()?.toDouble(),
-                sykefraværsprosentTil = queryParameters[SYKEFRAVÆRSPROSENT_TIL].tomSomNull()?.toDouble(),
-                ansatteFra = queryParameters[ANSATTE_FRA].tomSomNull()?.toInt(),
-                ansatteTil = queryParameters[ANSATTE_TIL].tomSomNull()?.toInt(),
-                status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
-                side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1
-            )
+        const val KUN_MINE_VIRKSOMHETER = "kunMineVirksomheter"
+
+        fun from(call: ApplicationCall, geografiService: GeografiService) =
+            call.request.queryParameters.let { queryParameters ->
+                Søkeparametere(
+                    kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
+                    næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
+                    sykefraværsperiode = Sykefraværsperiode.from(queryParameters),
+                    periode = Periode.from(
+                        queryParameters[KVARTAL].tomSomNull(),
+                        queryParameters[ÅRSTALL].tomSomNull()
+                    ),
+                    sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
+                    sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
+                    sykefraværsprosentFra = queryParameters[SYKEFRAVÆRSPROSENT_FRA].tomSomNull()?.toDouble(),
+                    sykefraværsprosentTil = queryParameters[SYKEFRAVÆRSPROSENT_TIL].tomSomNull()?.toDouble(),
+                    ansatteFra = queryParameters[ANSATTE_FRA].tomSomNull()?.toInt(),
+                    ansatteTil = queryParameters[ANSATTE_TIL].tomSomNull()?.toInt(),
+                    status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
+                    side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1,
+                    navIdenter = if (queryParameters[KUN_MINE_VIRKSOMHETER].toBoolean()) call.navIdent()
+                        ?.let { navIdent -> setOf(navIdent) } ?: emptySet() else emptySet()
+                )
+            }
+
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
             geografiService.hentKommunerFraFylkerOgKommuner(
                 queryParameters[FYLKER].tilUnikeVerdier(),
                 queryParameters[KOMMUNER].tilUnikeVerdier(),
             )
+
         private fun finnGyldigeNæringsgruppekoder(queryParameters: Parameters) =
             queryParameters[NÆRINGSGRUPPER].tilUnikeVerdier()
 
-        private fun String?.tilUnikeVerdier() : Set<String> =
+        private fun String?.tilUnikeVerdier(): Set<String> =
             this?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
 
         private fun String?.tomSomNull() = this?.ifBlank { null }
@@ -87,15 +101,17 @@ class Periode(val kvartal: Int, val årstall: Int) {
         fun from(kvartal: String?, årstall: String?) =
             Periode(
                 kvartal = kvartal?.toInt() ?: sisteKvartal(),
-                årstall = årstall?.toInt() ?: sisteÅr())
+                årstall = årstall?.toInt() ?: sisteÅr()
+            )
 
         private fun sisteKvartal() = 4
         private fun sisteÅr() = 2021
 
         fun gjeldendePeriode() =
             Periode(kvartal = sisteKvartal(), årstall = sisteÅr())
+
         fun forrigePeriode() =
-            when(sisteKvartal()) {
+            when (sisteKvartal()) {
                 1 -> Periode(kvartal = 4, årstall = sisteÅr() - 1)
                 else -> Periode(kvartal = sisteKvartal() - 1, årstall = sisteÅr())
             }
@@ -113,6 +129,7 @@ enum class Sorteringsnøkkel(private val verdi: String) {
                 "sykefraversprosent" -> SYKEFRAVÆRSPROSENT
                 else -> TAPTE_DAGSVERK
             }
+
         fun alleSorteringsNøkler() = values().map { it.toString() }
     }
 
@@ -126,13 +143,14 @@ enum class Sorteringsretning(private val retning: String) {
     STIGENDE("asc");
 
     companion object {
-        fun from (verdi: String?) : Sorteringsretning =
+        fun from(verdi: String?): Sorteringsretning =
             when (verdi?.lowercase()) {
                 "asc" -> STIGENDE
                 "desc" -> SYNKENDE
                 else -> SYNKENDE
             }
     }
+
     override fun toString(): String = this.retning
 }
 

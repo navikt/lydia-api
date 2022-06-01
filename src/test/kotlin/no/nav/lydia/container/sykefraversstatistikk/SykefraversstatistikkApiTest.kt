@@ -21,25 +21,25 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
+import no.nav.lydia.helper.*
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
-import no.nav.lydia.helper.localDateTimeTypeAdapter
-import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
 import no.nav.lydia.sykefraversstatistikk.api.ListResponse
@@ -161,7 +161,8 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente alle virksomheter i en gitt næring`() {
         hentSykefravær(success = { response ->
             response.data.forAll {
-                postgresContainer.performQuery("""
+                postgresContainer.performQuery(
+                    """
                         SELECT * FROM virksomhet AS v JOIN virksomhet_naring AS vn ON (v.id = vn.virksomhet)
                         WHERE v.orgnr = '${it.orgnr}' AND vn.narings_kode = '${SCENEKUNST.kode}'
                     """.trimIndent()
@@ -287,7 +288,7 @@ class SykefraversstatistikkApiTest {
                 .getInt("faktiskTotal")
             total shouldBeLessThanOrEqual faktiskTotal
 
-            val antallSider = total/50
+            val antallSider = total / 50
             (2..antallSider).map { it.toString() }.forEach { side ->
                 hentSykefravær(success = { response ->
                     response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
@@ -330,7 +331,8 @@ class SykefraversstatistikkApiTest {
     fun `skal ikke kunne hente sykefravær for navenheter`() {
         hentSykefravær(success = {
             it.data.map { it.orgnr } shouldNotContain TestVirksomhet.NAV_KONTOR.orgnr
-            val rs = postgresContainer.performQuery("select * from sykefravar_statistikk_virksomhet where orgnr = '${TestVirksomhet.NAV_KONTOR.orgnr}'")
+            val rs =
+                postgresContainer.performQuery("select * from sykefravar_statistikk_virksomhet where orgnr = '${TestVirksomhet.NAV_KONTOR.orgnr}'")
             rs.row shouldBe 1
         }, ansatteFra = "999", kommuner = "${KOMMUNE_OSLO.nummer}}")
     }
@@ -350,6 +352,48 @@ class SykefraversstatistikkApiTest {
         )
     }
 
+
+    @Test
+    fun `skal kunne filtrere på bare mine virksomheter`() {
+        val testBruker1 = TestContainerHelper.oauth2ServerContainer.superbruker1
+        val testBruker2 = TestContainerHelper.oauth2ServerContainer.superbruker2
+
+        listOf(
+            Pair(testBruker1, TestVirksomhet.OSLO),
+            Pair(testBruker2, TestVirksomhet.BERGEN)
+        ).forEach { (bruker, virksomhet) ->
+            SakHelper
+                .opprettSakForVirksomhet(virksomhet.orgnr, bruker.token)
+                .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker.token)
+        }
+
+        hentSykefravær(
+            token = testBruker1.token,
+            kunMineVirksomheter = true,
+            success = { response ->
+                response.data
+                    .forAll {
+                        it.eidAv shouldBe testBruker1.navIdent
+                    }
+            }
+        )
+        hentSykefravær(
+            token = testBruker1.token,
+            kunMineVirksomheter = false,
+            iaStatus = IAProsessStatus.VURDERES.name,
+            success = { response ->
+                response.data
+                    .forAtLeastOne {
+                        it.eidAv shouldNotBe testBruker1.navIdent
+                    }
+                    .forAtLeastOne {
+                        it.eidAv shouldBe testBruker1.navIdent
+                    }
+            }
+        )
+    }
+
+
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {
         hentSykefraværRespons(token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
@@ -361,9 +405,21 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk for en virksomhet`() {
         val orgnr = BERGEN.orgnr
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.superbruker1.token).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(orgnummer = orgnr, token = mockOAuth2Server.brukerUtenTilgangsrolle.token).statuskode() shouldBe 403
+        hentSykefraværForVirksomhetRespons(
+            orgnummer = orgnr,
+            token = mockOAuth2Server.lesebruker.token
+        ).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(
+            orgnummer = orgnr,
+            token = mockOAuth2Server.saksbehandler1.token
+        ).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(
+            orgnummer = orgnr,
+            token = mockOAuth2Server.superbruker1.token
+        ).statuskode() shouldBe 200
+        hentSykefraværForVirksomhetRespons(
+            orgnummer = orgnr,
+            token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+        ).statuskode() shouldBe 403
     }
 }

@@ -49,10 +49,12 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         val sykefraværMedAntall = using(sessionOf(dataSource)) { session ->
             val tmpKommuneTabell = "kommuner"
             val tmpNæringTabell = "naringer"
+            val tmpNavIdenterTabell = "nav_identer"
             val sql = """
                     WITH 
                         ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
-                        ${filterVerdi(tmpNæringTabell, søkeparametere.næringsgruppeKoder)}
+                        ${filterVerdi(tmpNæringTabell, søkeparametere.næringsgruppeKoder)},
+                        ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
                     SELECT
                         virksomhet.orgnr,
                         virksomhet.navn,
@@ -77,6 +79,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     WHERE (
                         (SELECT inkluderAlle FROM $tmpKommuneTabell) IS TRUE OR
                         virksomhet.kommunenummer in (select unnest($tmpKommuneTabell.filterverdi) FROM $tmpKommuneTabell)
+                    )
+                    AND (
+                        (SELECT inkluderAlle FROM $tmpNavIdenterTabell) IS TRUE OR
+                        ia_sak.eid_av in (select unnest($tmpNavIdenterTabell.filterverdi) FROM $tmpNavIdenterTabell)
                     )
                     AND (
                         (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
@@ -138,6 +144,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     tmpNæringTabell to session.connection.underlying.createArrayOf(
                         "text",
                         søkeparametere.næringsgruppeKoder.toTypedArray()
+                    ),
+                    tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        søkeparametere.navIdenter.toTypedArray()
                     ),
                     "kvartal" to søkeparametere.periode.kvartal,
                     "arstall" to søkeparametere.periode.årstall,
