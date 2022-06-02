@@ -378,7 +378,6 @@ class SykefraversstatistikkApiTest {
                 response.data
                     .forAll {
                         it.eidAv shouldBe testBruker1.navIdent
-                        it.orgnr shouldBe OSLO.orgnr
                     }
             }
         )
