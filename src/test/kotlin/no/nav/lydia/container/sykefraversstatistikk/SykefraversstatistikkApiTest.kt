@@ -21,24 +21,28 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
+import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
+import no.nav.lydia.helper.localDateTimeTypeAdapter
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
@@ -359,8 +363,8 @@ class SykefraversstatistikkApiTest {
         val testBruker2 = TestContainerHelper.oauth2ServerContainer.superbruker2
 
         listOf(
-            Pair(testBruker1, TestVirksomhet.OSLO),
-            Pair(testBruker2, TestVirksomhet.BERGEN)
+            Pair(testBruker1, OSLO),
+            Pair(testBruker2, BERGEN)
         ).forEach { (bruker, virksomhet) ->
             SakHelper
                 .opprettSakForVirksomhet(virksomhet.orgnr, bruker.token)
@@ -374,6 +378,7 @@ class SykefraversstatistikkApiTest {
                 response.data
                     .forAll {
                         it.eidAv shouldBe testBruker1.navIdent
+                        it.orgnr shouldBe OSLO.orgnr
                     }
             }
         )
@@ -382,12 +387,15 @@ class SykefraversstatistikkApiTest {
             kunMineVirksomheter = false,
             iaStatus = IAProsessStatus.VURDERES.name,
             success = { response ->
-                response.data
+                val sfStatistikk = response.data
+                sfStatistikk
                     .forAtLeastOne {
-                        it.eidAv shouldNotBe testBruker1.navIdent
+                        it.eidAv shouldBe testBruker2.navIdent
+                        it.orgnr shouldBe BERGEN.orgnr
                     }
                     .forAtLeastOne {
                         it.eidAv shouldBe testBruker1.navIdent
+                        it.orgnr shouldBe OSLO.orgnr
                     }
             }
         )
