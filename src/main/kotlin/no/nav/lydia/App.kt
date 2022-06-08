@@ -69,9 +69,14 @@ fun startLydiaBackend() {
             )
         )
     )
+    val iaProdusent = IaProdusent(producer = KafkaProducer(naisEnv.kafka.producerProperties()), topic = naisEnv.kafka.iaSakHendelseTopic).also {
+        Runtime.getRuntime().addShutdownHook(Thread {
+            it.stop()
+        })
+    }
 
     embeddedServer(Netty, port = 8080) {
-        lydiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource)
+        lydiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource, produsent = iaProdusent)
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
@@ -80,7 +85,7 @@ fun startLydiaBackend() {
     }.start(wait = true)
 }
 
-fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataSource) {
+fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataSource, produsent: IaProdusent? = null) {
     install(ContentNegotiation) {
         json()
     }
@@ -124,12 +129,6 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
             call.respond(HttpStatusCode.Forbidden)
         }
     }
-
-    val iaProdusent = IaProdusent(producer = KafkaProducer(naisEnvironment.kafka.producerProperties()), topic = naisEnvironment.kafka.iaSakHendelseTopic /** FIXME */).also {
-        Runtime.getRuntime().addShutdownHook(Thread {
-            it.stop()
-        })
-    }
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val sykefraværsstatistikkService =
@@ -171,7 +170,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                     ),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ).apply {
-                    leggTilObserver(iaProdusent)
+                    produsent?.let { leggTilObserver(it) }
                 },
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog

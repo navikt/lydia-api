@@ -49,6 +49,7 @@ class KtorTestHelper {
                 keystoreLocation = "",
                 credstorePassword = "",
                 statistikkTopic = "",
+                iaSakHendelseTopic = "",
                 consumerLoopDelay = 200L
             ), integrasjoner = Integrasjoner(
                 ssbNæringsUrl = næringMockUrl,
