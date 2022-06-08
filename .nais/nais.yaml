@@ -61,8 +61,10 @@ spec:
   kafka:
     pool: {{kafkaPool}}
   env:
+    - name: IA_SAK_HENDELSE_TOPIC
+      value: pia.ia-sak-hendelse-v1
     - name: STATISTIKK_TOPIC
-      value: {{statistikkTopic}}
+      value: arbeidsgiver.sykefravarsstatistikk-v1
     - name: BRREG_UNDERENHET_URL
       value: "https://data.brreg.no/enhetsregisteret/api/underenheter/lastned"
     - name: CONSUMER_LOOP_DELAY
