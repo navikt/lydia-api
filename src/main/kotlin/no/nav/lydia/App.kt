@@ -125,7 +125,7 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
         }
     }
 
-    val iaProdusent = IaProdusent(KafkaProducer(naisEnvironment.kafka.producerProperties())).also {
+    val iaProdusent = IaProdusent(producer = KafkaProducer(naisEnvironment.kafka.producerProperties()), topic = "" /** FIXME */).also {
         Runtime.getRuntime().addShutdownHook(Thread {
             it.stop()
         })
