@@ -61,7 +61,7 @@ class KafkaContainerHelper(
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
-            createTopic(statistikkTopic)
+            createTopic(statistikkTopic, iaSakHendelseTopic)
             kafkaProducer = producer()
         }
 
