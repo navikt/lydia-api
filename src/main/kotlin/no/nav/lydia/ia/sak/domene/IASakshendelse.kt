@@ -40,12 +40,12 @@ open class IASakshendelse(
     }
 
     @Serializable
-    private data class Key(val orgnummer: String, val saksnummer: String)
+    private data class Key(val saksnummer: String)
     @Serializable
     private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: SaksHendelsestype, val opprettetAv: String)
 
-    internal open fun tilKafkaMelding(): Pair<String, String> {
-        val key = Key(orgnummer, saksnummer)
+    internal open fun tilKeyValueJsonPair(): Pair<String, String> {
+        val key = Key(saksnummer)
         val value = Value(
             id = id,
             opprettetTidspunkt = opprettetTidspunkt.toString(),
@@ -103,8 +103,8 @@ class VirksomhetIkkeAktuellHendelse(
     )
 
 
-    override fun tilKafkaMelding(): Pair<String, String> {
-        val key = super.tilKafkaMelding().first
+    override fun tilKeyValueJsonPair(): Pair<String, String> {
+        val key = super.tilKeyValueJsonPair().first
         val value = IkkeAktuellValue(
             id = id,
             opprettetAv = opprettetAv,
