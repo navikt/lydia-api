@@ -28,7 +28,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.util.*
+import java.util.TimeZone
 
 
 class KafkaContainerHelper(
@@ -38,6 +38,7 @@ class KafkaContainerHelper(
     private val gson = GsonBuilder().create()
     private val kafkaNetworkAlias = "kafkaContainer"
     val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
+    val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
     private var adminClient: AdminClient
     private var kafkaProducer: KafkaProducer<String, String>
 
@@ -69,7 +70,8 @@ class KafkaContainerHelper(
         "KAFKA_TRUSTSTORE_PATH" to "",
         "KAFKA_KEYSTORE_PATH" to "",
         "KAFKA_CREDSTORE_PASSWORD" to "",
-        "STATISTIKK_TOPIC" to statistikkTopic
+        "STATISTIKK_TOPIC" to statistikkTopic,
+        "IA_SAK_HENDELSE_TOPIC" to iaSakHendelseTopic
     )
 
     private fun createTopic(vararg topics: String) {
