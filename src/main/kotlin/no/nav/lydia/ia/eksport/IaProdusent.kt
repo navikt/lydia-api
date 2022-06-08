@@ -11,7 +11,7 @@ class IaProdusent(private val producer: KafkaProducer<String, String>, private v
     }
 
     override fun receive(input: IASakshendelse) {
-        val kafkaMelding = input.tilKafkaMelding()
+        val kafkaMelding = input.tilKeyValueJsonPair()
         val melding = ProducerRecord(topic, kafkaMelding.first, kafkaMelding.second)
         producer.send(melding)
     }
