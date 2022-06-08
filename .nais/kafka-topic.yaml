@@ -1,7 +1,7 @@
 apiVersion: kafka.nais.io/v1
 kind: Topic
 metadata:
-  name: mytopic #FIXME
+  name: ia-sak-hendelse-v1
   namespace: pia
   labels:
     team: pia
