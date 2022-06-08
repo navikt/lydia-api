@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
+import no.nav.lydia.Observer
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
@@ -22,8 +23,21 @@ class IASakService(
     private val iaSakRepository: IASakRepository,
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val grunnlagService: GrunnlagService,
-    private val årsakService : ÅrsakService
+    private val årsakService : ÅrsakService,
+    private val observers: MutableList<Observer<IASakshendelse>> = mutableListOf()
 ) {
+
+    private fun lagreHendelse(hendelse: IASakshendelse): IASakshendelse {
+        return iaSakshendelseRepository.lagreHendelse(hendelse).also(::notifikasjon)
+    }
+
+    fun leggTilObserver(observer: Observer<IASakshendelse>) {
+        observers.add(observer)
+    }
+
+    private fun notifikasjon(hendelse: IASakshendelse) {
+        observers.forEach { observer -> observer.receive(hendelse) }
+    }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
         if (NavEnheter.enheterSomSkalSkjermes.contains(orgnummer)) {
@@ -32,7 +46,7 @@ class IASakService(
             return Either.Left(IASakError.`støtter ikke flere saker for en virksomhet ennå`)
         }
         val saksnummer = ULID.random()
-        val nySakshendelse = iaSakshendelseRepository.lagreHendelse(IASakshendelse(
+        val nySakshendelse = lagreHendelse(IASakshendelse(
             id = saksnummer,
             opprettetTidspunkt = LocalDateTime.now(),
             saksnummer = saksnummer,
@@ -64,7 +78,7 @@ class IASakService(
             opprettetAv = navIdent
         )
         val sakEtterVurdering = lagretSak.behandleHendelse(
-            iaSakshendelseRepository.lagreHendelse(vurderHendelse)
+            lagreHendelse(vurderHendelse)
         )
         sakEtterVurdering.lagreGrunnlag(grunnlagService)
         return iaSakRepository.oppdaterSak(sakEtterVurdering)
@@ -85,7 +99,7 @@ class IASakService(
                 else {
                     return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
                 }
-                iaSakshendelseRepository.lagreHendelse(sakshendelse)
+                lagreHendelse(sakshendelse)
                 årsakService.lagreÅrsak(sakshendelse)
                 return iaSakRepository.oppdaterSak(sak)
             }

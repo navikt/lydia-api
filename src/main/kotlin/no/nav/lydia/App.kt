@@ -170,7 +170,9 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                         sykefraværsstatistikkService = sykefraværsstatistikkService
                     ),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
-                ),
+                ).apply {
+                    leggTilObserver(iaProdusent)
+                },
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog
             )
