@@ -4,9 +4,10 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
@@ -36,6 +37,24 @@ open class IASakshendelse(
                     opprettetAv = navIdent,
                 ).right()
             }
+    }
+
+    @Serializable
+    private data class Key(val orgnummer: String, val saksnummer: String)
+    @Serializable
+    private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: SaksHendelsestype, val opprettetAv: String)
+
+    internal open fun tilKafkaMelding(): Pair<String, String> {
+        val key = Key(orgnummer, saksnummer)
+        val value = Value(
+            id = id,
+            opprettetTidspunkt = opprettetTidspunkt.toString(),
+            orgnummer = orgnummer,
+            saksnummer = saksnummer,
+            hendelsesType = hendelsesType,
+            opprettetAv = opprettetAv
+        )
+        return Json.encodeToString(key) to Json.encodeToString(value)
     }
 }
 
@@ -70,6 +89,32 @@ class VirksomhetIkkeAktuellHendelse(
                     SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
                 }
             } ?: SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
+    }
+
+    @Serializable
+    private data class IkkeAktuellValue(
+        val id: String,
+        val opprettetTidspunkt: String,
+        val orgnummer: String,
+        val saksnummer: String,
+        val hendelsesType: SaksHendelsestype,
+        val opprettetAv: String,
+        val valgtÅrsak: ValgtÅrsak
+    )
+
+
+    override fun tilKafkaMelding(): Pair<String, String> {
+        val key = super.tilKafkaMelding().first
+        val value = IkkeAktuellValue(
+            id = id,
+            opprettetAv = opprettetAv,
+            opprettetTidspunkt = opprettetTidspunkt.toString(),
+            orgnummer = orgnummer,
+            hendelsesType = hendelsesType,
+            saksnummer = saksnummer,
+            valgtÅrsak = valgtÅrsak
+        )
+        return key to Json.encodeToString(value)
     }
 }
 
