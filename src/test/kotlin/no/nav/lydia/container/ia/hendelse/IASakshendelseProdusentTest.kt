@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
 import no.nav.lydia.Kafka
+import no.nav.lydia.helper.KafkaContainerHelper.Companion.iaSakHendelseTopic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.toJson
@@ -25,21 +26,11 @@ import java.time.Duration
 import kotlin.test.Test
 
 class IASakshendelseProdusentTest {
-    private val iaSakshendelseTopic = TestContainerHelper.kafkaContainerHelper.iaSakHendelseTopic
-    private val kafkaConsumerConfig = Kafka(
-        brokers = TestContainerHelper.kafkaContainerHelper.getConnectionString(),
-        iaSakHendelseTopic = iaSakshendelseTopic,
-        statistikkTopic = TestContainerHelper.kafkaContainerHelper.statistikkTopic,
-        consumerLoopDelay = 1,
-        credstorePassword = "",
-        keystoreLocation = "",
-        truststoreLocation = ""
-    ).consumerProperties()
-    private val konsument = KafkaConsumer(kafkaConsumerConfig, StringDeserializer(), StringDeserializer())
+    private val konsument = TestContainerHelper.kafkaContainerHelper.nyKonsument()
 
     @Before
     fun setUp() {
-        konsument.subscribe(mutableListOf(iaSakshendelseTopic))
+        konsument.subscribe(mutableListOf(iaSakHendelseTopic))
     }
 
     @After
