@@ -15,10 +15,12 @@ import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
 import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.config.SaslConfigs
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -35,10 +37,13 @@ class KafkaContainerHelper(
     network: Network = Network.newNetwork(),
     log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)
 ) {
+    companion object {
+        const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
+        const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
+    }
+
     private val gson = GsonBuilder().create()
     private val kafkaNetworkAlias = "kafkaContainer"
-    val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
-    val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
     private var adminClient: AdminClient
     private var kafkaProducer: KafkaProducer<String, String>
 
@@ -65,11 +70,19 @@ class KafkaContainerHelper(
             kafkaProducer = producer()
         }
 
-    fun getConnectionString() : String {
-        val host = kafkaContainer.host
-        val port = kafkaContainer.firstMappedPort
-        return "BROKER://$host:$port,PLAINTEXT://$host:$port"
-    }
+    fun nyKonsument() =
+        Kafka(
+            brokers = kafkaContainer.bootstrapServers,
+            iaSakHendelseTopic = iaSakHendelseTopic,
+            statistikkTopic = statistikkTopic,
+            consumerLoopDelay = 1,
+            credstorePassword = "",
+            keystoreLocation = "",
+            truststoreLocation = ""
+        ).consumerProperties()
+        .let { config ->
+            KafkaConsumer(config, StringDeserializer(), StringDeserializer())
+        }
 
     fun envVars() = mapOf(
         "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092",
