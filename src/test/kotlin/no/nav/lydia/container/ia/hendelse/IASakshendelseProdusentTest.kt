@@ -20,10 +20,8 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import org.junit.After
 import org.junit.Before
 import java.time.Duration
-import kotlin.test.Ignore
 import kotlin.test.Test
 
-@Ignore
 class IASakshendelseProdusentTest {
     private val konsument = TestContainerHelper.kafkaContainerHelper.nyKonsument()
 

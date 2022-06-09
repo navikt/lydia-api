@@ -48,6 +48,7 @@ import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.api.virksomhet
+import org.apache.kafka.clients.producer.KafkaProducer
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -68,14 +69,14 @@ fun startLydiaBackend() {
             )
         )
     )
-    /**val iaProdusent = IaProdusent(producer = KafkaProducer(naisEnv.kafka.producerProperties()), topic = naisEnv.kafka.iaSakHendelseTopic).also {
+    val iaProdusent = IaProdusent(producer = KafkaProducer(naisEnv.kafka.producerProperties()), topic = naisEnv.kafka.iaSakHendelseTopic).also {
         Runtime.getRuntime().addShutdownHook(Thread {
             it.stop()
         })
-    }**/
+    }
 
     embeddedServer(Netty, port = 8080) {
-        lydiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource, produsent = null /** midlertidig **/)
+        lydiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource, produsent = iaProdusent)
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
