@@ -1,8 +1,7 @@
 package no.nav.lydia.container.ia.hendelse
 
 import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.*
-import io.kotest.matchers.shouldBe
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -11,10 +10,13 @@ import kotlinx.coroutines.time.withTimeout
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.junit.After
@@ -53,9 +55,13 @@ class IASakshendelseProdusentTest {
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnr)
                 .nyHendelse(SaksHendelsestype.TA_EIERSKAP_I_SAK)
                 .nyHendelse(SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES)
-                .also {
-                    it.status shouldBe IAProsessStatus.KONTAKTES
-                }
+                .nyHendelse(
+                    hendelsestype = SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
+                    payload = ValgtÅrsak(
+                        type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT, BegrunnelseType.HAR_IKKE_KAPASITET)
+                    ).toJson()
+                )
 
             withTimeout(Duration.ofSeconds(10)) {
                 launch {
@@ -67,11 +73,14 @@ class IASakshendelseProdusentTest {
                                 hendelse shouldContain sak.saksnummer
                                 hendelse shouldContain sak.orgnr
                             }
-                            meldinger shouldHaveSize 4
+                            meldinger shouldHaveSize 5
                             meldinger[0] shouldContain SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET.name
                             meldinger[1] shouldContain SaksHendelsestype.VIRKSOMHET_VURDERES.name
                             meldinger[2] shouldContain SaksHendelsestype.TA_EIERSKAP_I_SAK.name
                             meldinger[3] shouldContain SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES.name
+                            meldinger[4] shouldContain SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL.name
+                            meldinger[4] shouldContain BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT.navn
+                            meldinger[4] shouldContain BegrunnelseType.HAR_IKKE_KAPASITET.navn
                             break
                         }
                     }

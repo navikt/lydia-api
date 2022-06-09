@@ -47,7 +47,6 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         :opprettet_av,
                         :opprettet
                     ) 
-                    returning *  
                 """.trimMargin(),
                     mapOf(
                         "id" to hendelse.id,
@@ -57,8 +56,9 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         "opprettet_av" to hendelse.opprettetAv,
                         "opprettet" to hendelse.opprettetTidspunkt
                     )
-                ).map(this::mapRow).asSingle
-            )!!
+                ).asUpdate
+            )
+            hendelse
         }
 
     private fun mapRow(row: Row): IASakshendelse {
