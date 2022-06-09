@@ -47,7 +47,7 @@ jobs:
         env:
           "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
           "CLUSTER": "dev-gcp"
-          "RESOURCE": ".nais/nais.yaml"
+          "RESOURCE": ".nais/nais.yaml,.nais/kafka-topic.yaml"
           "VARS": ".nais/dev.yaml"
   "deployAppToProd":
     name: "Deploy app to prod"
