@@ -14,7 +14,6 @@ import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
-import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import java.time.LocalDateTime
 
 open class IASakshendelse(
@@ -104,7 +103,7 @@ class VirksomhetIkkeAktuellHendelse(
     )
 
     @Serializable
-    private data class Årsak(val type: ÅrsakType, val begrunnelser: List<String>)
+    private data class Årsak(val type: String, val begrunnelser: List<String>)
 
     override fun tilKeyValueJsonPair(): Pair<String, String> {
         val key = super.tilKeyValueJsonPair().first
@@ -115,7 +114,7 @@ class VirksomhetIkkeAktuellHendelse(
             orgnummer = orgnummer,
             hendelsesType = hendelsesType,
             saksnummer = saksnummer,
-            årsak = Årsak(type = valgtÅrsak.type, begrunnelser = valgtÅrsak.begrunnelser.map { it.navn })
+            årsak = Årsak(type = valgtÅrsak.type.navn, begrunnelser = valgtÅrsak.begrunnelser.map { it.navn })
         )
         return key to Json.encodeToString(value)
     }

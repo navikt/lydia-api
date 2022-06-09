@@ -7,7 +7,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
-import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper.Companion.iaSakHendelseTopic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -18,8 +17,6 @@ import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
-import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.common.serialization.StringDeserializer
 import org.junit.After
 import org.junit.Before
 import java.time.Duration
@@ -70,6 +67,7 @@ class IASakshendelseProdusentTest {
                             meldinger[2] shouldContain SaksHendelsestype.TA_EIERSKAP_I_SAK.name
                             meldinger[3] shouldContain SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES.name
                             meldinger[4] shouldContain SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL.name
+                            meldinger[4] shouldContain ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.navn
                             meldinger[4] shouldContain BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT.navn
                             meldinger[4] shouldContain BegrunnelseType.HAR_IKKE_KAPASITET.navn
                             break
