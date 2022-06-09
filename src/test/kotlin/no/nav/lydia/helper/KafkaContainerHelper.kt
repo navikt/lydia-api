@@ -65,6 +65,12 @@ class KafkaContainerHelper(
             kafkaProducer = producer()
         }
 
+    fun getConnectionString() : String {
+        val host = kafkaContainer.host
+        val port = kafkaContainer.firstMappedPort
+        return "BROKER://$host:$port,PLAINTEXT://$host:$port"
+    }
+
     fun envVars() = mapOf(
         "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092",
         "KAFKA_TRUSTSTORE_PATH" to "",
