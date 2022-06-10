@@ -47,7 +47,7 @@ jobs:
         env:
           "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
           "CLUSTER": "dev-gcp"
-          "RESOURCE": ".nais/nais.yaml,.nais/kafka-topic.yaml"
+          "RESOURCE": ".nais/nais.yaml"
           "VARS": ".nais/dev.yaml"
   "deployAppToProd":
     name: "Deploy app to prod"
@@ -62,6 +62,32 @@ jobs:
           "CLUSTER": "prod-gcp"
           "RESOURCE": ".nais/nais.yaml"
           "VARS": ".nais/prod.yaml"
+  "deployTopicToDev":
+    name: "Deploy topic to dev"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout code"
+        uses: "actions/checkout@v3"
+      - name: "Deploy topic ia-sak-hendelse-topic to dev-gcp"
+        uses: "nais/deploy/actions/deploy@master"
+        env:
+          APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
+          CLUSTER: "dev-gcp"
+          RESOURCE: ".nais/ia-sak-hendelse-topic.yaml"
+          VARS: ".nais/dev.yaml"
+  "deployTopicToProd":
+    name: "Deploy topic to prod"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout code"
+        uses: "actions/checkout@v3"
+      - name: "Deploy topic ia-sak-hendelse-topic to prod-gcp"
+        uses: "nais/deploy/actions/deploy@master"
+        env:
+          APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
+          CLUSTER: "prod-gcp"
+          RESOURCE: ".nais/ia-sak-hendelse-topic.yaml"
+          VARS: ".nais/prod.yaml"
 #  "deployAlertsToDev":
 #    name: "Deploy alerts to dev"
 #    needs: "build"
