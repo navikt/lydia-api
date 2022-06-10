@@ -84,7 +84,7 @@ class Kafka(
             ProducerConfig.CLIENT_ID_CONFIG to clientId
         )
         if (truststoreLocation.isNotEmpty()) {
-            producerConfigs + securityConfigs()
+            producerConfigs.putAll(securityConfigs())
         }
         return producerConfigs.toMap()
     }
