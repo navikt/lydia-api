@@ -4,6 +4,7 @@ import com.github.guepardoapps.kulid.ULID
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -129,6 +130,26 @@ class IASakTest {
                 it.saksHendelsestype shouldBe VIRKSOMHET_SKAL_KONTAKTES
                 it.gyldigeÅrsaker.shouldBeEmpty()
             }
+    }
+
+    @Test
+    fun `en sak skal inneholde alle sine hendelser`(){
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val h2_vurderes = nyHendelse(
+            VIRKSOMHET_VURDERES,
+            saksnummer = h1_ny_sak.saksnummer,
+            orgnummer = h1_ny_sak.orgnummer,
+            navIdent = superbruker1.navIdent
+        )
+        val h3_ta_eierskap = nyHendelse(
+            TA_EIERSKAP_I_SAK,
+            saksnummer = h1_ny_sak.saksnummer,
+            orgnummer = h1_ny_sak.orgnummer,
+            navIdent = saksbehandler2.navIdent
+        )
+        val hendelserPåSak = listOf(h1_ny_sak, h2_vurderes, h3_ta_eierskap)
+        val sak = IASak.fraHendelser(hendelserPåSak)
+        sak.hendelser.map { it.id } shouldBe hendelserPåSak.map { it.id }
     }
 
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
