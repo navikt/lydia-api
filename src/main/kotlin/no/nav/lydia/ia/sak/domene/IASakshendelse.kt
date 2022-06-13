@@ -40,12 +40,10 @@ open class IASakshendelse(
     }
 
     @Serializable
-    private data class Key(val saksnummer: String)
-    @Serializable
     private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: SaksHendelsestype, val opprettetAv: String)
 
     internal open fun tilKeyValueJsonPair(): Pair<String, String> {
-        val key = Key(saksnummer)
+        val key = saksnummer
         val value = Value(
             id = id,
             opprettetTidspunkt = opprettetTidspunkt.toString(),
@@ -54,7 +52,7 @@ open class IASakshendelse(
             hendelsesType = hendelsesType,
             opprettetAv = opprettetAv
         )
-        return Json.encodeToString(key) to Json.encodeToString(value)
+        return key to Json.encodeToString(value)
     }
 }
 

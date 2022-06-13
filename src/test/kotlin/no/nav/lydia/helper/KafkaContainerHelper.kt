@@ -163,17 +163,18 @@ class KafkaContainerHelper(
         landKode: String = LANDKODE_NO,
         sektorkode: String = SEKTOR_STATLIG_FORVALTNING
     ) {
-        kafkaProducer.send(
-            ProducerRecord(
-                statistikkTopic,
-                """
+        runBlocking {
+            val sendtMelding = kafkaProducer.send(
+                ProducerRecord(
+                    statistikkTopic,
+                    """
             {
                 "kvartal": 1,
                 "årstall": 2019,
                 "orgnr": "$orgnr"
             }
             """.trimIndent(),
-                """
+                    """
              {
                 "næringSykefravær": {
                   "kvartal": 1,
@@ -234,8 +235,10 @@ class KafkaContainerHelper(
                 }
               }   
             """.trimIndent()
-            )
-        ).get()
+                )
+            ).get()
+            ventTilKonsumert(sendtMelding.offset())
+        }
     }
 
 }

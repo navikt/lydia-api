@@ -4,9 +4,8 @@ import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.slf4j.LoggerFactory
 
-class IaProdusent(private val producer: KafkaProducer<String, String>, private val topic: String) : Observer<IASakshendelse> {
+class IASakshendelseProdusent(private val producer: KafkaProducer<String, String>, private val topic: String) : Observer<IASakshendelse> {
     internal fun stop() {
         producer.close()
     }
