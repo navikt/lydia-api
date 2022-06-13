@@ -23,6 +23,9 @@ class IASak private constructor(
     private var tilstand: ProsessTilstand
     private val log = LoggerFactory.getLogger(this.javaClass)
 
+    private val sakshendelser = mutableListOf<IASakshendelse>()
+    val hendelser get() = sakshendelser.toList()
+
     init {
         tilstand = this.iStatus(status)
     }
@@ -74,7 +77,7 @@ class IASak private constructor(
         endretAvHendelseId = hendelse.id
         endretAv = hendelse.opprettetAv
         endretTidspunkt = hendelse.opprettetTidspunkt
-
+        sakshendelser.add(hendelse)
         return this
     }
 
@@ -212,21 +215,12 @@ class IASak private constructor(
                 endretAvHendelseId = hendelse.id,
                 status = IAProsessStatus.NY
             )
+                .also { sak -> sak.sakshendelser.add(hendelse) }
 
         fun fraHendelser(hendelser: List<IASakshendelse>): IASak {
             val førsteHendelse = hendelser.first()
+            val sak = fraFørsteHendelse(førsteHendelse)
             val resterendeHendelser = hendelser.minus(førsteHendelse)
-            val sak = IASak(
-                saksnummer = førsteHendelse.saksnummer,
-                orgnr = førsteHendelse.orgnummer,
-                opprettetTidspunkt = førsteHendelse.opprettetTidspunkt,
-                opprettetAv = førsteHendelse.opprettetAv,
-                eidAv = null,
-                endretTidspunkt = null,
-                endretAv = null,
-                endretAvHendelseId = førsteHendelse.id,
-                status = IAProsessStatus.NY
-            )
             resterendeHendelser.forEach(sak::behandleHendelse)
             return sak
         }
