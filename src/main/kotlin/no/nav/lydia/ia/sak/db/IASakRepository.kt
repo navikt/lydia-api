@@ -10,7 +10,6 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakstype
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
@@ -24,7 +23,6 @@ class IASakRepository(val dataSource: DataSource) {
                     INSERT INTO ia_sak (
                         saksnummer,
                         orgnr,
-                        type,
                         status,
                         opprettet_av,
                         opprettet,
@@ -33,7 +31,6 @@ class IASakRepository(val dataSource: DataSource) {
                     VALUES (
                         :saksnummer,
                         :orgnr,
-                        :type,
                         :status,
                         :opprettet_av,
                         :opprettet,
@@ -44,7 +41,6 @@ class IASakRepository(val dataSource: DataSource) {
                     mapOf(
                         "saksnummer" to iaSak.saksnummer,
                         "orgnr" to iaSak.orgnr,
-                        "type" to iaSak.type.name,
                         "status" to iaSak.status.name,
                         "opprettet_av" to iaSak.opprettetAv,
                         "opprettet" to iaSak.opprettetTidspunkt,
@@ -61,7 +57,6 @@ class IASakRepository(val dataSource: DataSource) {
                     """
                     UPDATE ia_sak 
                     SET
-                        type = :type,
                         status = :status,
                         endret_av = :endret_av,
                         endret = :endret,
@@ -72,7 +67,6 @@ class IASakRepository(val dataSource: DataSource) {
                 """.trimMargin(),
                     mapOf(
                         "saksnummer" to iaSak.saksnummer,
-                        "type" to iaSak.type.name,
                         "status" to iaSak.status.name,
                         "endret_av" to iaSak.endretAv,
                         "endret" to iaSak.endretTidspunkt,
@@ -87,7 +81,6 @@ class IASakRepository(val dataSource: DataSource) {
         return IASak(
             saksnummer = row.string("saksnummer"),
             orgnr = row.string("orgnr"),
-            type = IASakstype.valueOf(row.string("type")),
             opprettetTidspunkt = row.localDateTime("opprettet"),
             opprettetAv = row.string("opprettet_av"),
             endretTidspunkt = row.localDateTimeOrNull("endret"),

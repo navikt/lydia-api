@@ -9,7 +9,6 @@ import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakstype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
@@ -158,7 +157,6 @@ class IASakTest {
             IASak(
                 saksnummer = sakshendelse.saksnummer,
                 orgnr = orgnummer,
-                type = IASakstype.NAV_STOTTER,
                 opprettetTidspunkt = sakshendelse.opprettetTidspunkt,
                 opprettetAv = sakshendelse.opprettetAv,
                 endretAvHendelseId = sakshendelse.id,

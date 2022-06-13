@@ -11,7 +11,6 @@ import java.time.LocalDateTime
 class IASak(
     val saksnummer: String,
     val orgnr: String,
-    val type: IASakstype,
     val opprettetTidspunkt: LocalDateTime,
     val opprettetAv: String,
     var eidAv: String?,
@@ -203,7 +202,6 @@ class IASak(
             val sak = IASak(
                 saksnummer = førsteHendelse.saksnummer,
                 orgnr = førsteHendelse.orgnummer,
-                type = IASakstype.NAV_STOTTER, // TODO: skal ligge på hendelsen
                 opprettetTidspunkt = førsteHendelse.opprettetTidspunkt,
                 opprettetAv = førsteHendelse.opprettetAv,
                 eidAv = null,
@@ -233,9 +231,4 @@ enum class IAProsessStatus {
             IKKE_AKTUELL
         )
     }
-}
-
-enum class IASakstype {
-    NAV_STOTTER,
-    SELVBETJENT
 }
