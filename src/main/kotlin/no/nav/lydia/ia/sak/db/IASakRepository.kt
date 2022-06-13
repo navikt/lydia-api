@@ -8,8 +8,8 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
@@ -78,17 +78,7 @@ class IASakRepository(val dataSource: DataSource) {
         }
 
     private fun mapRowToIASak(row: Row): IASak {
-        return IASak(
-            saksnummer = row.string("saksnummer"),
-            orgnr = row.string("orgnr"),
-            opprettetTidspunkt = row.localDateTime("opprettet"),
-            opprettetAv = row.string("opprettet_av"),
-            endretTidspunkt = row.localDateTimeOrNull("endret"),
-            endretAv = row.stringOrNull("endret_av"),
-            status = IAProsessStatus.valueOf(row.string("status")),
-            endretAvHendelseId = row.string("endret_av_hendelse"),
-            eidAv = row.stringOrNull("eid_av")
-        )
+        return row.tilIASak()
     }
 
     fun hentSaker(orgnummer: String): List<IASak> =

@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.domene
 
+import kotliquery.Row
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -8,7 +9,7 @@ import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-class IASak(
+class IASak private constructor(
     val saksnummer: String,
     val orgnr: String,
     val opprettetTidspunkt: LocalDateTime,
@@ -229,6 +230,19 @@ class IASak(
             resterendeHendelser.forEach(sak::behandleHendelse)
             return sak
         }
+
+        fun Row.tilIASak(): IASak =
+            IASak(
+                saksnummer = this.string("saksnummer"),
+                orgnr = this.string("orgnr"),
+                opprettetTidspunkt = this.localDateTime("opprettet"),
+                opprettetAv = this.string("opprettet_av"),
+                endretTidspunkt = this.localDateTimeOrNull("endret"),
+                endretAv = this.stringOrNull("endret_av"),
+                status = IAProsessStatus.valueOf(this.string("status")),
+                endretAvHendelseId = this.string("endret_av_hendelse"),
+                eidAv = this.stringOrNull("eid_av")
+            )
     }
 }
 

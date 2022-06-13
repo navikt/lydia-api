@@ -42,7 +42,7 @@ class IASakService(
         } else if (iaSakRepository.hentSaker(orgnummer).isNotEmpty()) {
             return Either.Left(IASakError.`støtter ikke flere saker for en virksomhet ennå`)
         }
-        val sak = lagreHendelse(IASakshendelse.førsteHendelse(orgnummer = orgnummer, opprettetAv = navIdent))
+        val sak = lagreHendelse(IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = navIdent))
             .let { førsteSakshendelse ->
                 iaSakRepository.opprettSak(iaSak = IASak.fraFørsteHendelse(førsteSakshendelse))
             }
