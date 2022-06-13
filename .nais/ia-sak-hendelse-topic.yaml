@@ -23,4 +23,4 @@ spec:
       access: read
     - team: pia
       application: ia-sak-hendelse-devops
-      access: readwrite
+      access: read
