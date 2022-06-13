@@ -37,6 +37,28 @@ open class IASakshendelse(
                     opprettetAv = navIdent,
                 ).right()
             }
+
+        fun førsteHendelse(orgnummer : String, opprettetAv: String): IASakshendelse {
+            val saksnummer = ULID.random()
+            return IASakshendelse(
+                id = saksnummer,
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                hendelsesType = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
+                orgnummer = orgnummer,
+                opprettetAv = opprettetAv,
+            )
+        }
+
+        fun IASak.nyHendelseBasertPåSak(hendelsestype: SaksHendelsestype, opprettetAv: String) =
+            IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = this.saksnummer,
+                hendelsesType = hendelsestype,
+                orgnummer = this.orgnr,
+                opprettetAv = opprettetAv,
+            )
     }
 
     @Serializable
