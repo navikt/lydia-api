@@ -12,7 +12,6 @@ import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakstype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
@@ -58,7 +57,6 @@ class IASakService(
         val sak = IASak(
             saksnummer = nySakshendelse.saksnummer,
             orgnr = nySakshendelse.orgnummer,
-            type = IASakstype.NAV_STOTTER, // TODO: dette burde ligger på hendelsen
             opprettetTidspunkt = nySakshendelse.opprettetTidspunkt,
             opprettetAv = nySakshendelse.opprettetAv,
             eidAv = null,
