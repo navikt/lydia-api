@@ -37,7 +37,10 @@ class IASak(
         is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(rådgiver)
             .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
             .filter { it.type == hendelse.valgtÅrsak.type }
-            .any { hendelse.valgtÅrsak.begrunnelser.isNotEmpty().and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))}
+            .any {
+                hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
+                    .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
+            }
         else ->
             gyldigeNesteHendelser(rådgiver)
                 .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
@@ -195,6 +198,19 @@ class IASak(
                 IAProsessStatus.IKKE_AKTIV -> throw IllegalStateException()
             }
         }
+
+        fun fraFørsteHendelse(hendelse: IASakshendelse): IASak =
+            IASak(
+                saksnummer = hendelse.saksnummer,
+                orgnr = hendelse.orgnummer,
+                opprettetTidspunkt = hendelse.opprettetTidspunkt,
+                opprettetAv = hendelse.opprettetAv,
+                eidAv = null,
+                endretTidspunkt = null,
+                endretAv = null,
+                endretAvHendelseId = hendelse.id,
+                status = IAProsessStatus.NY
+            )
 
         fun fraHendelser(hendelser: List<IASakshendelse>): IASak {
             val førsteHendelse = hendelser.first()
