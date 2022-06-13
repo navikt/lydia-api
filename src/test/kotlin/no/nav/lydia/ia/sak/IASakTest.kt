@@ -3,11 +3,12 @@ package no.nav.lydia.ia.sak
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
@@ -62,7 +63,7 @@ class IASakTest {
         sak.endretTidspunkt shouldBe vurderingsHendelse.opprettetTidspunkt
         sak.saksnummer shouldBe vurderingsHendelse.saksnummer
         sak.endretAvHendelseId shouldBe vurderingsHendelse.id
-        sak.status shouldBe IAProsessStatus.VURDERES
+        sak.status shouldBe VURDERES
     }
 
     @Test
@@ -152,6 +153,25 @@ class IASakTest {
         sak.hendelser.map { it.id } shouldBe hendelserPåSak.map { it.id }
     }
 
+
+    @Test
+    fun `det skal gå an å angre på en sak`(){
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val h2_vurderes = h1_ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
+        val hendelserPåSak = listOf(h1_ny_sak, h2_vurderes)
+        val sak = IASak.fraHendelser(hendelserPåSak)
+
+        val h3_angre = h2_vurderes.nesteHendelse(ANGRE)
+        sak.behandleHendelse(h3_angre)
+        sak.status shouldBe VURDERES
+        sak.hendelser shouldContain h3_angre
+
+        val h4_angre = h3_angre.nesteHendelse(ANGRE)
+        sak.behandleHendelse(h4_angre)
+        sak.hendelser shouldContain h4_angre
+        sak.status shouldBe OPPRETT_SAK_FOR_VIRKSOMHET
+    }
+
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
         IASakshendelse(
             id = ULID.random(),
@@ -161,6 +181,9 @@ class IASakTest {
             orgnummer = orgnummer,
             opprettetAv = navIdent,
         )
+
+    private fun IASakshendelse.nesteHendelse(saksHendelsestype: SaksHendelsestype) =
+        nyHendelse(saksHendelsestype, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
 
     private fun nyIASak(orgnummer: String, navIdent: String): IASak =
         IASak.fraFørsteHendelse(IASakshendelse.nyFørsteHendelse(orgnummer, navIdent))
