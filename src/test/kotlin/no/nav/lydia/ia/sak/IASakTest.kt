@@ -9,6 +9,7 @@ import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
@@ -65,7 +66,7 @@ class IASakTest {
 
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
-        val h1 = nyFørsteHendelse(orgnummer = orgnummer, navIdent = navIdent1)
+        val h1 = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = navIdent1)
         val h2 = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
@@ -87,7 +88,7 @@ class IASakTest {
 
     @Test
     fun `skal få en liste over gyldige begrunnelser for når en virksomhet ikke er aktuell`() {
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, navIdent = superbruker1.navIdent)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
@@ -130,18 +131,6 @@ class IASakTest {
             }
     }
 
-    private fun nyFørsteHendelse(orgnummer: String, navIdent: String): IASakshendelse {
-        val id = ULID.random()
-        return IASakshendelse(
-            id = id,
-            opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = id,
-            hendelsesType = OPPRETT_SAK_FOR_VIRKSOMHET,
-            orgnummer = orgnummer,
-            opprettetAv = navIdent,
-        )
-    }
-
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
         IASakshendelse(
             id = ULID.random(),
@@ -152,19 +141,6 @@ class IASakTest {
             opprettetAv = navIdent,
         )
 
-    private fun nyIASak(orgnummer: String, navIdent: String): IASak {
-        return nyFørsteHendelse(orgnummer, navIdent).let { sakshendelse ->
-            IASak(
-                saksnummer = sakshendelse.saksnummer,
-                orgnr = orgnummer,
-                opprettetTidspunkt = sakshendelse.opprettetTidspunkt,
-                opprettetAv = sakshendelse.opprettetAv,
-                endretAvHendelseId = sakshendelse.id,
-                status = IAProsessStatus.NY,
-                endretTidspunkt = null,
-                endretAv = null,
-                eidAv = null
-            )
-        }
-    }
+    private fun nyIASak(orgnummer: String, navIdent: String): IASak =
+        IASak.fraFørsteHendelse(IASakshendelse.nyFørsteHendelse(orgnummer, navIdent))
 }

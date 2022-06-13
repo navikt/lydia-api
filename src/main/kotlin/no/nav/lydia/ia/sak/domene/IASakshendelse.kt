@@ -38,7 +38,7 @@ open class IASakshendelse(
                 ).right()
             }
 
-        fun førsteHendelse(orgnummer : String, opprettetAv: String): IASakshendelse {
+        fun nyFørsteHendelse(orgnummer : String, opprettetAv: String): IASakshendelse {
             val saksnummer = ULID.random()
             return IASakshendelse(
                 id = saksnummer,
