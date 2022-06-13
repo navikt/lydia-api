@@ -73,6 +73,9 @@ class IASak private constructor(
             OPPRETT_SAK_FOR_VIRKSOMHET -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
+            ANGRE -> {
+                tilstand.angre()
+            }
         }
         endretAvHendelseId = hendelse.id
         endretAv = hendelse.opprettetAv
@@ -104,6 +107,11 @@ class IASak private constructor(
             håndterFeilState()
         }
 
+        fun angre() =
+            fraHendelser(
+                sakshendelser.minus(sakshendelser.last { it.hendelsesType != ANGRE })
+            ).tilstand
+
         open fun lagreGrunnlag(grunnlagService: GrunnlagService) {}
 
         abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse>
@@ -113,6 +121,7 @@ class IASak private constructor(
             endretAv = hendelse.opprettetAv
             endretTidspunkt = hendelse.opprettetTidspunkt
         }
+
     }
 
     private inner class StartTilstand : ProsessTilstand(
