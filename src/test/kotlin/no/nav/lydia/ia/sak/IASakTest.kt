@@ -7,16 +7,13 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.tilgangskontroll.Rådgiver
@@ -157,22 +154,26 @@ class IASakTest {
 
     @Test
     fun `det skal gå an å angre på en sak`(){
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
-        val h2_vurderes = h1_ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
-        val h3_eierskap = h2_vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
-        val h4_kontaktes = h3_eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-        val hendelserPåSak = listOf(h1_ny_sak, h2_vurderes, h3_eierskap, h4_kontaktes)
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
+        val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
+        val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val tilbakeMidtI = kontaktes.nesteHendelse(TILBAKE)
+        val kontaktesAllikevel = tilbakeMidtI.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val ikkeAktuell = kontaktesAllikevel.nesteHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
+        val hendelserPåSak = listOf(ny_sak, vurderes, eierskap, kontaktes, tilbakeMidtI, kontaktesAllikevel,  ikkeAktuell)
         val sak = IASak.fraHendelser(hendelserPåSak)
+        sak.status shouldBe IKKE_AKTUELL
 
-        val h5_angre = h4_kontaktes.nesteHendelse(ANGRE)
-        sak.behandleHendelse(h5_angre)
+        val tilbakeTilKontaktes = ikkeAktuell.nesteHendelse(TILBAKE)
+        sak.behandleHendelse(tilbakeTilKontaktes)
+        sak.status shouldBe KONTAKTES
+        sak.hendelser shouldContain tilbakeTilKontaktes
+
+        val tilbakeTilVurderes = tilbakeTilKontaktes.nesteHendelse(TILBAKE)
+        sak.behandleHendelse(tilbakeTilVurderes)
+        sak.hendelser shouldContain tilbakeTilVurderes
         sak.status shouldBe VURDERES
-        sak.hendelser shouldContain h5_angre
-
-        val h6_angre = h5_angre.nesteHendelse(ANGRE)
-        sak.behandleHendelse(h6_angre)
-        sak.hendelser shouldContain h6_angre
-        sak.status shouldBe NY
     }
 
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
@@ -186,7 +187,17 @@ class IASakTest {
         )
 
     private fun IASakshendelse.nesteHendelse(saksHendelsestype: SaksHendelsestype) =
-        nyHendelse(saksHendelsestype, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
+        when (saksHendelsestype) {
+            VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                orgnummer = orgnummer,
+                opprettetAv = this.opprettetAv,
+                valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID))
+            )
+            else -> nyHendelse(saksHendelsestype, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
+        }
 
     private fun nyIASak(orgnummer: String, navIdent: String): IASak =
         IASak.fraFørsteHendelse(IASakshendelse.nyFørsteHendelse(orgnummer, navIdent))

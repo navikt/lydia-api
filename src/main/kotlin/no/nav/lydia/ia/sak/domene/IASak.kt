@@ -73,7 +73,7 @@ class IASak private constructor(
             OPPRETT_SAK_FOR_VIRKSOMHET -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
-            ANGRE -> {
+            TILBAKE -> {
                 tilstand.angre()
             }
         }
@@ -107,10 +107,9 @@ class IASak private constructor(
             håndterFeilState()
         }
 
-        fun angre() =
-            fraHendelser(
-                sakshendelser.minus(sakshendelser.last { it.hendelsesType != ANGRE })
-            ).tilstand
+        open fun angre() {
+           håndterFeilState()
+        }
 
         open fun lagreGrunnlag(grunnlagService: GrunnlagService) {}
 
@@ -168,7 +167,6 @@ class IASak private constructor(
                 }
             }
         }
-
     }
 
     private inner class KontaktesTilstand : ProsessTilstand(
@@ -193,12 +191,20 @@ class IASak private constructor(
                 }
             }
         }
+
+        override fun angre() {
+            tilstand = VurderesTilstand()
+        }
     }
 
     private inner class IkkeAktuellTilstand : ProsessTilstand(
         status = IAProsessStatus.IKKE_AKTUELL
     ) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
+
+        override fun angre() {
+            tilstand = KontaktesTilstand()
+        }
     }
 
     companion object {
