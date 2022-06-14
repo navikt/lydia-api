@@ -151,7 +151,7 @@ enum class SaksHendelsestype {
     TA_EIERSKAP_I_SAK,
     VIRKSOMHET_SKAL_KONTAKTES,
     VIRKSOMHET_ER_IKKE_AKTUELL,
-    ANGRE
+    TILBAKE
 }
 
 @Serializable
