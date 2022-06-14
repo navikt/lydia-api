@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
@@ -158,18 +159,20 @@ class IASakTest {
     fun `det skal gå an å angre på en sak`(){
         val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
         val h2_vurderes = h1_ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
-        val hendelserPåSak = listOf(h1_ny_sak, h2_vurderes)
+        val h3_eierskap = h2_vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
+        val h4_kontaktes = h3_eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val hendelserPåSak = listOf(h1_ny_sak, h2_vurderes, h3_eierskap, h4_kontaktes)
         val sak = IASak.fraHendelser(hendelserPåSak)
 
-        val h3_angre = h2_vurderes.nesteHendelse(ANGRE)
-        sak.behandleHendelse(h3_angre)
+        val h5_angre = h4_kontaktes.nesteHendelse(ANGRE)
+        sak.behandleHendelse(h5_angre)
         sak.status shouldBe VURDERES
-        sak.hendelser shouldContain h3_angre
+        sak.hendelser shouldContain h5_angre
 
-        val h4_angre = h3_angre.nesteHendelse(ANGRE)
-        sak.behandleHendelse(h4_angre)
-        sak.hendelser shouldContain h4_angre
-        sak.status shouldBe OPPRETT_SAK_FOR_VIRKSOMHET
+        val h6_angre = h5_angre.nesteHendelse(ANGRE)
+        sak.behandleHendelse(h6_angre)
+        sak.hendelser shouldContain h6_angre
+        sak.status shouldBe NY
     }
 
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
