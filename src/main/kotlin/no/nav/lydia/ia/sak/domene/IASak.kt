@@ -186,7 +186,10 @@ class IASak private constructor(
             return when (rådgiver.rolle) {
                 LESE -> emptyList()
                 SAKSBEHANDLER, SUPERBRUKER -> {
-                    if (erEierAvSak(rådgiver)) return listOf(GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL))
+                    if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                        GyldigHendelse(saksHendelsestype = TILBAKE)
+                    )
                     else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
                 }
             }
@@ -200,7 +203,14 @@ class IASak private constructor(
     private inner class IkkeAktuellTilstand : ProsessTilstand(
         status = IAProsessStatus.IKKE_AKTUELL
     ) {
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> =
+            when (rådgiver.rolle) {
+                LESE -> emptyList()
+                SAKSBEHANDLER, SUPERBRUKER -> {
+                    if (erEierAvSak(rådgiver= rådgiver)) listOf(GyldigHendelse(saksHendelsestype = TILBAKE))
+                    else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
 
         override fun angre() {
             tilstand = KontaktesTilstand()

@@ -27,6 +27,7 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
+import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -41,7 +42,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
-    val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+    val mockOAuth2Server = oauth2ServerContainer
     val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
@@ -412,7 +413,7 @@ class IASakApiTest {
             sak = sakForVirksomhet,
             hendelsestype = TA_EIERSKAP_I_SAK,
             payload = null,
-            token = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
+            token = oauth2ServerContainer.saksbehandler1.token,
         ).responseString().third.get()
 
         sakJson.shouldEqualSpecifiedJson(
@@ -549,6 +550,36 @@ class IASakApiTest {
                     {"type":"VIRKSOMHETEN_TAKKET_NEI","begrunnelser":["IKKE_ET_FAKTISK_TILTAK"]}
                 """.trimIndent()
             )
+        }
+    }
+
+    @Test
+    fun `saksbehandler som eier sak skal kunne gå tilbake i prosessflyten`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(TILBAKE)
+        sak.status shouldBe IAProsessStatus.VURDERES
+    }
+
+    @Test
+    fun `saksbehandler som ikke eier sak skal ikke kunne gå tilbake i prosessflyten`() {
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1.token
+        val saksbehandler2 = oauth2ServerContainer.saksbehandler2.token
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1)
+            .nyHendelse(hendelsestype = VIRKSOMHET_SKAL_KONTAKTES, token = saksbehandler1)
+        shouldFail {
+            sak.nyHendelse(hendelsestype = TILBAKE, token = saksbehandler2)
+        }
+    }
+
+    @Test
+    fun `skal ikke kunne gå tilbake i prosessflyten dersom man er i vurderes status`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+        shouldFail {
+            sak.nyHendelse(TILBAKE)
         }
     }
 }
