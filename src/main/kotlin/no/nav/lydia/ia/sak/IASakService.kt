@@ -21,19 +21,28 @@ class IASakService(
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val grunnlagService: GrunnlagService,
     private val årsakService: ÅrsakService,
-    private val observers: MutableList<Observer<IASakshendelse>> = mutableListOf()
+    private val iaSakshendelseObservers: MutableList<Observer<IASakshendelse>> = mutableListOf(),
+    private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
 ) {
 
     private fun lagreHendelse(hendelse: IASakshendelse): IASakshendelse {
-        return iaSakshendelseRepository.lagreHendelse(hendelse).also(::notifikasjon)
+        return iaSakshendelseRepository.lagreHendelse(hendelse).also(::varsleIASakshendelseObservers)
     }
 
-    fun leggTilObserver(observer: Observer<IASakshendelse>) {
-        observers.add(observer)
+    fun leggTilIASakshendelseObserver(observer: Observer<IASakshendelse>) {
+        iaSakshendelseObservers.add(observer)
     }
 
-    private fun notifikasjon(hendelse: IASakshendelse) {
-        observers.forEach { observer -> observer.receive(hendelse) }
+    private fun varsleIASakshendelseObservers(hendelse: IASakshendelse) {
+        iaSakshendelseObservers.forEach { observer -> observer.receive(hendelse) }
+    }
+
+    fun leggTilIASakObserver(observer: Observer<IASak>) {
+        iaSakObservers.add(observer)
+    }
+
+    private fun varsleIASakObservers(sak: IASak) {
+        iaSakObservers.forEach { observer -> observer.receive(sak) }
     }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
