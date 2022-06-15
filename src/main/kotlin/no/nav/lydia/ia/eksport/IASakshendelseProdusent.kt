@@ -2,17 +2,11 @@ package no.nav.lydia.ia.eksport
 
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
 
-class IASakshendelseProdusent(private val producer: KafkaProducer<String, String>, private val topic: String) : Observer<IASakshendelse> {
-    internal fun stop() {
-        producer.close()
-    }
+class IASakshendelseProdusent(private val produsent: KafkaProdusent, private val topic: String) : Observer<IASakshendelse> {
 
     override fun receive(input: IASakshendelse) {
         val kafkaMelding = input.tilKeyValueJsonPair()
-        val melding = ProducerRecord(topic, kafkaMelding.first, kafkaMelding.second)
-        producer.send(melding)
+        produsent.sendMelding(topic, kafkaMelding.first, kafkaMelding.second)
     }
 }

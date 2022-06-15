@@ -27,7 +27,9 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UatorisertException
+import no.nav.lydia.ia.eksport.IASakProdusent
 import no.nav.lydia.ia.eksport.IASakshendelseProdusent
+import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.grunnlag.GrunnlagRepository
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
@@ -48,7 +50,6 @@ import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.api.virksomhet
-import org.apache.kafka.clients.producer.KafkaProducer
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -69,14 +70,18 @@ fun startLydiaBackend() {
             )
         )
     )
-    val iaSakshendelseProdusent = IASakshendelseProdusent(producer = KafkaProducer(naisEnv.kafka.producerProperties()), topic = naisEnv.kafka.iaSakHendelseTopic).also {
-        Runtime.getRuntime().addShutdownHook(Thread {
-            it.stop()
-        })
-    }
+    val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
+    val iaSakshendelseProdusent =
+        IASakshendelseProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakHendelseTopic)
+    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakTopic)
 
     embeddedServer(Netty, port = 8080) {
-        lydiaRestApi(naisEnvironment = naisEnv, dataSource = dataSource, produsent = iaSakshendelseProdusent)
+        lydiaRestApi(
+            naisEnvironment = naisEnv,
+            dataSource = dataSource,
+            iaSakshendelseProdusent = iaSakshendelseProdusent,
+            iaSakProdusent = iaSakProdusent
+        )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
         it.addShutdownHook {
@@ -85,7 +90,12 @@ fun startLydiaBackend() {
     }.start(wait = true)
 }
 
-fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataSource, produsent: IASakshendelseProdusent? = null) {
+fun Application.lydiaRestApi(
+    naisEnvironment: NaisEnvironment,
+    dataSource: DataSource,
+    iaSakshendelseProdusent: IASakshendelseProdusent? = null,
+    iaSakProdusent: IASakProdusent? = null
+) {
     install(ContentNegotiation) {
         json()
     }
@@ -170,7 +180,8 @@ fun Application.lydiaRestApi(naisEnvironment: NaisEnvironment, dataSource: DataS
                     ),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ).apply {
-                    produsent?.let { leggTilObserver(it) }
+                    iaSakshendelseProdusent?.also { leggTilIASakshendelseObserver(it) }
+                    iaSakProdusent?.also { leggTilIASakObserver(it) }
                 },
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog
