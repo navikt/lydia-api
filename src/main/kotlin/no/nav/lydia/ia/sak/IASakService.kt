@@ -25,9 +25,14 @@ class IASakService(
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
 ) {
 
-    private fun lagreHendelse(hendelse: IASakshendelse): IASakshendelse {
-        return iaSakshendelseRepository.lagreHendelse(hendelse).also(::varsleIASakshendelseObservers)
-    }
+    private fun IASakshendelse.lagre() =
+        iaSakshendelseRepository.lagreHendelse(this).also(::varsleIASakshendelseObservers)
+
+    private fun IASak.lagre() =
+        iaSakRepository.opprettSak(this).also(::varsleIASakObservers)
+
+    private fun IASak.lagreOppdatering() =
+        iaSakRepository.oppdaterSak(this).tap(::varsleIASakObservers)
 
     fun leggTilIASakshendelseObserver(observer: Observer<IASakshendelse>) {
         iaSakshendelseObservers.add(observer)
@@ -51,15 +56,14 @@ class IASakService(
         } else if (iaSakRepository.hentSaker(orgnummer).isNotEmpty()) {
             return Either.Left(IASakError.`støtter ikke flere saker for en virksomhet ennå`)
         }
-        val sak = lagreHendelse(IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = navIdent))
-            .let { førsteSakshendelse ->
-                iaSakRepository.opprettSak(iaSak = IASak.fraFørsteHendelse(førsteSakshendelse))
-            }
+        val sak = IASak.fraFørsteHendelse(
+            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = navIdent).lagre()
+        ).lagre()
 
-        return lagreHendelse(sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, opprettetAv = navIdent))
+        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, opprettetAv = navIdent).lagre()
             .let { vurderHendelse -> sak.behandleHendelse(hendelse = vurderHendelse) }
             .also { sakEtterVurdering -> sakEtterVurdering.lagreGrunnlag(grunnlagService = grunnlagService) }
-            .let { sakEtterVurdering -> iaSakRepository.oppdaterSak(sakEtterVurdering) }
+            .lagreOppdatering()
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {
@@ -77,9 +81,9 @@ class IASakService(
                 else {
                     return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
                 }
-                lagreHendelse(sakshendelse)
+                sakshendelse.lagre()
                 årsakService.lagreÅrsak(sakshendelse)
-                return iaSakRepository.oppdaterSak(sak)
+                return sak.lagreOppdatering()
             }
     }
 
