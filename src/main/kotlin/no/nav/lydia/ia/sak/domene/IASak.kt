@@ -27,11 +27,21 @@ class IASak private constructor(
     val hendelser get() = sakshendelser.toList()
 
     init {
-        tilstand = this.iStatus(status)
+        tilstand = tilstandFraStatus(status)
     }
 
     val status: IAProsessStatus
         get() = tilstand.status
+
+    private fun tilstandFraStatus(status: IAProsessStatus): ProsessTilstand {
+        return when (status) {
+            IAProsessStatus.NY -> StartTilstand()
+            IAProsessStatus.VURDERES -> VurderesTilstand()
+            IAProsessStatus.IKKE_AKTUELL -> IkkeAktuellTilstand()
+            IAProsessStatus.KONTAKTES -> KontaktesTilstand()
+            IAProsessStatus.IKKE_AKTIV -> throw IllegalStateException()
+        }
+    }
 
     fun lagreGrunnlag(grunnlagService: GrunnlagService) = tilstand.lagreGrunnlag(grunnlagService)
 
@@ -74,7 +84,7 @@ class IASak private constructor(
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
             TILBAKE -> {
-                tilstand.angre()
+                tilstand.tilbake()
             }
         }
         endretAvHendelseId = hendelse.id
@@ -107,8 +117,14 @@ class IASak private constructor(
             håndterFeilState()
         }
 
-        open fun angre() {
+        open fun tilbake() {
            håndterFeilState()
+        }
+
+        protected fun finnForrigeTilstand(): ProsessTilstand {
+            val hendelserUtenTilbake = hendelser.filter { it.hendelsesType != TILBAKE }
+            val sak = fraHendelser(hendelser.minus(hendelserUtenTilbake.last()))
+            return tilstandFraStatus(sak.status)
         }
 
         open fun lagreGrunnlag(grunnlagService: GrunnlagService) {}
@@ -195,8 +211,8 @@ class IASak private constructor(
             }
         }
 
-        override fun angre() {
-            tilstand = VurderesTilstand()
+        override fun tilbake() {
+            tilstand = finnForrigeTilstand()
         }
     }
 
@@ -212,22 +228,12 @@ class IASak private constructor(
                 }
             }
 
-        override fun angre() {
-            tilstand = KontaktesTilstand()
+        override fun tilbake() {
+            tilstand = finnForrigeTilstand()
         }
     }
 
     companion object {
-        private fun IASak.iStatus(status: IAProsessStatus): ProsessTilstand {
-            return when (status) {
-                IAProsessStatus.NY -> StartTilstand()
-                IAProsessStatus.VURDERES -> VurderesTilstand()
-                IAProsessStatus.IKKE_AKTUELL -> IkkeAktuellTilstand()
-                IAProsessStatus.KONTAKTES -> KontaktesTilstand()
-                IAProsessStatus.IKKE_AKTIV -> throw IllegalStateException()
-            }
-        }
-
         fun fraFørsteHendelse(hendelse: IASakshendelse): IASak =
             IASak(
                 saksnummer = hendelse.saksnummer,

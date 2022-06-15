@@ -80,7 +80,7 @@ class IASakTest {
             navIdent = navIdent2
         )
         val sak = IASak.fraHendelser(listOf(h1, h2, h3))
-        sak.status shouldBe IAProsessStatus.IKKE_AKTUELL
+        sak.status shouldBe IKKE_AKTUELL
         sak.opprettetAv shouldBe h1.opprettetAv
         sak.endretAv shouldBe h3.opprettetAv
         sak.endretAvHendelseId shouldBe h3.id
@@ -167,11 +167,13 @@ class IASakTest {
 
         val tilbakeTilKontaktes = ikkeAktuell.nesteHendelse(TILBAKE)
         sak.behandleHendelse(tilbakeTilKontaktes)
+        sak.endretAvHendelseId shouldBe tilbakeTilKontaktes.id
         sak.status shouldBe KONTAKTES
         sak.hendelser shouldContain tilbakeTilKontaktes
 
         val tilbakeTilVurderes = tilbakeTilKontaktes.nesteHendelse(TILBAKE)
         sak.behandleHendelse(tilbakeTilVurderes)
+        sak.endretAvHendelseId shouldBe tilbakeTilVurderes.id
         sak.hendelser shouldContain tilbakeTilVurderes
         sak.status shouldBe VURDERES
     }
@@ -200,5 +202,5 @@ class IASakTest {
         }
 
     private fun nyIASak(orgnummer: String, navIdent: String): IASak =
-        IASak.fraFørsteHendelse(IASakshendelse.nyFørsteHendelse(orgnummer, navIdent))
+        IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, navIdent))
 }

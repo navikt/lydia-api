@@ -563,7 +563,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `saksbehandler som ikke eier sak skal ikke kunne gå tilbake i prosessflyten`() {
+    fun `tilgangskontroll - saksbehandler som ikke eier sak skal ikke kunne gå tilbake i prosessflyten`() {
         val saksbehandler1 = oauth2ServerContainer.saksbehandler1.token
         val saksbehandler2 = oauth2ServerContainer.saksbehandler2.token
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
@@ -581,5 +581,17 @@ class IASakApiTest {
         shouldFail {
             sak.nyHendelse(TILBAKE)
         }
+    }
+
+    @Test
+    fun `skal kunne gå tilbake til vurderes fra ikke aktuell`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                type = VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = listOf(HAR_IKKE_KAPASITET)
+            ).toJson())
+            .nyHendelse(TILBAKE)
+        sak.status shouldBe IAProsessStatus.VURDERES
     }
 }
