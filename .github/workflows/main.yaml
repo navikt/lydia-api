@@ -62,31 +62,31 @@ jobs:
           "CLUSTER": "prod-gcp"
           "RESOURCE": ".nais/nais.yaml"
           "VARS": ".nais/prod.yaml"
-  "deployTopicToDev":
-    name: "Deploy topic to dev"
+  "deployTopicsToDev":
+    name: "Deploy topics to dev"
     runs-on: "ubuntu-latest"
     steps:
       - name: "Checkout code"
         uses: "actions/checkout@v3"
-      - name: "Deploy topic ia-sak-hendelse-topic to dev-gcp"
+      - name: "Deploy topics to dev-gcp"
         uses: "nais/deploy/actions/deploy@master"
         env:
           APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
           CLUSTER: "dev-gcp"
-          RESOURCE: ".nais/ia-sak-hendelse-topic.yaml"
+          RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
           VARS: ".nais/dev.yaml"
-  "deployTopicToProd":
-    name: "Deploy topic to prod"
+  "deployTopicsToProd":
+    name: "Deploy topics to prod"
     runs-on: "ubuntu-latest"
     steps:
       - name: "Checkout code"
         uses: "actions/checkout@v3"
-      - name: "Deploy topic ia-sak-hendelse-topic to prod-gcp"
+      - name: "Deploy topics to prod-gcp"
         uses: "nais/deploy/actions/deploy@master"
         env:
           APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
           CLUSTER: "prod-gcp"
-          RESOURCE: ".nais/ia-sak-hendelse-topic.yaml"
+          RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
           VARS: ".nais/prod.yaml"
 #  "deployAlertsToDev":
 #    name: "Deploy alerts to dev"
