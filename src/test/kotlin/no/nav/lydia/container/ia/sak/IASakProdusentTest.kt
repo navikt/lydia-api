@@ -65,7 +65,7 @@ class IASakProdusentTest {
                             meldinger shouldHaveSize 5
                             meldinger[0] shouldContain IAProsessStatus.NY.name
                             meldinger[1] shouldContain IAProsessStatus.VURDERES.name
-                            meldinger[1] shouldContain """"eierAvSak":"S54321""""
+                            meldinger[1] shouldContain """"eierAvSak":null"""
                             meldinger[2] shouldContain IAProsessStatus.VURDERES.name
                             meldinger[2] shouldContain """"eierAvSak":"X12345""""
                             meldinger[3] shouldContain IAProsessStatus.KONTAKTES.name
