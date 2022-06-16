@@ -22,7 +22,7 @@ class IASakProdusent(private val produsent: KafkaProdusent, private val topic: S
             val value = IASakValue(
                 saksnummer = this.saksnummer,
                 orgnr = this.orgnr,
-                kontaktperson = this.eidAv ?: this.endretAv ?: this.opprettetAv,
+                eierAvSak = this.eidAv,
                 endretAvHendelseId = this.endretAvHendelseId,
                 status = this.status,
                 opprettetTidspunkt = this.opprettetTidspunkt,
@@ -37,7 +37,7 @@ class IASakProdusent(private val produsent: KafkaProdusent, private val topic: S
     private data class IASakValue(
         val saksnummer: String,
         val orgnr: String,
-        val kontaktperson: String,
+        val eierAvSak: String?,
         val endretAvHendelseId: String,
         val status: IAProsessStatus,
         @Serializable(with = LocalDateTimeSerializer::class)
