@@ -22,11 +22,11 @@ For å koble seg mot Aiven Kafka lokalt trenger man:
 - [kafka-cli](https://kafka.apache.org/quickstart) (kan også installeres med [brew install kafka](https://formulae.brew.sh/formula/kafka))
 - [nais-cli](https://doc.nais.io/cli/install/)
 
-Vi har gitt tilgang til en k8s-ressurs som heter `ia-sak-hendelse-devops` som har lese- og skrivetilgang til `ia-sak-hendelse-v1`-topicet. 
+Vi har gitt tilgang til en k8s-ressurs som heter `pia-devops` som har lese- og skrivetilgang til `ia-sak-hendelse-v1`-topicet. 
 Det er denne man bruker som utvikler om man vil koble seg opp mot topicet lokalt. Det gjør man slik: 
 
-1. `nais aiven create kafka ia-sak-hendelse-devops pia` (lager en [AivenApplication](https://doc.nais.io/cli/commands/aiven/#aiven-command))
-2. `kubectl get AivenApplication -c <cluster> -n pia` for å finne ut hva den genererte secreten til `ia-sak-hendelse-devops` heter
+1. `nais aiven create kafka pia-devops pia` (lager en [AivenApplication](https://doc.nais.io/cli/commands/aiven/#aiven-command))
+2. `kubectl get AivenApplication -c <cluster> -n pia` for å finne ut hva den genererte secreten til `pia-devops` heter
 3. `nais aiven get kafka <navn på secret> pia` (lager en lokal config i under `/var/` basert på k8s-secreten)
 4. `KAFKA_CONFIG=<path til der config ble lagret i forrige steg>`
 5. `source $KAFKA_CONFIG/kafka-secret.env`
