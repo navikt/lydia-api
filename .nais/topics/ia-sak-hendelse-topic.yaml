@@ -22,5 +22,5 @@ spec:
       application: sf-sykefravaersstatistikk
       access: read
     - team: pia
-      application: ia-sak-hendelse-devops
+      application: pia-devops
       access: read
