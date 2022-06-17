@@ -18,14 +18,15 @@ open class IASakshendelseDto(
 )
 
 @Serializable
-open class IASakshendelseOppsummeringDto(
+class IASakshendelseOppsummeringDto(
     val id: String,
     val orgnummer: String,
     val saksnummer: String,
     val hendelsestype: SaksHendelsestype,
     val opprettetAv: String,
     @Serializable(with = LocalDateTimeSerializer::class)
-    val opprettetTidspunkt: LocalDateTime
+    val opprettetTidspunkt: LocalDateTime,
+    val valgtÅrsak: ValgtÅrsak?
     ) {
     companion object {
         fun List<IASakshendelse>.toDto() = this.map { it.toDto() }
@@ -37,36 +38,10 @@ open class IASakshendelseOppsummeringDto(
             hendelsestype = this.hendelsesType,
             opprettetAv = this.opprettetAv,
             opprettetTidspunkt = this.opprettetTidspunkt,
-        )
-    }
-}
-
-class VirksomhetIkkeAktuellHendelseOppsummeringDto(
-    id: String,
-    orgnummer: String,
-    saksnummer: String,
-    hendelsestype: SaksHendelsestype,
-    opprettetAv: String,
-    opprettetTidspunkt: LocalDateTime,
-    @Serializable
-    val valgtÅrsak: ValgtÅrsak
-) : IASakshendelseOppsummeringDto(
-    id = id,
-    orgnummer = orgnummer,
-    saksnummer = saksnummer,
-    hendelsestype = hendelsestype,
-    opprettetAv = opprettetAv,
-    opprettetTidspunkt = opprettetTidspunkt
-) {
-    companion object {
-        fun VirksomhetIkkeAktuellHendelse.toDto() = VirksomhetIkkeAktuellHendelseOppsummeringDto(
-            id = this.id,
-            orgnummer = this.orgnummer,
-            saksnummer = this.saksnummer,
-            hendelsestype = this.hendelsesType,
-            opprettetAv = this.opprettetAv,
-            opprettetTidspunkt = this.opprettetTidspunkt,
-            valgtÅrsak = this.valgtÅrsak
+            valgtÅrsak = when (this) {
+                is VirksomhetIkkeAktuellHendelse -> this.valgtÅrsak
+                else -> null
+            }
         )
     }
 }

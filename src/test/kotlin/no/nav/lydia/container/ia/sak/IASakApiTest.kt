@@ -10,6 +10,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
@@ -306,15 +307,16 @@ class IASakApiTest {
     @Test
     fun `skal kunne hente en oppsummering av alle hendelsene som har skjedd på en sak`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).also { sak ->
+            val valgtÅrsak = ValgtÅrsak(
+                type = VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
+            )
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-                    payload = ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
-                    ).toJson()
+                    payload = valgtÅrsak.toJson()
                 )
             val alleHendelsesTyper = listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
@@ -328,6 +330,12 @@ class IASakApiTest {
                 oppsummering.forExactlyOne {
                     it.hendelsestype shouldBe OPPRETT_SAK_FOR_VIRKSOMHET
                     it.opprettetTidspunkt shouldBe sakIkkeAktuell.opprettetTidspunkt
+                    it.valgtÅrsak shouldBe null
+                }
+                oppsummering.forExactlyOne {
+                    it.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                    it.valgtÅrsak shouldNotBe null
+                    it.valgtÅrsak!! shouldBeEqualToComparingFields valgtÅrsak
                 }
             }
         }
