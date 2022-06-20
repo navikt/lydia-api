@@ -7,7 +7,6 @@ import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.*
-import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
@@ -329,12 +328,6 @@ class IASakApiTest {
                 oppsummering.forExactlyOne {
                     it.hendelsestype shouldBe OPPRETT_SAK_FOR_VIRKSOMHET
                     it.opprettetTidspunkt shouldBe sakIkkeAktuell.opprettetTidspunkt
-                    it.valgtÅrsak shouldBe null
-                }
-                oppsummering.forExactlyOne {
-                    it.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                    it.valgtÅrsak shouldNotBe null
-                    it.valgtÅrsak!! shouldBeEqualToComparingFields valgtÅrsak
                 }
             }
         }
