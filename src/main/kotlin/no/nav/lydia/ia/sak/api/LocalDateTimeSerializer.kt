@@ -1,7 +1,5 @@
 package no.nav.lydia.ia.sak.api
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonSerializationContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor

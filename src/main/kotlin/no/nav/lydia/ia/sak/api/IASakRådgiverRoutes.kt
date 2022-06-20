@@ -14,6 +14,7 @@ import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto.Companion.toDto
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandlertilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
@@ -21,6 +22,7 @@ import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "hendelse"
 val SAK_HENDELSER_SUB_PATH = "hendelser"
+val SAMARBEIDSHISTORIKK_PATH = "historikk"
 
 fun Route.IASak_Rådgiver(
     iaSakService: IASakService,
@@ -91,6 +93,26 @@ fun Route.IASak_Rådgiver(
             }.mapLeft {
                 call.respond(status = it.httpStatusCode, message = it.feilmelding)
             }
+    }
+
+    get("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/{orgnummer}") {
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+            iaSakService.hentSaker(orgnummer).map {
+                IASak.fraHendelser(iaSakService.hentHendelserForSak(it.saksnummer))
+            }.right()
+        }. also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = orgnummer,
+                auditType = AuditType.access
+            )
+        }.map { iaSaker ->
+            call.respond(iaSaker.tilSamarbeidshistorikk()).right()
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
     }
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
