@@ -6,10 +6,7 @@ import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -19,6 +16,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSak
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidsHistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
@@ -75,7 +73,8 @@ class IASakApiTest {
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
         val utsiraKommune = Kommune(navn = "Utsira", nummer = "1151")
-        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(TestVirksomhet.beliggenhet(kommune = utsiraKommune)))
+        val virksomhet =
+            VirksomhetHelper.lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(TestVirksomhet.beliggenhet(kommune = utsiraKommune)))
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -342,6 +341,42 @@ class IASakApiTest {
     }
 
     @Test
+    fun `skal få samarbeidshistorikken til en virksomhet`() {
+        val valgtÅrsak = ValgtÅrsak(
+            type = NAV_IGANGSETTER_IKKE_TILTAK,
+            begrunnelser = listOf(MINDRE_VIRKSOMHET, FOR_LAVT_SYKEFRAVÆR)
+        )
+        val orgnummer = nyttOrgnummer()
+        opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                payload = valgtÅrsak.toJson()
+            )
+
+        hentSamarbeidsHistorikk(orgnummer = orgnummer).also { samarbeidshistorikk ->
+            samarbeidshistorikk shouldHaveSize 1
+            val sakshistorikk = samarbeidshistorikk.first()
+            sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
+                IAProsessStatus.VURDERES,
+                IAProsessStatus.VURDERES,
+                IAProsessStatus.KONTAKTES,
+                IAProsessStatus.IKKE_AKTUELL
+            )
+            sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainExactly listOf(
+                VIRKSOMHET_VURDERES,
+                TA_EIERSKAP_I_SAK,
+                VIRKSOMHET_SKAL_KONTAKTES,
+                VIRKSOMHET_ER_IKKE_AKTUELL
+            )
+            sakshistorikk.sakshendelser.forExactlyOne {
+                it.begrunnelser shouldBe valgtÅrsak.begrunnelser
+            }
+        }
+    }
+
+    @Test
     fun `skal kunne ta eierskap i en sak`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).also { sak ->
             sak.eidAv shouldBe null
@@ -595,10 +630,12 @@ class IASakApiTest {
     fun `skal kunne gå tilbake til vurderes fra ikke aktuell`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = listOf(HAR_IKKE_KAPASITET)
-            ).toJson())
+            .nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                ).toJson()
+            )
             .nyHendelse(TILBAKE)
         sak.status shouldBe IAProsessStatus.VURDERES
     }

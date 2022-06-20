@@ -14,13 +14,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSER_SUB_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
@@ -115,6 +111,19 @@ class SakHelper {
                 .authentication().bearer(token = token)
                 .responseObject<List<IASakDto>>(localDateTimeTypeAdapter)
 
+        fun hentSamarbeidsHistorikk(
+            orgnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnummer")
+                .authentication().bearer(token = token)
+                .responseObject<List<SakshistorikkDto>>(localDateTimeTypeAdapter).third
+                .fold(
+                    success = { respons -> respons },
+                    failure = { fail(it.message) }
+                )
+
+
         fun hentHendelserPåSakRespons(
             saksnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
@@ -122,7 +131,6 @@ class SakHelper {
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSER_SUB_PATH/$saksnummer")
                 .authentication().bearer(token = token)
                 .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter)
-
 
         fun hentHendelserPåSak(
             saksnummer: String,
