@@ -5,7 +5,6 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import java.time.LocalDateTime
 
 @Serializable
@@ -22,7 +21,7 @@ class SakSnapshotDto(
     val hendelsestype: SaksHendelsestype,
     @Serializable(with = LocalDateTimeSerializer::class)
     val tidspunktForSnapshot: LocalDateTime,
-    val begrunnelser: List<BegrunnelseType>,
+    val begrunnelser: List<String>,
     val eier: String?
 )
 
@@ -40,7 +39,7 @@ fun IASak.tilSakshistorikk(): SakshistorikkDto {
                 tidspunktForSnapshot = hendelse.opprettetTidspunkt,
                 eier = sak.eidAv,
                 begrunnelser = when (hendelse) {
-                    is VirksomhetIkkeAktuellHendelse -> hendelse.valgtÅrsak.begrunnelser
+                    is VirksomhetIkkeAktuellHendelse -> hendelse.valgtÅrsak.begrunnelser.map { it.navn }
                     else -> emptyList()
             })
         )

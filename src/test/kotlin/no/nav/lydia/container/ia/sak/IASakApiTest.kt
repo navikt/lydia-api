@@ -363,8 +363,8 @@ class IASakApiTest {
                 VIRKSOMHET_SKAL_KONTAKTES,
                 VIRKSOMHET_ER_IKKE_AKTUELL
             )
-            sakshistorikk.sakshendelser.forExactlyOne {
-                it.begrunnelser shouldBe valgtÅrsak.begrunnelser
+            sakshistorikk.sakshendelser.forExactlyOne { sakSnapshot ->
+                sakSnapshot.begrunnelser shouldBe valgtÅrsak.begrunnelser.map { it.navn }
             }
         }
     }
