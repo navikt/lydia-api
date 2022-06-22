@@ -1,13 +1,16 @@
 package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
@@ -102,12 +105,26 @@ fun Route.IASak_Rådgiver(
                 IASak.fraHendelser(iaSakService.hentHendelserForSak(it.saksnummer))
             }.right()
         }. also { either ->
-            auditLog.auditloggEither(
-                call = call,
-                either = either,
-                orgnummer = orgnummer,
-                auditType = AuditType.access
-            )
+            if (either.isLeft()) {
+                auditLog.auditloggEither(
+                    call = call,
+                    either = either,
+                    orgnummer = orgnummer,
+                    auditType = AuditType.access,
+                )
+            } else {
+                val iaSaker = either.getOrElse { listOf() }
+                iaSaker.forEach { iaSak ->
+                    auditLog.auditloggEither(
+                        call = call,
+                        either = either,
+                        orgnummer = orgnummer,
+                        auditType = AuditType.access,
+                        saksnummer = iaSak.saksnummer
+                    )
+                }
+            }
+
         }.map { iaSaker ->
             call.respond(iaSaker.tilSamarbeidshistorikk()).right()
         }.mapLeft {

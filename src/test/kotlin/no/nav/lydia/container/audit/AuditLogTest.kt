@@ -1,11 +1,14 @@
 package no.nav.lydia.container.audit
 
-import com.github.guepardoapps.kulid.ULID
 import com.github.kittinunf.fuel.core.Request
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.StatistikkHelper
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import kotlin.test.Test
@@ -137,7 +140,7 @@ class AuditLogTest {
     fun `auditlogger uthenting av hendelser på IA-sak på et gyldig saksnummer`() {
         val orgnummer = nyttOrgnummer()
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
-        SakHelper.hentHendelserPåSakRespons(sak.saksnummer, token = mockOAuth2Server.superbruker1.token).also {
+        SakHelper.hentSamarbeidsHistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
                 navIdent = mockOAuth2Server.superbruker1.navIdent,
@@ -147,33 +150,16 @@ class AuditLogTest {
                 saksnummer = sak.saksnummer
             )
         }
-        SakHelper.hentHendelserPåSakRespons(sak.saksnummer, token = mockOAuth2Server.brukerUtenTilgangsrolle.token)
+        SakHelper.hentSamarbeidsHistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerUtenTilgangsrolle.token)
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
                     navIdent = mockOAuth2Server.brukerUtenTilgangsrolle.navIdent,
-                    orgnummer = null, // Vi auditlogger ikke hvilket orgnummer man ikke hadde tilgang til
+                    orgnummer = orgnummer, // Vi auditlogger ikke hvilket orgnummer man ikke hadde tilgang til
                     auditType = AuditType.access,
                     tillat = Tillat.Nei,
-                    saksnummer = sak.saksnummer,
-                    severity = "WARN"
                 )
             }
-    }
-
-    @Test
-    fun `uthenting av hendelser på IA-sak på et ugyldig saksnummer viser at DUID ikke er tilgjengelig i auditloggen`() {
-        val tilfeldigSaksnummer = ULID.random()
-        SakHelper.hentHendelserPåSakRespons(tilfeldigSaksnummer, token = mockOAuth2Server.superbruker1.token).also {
-            lydiaApiContainer shouldContainLog auditLog(
-                request = it.first,
-                navIdent = mockOAuth2Server.superbruker1.navIdent,
-                orgnummer = null,
-                auditType = AuditType.access,
-                tillat = Tillat.Ja,
-                severity = "WARN"
-            )
-        }
     }
 
 

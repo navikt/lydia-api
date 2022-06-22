@@ -6,12 +6,14 @@ import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.ktor.http.*
-import no.nav.lydia.helper.*
-import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSak
+import io.ktor.http.HttpStatusCode
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
@@ -25,12 +27,29 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TID
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MANGLER_PARTSGRUPPE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MINDRE_VIRKSOMHET
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
@@ -304,7 +323,8 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne hente en oppsummering av alle hendelsene som har skjedd på en sak`() {
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).also { sak ->
+        val orgnummer = nyttOrgnummer()
+        opprettSakForVirksomhet(orgnummer = orgnummer).also { sak ->
             val valgtÅrsak = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
                 begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
@@ -317,17 +337,18 @@ class IASakApiTest {
                     payload = valgtÅrsak.toJson()
                 )
             val alleHendelsesTyper = listOf(
-                OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
                 TA_EIERSKAP_I_SAK,
                 VIRKSOMHET_SKAL_KONTAKTES,
                 VIRKSOMHET_ER_IKKE_AKTUELL
             )
-            hentHendelserPåSak(sakIkkeAktuell.saksnummer).also { oppsummering ->
-                oppsummering.map { it.hendelsestype } shouldContainExactly alleHendelsesTyper
-                oppsummering.forExactlyOne {
+            hentSamarbeidsHistorikk(orgnummer, mockOAuth2Server.superbruker1.token).also { sakshistorikkForVirksomhet ->
+                val historikkForSak = sakshistorikkForVirksomhet.find { it.saksnummer == sakIkkeAktuell.saksnummer }
+                historikkForSak shouldNotBe null
+                historikkForSak!!.sakshendelser.map { it.hendelsestype } shouldContainExactly alleHendelsesTyper
+                historikkForSak.sakshendelser.forAtLeastOne {
                     it.hendelsestype shouldBe OPPRETT_SAK_FOR_VIRKSOMHET
-                    it.opprettetTidspunkt shouldBe sakIkkeAktuell.opprettetTidspunkt
+                    it.tidspunktForSnapshot shouldBe sakIkkeAktuell.opprettetTidspunkt
                 }
             }
         }
@@ -518,7 +539,8 @@ class IASakApiTest {
     @Test
     fun `skal kunne se valgte begrunnelser for når en virksomhet ikke er aktuell`() {
         val begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).also { sak ->
+        val orgnummer = nyttOrgnummer()
+        opprettSakForVirksomhet(orgnummer = orgnummer).also { sak ->
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -529,18 +551,11 @@ class IASakApiTest {
                         begrunnelser = begrunnelser
                     ).toJson()
                 )
-            hentHendelserPåSak(sakIkkeAktuell.saksnummer)
+            hentSamarbeidsHistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
                 .forAtLeastOne { hendelseOppsummering ->
                     hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                    hendelseOppsummering.opprettetTidspunkt shouldBe sakIkkeAktuell.endretTidspunkt
-                    postgresContainer.performQuery(
-                        "select * from hendelse_begrunnelse where hendelse_id = '${hendelseOppsummering.id}'"
-                    ).also { rs ->
-                        rs.row shouldBe 1
-                        rs.getString("begrunnelse") shouldBe begrunnelser.first().navn
-                        rs.next()
-                        rs.getString("begrunnelse") shouldBe begrunnelser[1].navn
-                    }
+                    hendelseOppsummering.tidspunktForSnapshot shouldBe sakIkkeAktuell.endretTidspunkt
+                    hendelseOppsummering.begrunnelser shouldContainAll begrunnelser.map { it.navn }
                 }
         }
     }
