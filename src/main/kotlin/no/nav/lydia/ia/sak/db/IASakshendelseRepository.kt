@@ -49,7 +49,43 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     .map(this::mapRow).asList
             )
         }
-    
+    fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> {
+        val orgnrKolonneNavn = "orgnr"
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT 
+                        id,
+                        type,
+                        $orgnrKolonneNavn,
+                        opprettet_av,
+                        saksnummer,
+                        opprettet,
+                        aarsak_enum,
+                        array_agg(begrunnelse_enum) as begrunnelser
+                    FROM ia_sak_hendelse
+                    LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
+                    WHERE $orgnrKolonneNavn = :$orgnrKolonneNavn
+                    AND $orgnrKolonneNavn NOT in ${
+                        NavEnheter.enheterSomSkalSkjermes.joinToString(
+                            prefix = "(",
+                            postfix = ")",
+                            separator = ","
+                        ) { s -> "\'$s\'" }
+                    }
+                    GROUP BY aarsak_enum, id, type, $orgnrKolonneNavn, opprettet_av, saksnummer, opprettet
+                    ORDER BY id ASC
+                    """.trimIndent(),
+                    mapOf(
+                        orgnrKolonneNavn to orgnr
+                    )
+                )
+                    .map(this::mapRow).asList
+            )
+        }
+    }
+
     fun lagreHendelse(hendelse: IASakshendelse) =
         using(sessionOf(dataSource)) { session ->
             session.run(
