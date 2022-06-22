@@ -72,7 +72,7 @@ class IASakService(
         }
         return IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
             .map { sakshendelse ->
-                val hendelser = iaSakshendelseRepository.hentHendelser(sakshendelse.saksnummer)
+                val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(sakshendelse.saksnummer)
                 if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
                 if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
                 val sak = IASak.fraHendelser(hendelser)
@@ -89,7 +89,7 @@ class IASakService(
 
     fun hentSaker(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)
 
-    fun hentHendelserForSak(saksnummer: String): List<IASakshendelse> =
-        iaSakshendelseRepository.hentHendelser(saksnummer)
+    fun hentHendelserForSaksnummer(saksnummer: String): List<IASakshendelse> =
+        iaSakshendelseRepository.hentHendelserForSaksnummer(saksnummer)
 
 }

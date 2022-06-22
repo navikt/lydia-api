@@ -17,7 +17,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
-import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidsHistorikk
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
@@ -337,12 +337,13 @@ class IASakApiTest {
                     payload = valgtÅrsak.toJson()
                 )
             val alleHendelsesTyper = listOf(
+                OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
                 TA_EIERSKAP_I_SAK,
                 VIRKSOMHET_SKAL_KONTAKTES,
                 VIRKSOMHET_ER_IKKE_AKTUELL
             )
-            hentSamarbeidsHistorikk(orgnummer, mockOAuth2Server.superbruker1.token).also { sakshistorikkForVirksomhet ->
+            hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).also { sakshistorikkForVirksomhet ->
                 val historikkForSak = sakshistorikkForVirksomhet.find { it.saksnummer == sakIkkeAktuell.saksnummer }
                 historikkForSak shouldNotBe null
                 historikkForSak!!.sakshendelser.map { it.hendelsestype } shouldContainExactly alleHendelsesTyper
@@ -369,16 +370,18 @@ class IASakApiTest {
                 payload = valgtÅrsak.toJson()
             )
 
-        hentSamarbeidsHistorikk(orgnummer = orgnummer).also { samarbeidshistorikk ->
+        hentSamarbeidshistorikk(orgnummer = orgnummer).also { samarbeidshistorikk ->
             samarbeidshistorikk shouldHaveSize 1
             val sakshistorikk = samarbeidshistorikk.first()
             sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
+                IAProsessStatus.NY,
                 IAProsessStatus.VURDERES,
                 IAProsessStatus.VURDERES,
                 IAProsessStatus.KONTAKTES,
                 IAProsessStatus.IKKE_AKTUELL
             )
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainExactly listOf(
+                OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
                 TA_EIERSKAP_I_SAK,
                 VIRKSOMHET_SKAL_KONTAKTES,
@@ -551,7 +554,7 @@ class IASakApiTest {
                         begrunnelser = begrunnelser
                     ).toJson()
                 )
-            hentSamarbeidsHistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
+            hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
                 .forAtLeastOne { hendelseOppsummering ->
                     hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                     hendelseOppsummering.tidspunktForSnapshot shouldBe sakIkkeAktuell.endretTidspunkt

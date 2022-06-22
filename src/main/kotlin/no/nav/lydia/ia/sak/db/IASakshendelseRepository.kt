@@ -15,7 +15,7 @@ import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
 
-    fun hentHendelser(saksnummer: String) =
+    fun hentHendelserForSaksnummer(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -42,14 +42,14 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     GROUP BY aarsak_enum, id, type, orgnr, opprettet_av, saksnummer, opprettet
                     ORDER BY id ASC
                     """.trimIndent(),
-                        mapOf(
-                            "saksnummer" to saksnummer
-                        )
+                    mapOf(
+                        "saksnummer" to saksnummer
                     )
+                )
                     .map(this::mapRow).asList
             )
         }
-
+    
     fun lagreHendelse(hendelse: IASakshendelse) =
         using(sessionOf(dataSource)) { session ->
             session.run(

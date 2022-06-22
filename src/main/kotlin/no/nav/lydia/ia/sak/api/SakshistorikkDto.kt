@@ -1,10 +1,7 @@
 package no.nav.lydia.ia.sak.api
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
+import no.nav.lydia.ia.sak.domene.*
 import java.time.LocalDateTime
 
 @Serializable
@@ -23,26 +20,31 @@ class SakSnapshotDto(
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
     val eier: String?
-)
+){
+    companion object {
+        fun from(iaSakshendelse: IASakshendelse, iaSak: IASak) =
+            SakSnapshotDto(
+                status = iaSak.status,
+                hendelsestype = iaSakshendelse.hendelsesType,
+                tidspunktForSnapshot = iaSakshendelse.opprettetTidspunkt,
+                eier = iaSak.eidAv,
+                begrunnelser = when (iaSakshendelse) {
+                    is VirksomhetIkkeAktuellHendelse -> iaSakshendelse.valgtÅrsak.begrunnelser.map { it.navn }
+                    else -> emptyList()
+                }
+            )
+    }
+}
 
 fun IASak.tilSakshistorikk(): SakshistorikkDto {
     val førsteHendelse = hendelser.first()
     val resterendeHendelser = hendelser.minus(førsteHendelse)
     val sak = IASak.fraFørsteHendelse(førsteHendelse)
     val sakSnapshotDtos = mutableListOf<SakSnapshotDto>()
+    sakSnapshotDtos.add(SakSnapshotDto.from(iaSakshendelse = førsteHendelse, iaSak = sak))
     resterendeHendelser.forEach { hendelse ->
         sak.behandleHendelse(hendelse)
-        sakSnapshotDtos.add(
-            SakSnapshotDto(
-                status = sak.status,
-                hendelsestype = hendelse.hendelsesType,
-                tidspunktForSnapshot = hendelse.opprettetTidspunkt,
-                eier = sak.eidAv,
-                begrunnelser = when (hendelse) {
-                    is VirksomhetIkkeAktuellHendelse -> hendelse.valgtÅrsak.begrunnelser.map { it.navn }
-                    else -> emptyList()
-            })
-        )
+        sakSnapshotDtos.add(SakSnapshotDto.from(iaSakshendelse = hendelse, iaSak = sak))
     }
 
     return SakshistorikkDto(
