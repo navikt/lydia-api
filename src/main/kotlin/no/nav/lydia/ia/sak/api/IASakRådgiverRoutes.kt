@@ -52,7 +52,7 @@ fun Route.IASak_Rådgiver(
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            iaSakService.hentSaker(orgnummer).toDto(rådgiver = rådgiver).right()
+            iaSakService.hentSakerForOrgnummer(orgnummer).toDto(rådgiver = rådgiver).right()
         }.also { either ->
             auditLog.auditloggEither(
                 call = call,
@@ -73,9 +73,10 @@ fun Route.IASak_Rådgiver(
     get("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
-            iaSakService.hentSaker(orgnummer).map {
-                IASak.fraHendelser(iaSakService.hentHendelserForSaksnummer(it.saksnummer))
-            }.right()
+            iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
+                .groupBy { it.saksnummer }
+                .map { IASak.fraHendelser(it.value) }
+                .right()
         }. also { either ->
             if (either.isLeft()) {
                 auditLog.auditloggEither(
@@ -138,7 +139,6 @@ object IASakError {
     val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
     val `Kan ikke oppdatere sak på NAV-kontor` = Feil("Kan ikke oppdatere saker på NAV-kontorer", HttpStatusCode.UnprocessableEntity)
-    val `ugyldig saksnummer` = Feil("Ugyldig saksnummer", HttpStatusCode.BadRequest)
     val `støtter ikke flere saker for en virksomhet ennå` = Feil(
         "Støtter ikke flere saker for en virksomhet ennå", HttpStatusCode.NotImplemented
     )
