@@ -116,16 +116,16 @@ class SakHelper {
                 .authentication().bearer(token = token)
                 .responseObject<List<IASakDto>>(localDateTimeTypeAdapter)
 
-        fun hentSamarbeidsHistorikk(
+        fun hentSamarbeidshistorikk(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            hentSamarbeidsHistorikkRespons(orgnummer, token).third.fold(
+            hentSamarbeidshistorikkRespons(orgnummer, token).third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) }
             )
 
-        fun hentSamarbeidsHistorikkRespons(
+        fun hentSamarbeidshistorikkRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =

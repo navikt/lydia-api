@@ -140,7 +140,7 @@ class AuditLogTest {
     fun `auditlogger uthenting av hendelser på IA-sak på et gyldig saksnummer`() {
         val orgnummer = nyttOrgnummer()
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
-        SakHelper.hentSamarbeidsHistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
+        SakHelper.hentSamarbeidshistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
                 navIdent = mockOAuth2Server.superbruker1.navIdent,
@@ -150,7 +150,7 @@ class AuditLogTest {
                 saksnummer = sak.saksnummer
             )
         }
-        SakHelper.hentSamarbeidsHistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerUtenTilgangsrolle.token)
+        SakHelper.hentSamarbeidshistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerUtenTilgangsrolle.token)
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
