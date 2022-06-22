@@ -134,23 +134,13 @@ class SakHelper {
                 .responseObject<List<SakshistorikkDto>>(localDateTimeTypeAdapter)
 
 
-        fun hentHendelserPåSakRespons(
-            saksnummer: String,
+        fun hentSamarbeidshistorikkForOrgnrRespons(
+            orgnr: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$saksnummer")
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnr")
                 .authentication().bearer(token = token)
                 .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter)
-
-        fun hentHendelserPåSak(
-            saksnummer: String,
-            token: String = oauth2ServerContainer.saksbehandler1.token
-        ) =
-            hentHendelserPåSakRespons(saksnummer = saksnummer, token = token).third.fold(
-                success = { respons -> respons },
-                failure = {
-                    fail(it.message)
-                })
 
         fun opprettSakForVirksomhetRespons(
             orgnummer: String,
@@ -190,7 +180,7 @@ class SakHelper {
             payload: String? = null
         ): ResponseResultOf<IASakDto> {
             val request = nyHendelsePåSakRequest(token, sak, hendelsestype, payload)
-            return request.responseObject<IASakDto>(localDateTimeTypeAdapter)
+            return request.responseObject(localDateTimeTypeAdapter)
         }
 
         fun nyHendelsePåSakRequest(
@@ -199,7 +189,7 @@ class SakHelper {
             hendelsestype: SaksHendelsestype,
             payload: String?
         ): Request {
-            val request = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+            return lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
                 .authentication().bearer(token)
                 .jsonBody(
                     IASakshendelseDto(
@@ -211,7 +201,6 @@ class SakHelper {
                     ),
                     localDateTimeTypeAdapter
                 )
-            return request
         }
 
 
