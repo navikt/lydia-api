@@ -155,7 +155,7 @@ class AuditLogTest {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
                     navIdent = mockOAuth2Server.brukerUtenTilgangsrolle.navIdent,
-                    orgnummer = orgnummer, // Vi auditlogger ikke hvilket orgnummer man ikke hadde tilgang til
+                    orgnummer = orgnummer,
                     auditType = AuditType.access,
                     tillat = Tillat.Nei,
                 )
