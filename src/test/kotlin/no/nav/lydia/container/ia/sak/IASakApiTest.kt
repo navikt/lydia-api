@@ -14,7 +14,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.helper.SakHelper.Companion.hentHendelserPåSakRespons
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
@@ -27,7 +27,6 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
@@ -60,7 +59,6 @@ import kotlin.test.assertTrue
 
 class IASakApiTest {
     val mockOAuth2Server = oauth2ServerContainer
-    val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
@@ -205,20 +203,20 @@ class IASakApiTest {
                 token = mockOAuth2Server.brukerUtenTilgangsrolle.token
             ).statuskode() shouldBe 403
 
-            hentHendelserPåSakRespons(
-                saksnummer = sak.saksnummer,
+            hentSamarbeidshistorikkForOrgnrRespons(
+                orgnr = orgnummer,
                 token = mockOAuth2Server.lesebruker.token
             ).statuskode() shouldBe 200
-            hentHendelserPåSakRespons(
-                saksnummer = sak.saksnummer,
+            hentSamarbeidshistorikkForOrgnrRespons(
+                orgnr = orgnummer,
                 token = mockOAuth2Server.saksbehandler1.token
             ).statuskode() shouldBe 200
-            hentHendelserPåSakRespons(
-                saksnummer = sak.saksnummer,
+            hentSamarbeidshistorikkForOrgnrRespons(
+                orgnr = orgnummer,
                 token = mockOAuth2Server.superbruker1.token
             ).statuskode() shouldBe 200
-            hentHendelserPåSakRespons(
-                saksnummer = sak.saksnummer,
+            hentSamarbeidshistorikkForOrgnrRespons(
+                orgnr = orgnummer,
                 token = mockOAuth2Server.brukerUtenTilgangsrolle.token
             ).statuskode() shouldBe 403
         }
@@ -246,20 +244,20 @@ class IASakApiTest {
                     token = mockOAuth2Server.brukerUtenTilgangsrolle.token
                 ).statuskode() shouldBe 403
 
-                hentHendelserPåSakRespons(
-                    saksnummer = sak.saksnummer,
+                hentSamarbeidshistorikkForOrgnrRespons(
+                    orgnr = orgnummer,
                     token = mockOAuth2Server.lesebruker.token
                 ).statuskode() shouldBe 200
-                hentHendelserPåSakRespons(
-                    saksnummer = sak.saksnummer,
+                hentSamarbeidshistorikkForOrgnrRespons(
+                    orgnr = orgnummer,
                     token = mockOAuth2Server.saksbehandler1.token
                 ).statuskode() shouldBe 200
-                hentHendelserPåSakRespons(
-                    saksnummer = sak.saksnummer,
+                hentSamarbeidshistorikkForOrgnrRespons(
+                    orgnr = orgnummer,
                     token = mockOAuth2Server.superbruker1.token
                 ).statuskode() shouldBe 200
-                hentHendelserPåSakRespons(
-                    saksnummer = sak.saksnummer,
+                hentSamarbeidshistorikkForOrgnrRespons(
+                    orgnr = orgnummer,
                     token = mockOAuth2Server.brukerUtenTilgangsrolle.token
                 ).statuskode() shouldBe 403
             }
@@ -275,8 +273,8 @@ class IASakApiTest {
                         orgnummer = orgnummer,
                         token = mockOAuth2Server.saksbehandler1.token
                     ).statuskode() shouldBe 200
-                    hentHendelserPåSakRespons(
-                        saksnummer = sak.saksnummer,
+                    hentSamarbeidshistorikkForOrgnrRespons(
+                        orgnr = orgnummer,
                         token = mockOAuth2Server.saksbehandler1.token
                     ).statuskode() shouldBe 200
                 }
@@ -289,8 +287,8 @@ class IASakApiTest {
                         orgnummer = orgnummer,
                         token = mockOAuth2Server.superbruker1.token
                     ).statuskode() shouldBe 200
-                    hentHendelserPåSakRespons(
-                        saksnummer = sak.saksnummer,
+                    hentSamarbeidshistorikkForOrgnrRespons(
+                        orgnr = orgnummer,
                         token = mockOAuth2Server.superbruker1.token
                     ).statuskode() shouldBe 200
                 }
