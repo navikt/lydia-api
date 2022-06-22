@@ -14,6 +14,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
@@ -27,12 +28,7 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
-import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
@@ -58,7 +54,8 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
-    val mockOAuth2Server = oauth2ServerContainer
+    private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+//    private val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
@@ -471,7 +468,7 @@ class IASakApiTest {
             sak = sakForVirksomhet,
             hendelsestype = TA_EIERSKAP_I_SAK,
             payload = null,
-            token = oauth2ServerContainer.saksbehandler1.token,
+            token = mockOAuth2Server.saksbehandler1.token,
         ).responseString().third.get()
 
         sakJson.shouldEqualSpecifiedJson(
@@ -616,8 +613,8 @@ class IASakApiTest {
 
     @Test
     fun `tilgangskontroll - saksbehandler som ikke eier sak skal ikke kunne gå tilbake i prosessflyten`() {
-        val saksbehandler1 = oauth2ServerContainer.saksbehandler1.token
-        val saksbehandler2 = oauth2ServerContainer.saksbehandler2.token
+        val saksbehandler1 = mockOAuth2Server.saksbehandler1.token
+        val saksbehandler2 = mockOAuth2Server.saksbehandler2.token
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1)
             .nyHendelse(hendelsestype = VIRKSOMHET_SKAL_KONTAKTES, token = saksbehandler1)
