@@ -1,0 +1,1 @@
+drop index idx_orgnr_virksomhet;
