@@ -88,10 +88,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
                         vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
                     )
-                    AND (
-                        statistikk.kvartal = :kvartal AND statistikk.arstall = :arstall
-                    )
-                    AND ( statistikk.orgnr NOT in ${
+                    AND statistikk.kvartal = :kvartal
+                    AND statistikk.arstall = :arstall
+                    AND ( virksomhet.orgnr NOT in ${
                 NavEnheter.enheterSomSkalSkjermes.joinToString(
                     prefix = "(",
                     postfix = ")",
