@@ -10,7 +10,6 @@ data class Søkeparametere(
     val kommunenummer: Set<String>,
     val næringsgruppeKoder: Set<String>,
     val periode: Periode,
-    val sykefraværsperiode: Sykefraværsperiode,
     val sorteringsnøkkel: Sorteringsnøkkel,
     val sorteringsretning: Sorteringsretning,
     val sykefraværsprosentFra: Double?,
@@ -44,7 +43,6 @@ data class Søkeparametere(
                 Søkeparametere(
                     kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
                     næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
-                    sykefraværsperiode = Sykefraværsperiode.from(queryParameters),
                     periode = Periode.from(
                         queryParameters[KVARTAL].tomSomNull(),
                         queryParameters[ÅRSTALL].tomSomNull()
@@ -79,21 +77,6 @@ data class Søkeparametere(
 
     fun virksomheterPerSide() = VIRKSOMHETER_PER_SIDE
     fun offset() = (side - 1) * VIRKSOMHETER_PER_SIDE
-}
-
-class Sykefraværsperiode private constructor(fra: Number, til: Number) {
-
-    internal val fra = fra.toDouble()
-    internal val til = til.toDouble()
-
-    companion object {
-        fun from(queryParameters: Parameters): Sykefraværsperiode {
-            return Sykefraværsperiode(
-                fra = queryParameters["sykefraversprosentFra"]?.toDoubleOrNull() ?: 0,
-                til = queryParameters["sykefraversprosentTil"]?.toDoubleOrNull() ?: 100
-            )
-        }
-    }
 }
 
 class Periode(val kvartal: Int, val årstall: Int) {
