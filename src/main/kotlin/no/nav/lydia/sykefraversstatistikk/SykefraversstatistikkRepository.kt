@@ -150,9 +150,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         søkeparametere.navIdenter.toTypedArray()
                     ),
                     "kvartal" to søkeparametere.periode.kvartal,
-                    "arstall" to søkeparametere.periode.årstall,
-                    "sykefraversprosentFra" to søkeparametere.sykefraværsprosentFra,
-                    "sykefraversprosentTil" to søkeparametere.sykefraværsprosentTil
+                    "arstall" to søkeparametere.periode.årstall
                 )
             ).map(this::mapRow).asList
             session.run(query)
