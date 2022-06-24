@@ -1,5 +1,6 @@
 package no.nav.lydia.ssb
 
+import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.server.testing.*
@@ -17,7 +18,7 @@ class NæringsDownloaderTest {
 
     @Test
     fun `kan laste ned og hente ut næringer`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource(), unleash = FakeUnleash()) }) {
             with(handleRequest(HttpMethod.Get, NÆRINGSIMPORT_URL)) {
                 this.response.status() shouldBe HttpStatusCode.OK
 

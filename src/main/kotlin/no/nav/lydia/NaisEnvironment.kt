@@ -19,6 +19,8 @@ class NaisEnvironment(
         enum class Environment {
             PROD_GCP, DEV_GCP, LOKALT
         }
+
+        const val APP_NAVN = "lydia-api"
     }
 
     val miljø = when (cluster) {

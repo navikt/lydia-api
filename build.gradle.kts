@@ -67,6 +67,9 @@ dependencies {
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
+    // featuretoggling med unleash
+    implementation("io.getunleash:unleash-client-java:5.1.0")
+
     // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test")

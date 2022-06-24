@@ -1,5 +1,6 @@
 package no.nav.lydia.brreg
 
+import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
@@ -45,7 +46,8 @@ class BrregDownloaderTest {
         withTestApplication({
             lydiaRestApi(
                 naisEnvironment = naisEnvironment,
-                dataSource = postgres.getDataSource()
+                dataSource = postgres.getDataSource(),
+                unleash = FakeUnleash()
             )
         }) {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
@@ -69,7 +71,8 @@ class BrregDownloaderTest {
         withTestApplication({
             lydiaRestApi(
                 naisEnvironment = naisEnvironment,
-                dataSource = postgres.getDataSource()
+                dataSource = postgres.getDataSource(),
+                unleash = FakeUnleash()
             )
         }) {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
