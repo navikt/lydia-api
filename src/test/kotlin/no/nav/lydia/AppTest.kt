@@ -3,7 +3,7 @@ package no.nav.lydia
 import io.getunleash.FakeUnleash
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import no.nav.lydia.appstatus.FEATURE_TOGGLE_PATH
+import no.nav.lydia.appstatus.FEATURE_TOGGLE_TEST_PATH
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
@@ -63,13 +63,13 @@ class AppTest {
     fun `featuretoggling virker`() {
         val unleash = FakeUnleash().apply { enableAll() }
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = unleash) }) {
-            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_PATH)) {
+            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
                 assertEquals(HttpStatusCode.OK, response.status())
             }
         }
         unleash.disableAll()
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = unleash) }) {
-            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_PATH)) {
+            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
                 assertEquals(HttpStatusCode.NotImplemented, response.status())
             }
         }
