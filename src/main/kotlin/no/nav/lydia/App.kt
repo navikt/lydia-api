@@ -4,9 +4,7 @@
 package no.nav.lydia
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.getunleash.DefaultUnleash
 import io.getunleash.Unleash
-import io.getunleash.util.UnleashConfig
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -56,12 +54,7 @@ fun main() {
 
 fun startLydiaBackend() {
     val naisEnv = NaisEnvironment()
-    val config: UnleashConfig = UnleashConfig.builder()
-        .appName(NaisEnvironment.APP_NAVN)
-        .instanceId(NaisEnvironment.APP_NAVN + "_" + naisEnv.miljø.name)
-        .unleashAPI("https://unleash.nais.io/api/")
-        .build()
-    val unleash: Unleash = DefaultUnleash(config)
+    val unleash = lagUnleashKlient(naisEnv)
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
