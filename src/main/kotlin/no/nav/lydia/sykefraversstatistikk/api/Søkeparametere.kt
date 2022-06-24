@@ -1,7 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import io.ktor.http.Parameters
-import io.ktor.server.application.*
+import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.navIdent
@@ -101,20 +101,22 @@ class Periode(val kvartal: Int, val årstall: Int) {
     }
 }
 
-enum class Sorteringsnøkkel(private val verdi: String) {
-    TAPTE_DAGSVERK("tapte_dagsverk"),
-    SYKEFRAVÆRSPROSENT("sykefraversprosent");
+private const val SYKEFRAVÆR_TABELLNAVN = "statistikk"
+private const val VIRKSOMHET_TABELLNAVN = "virksomhet"
+
+enum class Sorteringsnøkkel(private val verdi: String, private val tabell: String) {
+    NAVN_PÅ_VIRKSOMHET("navn", VIRKSOMHET_TABELLNAVN),
+    TAPTE_DAGSVERK("tapte_dagsverk", SYKEFRAVÆR_TABELLNAVN),
+    ANTALL_PERSONER("antall_personer", SYKEFRAVÆR_TABELLNAVN),
+    MULIGE_DAGSVERK("mulige_dagsverk", SYKEFRAVÆR_TABELLNAVN),
+    SYKEFRAVÆRSPROSENT("sykefraversprosent", SYKEFRAVÆR_TABELLNAVN);
 
     companion object {
-        fun from(verdi: String?): Sorteringsnøkkel =
-            when (verdi?.lowercase()) {
-                "tapte_dagsverk" -> TAPTE_DAGSVERK
-                "sykefraversprosent" -> SYKEFRAVÆRSPROSENT
-                else -> TAPTE_DAGSVERK
-            }
-
+        fun from(verdi: String?) = values().find { it.verdi == verdi?.lowercase() } ?: TAPTE_DAGSVERK
         fun alleSorteringsNøkler() = values().map { it.toString() }
     }
+
+    fun tilOrderBy() = "ORDER BY ${tabell}.${verdi}"
 
     override fun toString(): String = this.verdi
 
