@@ -39,6 +39,8 @@ class IASak private constructor(
             IAProsessStatus.VURDERES -> VurderesTilstand()
             IAProsessStatus.IKKE_AKTUELL -> IkkeAktuellTilstand()
             IAProsessStatus.KONTAKTES -> KontaktesTilstand()
+            IAProsessStatus.KARTLEGGES -> KartleggesTilstand()
+            IAProsessStatus.VI_BISTÅR -> ViBistårTilstand()
             IAProsessStatus.IKKE_AKTIV -> throw IllegalStateException()
         }
     }
@@ -77,6 +79,13 @@ class IASak private constructor(
             VIRKSOMHET_SKAL_KONTAKTES -> {
                 tilstand.kontaktes()
             }
+            VIRKSOMHET_KARTLEGGES -> {
+                tilstand.kartlegges()
+            }
+            VIRKSOMHET_SKAL_BISTÅS -> {
+                tilstand.viBistår()
+            }
+
             TA_EIERSKAP_I_SAK -> {
                 eidAv = hendelse.opprettetAv
             }
@@ -110,6 +119,13 @@ class IASak private constructor(
         }
 
         open fun kontaktes() {
+            håndterFeilState()
+        }
+        open fun kartlegges() {
+            håndterFeilState()
+        }
+
+        open fun viBistår() {
             håndterFeilState()
         }
 
@@ -193,6 +209,10 @@ class IASak private constructor(
             tilstand = IkkeAktuellTilstand()
         }
 
+        override fun kartlegges() {
+            tilstand = KartleggesTilstand()
+        }
+
         override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
             ikkeAktuell()
             super.oppdaterStandardFelter(hendelse = hendelse)
@@ -203,6 +223,7 @@ class IASak private constructor(
                 LESE -> emptyList()
                 SAKSBEHANDLER, SUPERBRUKER -> {
                     if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_KARTLEGGES),
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
                         GyldigHendelse(saksHendelsestype = TILBAKE)
                     )
@@ -215,6 +236,52 @@ class IASak private constructor(
             tilstand = finnForrigeTilstand()
         }
     }
+
+    private inner class KartleggesTilstand : ProsessTilstand(
+        status = IAProsessStatus.KARTLEGGES
+    ) {
+        override fun viBistår() {
+            tilstand = ViBistårTilstand()
+        }
+
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
+            return when (rådgiver.rolle) {
+                LESE -> emptyList()
+                SAKSBEHANDLER, SUPERBRUKER -> {
+                    if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
+                        GyldigHendelse(saksHendelsestype = TILBAKE)
+                    )
+                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
+        }
+
+        override fun tilbake() {
+            tilstand = finnForrigeTilstand()
+        }
+    }
+
+    private inner class ViBistårTilstand : ProsessTilstand(
+        status = IAProsessStatus.VI_BISTÅR
+    ) {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
+            return when (rådgiver.rolle) {
+                LESE -> emptyList()
+                SAKSBEHANDLER, SUPERBRUKER -> {
+                    if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = TILBAKE)
+                    )
+                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
+        }
+
+        override fun tilbake() {
+            tilstand = finnForrigeTilstand()
+        }
+    }
+
 
     private inner class IkkeAktuellTilstand : ProsessTilstand(
         status = IAProsessStatus.IKKE_AKTUELL
@@ -276,6 +343,8 @@ enum class IAProsessStatus {
     IKKE_AKTIV,
     VURDERES,
     KONTAKTES,
+    KARTLEGGES,
+    VI_BISTÅR,
     IKKE_AKTUELL;
 
     companion object {
@@ -283,7 +352,9 @@ enum class IAProsessStatus {
             IKKE_AKTIV,
             VURDERES,
             KONTAKTES,
-            IKKE_AKTUELL
+            IKKE_AKTUELL,
+            KARTLEGGES,
+            VI_BISTÅR
         )
     }
 }

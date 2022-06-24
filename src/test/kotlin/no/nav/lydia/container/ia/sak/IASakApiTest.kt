@@ -31,12 +31,9 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND
@@ -55,7 +52,6 @@ import kotlin.test.assertTrue
 
 class IASakApiTest {
     private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
-//    private val postgresContainer = TestContainerHelper.postgresContainer
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
@@ -645,4 +641,28 @@ class IASakApiTest {
             .nyHendelse(TILBAKE)
         sak.status shouldBe IAProsessStatus.VURDERES
     }
+
+    @Test
+    fun `skal kunne sette en sak i 'Vi bistår'`() {
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .also { sak -> shouldFail { sak.nyHendelse(VIRKSOMHET_SKAL_BISTÅS) } }
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .also { sak -> sak.status shouldBe KARTLEGGES }
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .also { sak -> sak.status shouldBe VI_BISTÅR }
+            .also { sak ->
+                shouldFail {
+                    sak.nyHendelse(
+                        hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                            type = VIRKSOMHETEN_TAKKET_NEI,
+                            begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                        ).toJson()
+                    )
+                }
+            }
+    }
+
+
 }
