@@ -24,7 +24,7 @@ val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "hendelse"
 val SAMARBEIDSHISTORIKK_PATH = "historikk"
 
-fun Route.IASak_Rådgiver(
+fun Route.iaSakRådgiver(
     iaSakService: IASakService,
     fiaRoller: FiaRoller,
     auditLog: AuditLog

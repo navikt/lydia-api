@@ -56,7 +56,7 @@ class AppContainerTest {
     }
 
     @Test
-    fun `unleash skal ha enablet featuretoggle`() {
-        lydiaApiContainer.performGet(FEATURE_TOGGLE_TEST_PATH).response().second.statusCode shouldBe 200
+    fun `unleash skal ha disablet featuretoggle by default`() {
+        lydiaApiContainer.performGet(FEATURE_TOGGLE_TEST_PATH).response().second.statusCode shouldBe 501
     }
 }
