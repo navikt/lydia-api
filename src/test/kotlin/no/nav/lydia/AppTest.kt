@@ -67,12 +67,13 @@ class AppTest {
 
     @Test
     fun `featuretoggling virker`() {
+        UnleashKlient.skruAvToggle(UnleashToggleKeys.testToggle)
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
                 assertEquals(HttpStatusCode.NotImplemented, response.status())
             }
         }
-        UnleashKlient.skruPåTogglesForTest(UnleashToggleKeys.testToggle)
+        UnleashKlient.skruPåToggle(UnleashToggleKeys.testToggle)
         withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
                 assertEquals(HttpStatusCode.OK, response.status())

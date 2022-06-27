@@ -10,17 +10,13 @@ import com.github.kittinunf.fuel.httpPost
 import io.kotest.matchers.string.shouldContain
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.appstatus.FEATURE_TOGGLE_DISABLE_PATH
+import no.nav.lydia.appstatus.FEATURE_TOGGLE_ENABLE_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
-import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
-import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -370,5 +366,25 @@ class VirksomhetHelper {
             }
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(testData.sykefraværsStatistikkMeldinger().toList())
         }
+    }
+}
+
+
+class FeatureToggleHelper {
+    companion object {
+        fun skruPåToggle(toggleKey: String) =
+            lydiaApiContainer.performGet("$FEATURE_TOGGLE_ENABLE_PATH/$toggleKey")
+                .response()
+                .third.fold(
+                    success = { response -> response },
+                    failure = { fail(it.message) }
+                )
+        fun skruAvToggle(toggleKey: String) =
+            lydiaApiContainer.performGet("$FEATURE_TOGGLE_DISABLE_PATH/$toggleKey")
+                .response()
+                .third.fold(
+                    success = { response -> response },
+                    failure = { fail(it.message) }
+                )
     }
 }
