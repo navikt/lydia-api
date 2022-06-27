@@ -4,6 +4,7 @@ import kotliquery.Row
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
+import no.nav.lydia.skalBrukeNyeStatuser
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 import org.slf4j.LoggerFactory
@@ -47,7 +48,12 @@ class IASak private constructor(
 
     fun lagreGrunnlag(grunnlagService: GrunnlagService) = tilstand.lagreGrunnlag(grunnlagService)
 
-    fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
+    fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
+        val nyeHendelser = listOf(VIRKSOMHET_KARTLEGGES, VIRKSOMHET_SKAL_BISTÅS)
+        val gyldigeNesteHendelser = tilstand.gyldigeNesteHendelser(rådgiver)
+        if (skalBrukeNyeStatuser()) return gyldigeNesteHendelser
+        return gyldigeNesteHendelser.filterNot { gyldigHendelse -> nyeHendelser.contains(gyldigHendelse.saksHendelsestype) }
+    }
 
     fun kanUtføreHendelse(hendelse: IASakshendelse, rådgiver: Rådgiver) = when (hendelse) {
         is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(rådgiver)

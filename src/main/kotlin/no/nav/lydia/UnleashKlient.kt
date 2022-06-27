@@ -20,14 +20,17 @@ object UnleashKlient {
                 .build()
             this.unleash = DefaultUnleash(config)
         }
-        LOKALT -> this.unleash = FakeUnleash()
+        LOKALT -> this.unleash = FakeUnleash().also { it.enable(UnleashToggleKeys.testToggle) }
     }
 
     fun isEnabled(toggleKey: String) = unleash.isEnabled(toggleKey, false)
-    fun skruPåTogglesForTest(vararg toggleKey: String) = (unleash as FakeUnleash).enable(*toggleKey)
+    fun skruPåToggle(toggleKey: String) = (unleash as FakeUnleash).enable(toggleKey)
+    fun skruAvToggle(toggleKey: String) = (unleash as FakeUnleash).disable(toggleKey)
 }
 
 object UnleashToggleKeys {
     const val testToggle = "pia.tester-unleash"
     const val nyeStatuserToggle = "pia.nye-statuser"
 }
+
+fun skalBrukeNyeStatuser() = UnleashKlient.isEnabled(UnleashToggleKeys.nyeStatuserToggle)
