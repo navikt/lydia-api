@@ -4,7 +4,6 @@
 package no.nav.lydia
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.getunleash.Unleash
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -28,7 +27,7 @@ import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.grunnlag.GrunnlagRepository
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.api.IASak_Rådgiver
+import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
@@ -54,7 +53,7 @@ fun main() {
 
 fun startLydiaBackend() {
     val naisEnv = NaisEnvironment()
-    val unleash = lagUnleashKlient(naisEnv)
+    UnleashKlient.init(naisEnv.miljø)
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
@@ -77,8 +76,7 @@ fun startLydiaBackend() {
             naisEnvironment = naisEnv,
             dataSource = dataSource,
             iaSakshendelseProdusent = iaSakshendelseProdusent,
-            iaSakProdusent = iaSakProdusent,
-            unleash = unleash
+            iaSakProdusent = iaSakProdusent
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -92,8 +90,7 @@ fun Application.lydiaRestApi(
     naisEnvironment: NaisEnvironment,
     dataSource: DataSource,
     iaSakshendelseProdusent: IASakshendelseProdusent? = null,
-    iaSakProdusent: IASakProdusent? = null,
-    unleash: Unleash
+    iaSakProdusent: IASakProdusent? = null
 ) {
     install(ContentNegotiation) {
         json()
@@ -148,7 +145,7 @@ fun Application.lydiaRestApi(
 
     routing {
         healthChecks()
-        featureToggle(unleash = unleash)
+        featureToggle()
         metrics()
         virksomhetsImport(
             BrregDownloader(
@@ -170,7 +167,7 @@ fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 fiaRoller = naisEnvironment.security.fiaRoller
             )
-            IASak_Rådgiver(
+            iaSakRådgiver(
                 iaSakService = IASakService(
                     iaSakRepository = IASakRepository(dataSource = dataSource),
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),

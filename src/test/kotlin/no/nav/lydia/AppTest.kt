@@ -1,13 +1,14 @@
 package no.nav.lydia
 
-import io.getunleash.FakeUnleash
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKALT
 import no.nav.lydia.appstatus.FEATURE_TOGGLE_TEST_PATH
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import org.junit.Before
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -18,9 +19,14 @@ class AppTest {
         private val naisEnvironment = KtorTestHelper.ktorNaisEnvironment
     }
 
+    @Before
+    fun setUp() {
+        UnleashKlient.init(miljø = LOKALT)
+    }
+
     @Test
     fun `appen svarer på isAlive-kall når den kjører`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = FakeUnleash()) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isalive")) {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals("OK", response.content)
@@ -30,7 +36,7 @@ class AppTest {
 
     @Test
     fun `appen svarer på isReady-kall når den er klar til å ta imot trafikk`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = FakeUnleash()) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "/internal/isready")) {
                 //TODO sørg for at database-tilkoblingen funker før vi svarer ja på isReady
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -41,7 +47,7 @@ class AppTest {
 
     @Test
     fun `uautentisert kall mot beskyttet endepunkt skal returnere 401`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = FakeUnleash()) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
             }
@@ -50,7 +56,7 @@ class AppTest {
 
     @Test
     fun `kall med ugyldig token mot beskyttet endepunkt skal returnere 401`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = FakeUnleash()) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, "$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
                 addHeader(HttpHeaders.Authorization, "Bearer detteErIkkeEtGyldigToken")
             }) {
@@ -61,16 +67,15 @@ class AppTest {
 
     @Test
     fun `featuretoggling virker`() {
-        val unleash = FakeUnleash().apply { enableAll() }
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = unleash) }) {
-            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
-                assertEquals(HttpStatusCode.OK, response.status())
-            }
-        }
-        unleash.disableAll()
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource, unleash = unleash) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
             with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
                 assertEquals(HttpStatusCode.NotImplemented, response.status())
+            }
+        }
+        UnleashKlient.skruPåTogglesForTest(UnleashToggleKeys.testToggle)
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
+            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
+                assertEquals(HttpStatusCode.OK, response.status())
             }
         }
     }

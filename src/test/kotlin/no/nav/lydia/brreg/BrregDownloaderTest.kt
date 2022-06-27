@@ -1,11 +1,12 @@
 package no.nav.lydia.brreg
 
-import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.testing.*
+import no.nav.lydia.UnleashKlient
+import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKALT
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
@@ -18,6 +19,7 @@ import no.nav.lydia.integrasjoner.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.lydiaRestApi
+import org.junit.Before
 import kotlin.test.AfterTest
 import kotlin.test.Test
 
@@ -35,6 +37,11 @@ class BrregDownloaderTest {
         }
     }
 
+    @Before
+    fun setUp() {
+        UnleashKlient.init(miljø = LOKALT)
+    }
+
     @AfterTest
     fun cleanup() {
         postgres.performUpdate("delete from virksomhet_naring")
@@ -46,8 +53,7 @@ class BrregDownloaderTest {
         withTestApplication({
             lydiaRestApi(
                 naisEnvironment = naisEnvironment,
-                dataSource = postgres.getDataSource(),
-                unleash = FakeUnleash()
+                dataSource = postgres.getDataSource()
             )
         }) {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
@@ -71,8 +77,7 @@ class BrregDownloaderTest {
         withTestApplication({
             lydiaRestApi(
                 naisEnvironment = naisEnvironment,
-                dataSource = postgres.getDataSource(),
-                unleash = FakeUnleash()
+                dataSource = postgres.getDataSource()
             )
         }) {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
