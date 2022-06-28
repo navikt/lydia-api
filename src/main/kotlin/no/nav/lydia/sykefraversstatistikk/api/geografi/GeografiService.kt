@@ -63,6 +63,7 @@ class GeografiService {
             "3019", // VESTBY
             "3018", // VÅLER
             "3021", // ÅS
+            "3054" // LUNNER
         )
 
         @OptIn(ExperimentalSerializationApi::class)
