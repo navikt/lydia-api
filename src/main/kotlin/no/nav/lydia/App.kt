@@ -151,7 +151,7 @@ fun Application.lydiaRestApi(
 
     routing {
         healthChecks()
-        if (naisEnvironment.miljø == NaisEnvironment.Companion.Environment.LOKALT) {
+        if (naisEnvironment.miljø == NaisEnvironment.Companion.Environment.LOKAL) {
             featureToggle()
         }
         metrics()

@@ -53,7 +53,7 @@ class AuditLog(val miljø: Environment) {
         when (miljø) {
             `PROD-GCP` -> auditLog.info(logstring)
             Environment.`DEV-GCP` -> Unit
-            Environment.LOKALT -> fiaLog.info(logstring)
+            Environment.LOKAL -> fiaLog.info(logstring)
         }
     }
 
