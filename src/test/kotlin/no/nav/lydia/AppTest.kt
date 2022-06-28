@@ -5,12 +5,10 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.withTestApplication
-import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKALT
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import org.junit.Before
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -19,11 +17,6 @@ class AppTest {
         private val postgres = PostgrestContainerHelper()
         private val dataSource = postgres.getDataSource().apply { runMigration(this) }
         private val naisEnvironment = KtorTestHelper.ktorNaisEnvironment
-    }
-
-    @Before
-    fun setUp() {
-        UnleashKlient.init(miljø = LOKALT)
     }
 
     @Test

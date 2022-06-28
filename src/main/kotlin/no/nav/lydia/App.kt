@@ -60,7 +60,6 @@ fun main() {
 
 fun startLydiaBackend() {
     val naisEnv = NaisEnvironment()
-    UnleashKlient.init(naisEnv.miljø)
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
