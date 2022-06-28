@@ -1,9 +1,11 @@
 package no.nav.lydia
 
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.withTestApplication
 import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKALT
-import no.nav.lydia.appstatus.FEATURE_TOGGLE_TEST_PATH
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
@@ -61,22 +63,6 @@ class AppTest {
                 addHeader(HttpHeaders.Authorization, "Bearer detteErIkkeEtGyldigToken")
             }) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
-            }
-        }
-    }
-
-    @Test
-    fun `featuretoggling virker`() {
-        UnleashKlient.skruAvToggle(UnleashToggleKeys.testToggle)
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
-            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
-                assertEquals(HttpStatusCode.NotImplemented, response.status())
-            }
-        }
-        UnleashKlient.skruPåToggle(UnleashToggleKeys.testToggle)
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = dataSource) }) {
-            with(handleRequest(HttpMethod.Get, FEATURE_TOGGLE_TEST_PATH)) {
-                assertEquals(HttpStatusCode.OK, response.status())
             }
         }
     }

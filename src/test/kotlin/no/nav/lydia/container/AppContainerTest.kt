@@ -2,9 +2,7 @@ package no.nav.lydia.container
 
 import com.github.kittinunf.fuel.core.isSuccessful
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import no.nav.lydia.appstatus.FEATURE_TOGGLE_TEST_PATH
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import kotlin.test.Test
@@ -53,10 +51,5 @@ class AppContainerTest {
             fail("")
         }
         )
-    }
-
-    @Test
-    fun `skal ha enablet test-featuretoggelen i tester by default`() {
-        lydiaApiContainer.performGet(FEATURE_TOGGLE_TEST_PATH).response().second.statusCode shouldBe 200
     }
 }
