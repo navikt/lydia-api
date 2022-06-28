@@ -17,14 +17,11 @@ class NaisEnvironment(
 ) {
     companion object {
         enum class Environment {
-            `PROD-GCP`, `DEV-GCP`, LOKALT
+            `PROD-GCP`, `DEV-GCP`, LOKAL
         }
-        fun hentMiljø(cluster: String) = when (cluster) {
-            "prod-gcp" -> Environment.`PROD-GCP`
-            "dev-gcp" -> Environment.`DEV-GCP`
-            "lokal" -> Environment.LOKALT
-            else -> throw IllegalStateException("Ukjent miljø")
-        }
+
+        fun hentMiljø(cluster: String) =
+            Environment.values().find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø ${cluster}")
 
         const val APP_NAVN = "lydia-api"
     }
