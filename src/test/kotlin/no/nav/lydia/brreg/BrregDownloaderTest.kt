@@ -2,11 +2,10 @@ package no.nav.lydia.brreg
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import io.ktor.http.*
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode.Companion.OK
-import io.ktor.server.testing.*
-import no.nav.lydia.UnleashKlient
-import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKALT
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.withTestApplication
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
@@ -19,7 +18,6 @@ import no.nav.lydia.integrasjoner.brreg.VIRKSOMHETSIMPORT_PATH
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.lydiaRestApi
-import org.junit.Before
 import kotlin.test.AfterTest
 import kotlin.test.Test
 
@@ -35,11 +33,6 @@ class BrregDownloaderTest {
                 næringsRepository = NæringsRepository(dataSource = dataSource)
             ).lastNedNæringer()
         }
-    }
-
-    @Before
-    fun setUp() {
-        UnleashKlient.init(miljø = LOKALT)
     }
 
     @AfterTest

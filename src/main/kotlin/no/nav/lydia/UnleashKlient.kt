@@ -4,23 +4,23 @@ import io.getunleash.DefaultUnleash
 import io.getunleash.FakeUnleash
 import io.getunleash.Unleash
 import io.getunleash.util.UnleashConfig
-import no.nav.lydia.NaisEnvironment.Companion.Environment
-import no.nav.lydia.NaisEnvironment.Companion.Environment.*
 
 
 object UnleashKlient {
-    private lateinit var unleash: Unleash
+    private val unleash: Unleash
 
-    fun init(miljø : Environment) = when(miljø) {
-        PROD_GCP, DEV_GCP -> {
-            val config: UnleashConfig = UnleashConfig.builder()
-                .appName(NaisEnvironment.APP_NAVN)
-                .instanceId(NaisEnvironment.APP_NAVN + "_" + miljø.name)
-                .unleashAPI("https://unleash.nais.io/api/")
-                .build()
-            this.unleash = DefaultUnleash(config)
+    init {
+        val miljø = getEnvVar(varName = "NAIS_CLUSTER_NAME", defaultValue = "lokal")
+        unleash = when (miljø) {
+            "prod-gcp", "dev-gcp" -> DefaultUnleash(
+                UnleashConfig.builder()
+                    .appName(NaisEnvironment.APP_NAVN)
+                    .instanceId(NaisEnvironment.APP_NAVN + "_" + miljø)
+                    .unleashAPI("https://unleash.nais.io/api/")
+                    .build()
+            )
+            else -> FakeUnleash()
         }
-        LOKALT -> this.unleash = FakeUnleash().also { it.enable(UnleashToggleKeys.testToggle) }
     }
 
     fun isEnabled(toggleKey: String) = unleash.isEnabled(toggleKey, false)
@@ -29,7 +29,6 @@ object UnleashKlient {
 }
 
 object UnleashToggleKeys {
-    const val testToggle = "pia.tester-unleash"
     const val nyeStatuserToggle = "pia.nye-statuser"
 }
 

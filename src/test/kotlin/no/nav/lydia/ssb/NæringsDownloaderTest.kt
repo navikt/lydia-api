@@ -1,27 +1,21 @@
 package no.nav.lydia.ssb
 
 import io.kotest.matchers.shouldBe
-import io.ktor.http.*
-import io.ktor.server.testing.*
-import no.nav.lydia.UnleashKlient
-import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKALT
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.withTestApplication
 import no.nav.lydia.helper.KtorTestHelper
 import no.nav.lydia.helper.PostgrestContainerHelper
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.integrasjoner.ssb.NÆRINGSIMPORT_URL
 import no.nav.lydia.lydiaRestApi
-import org.junit.Before
 import kotlin.test.Test
 
 class NæringsDownloaderTest {
 
     val postgres = PostgrestContainerHelper()
     val naisEnvironment = KtorTestHelper.ktorNaisEnvironment
-
-    @Before
-    fun setUp() {
-        UnleashKlient.init(miljø = LOKALT)
-    }
 
     @Test
     fun `kan laste ned og hente ut næringer`() {
