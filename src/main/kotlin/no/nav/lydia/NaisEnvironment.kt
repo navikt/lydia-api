@@ -19,16 +19,17 @@ class NaisEnvironment(
         enum class Environment {
             PROD_GCP, DEV_GCP, LOKALT
         }
+        fun hentMiljø(cluster: String) = when (cluster) {
+            "prod-gcp" -> Environment.PROD_GCP
+            "dev-gcp" -> Environment.DEV_GCP
+            "lokal" -> Environment.LOKALT
+            else -> throw IllegalStateException("Ukjent miljø")
+        }
 
         const val APP_NAVN = "lydia-api"
     }
 
-    val miljø = when (cluster) {
-        "prod-gcp" -> Environment.PROD_GCP
-        "dev-gcp" -> Environment.DEV_GCP
-        "lokal" -> Environment.LOKALT
-        else -> throw IllegalStateException("Ukjent miljø")
-    }
+    val miljø = hentMiljø(cluster)
 }
 
 class Database(
