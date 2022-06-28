@@ -6,7 +6,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import no.nav.lydia.NaisEnvironment.Companion.Environment
-import no.nav.lydia.NaisEnvironment.Companion.Environment.PROD_GCP
+import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.tilgangskontroll.navIdent
 import org.slf4j.LoggerFactory
@@ -51,8 +51,8 @@ class AuditLog(val miljø: Environment) {
                     (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "")
 
         when (miljø) {
-            PROD_GCP -> auditLog.info(logstring)
-            Environment.DEV_GCP -> Unit
+            `PROD-GCP` -> auditLog.info(logstring)
+            Environment.`DEV-GCP` -> Unit
             Environment.LOKALT -> fiaLog.info(logstring)
         }
     }

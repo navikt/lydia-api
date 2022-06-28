@@ -17,11 +17,11 @@ class NaisEnvironment(
 ) {
     companion object {
         enum class Environment {
-            PROD_GCP, DEV_GCP, LOKALT
+            `PROD-GCP`, `DEV-GCP`, LOKALT
         }
         fun hentMiljø(cluster: String) = when (cluster) {
-            "prod-gcp" -> Environment.PROD_GCP
-            "dev-gcp" -> Environment.DEV_GCP
+            "prod-gcp" -> Environment.`PROD-GCP`
+            "dev-gcp" -> Environment.`DEV-GCP`
             "lokal" -> Environment.LOKALT
             else -> throw IllegalStateException("Ukjent miljø")
         }
