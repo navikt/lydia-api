@@ -23,6 +23,7 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
+import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.featureToggle
 import no.nav.lydia.appstatus.healthChecks
@@ -151,7 +152,7 @@ fun Application.lydiaRestApi(
 
     routing {
         healthChecks()
-        if (naisEnvironment.miljø == NaisEnvironment.Companion.Environment.LOKAL) {
+        if (naisEnvironment.miljø == LOKAL) {
             featureToggle()
         }
         metrics()

@@ -32,9 +32,7 @@ object UnleashKlient {
     fun skruAvToggle(toggleKey: String) = (unleash as FakeUnleash).disable(toggleKey)
 }
 
-object UnleashToggleKeys {
-    const val nyeStatuserToggle = "pia.nye-statuser"
-}
+object UnleashToggleKeys {}
 
 class ClusterStrategy(val miljø: NaisEnvironment.Companion.Environment) : Strategy {
     override fun getName() = "byCluster"
@@ -45,5 +43,3 @@ class ClusterStrategy(val miljø: NaisEnvironment.Companion.Environment) : Strat
         return alleClustere.contains(miljø.name.lowercase())
     }
 }
-
-fun skalBrukeNyeStatuser() = UnleashKlient.isEnabled(UnleashToggleKeys.nyeStatuserToggle)

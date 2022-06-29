@@ -14,7 +14,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
-import no.nav.lydia.UnleashToggleKeys
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
@@ -644,13 +643,11 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal ikke kunne sette en sak i 'Vi bistår' før feature toggle er skrudd på`() {
+    fun `skal kunne sette en sak i 'Vi bistår'`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .also { sak -> shouldFail { sak.nyHendelse(VIRKSOMHET_SKAL_BISTÅS) } }
-            .also { sak -> shouldFail { sak.nyHendelse(VIRKSOMHET_KARTLEGGES) } }
-            .also { FeatureToggleHelper.skruPåToggle(UnleashToggleKeys.nyeStatuserToggle) }
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
             .also { sak -> sak.status shouldBe KARTLEGGES }
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
