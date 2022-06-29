@@ -34,7 +34,7 @@ class NæringsRepository(
             session.run(
                 queryOf(
                     """
-                select * from naring where length(kode) = 6
+                select * from naring where length(kode) = 2
             """.trimIndent()
                 ).map {
                     Næringsgruppe(navn = it.string("navn"), kode = it.string("kode"))
