@@ -86,7 +86,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     )
                     AND (
                         (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
-                        vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
+                        substr(vn.narings_kode, 1, 2) in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
                     )
                     AND statistikk.kvartal = :kvartal
                     AND statistikk.arstall = :arstall
