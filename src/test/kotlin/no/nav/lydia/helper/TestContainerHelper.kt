@@ -10,8 +10,6 @@ import com.github.kittinunf.fuel.httpPost
 import io.kotest.matchers.string.shouldContain
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import no.nav.lydia.appstatus.FEATURE_TOGGLE_DISABLE_PATH
-import no.nav.lydia.appstatus.FEATURE_TOGGLE_ENABLE_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -366,25 +364,5 @@ class VirksomhetHelper {
             }
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(testData.sykefraværsStatistikkMeldinger().toList())
         }
-    }
-}
-
-
-class FeatureToggleHelper {
-    companion object {
-        fun skruPåToggle(toggleKey: String) =
-            lydiaApiContainer.performGet("$FEATURE_TOGGLE_ENABLE_PATH/$toggleKey")
-                .response()
-                .third.fold(
-                    success = { response -> response },
-                    failure = { fail(it.message) }
-                )
-        fun skruAvToggle(toggleKey: String) =
-            lydiaApiContainer.performGet("$FEATURE_TOGGLE_DISABLE_PATH/$toggleKey")
-                .response()
-                .third.fold(
-                    success = { response -> response },
-                    failure = { fail(it.message) }
-                )
     }
 }

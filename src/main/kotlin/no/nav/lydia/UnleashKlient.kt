@@ -28,8 +28,6 @@ object UnleashKlient {
     }
 
     fun isEnabled(toggleKey: String) = unleash.isEnabled(toggleKey, false)
-    fun skruPåToggle(toggleKey: String) = (unleash as FakeUnleash).enable(toggleKey)
-    fun skruAvToggle(toggleKey: String) = (unleash as FakeUnleash).disable(toggleKey)
 }
 
 object UnleashToggleKeys {}

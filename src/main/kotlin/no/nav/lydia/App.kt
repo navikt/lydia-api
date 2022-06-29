@@ -4,28 +4,19 @@
 package no.nav.lydia
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.application.log
-import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
-import io.ktor.server.engine.addShutdownHook
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.engine.stop
-import io.ktor.server.metrics.micrometer.MicrometerMetrics
-import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.response.respond
-import io.ktor.server.routing.IgnoreTrailingSlash
-import io.ktor.server.routing.routing
-import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.engine.*
+import io.ktor.server.metrics.micrometer.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.appstatus.featureToggle
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UatorisertException
@@ -152,9 +143,6 @@ fun Application.lydiaRestApi(
 
     routing {
         healthChecks()
-        if (naisEnvironment.miljø == LOKAL) {
-            featureToggle()
-        }
         metrics()
         virksomhetsImport(
             BrregDownloader(
