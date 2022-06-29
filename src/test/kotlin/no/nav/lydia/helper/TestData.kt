@@ -94,6 +94,10 @@ class TestData(
                 )
             )
         }
+        virksomhet.næringsundergrupper
+            .map(Næringsgruppe::tilTosifret)
+            .toSet()
+            .forEach { næringer.add(lagSsbNæringInnslag(kode = it, navn = "Næring")) }
         virksomhet.næringsundergrupper.forEach { næring ->
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
         }

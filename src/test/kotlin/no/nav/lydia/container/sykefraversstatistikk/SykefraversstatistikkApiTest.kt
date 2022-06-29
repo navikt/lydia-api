@@ -103,10 +103,10 @@ class SykefraversstatistikkApiTest {
                 filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
                 filterverdier.fylker[0].fylke.nummer shouldBe "03"
                 filterverdier.fylker[0].kommuner.size shouldBe 1
-                filterverdier.neringsgrupper.find { it.kode == Næringsgruppe.UOPPGITT.kode }
-                    .shouldNotBeNull() // Vi forventer en næringsgruppe av verdien Uoppgitt med kode 00.000
+                filterverdier.neringsgrupper.find { it.kode == Næringsgruppe.UOPPGITT.tilTosifret() }
+                    .shouldNotBeNull()
                 filterverdier.neringsgrupper.size shouldBeGreaterThan 1
-                filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 6 }.shouldBeTrue()
+                filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
                 filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
             }, failure = { fail(it.message) })
     }
@@ -206,7 +206,7 @@ class SykefraversstatistikkApiTest {
                 }
             },
             kommuner = "$oslo,$nordreFollo",
-            næringsgrupper = "${SCENEKUNST.kode},${BEDRIFTSRÅDGIVNING.kode}",
+            næringsgrupper = "${SCENEKUNST.tilTosifret()},${BEDRIFTSRÅDGIVNING.tilTosifret()}",
             token = mockOAuth2Server.saksbehandler1.token
         )
     }
