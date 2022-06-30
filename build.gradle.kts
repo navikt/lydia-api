@@ -13,7 +13,7 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
-    maven { url = uri("https://jitpack.io") }
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -69,6 +69,9 @@ dependencies {
 
     // featuretoggling med unleash
     implementation("io.getunleash:unleash-client-java:5.1.0")
+
+    // Felles definisjoner for IA-domenet
+    implementation("com.github.navikt:ia-felles:0.0.5")
 
     // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
