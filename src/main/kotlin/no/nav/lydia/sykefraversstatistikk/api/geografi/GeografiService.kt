@@ -92,16 +92,14 @@ class GeografiService {
             .toMutableList()
         return fylkerMappetMedKommuner
             .apply {
-                add(FylkeOgKommuner(Fylke("Øst-Viken", "Ø30"), alleKommuner.filter { it.nummer in ØST_VIKEN_KOMMUNENR }.map { it.copy(nummer = "Ø${it.nummer}") }))
-                add(FylkeOgKommuner(Fylke("Vest-Viken", "V30"), alleKommuner.filter { it.nummer in VEST_VIKEN_KOMMUNENR }.map { it.copy(nummer = "V${it.nummer}") }))
+                add(FylkeOgKommuner(Fylke("Øst-Viken", "Ø30"), alleKommuner.filter { it.nummer in ØST_VIKEN_KOMMUNENR }))
+                add(FylkeOgKommuner(Fylke("Vest-Viken", "V30"), alleKommuner.filter { it.nummer in VEST_VIKEN_KOMMUNENR }))
             }
     }
 
     fun hentKommunerFraFylkesnummer(fylkesnummer: List<String>): List<Kommune> {
-        return alleFylker
-            .map { fylke -> FylkeOgKommuner(fylke, alleKommuner.filter { kommune -> kommune.nummer.take(2) == fylke.nummer }) }
-            .filter { fylkesnummer.contains(it.fylke.nummer) }
-            .flatMap { it.kommuner }
+        return hentFylkerOgKommuner()
+            .filter { fylkesnummer.contains(it.fylke.nummer) }.flatMap { it.kommuner }
     }
 
 
@@ -109,13 +107,22 @@ class GeografiService {
         fylkesnummerISøk: Set<String>,
         kommunenummerISøk: Set<String>
     ): Set<String> {
-        val alleKommunenummer = alleKommuner.associateBy { it.nummer }
-        val fylkesNummereFraKSøk = kommunenummerISøk.map { k -> k.take(2) }
-        val faktiskeFylkesNummereÅSøkeFra = fylkesnummerISøk.filter { fn -> !fylkesNummereFraKSøk.contains(fn) }
-        val kommunerFraFylkesnummer = hentKommunerFraFylkesnummer(faktiskeFylkesNummereÅSøkeFra.toList())
+        val alleFylkerOgKommuner = hentFylkerOgKommuner()
+        val fylkesnummerFraKommunenummerISøk = alleFylkerOgKommuner.filter { fylke ->
+            val kommunerIFylke = fylke.kommuner.map { it.nummer }
+            kommunenummerISøk.any { kommunerIFylke.contains(it) }
+        }.map { it.fylke.nummer }
+
+
+        val kommunenummerFraFylkesnummerISøk = alleFylkerOgKommuner
+            .filterNot { fylkesnummerFraKommunenummerISøk.contains(it.fylke.nummer) }
+            .filter { fylkesnummerISøk.contains(it.fylke.nummer) }
+            .flatMap { it.kommuner }
+            .map { it.nummer }
+
         return setOf(
-            *kommunenummerISøk.filter { kommunenummer -> alleKommunenummer.containsKey(kommunenummer) }.toTypedArray(),
-            *kommunerFraFylkesnummer.map { it.nummer }.toTypedArray()
+            *kommunenummerFraFylkesnummerISøk.toTypedArray(),
+            *kommunenummerISøk.toTypedArray()
         )
     }
 }

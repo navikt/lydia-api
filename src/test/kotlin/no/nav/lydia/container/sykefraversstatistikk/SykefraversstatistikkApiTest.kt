@@ -5,12 +5,7 @@ import com.github.kittinunf.fuel.gson.responseObject
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldBeOneOf
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainInOrder
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -21,25 +16,24 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
+import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
+import no.nav.lydia.helper.TestVirksomhet.Companion.LUNNER
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
-import no.nav.lydia.helper.localDateTimeTypeAdapter
-import no.nav.lydia.helper.statuskode
+import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -146,6 +140,72 @@ class SykefraversstatistikkApiTest {
             }
         }, fylker = fylkesnummer)
     }
+
+    @Test
+    fun `skal kunne filtrere på øst-viken fylke`() {
+        val virksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet)
+        val alleKommunenummerIØstViken = GeografiService().hentKommunerFraFylkesnummer(listOf("Ø30")).map { it.nummer }
+        hentSykefravær(
+            fylker = "Ø30",
+            success = {response ->
+                response.total shouldBeGreaterThan 0
+                response.data.forAll { dto ->
+                    dto.kommune.nummer shouldBeIn alleKommunenummerIØstViken
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `skal kunne filtrere på en enkelt kommune i øst-viken`() {
+        val virksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet)
+        hentSykefravær(
+            kommuner = INDRE_ØSTFOLD.nummer,
+            success = {response ->
+                response.total shouldBeGreaterThan 0
+                response.data.forAll { dto ->
+                    dto.kommune.nummer shouldBe INDRE_ØSTFOLD.nummer
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `skal kun få treff fra kommuner definert i søkeparemeter og ikke fra hele fylke (hvis man spesifiserer fylke)`() {
+        val virksomhet1 = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet1)
+        val virksomhet2 = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = LUNNER))
+        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet2)
+        hentSykefravær(
+            fylker = "Ø30",
+            kommuner = LUNNER.nummer,
+            success = {response ->
+                response.total shouldBeGreaterThan 0
+                response.data.forAll { dto ->
+                    dto.kommune.nummer shouldBe LUNNER.nummer
+                }
+            }
+        )
+    }
+
+    @Test
+    fun `skal kunne filtrere på kommuner utenfor øst-viken samt fylke øst-viken`() {
+        val virksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet)
+        hentSykefravær(
+            kommuner = KOMMUNE_OSLO.nummer,
+            fylker = "Ø30",
+            success = {response ->
+                response.total shouldBeGreaterThan 0
+                response.data.forAll {
+                    it.kommune.nummer.substring(0..1) shouldBeIn setOf("30", "03")
+                }
+            }
+        )
+    }
+
 
     @Test
     fun `skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`() {
