@@ -56,7 +56,7 @@ fun Route.sykefraversstatistikk(
             FilterverdierDto(
                 fylker = geografiService.hentFylkerOgKommuner(),
                 neringsgrupper = næringsRepository.hentNæringer(),
-                bransjeProgram = Bransjer.values().asList()
+                bransjeprogram = Bransjer.values().asList()
             )
         )
     }

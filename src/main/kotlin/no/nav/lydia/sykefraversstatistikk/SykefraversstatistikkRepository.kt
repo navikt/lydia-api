@@ -88,8 +88,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     AND (
                         (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE
                         OR substr(vn.narings_kode, 1, 2) in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
-                        ${if (søkeparametere.bransjeProgram.isNotEmpty()) {
-                                val koder = søkeparametere.bransjeProgram.flatMap { it.næringskoder }.groupBy {
+                        ${if (søkeparametere.bransjeprogram.isNotEmpty()) {
+                                val koder = søkeparametere.bransjeprogram.flatMap { it.næringskoder }.groupBy {
                                     it.length
                                 }
                                 val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }

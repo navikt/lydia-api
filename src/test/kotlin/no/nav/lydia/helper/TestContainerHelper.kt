@@ -309,7 +309,7 @@ class StatistikkHelper{
                         "&${Søkeparametere.IA_STATUS}=$iaStatus" +
                         "&${Søkeparametere.SIDE}=$side" +
                         "&${Søkeparametere.KUN_MINE_VIRKSOMHETER}=$kunMineVirksomheter" +
-                        "&${Søkeparametere.BRANSJE_PROGRAM}=$bransjeProgram"
+                        "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram"
             )
                 .authentication().bearer(token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)

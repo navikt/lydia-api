@@ -20,7 +20,7 @@ data class Søkeparametere(
     val status: IAProsessStatus?,
     val side: Int,
     val navIdenter: Set<String>,
-    val bransjeProgram: Set<Bransjer>
+    val bransjeprogram: Set<Bransjer>
 ) {
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 50
@@ -39,7 +39,7 @@ data class Søkeparametere(
         const val IA_STATUS = "iaStatus"
         const val SIDE = "side"
         const val KUN_MINE_VIRKSOMHETER = "kunMineVirksomheter"
-        const val BRANSJE_PROGRAM = "bransjeprogram"
+        const val BRANSJEPROGRAM = "bransjeprogram"
 
         fun from(call: ApplicationCall, geografiService: GeografiService) =
             call.request.queryParameters.let { queryParameters ->
@@ -60,7 +60,7 @@ data class Søkeparametere(
                     side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1,
                     navIdenter = if (queryParameters[KUN_MINE_VIRKSOMHETER].toBoolean()) call.navIdent()
                         ?.let { navIdent -> setOf(navIdent) } ?: emptySet() else emptySet(),
-                    bransjeProgram = finnBransjeProgram(queryParameters[BRANSJE_PROGRAM])
+                    bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM])
                 )
             }
 
@@ -88,7 +88,7 @@ data class Søkeparametere(
     fun offset() = (side - 1) * VIRKSOMHETER_PER_SIDE
 
     internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply { addAll(
-        bransjeProgram.flatMap { bransje ->
+        bransjeprogram.flatMap { bransje ->
             bransje.næringskoder.map { næringskode ->
                 if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
                 else næringskode
