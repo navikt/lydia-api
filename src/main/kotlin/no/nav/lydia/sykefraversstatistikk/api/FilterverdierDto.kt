@@ -1,5 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
+import ia.felles.definisjoner.bransjer.Bransjer
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Fylke
@@ -10,6 +11,7 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 data class FilterverdierDto(
     val fylker: List<FylkeOgKommuner>,
     val neringsgrupper: List<Næringsgruppe> = emptyList(),
+    val bransjeProgram: List<Bransjer> = emptyList(),
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
     val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser()
 )
