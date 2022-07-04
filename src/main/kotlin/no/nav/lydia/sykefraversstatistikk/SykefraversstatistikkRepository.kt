@@ -85,9 +85,18 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ia_sak.eid_av in (select unnest($tmpNavIdenterTabell.filterverdi) FROM $tmpNavIdenterTabell)
                     )
                     AND (
-                        (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE OR
-                        substr(vn.narings_kode, 1, 2) in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
+                        (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE
+                        OR substr(vn.narings_kode, 1, 2) in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
                     )
+                    ${if (søkeparametere.bransjeProgram.isNotEmpty()) {
+                        val koder = søkeparametere.bransjeProgram.flatMap { it.næringskoder }.groupBy { 
+                            it.length
+                        }
+                        val femsifrede = koder[5]?.map { "${it.take(2)}.${it.takeLast(3)}" }?.joinToString()
+                        val tosifrede = koder[2]?.joinToString()
+                        "AND ( ${femsifrede?.let { "vn.narings_kode in ($it)" }} OR ${tosifrede?.let { "substr(vn.narings_kode, 1, 2) in ($it)" }}) "
+                    } else ""
+                    }
                     AND statistikk.kvartal = :kvartal
                     AND statistikk.arstall = :arstall
                     AND ( virksomhet.orgnr NOT in ${
