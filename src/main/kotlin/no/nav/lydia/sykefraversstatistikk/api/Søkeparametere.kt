@@ -1,5 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
+import ia.felles.definisjoner.bransjer.Bransjer
 import io.ktor.http.Parameters
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -18,7 +19,8 @@ data class Søkeparametere(
     val ansatteTil: Int?,
     val status: IAProsessStatus?,
     val side: Int,
-    val navIdenter: Set<String>
+    val navIdenter: Set<String>,
+    val bransjeProgram: Set<Bransjer>
 ) {
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 50
@@ -37,6 +39,7 @@ data class Søkeparametere(
         const val IA_STATUS = "iaStatus"
         const val SIDE = "side"
         const val KUN_MINE_VIRKSOMHETER = "kunMineVirksomheter"
+        const val BRANSJE_PROGRAM = "bransjeprogram"
 
         fun from(call: ApplicationCall, geografiService: GeografiService) =
             call.request.queryParameters.let { queryParameters ->
@@ -56,9 +59,15 @@ data class Søkeparametere(
                     status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
                     side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1,
                     navIdenter = if (queryParameters[KUN_MINE_VIRKSOMHETER].toBoolean()) call.navIdent()
-                        ?.let { navIdent -> setOf(navIdent) } ?: emptySet() else emptySet()
+                        ?.let { navIdent -> setOf(navIdent) } ?: emptySet() else emptySet(),
+                    bransjeProgram = finnBransjeProgram(queryParameters[BRANSJE_PROGRAM])
                 )
             }
+
+        private fun finnBransjeProgram(queryParams: String?): Set<Bransjer> {
+            val unikeVerdier = queryParams.tilUnikeVerdier().map(String::uppercase)
+            return Bransjer.values().filter { it.name in unikeVerdier }.toSet()
+        }
 
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
             geografiService.hentKommunerFraFylkerOgKommuner(
