@@ -14,7 +14,13 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
+import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -245,6 +251,7 @@ class StatistikkHelper{
             iaStatus: String = "",
             side: String = "",
             kunMineVirksomheter : Boolean = false,
+            bransjeProgram: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             hentSykefraværRespons(
@@ -262,6 +269,7 @@ class StatistikkHelper{
                 iaStatus = iaStatus,
                 side = side,
                 kunMineVirksomheter = kunMineVirksomheter,
+                bransjeProgram = bransjeProgram,
                 token = token
             ).third
                 .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
@@ -282,6 +290,7 @@ class StatistikkHelper{
             iaStatus: String = "",
             side: String = "",
             kunMineVirksomheter : Boolean = false,
+            bransjeProgram: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             lydiaApiContainer.performGet(
@@ -299,7 +308,8 @@ class StatistikkHelper{
                         "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
                         "&${Søkeparametere.IA_STATUS}=$iaStatus" +
                         "&${Søkeparametere.SIDE}=$side" +
-                        "&${Søkeparametere.KUN_MINE_VIRKSOMHETER}=$kunMineVirksomheter"
+                        "&${Søkeparametere.KUN_MINE_VIRKSOMHETER}=$kunMineVirksomheter" +
+                        "&${Søkeparametere.BRANSJE_PROGRAM}=$bransjeProgram"
             )
                 .authentication().bearer(token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)

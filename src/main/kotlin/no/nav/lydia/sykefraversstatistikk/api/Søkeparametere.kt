@@ -86,6 +86,15 @@ data class Søkeparametere(
 
     fun virksomheterPerSide() = VIRKSOMHETER_PER_SIDE
     fun offset() = (side - 1) * VIRKSOMHETER_PER_SIDE
+
+    internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply { addAll(
+        bransjeProgram.flatMap { bransje ->
+            bransje.næringskoder.map { næringskode ->
+                if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
+                else næringskode
+            }
+        }
+    ) }.toSet()
 }
 
 class Periode(val kvartal: Int, val årstall: Int) {

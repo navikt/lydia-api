@@ -2,10 +2,17 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.gson.responseObject
+import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldBeOneOf
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -16,17 +23,19 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
@@ -34,6 +43,12 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.LUNNER
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
+import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.localDateTimeTypeAdapter
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -399,6 +414,38 @@ class SykefraversstatistikkApiTest {
                 postgresContainer.performQuery("select * from sykefravar_statistikk_virksomhet where orgnr = '${TestVirksomhet.NAV_KONTOR.orgnr}'")
             rs.row shouldBe 1
         }, ansatteFra = "999", kommuner = "${KOMMUNE_OSLO.nummer}}")
+    }
+
+    @Test
+    fun `skal kunne søke på bransjeprogram`() {
+        val virksomhet = nyVirksomhet(næringer = listOf(Næringsgruppe("Boligbyggelag", "41.101")))
+        lastInnNyVirksomhet(nyVirksomhet = virksomhet)
+        hentSykefravær(
+            bransjeProgram = "${Bransjer.BYGG}",
+            success = {
+                it.total shouldBeGreaterThanOrEqual  1
+                it.data.forExactlyOne { it.orgnr shouldBe virksomhet.orgnr }
+            }
+        )
+    }
+
+    @Test
+    fun `skal kunne søke på både næringsgrupper og bransjeprogram samtidig`() {
+        val virksomhet = nyVirksomhet(næringer = listOf(Næringsgruppe("Boligbyggelag", "41.101")))
+        val virksomhet2 = nyVirksomhet(næringer = listOf(Næringsgruppe("Bygging av havne- og damanlegg", "42.910")))
+        val virksomhet3 = nyVirksomhet(næringer = listOf(Næringsgruppe("Sykehus et eller annet", "86.101")))
+
+        lastInnNyVirksomhet(virksomhet)
+        lastInnNyVirksomhet(virksomhet2)
+        lastInnNyVirksomhet(virksomhet3)
+        hentSykefravær(
+            bransjeProgram = "${Bransjer.BYGG},${Bransjer.SYKEHUS}",
+            næringsgrupper = "42",
+            success = {
+                it.total shouldBeGreaterThanOrEqual 3
+                it.data.map { virksomhet -> virksomhet.orgnr } shouldContainAll listOf(virksomhet.orgnr, virksomhet2.orgnr, virksomhet3.orgnr)
+            }
+        )
     }
 
     @Test

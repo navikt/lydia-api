@@ -47,13 +47,14 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         søkeparametere: Søkeparametere
     ): ListResponse<SykefraversstatistikkVirksomhet> {
         val sykefraværMedAntall = using(sessionOf(dataSource)) { session ->
+            val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
             val tmpKommuneTabell = "kommuner"
             val tmpNæringTabell = "naringer"
             val tmpNavIdenterTabell = "nav_identer"
             val sql = """
                     WITH 
                         ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
-                        ${filterVerdi(tmpNæringTabell, søkeparametere.næringsgruppeKoder)},
+                        ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
                         ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
                     SELECT
                         virksomhet.orgnr,
@@ -87,16 +88,15 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     AND (
                         (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE
                         OR substr(vn.narings_kode, 1, 2) in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
-                    )
-                    ${if (søkeparametere.bransjeProgram.isNotEmpty()) {
-                        val koder = søkeparametere.bransjeProgram.flatMap { it.næringskoder }.groupBy { 
-                            it.length
+                        ${if (søkeparametere.bransjeProgram.isNotEmpty()) {
+                                val koder = søkeparametere.bransjeProgram.flatMap { it.næringskoder }.groupBy {
+                                    it.length
+                                }
+                                val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
+                                femsifrede?.let { "OR (vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell))" } ?: ""
+                            } else ""
                         }
-                        val femsifrede = koder[5]?.map { "${it.take(2)}.${it.takeLast(3)}" }?.joinToString()
-                        val tosifrede = koder[2]?.joinToString()
-                        "AND ( ${femsifrede?.let { "vn.narings_kode in ($it)" }} OR ${tosifrede?.let { "substr(vn.narings_kode, 1, 2) in ($it)" }}) "
-                    } else ""
-                    }
+                    )
                     AND statistikk.kvartal = :kvartal
                     AND statistikk.arstall = :arstall
                     AND ( virksomhet.orgnr NOT in ${
@@ -151,7 +151,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     ),
                     tmpNæringTabell to session.connection.underlying.createArrayOf(
                         "text",
-                        søkeparametere.næringsgruppeKoder.toTypedArray()
+                        næringsgrupperMedBransjer.toTypedArray()
                     ),
                     tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
                         "text",
