@@ -1,13 +1,16 @@
 package no.nav.lydia.container.virksomhet
 
+import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
+import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
 
@@ -32,7 +35,7 @@ class VirksomhetApiTest {
     @Test
     fun `skal kunne vise næringer med bindestrek`() {
         val orgnummer = VirksomhetHelper.lastInnNyVirksomhet(
-            nyVirksomhet = TestVirksomhet.nyVirksomhet(
+            nyVirksomhet = nyVirksomhet(
                 næringer = listOf(
                     Næringsgruppe(
                         navn = "Testgruppe en",
@@ -61,5 +64,25 @@ class VirksomhetApiTest {
             "Test - gruppe to",
             "Test-gruppe tre"
         )
+    }
+
+    @Test
+    fun `skal kunne søke etter virksomheter basert på navn og orgnummer`() {
+        val virksomhet = nyVirksomhet(navn = "Hei og hå")
+        VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
+
+        søkEtterVirksomheter(søkestreng = "hei", success = { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 1
+            virksomheter.forAtLeastOne {
+                it.orgnr shouldBe virksomhet.orgnr
+            }
+        })
+
+        søkEtterVirksomheter(søkestreng = virksomhet.orgnr.take(5), success = { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 1
+            virksomheter.forAtLeastOne {
+                it.orgnr shouldBe virksomhet.orgnr
+            }
+        })
     }
 }

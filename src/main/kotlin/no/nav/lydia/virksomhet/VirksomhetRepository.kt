@@ -1,5 +1,6 @@
 package no.nav.lydia.virksomhet
 
+import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -127,7 +128,41 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 navn = naring.split("∞")[1]
                             )
                         },
-                    sektor = row.stringOrNull("sektor"))
-            }.asSingle)
+                    sektor = row.stringOrNull("sektor")
+                )
+            }.asSingle
+            )
         }
+
+    fun finnVirksomheter(søkestreng: String): List<VirksomhetSøkeresultat> {
+        val søkEtterOrgnummer = søkestreng.matches("\\d{3,9}".toRegex())
+        println("søker etter virksomhet $søkestreng, $søkEtterOrgnummer")
+        return sessionOf(dataSource = dataSource).use { session ->
+            session.run(queryOf(
+                """
+                    SELECT 
+                        orgnr,
+                        navn 
+                    FROM virksomhet
+                    WHERE navn ilike :sokestreng
+                    ${if (søkEtterOrgnummer) "OR orgnr like :sokestreng" else ""}
+                    LIMIT 10
+                    """.trimMargin(),
+                mapOf(
+                    "sokestreng" to "$søkestreng%",
+                )
+            ).also { println(it) }
+                .map { row ->
+                    VirksomhetSøkeresultat(
+                        orgnr = row.string("orgnr"),
+                        navn = row.string("navn")
+                    )
+                }.asList
+            )
+        }
+    }
+
 }
+
+@Serializable
+data class VirksomhetSøkeresultat(val orgnr: String, val navn: String)

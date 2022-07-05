@@ -14,13 +14,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
-import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
-import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -31,6 +25,7 @@ import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import org.slf4j.Logger
@@ -40,6 +35,8 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.net.URLEncoder.encode
+import java.nio.charset.Charset.defaultCharset
 import kotlin.io.path.Path
 import kotlin.test.fail
 
@@ -233,7 +230,7 @@ class SakHelper {
     }
 }
 
-class StatistikkHelper{
+class StatistikkHelper {
     companion object {
         fun hentSykefravær(
             success: (ListResponse<SykefraversstatistikkVirksomhetDto>) -> Unit,
@@ -250,7 +247,7 @@ class StatistikkHelper{
             ansatteTil: String = "",
             iaStatus: String = "",
             side: String = "",
-            kunMineVirksomheter : Boolean = false,
+            kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
@@ -289,7 +286,7 @@ class StatistikkHelper{
             ansatteTil: String = "",
             iaStatus: String = "",
             side: String = "",
-            kunMineVirksomheter : Boolean = false,
+            kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
@@ -333,6 +330,16 @@ class StatistikkHelper{
 
 class VirksomhetHelper {
     companion object {
+        fun søkEtterVirksomheter(
+            success: (List<VirksomhetSøkeresultat>) -> Unit,
+            søkestreng: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performGet(url = "$VIRKSOMHET_PATH/finn?q=${encode(søkestreng, defaultCharset())}")
+                .authentication().bearer(token)
+                .responseObject<List<VirksomhetSøkeresultat>>()
+                .third.fold(success = success, failure = { fail(it.message) })
+
         fun hentVirksomhetsinformasjonRespons(orgnummer: String, token: String) =
             lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
                 .authentication().bearer(token)
@@ -372,7 +379,9 @@ class VirksomhetHelper {
                 }
                 httpMock.stop()
             }
-            TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(testData.sykefraværsStatistikkMeldinger().toList())
+            TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
+                testData.sykefraværsStatistikkMeldinger().toList()
+            )
         }
     }
 }

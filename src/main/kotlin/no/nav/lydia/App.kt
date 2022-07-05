@@ -42,6 +42,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
@@ -181,7 +182,7 @@ fun Application.lydiaRestApi(
                 auditLog = auditLog
             )
             virksomhet(
-                virksomhetRepository = virksomhetRepository,
+                virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
                 auditLog = auditLog,
                 fiaRoller = naisEnvironment.security.fiaRoller
             )

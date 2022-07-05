@@ -102,13 +102,13 @@ class TestVirksomhet(
 
         fun nyVirksomhet(
             beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
-            næringer: List<Næringsgruppe> = tilfeldigeNæringsgrupper()
+            næringer: List<Næringsgruppe> = tilfeldigeNæringsgrupper(),
+            orgnr: String = (800000000 .. 899999999).random(tilfeldigGenerator).toString(), // tilfeldige virksomheter har orgnummer som starter på 8
+            navn: String = "Navn $orgnr"
         ): TestVirksomhet {
-            val orgnr = (800000000 .. 899999999).random(tilfeldigGenerator).toString() // tilfeldige virksomheter har orgnummer som starter på 8
-
             return TestVirksomhet(
                 orgnr = orgnr,
-                navn = "Navn $orgnr",
+                navn = navn,
                 næringsundergrupper = næringer,
                 beliggenhet = beliggenhet
             )
