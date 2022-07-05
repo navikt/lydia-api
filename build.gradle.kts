@@ -39,17 +39,17 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.2.11")
-    implementation("net.logstash.logback:logstash-logback-encoder:7.1.1")
+    implementation("net.logstash.logback:logstash-logback-encoder:7.2")
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
     implementation("io.micrometer:micrometer-registry-prometheus:1.9.0")
 
     // Database
-    implementation("org.postgresql:postgresql:42.3.4")
+    implementation("org.postgresql:postgresql:42.3.6")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:8.5.10")
-    implementation("com.github.seratch:kotliquery:1.7.0")
+    implementation("org.flywaydb:flyway-core:8.5.12")
+    implementation("com.github.seratch:kotliquery:1.8.0")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
@@ -78,12 +78,12 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.3.0"
+    val kotestVerstion = "5.3.2"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.17.1"
+    val testcontainersVersion = "1.17.3"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
