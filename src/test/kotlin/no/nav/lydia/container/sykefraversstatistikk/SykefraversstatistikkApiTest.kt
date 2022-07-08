@@ -164,7 +164,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             fylker = "Ø30",
             success = {response ->
-                response.total shouldBeGreaterThan 0
+                response.total!! shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBeIn alleKommunenummerIØstViken
                 }
@@ -179,7 +179,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             kommuner = INDRE_ØSTFOLD.nummer,
             success = {response ->
-                response.total shouldBeGreaterThan 0
+                response.total!! shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBe INDRE_ØSTFOLD.nummer
                 }
@@ -197,7 +197,7 @@ class SykefraversstatistikkApiTest {
             fylker = "Ø30",
             kommuner = LUNNER.nummer,
             success = {response ->
-                response.total shouldBeGreaterThan 0
+                response.total!! shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBe LUNNER.nummer
                 }
@@ -213,7 +213,7 @@ class SykefraversstatistikkApiTest {
             kommuner = KOMMUNE_OSLO.nummer,
             fylker = "Ø30",
             success = {response ->
-                response.total shouldBeGreaterThan 0
+                response.total!! shouldBeGreaterThan 0
                 response.data.forAll {
                     it.kommune.nummer.substring(0..1) shouldBeIn setOf("30", "03")
                 }
@@ -360,7 +360,7 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne paginere på ett statistikkresultat`() {
         hentSykefravær(success = { response ->
             val total = response.total
-            total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
+            total!! shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
             response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
             val faktiskTotal = postgresContainer.performQuery("SELECT count(*) AS faktiskTotal FROM virksomhet")
@@ -369,8 +369,8 @@ class SykefraversstatistikkApiTest {
 
             val antallSider = total / 50
             (2..antallSider).map { it.toString() }.forEach { side ->
-                hentSykefravær(success = { response ->
-                    response.total shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
+                hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
+                    response.total shouldBe null
                     response.data shouldHaveAtLeastSize 1
                 }, side = side)
             }
@@ -423,7 +423,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             bransjeProgram = "${Bransjer.BYGG}",
             success = {
-                it.total shouldBeGreaterThanOrEqual  1
+                it.total!! shouldBeGreaterThanOrEqual  1
                 it.data.forExactlyOne { it.orgnr shouldBe virksomhet.orgnr }
             }
         )
@@ -442,7 +442,7 @@ class SykefraversstatistikkApiTest {
             bransjeProgram = "${Bransjer.BYGG},${Bransjer.SYKEHUS}",
             næringsgrupper = "42",
             success = {
-                it.total shouldBeGreaterThanOrEqual 3
+                it.total!! shouldBeGreaterThanOrEqual 3
                 it.data.map { virksomhet -> virksomhet.orgnr } shouldContainAll listOf(virksomhet.orgnr, virksomhet2.orgnr, virksomhet3.orgnr)
             }
         )
@@ -510,10 +510,18 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {
-        hentSykefraværRespons(token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
-        hentSykefraværRespons(token = mockOAuth2Server.saksbehandler1.token).statuskode() shouldBe 200
-        hentSykefraværRespons(token = mockOAuth2Server.superbruker1.token).statuskode() shouldBe 200
-        hentSykefraværRespons(token = mockOAuth2Server.brukerUtenTilgangsrolle.token).statuskode() shouldBe 403
+        hentSykefraværRespons(
+            token = mockOAuth2Server.lesebruker.token
+        ).statuskode() shouldBe 200
+        hentSykefraværRespons(
+            token = mockOAuth2Server.saksbehandler1.token
+        ).statuskode() shouldBe 200
+        hentSykefraværRespons(
+            token = mockOAuth2Server.superbruker1.token
+        ).statuskode() shouldBe 200
+        hentSykefraværRespons(
+            token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+        ).statuskode() shouldBe 403
     }
 
     @Test

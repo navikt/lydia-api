@@ -14,7 +14,13 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
+import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -249,6 +255,7 @@ class StatistikkHelper {
             side: String = "",
             kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
+            skalInkludereTotaltAntall: Boolean = true,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             hentSykefraværRespons(
@@ -267,6 +274,7 @@ class StatistikkHelper {
                 side = side,
                 kunMineVirksomheter = kunMineVirksomheter,
                 bransjeProgram = bransjeProgram,
+                skalInkludereTotaltAntall = skalInkludereTotaltAntall,
                 token = token
             ).third
                 .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
@@ -288,7 +296,8 @@ class StatistikkHelper {
             side: String = "",
             kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
-            token: String = oauth2ServerContainer.saksbehandler1.token
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            skalInkludereTotaltAntall: Boolean = true
         ) =
             lydiaApiContainer.performGet(
                 SYKEFRAVERSSTATISTIKK_PATH +
@@ -306,7 +315,8 @@ class StatistikkHelper {
                         "&${Søkeparametere.IA_STATUS}=$iaStatus" +
                         "&${Søkeparametere.SIDE}=$side" +
                         "&${Søkeparametere.KUN_MINE_VIRKSOMHETER}=$kunMineVirksomheter" +
-                        "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram"
+                        "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
+                        "&${Søkeparametere.SKAL_INKLUDERE_TOTALT_ANTALL}=$skalInkludereTotaltAntall"
             )
                 .authentication().bearer(token)
                 .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)

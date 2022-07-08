@@ -44,27 +44,30 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         """.trimIndent()
 
 
-    fun hentTotaltAntall(søkeparametere: Søkeparametere) =
-        using(sessionOf(dataSource)) { session ->
+    fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? {
+        if (!søkeparametere.skalInkludereTotaltAntall) {
+            return null
+        }
+        return using(sessionOf(dataSource)) { session ->
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
             val tmpKommuneTabell = "kommuner"
             val tmpNæringTabell = "naringer"
             val tmpNavIdenterTabell = "nav_identer"
             val sql =
                 """
-                    WITH 
-                        ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
-                        ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
-                        ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
-                    SELECT
-                        COUNT(DISTINCT virksomhet.orgnr) AS total
-                    ${filter(
-                        tmpKommuneTabell = tmpKommuneTabell,
-                        tmpNavIdenterTabell = tmpNavIdenterTabell,
-                        tmpNæringTabell = tmpNæringTabell,
-                        søkeparametere = søkeparametere
-                    )}
-                """.trimIndent()
+                        WITH 
+                            ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
+                            ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
+                            ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
+                        SELECT
+                            COUNT(DISTINCT virksomhet.orgnr) AS total
+                        ${filter(
+                    tmpKommuneTabell = tmpKommuneTabell,
+                    tmpNavIdenterTabell = tmpNavIdenterTabell,
+                    tmpNæringTabell = tmpNæringTabell,
+                    søkeparametere = søkeparametere
+                )}
+                    """.trimIndent()
 
             val query = queryOf(
                 statement = sql,
@@ -87,6 +90,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             )
             session.run(query.map { it.int("total") }.asSingle)
         }
+    }
 
     fun hentSykefravær(
         søkeparametere: Søkeparametere
@@ -164,7 +168,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-        val totaltAntallVirksomheter = hentTotaltAntall(søkeparametere = søkeparametere) ?: 0
+        val totaltAntallVirksomheter = hentTotaltAntall(søkeparametere = søkeparametere)
 
         return ListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
     }
