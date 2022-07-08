@@ -23,8 +23,8 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
+import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
-import no.nav.lydia.appstatus.HelsesjekkRepository
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
@@ -66,6 +66,8 @@ fun startLydiaBackend() {
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
 
+    HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
+
     statistikkConsumer(
         kafka = naisEnv.kafka,
         sykefraværsstatistikkService = SykefraværsstatistikkService(
@@ -73,7 +75,8 @@ fun startLydiaBackend() {
                 dataSource = dataSource
             )
         )
-    )
+    ).also { HelseMonitor.leggTilHelsesjekk(it) }
+
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
     val iaSakshendelseProdusent =
         IASakshendelseProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakHendelseTopic)
@@ -150,12 +153,9 @@ fun Application.lydiaRestApi(
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
-    val helseMonitor: HelseMonitor = HelseMonitor().apply {
-        helsesjekk(HelsesjekkRepository(dataSource = dataSource))
-    }
 
     routing {
-        healthChecks(helseMonitor)
+        healthChecks(HelseMonitor)
         metrics()
         virksomhetsImport(
             BrregDownloader(

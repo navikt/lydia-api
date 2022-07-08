@@ -7,6 +7,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import no.nav.lydia.Kafka
+import no.nav.lydia.appstatus.Helse
+import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -17,7 +19,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 
-object StatistikkConsumer : CoroutineScope {
+object StatistikkConsumer : CoroutineScope, Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     lateinit var job: Job
     lateinit var kafka: Kafka
@@ -91,4 +93,6 @@ object StatistikkConsumer : CoroutineScope {
         job.cancel()
         logger.info("Stopped kafka consumer job")
     }
+
+    override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN
 }

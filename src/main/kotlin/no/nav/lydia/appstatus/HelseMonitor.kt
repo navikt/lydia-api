@@ -1,9 +1,9 @@
 package no.nav.lydia.appstatus
 
-class HelseMonitor {
+object HelseMonitor {
     private val helsesjekker: MutableList<Helsesjekk> = mutableListOf()
 
-    fun helsesjekk(vararg helsesjekk: Helsesjekk) {
+    fun leggTilHelsesjekk(vararg helsesjekk: Helsesjekk) {
         helsesjekker.addAll(helsesjekk)
     }
 

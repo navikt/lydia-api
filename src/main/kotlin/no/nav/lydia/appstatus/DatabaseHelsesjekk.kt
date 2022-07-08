@@ -6,7 +6,7 @@ import kotliquery.using
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
-class HelsesjekkRepository(private val dataSource: DataSource): Helsesjekk {
+class DatabaseHelsesjekk(private val dataSource: DataSource): Helsesjekk {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
 
