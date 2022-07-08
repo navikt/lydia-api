@@ -77,6 +77,9 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+
+
     // Enklere assertions
     val kotestVerstion = "5.3.2"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")

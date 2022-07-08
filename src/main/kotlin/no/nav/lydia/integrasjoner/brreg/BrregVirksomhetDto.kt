@@ -7,10 +7,10 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 data class BrregVirksomhetDto(
     val organisasjonsnummer: String,
     val navn: String,
-    val beliggenhetsadresse: Beliggenhetsadresse?,
-    val naeringskode1: NæringsundergruppeBrreg?,
-    val naeringskode2: NæringsundergruppeBrreg?,
-    val naeringskode3: NæringsundergruppeBrreg?,
+    val beliggenhetsadresse: Beliggenhetsadresse? = null,
+    val naeringskode1: NæringsundergruppeBrreg? = null,
+    val naeringskode2: NæringsundergruppeBrreg? = null,
+    val naeringskode3: NæringsundergruppeBrreg? = null,
 
     ){
     fun hentNæringsgruppekoder() = mutableMapOf(

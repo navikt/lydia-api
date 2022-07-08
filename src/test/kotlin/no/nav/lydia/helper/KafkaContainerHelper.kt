@@ -41,6 +41,7 @@ class KafkaContainerHelper(
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
         const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
+        const val brregOppdateringTopic = "pia.brreg-oppdatering"
     }
 
     private val gson = GsonBuilder().create()
@@ -67,7 +68,7 @@ class KafkaContainerHelper(
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
-            createTopic(statistikkTopic, iaSakHendelseTopic, iaSakTopic)
+            createTopic(statistikkTopic, iaSakHendelseTopic, iaSakTopic, brregOppdateringTopic)
             kafkaProducer = producer()
         }
 
@@ -77,6 +78,7 @@ class KafkaContainerHelper(
             iaSakHendelseTopic = iaSakHendelseTopic,
             iaSakTopic = iaSakTopic,
             statistikkTopic = statistikkTopic,
+            brregOppdateringTopic = brregOppdateringTopic,
             consumerLoopDelay = 1,
             credstorePassword = "",
             keystoreLocation = "",
@@ -93,7 +95,8 @@ class KafkaContainerHelper(
         "KAFKA_CREDSTORE_PASSWORD" to "",
         "STATISTIKK_TOPIC" to statistikkTopic,
         "IA_SAK_HENDELSE_TOPIC" to iaSakHendelseTopic,
-        "IA_SAK_TOPIC" to iaSakTopic
+        "IA_SAK_TOPIC" to iaSakTopic,
+        "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic
     )
 
     private fun createTopic(vararg topics: String) {
