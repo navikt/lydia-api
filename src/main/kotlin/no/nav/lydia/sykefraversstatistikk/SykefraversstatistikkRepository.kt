@@ -136,7 +136,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.opprettet,
                         ia_sak.status,
                         ia_sak.eid_av
-                    ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning}
+                    ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
                     
                     LIMIT ${søkeparametere.virksomheterPerSide()}
                     OFFSET ${søkeparametere.offset()}

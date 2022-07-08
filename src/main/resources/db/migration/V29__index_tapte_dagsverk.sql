@@ -1,0 +1,1 @@
+create index idx_sykefraver_periode_tapte_dagsverk on sykefravar_statistikk_virksomhet(arstall, kvartal, tapte_dagsverk DESC NULLS LAST)
