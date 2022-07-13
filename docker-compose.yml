@@ -5,7 +5,6 @@ services:
     depends_on:
       - postgres,kafka
     build:
-      target: local
       context: .
     ports:
       - "8081:8080"

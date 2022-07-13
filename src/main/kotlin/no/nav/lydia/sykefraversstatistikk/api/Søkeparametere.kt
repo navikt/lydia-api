@@ -20,7 +20,8 @@ data class Søkeparametere(
     val status: IAProsessStatus?,
     val side: Int,
     val navIdenter: Set<String>,
-    val bransjeprogram: Set<Bransjer>
+    val bransjeprogram: Set<Bransjer>,
+    val skalInkludereTotaltAntall: Boolean = false
 ) {
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 50
@@ -40,6 +41,7 @@ data class Søkeparametere(
         const val SIDE = "side"
         const val KUN_MINE_VIRKSOMHETER = "kunMineVirksomheter"
         const val BRANSJEPROGRAM = "bransjeprogram"
+        const val SKAL_INKLUDERE_TOTALT_ANTALL = "skalInkludereTotaltAntall"
 
         fun from(call: ApplicationCall, geografiService: GeografiService) =
             call.request.queryParameters.let { queryParameters ->
@@ -60,7 +62,8 @@ data class Søkeparametere(
                     side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1,
                     navIdenter = if (queryParameters[KUN_MINE_VIRKSOMHETER].toBoolean()) call.navIdent()
                         ?.let { navIdent -> setOf(navIdent) } ?: emptySet() else emptySet(),
-                    bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM])
+                    bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
+                    skalInkludereTotaltAntall = queryParameters[SKAL_INKLUDERE_TOTALT_ANTALL].toBoolean()
                 )
             }
 

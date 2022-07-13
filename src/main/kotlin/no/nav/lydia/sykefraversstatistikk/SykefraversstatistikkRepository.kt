@@ -43,10 +43,59 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                 )
         """.trimIndent()
 
+
+    fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? {
+        if (!søkeparametere.skalInkludereTotaltAntall) {
+            return null
+        }
+        return using(sessionOf(dataSource)) { session ->
+            val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
+            val tmpKommuneTabell = "kommuner"
+            val tmpNæringTabell = "naringer"
+            val tmpNavIdenterTabell = "nav_identer"
+            val sql =
+                """
+                        WITH 
+                            ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
+                            ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
+                            ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
+                        SELECT
+                            COUNT(DISTINCT virksomhet.orgnr) AS total
+                        ${filter(
+                    tmpKommuneTabell = tmpKommuneTabell,
+                    tmpNavIdenterTabell = tmpNavIdenterTabell,
+                    tmpNæringTabell = tmpNæringTabell,
+                    søkeparametere = søkeparametere
+                )}
+                    """.trimIndent()
+
+            val query = queryOf(
+                statement = sql,
+                mapOf(
+                    tmpKommuneTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        søkeparametere.kommunenummer.toTypedArray()
+                    ),
+                    tmpNæringTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        næringsgrupperMedBransjer.toTypedArray()
+                    ),
+                    tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        søkeparametere.navIdenter.toTypedArray()
+                    ),
+                    "kvartal" to søkeparametere.periode.kvartal,
+                    "arstall" to søkeparametere.periode.årstall
+                )
+            )
+            session.run(query.map { it.int("total") }.asSingle)
+        }
+    }
+
     fun hentSykefravær(
         søkeparametere: Søkeparametere
     ): ListResponse<SykefraversstatistikkVirksomhet> {
-        val sykefraværMedAntall = using(sessionOf(dataSource)) { session ->
+        val sykefraværsStatistikk = using(sessionOf(dataSource)) { session ->
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
             val tmpKommuneTabell = "kommuner"
             val tmpNæringTabell = "naringer"
@@ -70,57 +119,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet,
                         ia_sak.status,
-                        ia_sak.eid_av,
-                        COUNT(*) OVER() AS total
-                    FROM sykefravar_statistikk_virksomhet AS statistikk
-                    JOIN virksomhet USING (orgnr)
-                    LEFT JOIN ia_sak USING (orgnr)
-                    JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet)
-                    
-                    WHERE (
-                        (SELECT inkluderAlle FROM $tmpKommuneTabell) IS TRUE OR
-                        virksomhet.kommunenummer in (select unnest($tmpKommuneTabell.filterverdi) FROM $tmpKommuneTabell)
-                    )
-                    AND (
-                        (SELECT inkluderAlle FROM $tmpNavIdenterTabell) IS TRUE OR
-                        ia_sak.eid_av in (select unnest($tmpNavIdenterTabell.filterverdi) FROM $tmpNavIdenterTabell)
-                    )
-                    AND (
-                        (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE
-                        OR substr(vn.narings_kode, 1, 2) in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
-                        ${if (søkeparametere.bransjeprogram.isNotEmpty()) {
-                                val koder = søkeparametere.bransjeprogram.flatMap { it.næringskoder }.groupBy {
-                                    it.length
-                                }
-                                val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
-                                femsifrede?.let { "OR (vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell))" } ?: ""
-                            } else ""
-                        }
-                    )
-                    AND statistikk.kvartal = :kvartal
-                    AND statistikk.arstall = :arstall
-                    AND ( virksomhet.orgnr NOT in ${
-                NavEnheter.enheterSomSkalSkjermes.joinToString(
-                    prefix = "(",
-                    postfix = ")",
-                    separator = ","
-                ) { s -> "\'$s\'" }
-            } )
-                    
-                    ${
-                søkeparametere.status?.let { status ->
-                    when (status) {
-                        IKKE_AKTIV -> " AND ia_sak.status IS NULL"
-                        else -> " AND ia_sak.status = '$status'"
-                    }
-                } ?: ""
-            }
-                    
-                    ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
-                    ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
-                    
-                    ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
-                    ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
+                        ia_sak.eid_av
+                    ${filter(
+                        tmpKommuneTabell = tmpKommuneTabell,
+                        tmpNavIdenterTabell = tmpNavIdenterTabell,
+                        tmpNæringTabell = tmpNæringTabell,
+                        søkeparametere = søkeparametere
+                    )}
                     GROUP BY 
                         virksomhet.orgnr,
                         virksomhet.navn,
@@ -137,7 +142,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ia_sak.status,
                         ia_sak.eid_av
                     ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
-                    
                     LIMIT ${søkeparametere.virksomheterPerSide()}
                     OFFSET ${søkeparametere.offset()}
                 """.trimIndent()
@@ -164,11 +168,67 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-        val sykefraværsStatistikk = sykefraværMedAntall.map { it.first }
-        val totaltAntallVirksomheter = sykefraværMedAntall.firstOrNull()?.second ?: 0
+        val totaltAntallVirksomheter = hentTotaltAntall(søkeparametere = søkeparametere)
 
         return ListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
     }
+
+    private fun filter(
+        tmpKommuneTabell: String,
+        tmpNavIdenterTabell: String,
+        tmpNæringTabell: String,
+        søkeparametere: Søkeparametere
+    ) = """
+        FROM sykefravar_statistikk_virksomhet AS statistikk
+        JOIN virksomhet USING (orgnr)
+        LEFT JOIN ia_sak USING (orgnr)
+        JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet)
+        
+        WHERE (
+            (SELECT inkluderAlle FROM $tmpKommuneTabell) IS TRUE OR
+            virksomhet.kommunenummer in (select unnest($tmpKommuneTabell.filterverdi) FROM $tmpKommuneTabell)
+        )
+        AND (
+            (SELECT inkluderAlle FROM $tmpNavIdenterTabell) IS TRUE OR
+            ia_sak.eid_av in (select unnest($tmpNavIdenterTabell.filterverdi) FROM $tmpNavIdenterTabell)
+        )
+        AND (
+            (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE
+            OR substr(vn.narings_kode, 1, 2) in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell)
+            ${
+                if (søkeparametere.bransjeprogram.isNotEmpty()) {
+                    val koder = søkeparametere.bransjeprogram.flatMap { it.næringskoder }.groupBy {
+                        it.length
+                    }
+                    val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
+                    femsifrede?.let { "OR (vn.narings_kode in (select unnest($tmpNæringTabell.filterverdi) FROM $tmpNæringTabell))" } ?: ""
+                } else ""
+            }
+        )
+        AND statistikk.kvartal = :kvartal
+        AND statistikk.arstall = :arstall
+        AND ( virksomhet.orgnr NOT in ${
+            NavEnheter.enheterSomSkalSkjermes.joinToString(
+                prefix = "(",
+                postfix = ")",
+                separator = ","
+            ) { s -> "\'$s\'" }
+        } )
+                        
+        ${søkeparametere.status?.let { status ->
+                when (status) {
+                    IKKE_AKTIV -> " AND ia_sak.status IS NULL"
+                    else -> " AND ia_sak.status = '$status'"
+                }
+            } ?: ""
+        }
+                        
+        ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
+        ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
+        
+        ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
+        ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
+        """.trimIndent()
 
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
@@ -189,8 +249,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet,
                         ia_sak.status,
-                        ia_sak.eid_av,
-                        COUNT(*) OVER() AS total
+                        ia_sak.eid_av
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
@@ -206,11 +265,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                     "orgnr" to orgnr
                 )
             ).map(this::mapRow).asList
-            session.run(query).map { it.first }
+            session.run(query)
         }
     }
 
-    private fun mapRow(row: Row): Pair<SykefraversstatistikkVirksomhet, Int> {
+    private fun mapRow(row: Row): SykefraversstatistikkVirksomhet {
         return SykefraversstatistikkVirksomhet(
             virksomhetsnavn = row.string("navn"),
             kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
@@ -227,7 +286,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                 IAProsessStatus.valueOf(it)
             },
             eidAv = row.stringOrNull("eid_av")
-        ) to row.int("total")
+        )
     }
 }
 
@@ -303,14 +362,14 @@ private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatist
         )
     }
 
-private fun AggregertSykefraværsstatistikk.tilTabellnavn() = when(this) {
+private fun AggregertSykefraværsstatistikk.tilTabellnavn() = when (this) {
     is NæringSykefravær -> "sykefravar_statistikk_naring"
     is NæringsundergruppeSykefravær -> "sykefravar_statistikk_naringsundergruppe"
     is SektorSykefravær -> "sykefravar_statistikk_sektor"
     is LandSykefravær -> "sykefravar_statistikk_land"
 }
 
-private fun AggregertSykefraværsstatistikk.tilKolonnenavn() = when(this) {
+private fun AggregertSykefraværsstatistikk.tilKolonnenavn() = when (this) {
     is NæringSykefravær -> "naring"
     is NæringsundergruppeSykefravær -> "naringsundergruppe"
     is SektorSykefravær -> "sektor_kode"

@@ -1,10 +1,11 @@
 package no.nav.lydia.virksomhet.api
 
 import arrow.core.rightIfNotNull
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
@@ -36,7 +37,6 @@ fun Route.virksomhet(
     get("$VIRKSOMHET_PATH/finn") {
         val søkestreng = call.request.queryParameters["q"] ?: return@get call.respond(VirksomhetFeil.`mangler søkestreng`)
         val virksomheter = virksomhetService.finnVirksomheter(søkestreng = søkestreng)
-        println(virksomheter)
         call.respond(HttpStatusCode.OK, virksomheter)
     }
 }

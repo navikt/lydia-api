@@ -82,8 +82,9 @@ class VirksomhetRepository(val dataSource: DataSource) {
 
     fun hentVirksomhet(orgnr: String) =
         sessionOf(dataSource).use { session ->
-            session.run(queryOf(
-                """
+            session.run(
+                queryOf(
+                    """
                     SELECT 
                         virksomhet.id,
                         virksomhet.orgnr,
@@ -107,39 +108,39 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.orgnr,
                         virksomhet_statistikk_metadata.sektor
                 """.trimIndent(),
-                mapOf("orgnr" to orgnr)
-            ).map { row ->
-                Virksomhet(
-                    id = row.long("id"),
-                    orgnr = orgnr,
-                    navn = row.string("navn"),
-                    adresse = row.array<String>("adresse").toList(),
-                    postnummer = row.string("postnummer"),
-                    poststed = row.string("poststed"),
-                    kommune = row.string("kommune"),
-                    kommunenummer = row.string("kommunenummer"),
-                    land = row.string("land"),
-                    landkode = row.string("landkode"),
-                    næringsgrupper = row.string("naringer")
-                        .split("€")
-                        .map { naring ->
-                            Næringsgruppe(
-                                kode = naring.split("∞")[0],
-                                navn = naring.split("∞")[1]
-                            )
-                        },
-                    sektor = row.stringOrNull("sektor")
-                )
-            }.asSingle
+                    mapOf("orgnr" to orgnr)
+                ).map { row ->
+                    Virksomhet(
+                        id = row.long("id"),
+                        orgnr = orgnr,
+                        navn = row.string("navn"),
+                        adresse = row.array<String>("adresse").toList(),
+                        postnummer = row.string("postnummer"),
+                        poststed = row.string("poststed"),
+                        kommune = row.string("kommune"),
+                        kommunenummer = row.string("kommunenummer"),
+                        land = row.string("land"),
+                        landkode = row.string("landkode"),
+                        næringsgrupper = row.string("naringer")
+                            .split("€")
+                            .map { naring ->
+                                Næringsgruppe(
+                                    kode = naring.split("∞")[0],
+                                    navn = naring.split("∞")[1]
+                                )
+                            },
+                        sektor = row.stringOrNull("sektor")
+                    )
+                }.asSingle
             )
         }
 
     fun finnVirksomheter(søkestreng: String): List<VirksomhetSøkeresultat> {
         val søkEtterOrgnummer = søkestreng.matches("\\d{3,9}".toRegex())
-        println("søker etter virksomhet $søkestreng, $søkEtterOrgnummer")
         return sessionOf(dataSource = dataSource).use { session ->
-            session.run(queryOf(
-                """
+            session.run(
+                queryOf(
+                    """
                     SELECT 
                         orgnr,
                         navn 
@@ -148,16 +149,16 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     ${if (søkEtterOrgnummer) "OR orgnr like :sokestreng" else ""}
                     LIMIT 10
                     """.trimMargin(),
-                mapOf(
-                    "sokestreng" to "$søkestreng%",
-                )
-            ).also { println(it) }
-                .map { row ->
-                    VirksomhetSøkeresultat(
-                        orgnr = row.string("orgnr"),
-                        navn = row.string("navn")
+                    mapOf(
+                        "sokestreng" to "$søkestreng%",
                     )
-                }.asList
+                )
+                    .map { row ->
+                        VirksomhetSøkeresultat(
+                            orgnr = row.string("orgnr"),
+                            navn = row.string("navn")
+                        )
+                    }.asList
             )
         }
     }
