@@ -63,7 +63,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                                 Endringstype.Ukjent,
                                 Endringstype.Endring,
                                 Endringstype.Ny -> oppdateringVirksomhet.metadata?.let {
-                                    repository.insert(it)
+                                    repository.insert(it) //TODO Hva om næringskoder blir oppdatert? Står "on conlict do nothing" i spørringen nå...
                                 }
                                 Endringstype.Sletting,
                                 Endringstype.Fjernet -> Unit // TODO
@@ -91,6 +91,7 @@ object BrregOppdateringConsumer : CoroutineScope {
     @kotlinx.serialization.Serializable
     private data class OppdateringVirksomhet(
         val orgnummer: String,
+        val oppdateringsId: Long,
         val endringstype: Endringstype,
         val metadata: BrregVirksomhetDto? = null,
         val endringstidspunkt: Instant

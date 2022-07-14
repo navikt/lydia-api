@@ -1,5 +1,7 @@
 package no.nav.lydia.virksomhet
 
+import kotlinx.datetime.toKotlinInstant
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -7,6 +9,7 @@ import kotliquery.using
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Virksomhet
+import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
@@ -114,6 +117,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         id = row.long("id"),
                         orgnr = orgnr,
                         navn = row.string("navn"),
+                        status = VirksomhetStatus.valueOf(row.string("status")),
+                        oppstartsdato = row.localDateOrNull("oppstartsdato")?.toKotlinLocalDate(),
                         adresse = row.array<String>("adresse").toList(),
                         postnummer = row.string("postnummer"),
                         poststed = row.string("poststed"),
@@ -129,7 +134,10 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     navn = naring.split("∞")[1]
                                 )
                             },
-                        sektor = row.stringOrNull("sektor")
+                        sektor = row.stringOrNull("sektor"),
+                        oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
+                        opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),
+                        sistEndretTidspunkt = row.instantOrNull("sistEndretTidspunkt")?.toKotlinInstant()
                     )
                 }.asSingle
             )
