@@ -11,15 +11,15 @@ import kotliquery.using
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Virksomhet
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
+import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
     fun insert(virksomhet: VirksomhetLagringDao) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
+                @Language("PostgreSQL")
+                val sql = """
                            WITH virksomhetId AS(
                                INSERT INTO virksomhet(
                                 orgnr,
@@ -72,26 +72,30 @@ class VirksomhetRepository(val dataSource: DataSource) {
                             )
                             VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
                             ON CONFLICT DO NOTHING
-                            """.trimMargin(),
-                        mutableMapOf(
-                            "orgnr" to virksomhet.orgnr,
-                            "navn" to virksomhet.navn,
-                            "land" to virksomhet.land,
-                            "landkode" to virksomhet.landkode,
-                            "postnummer" to virksomhet.postnummer,
-                            "poststed" to virksomhet.poststed,
-                            "adresse" to session.connection.underlying.createArrayOf(
-                                "text",
-                                virksomhet.adresse.toTypedArray()
-                            ),
-                            "kommune" to virksomhet.kommune,
-                            "kommunenummer" to virksomhet.kommunenummer,
-                            "status" to virksomhet.status.name,
-                            "oppstartsdato" to virksomhet.oppstartsdato?.toJavaLocalDate(),
-                            "oppdatertAvBrregOppdateringsId" to virksomhet.oppdatertAvBrregOppdateringsId
-                        ).apply {
-                            this.putAll(virksomhet.hentNæringsgruppekoder())
-                        },
+                            """.trimMargin()
+                val params = mutableMapOf(
+                    "orgnr" to virksomhet.orgnr,
+                    "navn" to virksomhet.navn,
+                    "land" to virksomhet.land,
+                    "landkode" to virksomhet.landkode,
+                    "postnummer" to virksomhet.postnummer,
+                    "poststed" to virksomhet.poststed,
+                    "adresse" to session.connection.underlying.createArrayOf(
+                        "text",
+                        virksomhet.adresse.toTypedArray()
+                    ),
+                    "kommune" to virksomhet.kommune,
+                    "kommunenummer" to virksomhet.kommunenummer,
+                    "status" to virksomhet.status.name,
+                    "oppstartsdato" to virksomhet.oppstartsdato?.toJavaLocalDate(),
+                    "oppdatertAvBrregOppdateringsId" to virksomhet.oppdatertAvBrregOppdateringsId
+                ).apply {
+                    this.putAll(virksomhet.hentNæringsgruppekoder())
+                }
+                tx.run(
+                    queryOf(
+                        sql,
+                        params,
                     ).asUpdate
                 )
             }
@@ -100,33 +104,35 @@ class VirksomhetRepository(val dataSource: DataSource) {
 
     fun oppdaterStatus(orgnr: String, status: VirksomhetStatus, oppdatertAvBrregOppdateringsId: Long?) {
         sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    statement =
-                    """
+            @Language("PostgreSQL")
+            val sql = """
                         UPDATE virksomhet SET
                         status = :status,
-                        oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId
+                        oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
                         sistEndretTidspunkt = now()
                         WHERE orgnr = :orgnr
-                    """.trimIndent(),
-                    paramMap = mapOf(
-                        "orgnr" to orgnr,
-                        "status" to status,
-                        "oppdatertAvBrregOppdateringsId" to oppdatertAvBrregOppdateringsId
-                    )
+                    """.trimIndent()
+            val params = mapOf(
+                "orgnr" to orgnr,
+                "status" to status,
+                "oppdatertAvBrregOppdateringsId" to oppdatertAvBrregOppdateringsId
+            )
+            session.run(
+                queryOf(
+                    statement = sql,
+                    paramMap = params
                 ).asUpdate
             )
         }
     }
 
-    fun hentVirksomhet(orgnr: String) =
-        sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    """
+    fun hentVirksomhet(orgnr: String): Virksomhet? {
+        @Language("PostgreSQL")
+        val sql = """
                     SELECT 
                         virksomhet.id,
+                        virksomhet.status,
+                        virksomhet.oppstartsdato,
                         virksomhet.orgnr,
                         virksomhet.navn,
                         virksomhet.adresse,
@@ -137,7 +143,10 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.land,
                         virksomhet.landkode,
                         virksomhet_statistikk_metadata.sektor,
-                        string_agg(naring.kode || '∞' || naring.navn, '€') AS naringer
+                        string_agg(naring.kode || '∞' || naring.navn, '€') AS naringer,
+                        virksomhet.oppdatertAvBrregOppdateringsId,
+                        virksomhet.opprettetTidspunkt,
+                        virksomhet.sistEndretTidspunkt
                     FROM virksomhet 
                     JOIN virksomhet_naring ON (virksomhet.id = virksomhet_naring.virksomhet)
                     JOIN naring ON (virksomhet_naring.narings_kode = naring.kode)
@@ -147,8 +156,13 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.id,
                         virksomhet.orgnr,
                         virksomhet_statistikk_metadata.sektor
-                """.trimIndent(),
-                    mapOf("orgnr" to orgnr)
+                """.trimIndent()
+        val params = mapOf("orgnr" to orgnr)
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    sql,
+                    params
                 ).map { row ->
                     Virksomhet(
                         id = row.long("id"),
@@ -179,13 +193,13 @@ class VirksomhetRepository(val dataSource: DataSource) {
                 }.asSingle
             )
         }
+    }
 
     fun finnVirksomheter(søkestreng: String): List<VirksomhetSøkeresultat> {
         val søkEtterOrgnummer = søkestreng.matches("\\d{3,9}".toRegex())
         return sessionOf(dataSource = dataSource).use { session ->
-            session.run(
-                queryOf(
-                    """
+            @Language("PostgreSQL")
+            val sql = """
                     SELECT 
                         orgnr,
                         navn 
@@ -193,10 +207,14 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     WHERE navn ilike :sokestreng
                     ${if (søkEtterOrgnummer) "OR orgnr like :sokestreng" else ""}
                     LIMIT 10
-                    """.trimMargin(),
-                    mapOf(
-                        "sokestreng" to "$søkestreng%",
-                    )
+                    """.trimMargin()
+            val params = mapOf(
+                "sokestreng" to "$søkestreng%",
+            )
+            session.run(
+                queryOf(
+                    sql,
+                    params
                 )
                     .map { row ->
                         VirksomhetSøkeresultat(
