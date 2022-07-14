@@ -10,7 +10,9 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
+import no.nav.lydia.integrasjoner.brreg.tilVirksomhet
 import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -59,14 +61,22 @@ object BrregOppdateringConsumer : CoroutineScope {
                         logger.info("Fant $antallMeldinger nye meldinger")
                         records.forEach { record ->
                             val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
-                            when(oppdateringVirksomhet.endringstype) {
+                            when (oppdateringVirksomhet.endringstype) {
                                 Endringstype.Ukjent,
                                 Endringstype.Endring,
-                                Endringstype.Ny -> oppdateringVirksomhet.metadata?.let {
-                                    repository.insert(it) //TODO Hva om næringskoder blir oppdatert? Står "on conlict do nothing" i spørringen nå...
+                                Endringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
+                                    val virksomhet = brregVirksomhet.tilVirksomhet(
+                                        status = oppdateringVirksomhet.endringstype.tilStatus(),
+                                        oppdateringsId = oppdateringVirksomhet.oppdateringsId
+                                    )
+                                    repository.insert(virksomhet)
                                 }
                                 Endringstype.Sletting,
-                                Endringstype.Fjernet -> Unit // TODO
+                                Endringstype.Fjernet -> repository.oppdaterStatus(
+                                    orgnr = oppdateringVirksomhet.orgnummer,
+                                    status = oppdateringVirksomhet.endringstype.tilStatus(),
+                                    oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsId
+                                )
                             }
 
                         }
@@ -102,6 +112,14 @@ object BrregOppdateringConsumer : CoroutineScope {
         Endring, // Enheten har blitt endret i Enhetsregisteret
         Ny, // Enheten har blitt lagt til i Enhetsregisteret
         Sletting, // Enheten har blitt slettet fra Enhetsregisteret
-        Fjernet // Enheten har blitt fjernet fra Åpne Data. Eventuelle kopier skal også fjerne enheten.
+        Fjernet; // Enheten har blitt fjernet fra Åpne Data. Eventuelle kopier skal også fjerne enheten.
+
+        fun tilStatus() = when(this) {
+            Ukjent,
+            Endring,
+            Ny ->  VirksomhetStatus.AKTIV
+            Sletting -> VirksomhetStatus.SLETTET
+            Fjernet -> VirksomhetStatus.FJERNET
+        }
     }
 }

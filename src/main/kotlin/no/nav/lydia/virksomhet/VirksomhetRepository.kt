@@ -1,20 +1,19 @@
 package no.nav.lydia.virksomhet
 
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Virksomhet
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
-
-    fun insert(virksomhet: BrregVirksomhetDto) {
+    fun insert(virksomhet: VirksomhetLagringDao) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
@@ -30,7 +29,10 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 poststed,
                                 adresse,
                                 kommune,
-                                kommunenummer
+                                kommunenummer,
+                                status,
+                                oppstartsdato,
+                                oppdatertAvBrregOppdateringsId
                                )
                                 VALUES(
                                     :orgnr,
@@ -41,7 +43,10 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     :poststed,
                                     :adresse,
                                     :kommune,
-                                    :kommunenummer
+                                    :kommunenummer,
+                                    :status,
+                                    :oppstartsdato,
+                                    :oppdatertAvBrregOppdateringsId
                                 ) 
                                 ON CONFLICT (orgnr) DO UPDATE SET
                                     navn = :navn,
@@ -51,7 +56,11 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     poststed = :poststed,
                                     adresse = :adresse,
                                     kommune = :kommune,
-                                    kommunenummer = :kommunenummer
+                                    kommunenummer = :kommunenummer,
+                                    status = :status,                                              
+                                    oppstartsdato = :oppstartsdato,                                
+                                    oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
+                                    sistEndretTidspunkt = now()
                                 RETURNING id
                            )
                            INSERT INTO virksomhet_naring(
@@ -59,27 +68,52 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 narings_kode 
                             )
                             VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
-                            ON CONFLICT DO NOTHING
+                            ON CONFLICT DO NOTHING // TODO Hva skal vi gjøre hvis disse endres?
                             """.trimMargin(),
                         mutableMapOf(
-                            "orgnr" to virksomhet.organisasjonsnummer,
+                            "orgnr" to virksomhet.orgnr,
                             "navn" to virksomhet.navn,
-                            "land" to virksomhet.beliggenhetsadresse?.land,
-                            "landkode" to virksomhet.beliggenhetsadresse?.landkode,
-                            "postnummer" to virksomhet.beliggenhetsadresse?.postnummer,
-                            "poststed" to virksomhet.beliggenhetsadresse?.poststed,
+                            "land" to virksomhet.land,
+                            "landkode" to virksomhet.landkode,
+                            "postnummer" to virksomhet.postnummer,
+                            "poststed" to virksomhet.poststed,
                             "adresse" to session.connection.underlying.createArrayOf(
                                 "text",
-                                virksomhet.beliggenhetsadresse?.adresse?.toTypedArray() ?: emptyArray()
+                                virksomhet.adresse.toTypedArray()
                             ),
-                            "kommune" to virksomhet.beliggenhetsadresse?.kommune,
-                            "kommunenummer" to virksomhet.beliggenhetsadresse?.kommunenummer,
+                            "kommune" to virksomhet.kommune,
+                            "kommunenummer" to virksomhet.kommunenummer,
+                            "status" to virksomhet.status,
+                            "oppstartsdato" to virksomhet.oppstartsdato,
+                            "oppdatertAvBrregOppdateringsId" to virksomhet.oppdatertAvBrregOppdateringsId
                         ).apply {
                             this.putAll(virksomhet.hentNæringsgruppekoder())
                         },
                     ).asUpdate
                 )
             }
+        }
+    }
+
+    fun oppdaterStatus(orgnr: String, status: VirksomhetStatus, oppdatertAvBrregOppdateringsId: Long?) {
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    statement =
+                    """
+                        UPDATE virksomhet SET
+                        status = :status,
+                        oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId
+                        sistEndretTidspunkt = now()
+                        WHERE orgnr = :orgnr
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "orgnr" to orgnr,
+                        "status" to status,
+                        "oppdatertAvBrregOppdateringsId" to oppdatertAvBrregOppdateringsId
+                    )
+                ).asUpdate
+            )
         }
     }
 
@@ -175,3 +209,21 @@ class VirksomhetRepository(val dataSource: DataSource) {
 
 @Serializable
 data class VirksomhetSøkeresultat(val orgnr: String, val navn: String)
+
+data class VirksomhetLagringDao(
+    val orgnr: String,
+    val navn: String,
+    val status: VirksomhetStatus,
+    val oppstartsdato: LocalDate?,
+    val adresse: List<String>,
+    val postnummer: String,
+    val poststed: String,
+    val kommune: String,
+    val kommunenummer: String,
+    val land: String,
+    val landkode: String,
+    val næringsgrupper: Map<String, String>,
+    val oppdatertAvBrregOppdateringsId: Long?,
+) {
+    fun hentNæringsgruppekoder() = næringsgrupper.toMap()
+}
