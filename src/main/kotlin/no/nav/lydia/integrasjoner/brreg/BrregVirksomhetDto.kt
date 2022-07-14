@@ -9,7 +9,7 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 @Serializable
 data class BrregVirksomhetDto(
     val organisasjonsnummer: String,
-    val oppstartsdato: LocalDate?,
+    val oppstartsdato: String?,
     val navn: String,
     val beliggenhetsadresse: Beliggenhetsadresse? = null,
     val naeringskode1: NæringsundergruppeBrreg? = null,
@@ -43,7 +43,7 @@ fun BrregVirksomhetDto.tilVirksomhet(
             kommune = beliggenhetsadresse.kommune!!,
             land = beliggenhetsadresse.land!!,
             landkode = beliggenhetsadresse.landkode!!,
-            oppstartsdato = oppstartsdato,
+            oppstartsdato = oppstartsdato?.let { LocalDate.parse(it) },
             oppdatertAvBrregOppdateringsId = oppdateringsId,
             adresse = beliggenhetsadresse.adresse ?: emptyList()
         )

@@ -1,6 +1,7 @@
 package no.nav.lydia.virksomhet
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinInstant
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
@@ -32,7 +33,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 kommunenummer,
                                 status,
                                 oppstartsdato,
-                                oppdatertAvBrregOppdateringsId
+                                oppdatertAvBrregOppdateringsId,
+                                sistEndretTidspunkt
                                )
                                 VALUES(
                                     :orgnr,
@@ -46,7 +48,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     :kommunenummer,
                                     :status,
                                     :oppstartsdato,
-                                    :oppdatertAvBrregOppdateringsId
+                                    :oppdatertAvBrregOppdateringsId,
+                                    null
                                 ) 
                                 ON CONFLICT (orgnr) DO UPDATE SET
                                     navn = :navn,
@@ -68,7 +71,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 narings_kode 
                             )
                             VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
-                            ON CONFLICT DO NOTHING // TODO Hva skal vi gjøre hvis disse endres?
+                            ON CONFLICT DO NOTHING
                             """.trimMargin(),
                         mutableMapOf(
                             "orgnr" to virksomhet.orgnr,
@@ -83,8 +86,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                             ),
                             "kommune" to virksomhet.kommune,
                             "kommunenummer" to virksomhet.kommunenummer,
-                            "status" to virksomhet.status,
-                            "oppstartsdato" to virksomhet.oppstartsdato,
+                            "status" to virksomhet.status.name,
+                            "oppstartsdato" to virksomhet.oppstartsdato?.toJavaLocalDate(),
                             "oppdatertAvBrregOppdateringsId" to virksomhet.oppdatertAvBrregOppdateringsId
                         ).apply {
                             this.putAll(virksomhet.hentNæringsgruppekoder())
