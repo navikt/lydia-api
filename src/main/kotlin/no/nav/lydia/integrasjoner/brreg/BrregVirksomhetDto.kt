@@ -9,7 +9,7 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 @Serializable
 data class BrregVirksomhetDto(
     val organisasjonsnummer: String,
-    val oppstartsdato: String?,
+    val oppstartsdato: String? = null,
     val navn: String,
     val beliggenhetsadresse: Beliggenhetsadresse? = null,
     val naeringskode1: NæringsundergruppeBrreg? = null,

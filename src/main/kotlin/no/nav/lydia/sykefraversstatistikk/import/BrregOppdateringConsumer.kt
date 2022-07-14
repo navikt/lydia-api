@@ -61,20 +61,20 @@ object BrregOppdateringConsumer : CoroutineScope {
                         logger.info("Fant $antallMeldinger nye meldinger")
                         records.forEach { record ->
                             val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
-                            when (oppdateringVirksomhet.endringstype) {
-                                Endringstype.Ukjent,
-                                Endringstype.Endring,
-                                Endringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
+                            when (oppdateringVirksomhet.brregVirksomhetEndringstype) {
+                                BrregVirksomhetEndringstype.Ukjent,
+                                BrregVirksomhetEndringstype.Endring,
+                                BrregVirksomhetEndringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
                                     val virksomhet = brregVirksomhet.tilVirksomhet(
-                                        status = oppdateringVirksomhet.endringstype.tilStatus(),
+                                        status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
                                         oppdateringsId = oppdateringVirksomhet.oppdateringsId
                                     )
                                     repository.insert(virksomhet)
                                 }
-                                Endringstype.Sletting,
-                                Endringstype.Fjernet -> repository.oppdaterStatus(
+                                BrregVirksomhetEndringstype.Sletting,
+                                BrregVirksomhetEndringstype.Fjernet -> repository.oppdaterStatus(
                                     orgnr = oppdateringVirksomhet.orgnummer,
-                                    status = oppdateringVirksomhet.endringstype.tilStatus(),
+                                    status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
                                     oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsId
                                 )
                             }
@@ -99,15 +99,15 @@ object BrregOppdateringConsumer : CoroutineScope {
     }
 
     @kotlinx.serialization.Serializable
-    private data class OppdateringVirksomhet(
+    data class OppdateringVirksomhet(
         val orgnummer: String,
         val oppdateringsId: Long,
-        val endringstype: Endringstype,
+        val brregVirksomhetEndringstype: BrregVirksomhetEndringstype,
         val metadata: BrregVirksomhetDto? = null,
         val endringstidspunkt: Instant
     )
 
-    private enum class Endringstype {
+    enum class BrregVirksomhetEndringstype {
         Ukjent, // Ukjent type endring. Ofte fordi endringen har skjedd før endringstype ble innført.
         Endring, // Enheten har blitt endret i Enhetsregisteret
         Ny, // Enheten har blitt lagt til i Enhetsregisteret

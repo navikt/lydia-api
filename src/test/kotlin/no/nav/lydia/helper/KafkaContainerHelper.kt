@@ -4,11 +4,14 @@ import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeoutOrNull
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.Key
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
 import org.apache.kafka.clients.CommonClientConfigs
@@ -30,7 +33,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.util.TimeZone
+import java.util.*
 
 
 class KafkaContainerHelper(
@@ -84,9 +87,9 @@ class KafkaContainerHelper(
             keystoreLocation = "",
             truststoreLocation = ""
         ).consumerProperties()
-        .let { config ->
-            KafkaConsumer(config, StringDeserializer(), StringDeserializer())
-        }
+            .let { config ->
+                KafkaConsumer(config, StringDeserializer(), StringDeserializer())
+            }
 
     fun envVars() = mapOf(
         "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092",
@@ -148,6 +151,21 @@ class KafkaContainerHelper(
                 ),
             ), gson.toJson(this)
         )
+
+    inner class BrregOppdateringKafkaHelper {
+        fun sendBrregOppdateringKafkaMelding(oppdateringVirksomhet: BrregOppdateringConsumer.OppdateringVirksomhet) {
+            runBlocking {
+                val sendtMelding = kafkaProducer.send(oppdateringVirksomhet.tilProducerRecord()).get()
+                ventTilKonsumert(sendtMelding.offset())
+            }
+        }
+
+        private fun BrregOppdateringConsumer.OppdateringVirksomhet.tilProducerRecord() =
+            ProducerRecord(
+                brregOppdateringTopic, this.orgnummer, Json.encodeToString(this)
+            )
+    }
+    val brregOppdatering = BrregOppdateringKafkaHelper()
 
     private suspend fun ventTilKonsumert(offset: Long) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
