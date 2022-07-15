@@ -46,7 +46,6 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.kotlinxJsonSerializer
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
@@ -104,7 +103,7 @@ class SykefraversstatistikkApiTest {
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
             .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
-            .responseObject<FilterverdierDto>(deserializer = kotlinxJsonSerializer())
+            .tilSingelRespons<FilterverdierDto>()
 
         result.fold(
             success = { filterverdier ->
@@ -336,7 +335,7 @@ class SykefraversstatistikkApiTest {
 
         lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
-            .responseObject<IASakDto>(deserializer = kotlinxJsonSerializer()).third.fold(
+            .tilSingelRespons<IASakDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) })
 

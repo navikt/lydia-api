@@ -1,7 +1,6 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.Request
-import com.github.kittinunf.fuel.core.ResponseDeserializable
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
@@ -45,8 +44,6 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.io.InputStream
-import java.io.Reader
 import java.net.URLEncoder.encode
 import java.nio.charset.Charset.defaultCharset
 import kotlin.io.path.Path
@@ -394,25 +391,6 @@ class VirksomhetHelper {
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
                 testData.sykefraværsStatistikkMeldinger().toList()
             )
-        }
-    }
-}
-
-@OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> kotlinxJsonSerializer(): ResponseDeserializable<T> {
-    return  object : ResponseDeserializable<T> {
-        val json = Json {
-            useArrayPolymorphism = true
-        }
-
-        override fun deserialize(content: String): T? = json.decodeFromString(T::class.serializer(), content)
-        override fun deserialize(reader: Reader): T? = deserialize(reader.readText())
-        override fun deserialize(bytes: ByteArray): T? = deserialize(String(bytes))
-
-        override fun deserialize(inputStream: InputStream): T? {
-            inputStream.bufferedReader().use {
-                return deserialize(it)
-            }
         }
     }
 }
