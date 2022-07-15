@@ -1,6 +1,7 @@
 package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.ResponseDeserializable
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
@@ -8,8 +9,11 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -41,6 +45,8 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.io.InputStream
+import java.io.Reader
 import java.net.URLEncoder.encode
 import java.nio.charset.Charset.defaultCharset
 import kotlin.io.path.Path
@@ -96,7 +102,6 @@ class TestContainerHelper {
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
 
-        fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
     }
 }
@@ -117,7 +122,7 @@ class SakHelper {
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
                 .authentication().bearer(token = token)
-                .responseObject<List<IASakDto>>()
+                .tilListeRespons<IASakDto>()
 
         fun hentSamarbeidshistorikk(
             orgnummer: String,
@@ -134,7 +139,7 @@ class SakHelper {
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnummer")
                 .authentication().bearer(token = token)
-                .responseObject<List<SakshistorikkDto>>()
+                .tilListeRespons<SakshistorikkDto>()
 
 
         fun hentSamarbeidshistorikkForOrgnrRespons(
@@ -143,14 +148,14 @@ class SakHelper {
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnr")
                 .authentication().bearer(token = token)
-                .responseObject<List<IASakshendelseOppsummeringDto>>()
+                .tilListeRespons<IASakshendelseOppsummeringDto>()
 
         fun opprettSakForVirksomhetRespons(
             orgnummer: String,
             token: String
         ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(token = token)
-            .responseObject<IASakDto>()
+            .tilSingelRespons<IASakDto>()
 
         fun opprettSakForVirksomhet(
             orgnummer: String,
@@ -167,7 +172,7 @@ class SakHelper {
             lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
                 .authentication().bearer(token)
                 .jsonBody(Json.encodeToString(sakshendelse))
-                .responseObject<IASakDto>().third.fold(
+                .tilSingelRespons<IASakDto>().third.fold(
                     success = { respons -> respons },
                     failure = {
                         fail(it.message)
@@ -180,7 +185,7 @@ class SakHelper {
             payload: String? = null
         ): ResponseResultOf<IASakDto> {
             val request = nyHendelsePåSakRequest(token, sak, hendelsestype, payload)
-            return request.responseObject()
+            return request.tilSingelRespons()
         }
 
         fun nyHendelsePåSakRequest(
@@ -316,7 +321,7 @@ class StatistikkHelper {
                         "&${Søkeparametere.SKAL_INKLUDERE_TOTALT_ANTALL}=$skalInkludereTotaltAntall"
             )
                 .authentication().bearer(token)
-                .responseObject<SykefraværsstatistikkListResponseDto>()
+                .tilSingelRespons<SykefraværsstatistikkListResponseDto>()
 
         fun hentSykefraværForVirksomhetRespons(
             orgnummer: String,
@@ -324,7 +329,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer")
                 .authentication().bearer(token)
-                .responseObject<List<SykefraversstatistikkVirksomhetDto>>()
+                .tilListeRespons<SykefraversstatistikkVirksomhetDto>()
 
         fun hentSykefraværForVirksomhet(
             orgnummer: String,
@@ -344,13 +349,13 @@ class VirksomhetHelper {
         ) =
             lydiaApiContainer.performGet(url = "$VIRKSOMHET_PATH/finn?q=${encode(søkestreng, defaultCharset())}")
                 .authentication().bearer(token)
-                .responseObject<List<VirksomhetSøkeresultat>>()
+                .tilListeRespons<VirksomhetSøkeresultat>()
                 .third.fold(success = success, failure = { fail(it.message) })
 
         fun hentVirksomhetsinformasjonRespons(orgnummer: String, token: String) =
             lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
                 .authentication().bearer(token)
-                .responseObject<VirksomhetDto>()
+                .tilSingelRespons<VirksomhetDto>()
 
         fun hentVirksomhetsinformasjon(orgnummer: String, token: String) =
             hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
@@ -392,3 +397,28 @@ class VirksomhetHelper {
         }
     }
 }
+
+@OptIn(InternalSerializationApi::class)
+inline fun <reified T : Any> kotlinxJsonSerializer(): ResponseDeserializable<T> {
+    return  object : ResponseDeserializable<T> {
+        val json = Json {
+            useArrayPolymorphism = true
+        }
+
+        override fun deserialize(content: String): T? = json.decodeFromString(T::class.serializer(), content)
+        override fun deserialize(reader: Reader): T? = deserialize(reader.readText())
+        override fun deserialize(bytes: ByteArray): T? = deserialize(String(bytes))
+
+        override fun deserialize(inputStream: InputStream): T? {
+            inputStream.bufferedReader().use {
+                return deserialize(it)
+            }
+        }
+    }
+}
+
+@OptIn(InternalSerializationApi::class)
+inline fun <reified T : Any> Request.tilListeRespons() = this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json.Default)
+@OptIn(InternalSerializationApi::class)
+inline fun <reified T : Any> Request.tilSingelRespons() = this.responseObject(loader = T::class.serializer(), json = Json.Default)
+
