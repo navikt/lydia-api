@@ -14,10 +14,8 @@ data class IASakDto(
     val orgnr: String,
     var status: IAProsessStatus,
     val opprettetAv: String,
-//    @Serializable(with = LocalDateTimeSerializer::class)
     val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,
-//    @Serializable(with = LocalDateTimeSerializer::class)
     val endretTidspunkt: LocalDateTime?,
     val eidAv: String?,
     val endretAvHendelseId: String,
