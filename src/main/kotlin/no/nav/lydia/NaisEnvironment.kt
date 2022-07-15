@@ -67,6 +67,7 @@ class Kafka(
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
     val iaSakHendelseTopic: String = getEnvVar("IA_SAK_HENDELSE_TOPIC"),
     val iaSakTopic: String = getEnvVar("IA_SAK_TOPIC"),
+    val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
     val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {

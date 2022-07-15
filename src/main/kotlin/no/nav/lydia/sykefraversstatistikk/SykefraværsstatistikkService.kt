@@ -1,6 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk
 
-import no.nav.lydia.sykefraversstatistikk.api.ListResponse
+import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
@@ -17,7 +17,7 @@ class SykefraværsstatistikkService(val sykefraversstatistikkRepository: Sykefra
 
     fun hentSykefravær(
         søkeparametere: Søkeparametere
-    ): ListResponse<SykefraversstatistikkVirksomhet> {
+    ): SykefraværsstatistikkListResponse {
         val start = System.currentTimeMillis()
         val sykefravær = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter, total: ${sykefravær.total}")

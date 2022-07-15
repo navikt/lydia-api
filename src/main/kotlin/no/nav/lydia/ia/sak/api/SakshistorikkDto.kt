@@ -1,13 +1,17 @@
 package no.nav.lydia.ia.sak.api
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.*
-import java.time.LocalDateTime
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 
 @Serializable
 class SakshistorikkDto(
     val saksnummer: String,
-    @Serializable(with = LocalDateTimeSerializer::class)
     val opprettet: LocalDateTime,
     val sakshendelser: List<SakSnapshotDto>
 )
@@ -16,7 +20,6 @@ class SakshistorikkDto(
 class SakSnapshotDto(
     val status: IAProsessStatus,
     val hendelsestype: SaksHendelsestype,
-    @Serializable(with = LocalDateTimeSerializer::class)
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
     val eier: String?
@@ -26,7 +29,7 @@ class SakSnapshotDto(
             SakSnapshotDto(
                 status = iaSak.status,
                 hendelsestype = iaSakshendelse.hendelsesType,
-                tidspunktForSnapshot = iaSakshendelse.opprettetTidspunkt,
+                tidspunktForSnapshot = iaSakshendelse.opprettetTidspunkt.toKotlinLocalDateTime(),
                 eier = iaSak.eidAv,
                 begrunnelser = when (iaSakshendelse) {
                     is VirksomhetIkkeAktuellHendelse -> iaSakshendelse.valgtÅrsak.begrunnelser.map { it.navn }
@@ -49,7 +52,7 @@ fun IASak.tilSakshistorikk(): SakshistorikkDto {
 
     return SakshistorikkDto(
         saksnummer = this.saksnummer,
-        opprettet = this.opprettetTidspunkt,
+        opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
         sakshendelser = sakSnapshotDtos.toList())
 }
 

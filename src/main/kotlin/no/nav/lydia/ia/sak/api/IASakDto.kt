@@ -1,11 +1,12 @@
 package no.nav.lydia.ia.sak.api
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.GyldigHendelse
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.Rådgiver
-import java.time.LocalDateTime
 
 @Serializable
 data class IASakDto(
@@ -13,10 +14,8 @@ data class IASakDto(
     val orgnr: String,
     var status: IAProsessStatus,
     val opprettetAv: String,
-    @Serializable(with = LocalDateTimeSerializer::class)
     val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,
-    @Serializable(with = LocalDateTimeSerializer::class)
     val endretTidspunkt: LocalDateTime?,
     val eidAv: String?,
     val endretAvHendelseId: String,
@@ -30,9 +29,9 @@ data class IASakDto(
             orgnr = this.orgnr,
             status = this.status,
             opprettetAv = this.opprettetAv,
-            opprettetTidspunkt = this.opprettetTidspunkt,
+            opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
             endretAv = this.endretAv,
-            endretTidspunkt = this.endretTidspunkt,
+            endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
             eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId,
             gyldigeNesteHendelser = this.gyldigeNesteHendelser(rådgiver)

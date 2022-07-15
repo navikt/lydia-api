@@ -73,6 +73,8 @@ dependencies {
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:0.0.5")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+
     // TEST
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -89,9 +91,8 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
     testImplementation("org.testcontainers:kafka:$testcontainersVersion")
 
-
     // Http-mocking
-    testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVersion")
+    testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
     testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.33.2")
 
 

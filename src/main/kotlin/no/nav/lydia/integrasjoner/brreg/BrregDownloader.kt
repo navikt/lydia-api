@@ -5,6 +5,7 @@ import com.github.kittinunf.fuel.httpGet
 import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
 import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -13,7 +14,12 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.GZIPInputStream
-import kotlin.io.path.*
+import kotlin.io.path.bufferedWriter
+import kotlin.io.path.createTempFile
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.fileSize
+import kotlin.io.path.inputStream
+import kotlin.io.path.writeBytes
 
 // Ref: https://data.brreg.no/enhetsregisteret/api/docs/index.html#enheter-lastned
 class BrregDownloader(
@@ -60,16 +66,17 @@ class BrregDownloader(
         JsonReader(InputStreamReader(brregUkomprimert.inputStream())).use { reader ->
             reader.beginArray()
             while (reader.hasNext()) {
-                val virksomhet = gson.fromJson<BrregVirksomhetDto>(reader, BrregVirksomhetDto::class.java)
-                when (virksomhet) {
+                val brregVirksomhet = gson.fromJson<BrregVirksomhetDto>(reader, BrregVirksomhetDto::class.java)
+                when (brregVirksomhet) {
                     null -> {
                         log.debug("Skipper lagring av virksomhet da den er null fra JsonReader")
                         feilendeBedrifter++
                     }
                     else -> {
                         try {
-                            virksomhet.beliggenhetsadresse?.let { adresse ->
+                            brregVirksomhet.beliggenhetsadresse?.let { adresse ->
                                 if (adresse.erRelevant()) {
+                                    val virksomhet = brregVirksomhet.tilVirksomhet(status = VirksomhetStatus.AKTIV, oppdateringsId = null)
                                     virksomhetRepository.insert(virksomhet = virksomhet)
                                     importerteBedrifter++
                                 } else {

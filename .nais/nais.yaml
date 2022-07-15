@@ -65,6 +65,8 @@ spec:
       value: pia.ia-sak-hendelse-v1
     - name: IA_SAK_TOPIC
       value: pia.ia-sak-v1
+    - name: BRREG_OPPDATERING_TOPIC
+      value: pia.brreg-oppdatering
     - name: STATISTIKK_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-v1
     - name: BRREG_UNDERENHET_URL

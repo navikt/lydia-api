@@ -1,13 +1,13 @@
 package no.nav.lydia.ia.eksport
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
-import no.nav.lydia.ia.sak.api.LocalDateTimeSerializer
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
-import java.time.LocalDateTime
 
 class IASakProdusent(private val produsent: KafkaProdusent, private val topic: String) : Observer<IASak> {
 
@@ -25,8 +25,8 @@ class IASakProdusent(private val produsent: KafkaProdusent, private val topic: S
                 eierAvSak = this.eidAv,
                 endretAvHendelseId = this.endretAvHendelseId,
                 status = this.status,
-                opprettetTidspunkt = this.opprettetTidspunkt,
-                endretTidspunkt = this.endretTidspunkt ?: this.opprettetTidspunkt,
+                opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
+                endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime() ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
             )
             return key to Json.encodeToString(value)
 
@@ -40,9 +40,7 @@ class IASakProdusent(private val produsent: KafkaProdusent, private val topic: S
         val eierAvSak: String?,
         val endretAvHendelseId: String,
         val status: IAProsessStatus,
-        @Serializable(with = LocalDateTimeSerializer::class)
         val opprettetTidspunkt: LocalDateTime,
-        @Serializable(with = LocalDateTimeSerializer::class)
         val endretTidspunkt: LocalDateTime,
     )
 }

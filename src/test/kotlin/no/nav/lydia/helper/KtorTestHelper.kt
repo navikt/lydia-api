@@ -51,6 +51,7 @@ class KtorTestHelper {
                 statistikkTopic = "",
                 iaSakHendelseTopic = "",
                 iaSakTopic = "",
+                brregOppdateringTopic = "",
                 consumerLoopDelay = 200L
             ), integrasjoner = Integrasjoner(
                 ssbNæringsUrl = næringMockUrl,

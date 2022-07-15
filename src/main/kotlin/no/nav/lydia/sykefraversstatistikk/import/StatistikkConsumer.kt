@@ -35,11 +35,11 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
-        logger.info("Creating kafka consumer job")
+        logger.info("Creating kafka consumer job for statistikk")
         this.job = Job()
         this.kafka = kafka
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
-        logger.info("Created kafka consumer job")
+        logger.info("Created kafka consumer job for statistikk")
     }
 
     fun run() {
@@ -65,7 +65,6 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
                     }
-
                     delay(kafka.consumerLoopDelay)
                 }
 
@@ -89,9 +88,9 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun cancel() {
-        logger.info("Stopping kafka consumer job")
+        logger.info("Stopping kafka consumer job for statistikk")
         job.cancel()
-        logger.info("Stopped kafka consumer job")
+        logger.info("Stopped kafka consumer job for statistikk")
     }
 
     override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN

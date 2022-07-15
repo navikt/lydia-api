@@ -49,6 +49,7 @@ import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -76,6 +77,7 @@ fun startLydiaBackend() {
             )
         )
     ).also { HelseMonitor.leggTilHelsesjekk(it) }
+    brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
     val iaSakshendelseProdusent =
@@ -95,6 +97,16 @@ fun startLydiaBackend() {
             it.stop(3, 5, TimeUnit.SECONDS)
         }
     }.start(wait = true)
+}
+
+private fun brregConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
+    BrregOppdateringConsumer.apply {
+        create(
+            kafka = naisEnv.kafka,
+            repository = VirksomhetRepository(dataSource)
+        )
+        run()
+    }
 }
 
 fun Application.lydiaRestApi(

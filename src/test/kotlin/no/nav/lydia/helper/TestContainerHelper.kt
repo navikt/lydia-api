@@ -3,13 +3,16 @@ package no.nav.lydia.helper
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
-import com.github.kittinunf.fuel.gson.jsonBody
-import com.github.kittinunf.fuel.gson.responseObject
+import com.github.kittinunf.fuel.core.extensions.jsonBody
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
+import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -26,9 +29,9 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.sykefraversstatistikk.api.ListResponse
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
+import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
@@ -96,7 +99,6 @@ class TestContainerHelper {
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
 
-        fun Request.withLydiaToken(): Request = this.authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
     }
 }
@@ -108,7 +110,7 @@ class SakHelper {
             hentSakerRespons(orgnummer = orgnummer, token = token).third.fold(
                 success = { respons -> respons },
                 failure = {
-                    fail(it.message)
+                    fail(it.stackTraceToString())
                 })
 
         fun hentSakerRespons(
@@ -117,7 +119,7 @@ class SakHelper {
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
                 .authentication().bearer(token = token)
-                .responseObject<List<IASakDto>>(localDateTimeTypeAdapter)
+                .tilListeRespons<IASakDto>()
 
         fun hentSamarbeidshistorikk(
             orgnummer: String,
@@ -125,7 +127,7 @@ class SakHelper {
         ) =
             hentSamarbeidshistorikkRespons(orgnummer, token).third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) }
+                failure = { fail(it.stackTraceToString()) }
             )
 
         fun hentSamarbeidshistorikkRespons(
@@ -134,7 +136,7 @@ class SakHelper {
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnummer")
                 .authentication().bearer(token = token)
-                .responseObject<List<SakshistorikkDto>>(localDateTimeTypeAdapter)
+                .tilListeRespons<SakshistorikkDto>()
 
 
         fun hentSamarbeidshistorikkForOrgnrRespons(
@@ -143,14 +145,14 @@ class SakHelper {
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnr")
                 .authentication().bearer(token = token)
-                .responseObject<List<IASakshendelseOppsummeringDto>>(localDateTimeTypeAdapter)
+                .tilListeRespons<IASakshendelseOppsummeringDto>()
 
         fun opprettSakForVirksomhetRespons(
             orgnummer: String,
             token: String
         ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
             .authentication().bearer(token = token)
-            .responseObject<IASakDto>(localDateTimeTypeAdapter)
+            .tilSingelRespons<IASakDto>()
 
         fun opprettSakForVirksomhet(
             orgnummer: String,
@@ -166,11 +168,8 @@ class SakHelper {
         ) =
             lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
                 .authentication().bearer(token)
-                .jsonBody(
-                    src = sakshendelse,
-                    gson = localDateTimeTypeAdapter
-                )
-                .responseObject<IASakDto>(localDateTimeTypeAdapter).third.fold(
+                .jsonBody(Json.encodeToString(sakshendelse))
+                .tilSingelRespons<IASakDto>().third.fold(
                     success = { respons -> respons },
                     failure = {
                         fail(it.message)
@@ -183,7 +182,7 @@ class SakHelper {
             payload: String? = null
         ): ResponseResultOf<IASakDto> {
             val request = nyHendelsePåSakRequest(token, sak, hendelsestype, payload)
-            return request.responseObject(localDateTimeTypeAdapter)
+            return request.tilSingelRespons()
         }
 
         fun nyHendelsePåSakRequest(
@@ -195,17 +194,17 @@ class SakHelper {
             return lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
                 .authentication().bearer(token)
                 .jsonBody(
-                    IASakshendelseDto(
-                        orgnummer = sak.orgnr,
-                        saksnummer = sak.saksnummer,
-                        hendelsesType = hendelsestype,
-                        endretAvHendelseId = sak.endretAvHendelseId,
-                        payload = payload
-                    ),
-                    localDateTimeTypeAdapter
+                    Json.encodeToString(
+                        IASakshendelseDto(
+                            orgnummer = sak.orgnr,
+                            saksnummer = sak.saksnummer,
+                            hendelsesType = hendelsestype,
+                            endretAvHendelseId = sak.endretAvHendelseId,
+                            payload = payload
+                        )
+                    )
                 )
         }
-
 
         fun nyHendelsePåSak(
             sak: IASakDto,
@@ -239,7 +238,7 @@ class SakHelper {
 class StatistikkHelper {
     companion object {
         fun hentSykefravær(
-            success: (ListResponse<SykefraversstatistikkVirksomhetDto>) -> Unit,
+            success: (SykefraværsstatistikkListResponseDto) -> Unit,
             kvartal: String = "",
             årstall: String = "",
             kommuner: String = "",
@@ -319,7 +318,7 @@ class StatistikkHelper {
                         "&${Søkeparametere.SKAL_INKLUDERE_TOTALT_ANTALL}=$skalInkludereTotaltAntall"
             )
                 .authentication().bearer(token)
-                .responseObject<ListResponse<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
+                .tilSingelRespons<SykefraværsstatistikkListResponseDto>()
 
         fun hentSykefraværForVirksomhetRespons(
             orgnummer: String,
@@ -327,7 +326,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer")
                 .authentication().bearer(token)
-                .responseObject<List<SykefraversstatistikkVirksomhetDto>>(localDateTimeTypeAdapter)
+                .tilListeRespons<SykefraversstatistikkVirksomhetDto>()
 
         fun hentSykefraværForVirksomhet(
             orgnummer: String,
@@ -347,13 +346,13 @@ class VirksomhetHelper {
         ) =
             lydiaApiContainer.performGet(url = "$VIRKSOMHET_PATH/finn?q=${encode(søkestreng, defaultCharset())}")
                 .authentication().bearer(token)
-                .responseObject<List<VirksomhetSøkeresultat>>()
+                .tilListeRespons<VirksomhetSøkeresultat>()
                 .third.fold(success = success, failure = { fail(it.message) })
 
         fun hentVirksomhetsinformasjonRespons(orgnummer: String, token: String) =
             lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
                 .authentication().bearer(token)
-                .responseObject<VirksomhetDto>()
+                .tilSingelRespons<VirksomhetDto>()
 
         fun hentVirksomhetsinformasjon(orgnummer: String, token: String) =
             hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
@@ -395,3 +394,9 @@ class VirksomhetHelper {
         }
     }
 }
+
+@OptIn(InternalSerializationApi::class)
+inline fun <reified T : Any> Request.tilListeRespons() = this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json.Default)
+@OptIn(InternalSerializationApi::class)
+inline fun <reified T : Any> Request.tilSingelRespons() = this.responseObject(loader = T::class.serializer(), json = Json.Default)
+

@@ -1,18 +1,15 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import arrow.core.Either
-import com.github.kittinunf.fuel.gson.responseObject
-import com.github.kittinunf.result.getOrElse
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.SykefraværsstatistikkTestData
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.TestContainerHelper.Companion.withLydiaToken
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.AVVIRKNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
@@ -29,14 +26,10 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.lagSykefraværsstatistikkImportDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import java.sql.ResultSet
 import kotlin.test.Test
-import kotlin.test.fail
 
 class SykefraversstatistikkImportTest {
-    private val lydiaApi = TestContainerHelper.lydiaApiContainer
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
     private val postgres = TestContainerHelper.postgresContainer
 
@@ -231,10 +224,7 @@ class SykefraversstatistikkImportTest {
 
 
     private fun hentSykefraværsstatistikk(orgnr: String) =
-        lydiaApi.performGet("$SYKEFRAVERSSTATISTIKK_PATH/${orgnr}")
-            .withLydiaToken()
-            .responseObject<List<SykefraversstatistikkVirksomhetDto>>().third
-            .getOrElse { fail(it.message) }
+        StatistikkHelper.hentSykefraværForVirksomhet(orgnummer = orgnr)
 
 
     private fun ResultSet.getOrNull(columnLabel: String): Any? = Either.catch {

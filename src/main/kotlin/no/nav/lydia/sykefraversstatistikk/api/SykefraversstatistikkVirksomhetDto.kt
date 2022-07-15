@@ -23,9 +23,6 @@ data class SykefraversstatistikkVirksomhetDto(
 ) {
 
     companion object {
-        fun ListResponse<SykefraversstatistikkVirksomhet>.toDto() =
-            ListResponse(data = this.data.toDto(), total = this.total)
-
         fun List<SykefraversstatistikkVirksomhet>.toDto(): List<SykefraversstatistikkVirksomhetDto> =
             this.map { it.toDto() }
         
