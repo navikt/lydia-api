@@ -7,7 +7,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
-import no.nav.lydia.sykefraversstatistikk.api.ListResponse
+import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
@@ -94,7 +94,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
     fun hentSykefravær(
         søkeparametere: Søkeparametere
-    ): ListResponse<SykefraversstatistikkVirksomhet> {
+    ): SykefraværsstatistikkListResponse {
         val sykefraværsStatistikk = using(sessionOf(dataSource)) { session ->
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
             val tmpKommuneTabell = "kommuner"
@@ -170,7 +170,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
         val totaltAntallVirksomheter = hentTotaltAntall(søkeparametere = søkeparametere)
 
-        return ListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
+        return SykefraværsstatistikkListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
     }
 
     private fun filter(

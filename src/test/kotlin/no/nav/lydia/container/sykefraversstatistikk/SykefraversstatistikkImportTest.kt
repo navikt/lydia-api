@@ -1,7 +1,7 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import arrow.core.Either
-import com.github.kittinunf.fuel.gson.responseObject
+import com.github.kittinunf.fuel.serialization.responseObject
 import com.github.kittinunf.result.getOrElse
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.ints.shouldBeExactly

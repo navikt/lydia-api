@@ -1,6 +1,8 @@
 package no.nav.lydia.container.virksomhet
 
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.datetime.Clock
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
@@ -8,6 +10,7 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
+import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
 class VirksomhetOppdateringTest {
@@ -24,7 +27,7 @@ class VirksomhetOppdateringTest {
         tilfeldigeVirksomheter.forEachIndexed { index, testVirksomhet ->
             val oppdateringVirksomhet = BrregOppdateringConsumer.OppdateringVirksomhet(
                 orgnummer = testVirksomhet.orgnr,
-                oppdateringsId = index.toLong(),
+                oppdateringsId = testVirksomhet.orgnr.toLong() + 1L,
                 brregVirksomhetEndringstype = BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring,
                 metadata = BrregVirksomhetDto(
                     organisasjonsnummer = testVirksomhet.orgnr,
@@ -45,6 +48,11 @@ class VirksomhetOppdateringTest {
             val virksomhetDto =
                 VirksomhetHelper.hentVirksomhetsinformasjon(orgnummer = testVirksomhet.orgnr, token)
             virksomhetDto.navn shouldBe testVirksomhet.navn.reversed()
+            virksomhetDto.status shouldBe VirksomhetStatus.AKTIV
+            virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe testVirksomhet.orgnr.toLong() + 1L
+            virksomhetDto.opprettetTidspunkt shouldNotBe null
+            virksomhetDto.sistEndretTidspunkt shouldNotBe null
+            virksomhetDto.sistEndretTidspunkt!! shouldBeGreaterThan virksomhetDto.opprettetTidspunkt
         }
 
     }
