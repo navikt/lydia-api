@@ -33,8 +33,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 kommunenummer,
                                 status,
                                 oppstartsdato,
-                                oppdatertAvBrregOppdateringsId,
-                                sistEndretTidspunkt
+                                oppdatertAvBrregOppdateringsId
                                )
                                 VALUES(
                                     :orgnr,
@@ -48,8 +47,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     :kommunenummer,
                                     :status,
                                     :oppstartsdato,
-                                    :oppdatertAvBrregOppdateringsId,
-                                    null
+                                    :oppdatertAvBrregOppdateringsId
                                 ) 
                                 ON CONFLICT (orgnr) DO UPDATE SET
                                     navn = :navn,
@@ -188,7 +186,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         sektor = row.stringOrNull("sektor"),
                         oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
                         opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),
-                        sistEndretTidspunkt = row.instantOrNull("sistEndretTidspunkt")?.toKotlinInstant()
+                        sistEndretTidspunkt = row.instant("sistEndretTidspunkt").toKotlinInstant()
                     )
                 }.asSingle
             )

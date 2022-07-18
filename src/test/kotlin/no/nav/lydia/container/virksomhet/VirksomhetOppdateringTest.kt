@@ -1,19 +1,24 @@
 package no.nav.lydia.container.virksomhet
 
 import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.*
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Ny
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting
+import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
@@ -114,7 +119,7 @@ class VirksomhetOppdateringTest {
         virksomhetDto.neringsgrupper shouldContainAll this.næringsundergrupper
         virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe null
         virksomhetDto.opprettetTidspunkt shouldBeLessThanOrEqualTo Clock.System.now()
-        virksomhetDto.sistEndretTidspunkt shouldBe null
+        virksomhetDto.sistEndretTidspunkt shouldBeLessThanOrEqualTo Clock.System.now()
     }
 
     private fun TestVirksomhet.tilOppdateringsmelding(endringstype: BrregOppdateringConsumer.BrregVirksomhetEndringstype): BrregOppdateringConsumer.OppdateringVirksomhet {
@@ -145,6 +150,11 @@ class VirksomhetOppdateringTest {
     }
 
     private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(status: VirksomhetStatus, navn: String = this.navn) {
+        val virksomhetDto = skalHaRiktigTilstand(status, navn)
+        virksomhetDto.sistEndretTidspunkt shouldBe virksomhetDto.opprettetTidspunkt
+    }
+
+    private fun TestVirksomhet.skalHaRiktigTilstand(status: VirksomhetStatus, navn: String = this.navn): VirksomhetDto {
         val virksomhetDto =
             VirksomhetHelper.hentVirksomhetsinformasjon(orgnummer = this.orgnr, token)
 
@@ -158,8 +168,33 @@ class VirksomhetOppdateringTest {
         virksomhetDto.neringsgrupper shouldContainAll this.næringsundergrupper
         virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe genererOppdateringsid(this)
         virksomhetDto.opprettetTidspunkt shouldBeLessThan Clock.System.now()
-        virksomhetDto.sistEndretTidspunkt shouldNotBe null
-        virksomhetDto.sistEndretTidspunkt!! shouldBeGreaterThan virksomhetDto.opprettetTidspunkt
+        return virksomhetDto
+    }
+
+    private fun TestVirksomhet.skalHaRiktigTilstandEtterNy(navn: String = this.navn) {
+        val virksomhetDto = skalHaRiktigTilstand(status = VirksomhetStatus.AKTIV, navn)
+        virksomhetDto.sistEndretTidspunkt shouldBeEqualComparingTo virksomhetDto.opprettetTidspunkt
+    }
+
+    @Test
+    fun `gjør ingenting med virksomheter som ikke er relevante`() {
+        val testVirksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = Beliggenhetsadresse()))
+        VirksomhetHelper.hentVirksomhetsinformasjonRespons(orgnummer = testVirksomhet.orgnr, token = token).second.statusCode shouldBe HttpStatusCode.NotFound.value
+        BrregOppdateringConsumer.BrregVirksomhetEndringstype.values().forEach { endringsType ->
+            testVirksomhet
+                .tilOppdateringsmelding(endringstype = endringsType)
+                .send()
+            VirksomhetHelper.hentVirksomhetsinformasjonRespons(orgnummer = testVirksomhet.orgnr, token = token).second.statusCode shouldBe HttpStatusCode.NotFound.value
+        }
+    }
+
+    @Test
+    fun `Skal inserte en virksomhet med endringstype ny`() {
+        val virksomhet = TestVirksomhet.nyVirksomhet()
+        virksomhet
+            .tilOppdateringsmelding(endringstype = Ny)
+            .send()
+        virksomhet.skalHaRiktigTilstandEtterNy()
     }
 }
 
