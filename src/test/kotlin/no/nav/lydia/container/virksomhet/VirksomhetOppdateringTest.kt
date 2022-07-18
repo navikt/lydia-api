@@ -1,13 +1,19 @@
 package no.nav.lydia.container.virksomhet
 
 import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
+import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
@@ -149,9 +155,10 @@ class VirksomhetOppdateringTest {
         kafkaContainer.brregOppdatering.sendBrregOppdateringKafkaMelding(oppdateringVirksomhet = this)
     }
 
-    private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(status: VirksomhetStatus, navn: String = this.navn) {
+    private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(status: VirksomhetStatus, navn: String = this.navn): VirksomhetDto {
         val virksomhetDto = skalHaRiktigTilstand(status, navn)
-        virksomhetDto.sistEndretTidspunkt shouldBe virksomhetDto.opprettetTidspunkt
+        virksomhetDto.sistEndretTidspunkt shouldBeGreaterThan virksomhetDto.opprettetTidspunkt
+        return virksomhetDto
     }
 
     private fun TestVirksomhet.skalHaRiktigTilstand(status: VirksomhetStatus, navn: String = this.navn): VirksomhetDto {
@@ -195,6 +202,17 @@ class VirksomhetOppdateringTest {
             .tilOppdateringsmelding(endringstype = Ny)
             .send()
         virksomhet.skalHaRiktigTilstandEtterNy()
+    }
+
+    @Test
+    fun `sjekk på næringskoder`() {
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(næringer = listOf(DYRKING_AV_RIS, DYRKING_AV_KORN, SCENEKUNST)))
+        virksomhet
+            .copy(næringsundergrupper = listOf(DYRKING_AV_RIS, DYRKING_AV_KORN, BEDRIFTSRÅDGIVNING))
+            .tilOppdateringsmelding(endringstype = Endring)
+            .send()
+        val virksomhetDto = virksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
+        virksomhetDto.neringsgrupper shouldContainExactlyInAnyOrder listOf(DYRKING_AV_RIS, DYRKING_AV_KORN, BEDRIFTSRÅDGIVNING)
     }
 }
 

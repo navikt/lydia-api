@@ -19,8 +19,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 @Language("PostgreSQL")
-                val sql = """
-                           WITH virksomhetId AS(
+                val virksomhetInsertSql = """
                                INSERT INTO virksomhet(
                                 orgnr,
                                 navn,
@@ -34,7 +33,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 status,
                                 oppstartsdato,
                                 oppdatertAvBrregOppdateringsId
-                               )
+                                )
                                 VALUES(
                                     :orgnr,
                                     :navn,
@@ -62,15 +61,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     oppstartsdato = :oppstartsdato,                                
                                     oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
                                     sistEndretTidspunkt = now()
-                                RETURNING id
-                           )
-                           INSERT INTO virksomhet_naring(
-                                virksomhet,
-                                narings_kode 
-                            )
-                            VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
-                            ON CONFLICT DO NOTHING
-                            """.trimMargin()
+                """.trimMargin()
                 val params = mutableMapOf(
                     "orgnr" to virksomhet.orgnr,
                     "navn" to virksomhet.navn,
@@ -87,18 +78,46 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     "status" to virksomhet.status.name,
                     "oppstartsdato" to virksomhet.oppstartsdato?.toJavaLocalDate(),
                     "oppdatertAvBrregOppdateringsId" to virksomhet.oppdatertAvBrregOppdateringsId
-                ).apply {
-                    this.putAll(virksomhet.hentNæringsgruppekoder())
-                }
+                )
                 tx.run(
                     queryOf(
-                        sql,
+                        virksomhetInsertSql,
                         params,
                     ).asUpdate
+                )
+
+                @Language("PostgreSQL")
+                val slettingAvNæringerSql = """
+                    with virksomhetId as (select id from virksomhet where orgnr = :orgnr)
+                    DELETE from virksomhet_naring where virksomhet = (select id from virksomhetId);
+                """.trimIndent()
+                tx.run(
+                    queryOf(
+                        statement = slettingAvNæringerSql,
+                        paramMap = mapOf("orgnr" to virksomhet.orgnr)
+                    ).asExecute
+                )
+
+                @Language("PostgreSQL")
+                val oppdateringAvNyeNæringerSql = """
+                    with virksomhetId as (select id from virksomhet where orgnr = :orgnr)
+                    INSERT INTO virksomhet_naring(
+                                            virksomhet,
+                                            narings_kode 
+                                        )
+                                        VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })};
+                """.trimIndent()
+                tx.run(
+                    queryOf(
+                        statement = oppdateringAvNyeNæringerSql,
+                        paramMap = mutableMapOf("orgnr" to virksomhet.orgnr).apply {
+                            this.putAll(virksomhet.hentNæringsgruppekoder())
+                        }).asExecute
                 )
             }
         }
     }
+
 
     fun oppdaterStatus(orgnr: String, status: VirksomhetStatus, oppdatertAvBrregOppdateringsId: Long?) {
         sessionOf(dataSource).use { session ->
