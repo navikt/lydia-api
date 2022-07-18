@@ -114,7 +114,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     """.trimIndent()
             val params = mapOf(
                 "orgnr" to orgnr,
-                "status" to status,
+                "status" to status.name,
                 "oppdatertAvBrregOppdateringsId" to oppdatertAvBrregOppdateringsId
             )
             session.run(

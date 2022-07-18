@@ -8,10 +8,10 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.random.Random
 
-class TestVirksomhet(
+data class TestVirksomhet(
     val orgnr: String,
     val navn: String,
-    val næringsundergrupper: List<Næringsgruppe>,
+    val næringsundergrupper: List<Næringsgruppe>, //TODO hvorfor kommer samme element to ganger i denne lista?
     val beliggenhet: Beliggenhetsadresse?
 ) {
     val næringsundergruppe1 = næringsundergrupper.first()
