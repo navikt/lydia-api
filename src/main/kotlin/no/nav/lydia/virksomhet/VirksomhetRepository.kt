@@ -19,9 +19,9 @@ class VirksomhetRepository(val dataSource: DataSource) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 @Language("PostgreSQL")
-                val sql = """
-                           WITH virksomhetId AS(
-                               INSERT INTO virksomhet(
+                val virksomhetInsertSql = """
+                    WITH virksomhetId as (
+                        INSERT INTO virksomhet(
                                 orgnr,
                                 navn,
                                 land,
@@ -33,9 +33,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 kommunenummer,
                                 status,
                                 oppstartsdato,
-                                oppdatertAvBrregOppdateringsId,
-                                sistEndretTidspunkt
-                               )
+                                oppdatertAvBrregOppdateringsId
+                                )
                                 VALUES(
                                     :orgnr,
                                     :navn,
@@ -48,8 +47,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     :kommunenummer,
                                     :status,
                                     :oppstartsdato,
-                                    :oppdatertAvBrregOppdateringsId,
-                                    null
+                                    :oppdatertAvBrregOppdateringsId
                                 ) 
                                 ON CONFLICT (orgnr) DO UPDATE SET
                                     navn = :navn,
@@ -65,14 +63,12 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
                                     sistEndretTidspunkt = now()
                                 RETURNING id
-                           )
-                           INSERT INTO virksomhet_naring(
-                                virksomhet,
-                                narings_kode 
-                            )
-                            VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
-                            ON CONFLICT DO NOTHING
-                            """.trimMargin()
+                    ), deletions AS (
+                        DELETE from virksomhet_naring where virksomhet = (select id from virksomhetId)
+                        RETURNING 2
+                    )
+                    SELECT 1
+                """.trimMargin()
                 val params = mutableMapOf(
                     "orgnr" to virksomhet.orgnr,
                     "navn" to virksomhet.navn,
@@ -89,18 +85,38 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     "status" to virksomhet.status.name,
                     "oppstartsdato" to virksomhet.oppstartsdato?.toJavaLocalDate(),
                     "oppdatertAvBrregOppdateringsId" to virksomhet.oppdatertAvBrregOppdateringsId
-                ).apply {
-                    this.putAll(virksomhet.hentNæringsgruppekoder())
-                }
+                )
                 tx.run(
                     queryOf(
-                        sql,
+                        virksomhetInsertSql,
                         params,
+                    ).asExecute
+                )
+
+                @Language("PostgreSQL")
+                val insertSql = """
+                    WITH virksomhetId as (
+                        select id from virksomhet where orgnr = :orgnr
+                    )
+                    INSERT INTO virksomhet_naring(
+                        virksomhet,
+                        narings_kode 
+                    )
+                    VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
+                    ON CONFLICT DO NOTHING
+                """.trimIndent()
+                tx.run(
+                    queryOf(
+                        insertSql,
+                        mutableMapOf(
+                            "orgnr" to virksomhet.orgnr
+                        ).apply { this.putAll(virksomhet.hentNæringsgruppekoder()) },
                     ).asUpdate
                 )
             }
         }
     }
+
 
     fun oppdaterStatus(orgnr: String, status: VirksomhetStatus, oppdatertAvBrregOppdateringsId: Long?) {
         sessionOf(dataSource).use { session ->
@@ -188,7 +204,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         sektor = row.stringOrNull("sektor"),
                         oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
                         opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),
-                        sistEndretTidspunkt = row.instantOrNull("sistEndretTidspunkt")?.toKotlinInstant()
+                        sistEndretTidspunkt = row.instant("sistEndretTidspunkt").toKotlinInstant()
                     )
                 }.asSingle
             )

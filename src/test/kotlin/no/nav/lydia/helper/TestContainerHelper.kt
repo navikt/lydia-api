@@ -91,6 +91,14 @@ class TestContainerHelper {
                     start()
                 }
 
+        val httpMock = HttpMock().also { httpMock ->
+            httpMock.start()
+        }
+
+        private val dataSource = postgresContainer.getDataSource()
+        val næringsRepository = NæringsRepository(dataSource = dataSource)
+        val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+
         init {
             VirksomhetHelper.lastInnStandardTestdata()
         }
@@ -373,21 +381,21 @@ class VirksomhetHelper {
         }
 
         fun lastInnTestdata(testData: TestData) {
-            HttpMock().also { httpMock ->
-                httpMock.start()
-                TestContainerHelper.postgresContainer.getDataSource().use { dataSource ->
-                    NæringsDownloader(
-                        url = IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData),
-                        næringsRepository = NæringsRepository(dataSource = dataSource)
-                    ).lastNedNæringer()
+            NæringsDownloader(
+                url = IntegrationsHelper.mockKallMotSsbNæringer(
+                    httpMock = TestContainerHelper.httpMock,
+                    testData = testData
+                ),
+                næringsRepository = TestContainerHelper.næringsRepository
+            ).lastNedNæringer()
 
-                    BrregDownloader(
-                        url = IntegrationsHelper.mockKallMotBrregUnderhenter(httpMock = httpMock, testData = testData),
-                        virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-                    ).lastNed()
-                }
-                httpMock.stop()
-            }
+            BrregDownloader(
+                url = IntegrationsHelper.mockKallMotBrregUnderhenter(
+                    httpMock = TestContainerHelper.httpMock,
+                    testData = testData
+                ),
+                virksomhetRepository = TestContainerHelper.virksomhetRepository
+            ).lastNed()
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
                 testData.sykefraværsStatistikkMeldinger().toList()
             )
@@ -396,7 +404,10 @@ class VirksomhetHelper {
 }
 
 @OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> Request.tilListeRespons() = this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json.Default)
+inline fun <reified T : Any> Request.tilListeRespons() =
+    this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json.Default)
+
 @OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> Request.tilSingelRespons() = this.responseObject(loader = T::class.serializer(), json = Json.Default)
+inline fun <reified T : Any> Request.tilSingelRespons() =
+    this.responseObject(loader = T::class.serializer(), json = Json.Default)
 

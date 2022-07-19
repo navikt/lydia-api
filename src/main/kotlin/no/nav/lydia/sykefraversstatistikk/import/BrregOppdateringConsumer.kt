@@ -9,6 +9,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
+import no.nav.lydia.exceptions.UgyldigAdresseException
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.tilVirksomhet
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -58,6 +59,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         val antallMeldinger = records.count()
                         if (antallMeldinger < 1) continue
+                        var antallIrrelevanteBedrifter = 0
                         logger.info("Fant $antallMeldinger nye meldinger")
                         records.forEach { record ->
                             val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
@@ -65,11 +67,15 @@ object BrregOppdateringConsumer : CoroutineScope {
                                 BrregVirksomhetEndringstype.Ukjent,
                                 BrregVirksomhetEndringstype.Endring,
                                 BrregVirksomhetEndringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
-                                    val virksomhet = brregVirksomhet.tilVirksomhet(
-                                        status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
-                                        oppdateringsId = oppdateringVirksomhet.oppdateringsId
-                                    )
-                                    repository.insert(virksomhet)
+                                    try {
+                                        val virksomhet = brregVirksomhet.tilVirksomhet(
+                                            status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
+                                            oppdateringsId = oppdateringVirksomhet.oppdateringsId
+                                        )
+                                        repository.insert(virksomhet)
+                                    } catch (e: UgyldigAdresseException) {
+                                        antallIrrelevanteBedrifter += 1
+                                    }
                                 }
                                 BrregVirksomhetEndringstype.Sletting,
                                 BrregVirksomhetEndringstype.Fjernet -> repository.oppdaterStatus(
@@ -78,10 +84,11 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsId
                                 )
                             }
-
                         }
                         logger.info("Lagret $antallMeldinger meldinger")
-
+                        if (antallIrrelevanteBedrifter > 0) {
+                            logger.info("Fant $antallIrrelevanteBedrifter irrelevante bedrifter.")
+                        }
                         consumer.commitSync()
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)

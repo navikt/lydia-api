@@ -20,7 +20,7 @@ data class Virksomhet(
     val sektor: String?,
     val oppdatertAvBrregOppdateringsId: Long?,
     val opprettetTidspunkt: Instant,
-    val sistEndretTidspunkt: Instant?,
+    val sistEndretTidspunkt: Instant,
 )
 
 enum class VirksomhetStatus {

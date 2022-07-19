@@ -28,7 +28,7 @@ import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
-import no.nav.lydia.exceptions.UatorisertException
+import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.IASakProdusent
 import no.nav.lydia.ia.eksport.IASakshendelseProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
@@ -153,7 +153,7 @@ fun Application.lydiaRestApi(
             call.application.log.error("Det har skjedd en feil", cause)
             call.respond(HttpStatusCode.InternalServerError)
         }
-        exception<UatorisertException> { call, cause ->
+        exception<UautorisertException> { call, cause ->
             call.application.log.error("Ikke autorisert", cause)
             call.respond(HttpStatusCode.Forbidden)
         }

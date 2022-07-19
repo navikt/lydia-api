@@ -20,7 +20,7 @@ data class VirksomhetDto(
     val sektor: String,
     val oppdatertAvBrregOppdateringsId: Long? = null,
     val opprettetTidspunkt: Instant,
-    val sistEndretTidspunkt: Instant? = null
+    val sistEndretTidspunkt: Instant
 )
 
 fun Virksomhet.toDto() = VirksomhetDto(

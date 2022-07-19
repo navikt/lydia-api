@@ -33,7 +33,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.util.*
+import java.util.TimeZone
 
 
 class KafkaContainerHelper(

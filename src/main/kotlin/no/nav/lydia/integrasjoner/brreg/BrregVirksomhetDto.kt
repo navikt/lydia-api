@@ -2,6 +2,7 @@ package no.nav.lydia.integrasjoner.brreg
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
+import no.nav.lydia.exceptions.UgyldigAdresseException
 import no.nav.lydia.virksomhet.VirksomhetLagringDao
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -48,7 +49,7 @@ fun BrregVirksomhetDto.tilVirksomhet(
             adresse = beliggenhetsadresse.adresse ?: emptyList()
         )
     }
-    throw IllegalArgumentException("Beliggenhetsadresse ${beliggenhetsadresse} for orgnr ${organisasjonsnummer} inneholder ugyldige verdier for lagring")
+    throw UgyldigAdresseException("Beliggenhetsadresse ${beliggenhetsadresse} for orgnr ${organisasjonsnummer} inneholder ugyldige verdier for lagring")
 }
 
 @Serializable
@@ -59,13 +60,13 @@ data class NæringsundergruppeBrreg(
 
 @Serializable
 data class Beliggenhetsadresse(
-    val land: String?,
-    val landkode: String?,
-    val postnummer: String?,
-    val poststed: String?,
-    val adresse: List<String>?,
-    val kommune: String?,
-    val kommunenummer: String?
+    val land: String? = null,
+    val landkode: String? = null,
+    val postnummer: String? = null,
+    val poststed: String? = null,
+    val adresse: List<String>? = null,
+    val kommune: String? = null,
+    val kommunenummer: String? = null
 ) {
     // TODO: hva definerer en relevant virksomhet i kontekst av beliggenhet
     fun erRelevant() =
