@@ -20,7 +20,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
             session.transaction { tx ->
                 @Language("PostgreSQL")
                 val virksomhetInsertSql = """
-                               INSERT INTO virksomhet(
+                    WITH virksomhetId as (
+                        INSERT INTO virksomhet(
                                 orgnr,
                                 navn,
                                 land,
@@ -61,6 +62,12 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     oppstartsdato = :oppstartsdato,                                
                                     oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
                                     sistEndretTidspunkt = now()
+                                RETURNING id
+                    ), deletions AS (
+                        DELETE from virksomhet_naring where virksomhet = (select id from virksomhetId)
+                        RETURNING 2
+                    )
+                    SELECT 1
                 """.trimMargin()
                 val params = mutableMapOf(
                     "orgnr" to virksomhet.orgnr,
@@ -83,36 +90,28 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     queryOf(
                         virksomhetInsertSql,
                         params,
-                    ).asUpdate
-                )
-
-                @Language("PostgreSQL")
-                val slettingAvNæringerSql = """
-                    with virksomhetId as (select id from virksomhet where orgnr = :orgnr)
-                    DELETE from virksomhet_naring where virksomhet = (select id from virksomhetId);
-                """.trimIndent()
-                tx.run(
-                    queryOf(
-                        statement = slettingAvNæringerSql,
-                        paramMap = mapOf("orgnr" to virksomhet.orgnr)
                     ).asExecute
                 )
 
                 @Language("PostgreSQL")
-                val oppdateringAvNyeNæringerSql = """
-                    with virksomhetId as (select id from virksomhet where orgnr = :orgnr)
+                val insertSql = """
+                    WITH virksomhetId as (
+                        select id from virksomhet where orgnr = :orgnr
+                    )
                     INSERT INTO virksomhet_naring(
-                                            virksomhet,
-                                            narings_kode 
-                                        )
-                                        VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })};
+                        virksomhet,
+                        narings_kode 
+                    )
+                    VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
+                    ON CONFLICT DO NOTHING
                 """.trimIndent()
                 tx.run(
                     queryOf(
-                        statement = oppdateringAvNyeNæringerSql,
-                        paramMap = mutableMapOf("orgnr" to virksomhet.orgnr).apply {
-                            this.putAll(virksomhet.hentNæringsgruppekoder())
-                        }).asExecute
+                        insertSql,
+                        mutableMapOf(
+                            "orgnr" to virksomhet.orgnr
+                        ).apply { this.putAll(virksomhet.hentNæringsgruppekoder()) },
+                    ).asUpdate
                 )
             }
         }

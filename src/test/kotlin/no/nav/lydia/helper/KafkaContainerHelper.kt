@@ -1,11 +1,9 @@
 package no.nav.lydia.helper
 
 import com.google.gson.GsonBuilder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeoutOrNull
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
@@ -157,9 +155,7 @@ class KafkaContainerHelper(
     inner class BrregOppdateringKafkaHelper {
         fun sendBrregOppdateringKafkaMelding(oppdateringVirksomhet: BrregOppdateringConsumer.OppdateringVirksomhet) {
             runBlocking {
-                val sendtMelding = withContext(Dispatchers.IO) {
-                    kafkaProducer.send(oppdateringVirksomhet.tilProducerRecord()).get()
-                }
+                val sendtMelding = kafkaProducer.send(oppdateringVirksomhet.tilProducerRecord()).get()
                 ventTilKonsumert(sendtMelding.offset())
             }
         }
