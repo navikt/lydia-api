@@ -127,7 +127,7 @@ services:
       - 3000:3000
     environment:
       REDIS_HOST: redis
-      REDIS_PORT: 6739
+      REDIS_PORT: 6379
       NAIS_CLUSTER_NAME: dev
       SESSION_SECRET: secret
       OBO_TOKEN_ENC_KEY: bogus
@@ -143,7 +143,7 @@ services:
     image: redis:7-alpine
     restart: always
     ports:
-      - 6739:6739
+      - 6379:6379
     volumes:
       - redis-cache:/data
   wonderwall:
