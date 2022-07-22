@@ -16,7 +16,7 @@ services:
     environment:
       TZ: Europe/Oslo
       SERVER_PORT: 6969
-      JSON_CONFIG: "{\"interactiveLogin\":true,\"tokenCallbacks\":[{\"issuerId\":\"azure\",\"tokenExpiry\":120,\"requestMappings\":[{\"requestParam\":\"grant_type\",\"claims\":{\"aud\":[\"lydia-api\"],\"NAVident\":\"Z123456\",\"groups\":[\"ensuperbrukerGroupId\"]}}],\"preferred_username\":\"fornavn.etternavn@nav.no\",\"name\":\"Testbruker Testesen\"}]}"
+      JSON_CONFIG: "{\"interactiveLogin\":true,\"tokenCallbacks\":[{\"issuerId\":\"azure\",\"tokenExpiry\":120,\"requestMappings\":[{\"requestParam\":\"grant_type\",\"claims\":{\"aud\":[\"lydia-api\"],\"NAVident\":\"Z123456\",\"groups\":[\"ensuperbrukerGroupId\"]}}]}]}"
     ports:
       - 6969:6969
 
@@ -148,6 +148,8 @@ services:
       - redis-cache:/data
   wonderwall:
     image: ghcr.io/nais/wonderwall:latest
+    depends_on:
+      - authserver
     ports:
       - "2222:2222"
     environment:
