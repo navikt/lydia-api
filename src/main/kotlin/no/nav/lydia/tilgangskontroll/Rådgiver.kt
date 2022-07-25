@@ -6,7 +6,7 @@ import arrow.core.left
 import io.ktor.http.*
 import io.ktor.server.application.*
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.exceptions.UatorisertException
+import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.sak.api.Feil
 
 class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: List<String>) {
@@ -43,7 +43,7 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
         if      (erSuperbruker()) Rolle.SUPERBRUKER
         else if (erSaksbehandler()) Rolle.SAKSBEHANDLER
         else if (erLesebruker()) Rolle.LESE
-        else throw UatorisertException()
+        else throw UautorisertException()
 
     fun erSuperbruker() = tilgang.harSuperbrukerTilgang()
     fun erSaksbehandler() = tilgang.harSaksbehandlerTilgang()
