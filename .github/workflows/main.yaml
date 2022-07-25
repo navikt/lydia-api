@@ -88,29 +88,29 @@ jobs:
           CLUSTER: "prod-gcp"
           RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
           VARS: ".nais/prod.yaml"
-#  "deployAlertsToDev":
-#    name: "Deploy alerts to dev"
-#    needs: "build"
-#    runs-on: "ubuntu-18.04"
-#    steps:
-#    - uses: "actions/checkout@v2"
-#    - name: "Deploy alerts to DEV"
-#      uses: "nais/deploy/actions/deploy@v1"
-#      env:
-#        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-#        "CLUSTER": "dev-gcp"
-#        "RESOURCE": ".nais/alerts-dev.yaml"
-#        "VARS": ".nais/dev.yaml"
-#  "deployAlertsToProd":
-#    name: "Deploy alerts to prod"
-#    needs: "build"
-#    runs-on: "ubuntu-18.04"
-#    steps:
-#    - uses: "actions/checkout@v2"
-#    - name: "Deploy alerts to PROD"
-#      uses: "nais/deploy/actions/deploy@v1"
-#      env:
-#        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-#        "CLUSTER": "prod-gcp"
-#        "RESOURCE": ".nais/alerts-prod.yaml"
-#        "VARS": ".nais/prod.yaml"
+  "deployAlertsToDev":
+    name: "Deploy alerts to dev"
+    needs: "build"
+    runs-on: "ubuntu-18.04"
+    steps:
+    - uses: "actions/checkout@v2"
+    - name: "Deploy alerts to DEV"
+      uses: "nais/deploy/actions/deploy@v1"
+      env:
+        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
+        "CLUSTER": "dev-gcp"
+        "RESOURCE": ".nais/alerts-dev.yaml"
+        "VARS": ".nais/dev.yaml"
+  "deployAlertsToProd":
+    name: "Deploy alerts to prod"
+    needs: "build"
+    runs-on: "ubuntu-18.04"
+    steps:
+    - uses: "actions/checkout@v2"
+    - name: "Deploy alerts to PROD"
+      uses: "nais/deploy/actions/deploy@v1"
+      env:
+        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
+        "CLUSTER": "prod-gcp"
+        "RESOURCE": ".nais/alerts-prod.yaml"
+        "VARS": ".nais/prod.yaml"

@@ -4,6 +4,12 @@
 
 Kjør ./run.sh
 
+Besøk deretter http://localhost:2222 i din favorittbrowser
+
+NB! Gå inn i `/etc/hosts` og legg til `127.0.0.1 host.docker.internal` som et eget entry.
+Da vil browseren automatisk fange opp wonderwall og mock-oauth2-server, som da vil resolve det til localhost.
+
+
 ## Docker-oppsett med `colima`
 
 I teamet bruker vi [`colima`](https://github.com/abiosoft/colima) som container runtime. Det skal strengt tatt ikke 
