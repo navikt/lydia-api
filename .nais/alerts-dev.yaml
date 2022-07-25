@@ -13,7 +13,7 @@ spec:
   alerts:
   - alert: "lydia-api er nede"
     description: "App {{ $labels.app }} er nede i namespace {{ $labels.kubernetes_namespace }}"
-    expr: "kube_deployment_status_replicas_available{deployment=\"lydia-api\"} > 0"
+    expr: "kube_deployment_status_replicas_available{deployment=\"lydia-api\"} == 0"
     for: "2m"
     action: "kubectl describe pod {{ $labels.kubernetes_pod_name }} -n {{ $labels.kubernetes_namespace }}` for events, og `kubectl logs {{ $labels.kubernetes_pod_name }} -n {{ $labels.kubernetes_namespace }}` for logger"
     documentation: "https://github.com/navikt/pia/somedoc"
