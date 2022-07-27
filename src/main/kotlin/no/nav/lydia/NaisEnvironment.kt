@@ -104,8 +104,8 @@ class Kafka(
             SslConfigs.SSL_KEY_PASSWORD_CONFIG to credstorePassword
         )
 
-    fun consumerProperties() =
-        baseConsumerProperties().apply {
+    fun consumerProperties(consumerGroupId: String = groupId) =
+        baseConsumerProperties(consumerGroupId).apply {
             // TODO: Finn smidigere måte å få tester til å kjøre
             if (truststoreLocation.isBlank()) {
                 put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "PLAINTEXT")
@@ -115,10 +115,10 @@ class Kafka(
             }
         }
 
-    fun baseConsumerProperties() =
+    private fun baseConsumerProperties(consumerGroupId: String) =
         mapOf(
             CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
-            ConsumerConfig.GROUP_ID_CONFIG to groupId,
+            ConsumerConfig.GROUP_ID_CONFIG to consumerGroupId,
             ConsumerConfig.CLIENT_ID_CONFIG to clientId,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
             ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1000"
