@@ -204,7 +204,7 @@ private fun TestVirksomhet.sendOppdateringsmelding(endringstype: BrregOppdaterin
     val oppdateringVirksomhet = BrregOppdateringConsumer.OppdateringVirksomhet(
         orgnummer = this.orgnr,
         oppdateringsid = genererOppdateringsid(this),
-        brregVirksomhetEndringstype = endringstype,
+        endringstype = endringstype,
         metadata = BrregVirksomhetDto(
             organisasjonsnummer = this.orgnr,
             navn = this.navn,

@@ -63,13 +63,13 @@ object BrregOppdateringConsumer : CoroutineScope {
                         logger.info("Fant $antallMeldinger nye meldinger")
                         records.forEach { record ->
                             val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
-                            when (oppdateringVirksomhet.brregVirksomhetEndringstype) {
+                            when (oppdateringVirksomhet.endringstype) {
                                 BrregVirksomhetEndringstype.Ukjent,
                                 BrregVirksomhetEndringstype.Endring,
                                 BrregVirksomhetEndringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
                                     try {
                                         val virksomhet = brregVirksomhet.tilVirksomhet(
-                                            status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
+                                            status = oppdateringVirksomhet.endringstype.tilStatus(),
                                             oppdateringsId = oppdateringVirksomhet.oppdateringsid
                                         )
                                         repository.insert(virksomhet)
@@ -80,7 +80,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                                 BrregVirksomhetEndringstype.Sletting,
                                 BrregVirksomhetEndringstype.Fjernet -> repository.oppdaterStatus(
                                     orgnr = oppdateringVirksomhet.orgnummer,
-                                    status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
+                                    status = oppdateringVirksomhet.endringstype.tilStatus(),
                                     oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid
                                 )
                             }
@@ -109,7 +109,7 @@ object BrregOppdateringConsumer : CoroutineScope {
     data class OppdateringVirksomhet(
         val orgnummer: String,
         val oppdateringsid: Long,
-        val brregVirksomhetEndringstype: BrregVirksomhetEndringstype,
+        val endringstype: BrregVirksomhetEndringstype,
         val metadata: BrregVirksomhetDto? = null,
         val endringstidspunkt: Instant
     )
