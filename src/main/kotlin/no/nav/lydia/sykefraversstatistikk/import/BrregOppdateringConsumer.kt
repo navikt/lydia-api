@@ -70,7 +70,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     try {
                                         val virksomhet = brregVirksomhet.tilVirksomhet(
                                             status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
-                                            oppdateringsId = oppdateringVirksomhet.oppdateringsId
+                                            oppdateringsId = oppdateringVirksomhet.oppdateringsid
                                         )
                                         repository.insert(virksomhet)
                                     } catch (e: UgyldigAdresseException) {
@@ -81,7 +81,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                                 BrregVirksomhetEndringstype.Fjernet -> repository.oppdaterStatus(
                                     orgnr = oppdateringVirksomhet.orgnummer,
                                     status = oppdateringVirksomhet.brregVirksomhetEndringstype.tilStatus(),
-                                    oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsId
+                                    oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid
                                 )
                             }
                         }
@@ -108,7 +108,7 @@ object BrregOppdateringConsumer : CoroutineScope {
     @kotlinx.serialization.Serializable
     data class OppdateringVirksomhet(
         val orgnummer: String,
-        val oppdateringsId: Long,
+        val oppdateringsid: Long,
         val brregVirksomhetEndringstype: BrregVirksomhetEndringstype,
         val metadata: BrregVirksomhetDto? = null,
         val endringstidspunkt: Instant

@@ -203,7 +203,7 @@ private fun TestVirksomhet.skalHaForventetTilstandFøroppdatering() {
 private fun TestVirksomhet.sendOppdateringsmelding(endringstype: BrregOppdateringConsumer.BrregVirksomhetEndringstype): TestVirksomhet {
     val oppdateringVirksomhet = BrregOppdateringConsumer.OppdateringVirksomhet(
         orgnummer = this.orgnr,
-        oppdateringsId = genererOppdateringsid(this),
+        oppdateringsid = genererOppdateringsid(this),
         brregVirksomhetEndringstype = endringstype,
         metadata = BrregVirksomhetDto(
             organisasjonsnummer = this.orgnr,
