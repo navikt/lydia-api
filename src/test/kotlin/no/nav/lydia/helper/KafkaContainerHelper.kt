@@ -33,7 +33,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.util.TimeZone
+import java.util.*
 
 
 class KafkaContainerHelper(
@@ -44,7 +44,6 @@ class KafkaContainerHelper(
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
         const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
-        const val brregOppdateringTopic = "pia.brreg-oppdatering"
     }
 
     private val gson = GsonBuilder().create()
