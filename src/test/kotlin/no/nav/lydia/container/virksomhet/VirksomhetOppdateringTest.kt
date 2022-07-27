@@ -47,6 +47,15 @@ class VirksomhetOppdateringTest {
             )
         )
 
+    /*
+
+    1. lage en rekke med TestVirksomhet
+    2. dynamisk lage en mock-respons fra Brreg basert på disse
+    3. trigge oppdateringsjobb
+    4. forvent noe derfra
+
+     */
+
 
     init {
         repeat(times = 5) {

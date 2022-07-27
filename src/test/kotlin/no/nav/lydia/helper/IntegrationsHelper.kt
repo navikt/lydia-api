@@ -6,7 +6,9 @@ import com.google.common.net.HttpHeaders
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 
 class IntegrationsHelper {
+
     companion object {
+
         fun mockKallMotSsbNæringer(httpMock: HttpMock, testData: TestData): String {
             val lastNedPath = "/naringmock/api/klass/v1/30/json"
             val næringMockUrl = httpMock.url(lastNedPath)
@@ -33,6 +35,19 @@ class IntegrationsHelper {
                     )
             )
             return brregMockUrl
+        }
+
+        fun mockKallMotBrregOppdaterteUnderhenter(httpMock: HttpMock, testData: TestData): String {
+            val brregMockOppdaterteEnheterUrl = httpMock.url(brregOppdaterteEnheterMockPath)
+            httpMock.wireMockServer.stubFor(
+                WireMock.get(WireMock.urlPathEqualTo(brregOppdaterteEnheterMockPath))
+                    .willReturn(
+                        WireMock.ok()
+                            .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+// TODO                           .withBody(Gzip.gzip(testData.brregMockData()))
+                    )
+            )
+            return brregMockOppdaterteEnheterUrl
         }
     }
 }

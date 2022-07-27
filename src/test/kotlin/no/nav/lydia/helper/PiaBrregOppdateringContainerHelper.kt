@@ -10,37 +10,44 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 import java.util.*
 
 const val brregOppdateringTopic = "pia.brreg-oppdatering"
+const val brregOppdaterteEnheterMockPath = "/brregmock/api/oppdateringer/underenheter"
 
 class PiaBrregOppdateringContainerHelper(
     network: Network = Network.newNetwork(),
     log: Logger = LoggerFactory.getLogger(PiaBrregOppdateringContainerHelper::class.java)
 ) {
-        val brregOppdateringContainer: GenericContainer<*> =
-            GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-                builder.from("ghcr.io/navikt/pia-brreg-oppdaterer:latest")
-                    .env(
+
+
+    val brregOppdateringContainer: GenericContainer<*> =
+        GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
+            builder.from("ghcr.io/navikt/pia-brreg-oppdaterer:latest")
+                .env(
+                    mapOf(
+                        "TZ" to TimeZone.getDefault().id
+                    )
+                )
+        })
+            .dependsOn(
+                TestContainerHelper.kafkaContainerHelper.kafkaContainer,
+            )
+            .withLogConsumer(
+                Slf4jLogConsumer(log).withPrefix("brregOppdateringContainer").withSeparateOutputStreams()
+            )
+            .withNetwork(network)
+            .withEnv(
+                TestContainerHelper.kafkaContainerHelper.envVars()
+                    .plus(
                         mapOf(
-                            "TZ" to TimeZone.getDefault().id
+                            "BRREG_OPPDATERING_UNDERENHET_URL" to brregOppdaterteEnheterMockPath,
+                            "NAIS_CLUSTER_NAME" to "lokal",
                         )
                     )
-            })
-                .dependsOn(
-                    TestContainerHelper.kafkaContainerHelper.kafkaContainer,
-                )
-                .withLogConsumer(
-                    Slf4jLogConsumer(log).withPrefix("brregOppdateringContainer").withSeparateOutputStreams()
-                )
-                .withNetwork(network)
-                .withEnv(
-                    TestContainerHelper.kafkaContainerHelper.envVars()
-                        .plus(
-                            mapOf(
-                                "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned",
-                                "NAIS_CLUSTER_NAME" to "lokal",
-                            )
-                        )
-                )
-                .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
-                    start()
-                }
+            )
+
+    fun start() =
+        brregOppdateringContainer
+            .waitingFor(HttpWaitStrategy().forPath("/internal/isready"))
+            .apply {
+                start()
+            }
 }

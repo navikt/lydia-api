@@ -13,6 +13,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import no.nav.lydia.helper.TestContainerHelper.Companion.httpMock
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -103,6 +104,8 @@ class TestContainerHelper {
 
         init {
             VirksomhetHelper.lastInnStandardTestdata()
+
+            brregOppdateringContainer.start()
         }
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
@@ -385,7 +388,7 @@ class VirksomhetHelper {
         fun lastInnTestdata(testData: TestData) {
             NæringsDownloader(
                 url = IntegrationsHelper.mockKallMotSsbNæringer(
-                    httpMock = TestContainerHelper.httpMock,
+                    httpMock = httpMock,
                     testData = testData
                 ),
                 næringsRepository = TestContainerHelper.næringsRepository
@@ -393,11 +396,17 @@ class VirksomhetHelper {
 
             BrregDownloader(
                 url = IntegrationsHelper.mockKallMotBrregUnderhenter(
-                    httpMock = TestContainerHelper.httpMock,
+                    httpMock = httpMock,
                     testData = testData
                 ),
                 virksomhetRepository = TestContainerHelper.virksomhetRepository
             ).lastNed()
+
+            IntegrationsHelper.mockKallMotBrregOppdaterteUnderhenter(
+                httpMock = httpMock,
+                testData = testData
+            )
+
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
                 testData.sykefraværsStatistikkMeldinger().toList()
             )
