@@ -7,12 +7,13 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.util.*
+import java.util.TimeZone
 
 const val brregOppdateringTopic = "pia.brreg-oppdatering"
 const val brregOppdaterteEnheterMockPath = "/brregmock/api/oppdateringer/underenheter"
 
 class PiaBrregOppdateringContainerHelper(
+    httpMock: HttpMock,
     network: Network = Network.newNetwork(),
     log: Logger = LoggerFactory.getLogger(PiaBrregOppdateringContainerHelper::class.java)
 ) {
@@ -38,7 +39,7 @@ class PiaBrregOppdateringContainerHelper(
                 TestContainerHelper.kafkaContainerHelper.envVars()
                     .plus(
                         mapOf(
-                            "BRREG_OPPDATERING_UNDERENHET_URL" to brregOppdaterteEnheterMockPath,
+                            "BRREG_OPPDATERING_UNDERENHET_URL" to "http://host.testcontainers.internal:${httpMock.wireMockServer.port()}/$brregOppdaterteEnheterMockPath",
                             "NAIS_CLUSTER_NAME" to "lokal",
                         )
                     )

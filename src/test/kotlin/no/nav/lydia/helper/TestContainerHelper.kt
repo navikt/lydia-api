@@ -40,6 +40,7 @@ import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -96,13 +97,14 @@ class TestContainerHelper {
             httpMock.start()
         }
 
-        val brregOppdateringContainer = PiaBrregOppdateringContainerHelper(network = network, log = log)
+        val brregOppdateringContainer = PiaBrregOppdateringContainerHelper(network = network, log = log, httpMock = httpMock)
 
         private val dataSource = postgresContainer.getDataSource()
         val næringsRepository = NæringsRepository(dataSource = dataSource)
         val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
 
         init {
+            Testcontainers.exposeHostPorts(httpMock.wireMockServer.port())
             VirksomhetHelper.lastInnStandardTestdata()
 
             brregOppdateringContainer.start()

@@ -3,6 +3,7 @@ package no.nav.lydia.helper
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
 import com.google.common.net.HttpHeaders
+import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_OPPDATERING
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 
 class IntegrationsHelper {
@@ -44,7 +45,7 @@ class IntegrationsHelper {
                     .willReturn(
                         WireMock.ok()
                             .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-// TODO                           .withBody(Gzip.gzip(testData.brregMockData()))
+                            .withBody(testData.underenhetOppdateringMock(TESTVIRKSOMHET_FOR_OPPDATERING))
                     )
             )
             return brregMockOppdaterteEnheterUrl

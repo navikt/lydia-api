@@ -61,6 +61,8 @@ class TestData(
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT, emptyList())
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = 6.0)
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 42.0, sykefraværsProsent = 6.0)
+            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_OPPDATERING, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 42.0, sykefraværsProsent = 6.0)
+
         }
         genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
     }
@@ -111,6 +113,48 @@ class TestData(
 
     fun brregMockData() =
         brregVirksomheter.joinToString(prefix = "[", postfix = "]", separator = ",")
+
+    fun underenhetOppdateringMock(virksomhet: TestVirksomhet): String {
+        val oppdaterteEnheter = """[
+              {
+                "oppdateringsid": ${virksomhet.orgnr.toInt() + 1},
+                "dato": "2022-07-05T04:01:39.613Z",
+                "organisasjonsnummer": "${virksomhet.orgnr}",
+                "endringstype": "Endring",
+                "_links": {
+                  "underenhet": {
+                    "href": "https://data.brreg.no/enhetsregisteret/api/underenheter/927818310"
+                  }
+                }
+              }
+            ]""".trimIndent()
+
+        return """{
+          "_embedded": {
+            "oppdaterteUnderenheter": $oppdaterteEnheter
+          },
+          "_links": {
+            "first": {
+              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&page=0&size=10"
+            },
+            "self": {
+              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&size=10"
+            },
+            "next": {
+              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&page=1&size=10"
+            },
+            "last": {
+              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&page=89&size=10"
+            }
+          },
+          "page": {
+            "size": 1,
+            "totalElements": 1,
+            "totalPages": 1,
+            "number": 0
+          }
+        }""".trimIndent()
+    }
 
     fun ssbNæringMockData() =
         næringer.joinToString(
