@@ -18,6 +18,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_OPPDATERING
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
@@ -397,16 +398,20 @@ class VirksomhetHelper {
             ).lastNedNæringer()
 
             BrregDownloader(
-                url = IntegrationsHelper.mockKallMotBrregUnderhenter(
+                url = IntegrationsHelper.mockKallMotBrregUnderenheterForNedlasting(
                     httpMock = httpMock,
                     testData = testData
                 ),
                 virksomhetRepository = TestContainerHelper.virksomhetRepository
             ).lastNed()
 
-            IntegrationsHelper.mockKallMotBrregOppdaterteUnderhenter(
+            IntegrationsHelper.mockKallMotBrregOppdaterteUnderenheter(
                 httpMock = httpMock,
                 testData = testData
+            )
+            IntegrationsHelper.mockKallMotBrregUnderenhet(
+                httpMock = httpMock,
+                testVirksomhet = TESTVIRKSOMHET_FOR_OPPDATERING
             )
 
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(

@@ -23,7 +23,7 @@ class IntegrationsHelper {
             return næringMockUrl
         }
 
-        fun mockKallMotBrregUnderhenter(httpMock: HttpMock, testData: TestData): String {
+        fun mockKallMotBrregUnderenheterForNedlasting(httpMock: HttpMock, testData: TestData): String {
             val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
             val brregMockUrl = httpMock.url(lastNedPath)
 
@@ -38,14 +38,28 @@ class IntegrationsHelper {
             return brregMockUrl
         }
 
-        fun mockKallMotBrregOppdaterteUnderhenter(httpMock: HttpMock, testData: TestData): String {
-            val brregMockOppdaterteEnheterUrl = httpMock.url(brregOppdaterteEnheterMockPath)
+        fun mockKallMotBrregOppdaterteUnderenheter(httpMock: HttpMock, testData: TestData): String {
+            val brregMockOppdaterteEnheterUrl = httpMock.url(brregOppdaterteUnderenheterMockPath)
             httpMock.wireMockServer.stubFor(
-                WireMock.get(WireMock.urlPathEqualTo(brregOppdaterteEnheterMockPath))
+                WireMock.get(WireMock.urlPathEqualTo(brregOppdaterteUnderenheterMockPath))
                     .willReturn(
                         WireMock.ok()
                             .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                            .withBody(testData.underenhetOppdateringMock(TESTVIRKSOMHET_FOR_OPPDATERING))
+                            .withBody(testData.brregOppdatertUnderenhetJson(TESTVIRKSOMHET_FOR_OPPDATERING))
+                    )
+            )
+            return brregMockOppdaterteEnheterUrl
+        }
+
+
+        fun mockKallMotBrregUnderenhet(httpMock: HttpMock, testVirksomhet: TestVirksomhet): String {
+            val brregMockOppdaterteEnheterUrl = httpMock.url(brregUnderenheterMockPath)
+            httpMock.wireMockServer.stubFor(
+                WireMock.get(WireMock.urlPathEqualTo(brregUnderenheterMockPath))
+                    .willReturn(
+                        WireMock.ok()
+                            .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                            .withBody(testVirksomhet.brregUnderenhetEmbeddedResponsJson())
                     )
             )
             return brregMockOppdaterteEnheterUrl

@@ -103,7 +103,7 @@ class TestData(
         virksomhet.næringsundergrupper.forEach { næring ->
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
         }
-        brregVirksomheter.add(virksomhet.brregJson())
+        brregVirksomheter.add(virksomhet.brregUnderenhetJson())
 
         return this
     }
@@ -114,7 +114,7 @@ class TestData(
     fun brregMockData() =
         brregVirksomheter.joinToString(prefix = "[", postfix = "]", separator = ",")
 
-    fun underenhetOppdateringMock(virksomhet: TestVirksomhet): String {
+    fun brregOppdatertUnderenhetJson(virksomhet: TestVirksomhet): String {
         val oppdaterteEnheter = """[
               {
                 "oppdateringsid": ${virksomhet.orgnr.toInt() + 1},
@@ -289,7 +289,31 @@ fun lagSykefraværsstatistikkImportDto(
         }
     )
 
-fun TestVirksomhet.brregJson() =
+fun TestVirksomhet.brregUnderenhetEmbeddedResponsJson() =
+    """
+        {
+        
+          "_embedded": {
+            "underenheter": [${this.brregUnderenhetJson()}]
+          },
+          "_links": {
+            "self": {
+              "href": "https://data.brreg.no/enhetsregisteret/api/underenheter/?organisasjonsnummer=927818310"
+            }
+          },
+          "page": {
+            "size": 20,
+            "totalElements": 1,
+            "totalPages": 1,
+            "number": 0
+          }
+        }
+        
+        
+        
+    """.trimIndent()
+
+private fun TestVirksomhet.brregUnderenhetJson() =
     """
         {
             "organisasjonsnummer" : "$orgnr",
@@ -325,7 +349,7 @@ fun TestVirksomhet.brregJson() =
             "overordnetEnhet" : "999888777",
             "oppstartsdato" : "2010-07-01",
             ${beliggenhet?.let {
-                "beliggenhetsadresse:" + Gson().toJson(it) + ","
+                "\"beliggenhetsadresse\":" + Gson().toJson(it) + ","
             } ?: ""}
             "links" : [ ]
         }

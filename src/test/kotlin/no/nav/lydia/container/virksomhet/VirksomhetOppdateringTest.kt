@@ -17,11 +17,11 @@ import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_OPPDATERING
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
-import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
@@ -57,59 +57,65 @@ class VirksomhetOppdateringTest {
      */
 
 
-    init {
-        repeat(times = 5) {
-            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-            tilfeldigeVirksomheter.add(nyVirksomhet)
-            testData.lagData(
-                virksomhet = nyVirksomhet,
-                perioder = listOf(Periode.gjeldendePeriode())
-            )
-        }
-        repeat(times = 5) {
-            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-            tilfeldigeFjernedeVirksomheter.add(nyVirksomhet)
-            testData.lagData(
-                virksomhet = nyVirksomhet,
-                perioder = listOf(Periode.gjeldendePeriode())
-            )
-        }
-        repeat(times = 5) {
-            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-            tilfeldigeSlettedeVirksomheter.add(nyVirksomhet)
-            testData.lagData(
-                virksomhet = nyVirksomhet,
-                perioder = listOf(Periode.gjeldendePeriode())
-            )
-        }
-        testData.lagData(virksomhet2, perioder = listOf(Periode.gjeldendePeriode()))
-
-        runBlocking {
-            VirksomhetHelper.lastInnTestdata(testData = testData)
-        }
-    }
+//    init {
+//        repeat(times = 5) {
+//            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
+//            tilfeldigeVirksomheter.add(nyVirksomhet)
+//            testData.lagData(
+//                virksomhet = nyVirksomhet,
+//                perioder = listOf(Periode.gjeldendePeriode())
+//            )
+//        }
+//        repeat(times = 5) {
+//            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
+//            tilfeldigeFjernedeVirksomheter.add(nyVirksomhet)
+//            testData.lagData(
+//                virksomhet = nyVirksomhet,
+//                perioder = listOf(Periode.gjeldendePeriode())
+//            )
+//        }
+//        repeat(times = 5) {
+//            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
+//            tilfeldigeSlettedeVirksomheter.add(nyVirksomhet)
+//            testData.lagData(
+//                virksomhet = nyVirksomhet,
+//                perioder = listOf(Periode.gjeldendePeriode())
+//            )
+//        }
+//        testData.lagData(virksomhet2, perioder = listOf(Periode.gjeldendePeriode()))
+//
+//        runBlocking {
+//            VirksomhetHelper.lastInnTestdata(testData = testData)
+//        }
+//    }
 
     @Test
     fun `kan oppdatere endrede virksomheter`() {
-        // Given
-        tilfeldigeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaForventetTilstandFøroppdatering()
-        }
+//        // Given
+//        tilfeldigeVirksomheter.forEach { testVirksomhet ->
+//            testVirksomhet.skalHaForventetTilstandFøroppdatering()
+//        }
+//
+//        // When
+//        tilfeldigeVirksomheter.forEach { testVirksomhet ->
+//            testVirksomhet
+//                .copy(navn = testVirksomhet.genererEndretNavn())
+//                .sendOppdateringsmelding(endringstype = Endring)
+//        }
+//
+//        // Then
+//        tilfeldigeVirksomheter.forEach { testVirksomhet ->
+//            testVirksomhet.skalHaRiktigTilstandEtterOppdatering(
+//                status = VirksomhetStatus.AKTIV,
+//                navn = testVirksomhet.genererEndretNavn()
+//            )
+//        }
 
-        // When
-        tilfeldigeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet
-                .copy(navn = testVirksomhet.genererEndretNavn())
-                .sendOppdateringsmelding(endringstype = Endring)
-        }
-
-        // Then
-        tilfeldigeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaRiktigTilstandEtterOppdatering(
-                status = VirksomhetStatus.AKTIV,
-                navn = testVirksomhet.genererEndretNavn()
-            )
-        }
+        val testVirksomhet = TESTVIRKSOMHET_FOR_OPPDATERING
+        testVirksomhet.skalHaRiktigTilstandEtterOppdatering(
+            status = VirksomhetStatus.AKTIV,
+            navn = testVirksomhet.navn
+        )
     }
 
     @Test
@@ -260,7 +266,6 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     navn: String = this.navn,
     token: String = TestContainerHelper.oauth2ServerContainer.superbruker1.token
 ): VirksomhetDto {
-    println("skalHaRiktigTilstand: ${this.orgnr}")
     val virksomhetDto =
         VirksomhetHelper.hentVirksomhetsinformasjon(orgnummer = this.orgnr, token)
 
@@ -274,8 +279,6 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     virksomhetDto.neringsgrupper shouldContainAll this.næringsundergrupper
     virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe genererOppdateringsid(this)
     virksomhetDto.opprettetTidspunkt shouldBeLessThan Clock.System.now()
-
-    println("skalHaRiktigTilstand: ${this.orgnr} OK")
     return virksomhetDto
 }
 

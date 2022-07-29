@@ -5,12 +5,13 @@ import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
-import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
 import java.util.TimeZone
 
 const val brregOppdateringTopic = "pia.brreg-oppdatering"
-const val brregOppdaterteEnheterMockPath = "/brregmock/api/oppdateringer/underenheter"
+const val brregOppdaterteUnderenheterMockPath = "/brregmock/api/oppdateringer/underenheter"
+const val brregUnderenheterMockPath = "/brregmock/api/underenheter"
 
 class PiaBrregOppdateringContainerHelper(
     httpMock: HttpMock,
@@ -39,7 +40,8 @@ class PiaBrregOppdateringContainerHelper(
                 TestContainerHelper.kafkaContainerHelper.envVars()
                     .plus(
                         mapOf(
-                            "BRREG_OPPDATERING_UNDERENHET_URL" to "http://host.testcontainers.internal:${httpMock.wireMockServer.port()}/$brregOppdaterteEnheterMockPath",
+                            "BRREG_OPPDATERING_UNDERENHET_URL" to "http://host.testcontainers.internal:${httpMock.wireMockServer.port()}$brregOppdaterteUnderenheterMockPath",
+                            "BRREG_UNDERENHET_URL" to "http://host.testcontainers.internal:${httpMock.wireMockServer.port()}$brregUnderenheterMockPath",
                             "NAIS_CLUSTER_NAME" to "lokal",
                         )
                     )
@@ -47,7 +49,9 @@ class PiaBrregOppdateringContainerHelper(
 
     fun start() =
         brregOppdateringContainer
-            .waitingFor(HttpWaitStrategy().forPath("/internal/isready"))
+            .waitingFor(
+                LogMessageWaitStrategy().withRegEx(".*Sendte oppdatering.*\\n")
+            )
             .apply {
                 start()
             }

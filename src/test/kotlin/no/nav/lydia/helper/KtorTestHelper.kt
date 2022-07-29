@@ -20,7 +20,7 @@ class KtorTestHelper {
         val næringMockUrl =
             IntegrationsHelper.mockKallMotSsbNæringer(httpMock = httpMock, testData = testData)
 
-        val brregMockUrl = IntegrationsHelper.mockKallMotBrregUnderhenter(
+        val brregMockUrl = IntegrationsHelper.mockKallMotBrregUnderenheterForNedlasting(
             httpMock = httpMock,
             testData = testData
         )
