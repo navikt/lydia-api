@@ -18,7 +18,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_OPPDATERING
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
@@ -107,7 +106,7 @@ class TestContainerHelper {
         init {
             Testcontainers.exposeHostPorts(httpMock.wireMockServer.port())
             VirksomhetHelper.lastInnStandardTestdata()
-
+            VirksomhetHelper.lastInnTestdata(PiaBrregOppdateringTestData.lagTestDataForPiaBrregOppdatering(httpMock = httpMock))
             brregOppdateringContainer.start()
         }
 
@@ -404,15 +403,6 @@ class VirksomhetHelper {
                 ),
                 virksomhetRepository = TestContainerHelper.virksomhetRepository
             ).lastNed()
-
-            IntegrationsHelper.mockKallMotBrregOppdaterteUnderenheter(
-                httpMock = httpMock,
-                testData = testData
-            )
-            IntegrationsHelper.mockKallMotBrregUnderenhet(
-                httpMock = httpMock,
-                testVirksomhet = TESTVIRKSOMHET_FOR_OPPDATERING
-            )
 
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
                 testData.sykefraværsStatistikkMeldinger().toList()

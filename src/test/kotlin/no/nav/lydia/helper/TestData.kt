@@ -5,12 +5,7 @@ import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.import.LandSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.NæringSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.NæringsundergruppeSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.SektorSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
-import no.nav.lydia.sykefraversstatistikk.import.SykefraværsstatistikkForVirksomhet
+import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.random.Random
 
@@ -39,7 +34,7 @@ class TestData(
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(Periode.gjeldendePeriode()),
-                sykefraværsProsent = (1 .. 20).random().toDouble()
+                sykefraværsProsent = (1..20).random().toDouble()
             )
 
     }
@@ -50,29 +45,56 @@ class TestData(
 
     init {
         if (inkluderStandardVirksomheter) {
-            lagData(virksomhet = TestVirksomhet.OSLO, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 6.0)
-            lagData(virksomhet = TestVirksomhet.BERGEN, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = 7.0)
+            lagData(
+                virksomhet = TestVirksomhet.OSLO,
+                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                antallPersoner = 6.0
+            )
+            lagData(
+                virksomhet = TestVirksomhet.BERGEN,
+                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                sykefraværsProsent = 7.0
+            )
 
-            lagData(virksomhet = TestVirksomhet.NAV_KONTOR, perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 1001.0)
+            lagData(
+                virksomhet = TestVirksomhet.NAV_KONTOR,
+                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                antallPersoner = 1001.0
+            )
             lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(Periode.gjeldendePeriode()))
             lagData(virksomhet = TestVirksomhet.OSLO_MANGLER_ADRESSER, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.UTENLANDSK, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT, emptyList())
-            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), sykefraværsProsent = 6.0)
-            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 42.0, sykefraværsProsent = 6.0)
-            lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_OPPDATERING, listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()), antallPersoner = 42.0, sykefraværsProsent = 6.0)
+            lagData(
+                virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER,
+                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                sykefraværsProsent = 6.0
+            )
+            lagData(
+                virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG,
+                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                antallPersoner = 42.0,
+                sykefraværsProsent = 6.0
+            )
+            lagData(
+                virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_OPPDATERING,
+                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                antallPersoner = 42.0,
+                sykefraværsProsent = 6.0
+            )
 
         }
         genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
     }
 
     private fun genererTilfeldigeVirksomheter(antallVirksomheter: Int) {
-        (0 .. antallVirksomheter).forEach { _ ->
+        (0..antallVirksomheter).forEach { _ ->
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
                 perioder = listOf(Periode.gjeldendePeriode()),
-                sektor = (0..3).random().toString())
+                sektor = (0..3).random().toString()
+            )
         }
     }
 
@@ -114,47 +136,6 @@ class TestData(
     fun brregMockData() =
         brregVirksomheter.joinToString(prefix = "[", postfix = "]", separator = ",")
 
-    fun brregOppdatertUnderenhetJson(virksomhet: TestVirksomhet): String {
-        val oppdaterteEnheter = """[
-              {
-                "oppdateringsid": ${virksomhet.orgnr.toInt() + 1},
-                "dato": "2022-07-05T04:01:39.613Z",
-                "organisasjonsnummer": "${virksomhet.orgnr}",
-                "endringstype": "Endring",
-                "_links": {
-                  "underenhet": {
-                    "href": "https://data.brreg.no/enhetsregisteret/api/underenheter/927818310"
-                  }
-                }
-              }
-            ]""".trimIndent()
-
-        return """{
-          "_embedded": {
-            "oppdaterteUnderenheter": $oppdaterteEnheter
-          },
-          "_links": {
-            "first": {
-              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&page=0&size=10"
-            },
-            "self": {
-              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&size=10"
-            },
-            "next": {
-              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&page=1&size=10"
-            },
-            "last": {
-              "href": "https://data.brreg.no/enhetsregisteret/api/oppdateringer/underenheter?dato=2022-07-05T00:00:00.000Z&page=89&size=10"
-            }
-          },
-          "page": {
-            "size": 1,
-            "totalElements": 1,
-            "totalPages": 1,
-            "number": 0
-          }
-        }""".trimIndent()
-    }
 
     fun ssbNæringMockData() =
         næringer.joinToString(
@@ -187,7 +168,7 @@ class TestData(
 }
 
 
-enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto : SykefraversstatistikkImportDto) {
+enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: SykefraversstatistikkImportDto) {
     testVirksomhetForrigeKvartal(
         sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
@@ -285,35 +266,12 @@ fun lagSykefraværsstatistikkImportDto(
                 antallPersoner = 1250.0,
                 prosent = 1.0,
                 maskert = false,
-                kategori = "NÆRING5SIFFER")
+                kategori = "NÆRING5SIFFER"
+            )
         }
     )
 
-fun TestVirksomhet.brregUnderenhetEmbeddedResponsJson() =
-    """
-        {
-        
-          "_embedded": {
-            "underenheter": [${this.brregUnderenhetJson()}]
-          },
-          "_links": {
-            "self": {
-              "href": "https://data.brreg.no/enhetsregisteret/api/underenheter/?organisasjonsnummer=927818310"
-            }
-          },
-          "page": {
-            "size": 20,
-            "totalElements": 1,
-            "totalPages": 1,
-            "number": 0
-          }
-        }
-        
-        
-        
-    """.trimIndent()
-
-private fun TestVirksomhet.brregUnderenhetJson() =
+fun TestVirksomhet.brregUnderenhetJson() =
     """
         {
             "organisasjonsnummer" : "$orgnr",
@@ -329,28 +287,34 @@ private fun TestVirksomhet.brregUnderenhetJson() =
               "beskrivelse" : "${næringsundergruppe1.navn}",
               "kode" : "${næringsundergruppe1.kode}"
             },            
-            ${næringsundergruppe2?.let { 
-                """
+            ${
+        næringsundergruppe2?.let {
+            """
                     "naeringskode2" : {
                       "beskrivelse" : "${it.navn}",
                       "kode" : "${it.kode}"
                     },                     
                 """.trimIndent()
-            } ?: ""}
-            ${næringsundergruppe3?.let { 
-                """
+        } ?: ""
+    }
+            ${
+        næringsundergruppe3?.let {
+            """
                     "naeringskode3" : {
                       "beskrivelse" : "${it.navn}",
                       "kode" : "${it.kode}"
                     },                     
                 """.trimIndent()
-            } ?: ""}
+        } ?: ""
+    }
             "antallAnsatte" : 1,
             "overordnetEnhet" : "999888777",
             "oppstartsdato" : "2010-07-01",
-            ${beliggenhet?.let {
-                "\"beliggenhetsadresse\":" + Gson().toJson(it) + ","
-            } ?: ""}
+            ${
+        beliggenhet?.let {
+            "\"beliggenhetsadresse\":" + Gson().toJson(it) + ","
+        } ?: ""
+    }
             "links" : [ ]
         }
     """.trimIndent()

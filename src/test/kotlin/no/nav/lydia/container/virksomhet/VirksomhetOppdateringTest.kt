@@ -10,12 +10,13 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetSomSkalFåNæringskodeOppdatert
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
-import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_OPPDATERING
 import no.nav.lydia.helper.VirksomhetHelper
@@ -33,61 +34,6 @@ import kotlin.test.Test
 
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
-
-    val testData = TestData()
-    private val tilfeldigeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-    private val tilfeldigeFjernedeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-    private val tilfeldigeSlettedeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-    private val virksomhet2 =
-        TestVirksomhet.nyVirksomhet(
-            næringer = listOf(
-                DYRKING_AV_RIS,
-                DYRKING_AV_KORN,
-                SCENEKUNST
-            )
-        )
-
-    /*
-
-    1. lage en rekke med TestVirksomhet
-    2. dynamisk lage en mock-respons fra Brreg basert på disse
-    3. trigge oppdateringsjobb
-    4. forvent noe derfra
-
-     */
-
-
-//    init {
-//        repeat(times = 5) {
-//            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-//            tilfeldigeVirksomheter.add(nyVirksomhet)
-//            testData.lagData(
-//                virksomhet = nyVirksomhet,
-//                perioder = listOf(Periode.gjeldendePeriode())
-//            )
-//        }
-//        repeat(times = 5) {
-//            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-//            tilfeldigeFjernedeVirksomheter.add(nyVirksomhet)
-//            testData.lagData(
-//                virksomhet = nyVirksomhet,
-//                perioder = listOf(Periode.gjeldendePeriode())
-//            )
-//        }
-//        repeat(times = 5) {
-//            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-//            tilfeldigeSlettedeVirksomheter.add(nyVirksomhet)
-//            testData.lagData(
-//                virksomhet = nyVirksomhet,
-//                perioder = listOf(Periode.gjeldendePeriode())
-//            )
-//        }
-//        testData.lagData(virksomhet2, perioder = listOf(Periode.gjeldendePeriode()))
-//
-//        runBlocking {
-//            VirksomhetHelper.lastInnTestdata(testData = testData)
-//        }
-//    }
 
     @Test
     fun `kan oppdatere endrede virksomheter`() {
@@ -121,18 +67,18 @@ class VirksomhetOppdateringTest {
     @Test
     fun `kan oppdatere fjernede virksomheter`() {
         // Given
-        tilfeldigeFjernedeVirksomheter.forEach { testVirksomhet ->
+        fjernedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet.skalHaForventetTilstandFøroppdatering()
         }
 
         // When
-        tilfeldigeFjernedeVirksomheter.forEach { testVirksomhet ->
+        fjernedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet
                 .sendOppdateringsmelding(endringstype = Fjernet)
         }
 
         // Then
-        tilfeldigeFjernedeVirksomheter.forEach { testVirksomhet ->
+        fjernedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.FJERNET)
         }
     }
@@ -140,18 +86,18 @@ class VirksomhetOppdateringTest {
     @Test
     fun `kan oppdatere slettede virksomheter`() {
         // Given
-        tilfeldigeSlettedeVirksomheter.forEach { testVirksomhet ->
+        slettedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet.skalHaForventetTilstandFøroppdatering()
         }
 
         // When
-        tilfeldigeSlettedeVirksomheter.forEach { testVirksomhet ->
+        slettedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet
                 .sendOppdateringsmelding(endringstype = Sletting)
         }
 
         // Then
-        tilfeldigeSlettedeVirksomheter.forEach { testVirksomhet ->
+        slettedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.SLETTET)
         }
     }
@@ -185,7 +131,7 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `sjekk på næringskoder`() {
-        val virksomhet = virksomhet2
+        val virksomhet = virksomhetSomSkalFåNæringskodeOppdatert
             .copy(næringsundergrupper = listOf(DYRKING_AV_RIS, DYRKING_AV_KORN, BEDRIFTSRÅDGIVNING))
         runBlocking {
             virksomhet
