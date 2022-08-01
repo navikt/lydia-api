@@ -6,7 +6,9 @@ import com.google.common.net.HttpHeaders
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 
 class IntegrationsHelper {
+
     companion object {
+
         fun mockKallMotSsbNæringer(httpMock: HttpMock, testData: TestData): String {
             val lastNedPath = "/naringmock/api/klass/v1/30/json"
             val næringMockUrl = httpMock.url(lastNedPath)
@@ -20,7 +22,7 @@ class IntegrationsHelper {
             return næringMockUrl
         }
 
-        fun mockKallMotBrregUnderhenter(httpMock: HttpMock, testData: TestData): String {
+        fun mockKallMotBrregUnderenheterForNedlasting(httpMock: HttpMock, testData: TestData): String {
             val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
             val brregMockUrl = httpMock.url(lastNedPath)
 

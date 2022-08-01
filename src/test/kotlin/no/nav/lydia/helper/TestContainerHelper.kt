@@ -13,6 +13,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import no.nav.lydia.helper.TestContainerHelper.Companion.httpMock
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -39,6 +40,7 @@ import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -95,12 +97,17 @@ class TestContainerHelper {
             httpMock.start()
         }
 
+        val brregOppdateringContainer = PiaBrregOppdateringContainerHelper(network = network, log = log, httpMock = httpMock)
+
         private val dataSource = postgresContainer.getDataSource()
         val næringsRepository = NæringsRepository(dataSource = dataSource)
         val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
 
         init {
+            Testcontainers.exposeHostPorts(httpMock.wireMockServer.port())
             VirksomhetHelper.lastInnStandardTestdata()
+            VirksomhetHelper.lastInnTestdata(PiaBrregOppdateringTestData.lagTestDataForPiaBrregOppdatering(httpMock = httpMock))
+            brregOppdateringContainer.start()
         }
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
@@ -383,19 +390,20 @@ class VirksomhetHelper {
         fun lastInnTestdata(testData: TestData) {
             NæringsDownloader(
                 url = IntegrationsHelper.mockKallMotSsbNæringer(
-                    httpMock = TestContainerHelper.httpMock,
+                    httpMock = httpMock,
                     testData = testData
                 ),
                 næringsRepository = TestContainerHelper.næringsRepository
             ).lastNedNæringer()
 
             BrregDownloader(
-                url = IntegrationsHelper.mockKallMotBrregUnderhenter(
-                    httpMock = TestContainerHelper.httpMock,
+                url = IntegrationsHelper.mockKallMotBrregUnderenheterForNedlasting(
+                    httpMock = httpMock,
                     testData = testData
                 ),
                 virksomhetRepository = TestContainerHelper.virksomhetRepository
             ).lastNed()
+
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
                 testData.sykefraværsStatistikkMeldinger().toList()
             )

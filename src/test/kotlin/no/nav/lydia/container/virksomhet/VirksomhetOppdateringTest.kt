@@ -4,98 +4,34 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
-import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.nyeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetSomSkalFåNæringskodeOppdatert
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetUtenAdresse
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
-import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
-import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
-import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
-import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
-import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
-import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Ny
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting
+import no.nav.lydia.helper.genererEndretNavn
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
+/**
+ * NOTE: Denne testen bruker testdata fra [no.nav.lydia.helper.PiaBrregOppdateringTestData]
+ * NOTE: og de dataene blir behandlet av [no.nav.lydia.helper.PiaBrregOppdateringContainerHelper.brregOppdateringContainer]
+ * */
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
 
-    val testData = TestData()
-    private val tilfeldigeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-    private val tilfeldigeFjernedeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-    private val tilfeldigeSlettedeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-    private val virksomhet2 =
-        TestVirksomhet.nyVirksomhet(
-            næringer = listOf(
-                DYRKING_AV_RIS,
-                DYRKING_AV_KORN,
-                SCENEKUNST
-            )
-        )
-
-
-    init {
-        repeat(times = 5) {
-            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-            tilfeldigeVirksomheter.add(nyVirksomhet)
-            testData.lagData(
-                virksomhet = nyVirksomhet,
-                perioder = listOf(Periode.gjeldendePeriode())
-            )
-        }
-        repeat(times = 5) {
-            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-            tilfeldigeFjernedeVirksomheter.add(nyVirksomhet)
-            testData.lagData(
-                virksomhet = nyVirksomhet,
-                perioder = listOf(Periode.gjeldendePeriode())
-            )
-        }
-        repeat(times = 5) {
-            val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-            tilfeldigeSlettedeVirksomheter.add(nyVirksomhet)
-            testData.lagData(
-                virksomhet = nyVirksomhet,
-                perioder = listOf(Periode.gjeldendePeriode())
-            )
-        }
-        testData.lagData(virksomhet2, perioder = listOf(Periode.gjeldendePeriode()))
-
-        runBlocking {
-            VirksomhetHelper.lastInnTestdata(testData = testData)
-        }
-    }
-
     @Test
     fun `kan oppdatere endrede virksomheter`() {
-        // Given
-        tilfeldigeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaForventetTilstandFøroppdatering()
-        }
-
-        // When
-        tilfeldigeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet
-                .copy(navn = testVirksomhet.genererEndretNavn())
-                .sendOppdateringsmelding(endringstype = Endring)
-        }
-
-        // Then
-        tilfeldigeVirksomheter.forEach { testVirksomhet ->
+        endredeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet.skalHaRiktigTilstandEtterOppdatering(
                 status = VirksomhetStatus.AKTIV,
                 navn = testVirksomhet.genererEndretNavn()
@@ -105,134 +41,45 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `kan oppdatere fjernede virksomheter`() {
-        // Given
-        tilfeldigeFjernedeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaForventetTilstandFøroppdatering()
-        }
-
-        // When
-        tilfeldigeFjernedeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet
-                .sendOppdateringsmelding(endringstype = Fjernet)
-        }
-
-        // Then
-        tilfeldigeFjernedeVirksomheter.forEach { testVirksomhet ->
+        fjernedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.FJERNET)
         }
     }
 
     @Test
     fun `kan oppdatere slettede virksomheter`() {
-        // Given
-        tilfeldigeSlettedeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaForventetTilstandFøroppdatering()
-        }
-
-        // When
-        tilfeldigeSlettedeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet
-                .sendOppdateringsmelding(endringstype = Sletting)
-        }
-
-        // Then
-        tilfeldigeSlettedeVirksomheter.forEach { testVirksomhet ->
+        slettedeVirksomheter.forEach { testVirksomhet ->
             testVirksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.SLETTET)
         }
     }
 
-
     @Test
     fun `gjør ingenting med virksomheter som ikke er relevante`() {
-        val testVirksomhet =
-            VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = Beliggenhetsadresse()))
         VirksomhetHelper.hentVirksomhetsinformasjonRespons(
-            orgnummer = testVirksomhet.orgnr,
+            orgnummer = virksomhetUtenAdresse.orgnr,
             token = token
         ).second.statusCode shouldBe HttpStatusCode.NotFound.value
-        BrregOppdateringConsumer.BrregVirksomhetEndringstype.values().forEach { endringsType ->
-            testVirksomhet
-                .sendOppdateringsmelding(endringstype = endringsType)
-            VirksomhetHelper.hentVirksomhetsinformasjonRespons(
-                orgnummer = testVirksomhet.orgnr,
-                token = token
-            ).second.statusCode shouldBe HttpStatusCode.NotFound.value
-        }
     }
 
     @Test
     fun `Skal inserte en virksomhet med endringstype ny`() {
-        val virksomhet = TestVirksomhet.nyVirksomhet()
-        virksomhet
-            .sendOppdateringsmelding(endringstype = Ny)
-        virksomhet.skalHaRiktigTilstandEtterNy()
+        nyeVirksomheter.forEach { virksomhet ->
+            virksomhet.skalHaRiktigTilstandEtterNy()
+        }
     }
 
     @Test
     fun `sjekk på næringskoder`() {
-        val virksomhet = virksomhet2
-            .copy(næringsundergrupper = listOf(DYRKING_AV_RIS, DYRKING_AV_KORN, BEDRIFTSRÅDGIVNING))
-        runBlocking {
-            virksomhet
-                .sendOppdateringsmelding(endringstype = Endring).also { delay(1000) }
-                .skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
-        }
+        virksomhetSomSkalFåNæringskodeOppdatert.copy(
+            navn = virksomhetSomSkalFåNæringskodeOppdatert.genererEndretNavn(),
+            næringsundergrupper = listOf(
+                TestData.DYRKING_AV_RIS,
+                TestData.DYRKING_AV_KORN,
+                TestData.BEDRIFTSRÅDGIVNING
+            )
+        ).skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
     }
 }
-
-private fun TestVirksomhet.skalHaForventetTilstandFøroppdatering() {
-    val virksomhetDto =
-        VirksomhetHelper.hentVirksomhetsinformasjon(
-            orgnummer = this.orgnr,
-            token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
-        )
-
-    virksomhetDto.orgnr shouldBe this.orgnr
-    virksomhetDto.navn shouldBe this.navn
-    virksomhetDto.status shouldBe VirksomhetStatus.AKTIV
-    // virksomhetDto.oppstartsdato shouldBe this.oppstartsdato TODO
-    virksomhetDto.adresse shouldBe this.beliggenhet!!.adresse!!
-    virksomhetDto.postnummer shouldBe this.beliggenhet.postnummer!!
-    virksomhetDto.poststed shouldBe this.beliggenhet.poststed!!
-    virksomhetDto.neringsgrupper shouldContainAll this.næringsundergrupper
-    virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe null
-    virksomhetDto.opprettetTidspunkt shouldBeLessThanOrEqualTo Clock.System.now()
-    virksomhetDto.sistEndretTidspunkt shouldBeLessThanOrEqualTo Clock.System.now()
-}
-
-private fun TestVirksomhet.sendOppdateringsmelding(endringstype: BrregOppdateringConsumer.BrregVirksomhetEndringstype): TestVirksomhet {
-    val oppdateringVirksomhet = BrregOppdateringConsumer.OppdateringVirksomhet(
-        orgnummer = this.orgnr,
-        oppdateringsid = genererOppdateringsid(this),
-        endringstype = endringstype,
-        metadata = BrregVirksomhetDto(
-            organisasjonsnummer = this.orgnr,
-            navn = this.navn,
-            beliggenhetsadresse = this.beliggenhet,
-            naeringskode1 = NæringsundergruppeBrreg(
-                beskrivelse = this.næringsundergruppe1.navn,
-                kode = this.næringsundergruppe1.kode
-            ),
-            naeringskode2 = this.næringsundergruppe2?.let { næringsundergruppe2 ->
-                NæringsundergruppeBrreg(
-                    beskrivelse = næringsundergruppe2.navn,
-                    kode = næringsundergruppe2.kode
-                )
-            },
-            naeringskode3 = this.næringsundergruppe3?.let { næringsundergruppe3 ->
-                NæringsundergruppeBrreg(
-                    beskrivelse = næringsundergruppe3.navn,
-                    kode = næringsundergruppe3.kode
-                )
-            },
-        ),
-        endringstidspunkt = Clock.System.now()
-    )
-    oppdateringVirksomhet.send()
-    return this
-}
-
-private fun TestVirksomhet.genererEndretNavn() = this.navn.reversed()
 
 private fun genererOppdateringsid(testVirksomhet: TestVirksomhet) =
     testVirksomhet.orgnr.toLong() + 1L
@@ -251,7 +98,6 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     navn: String = this.navn,
     token: String = TestContainerHelper.oauth2ServerContainer.superbruker1.token
 ): VirksomhetDto {
-    println("skalHaRiktigTilstand: ${this.orgnr}")
     val virksomhetDto =
         VirksomhetHelper.hentVirksomhetsinformasjon(orgnummer = this.orgnr, token)
 
@@ -265,16 +111,10 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     virksomhetDto.neringsgrupper shouldContainAll this.næringsundergrupper
     virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe genererOppdateringsid(this)
     virksomhetDto.opprettetTidspunkt shouldBeLessThan Clock.System.now()
-
-    println("skalHaRiktigTilstand: ${this.orgnr} OK")
     return virksomhetDto
 }
 
 private fun TestVirksomhet.skalHaRiktigTilstandEtterNy(navn: String = this.navn) {
     val virksomhetDto = skalHaRiktigTilstand(status = VirksomhetStatus.AKTIV, navn)
     virksomhetDto.sistEndretTidspunkt shouldBeEqualComparingTo virksomhetDto.opprettetTidspunkt
-}
-
-private fun BrregOppdateringConsumer.OppdateringVirksomhet.send() {
-    TestContainerHelper.kafkaContainerHelper.brregOppdatering.sendBrregOppdateringKafkaMelding(oppdateringVirksomhet = this)
 }
