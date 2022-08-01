@@ -1,9 +1,10 @@
 package no.nav.lydia.helper
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.matching
 import com.google.common.net.HttpHeaders
 import kotlinx.datetime.Clock
+import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.*
@@ -64,10 +65,13 @@ class PiaBrregOppdateringContainerHelper(
 class PiaBrregOppdateringTestData {
 
     companion object {
+        private val virksomheterSomSkalOppdateres: MutableMap<TestVirksomhet, BrregVirksomhetEndringstype> =
+            mutableMapOf()
         private val testData = TestData()
-        val endredeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-        val fjernedeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
-        val slettedeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
+        val endredeVirksomheter = lagVirksomheterForOppdatering(endringstype = Endring)
+        val fjernedeVirksomheter = lagVirksomheterForOppdatering(endringstype = Fjernet)
+        val slettedeVirksomheter = lagVirksomheterForOppdatering(endringstype = Sletting)
+        val nyeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
         val virksomhetSomSkalFåNæringskodeOppdatert =
             TestVirksomhet.nyVirksomhet(
                 næringer = listOf(
@@ -76,51 +80,42 @@ class PiaBrregOppdateringTestData {
                     TestData.SCENEKUNST
                 )
             )
-        private val virksomheterSomSkalOppdateres: MutableMap<TestVirksomhet, BrregVirksomhetEndringstype> =
-            mutableMapOf()
+        val virksomhetUtenAdresse = TestVirksomhet.nyVirksomhet(beliggenhet = Beliggenhetsadresse())
+
+        private fun lagVirksomheterForOppdatering(endringstype: BrregVirksomhetEndringstype) =
+            (1 .. 5).map {
+                val virksomhet = TestVirksomhet.nyVirksomhet()
+                virksomheterSomSkalOppdateres[virksomhet] = endringstype
+                testData.lagData(
+                    virksomhet = virksomhet,
+                    perioder = listOf(Periode.gjeldendePeriode())
+                )
+                virksomhet
+            }
 
         fun lagTestDataForPiaBrregOppdatering(httpMock: HttpMock): TestData {
             repeat(times = 5) {
-                val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-                endredeVirksomheter.add(nyVirksomhet)
-                virksomheterSomSkalOppdateres[nyVirksomhet] = Endring
-                testData.lagData(
-                    virksomhet = nyVirksomhet,
-                    perioder = listOf(Periode.gjeldendePeriode())
-                )
-            }
-            repeat(times = 5) {
-                val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-                fjernedeVirksomheter.add(nyVirksomhet)
-                virksomheterSomSkalOppdateres[nyVirksomhet] = Fjernet
-                testData.lagData(
-                    virksomhet = nyVirksomhet,
-                    perioder = listOf(Periode.gjeldendePeriode())
-                )
-            }
-            repeat(times = 5) {
-                val nyVirksomhet = TestVirksomhet.nyVirksomhet()
-                slettedeVirksomheter.add(nyVirksomhet)
-                virksomheterSomSkalOppdateres[nyVirksomhet] = Sletting
-                testData.lagData(
-                    virksomhet = nyVirksomhet,
-                    perioder = listOf(Periode.gjeldendePeriode())
-                )
+                val virksomhet = TestVirksomhet.nyVirksomhet()
+                nyeVirksomheter.add(virksomhet)
+                virksomheterSomSkalOppdateres[virksomhet] = Ny
             }
 
             testData.lagData(virksomhetSomSkalFåNæringskodeOppdatert, perioder = listOf(Periode.gjeldendePeriode()))
-            mockPiaBrregOppdaringTestData(httpMock = httpMock)
+            testData.lagData(virksomhetUtenAdresse, perioder = listOf(Periode.gjeldendePeriode()))
+            virksomheterSomSkalOppdateres[virksomhetUtenAdresse] = Endring
+
+            mockPiaBrregOppdateringTestData(httpMock = httpMock)
             return testData
         }
 
-        private fun mockPiaBrregOppdaringTestData(httpMock: HttpMock) {
+        fun mockPiaBrregOppdateringTestData(httpMock: HttpMock) {
             mockKallMotBrregOppdaterteUnderenheter(
                 httpMock = httpMock,
                 virksomheterSomSkalOppdateres = virksomheterSomSkalOppdateres
             )
             mockKallMotBrregUnderenhet(
                 httpMock = httpMock,
-                testVirksomheter = virksomheterSomSkalOppdateres.keys.toList()
+                testVirksomheter = endredeVirksomheter.map { testVirksomhet -> testVirksomhet.copy(navn = testVirksomhet.genererEndretNavn()) }
             )
         }
 
@@ -141,7 +136,11 @@ class PiaBrregOppdateringTestData {
         private fun mockKallMotBrregUnderenhet(httpMock: HttpMock, testVirksomheter: List<TestVirksomhet>) {
             httpMock.wireMockServer.stubFor(
                 WireMock.get(WireMock.urlPathEqualTo(brregUnderenheterMockPath))
-                    .withQueryParam("organisasjonsnummer", equalTo(testVirksomheter.joinToString(",") { it.orgnr }))
+                    .withQueryParam("organisasjonsnummer", matching(testVirksomheter.joinToString(
+                        separator = "",
+                        prefix = "^",
+                        transform = {"(?=.*\\b${it.orgnr}\\b)"},
+                        postfix = ".+")))
                     .willReturn(
                         WireMock.ok()
                             .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
@@ -222,3 +221,5 @@ class PiaBrregOppdateringTestData {
     """.trimIndent()
     }
 }
+
+fun TestVirksomhet.genererEndretNavn() = this.navn.reversed()
