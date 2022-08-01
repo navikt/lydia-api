@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.nyeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetSomSkalFåNæringskodeOppdatert
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetUtenAdresse
@@ -17,10 +18,6 @@ import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.genererEndretNavn
-import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
-import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Ny
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
@@ -68,10 +65,9 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `Skal inserte en virksomhet med endringstype ny`() {
-        val virksomhet = TestVirksomhet.nyVirksomhet()
-        virksomhet
-            .sendOppdateringsmelding(endringstype = Ny)
-        virksomhet.skalHaRiktigTilstandEtterNy()
+        nyeVirksomheter.forEach { virksomhet ->
+            virksomhet.skalHaRiktigTilstandEtterNy()
+        }
     }
 
     @Test
@@ -85,38 +81,6 @@ class VirksomhetOppdateringTest {
             )
         ).skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
     }
-}
-
-private fun TestVirksomhet.sendOppdateringsmelding(endringstype: BrregOppdateringConsumer.BrregVirksomhetEndringstype): TestVirksomhet {
-    val oppdateringVirksomhet = BrregOppdateringConsumer.OppdateringVirksomhet(
-        orgnummer = this.orgnr,
-        oppdateringsid = genererOppdateringsid(this),
-        endringstype = endringstype,
-        metadata = BrregVirksomhetDto(
-            organisasjonsnummer = this.orgnr,
-            navn = this.navn,
-            beliggenhetsadresse = this.beliggenhet,
-            naeringskode1 = NæringsundergruppeBrreg(
-                beskrivelse = this.næringsundergruppe1.navn,
-                kode = this.næringsundergruppe1.kode
-            ),
-            naeringskode2 = this.næringsundergruppe2?.let { næringsundergruppe2 ->
-                NæringsundergruppeBrreg(
-                    beskrivelse = næringsundergruppe2.navn,
-                    kode = næringsundergruppe2.kode
-                )
-            },
-            naeringskode3 = this.næringsundergruppe3?.let { næringsundergruppe3 ->
-                NæringsundergruppeBrreg(
-                    beskrivelse = næringsundergruppe3.navn,
-                    kode = næringsundergruppe3.kode
-                )
-            },
-        ),
-        endringstidspunkt = Clock.System.now()
-    )
-    oppdateringVirksomhet.send()
-    return this
 }
 
 private fun genererOppdateringsid(testVirksomhet: TestVirksomhet) =
@@ -155,8 +119,4 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
 private fun TestVirksomhet.skalHaRiktigTilstandEtterNy(navn: String = this.navn) {
     val virksomhetDto = skalHaRiktigTilstand(status = VirksomhetStatus.AKTIV, navn)
     virksomhetDto.sistEndretTidspunkt shouldBeEqualComparingTo virksomhetDto.opprettetTidspunkt
-}
-
-private fun BrregOppdateringConsumer.OppdateringVirksomhet.send() {
-    TestContainerHelper.kafkaContainerHelper.brregOppdatering.sendBrregOppdateringKafkaMelding(oppdateringVirksomhet = this)
 }
