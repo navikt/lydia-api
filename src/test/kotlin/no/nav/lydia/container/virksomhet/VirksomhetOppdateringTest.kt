@@ -4,26 +4,22 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
-import io.kotest.matchers.comparables.shouldBeLessThanOrEqualTo
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
-import no.nav.lydia.helper.*
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetSomSkalFåNæringskodeOppdatert
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetUtenAdresse
-import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
-import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
-import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
-import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.genererEndretNavn
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Ny
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -80,34 +76,15 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `sjekk på næringskoder`() {
-        val virksomhet = virksomhetSomSkalFåNæringskodeOppdatert
-            .copy(næringsundergrupper = listOf(DYRKING_AV_RIS, DYRKING_AV_KORN, BEDRIFTSRÅDGIVNING))
-        runBlocking {
-            virksomhet
-                .sendOppdateringsmelding(endringstype = Endring).also { delay(1000) }
-                .skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
-        }
+        virksomhetSomSkalFåNæringskodeOppdatert.copy(
+            navn = virksomhetSomSkalFåNæringskodeOppdatert.genererEndretNavn(),
+            næringsundergrupper = listOf(
+                TestData.DYRKING_AV_RIS,
+                TestData.DYRKING_AV_KORN,
+                TestData.BEDRIFTSRÅDGIVNING
+            )
+        ).skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
     }
-}
-
-private fun TestVirksomhet.skalHaForventetTilstandFøroppdatering() {
-    val virksomhetDto =
-        VirksomhetHelper.hentVirksomhetsinformasjon(
-            orgnummer = this.orgnr,
-            token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
-        )
-
-    virksomhetDto.orgnr shouldBe this.orgnr
-    virksomhetDto.navn shouldBe this.navn
-    virksomhetDto.status shouldBe VirksomhetStatus.AKTIV
-    // virksomhetDto.oppstartsdato shouldBe this.oppstartsdato TODO
-    virksomhetDto.adresse shouldBe this.beliggenhet!!.adresse!!
-    virksomhetDto.postnummer shouldBe this.beliggenhet.postnummer!!
-    virksomhetDto.poststed shouldBe this.beliggenhet.poststed!!
-    virksomhetDto.neringsgrupper shouldContainAll this.næringsundergrupper
-    virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe null
-    virksomhetDto.opprettetTidspunkt shouldBeLessThanOrEqualTo Clock.System.now()
-    virksomhetDto.sistEndretTidspunkt shouldBeLessThanOrEqualTo Clock.System.now()
 }
 
 private fun TestVirksomhet.sendOppdateringsmelding(endringstype: BrregOppdateringConsumer.BrregVirksomhetEndringstype): TestVirksomhet {

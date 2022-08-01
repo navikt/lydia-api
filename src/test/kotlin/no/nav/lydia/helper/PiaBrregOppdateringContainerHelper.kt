@@ -86,7 +86,7 @@ class PiaBrregOppdateringTestData {
         val virksomhetUtenAdresse = TestVirksomhet.nyVirksomhet(beliggenhet = Beliggenhetsadresse())
 
         private fun lagVirksomheterForOppdatering(endringstype: BrregVirksomhetEndringstype) =
-            (1 .. 5).map {
+            (1..5).map {
                 val virksomhet = TestVirksomhet.nyVirksomhet()
                 virksomheterSomSkalOppdateres[virksomhet] = endringstype
                 testData.lagData(
@@ -106,6 +106,13 @@ class PiaBrregOppdateringTestData {
             testData.lagData(virksomhetSomSkalFåNæringskodeOppdatert, perioder = listOf(Periode.gjeldendePeriode()))
             testData.lagData(virksomhetUtenAdresse, perioder = listOf(Periode.gjeldendePeriode()))
             virksomheterSomSkalOppdateres[virksomhetUtenAdresse] = Endring
+            virksomheterSomSkalOppdateres[virksomhetSomSkalFåNæringskodeOppdatert.copy(
+                næringsundergrupper = listOf(
+                    TestData.DYRKING_AV_RIS,
+                    TestData.DYRKING_AV_KORN,
+                    TestData.BEDRIFTSRÅDGIVNING
+                )
+            )] = Endring
 
             mockPiaBrregOppdateringTestData(httpMock = httpMock)
             return testData
@@ -117,11 +124,15 @@ class PiaBrregOppdateringTestData {
             )
             mockKallMotBrregUnderenhet(
                 httpMock = httpMock,
-                testVirksomheter = endredeVirksomheter.map { testVirksomhet -> testVirksomhet.copy(navn = testVirksomhet.genererEndretNavn()) }
+                testVirksomheter = virksomheterSomSkalOppdateres.filterValues { it == Endring }.keys.map { testVirksomhet ->
+                    testVirksomhet.copy(
+                        navn = testVirksomhet.genererEndretNavn()
+                    )
+                }
             )
             mockKallMotBrregUnderenhet(
                 httpMock = httpMock,
-                testVirksomheter = nyeVirksomheter
+                testVirksomheter = virksomheterSomSkalOppdateres.filterValues { it == Ny }.keys.toList()
             )
         }
 
@@ -141,11 +152,16 @@ class PiaBrregOppdateringTestData {
         private fun mockKallMotBrregUnderenhet(httpMock: HttpMock, testVirksomheter: List<TestVirksomhet>) {
             httpMock.wireMockServer.stubFor(
                 WireMock.get(WireMock.urlPathEqualTo(brregUnderenheterMockPath))
-                    .withQueryParam("organisasjonsnummer", matching(testVirksomheter.joinToString(
-                        separator = "",
-                        prefix = "^",
-                        transform = {"(?=.*\\b${it.orgnr}\\b)"},
-                        postfix = ".+")))
+                    .withQueryParam(
+                        "organisasjonsnummer", matching(
+                            testVirksomheter.joinToString(
+                                separator = "",
+                                prefix = "^",
+                                transform = { "(?=.*\\b${it.orgnr}\\b)" },
+                                postfix = ".+"
+                            )
+                        )
+                    )
                     .willReturn(
                         WireMock.ok()
                             .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
