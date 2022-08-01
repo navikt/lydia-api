@@ -113,8 +113,7 @@ class PiaBrregOppdateringTestData {
 
         fun mockPiaBrregOppdateringTestData(httpMock: HttpMock) {
             mockKallMotBrregOppdaterteUnderenheter(
-                httpMock = httpMock,
-                virksomheterSomSkalOppdateres = virksomheterSomSkalOppdateres
+                httpMock = httpMock
             )
             mockKallMotBrregUnderenhet(
                 httpMock = httpMock,
@@ -128,14 +127,13 @@ class PiaBrregOppdateringTestData {
 
         private fun mockKallMotBrregOppdaterteUnderenheter(
             httpMock: HttpMock,
-            virksomheterSomSkalOppdateres: Map<TestVirksomhet, BrregVirksomhetEndringstype>
         ) {
             httpMock.wireMockServer.stubFor(
                 WireMock.get(WireMock.urlPathEqualTo(brregOppdaterteUnderenheterMockPath))
                     .willReturn(
                         WireMock.ok()
                             .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                            .withBody(brregOppdatertUnderenhetJson(virksomheterSomSkalOppdateres))
+                            .withBody(brregOppdatertUnderenhetJson())
                     )
             )
         }
@@ -156,7 +154,7 @@ class PiaBrregOppdateringTestData {
             )
         }
 
-        private fun brregOppdatertUnderenhetJson(virksomheterSomSkalOppdateres: Map<TestVirksomhet, BrregVirksomhetEndringstype>): String {
+        private fun brregOppdatertUnderenhetJson(): String {
             val oppdaterteEnheter = """[
                   ${
                 virksomheterSomSkalOppdateres.entries.joinToString(",") { (virksomhet, endringstype) ->
