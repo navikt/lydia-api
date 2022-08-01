@@ -22,14 +22,12 @@ import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
+/**
+ * NOTE: Denne testen bruker testdata fra [no.nav.lydia.helper.PiaBrregOppdateringTestData]
+ * NOTE: og de dataene blir behandlet av [no.nav.lydia.helper.PiaBrregOppdateringContainerHelper.brregOppdateringContainer]
+ * */
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
-
-//    init {
-//        VirksomhetHelper.lastInnTestdata(PiaBrregOppdateringTestData.lagTestDataForPiaBrregOppdatering(httpMock = TestContainerHelper.httpMock))
-//        TestContainerHelper.brregOppdateringContainer.start()
-//        Thread.sleep(2000)
-//    }
 
     @Test
     fun `kan oppdatere endrede virksomheter`() {
