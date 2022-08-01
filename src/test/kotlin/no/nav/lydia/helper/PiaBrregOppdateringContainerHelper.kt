@@ -7,7 +7,10 @@ import kotlinx.datetime.Clock
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.*
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Ny
+import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Sletting
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
@@ -116,6 +119,10 @@ class PiaBrregOppdateringTestData {
             mockKallMotBrregUnderenhet(
                 httpMock = httpMock,
                 testVirksomheter = endredeVirksomheter.map { testVirksomhet -> testVirksomhet.copy(navn = testVirksomhet.genererEndretNavn()) }
+            )
+            mockKallMotBrregUnderenhet(
+                httpMock = httpMock,
+                testVirksomheter = nyeVirksomheter
             )
         }
 
