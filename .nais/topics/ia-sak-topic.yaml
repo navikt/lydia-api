@@ -21,6 +21,9 @@ spec:
     - team: team-dialog
       application: sf-sykefravaersstatistikk
       access: read
+    - team: team-dialog
+      application: sf-ia-sak
+      access: read
     - team: pia
       application: pia-devops
       access: read
