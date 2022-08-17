@@ -41,6 +41,7 @@ class IASak private constructor(
             IAProsessStatus.KONTAKTES -> KontaktesTilstand()
             IAProsessStatus.KARTLEGGES -> KartleggesTilstand()
             IAProsessStatus.VI_BISTÅR -> ViBistårTilstand()
+            IAProsessStatus.FULLFØRT -> FullførtTilstand()
             IAProsessStatus.IKKE_AKTIV -> throw IllegalStateException()
         }
     }
@@ -85,7 +86,9 @@ class IASak private constructor(
             VIRKSOMHET_SKAL_BISTÅS -> {
                 tilstand.viBistår()
             }
-
+            FULLFØR_BISTAND -> {
+                tilstand.fullfør()
+            }
             TA_EIERSKAP_I_SAK -> {
                 eidAv = hendelse.opprettetAv
             }
@@ -126,6 +129,10 @@ class IASak private constructor(
         }
 
         open fun viBistår() {
+            håndterFeilState()
+        }
+
+        open fun fullfør() {
             håndterFeilState()
         }
 
@@ -270,16 +277,26 @@ class IASak private constructor(
                 LESE -> emptyList()
                 SAKSBEHANDLER, SUPERBRUKER -> {
                     if (erEierAvSak(rådgiver)) return listOf(
-                        GyldigHendelse(saksHendelsestype = TILBAKE)
+                        GyldigHendelse(saksHendelsestype = TILBAKE),
+                        GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND)
                     )
                     else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
                 }
             }
         }
 
+        override fun fullfør() {
+            tilstand = FullførtTilstand()
+        }
+
         override fun tilbake() {
             tilstand = finnForrigeTilstand()
         }
+    }
+    private inner class FullførtTilstand : ProsessTilstand(
+        status = IAProsessStatus.FULLFØRT
+    ) {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
     }
 
 
@@ -345,16 +362,11 @@ enum class IAProsessStatus {
     KONTAKTES,
     KARTLEGGES,
     VI_BISTÅR,
-    IKKE_AKTUELL;
+    IKKE_AKTUELL,
+    FULLFØRT;
 
     companion object {
-        fun filtrerbareStatuser() = listOf(
-            IKKE_AKTIV,
-            VURDERES,
-            KONTAKTES,
-            IKKE_AKTUELL,
-            KARTLEGGES,
-            VI_BISTÅR
-        )
+        fun filtrerbareStatuser() =
+            values().filterNot { it == NY }
     }
 }

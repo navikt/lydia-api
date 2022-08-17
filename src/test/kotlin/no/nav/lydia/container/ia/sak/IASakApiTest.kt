@@ -31,8 +31,7 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
@@ -662,5 +661,21 @@ class IASakApiTest {
                     )
                 }
             }
+    }
+
+    @Test
+    fun `skal kunne fullføre en sak fra 'Vi Bistår' status`() {
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .also { sak ->
+                shouldFail {
+                    sak.nyHendelse(FULLFØR_BISTAND)
+                }
+            }
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(FULLFØR_BISTAND)
+            .also { sak -> sak.status shouldBe FULLFØRT }
     }
 }

@@ -5,12 +5,16 @@ import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.ia.sak.domene.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -176,6 +180,39 @@ class IASakTest {
         sak.endretAvHendelseId shouldBe tilbakeTilVurderes.id
         sak.hendelser shouldContain tilbakeTilVurderes
         sak.status shouldBe VURDERES
+    }
+
+    @Test
+    fun `det skal gå ann å fullføre en sak`() {
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
+        val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
+        val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val kartlegges = kontaktes.nesteHendelse(VIRKSOMHET_KARTLEGGES)
+        val viBistår = kartlegges.nesteHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val fullfør = viBistår.nesteHendelse(FULLFØR_BISTAND)
+
+        val sak = IASak.fraHendelser(listOf(
+            ny_sak,
+            vurderes,
+            eierskap,
+            kontaktes,
+            kartlegges,
+            viBistår,
+            fullfør,
+        ))
+
+        sak.status shouldBe FULLFØRT
+        sak.hendelser shouldContainInOrder listOf(
+            ny_sak,
+            vurderes,
+            eierskap,
+            kontaktes,
+            kartlegges,
+            viBistår,
+            fullfør,
+        )
+        sak.gyldigeNesteHendelser(superbruker1).shouldBeEmpty()
     }
 
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
