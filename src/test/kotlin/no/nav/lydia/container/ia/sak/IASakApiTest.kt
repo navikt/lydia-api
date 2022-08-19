@@ -13,12 +13,12 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.ktor.http.HttpStatusCode
-import no.nav.lydia.helper.*
-import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
+import io.ktor.http.*
+import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
@@ -28,19 +28,17 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MANGLER_PARTSGRUPPE
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MINDRE_VIRKSOMHET
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
@@ -87,7 +85,8 @@ class IASakApiTest {
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
                 sykefraversstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
-                sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.IKKE_AKTIV
+                sykefraversstatistikkVirksomhetDto.status shouldBe IKKE_AKTIV
+                sykefraversstatistikkVirksomhetDto.sistEndret shouldBe null
             }
         }, kommuner = utsiraKommune.nummer)
         val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
@@ -96,7 +95,8 @@ class IASakApiTest {
             listeEtterVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeEtterVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
                 sykefraversstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
-                sykefraversstatistikkVirksomhetDto.status shouldBe IAProsessStatus.VURDERES
+                sykefraversstatistikkVirksomhetDto.status shouldBe VURDERES
+                sykefraversstatistikkVirksomhetDto.sistEndret shouldBe java.time.LocalDate.now().toKotlinLocalDate()
             }
         }, kommuner = utsiraKommune.nummer)
 

@@ -1,5 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk
 
+import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -119,7 +120,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet,
                         ia_sak.status,
-                        ia_sak.eid_av
+                        ia_sak.eid_av,
+                        ia_sak.endret
                     ${filter(
                         tmpKommuneTabell = tmpKommuneTabell,
                         tmpNavIdenterTabell = tmpNavIdenterTabell,
@@ -140,7 +142,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet,
                         ia_sak.status,
-                        ia_sak.eid_av
+                        ia_sak.eid_av,
+                        ia_sak.endret
                     ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
                     LIMIT ${søkeparametere.virksomheterPerSide()}
                     OFFSET ${søkeparametere.offset()}
@@ -249,7 +252,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.maskert,
                         statistikk.opprettet,
                         ia_sak.status,
-                        ia_sak.eid_av
+                        ia_sak.eid_av,
+                        ia_sak.endret
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
@@ -285,7 +289,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             status = row.stringOrNull("status")?.let {
                 IAProsessStatus.valueOf(it)
             },
-            eidAv = row.stringOrNull("eid_av")
+            eidAv = row.stringOrNull("eid_av"),
+            sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate()
         )
     }
 }

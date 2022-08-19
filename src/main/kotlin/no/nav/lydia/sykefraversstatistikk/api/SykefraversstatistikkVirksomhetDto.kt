@@ -1,5 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
@@ -19,7 +20,8 @@ data class SykefraversstatistikkVirksomhetDto(
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
     val status: IAProsessStatus,
-    val eidAv: String?
+    val eidAv: String?,
+    val sistEndret: LocalDate?
 ) {
 
     companion object {
@@ -40,7 +42,8 @@ data class SykefraversstatistikkVirksomhetDto(
                 muligeDagsverk = this.muligeDagsverk,
                 tapteDagsverk = this.tapteDagsverk,
                 status = this.status ?: IAProsessStatus.IKKE_AKTIV,
-                eidAv = this.eidAv
+                eidAv = this.eidAv,
+                sistEndret = this.sistEndret
             )
     }
 }
