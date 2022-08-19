@@ -1,5 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.domene
 
+import kotlinx.datetime.LocalDate
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import java.time.LocalDateTime
@@ -17,5 +18,6 @@ class SykefraversstatistikkVirksomhet(
     val maskert: Boolean,
     val opprettet: LocalDateTime,
     val status: IAProsessStatus?,
-    val eidAv: String?
+    val eidAv: String?,
+    val sistEndret: LocalDate?
 )
