@@ -43,12 +43,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.9.0")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.9.2")
 
     // Database
-    implementation("org.postgresql:postgresql:42.3.6")
+    implementation("org.postgresql:postgresql:42.4.2")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:8.5.12")
+    implementation("org.flywaydb:flyway-core:9.1.6")
     implementation("com.github.seratch:kotliquery:1.8.0")
 
     // Enklere httpklient
@@ -56,7 +56,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.9.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.1.0")
+    implementation("org.apache.kafka:kafka-clients:3.2.1")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -80,7 +80,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.3.2"
+    val kotestVerstion = "5.4.1"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
