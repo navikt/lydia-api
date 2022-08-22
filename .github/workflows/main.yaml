@@ -91,7 +91,7 @@ jobs:
   "deployAlertsToDev":
     name: "Deploy alerts to dev"
     needs: "build"
-    runs-on: "ubuntu-18.04"
+    runs-on: "ubuntu-latest"
     steps:
     - uses: "actions/checkout@v2"
     - name: "Deploy alerts to DEV"
@@ -104,7 +104,7 @@ jobs:
   "deployAlertsToProd":
     name: "Deploy alerts to prod"
     needs: "build"
-    runs-on: "ubuntu-18.04"
+    runs-on: "ubuntu-latest"
     steps:
     - uses: "actions/checkout@v2"
     - name: "Deploy alerts to PROD"
