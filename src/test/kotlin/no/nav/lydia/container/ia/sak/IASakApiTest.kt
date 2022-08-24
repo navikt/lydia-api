@@ -7,6 +7,7 @@ import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -56,7 +57,7 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .also {
-                it.status shouldBe IAProsessStatus.KONTAKTES
+                it.status shouldBe KONTAKTES
             }
     }
 
@@ -651,16 +652,6 @@ class IASakApiTest {
             .also { sak -> sak.status shouldBe KARTLEGGES }
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .also { sak -> sak.status shouldBe VI_BISTÅR }
-            .also { sak ->
-                shouldFail {
-                    sak.nyHendelse(
-                        hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                            type = VIRKSOMHETEN_TAKKET_NEI,
-                            begrunnelser = listOf(HAR_IKKE_KAPASITET)
-                        ).toJson()
-                    )
-                }
-            }
     }
 
     @Test
@@ -678,4 +669,38 @@ class IASakApiTest {
             .nyHendelse(FULLFØR_BISTAND)
             .also { sak -> sak.status shouldBe FULLFØRT }
     }
+
+    @Test
+    fun `skal kunne sette en sak til ikke aktuell fra 'Vi bistår'`() {
+        val orgnummer = nyttOrgnummer()
+        val begrunnelser = listOf(HAR_IKKE_KAPASITET)
+
+
+        val sakIStatusViBistår = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .also { sak -> sak.status shouldBe VI_BISTÅR }
+
+        // Sjekk at 'Ikke aktuell' er en gyldig neste hendelse
+        sakIStatusViBistår.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContain VIRKSOMHET_ER_IKKE_AKTUELL
+
+        // Trykk på 'Ikke aktuell', med begrunnelse
+        val sakIkkeAktuell = sakIStatusViBistår.nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = begrunnelser
+                ).toJson()
+            ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
+
+        // Sjekk at begrunnelsen blir lagret
+        hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
+            .forAtLeastOne { hendelseOppsummering ->
+                hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                hendelseOppsummering.tidspunktForSnapshot shouldBe sakIkkeAktuell.endretTidspunkt
+                hendelseOppsummering.begrunnelser shouldContainAll begrunnelser.map { it.navn }
+            }
+    }
+
 }
