@@ -11,7 +11,7 @@ import kotlin.random.Random
 data class TestVirksomhet(
     val orgnr: String,
     val navn: String,
-    val næringsundergrupper: List<Næringsgruppe>, //TODO hvorfor kommer samme element to ganger i denne lista?
+    val næringsundergrupper: List<Næringsgruppe>,
     val beliggenhet: Beliggenhetsadresse?
 ) {
     val næringsundergruppe1 = næringsundergrupper.first()
@@ -117,8 +117,8 @@ data class TestVirksomhet(
 
         private fun tilfeldigeNæringsgrupper() =
             when ((1..6).random()) {
-                1, 2, 3 -> listOf(NÆRINGER_LISTE[(0..2).random()])
-                4, 5 -> listOf(NÆRINGER_LISTE[(0..2).random()], NÆRINGER_LISTE[(0..2).random()]) // TODO -- pass på at ikke samme næring kommer to ganger
+                1, 2, 3 -> listOf(NÆRINGER_LISTE[0])
+                4, 5 -> listOf(NÆRINGER_LISTE[0], NÆRINGER_LISTE[1])
                 else -> NÆRINGER_LISTE
             }
 
