@@ -118,7 +118,7 @@ data class TestVirksomhet(
         private fun tilfeldigeNæringsgrupper() =
             when ((1..6).random()) {
                 1, 2, 3 -> listOf(NÆRINGER_LISTE[(0..2).random()])
-                4, 5 -> listOf(NÆRINGER_LISTE[(0..2).random()], NÆRINGER_LISTE[(0..2).random()]) // TODO
+                4, 5 -> listOf(NÆRINGER_LISTE[(0..2).random()], NÆRINGER_LISTE[(0..2).random()]) // TODO -- pass på at ikke samme næring kommer to ganger
                 else -> NÆRINGER_LISTE
             }
 
