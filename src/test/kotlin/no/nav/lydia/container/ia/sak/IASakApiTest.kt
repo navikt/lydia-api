@@ -703,4 +703,36 @@ class IASakApiTest {
             }
     }
 
+    @Test
+    fun `skal kunne sette en sak til ikke aktuell fra 'Kartlegges'`() {
+        val orgnummer = nyttOrgnummer()
+        val begrunnelser = listOf(HAR_IKKE_KAPASITET)
+
+
+        val sakIStatusKartlegges = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .also { sak -> sak.status shouldBe KARTLEGGES }
+
+        // Sjekk at 'Ikke aktuell' er en gyldig neste hendelse
+        sakIStatusKartlegges.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContain VIRKSOMHET_ER_IKKE_AKTUELL
+
+        // Trykk på 'Ikke aktuell', med begrunnelse
+        val sakIkkeAktuell = sakIStatusKartlegges.nyHendelse(
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                type = VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = begrunnelser
+            ).toJson()
+        ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
+
+        // Sjekk at begrunnelsen blir lagret
+        hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
+            .forAtLeastOne { hendelseOppsummering ->
+                hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                hendelseOppsummering.tidspunktForSnapshot shouldBe sakIkkeAktuell.endretTidspunkt
+                hendelseOppsummering.begrunnelser shouldContainAll begrunnelser.map { it.navn }
+            }
+    }
+
 }

@@ -257,7 +257,8 @@ class IASak private constructor(
                 SAKSBEHANDLER, SUPERBRUKER -> {
                     if (erEierAvSak(rådgiver)) return listOf(
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
-                        GyldigHendelse(saksHendelsestype = TILBAKE)
+                        GyldigHendelse(saksHendelsestype = TILBAKE),
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
                     )
                     else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
                 }
@@ -267,6 +268,16 @@ class IASak private constructor(
         override fun tilbake() {
             tilstand = finnForrigeTilstand()
         }
+
+        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
+            ikkeAktuell()
+            super.oppdaterStandardFelter(hendelse = hendelse)
+        }
+
+        override fun ikkeAktuell() {
+            tilstand = IkkeAktuellTilstand()
+        }
+
     }
 
     private inner class ViBistårTilstand : ProsessTilstand(
