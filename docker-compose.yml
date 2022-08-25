@@ -72,6 +72,7 @@ services:
       PORT: 9021
 
   backend:
+    platform: linux/amd64
     build:
       context: .
     depends_on:
@@ -119,6 +120,7 @@ services:
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 
   frontend:
+    platform: linux/amd64
     image: ghcr.io/navikt/lydia-radgiver-frontend:latest
     depends_on:
       - backend
