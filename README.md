@@ -1,6 +1,6 @@
 # lydia-api
 
-# Komme i gang
+# Komme i gang med lydia-api
 
 Kjør ./run.sh
 
