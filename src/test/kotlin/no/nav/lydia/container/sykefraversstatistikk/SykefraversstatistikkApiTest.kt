@@ -5,13 +5,7 @@ import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldBeIn
-import io.kotest.matchers.collections.shouldBeOneOf
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainInOrder
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -22,19 +16,22 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.*
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.nyeVirksomheter
+import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
@@ -43,20 +40,12 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
-import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.statuskode
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
-import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
-import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
-import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
+import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -365,7 +354,7 @@ class SykefraversstatistikkApiTest {
                 .getInt("faktiskTotal")
             total shouldBeLessThanOrEqual faktiskTotal
 
-            val antallSider = total / 50
+            val antallSider = total / VIRKSOMHETER_PER_SIDE
             (2..antallSider).map { it.toString() }.forEach { side ->
                 hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
                     response.total shouldBe null
@@ -541,5 +530,15 @@ class SykefraversstatistikkApiTest {
             orgnummer = orgnr,
             token = mockOAuth2Server.brukerUtenTilgangsrolle.token
         ).statuskode() shouldBe 403
+    }
+
+    @Test
+    fun `skal filtrere bort slettede og fjernede virksomheter`() {
+        val virksomheterMedSykefravær = hentSykefraværForAlleVirksomheter().map { it.orgnr }
+        val endredeVirksomheter = endredeVirksomheter.map { it.orgnr }
+        val slettedeOgFjernedeVirksomheter = listOf(slettedeVirksomheter, fjernedeVirksomheter).flatten().map { it.orgnr }
+
+        virksomheterMedSykefravær shouldContainAll endredeVirksomheter
+        virksomheterMedSykefravær shouldNotContainAnyOf slettedeOgFjernedeVirksomheter
     }
 }

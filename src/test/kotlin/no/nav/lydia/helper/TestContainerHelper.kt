@@ -34,6 +34,7 @@ import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -349,6 +350,23 @@ class StatistikkHelper {
         ) =
             hentSykefraværForVirksomhetRespons(orgnummer = orgnummer, token = token).third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
+
+        fun hentSykefraværForAlleVirksomheter(): List<SykefraversstatistikkVirksomhetDto> {
+            val sykefraværsstatistikk = mutableListOf<SykefraversstatistikkVirksomhetDto>()
+            hentSykefravær(success = { response ->
+                val total = requireNotNull(response.total) { "Total ble null i hentSykefravær" }
+                sykefraværsstatistikk.addAll(response.data)
+
+                val antallSider = total / VIRKSOMHETER_PER_SIDE
+                (2..antallSider).map { it.toString() }.forEach { side ->
+                    hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
+                        sykefraværsstatistikk.addAll(response.data)
+                    }, side = side)
+                }
+            }, side = "1")
+
+            return sykefraværsstatistikk.toList()
+        }
     }
 }
 
