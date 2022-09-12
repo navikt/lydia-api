@@ -293,7 +293,44 @@ class StatistikkHelper {
                 token = token
             ).third
                 .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
-
+        fun hentSykefravær(
+            kvartal: String = "",
+            årstall: String = "",
+            kommuner: String = "",
+            fylker: String = "",
+            næringsgrupper: String = "",
+            sorteringsnokkel: String = "",
+            sorteringsretning: String = "",
+            sykefraværsprosentFra: String = "",
+            sykefraværsprosentTil: String = "",
+            ansatteFra: String = "",
+            ansatteTil: String = "",
+            iaStatus: String = "",
+            side: String = "",
+            kunMineVirksomheter: Boolean = false,
+            bransjeProgram: String = "",
+            skalInkludereTotaltAntall: Boolean = true,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            hentSykefraværRespons(
+                kvartal = kvartal,
+                årstall = årstall,
+                kommuner = kommuner,
+                fylker = fylker,
+                næringsgrupper = næringsgrupper,
+                sorteringsnokkel = sorteringsnokkel,
+                sorteringsretning = sorteringsretning,
+                sykefraværsprosentFra = sykefraværsprosentFra,
+                sykefraværsprosentTil = sykefraværsprosentTil,
+                ansatteFra = ansatteFra,
+                ansatteTil = ansatteTil,
+                iaStatus = iaStatus,
+                side = side,
+                kunMineVirksomheter = kunMineVirksomheter,
+                bransjeProgram = bransjeProgram,
+                skalInkludereTotaltAntall = skalInkludereTotaltAntall,
+                token = token
+            ).third.get()
 
         fun hentSykefraværRespons(
             kvartal: String = "",
@@ -352,20 +389,17 @@ class StatistikkHelper {
                 .fold(success = { response -> response }, failure = { fail(it.message) })
 
         fun hentSykefraværForAlleVirksomheter(): List<SykefraversstatistikkVirksomhetDto> {
-            val sykefraværsstatistikk = mutableListOf<SykefraversstatistikkVirksomhetDto>()
-            hentSykefravær(success = { response ->
-                val total = requireNotNull(response.total) { "Total ble null i hentSykefravær" }
-                sykefraværsstatistikk.addAll(response.data)
+            val resultatside = hentSykefravær(side = "1")
 
-                val antallSider = total / VIRKSOMHETER_PER_SIDE
-                (2..antallSider).map { it.toString() }.forEach { side ->
-                    hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
-                        sykefraværsstatistikk.addAll(response.data)
-                    }, side = side)
-                }
-            }, side = "1")
+            val antallVirksomheter = requireNotNull(resultatside.total) { "Total ble null i hentSykefravær" }
+            val sykefraværForAlleVirksomheter = resultatside.data.toMutableList()
 
-            return sykefraværsstatistikk.toList()
+            val antallSider = antallVirksomheter / VIRKSOMHETER_PER_SIDE
+            (2..antallSider).map { it.toString() }.forEach { side ->
+                sykefraværForAlleVirksomheter.addAll(hentSykefravær(side = side, skalInkludereTotaltAntall = false).data)
+            }
+
+            return sykefraværForAlleVirksomheter.toList()
         }
     }
 }
