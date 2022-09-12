@@ -19,6 +19,7 @@ import no.nav.lydia.sykefraversstatistikk.import.NæringSykefravær
 import no.nav.lydia.sykefraversstatistikk.import.NæringsundergruppeSykefravær
 import no.nav.lydia.sykefraversstatistikk.import.SektorSykefravær
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
@@ -231,6 +232,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         
         ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
         ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
+        AND virksomhet.status = '${VirksomhetStatus.AKTIV.name}'
         """.trimIndent()
 
 

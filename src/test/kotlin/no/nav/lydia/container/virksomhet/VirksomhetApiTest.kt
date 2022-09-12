@@ -112,6 +112,5 @@ class VirksomhetApiTest {
                     token = mockOAuthContainer.saksbehandler1.token
             ).also { it.status shouldBe VirksomhetStatus.FJERNET }
         }
-
     }
 }
