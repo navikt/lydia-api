@@ -389,17 +389,15 @@ class StatistikkHelper {
                 .fold(success = { response -> response }, failure = { fail(it.message) })
 
         fun hentSykefraværForAlleVirksomheter(): List<SykefraversstatistikkVirksomhetDto> {
-            val resultatside = hentSykefravær(side = "1")
-
-            val antallVirksomheter = requireNotNull(resultatside.total) { "Total ble null i hentSykefravær" }
-            val sykefraværForAlleVirksomheter = resultatside.data.toMutableList()
-
+            val førsteResultatside = hentSykefravær(side = "1")
+            val antallVirksomheter = requireNotNull(førsteResultatside.total) { "Total ble null i hentSykefravær" }
             val antallSider = antallVirksomheter / VIRKSOMHETER_PER_SIDE
-            (2..antallSider).map { it.toString() }.forEach { side ->
-                sykefraværForAlleVirksomheter.addAll(hentSykefravær(side = side, skalInkludereTotaltAntall = false).data)
-            }
 
-            return sykefraværForAlleVirksomheter.toList()
+            fun hentSiderFraSøkeresultat(sider: IntRange) =
+                sider.flatMap { side ->
+                    hentSykefravær(side = side.toString(), skalInkludereTotaltAntall = false).data
+                }
+            return listOf( førsteResultatside.data, hentSiderFraSøkeresultat((2 .. antallSider))).flatten()
         }
     }
 }
