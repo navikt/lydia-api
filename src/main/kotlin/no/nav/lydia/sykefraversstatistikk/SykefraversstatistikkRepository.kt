@@ -18,14 +18,15 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
-    fun insert(sykefraværsStatistikkListe: List<BehandletImportStatistikk>) {
+    fun insert(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                tx.insertVirksomhetsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.virksomhetSykefravær })
-                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.sektorSykefravær }.toSet())
-                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.næringSykefravær }.toSet())
-                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.flatMap { it.næring5SifferSykefravær }.toSet())
-                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.landSykefravær }.toSet())
+                tx.insertVirksomhetsstatistikk(sykefraværsStatistikkListe = behandletImportStatistikkListe.map { it.virksomhetSykefravær })
+                tx.insertMetadataForVirksomhet(behandletImportStatistikk = behandletImportStatistikkListe)
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = behandletImportStatistikkListe.map { it.sektorSykefravær }.toSet())
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = behandletImportStatistikkListe.map { it.næringSykefravær }.toSet())
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }.toSet())
+                tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = behandletImportStatistikkListe.map { it.landSykefravær }.toSet())
             }
         }
     }
@@ -337,28 +338,31 @@ private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatist
                 )
             ).asUpdate
         )
+    }
 
+private fun TransactionalSession.insertMetadataForVirksomhet(behandletImportStatistikk: List<BehandletImportStatistikk>) =
+    behandletImportStatistikk.forEach { sykefraværsStatistikk ->
         run(
             queryOf(
                 """
-                        INSERT INTO virksomhet_statistikk_metadata(
-                            orgnr,
-                            kategori,
-                            sektor
-                        )
-                        VALUES(
-                            :orgnr,
-                            :kategori,
-                            :sektor
-                        )
-                        ON CONFLICT (orgnr) DO UPDATE SET
-                            kategori = :kategori,
-                            sektor = :sektor
-                    """.trimIndent(),
+                            INSERT INTO virksomhet_statistikk_metadata(
+                                orgnr,
+                                kategori,
+                                sektor
+                            )
+                            VALUES(
+                                :orgnr,
+                                :kategori,
+                                :sektor
+                            )
+                            ON CONFLICT (orgnr) DO UPDATE SET
+                                kategori = :kategori,
+                                sektor = :sektor
+                        """.trimIndent(),
                 mapOf(
                     "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
                     "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
-                    "sektor" to sykefraværsStatistikk.sektorSykefravær.kode
+                    "sektor" to sykefraværsStatistikk.sektorSykefravær.sektor
                 )
             ).asUpdate
         )
@@ -377,6 +381,69 @@ private fun AggregertSykefraværsstatistikk.tilKolonnenavn() = when (this) {
     is SektorSykefravær -> "sektor_kode"
     is LandSykefravær -> "land"
 }
+
+private fun BehandletKvartalsvisSykefraværsstatistikk.tilKolonnenavn() = when (this) {
+//    is BehandletNæringSykefraværsstatistikk -> "naring"
+//    is NæringsundergruppeSykefravær -> "naringsundergruppe"
+//    is SektorSykefravær -> "sektor_kode"
+//    is LandSykefravær -> "land"
+}
+
+private fun TransactionalSession.insertBehandletVirksomhetStatistikk(
+    behandletLandStatistikkListe: List<BehandletLandSykefraværsstatistikk>
+) = this.insertKvartalsvisSykefraværsstatistikk(
+    kvartalsvisSykefraværsstatistikkListe = behandletLandStatistikkListe,
+    tabell = "sykefravar_statistikk_land",
+    kolonne = "sykefravar_statistikk_land",
+    tabell = "sykefravar_statistikk_land",
+)
+
+private fun TransactionalSession.insertKvartalsvisSykefraværsstatistikk(
+    kvartalsvisSykefraværsstatistikkListe: List<KvartalsvisSykefraværsstatistikk>,
+    tabell: String,
+    kolonne: String,
+    kolonneVerdi: String,
+) =
+    kvartalsvisSykefraværsstatistikkListe.forEach { kvartalsvisSykefraværsstatistikk ->
+        run(
+            queryOf(
+                """
+                    INSERT INTO ${tabell}(
+                        arstall,
+                        kvartal,
+                        ${kolonne},
+                        antall_personer,
+                        tapte_dagsverk,
+                        mulige_dagsverk,
+                        prosent,
+                        maskert
+                    )
+                    VALUES(
+                        :arstall,
+                        :kvartal,
+                        :kolonneVerdi,
+                        :antall_personer,
+                        :tapte_dagsverk,
+                        :mulige_dagsverk,
+                        :prosent,
+                        :maskert
+                    )
+                    ON CONFLICT DO NOTHING
+                """.trimIndent(),
+                mapOf(
+                    "arstall" to kvartalsvisSykefraværsstatistikk.årstall,
+                    "kvartal" to kvartalsvisSykefraværsstatistikk.kvartal,
+                    "kolonneVerdi" to kolonneVerdi,
+                    "antall_personer" to kvartalsvisSykefraværsstatistikk.antallPersoner,
+                    "tapte_dagsverk" to kvartalsvisSykefraværsstatistikk.tapteDagsverk,
+                    "mulige_dagsverk" to kvartalsvisSykefraværsstatistikk.muligeDagsverk,
+                    "prosent" to kvartalsvisSykefraværsstatistikk.prosent,
+                    "maskert" to kvartalsvisSykefraværsstatistikk.maskert,
+                )
+            ).asUpdate
+        )
+    }
+
 
 private fun TransactionalSession.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe: Collection<AggregertSykefraværsstatistikk>) =
     sykefraværsStatistikkListe.forEach { sykefraværsstatistikk ->

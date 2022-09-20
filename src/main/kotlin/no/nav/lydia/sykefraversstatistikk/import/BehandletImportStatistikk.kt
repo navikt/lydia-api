@@ -89,7 +89,7 @@ class BehandletVirksomhetSykefraværsstatistikk constructor(
     }
 }
 
-data class BehandletImportStatistikk private constructor(
+data class BehandletImportStatistikk constructor(
     val næringSykefravær: BehandletNæringSykefraværsstatistikk,
     val næring5SifferSykefravær: List<BehandletNæringsundergruppeSykefraværsstatistikk>,
     val virksomhetSykefravær: BehandletVirksomhetSykefraværsstatistikk,
@@ -97,13 +97,16 @@ data class BehandletImportStatistikk private constructor(
     val sektorSykefravær: BehandletSektorSykefraværsstatistikk
 ) {
     companion object {
-        fun tilBehandletStatistikk(importDto: SykefraversstatistikkImportDto) =
+        fun SykefraversstatistikkImportDto.tilBehandletStatistikk() =
             BehandletImportStatistikk(
-                næringSykefravær = importDto.næringSykefravær.tilBehandletStatistikk(),
-                næring5SifferSykefravær = importDto.næring5SifferSykefravær.map { it.tilBehandletStatistikk() },
-                virksomhetSykefravær = importDto.virksomhetSykefravær.tilBehandletStatistikk(),
-                landSykefravær = importDto.landSykefravær.tilBehandletStatistikk(),
-                sektorSykefravær = importDto.sektorSykefravær.tilBehandletStatistikk(),
+                næringSykefravær = this.næringSykefravær.tilBehandletStatistikk(),
+                næring5SifferSykefravær = this.næring5SifferSykefravær.map { it.tilBehandletStatistikk() },
+                virksomhetSykefravær = this.virksomhetSykefravær.tilBehandletStatistikk(),
+                landSykefravær = this.landSykefravær.tilBehandletStatistikk(),
+                sektorSykefravær = this.sektorSykefravær.tilBehandletStatistikk(),
             )
+
+        fun List<SykefraversstatistikkImportDto>.tilBehandletStatistikk() =
+            this.map { it.tilBehandletStatistikk() }
     }
 }
