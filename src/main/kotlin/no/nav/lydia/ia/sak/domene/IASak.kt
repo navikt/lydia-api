@@ -2,6 +2,15 @@ package no.nav.lydia.ia.sak.domene
 
 import kotliquery.Row
 import no.nav.lydia.ia.grunnlag.GrunnlagService
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
@@ -45,16 +54,18 @@ class IASak private constructor(
 
     private fun tilstandFraStatus(status: IAProsessStatus): ProsessTilstand {
         return when (status) {
-            IAProsessStatus.NY -> StartTilstand()
-            IAProsessStatus.VURDERES -> VurderesTilstand()
-            IAProsessStatus.IKKE_AKTUELL -> IkkeAktuellTilstand()
-            IAProsessStatus.KONTAKTES -> KontaktesTilstand()
-            IAProsessStatus.KARTLEGGES -> KartleggesTilstand()
-            IAProsessStatus.VI_BISTÅR -> ViBistårTilstand()
-            IAProsessStatus.FULLFØRT -> FullførtTilstand()
-            IAProsessStatus.IKKE_AKTIV -> throw IllegalStateException()
+            NY -> StartTilstand()
+            VURDERES -> VurderesTilstand()
+            IKKE_AKTUELL -> IkkeAktuellTilstand()
+            KONTAKTES -> KontaktesTilstand()
+            KARTLEGGES -> KartleggesTilstand()
+            VI_BISTÅR -> ViBistårTilstand()
+            FULLFØRT -> FullførtTilstand()
+            IKKE_AKTIV -> throw IllegalStateException()
         }
     }
+
+    fun ansesSomAvsluttet() = status == IKKE_AKTUELL || status == FULLFØRT
 
     fun lagreGrunnlag(grunnlagService: GrunnlagService) = tilstand.lagreGrunnlag(grunnlagService)
 
@@ -128,7 +139,7 @@ class IASak private constructor(
         }
 
         open fun tilbake() {
-           håndterFeilState()
+            håndterFeilState()
         }
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
@@ -150,7 +161,7 @@ class IASak private constructor(
     }
 
     private inner class StartTilstand : ProsessTilstand(
-        status = IAProsessStatus.NY
+        status = NY
     ) {
         override fun prosesser() {
             tilstand = VurderesTilstand()
@@ -160,7 +171,7 @@ class IASak private constructor(
     }
 
     private inner class VurderesTilstand : ProsessTilstand(
-        status = IAProsessStatus.VURDERES
+        status = VURDERES
     ) {
         override fun ikkeAktuell() {
             tilstand = IkkeAktuellTilstand()
@@ -196,7 +207,7 @@ class IASak private constructor(
     }
 
     private inner class KontaktesTilstand : ProsessTilstand(
-        status = IAProsessStatus.KONTAKTES
+        status = KONTAKTES
     ) {
 
         override fun ikkeAktuell() {
@@ -232,7 +243,7 @@ class IASak private constructor(
     }
 
     private inner class KartleggesTilstand : ProsessTilstand(
-        status = IAProsessStatus.KARTLEGGES
+        status = KARTLEGGES
     ) {
         override fun prosesser() {
             tilstand = ViBistårTilstand()
@@ -268,7 +279,7 @@ class IASak private constructor(
     }
 
     private inner class ViBistårTilstand : ProsessTilstand(
-        status = IAProsessStatus.VI_BISTÅR
+        status = VI_BISTÅR
     ) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
@@ -301,22 +312,35 @@ class IASak private constructor(
             tilstand = IkkeAktuellTilstand()
         }
     }
+
     private inner class FullførtTilstand : ProsessTilstand(
-        status = IAProsessStatus.FULLFØRT
+        status = FULLFØRT
     ) {
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when(rådgiver.rolle) {
+            SUPERBRUKER -> listOf(GyldigHendelse(OPPRETT_SAK_FOR_VIRKSOMHET))
+            else -> emptyList()
+        }
     }
 
 
     private inner class IkkeAktuellTilstand : ProsessTilstand(
-        status = IAProsessStatus.IKKE_AKTUELL
+        status = IKKE_AKTUELL
     ) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> =
             when (rådgiver.rolle) {
                 LESE -> emptyList()
-                SAKSBEHANDLER, SUPERBRUKER -> {
-                    if (erEierAvSak(rådgiver= rådgiver)) listOf(GyldigHendelse(saksHendelsestype = TILBAKE))
-                    else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                SAKSBEHANDLER,
+                SUPERBRUKER -> {
+                    val hendelser = mutableListOf<GyldigHendelse>()
+                    if (erEierAvSak(rådgiver = rådgiver)) {
+                        hendelser.add(GyldigHendelse(saksHendelsestype = TILBAKE))
+                    } else {
+                        hendelser.add(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                    }
+                    if (rådgiver.rolle == SUPERBRUKER) {
+                        hendelser.add(GyldigHendelse(OPPRETT_SAK_FOR_VIRKSOMHET))
+                    }
+                    hendelser
                 }
             }
 
@@ -336,7 +360,7 @@ class IASak private constructor(
                 endretTidspunkt = null,
                 endretAv = null,
                 endretAvHendelseId = hendelse.id,
-                status = IAProsessStatus.NY
+                status = NY
             )
                 .also { sak -> sak.sakshendelser.add(hendelse) }
 
@@ -356,7 +380,7 @@ class IASak private constructor(
                 opprettetAv = this.string("opprettet_av"),
                 endretTidspunkt = this.localDateTimeOrNull("endret"),
                 endretAv = this.stringOrNull("endret_av"),
-                status = IAProsessStatus.valueOf(this.string("status")),
+                status = valueOf(this.string("status")),
                 endretAvHendelseId = this.string("endret_av_hendelse"),
                 eidAv = this.stringOrNull("eid_av")
             )

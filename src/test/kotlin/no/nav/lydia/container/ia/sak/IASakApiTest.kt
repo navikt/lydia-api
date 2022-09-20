@@ -14,7 +14,7 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
@@ -37,9 +37,30 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_KARTLEGGES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_BISTÅS
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TID
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MANGLER_PARTSGRUPPE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MINDRE_VIRKSOMHET
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
@@ -72,7 +93,7 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .also {
-                it.status shouldBe IAProsessStatus.KONTAKTES
+                it.status shouldBe KONTAKTES
             }
     }
 
@@ -104,7 +125,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal ikke kunne opprette to saker på en virksomhet i første MVP (Men bør kunne gjøre det på sikt)`() {
+    fun `skal ikke kunne opprette ny sak hvis det allerede finnes en åpen sak`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhetRespons(
             orgnummer = orgnummer,
@@ -115,6 +136,62 @@ class IASakApiTest {
             orgnummer = orgnummer,
             token = mockOAuth2Server.superbruker1.token
         ).statuskode() shouldBe 501
+    }
+
+    @Test
+    fun `skal kunne opprette ny sak dersom de andre sakene anses som ikke aktuell`() {
+        val orgnummer = nyttOrgnummer()
+        var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .also { sak ->
+                shouldFail {
+                    sak.nyHendelse(FULLFØR_BISTAND)
+                }
+            }
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        sak.status shouldBe VI_BISTÅR
+
+        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+            .statuskode() shouldBe 501
+
+        sak = sak.nyHendelse(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+            type = VIRKSOMHETEN_TAKKET_NEI,
+            begrunnelser = listOf(HAR_IKKE_KAPASITET)
+        ).toJson())
+        sak.status shouldBe IKKE_AKTUELL
+
+        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+            .statuskode() shouldBe 201
+
+        hentSaker(orgnummer = orgnummer).size shouldBe 2
+    }
+
+    @Test
+    fun `skal kunne opprette ny sak dersom de andre sakene anses som ikke fullført`() {
+        val orgnummer = nyttOrgnummer()
+        var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .also { sak ->
+                shouldFail {
+                    sak.nyHendelse(FULLFØR_BISTAND)
+                }
+            }
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        sak.status shouldBe VI_BISTÅR
+
+        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+            .statuskode() shouldBe 501
+
+        sak = sak.nyHendelse(FULLFØR_BISTAND)
+        sak.status shouldBe FULLFØRT
+
+        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+            .statuskode() shouldBe 201
+        hentSaker(orgnummer = orgnummer).size shouldBe 2
     }
 
     @Test
@@ -297,7 +374,7 @@ class IASakApiTest {
         val iaSaker = hentSaker(orgnummer)
         iaSaker.forAtLeastOne {
             it.orgnr shouldBe orgnummer
-            it.status shouldBe IAProsessStatus.VURDERES
+            it.status shouldBe VURDERES
             it.opprettetAv shouldBe mockOAuth2Server.superbruker1.navIdent
             it.saksnummer shouldBe sak.saksnummer
         }
@@ -305,7 +382,7 @@ class IASakApiTest {
         nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
             it.orgnr shouldBe orgnummer
             it.saksnummer shouldBe sak.saksnummer
-            it.status shouldBe IAProsessStatus.VURDERES
+            it.status shouldBe VURDERES
             it.opprettetAv shouldBe sak.opprettetAv
             it.eidAv shouldBe mockOAuth2Server.saksbehandler1.navIdent
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
@@ -366,10 +443,10 @@ class IASakApiTest {
             val sakshistorikk = samarbeidshistorikk.first()
             sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
                 IAProsessStatus.NY,
-                IAProsessStatus.VURDERES,
-                IAProsessStatus.VURDERES,
-                IAProsessStatus.KONTAKTES,
-                IAProsessStatus.IKKE_AKTUELL
+                VURDERES,
+                VURDERES,
+                KONTAKTES,
+                IKKE_AKTUELL
             )
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainExactly listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
@@ -604,7 +681,7 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(TILBAKE)
-        sak.status shouldBe IAProsessStatus.VURDERES
+        sak.status shouldBe VURDERES
     }
 
     @Test
@@ -639,7 +716,7 @@ class IASakApiTest {
                 ).toJson()
             )
             .nyHendelse(TILBAKE)
-        sak.status shouldBe IAProsessStatus.VURDERES
+        sak.status shouldBe VURDERES
     }
 
     @Test

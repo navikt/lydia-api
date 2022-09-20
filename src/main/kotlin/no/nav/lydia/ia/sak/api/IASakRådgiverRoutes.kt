@@ -139,7 +139,7 @@ object IASakError {
     val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
     val `Kan ikke oppdatere sak på NAV-kontor` = Feil("Kan ikke oppdatere saker på NAV-kontorer", HttpStatusCode.UnprocessableEntity)
-    val `støtter ikke flere saker for en virksomhet ennå` = Feil(
-        "Støtter ikke flere saker for en virksomhet ennå", HttpStatusCode.NotImplemented
+    val `det finnes flere saker på dette orgnummeret som ikke anses som avsluttet` = Feil(
+        "Det finnes flere saker på dette orgnummeret som ikke anses som avsluttet", HttpStatusCode.NotImplemented
     )
 }
