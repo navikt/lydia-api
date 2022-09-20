@@ -2,10 +2,20 @@ package no.nav.lydia.ia.sak.domene
 
 import kotliquery.Row
 import no.nav.lydia.ia.grunnlag.GrunnlagService
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_KARTLEGGES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_BISTÅS
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.LESE
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SAKSBEHANDLER
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SUPERBRUKER
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
@@ -68,26 +78,18 @@ class IASak private constructor(
 
     fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
-            VIRKSOMHET_VURDERES -> {
-                tilstand.vurderes()
+            VIRKSOMHET_VURDERES,
+            VIRKSOMHET_SKAL_KONTAKTES,
+            VIRKSOMHET_KARTLEGGES,
+            VIRKSOMHET_SKAL_BISTÅS,
+            FULLFØR_BISTAND -> {
+                tilstand.prosesser()
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
                 when (hendelse) {
                     is VirksomhetIkkeAktuellHendelse -> tilstand.behandleHendelse(hendelse = hendelse)
                     else -> tilstand.ikkeAktuell() // TODO...
                 }
-            }
-            VIRKSOMHET_SKAL_KONTAKTES -> {
-                tilstand.kontaktes()
-            }
-            VIRKSOMHET_KARTLEGGES -> {
-                tilstand.kartlegges()
-            }
-            VIRKSOMHET_SKAL_BISTÅS -> {
-                tilstand.viBistår()
-            }
-            FULLFØR_BISTAND -> {
-                tilstand.fullfør()
             }
             TA_EIERSKAP_I_SAK -> {
                 eidAv = hendelse.opprettetAv
@@ -113,26 +115,11 @@ class IASak private constructor(
     }
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
-        open fun vurderes() {
-            håndterFeilState()
-        }
-
         open fun ikkeAktuell() {
             håndterFeilState()
         }
 
-        open fun kontaktes() {
-            håndterFeilState()
-        }
-        open fun kartlegges() {
-            håndterFeilState()
-        }
-
-        open fun viBistår() {
-            håndterFeilState()
-        }
-
-        open fun fullfør() {
+        open fun prosesser() {
             håndterFeilState()
         }
 
@@ -165,7 +152,7 @@ class IASak private constructor(
     private inner class StartTilstand : ProsessTilstand(
         status = IAProsessStatus.NY
     ) {
-        override fun vurderes() {
+        override fun prosesser() {
             tilstand = VurderesTilstand()
         }
 
@@ -184,7 +171,7 @@ class IASak private constructor(
             super.oppdaterStandardFelter(hendelse = hendelse)
         }
 
-        override fun kontaktes() {
+        override fun prosesser() {
             if (eidAv.isNullOrEmpty()) {
                 håndterFeilState("En virksomhet kan ikke kontaktes før saken har en eier")
             }
@@ -216,7 +203,7 @@ class IASak private constructor(
             tilstand = IkkeAktuellTilstand()
         }
 
-        override fun kartlegges() {
+        override fun prosesser() {
             tilstand = KartleggesTilstand()
         }
 
@@ -247,7 +234,7 @@ class IASak private constructor(
     private inner class KartleggesTilstand : ProsessTilstand(
         status = IAProsessStatus.KARTLEGGES
     ) {
-        override fun viBistår() {
+        override fun prosesser() {
             tilstand = ViBistårTilstand()
         }
 
@@ -297,7 +284,7 @@ class IASak private constructor(
             }
         }
 
-        override fun fullfør() {
+        override fun prosesser() {
             tilstand = FullførtTilstand()
         }
 
