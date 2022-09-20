@@ -52,7 +52,7 @@ fun Route.iaSakRådgiver(
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            iaSakService.hentSakerForOrgnummer(orgnummer).toDto(rådgiver = rådgiver).right()
+            iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }.toDto(rådgiver = rådgiver).right()
         }.also { either ->
             auditLog.auditloggEither(
                 call = call,
