@@ -13,20 +13,15 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
-import no.nav.lydia.sykefraversstatistikk.import.AggregertSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.LandSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.NæringSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.NæringsundergruppeSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.SektorSykefravær
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
-    fun insert(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) {
+    fun insert(sykefraværsStatistikkListe: List<BehandletImportStatistikk>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                tx.insertVirksomhetsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe)
+                tx.insertVirksomhetsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.virksomhetSykefravær })
                 tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.sektorSykefravær }.toSet())
                 tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.map { it.næringSykefravær }.toSet())
                 tx.insertAggregertSykefraværsstatistikk(sykefraværsStatistikkListe = sykefraværsStatistikkListe.flatMap { it.næring5SifferSykefravær }.toSet())
@@ -297,7 +292,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 }
 
-private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatistikkListe: List<SykefraversstatistikkImportDto>) =
+private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatistikkListe: List<BehandletVirksomhetSykefraværsstatistikk>) =
     sykefraværsStatistikkListe.forEach { sykefraværsStatistikk ->
         run(
             queryOf(
@@ -331,14 +326,14 @@ private fun TransactionalSession.insertVirksomhetsstatistikk(sykefraværsStatist
                             endret = now()
                         """.trimMargin(),
                 mapOf(
-                    "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
-                    "arstall" to sykefraværsStatistikk.virksomhetSykefravær.årstall,
-                    "kvartal" to sykefraværsStatistikk.virksomhetSykefravær.kvartal,
-                    "antall_personer" to sykefraværsStatistikk.virksomhetSykefravær.antallPersoner,
-                    "tapte_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.tapteDagsverk,
-                    "mulige_dagsverk" to sykefraværsStatistikk.virksomhetSykefravær.muligeDagsverk,
-                    "sykefraversprosent" to sykefraværsStatistikk.virksomhetSykefravær.prosent,
-                    "maskert" to sykefraværsStatistikk.virksomhetSykefravær.maskert
+                    "orgnr" to sykefraværsStatistikk.orgnr,
+                    "arstall" to sykefraværsStatistikk.årstall,
+                    "kvartal" to sykefraværsStatistikk.kvartal,
+                    "antall_personer" to sykefraværsStatistikk.antallPersoner,
+                    "tapte_dagsverk" to sykefraværsStatistikk.tapteDagsverk,
+                    "mulige_dagsverk" to sykefraværsStatistikk.muligeDagsverk,
+                    "sykefraversprosent" to sykefraværsStatistikk.prosent,
+                    "maskert" to sykefraværsStatistikk.maskert
                 )
             ).asUpdate
         )

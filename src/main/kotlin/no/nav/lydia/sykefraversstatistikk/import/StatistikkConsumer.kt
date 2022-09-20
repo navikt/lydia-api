@@ -82,6 +82,11 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
         }
     }
 
+    private fun List<SykefraversstatistikkImportDto>.tilBehandletStatistikk() =
+        this.map {
+
+        }
+
     fun isRunning(): Boolean {
         logger.trace("Asked if running")
         return job.isActive
