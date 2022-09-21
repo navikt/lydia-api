@@ -295,6 +295,57 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 }
 
+private fun TransactionalSession.insertMetadataForVirksomhet(behandletImportStatistikk: List<BehandletImportStatistikk>) =
+    behandletImportStatistikk.forEach { sykefraværsStatistikk ->
+        run(
+            queryOf(
+                """
+                            INSERT INTO virksomhet_statistikk_metadata(
+                                orgnr,
+                                kategori,
+                                sektor
+                            )
+                            VALUES(
+                                :orgnr,
+                                :kategori,
+                                :sektor
+                            )
+                            ON CONFLICT (orgnr) DO UPDATE SET
+                                kategori = :kategori,
+                                sektor = :sektor
+                        """.trimIndent(),
+                mapOf(
+                    "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
+                    "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
+                    "sektor" to sykefraværsStatistikk.sektorSykefravær.sektor
+                )
+            ).asUpdate
+        )
+    }
+
+private fun BehandletKvartalsvisSykefraværsstatistikk.tilStatistikkSpesifikkVerdi() = when (this) {
+    is BehandletLandSykefraværsstatistikk -> this.land
+    is BehandletNæringSykefraværsstatistikk -> this.næring
+    is BehandletNæringsundergruppeSykefraværsstatistikk -> this.næringsundergruppe
+    is BehandletSektorSykefraværsstatistikk -> this.sektor
+    is BehandletVirksomhetSykefraværsstatistikk -> this.orgnr
+}
+
+private fun TransactionalSession.insertBehandletImportStatistikk(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
+    insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe = behandletImportStatistikkListe.map { it.virksomhetSykefravær })
+    insertMetadataForVirksomhet(behandletImportStatistikk = behandletImportStatistikkListe)
+
+    insertBehandletSektorStatistikk(behandletSektorSykefraværsstatistikk = behandletImportStatistikkListe.map { it.sektorSykefravær }
+        .toSet())
+    insertBehandletNæringsStatistikk(behandletNæringSykefraværsstatistikk = behandletImportStatistikkListe.map { it.næringSykefravær }
+        .toSet())
+    insertBehandletNæringsundergruppeStatistikk(behandletNæringsundergruppeSykefraværsstatistikk = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }
+        .toSet())
+    insertBehandletLandStatistikk(behandletLandSykefraværsstatistikk = behandletImportStatistikkListe.map { it.landSykefravær }
+        .toSet())
+}
+
+
 private fun TransactionalSession.insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe: List<BehandletVirksomhetSykefraværsstatistikk>) =
     behandletVirksomhetStatistikkListe.forEach { sykefraværsStatistikk ->
         run(
@@ -342,78 +393,49 @@ private fun TransactionalSession.insertVirksomhetsstatistikk(behandletVirksomhet
         )
     }
 
-private fun TransactionalSession.insertMetadataForVirksomhet(behandletImportStatistikk: List<BehandletImportStatistikk>) =
-    behandletImportStatistikk.forEach { sykefraværsStatistikk ->
-        run(
-            queryOf(
-                """
-                            INSERT INTO virksomhet_statistikk_metadata(
-                                orgnr,
-                                kategori,
-                                sektor
-                            )
-                            VALUES(
-                                :orgnr,
-                                :kategori,
-                                :sektor
-                            )
-                            ON CONFLICT (orgnr) DO UPDATE SET
-                                kategori = :kategori,
-                                sektor = :sektor
-                        """.trimIndent(),
-                mapOf(
-                    "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
-                    "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
-                    "sektor" to sykefraværsStatistikk.sektorSykefravær.sektor
-                )
-            ).asUpdate
-        )
-    }
+private fun TransactionalSession.insertBehandletSektorStatistikk(behandletSektorSykefraværsstatistikk: Collection<BehandletSektorSykefraværsstatistikk>) =
+    insertBehandletSykefraværsstatistikk(
+        tabellNavn = "sykefravar_statistikk_sektor",
+        kolonneNavn = "sektor_kode",
+        behandletStatistikkListe = behandletSektorSykefraværsstatistikk
+    )
 
-private fun BehandletKvartalsvisSykefraværsstatistikk.tilTabellnavn() = when (this) {
-    is BehandletLandSykefraværsstatistikk -> "sykefravar_statistikk_land"
-    is BehandletNæringSykefraværsstatistikk -> "sykefravar_statistikk_naring"
-    is BehandletNæringsundergruppeSykefraværsstatistikk -> "sykefravar_statistikk_naringsundergruppe"
-    is BehandletSektorSykefraværsstatistikk -> "sykefravar_statistikk_sektor"
-    is BehandletVirksomhetSykefraværsstatistikk -> throw IllegalStateException()
-}
+private fun TransactionalSession.insertBehandletNæringsStatistikk(behandletNæringSykefraværsstatistikk: Collection<BehandletNæringSykefraværsstatistikk>) =
+    insertBehandletSykefraværsstatistikk(
+        tabellNavn = "sykefravar_statistikk_naring",
+        kolonneNavn = "naring",
+        behandletStatistikkListe = behandletNæringSykefraværsstatistikk
+    )
 
-private fun BehandletKvartalsvisSykefraværsstatistikk.tilKolonnenavn() = when (this) {
-    is BehandletLandSykefraværsstatistikk -> "land"
-    is BehandletNæringSykefraværsstatistikk -> "naring"
-    is BehandletNæringsundergruppeSykefraværsstatistikk -> "naringsundergruppe"
-    is BehandletSektorSykefraværsstatistikk -> "sektor_kode"
-    is BehandletVirksomhetSykefraværsstatistikk -> throw IllegalStateException()
-}
+private fun TransactionalSession.insertBehandletNæringsundergruppeStatistikk(
+    behandletNæringsundergruppeSykefraværsstatistikk: Collection<BehandletNæringsundergruppeSykefraværsstatistikk>
+) = insertBehandletSykefraværsstatistikk(
+    tabellNavn = "sykefravar_statistikk_naringsundergruppe",
+    kolonneNavn = "naringsundergruppe",
+    behandletStatistikkListe = behandletNæringsundergruppeSykefraværsstatistikk
+)
 
-private fun BehandletKvartalsvisSykefraværsstatistikk.tilStatistikkSpesifikkVerdi() = when (this) {
-    is BehandletLandSykefraværsstatistikk -> this.land
-    is BehandletNæringSykefraværsstatistikk -> this.næring
-    is BehandletNæringsundergruppeSykefraværsstatistikk -> this.næringsundergruppe
-    is BehandletSektorSykefraværsstatistikk -> this.sektor
-    is BehandletVirksomhetSykefraværsstatistikk -> this.orgnr
-}
-
-private fun TransactionalSession.insertBehandletImportStatistikk(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
-    insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe = behandletImportStatistikkListe.map { it.virksomhetSykefravær })
-    insertMetadataForVirksomhet(behandletImportStatistikk = behandletImportStatistikkListe)
-    insertBehandletSykefraværsstatistikk(behandletStatistikkListe = behandletImportStatistikkListe.map { it.sektorSykefravær }.toSet())
-    insertBehandletSykefraværsstatistikk(behandletStatistikkListe = behandletImportStatistikkListe.map { it.næringSykefravær }.toSet())
-    insertBehandletSykefraværsstatistikk(behandletStatistikkListe = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }.toSet())
-    insertBehandletSykefraværsstatistikk(behandletStatistikkListe = behandletImportStatistikkListe.map { it.landSykefravær }.toSet())
-}
+private fun TransactionalSession.insertBehandletLandStatistikk(behandletLandSykefraværsstatistikk: Collection<BehandletLandSykefraværsstatistikk>) =
+    insertBehandletSykefraværsstatistikk(
+        tabellNavn = "sykefravar_statistikk_land",
+        kolonneNavn = "land",
+        behandletStatistikkListe = behandletLandSykefraværsstatistikk
+    )
 
 
-
-private fun TransactionalSession.insertBehandletSykefraværsstatistikk(behandletStatistikkListe: Collection<BehandletKvartalsvisSykefraværsstatistikk>) =
+private fun TransactionalSession.insertBehandletSykefraværsstatistikk(
+    tabellNavn: String,
+    kolonneNavn: String,
+    behandletStatistikkListe: Collection<BehandletKvartalsvisSykefraværsstatistikk>
+) =
     behandletStatistikkListe.forEach { sykefraværsstatistikk ->
         run(
             queryOf(
                 """
-                    INSERT INTO ${sykefraværsstatistikk.tilTabellnavn()}(
+                    INSERT INTO $tabellNavn(
                         arstall,
                         kvartal,
-                        ${sykefraværsstatistikk.tilKolonnenavn()},
+                        $kolonneNavn,
                         antall_personer,
                         tapte_dagsverk,
                         mulige_dagsverk,
