@@ -1,7 +1,9 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import arrow.core.Either
+import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
@@ -122,7 +124,7 @@ class SykefraversstatistikkImportTest {
             it.antallPersoner shouldBe 100
             it.tapteDagsverk shouldBe 20.0
         }
-        hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getOrNull("endret").shouldBeNull()
+        hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet, "endret").getOrNull("endret").shouldBeNull()
 
         val opppdatertStatistikk = lagSykefraværsstatistikkImportDto(
             orgnr = virksomhet.orgnr,
@@ -139,7 +141,7 @@ class SykefraversstatistikkImportTest {
             it.tapteDagsverk shouldBe 16.0
         }
 
-        hentKolonneFraSykefraværsstatistikk(virksomhet, "endret").getOrNull("endret").shouldNotBeNull()
+        hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet, "endret").getOrNull("endret").shouldNotBeNull()
     }
 
     @Test
@@ -197,6 +199,29 @@ class SykefraversstatistikkImportTest {
         hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode) shouldBe LANDKODE_NO
     }
 
+    @Test
+    fun `vi stoler ikke på at sykefraværsstatistikken er maskert`() {
+        val importDto = SykefraværsstatistikkTestData.testVirksomhetSomFeilaktigIkkeErMaskert.sykefraværsstatistikkImportDto
+        listOf(
+            importDto.virksomhetSykefravær,
+            importDto.næringSykefravær,
+            importDto.sektorSykefravær,
+            importDto.landSykefravær,
+            *importDto.næring5SifferSykefravær.toTypedArray()
+        ).forAll {
+            it.maskert.shouldBeFalse()
+        }
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto)
+        hentSykefraværsstatistikk(importDto.virksomhetSykefravær.orgnr).forExactlyOne {
+            it.kvartal shouldBe importDto.virksomhetSykefravær.kvartal
+            it.arstall shouldBe importDto.virksomhetSykefravær.årstall
+            it.sykefraversprosent shouldBe 0.0
+            it.muligeDagsverk shouldBe 0.0
+            it.antallPersoner shouldBe 4.0
+            it.tapteDagsverk shouldBe 0.0
+        }
+    }
+
     private fun hentStatistikk(
         tabell: String,
         kolonne: String,
@@ -211,7 +236,7 @@ class SykefraversstatistikkImportTest {
         """.trimIndent()).getOrNull(kolonne)
 
 
-    private fun hentKolonneFraSykefraværsstatistikk(virksomhet: TestVirksomhet, kolonneNavn: String) =
+    private fun hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet: TestVirksomhet, kolonneNavn: String) =
         postgres.performQuery(
             """
                 select $kolonneNavn from sykefravar_statistikk_virksomhet 
@@ -221,7 +246,6 @@ class SykefraversstatistikkImportTest {
                 kvartal = ${Periode.gjeldendePeriode().kvartal}
             """.trimIndent()
         )
-
 
     private fun hentSykefraværsstatistikk(orgnr: String) =
         StatistikkHelper.hentSykefraværForVirksomhet(orgnummer = orgnr)

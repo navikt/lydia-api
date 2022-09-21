@@ -3,15 +3,15 @@ package no.nav.lydia.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
 import org.slf4j.LoggerFactory
 
 class SykefraværsstatistikkService(val sykefraversstatistikkRepository: SykefraversstatistikkRepository) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
-    fun lagre(sykefraværsstatistikkListe: List<SykefraversstatistikkImportDto>) {
+    fun lagre(sykefraværsstatistikkListe: List<BehandletImportStatistikk>) {
         val start = System.currentTimeMillis()
-        sykefraversstatistikkRepository.insert(sykefraværsStatistikkListe = sykefraværsstatistikkListe)
+        sykefraversstatistikkRepository.insert(behandletImportStatistikkListe = sykefraværsstatistikkListe)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre statistikk for ${sykefraværsstatistikkListe.size} virksomheter")
     }
 
