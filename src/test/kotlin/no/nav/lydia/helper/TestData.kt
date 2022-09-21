@@ -83,6 +83,10 @@ class TestData(
                 antallPersoner = 42.0,
                 sykefraværsProsent = 6.0
             )
+            lagData(
+                virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK,
+                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+            )
 
         }
         genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
@@ -184,7 +188,18 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: S
             antallPersoner = 6.0,
             sektor = "1"
         )
-    )
+    ),
+    testVirksomhetSomFeilaktigIkkeErMaskert(
+        sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
+            orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK.orgnr,
+            periode = Periode.forrigePeriode(),
+            antallPersoner = 4.0,
+            sykefraværsProsent = 10.0,
+            tapteDagsverk = 3000.0,
+            sektor = "1",
+            maskert = false
+        )
+    ),
 }
 
 fun lagSsbNæringInnslag(kode: String, navn: String) =
@@ -201,7 +216,6 @@ fun lagSsbNæringInnslag(kode: String, navn: String) =
 
 fun lagSykefraværsstatistikkImportDto(
     orgnr: String,
-
     periode: Periode,
     sykefraværsProsent: Double = 2.0,
     antallPersoner: Double = 6.0,
@@ -210,6 +224,7 @@ fun lagSykefraværsstatistikkImportDto(
     landKode: String = LANDKODE_NO,
     næring: String = NÆRING_JORDBRUK,
     næringsundergrupper: List<String> = listOf(DYRKING_AV_KORN.kode),
+    maskert: Boolean = false
 ) =
     SykefraversstatistikkImportDto(
         virksomhetSykefravær = SykefraværsstatistikkForVirksomhet(
@@ -220,7 +235,7 @@ fun lagSykefraværsstatistikkImportDto(
             antallPersoner = antallPersoner,
             tapteDagsverk = tapteDagsverk,
             muligeDagsverk = 500.0,
-            maskert = false,
+            maskert = maskert,
             kategori = "VIRKSOMHET"
         ),
         sektorSykefravær = SektorSykefravær(
@@ -231,7 +246,7 @@ fun lagSykefraværsstatistikkImportDto(
             tapteDagsverk = 1340.0,
             muligeDagsverk = 8000.0,
             antallPersoner = 33000.0,
-            maskert = false,
+            maskert = maskert,
             kategori = "SEKTOR"
         ),
         landSykefravær = LandSykefravær(
@@ -242,7 +257,7 @@ fun lagSykefraværsstatistikkImportDto(
             tapteDagsverk = 10000000.0,
             muligeDagsverk = 500000000.0,
             antallPersoner = 2500000.0,
-            maskert = false,
+            maskert = maskert,
             kategori = "LAND"
         ),
         næringSykefravær = NæringSykefravær(
@@ -253,7 +268,7 @@ fun lagSykefraværsstatistikkImportDto(
             muligeDagsverk = 5000.0,
             antallPersoner = 150.0,
             prosent = 2.0,
-            maskert = false,
+            maskert = maskert,
             kategori = "NÆRING2SIFFER"
         ),
         næring5SifferSykefravær = næringsundergrupper.map { næringsundergruppe ->
@@ -265,7 +280,7 @@ fun lagSykefraværsstatistikkImportDto(
                 muligeDagsverk = 4000.0,
                 antallPersoner = 1250.0,
                 prosent = 1.0,
-                maskert = false,
+                maskert = maskert,
                 kategori = "NÆRING5SIFFER"
             )
         }
