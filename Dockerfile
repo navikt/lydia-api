@@ -8,4 +8,4 @@ RUN addgroup -S app && adduser -S -G app app
 
 USER app
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-XX:+UseParallelGC", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
