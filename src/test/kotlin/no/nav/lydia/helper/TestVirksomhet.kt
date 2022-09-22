@@ -100,6 +100,7 @@ data class TestVirksomhet(
         val TESTVIRKSOMHET_FOR_STATUSFILTER = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_GRUNNLAG = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_OPPDATERING = nyVirksomhet()
+        val TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK = nyVirksomhet()
 
         fun nyVirksomhet(
             beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
