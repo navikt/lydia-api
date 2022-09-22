@@ -121,7 +121,7 @@ services:
 
   frontend:
     platform: linux/amd64
-    image: ghcr.io/navikt/lydia-radgiver-frontend:latest
+    image: lokal:frontend
     depends_on:
       - backend
       - redis

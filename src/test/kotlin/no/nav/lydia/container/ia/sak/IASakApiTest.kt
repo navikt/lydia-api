@@ -35,6 +35,7 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
@@ -189,9 +190,13 @@ class IASakApiTest {
         sak = sak.nyHendelse(FULLFØR_BISTAND)
         sak.status shouldBe FULLFØRT
 
-        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
-            .statuskode() shouldBe 201
-        hentSaker(orgnummer = orgnummer).size shouldBe 2
+        val sak2Respons = opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+        sak2Respons.statuskode() shouldBe 201
+        val sak2 = sak2Respons.third.get()
+
+        val sakerForVirksomheten = hentSaker(orgnummer = orgnummer)
+        sakerForVirksomheten.size shouldBe 2
+        sakerForVirksomheten.map(IASakDto::saksnummer) shouldContainExactly listOf(sak2.saksnummer, sak.saksnummer)
     }
 
     @Test

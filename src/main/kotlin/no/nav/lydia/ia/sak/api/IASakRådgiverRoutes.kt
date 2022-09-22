@@ -76,6 +76,7 @@ fun Route.iaSakRådgiver(
             iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
                 .groupBy { it.saksnummer }
                 .map { IASak.fraHendelser(it.value) }
+                .sortedByDescending { it.opprettetTidspunkt }
                 .right()
         }. also { either ->
             if (either.isLeft()) {
