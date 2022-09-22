@@ -533,6 +533,7 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    // TODO: Skriv denne testen på en annen måte, per i dag er den avhengig av resultatene fra andre tester
     fun `skal filtrere bort slettede og fjernede virksomheter`() {
         val virksomheterMedSykefravær = hentSykefraværForAlleVirksomheter().map { it.orgnr }
         val endredeVirksomheter = endredeVirksomheter.map { it.orgnr }
