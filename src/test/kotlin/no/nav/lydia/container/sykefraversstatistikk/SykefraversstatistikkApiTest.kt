@@ -19,9 +19,9 @@ import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.nyeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentAntallSider
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
@@ -145,8 +145,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på øst-viken fylke`() {
-        val virksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
-        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet)
+        val virksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        lastInnNyVirksomhet(nyVirksomhet = virksomhet)
         val alleKommunenummerIØstViken = GeografiService().hentKommunerFraFylkesnummer(listOf("Ø30")).map { it.nummer }
         hentSykefravær(
             fylker = "Ø30",
@@ -161,8 +161,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på en enkelt kommune i øst-viken`() {
-        val virksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
-        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet)
+        val virksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        lastInnNyVirksomhet(nyVirksomhet = virksomhet)
         hentSykefravær(
             kommuner = INDRE_ØSTFOLD.nummer,
             success = {response ->
@@ -176,10 +176,10 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kun få treff fra kommuner definert i søkeparemeter og ikke fra hele fylke (hvis man spesifiserer fylke)`() {
-        val virksomhet1 = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
-        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet1)
-        val virksomhet2 = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = LUNNER))
-        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet2)
+        val virksomhet1 = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        lastInnNyVirksomhet(nyVirksomhet = virksomhet1)
+        val virksomhet2 = nyVirksomhet(beliggenhet = beliggenhet(kommune = LUNNER))
+        lastInnNyVirksomhet(nyVirksomhet = virksomhet2)
         hentSykefravær(
             fylker = "Ø30",
             kommuner = LUNNER.nummer,
@@ -194,8 +194,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på kommuner utenfor øst-viken samt fylke øst-viken`() {
-        val virksomhet = TestVirksomhet.nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
-        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = virksomhet)
+        val virksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
+        lastInnNyVirksomhet(nyVirksomhet = virksomhet)
         hentSykefravær(
             kommuner = KOMMUNE_OSLO.nummer,
             fylker = "Ø30",
@@ -354,7 +354,7 @@ class SykefraversstatistikkApiTest {
                 .getInt("faktiskTotal")
             total shouldBeLessThanOrEqual faktiskTotal
 
-            val antallSider = total / VIRKSOMHETER_PER_SIDE
+            val antallSider = requireNotNull(response.hentAntallSider()) { "Kunne ikke regne ut antall sider" }
             (2..antallSider).map { it.toString() }.forEach { side ->
                 hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
                     response.total shouldBe null
@@ -533,7 +533,6 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    // TODO: Skriv denne testen på en annen måte, per i dag er den avhengig av resultatene fra andre tester
     fun `skal filtrere bort slettede og fjernede virksomheter`() {
         val virksomheterMedSykefravær = hentSykefraværForAlleVirksomheter().map { it.orgnr }
         val endredeVirksomheter = endredeVirksomheter.map { it.orgnr }

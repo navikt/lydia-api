@@ -47,7 +47,7 @@ object BrregOppdateringConsumer : CoroutineScope {
     fun run() {
         launch {
             KafkaConsumer(
-                kafka.consumerProperties(consumerGroupId = "lydia-api-brreg-oppdatering-consumer"),
+                kafka.consumerProperties(consumerGroupId = Kafka.brregConsumerGroupId),
                 StringDeserializer(),
                 StringDeserializer()
             ).use { consumer ->

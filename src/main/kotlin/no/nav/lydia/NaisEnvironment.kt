@@ -72,7 +72,8 @@ class Kafka(
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
     companion object {
-        const val groupId: String = "lydia-api-kafka-group-id"
+        const val statistikkConsumerGroupId = "lydia-api-kafka-group-id"
+        const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
         const val clientId: String = "lydia-api"
     }
 
@@ -104,7 +105,7 @@ class Kafka(
             SslConfigs.SSL_KEY_PASSWORD_CONFIG to credstorePassword
         )
 
-    fun consumerProperties(consumerGroupId: String = groupId) =
+    fun consumerProperties(consumerGroupId: String = statistikkConsumerGroupId) =
         baseConsumerProperties(consumerGroupId).apply {
             // TODO: Finn smidigere måte å få tester til å kjøre
             if (truststoreLocation.isBlank()) {

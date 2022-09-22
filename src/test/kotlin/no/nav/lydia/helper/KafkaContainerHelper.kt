@@ -3,6 +3,7 @@ package no.nav.lydia.helper
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.time.withTimeoutOrNull
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
@@ -15,6 +16,7 @@ import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
 import org.apache.kafka.clients.admin.NewTopic
+import org.apache.kafka.clients.admin.OffsetSpec
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -137,6 +139,21 @@ class KafkaContainerHelper(
         }
     }
 
+    suspend fun ventTilAlleMeldingerErKonsumert(konsumentGruppe: String, timeout: Duration = Duration.ofSeconds(10)) {
+        withTimeout(timeout) {
+            val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
+                .partitionsToOffsetAndMetadata().get()
+
+            val topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
+                OffsetSpec.latest()
+            }).all().get().map { it.value.offset() }.first()
+
+            do {
+                delay(timeMillis = 10L)
+            } while (topicOffset - consumerSinOffset(konsumentGruppe) != 0L)
+        }
+    }
+
     private fun SykefraversstatistikkImportDto.tilProducerRecord() =
         ProducerRecord(
             statistikkTopic, gson.toJson(
@@ -152,7 +169,7 @@ class KafkaContainerHelper(
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
                 delay(timeMillis = 10L)
-            } while (consumerSinOffset(consumerGroup = Kafka.groupId) <= offset)
+            } while (consumerSinOffset(consumerGroup = Kafka.statistikkConsumerGroupId) <= offset)
         }
 
     private fun consumerSinOffset(consumerGroup: String): Long {

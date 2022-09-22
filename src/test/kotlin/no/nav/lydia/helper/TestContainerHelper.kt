@@ -8,23 +8,19 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import no.nav.lydia.Kafka
 import no.nav.lydia.helper.TestContainerHelper.Companion.httpMock
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
-import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
-import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -109,6 +105,11 @@ class TestContainerHelper {
             VirksomhetHelper.lastInnStandardTestdata()
             VirksomhetHelper.lastInnTestdata(PiaBrregOppdateringTestData.lagTestDataForPiaBrregOppdatering(httpMock = httpMock))
             brregOppdateringContainer.start()
+            runBlocking {
+                log.info("Venter på at alle meldinger fra brregOppdatering er konsumert")
+                kafkaContainerHelper.ventTilAlleMeldingerErKonsumert(Kafka.brregConsumerGroupId)
+                log.info("Alle meldinger fra brregOppdatering er konsumert")
+            }
         }
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
@@ -373,6 +374,11 @@ class StatistikkHelper {
                 .authentication().bearer(token)
                 .tilSingelRespons<SykefraværsstatistikkListResponseDto>()
 
+        fun SykefraværsstatistikkListResponseDto.hentAntallSider() =
+            total?.let {
+                (it + VIRKSOMHETER_PER_SIDE - 1) / VIRKSOMHETER_PER_SIDE
+            }
+
         fun hentSykefraværForVirksomhetRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
@@ -390,8 +396,7 @@ class StatistikkHelper {
 
         fun hentSykefraværForAlleVirksomheter(): List<SykefraversstatistikkVirksomhetDto> {
             val førsteResultatside = hentSykefravær(side = "1")
-            val antallVirksomheter = requireNotNull(førsteResultatside.total) { "Total ble null i hentSykefravær" }
-            val antallSider = antallVirksomheter / VIRKSOMHETER_PER_SIDE
+            val antallSider = requireNotNull(førsteResultatside.hentAntallSider()) { "Kunne ikke regne ut antall sider" }
 
             fun hentSiderFraSøkeresultat(sider: IntRange) =
                 sider.flatMap { side ->
