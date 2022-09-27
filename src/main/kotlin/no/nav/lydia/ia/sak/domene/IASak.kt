@@ -13,6 +13,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
@@ -110,6 +111,10 @@ class IASak private constructor(
             }
             TILBAKE -> {
                 tilstand.tilbake()
+            }
+            SLETT_SAK -> {
+                // slettSak() // TODO implementer funksjon for å slette ein sak frå databasen
+                throw NotImplementedError("slettSak() er ikkje implementert enno")
             }
         }
         endretAvHendelseId = hendelse.id

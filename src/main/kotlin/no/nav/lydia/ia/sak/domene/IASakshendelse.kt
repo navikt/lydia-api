@@ -154,7 +154,8 @@ enum class SaksHendelsestype {
     VIRKSOMHET_SKAL_BISTÅS,
     VIRKSOMHET_ER_IKKE_AKTUELL,
     TILBAKE,
-    FULLFØR_BISTAND
+    FULLFØR_BISTAND,
+    SLETT_SAK
 }
 
 @Serializable
