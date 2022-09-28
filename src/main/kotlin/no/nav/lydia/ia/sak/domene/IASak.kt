@@ -82,6 +82,7 @@ class IASak private constructor(
                 hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
                     .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
             }
+
         else ->
             gyldigeNesteHendelser(rådgiver)
                 .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
@@ -217,15 +218,27 @@ class IASak private constructor(
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
                 LESE -> emptyList()
-                SAKSBEHANDLER, SUPERBRUKER -> {
+                SAKSBEHANDLER -> {
                     if (erEierAvSak(rådgiver)) return listOf(
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
                     )
                     else return listOf(
                         GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                    )
+                }
+                SUPERBRUKER -> {
+                    if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
+                    )
+                    else if (eidAv == null) return listOf(
+                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
                         GyldigHendelse(saksHendelsestype = SLETT_SAK)
-                    ) // TODO kun superbruker skal kunne gjere dette
+                    )
+                    else return listOf(
+                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK)
+                    )
                 }
             }
         }

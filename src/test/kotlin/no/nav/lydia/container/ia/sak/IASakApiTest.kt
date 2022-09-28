@@ -52,13 +52,20 @@ class IASakApiTest {
     @Test
     fun `skal kunne slette en sak med status Vurderes (uten eier)`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        sak.nyHendelse(SLETT_SAK)
+        sak.nyHendelse(SLETT_SAK, token = mockOAuth2Server.superbruker1.token)
         hentSaker(sak.orgnr).none { it.saksnummer == sak.saksnummer } shouldBe true
     }
 
     @Test
     fun `skal ikke kunne slette virksomhet om man ikke er superbruker`() {
-
+        shouldFail {
+            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = mockOAuth2Server.superbruker1.token)
+                .nyHendelse(hendelsestype = SLETT_SAK, token = mockOAuth2Server.saksbehandler1.token)
+        }
+        shouldFail {
+            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = mockOAuth2Server.superbruker1.token)
+                .nyHendelse(hendelsestype = SLETT_SAK, token = mockOAuth2Server.lesebruker.token)
+        }
     }
 
     @Test
@@ -507,7 +514,8 @@ class IASakApiTest {
                 token = mockOAuth2Server.superbruker1.token
             ).filter { it.saksnummer == sak.saksnummer }
                 .forEach {
-                    it.gyldigeNesteHendelser.map { it.saksHendelsestype }.shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
+                    it.gyldigeNesteHendelser.map { it.saksHendelsestype }
+                        .shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
                 }
             hentSaker(
                 sak.orgnr,
