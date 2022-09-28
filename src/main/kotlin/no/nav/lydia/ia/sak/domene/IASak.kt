@@ -113,8 +113,7 @@ class IASak private constructor(
                 tilstand.tilbake()
             }
             SLETT_SAK -> {
-                // slettSak() // TODO implementer funksjon for å slette ein sak frå databasen
-                throw NotImplementedError("slettSak() er ikkje implementert enno")
+                // TODO legg til validering av hending frå tilstand
             }
         }
         endretAvHendelseId = hendelse.id
@@ -205,7 +204,7 @@ class IASak private constructor(
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
                     )
-                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK), GyldigHendelse(saksHendelsestype = SLETT_SAK)) // TODO kun superbruker skal kunne gjere dette
                 }
             }
         }
