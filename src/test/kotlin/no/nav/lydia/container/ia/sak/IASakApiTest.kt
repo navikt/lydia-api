@@ -504,6 +504,13 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
             hentSaker(
                 sak.orgnr,
+                token = mockOAuth2Server.superbruker1.token
+            ).filter { it.saksnummer == sak.saksnummer }
+                .forEach {
+                    it.gyldigeNesteHendelser.map { it.saksHendelsestype }.shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
+                }
+            hentSaker(
+                sak.orgnr,
                 token = mockOAuth2Server.saksbehandler1.token
             ).filter { it.saksnummer == sak.saksnummer }
                 .forEach {
