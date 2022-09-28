@@ -49,6 +49,24 @@ class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
 
     @Test
+    fun `skal kunne slette en sak med status Vurderes (uten eier)`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        sak.nyHendelse(SLETT_SAK)
+        hentSaker(sak.orgnr).none { it.saksnummer == sak.saksnummer } shouldBe true
+    }
+
+    @Test
+    fun `skal ikke kunne slette virksomhet om man ikke er superbruker`() {
+
+    }
+
+    @Test
+    fun `skal ikke kunne slette virksomhet med annen status enn Vurderes (uten eier)`() {
+
+    }
+
+
+    @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -72,7 +90,6 @@ class IASakApiTest {
                 it.status shouldBe KONTAKTES
             }
     }
-
 
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
@@ -132,10 +149,12 @@ class IASakApiTest {
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
             .statuskode() shouldBe 501
 
-        sak = sak.nyHendelse(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-            type = VIRKSOMHETEN_TAKKET_NEI,
-            begrunnelser = listOf(HAR_IKKE_KAPASITET)
-        ).toJson())
+        sak = sak.nyHendelse(
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                type = VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = listOf(HAR_IKKE_KAPASITET)
+            ).toJson()
+        )
         sak.status shouldBe IKKE_AKTUELL
 
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
@@ -165,7 +184,8 @@ class IASakApiTest {
         sak = sak.nyHendelse(FULLFØR_BISTAND)
         sak.status shouldBe FULLFØRT
 
-        val sak2Respons = opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+        val sak2Respons =
+            opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
         sak2Respons.statuskode() shouldBe 201
         val sak2 = sak2Respons.third.get()
 
@@ -789,11 +809,11 @@ class IASakApiTest {
 
         // Trykk på 'Ikke aktuell', med begrunnelse
         val sakIkkeAktuell = sakIStatusViBistår.nyHendelse(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                    type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = begrunnelser
-                ).toJson()
-            ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                type = VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = begrunnelser
+            ).toJson()
+        ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
         hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
@@ -835,5 +855,4 @@ class IASakApiTest {
                 hendelseOppsummering.begrunnelser shouldContainAll begrunnelser.map { it.navn }
             }
     }
-
 }

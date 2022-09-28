@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
@@ -86,11 +87,22 @@ class IASakService(
                 else {
                     return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
                 }
+                if (hendelseDto.hendelsesType == SLETT_SAK) {
+                    return slettSak(sak)
+                }
                 sakshendelse.lagre()
                 årsakService.lagreÅrsak(sakshendelse)
                 return sak.lagreOppdatering()
             }
     }
+
+    fun slettSak(sak: IASak) =
+        try {
+            iaSakRepository.slettSak(sak.saksnummer)
+            Either.Right(sak)
+        } catch (exception: Exception) {
+            Either.Left(IASakError.`fikk ikke oppdatert sak`)
+        }
 
     fun hentSakerForOrgnummer(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)
 
