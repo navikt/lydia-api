@@ -35,6 +35,7 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -62,9 +63,27 @@ class IASakApiTest {
 
     @Test
     fun `skal ikke kunne slette virksomhet med annen status enn Vurderes (uten eier)`() {
+        var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val kanIkkeSletteEtterHendelser = SaksHendelsestype.values()
+            .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
 
+        kanIkkeSletteEtterHendelser.forEach {
+            sak = if (it == VIRKSOMHET_ER_IKKE_AKTUELL) {
+                sak.nyHendelse(
+                    it, payload = ValgtÅrsak(
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                    ).toJson()
+                )
+            } else {
+                sak.nyHendelse(it)
+            }
+
+            shouldFail {
+                sak.nyHendelse(SLETT_SAK)
+            }
+        }
     }
-
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
