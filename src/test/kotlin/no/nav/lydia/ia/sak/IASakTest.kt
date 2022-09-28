@@ -2,10 +2,7 @@ package no.nav.lydia.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
@@ -231,8 +228,8 @@ class IASakTest {
             fullfør,
         )
         val gyldigeNesteHendelser = sak.gyldigeNesteHendelser(superbruker1)
-        gyldigeNesteHendelser.size shouldBe 1
-        gyldigeNesteHendelser[0].saksHendelsestype shouldBe OPPRETT_SAK_FOR_VIRKSOMHET
+        gyldigeNesteHendelser.size shouldBe 2
+        gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(OPPRETT_SAK_FOR_VIRKSOMHET, TILBAKE)
     }
 
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =

@@ -6,15 +6,10 @@ import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.*
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
@@ -29,39 +24,19 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_KARTLEGGES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_BISTÅS
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MANGLER_PARTSGRUPPE
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MINDRE_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
@@ -71,7 +46,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
-    private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+    private val mockOAuth2Server = oauth2ServerContainer
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
@@ -722,6 +697,50 @@ class IASakApiTest {
             )
             .nyHendelse(TILBAKE)
         sak.status shouldBe VURDERES
+    }
+
+    @Test
+    fun `skal kunne gå tilbake til vi bistår fra fullført`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(FULLFØR_BISTAND)
+            .nyHendelse(TILBAKE)
+        sak.status shouldBe VI_BISTÅR
+    }
+
+    @Test
+    fun `skal kunne overta sak som står som fullført`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(FULLFØR_BISTAND)
+
+        val sakEtterOvertakelse = sak.nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
+
+        sakEtterOvertakelse.status shouldBe FULLFØRT
+        sakEtterOvertakelse.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
+    }
+
+    @Test
+    fun `skal ikke kunne gå tilbake fra fullført status dersom virksomheten har en annen åpen sak`() {
+        val virksomhet = lastInnNyVirksomhet()
+        val fullførtSak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(FULLFØR_BISTAND)
+
+        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+
+        shouldFail {
+            fullførtSak.nyHendelse(TILBAKE)
+        }
     }
 
     @Test

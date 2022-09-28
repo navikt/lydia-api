@@ -70,6 +70,11 @@ class IASakService(
         if (NavEnheter.enheterSomSkalSkjermes.contains(hendelseDto.orgnummer)) {
             return Either.Left(IASakError.`Kan ikke oppdatere sak på NAV-kontor`)
         }
+
+        val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.ansesSomAvsluttet() }
+        if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
+            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
+
         return IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
             .map { sakshendelse ->
                 val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(sakshendelse.saksnummer)

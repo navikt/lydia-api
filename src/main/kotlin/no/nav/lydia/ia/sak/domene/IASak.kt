@@ -317,8 +317,31 @@ class IASak private constructor(
         status = FULLFØRT
     ) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when(rådgiver.rolle) {
-            SUPERBRUKER -> listOf(GyldigHendelse(OPPRETT_SAK_FOR_VIRKSOMHET))
-            else -> emptyList()
+            SUPERBRUKER -> {
+                if (erEierAvSak(rådgiver = rådgiver)) {
+                    listOf(
+                        GyldigHendelse(saksHendelsestype = TILBAKE),
+                        GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET)
+                    )
+                } else {
+                    listOf(
+                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                        GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET)
+                    )
+                }
+            }
+            SAKSBEHANDLER -> {
+                if (erEierAvSak(rådgiver = rådgiver)) {
+                    listOf(GyldigHendelse(saksHendelsestype = TILBAKE))
+                } else {
+                    listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+                }
+            }
+            LESE -> emptyList()
+        }
+
+        override fun tilbake() {
+            tilstand = finnForrigeTilstand()
         }
     }
 
