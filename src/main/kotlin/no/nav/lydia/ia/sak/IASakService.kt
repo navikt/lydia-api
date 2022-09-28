@@ -8,10 +8,10 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
@@ -32,8 +32,12 @@ class IASakService(
     private fun IASak.lagre() =
         iaSakRepository.opprettSak(this).also(::varsleIASakObservers)
 
-    private fun IASak.lagreOppdatering() =
-        iaSakRepository.oppdaterSak(this).tap(::varsleIASakObservers)
+    private fun IASak.lagreOppdatering(): Either<Feil, IASak> {
+        if (this.status == IAProsessStatus.SLETTET) {
+            return slettSak(this).tap(::varsleIASakObservers)
+        }
+            return iaSakRepository.oppdaterSak(this).tap(::varsleIASakObservers)
+    }
 
     fun leggTilIASakshendelseObserver(observer: Observer<IASakshendelse>) {
         iaSakshendelseObservers.add(observer)
@@ -87,21 +91,18 @@ class IASakService(
                 else {
                     return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
                 }
-                if (hendelseDto.hendelsesType == SLETT_SAK) {
-                    return slettSak(sak)
-                }
                 sakshendelse.lagre()
                 årsakService.lagreÅrsak(sakshendelse)
                 return sak.lagreOppdatering()
             }
     }
 
-    fun slettSak(sak: IASak) =
+    private fun slettSak(sak: IASak) =
         try {
             iaSakRepository.slettSak(sak.saksnummer)
             Either.Right(sak)
         } catch (exception: Exception) {
-            Either.Left(IASakError.`fikk ikke oppdatert sak`)
+            Either.Left(IASakError.`fikk ikke oppdatert sak`) // TODO add better error message
         }
 
     fun hentSakerForOrgnummer(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)

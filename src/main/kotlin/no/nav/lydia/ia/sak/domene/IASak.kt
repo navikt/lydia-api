@@ -8,6 +8,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.SLETTET
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
@@ -63,6 +64,7 @@ class IASak private constructor(
             VI_BISTÅR -> ViBistårTilstand()
             FULLFØRT -> FullførtTilstand()
             IKKE_AKTIV -> throw IllegalStateException()
+            SLETTET -> throw IllegalStateException()
         }
     }
 
@@ -97,23 +99,28 @@ class IASak private constructor(
             FULLFØR_BISTAND -> {
                 tilstand.prosesser()
             }
+
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
                 when (hendelse) {
                     is VirksomhetIkkeAktuellHendelse -> tilstand.behandleHendelse(hendelse = hendelse)
                     else -> tilstand.ikkeAktuell() // TODO...
                 }
             }
+
             TA_EIERSKAP_I_SAK -> {
                 eidAv = hendelse.opprettetAv
             }
+
             OPPRETT_SAK_FOR_VIRKSOMHET -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
+
             TILBAKE -> {
                 tilstand.tilbake()
             }
+
             SLETT_SAK -> {
-                // TODO legg til validering av hending frå tilstand
+                tilstand.slett()
             }
         }
         endretAvHendelseId = hendelse.id
@@ -143,6 +150,10 @@ class IASak private constructor(
         }
 
         open fun tilbake() {
+            håndterFeilState()
+        }
+
+        open fun slett() {
             håndterFeilState()
         }
 
@@ -181,6 +192,13 @@ class IASak private constructor(
             tilstand = IkkeAktuellTilstand()
         }
 
+        override fun slett() {
+            if (eidAv != null) {
+                håndterFeilState()
+            }
+            tilstand = SlettetTilstand()
+        }
+
         override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
             ikkeAktuell()
             super.oppdaterStandardFelter(hendelse = hendelse)
@@ -204,7 +222,10 @@ class IASak private constructor(
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
                         GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
                     )
-                    else return listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK), GyldigHendelse(saksHendelsestype = SLETT_SAK)) // TODO kun superbruker skal kunne gjere dette
+                    else return listOf(
+                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                        GyldigHendelse(saksHendelsestype = SLETT_SAK)
+                    ) // TODO kun superbruker skal kunne gjere dette
                 }
             }
         }
@@ -320,7 +341,7 @@ class IASak private constructor(
     private inner class FullførtTilstand : ProsessTilstand(
         status = FULLFØRT
     ) {
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when(rådgiver.rolle) {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
             SUPERBRUKER -> {
                 if (erEierAvSak(rådgiver = rådgiver)) {
                     listOf(
@@ -376,6 +397,12 @@ class IASak private constructor(
         }
     }
 
+    private inner class SlettetTilstand : ProsessTilstand(
+        status = SLETTET
+    ) {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
+    }
+
     companion object {
         fun fraFørsteHendelse(hendelse: IASakshendelse): IASak =
             IASak(
@@ -422,10 +449,11 @@ enum class IAProsessStatus {
     KARTLEGGES,
     VI_BISTÅR,
     IKKE_AKTUELL,
-    FULLFØRT;
+    FULLFØRT,
+    SLETTET;
 
     companion object {
         fun filtrerbareStatuser() =
-            values().filterNot { it == NY }
+            values().filterNot { it == NY || it == SLETTET }
     }
 }
