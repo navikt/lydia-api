@@ -228,13 +228,13 @@ class IASak private constructor(
                     )
                 }
                 SUPERBRUKER -> {
-                    if (erEierAvSak(rådgiver)) return listOf(
-                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
-                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
-                    )
-                    else if (eidAv == null) return listOf(
+                    if (eidAv == null) return listOf(
                         GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
                         GyldigHendelse(saksHendelsestype = SLETT_SAK)
+                    )
+                    else if (erEierAvSak(rådgiver)) return listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
                     )
                     else return listOf(
                         GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK)
