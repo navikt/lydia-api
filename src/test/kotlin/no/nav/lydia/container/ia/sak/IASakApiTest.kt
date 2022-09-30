@@ -22,18 +22,17 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakRequest
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
+import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
@@ -50,14 +49,24 @@ class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
 
     @Test
+    fun `skal kunne åpne en ny sak etter at en sak er slettet`() {
+        val orgnummer = nyttOrgnummer()
+        opprettSakForVirksomhet(orgnummer = orgnummer).slettSak()
+        hentSaker(orgnummer = orgnummer).shouldBeEmpty()
+        opprettSakForVirksomhet(orgnummer = orgnummer).also {
+            it.status shouldBe VURDERES
+        }
+        hentSaker(orgnummer = orgnummer).shouldHaveSize(1)
+    }
+
+    @Test
     fun `skal kunne slette en sak med status Vurderes (uten eier)`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        sak.nyHendelse(SLETT_SAK, token = mockOAuth2Server.superbruker1.token)
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).slettSak()
         hentSaker(sak.orgnr).none { it.saksnummer == sak.saksnummer } shouldBe true
     }
 
     @Test
-    fun `skal ikke kunne slette virksomhet om man ikke er superbruker`() {
+    fun `skal ikke kunne slette sak dersom man ikke er superbruker`() {
         shouldFail {
             opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = mockOAuth2Server.superbruker1.token)
                 .nyHendelse(hendelsestype = SLETT_SAK, token = mockOAuth2Server.saksbehandler1.token)
@@ -69,7 +78,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal ikke kunne slette virksomhet med annen status enn Vurderes (uten eier)`() {
+    fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
         val kanIkkeSletteEtterHendelser = SaksHendelsestype.values()
             .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
@@ -87,7 +96,7 @@ class IASakApiTest {
             }
 
             shouldFail {
-                sak.nyHendelse(SLETT_SAK)
+                sak.slettSak()
             }
         }
     }
@@ -121,7 +130,7 @@ class IASakApiTest {
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
         val utsiraKommune = Kommune(navn = "Utsira", nummer = "1151")
         val virksomhet =
-            VirksomhetHelper.lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(TestVirksomhet.beliggenhet(kommune = utsiraKommune)))
+            lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(TestVirksomhet.beliggenhet(kommune = utsiraKommune)))
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -468,7 +477,7 @@ class IASakApiTest {
             samarbeidshistorikk shouldHaveSize 1
             val sakshistorikk = samarbeidshistorikk.first()
             sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
-                IAProsessStatus.NY,
+                NY,
                 VURDERES,
                 VURDERES,
                 KONTAKTES,
