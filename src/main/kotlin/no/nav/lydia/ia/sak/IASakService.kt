@@ -102,7 +102,7 @@ class IASakService(
             iaSakRepository.slettSak(sak.saksnummer)
             Either.Right(sak)
         } catch (exception: Exception) {
-            Either.Left(IASakError.`fikk ikke oppdatert sak`) // TODO add better error message
+            Either.Left(IASakError.`fikk ikke slettet sak`)
         }
 
     fun hentSakerForOrgnummer(orgnummer: String): List<IASak> = iaSakRepository.hentSaker(orgnummer)
