@@ -712,7 +712,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal kunne overta sak som står som fullført`() {
+    fun `skal kunne overta sak som står som fullført og deretter tilbake til vi bistår`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -724,6 +724,11 @@ class IASakApiTest {
 
         sakEtterOvertakelse.status shouldBe FULLFØRT
         sakEtterOvertakelse.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
+
+        val sakEtterTilbake = sakEtterOvertakelse.nyHendelse(TILBAKE, token = oauth2ServerContainer.saksbehandler2.token)
+
+        sakEtterTilbake.status shouldBe VI_BISTÅR
+        sakEtterTilbake.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
     }
 
     @Test

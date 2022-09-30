@@ -93,7 +93,8 @@ class IASak private constructor(
             VIRKSOMHET_SKAL_KONTAKTES,
             VIRKSOMHET_KARTLEGGES,
             VIRKSOMHET_SKAL_BISTÅS,
-            FULLFØR_BISTAND -> {
+            FULLFØR_BISTAND,
+            -> {
                 tilstand.prosesser()
             }
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
@@ -143,8 +144,9 @@ class IASak private constructor(
         }
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
-            val hendelserUtenTilbake = hendelser.filter { it.hendelsesType != TILBAKE }
-            val sak = fraHendelser(hendelser.minus(hendelserUtenTilbake.last()))
+            val hendelserUtenTilbakeOgTaEierskap =
+                hendelser.filter { it.hendelsesType != TILBAKE && it.hendelsesType != TA_EIERSKAP_I_SAK }
+            val sak = fraHendelser(hendelser.minus(hendelserUtenTilbakeOgTaEierskap.last()))
             return tilstandFraStatus(sak.status)
         }
 
@@ -316,7 +318,7 @@ class IASak private constructor(
     private inner class FullførtTilstand : ProsessTilstand(
         status = FULLFØRT
     ) {
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when(rådgiver.rolle) {
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
             SUPERBRUKER -> {
                 if (erEierAvSak(rådgiver = rådgiver)) {
                     listOf(
@@ -353,7 +355,8 @@ class IASak private constructor(
             when (rådgiver.rolle) {
                 LESE -> emptyList()
                 SAKSBEHANDLER,
-                SUPERBRUKER -> {
+                SUPERBRUKER,
+                -> {
                     val hendelser = mutableListOf<GyldigHendelse>()
                     if (erEierAvSak(rådgiver = rådgiver)) {
                         hendelser.add(GyldigHendelse(saksHendelsestype = TILBAKE))
