@@ -1,10 +1,9 @@
 name: "Build and deploy lydia-api"
-on:
-  push:
-    branches:
-      - "main"
+on: [ push ]
+
 env:
   "IMAGE": "ghcr.io/${{ github.repository }}:${{ github.sha }}"
+
 jobs:
   "build":
     name: "build"
@@ -36,9 +35,10 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:latest,${{ env.IMAGE }}
 
-  "deployAppToDev":
+  deployAppToDev:
     name: "Deploy app to dev"
     needs: "build"
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/kan-slette-saker-med-status-vurderes'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v2"
@@ -49,9 +49,11 @@ jobs:
           "CLUSTER": "dev-gcp"
           "RESOURCE": ".nais/nais.yaml"
           "VARS": ".nais/dev.yaml"
-  "deployAppToProd":
+
+  deployAppToProd:
     name: "Deploy app to prod"
     needs: "deployAppToDev"
+    if: github.ref == 'refs/heads/main'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v2"
@@ -62,9 +64,11 @@ jobs:
           "CLUSTER": "prod-gcp"
           "RESOURCE": ".nais/nais.yaml"
           "VARS": ".nais/prod.yaml"
-  "deployTopicsToDev":
+
+  deployTopicsToDev:
     name: "Deploy topics to dev"
     runs-on: "ubuntu-latest"
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/kan-slette-saker-med-status-vurderes'
     steps:
       - name: "Checkout code"
         uses: "actions/checkout@v3"
@@ -75,9 +79,11 @@ jobs:
           CLUSTER: "dev-gcp"
           RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
           VARS: ".nais/dev.yaml"
-  "deployTopicsToProd":
+
+  deployTopicsToProd:
     name: "Deploy topics to prod"
     runs-on: "ubuntu-latest"
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: "Checkout code"
         uses: "actions/checkout@v3"
@@ -88,29 +94,3 @@ jobs:
           CLUSTER: "prod-gcp"
           RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
           VARS: ".nais/prod.yaml"
-  "deployAlertsToDev":
-    name: "Deploy alerts to dev"
-    needs: "build"
-    runs-on: "ubuntu-latest"
-    steps:
-    - uses: "actions/checkout@v2"
-    - name: "Deploy alerts to DEV"
-      uses: "nais/deploy/actions/deploy@v1"
-      env:
-        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-        "CLUSTER": "dev-gcp"
-        "RESOURCE": ".nais/alerts-dev.yaml"
-        "VARS": ".nais/dev.yaml"
-  "deployAlertsToProd":
-    name: "Deploy alerts to prod"
-    needs: "build"
-    runs-on: "ubuntu-latest"
-    steps:
-    - uses: "actions/checkout@v2"
-    - name: "Deploy alerts to PROD"
-      uses: "nais/deploy/actions/deploy@v1"
-      env:
-        "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-        "CLUSTER": "prod-gcp"
-        "RESOURCE": ".nais/alerts-prod.yaml"
-        "VARS": ".nais/prod.yaml"

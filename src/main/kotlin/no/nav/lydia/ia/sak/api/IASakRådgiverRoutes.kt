@@ -138,6 +138,7 @@ object IASakError {
         "Prøvde å legge til hendelse på gammel sak", HttpStatusCode.Conflict
     )
     val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
+    val `fikk ikke slettet sak` = Feil("Fikk ikke slettet sak", HttpStatusCode.InternalServerError)
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
     val `Kan ikke oppdatere sak på NAV-kontor` = Feil("Kan ikke oppdatere saker på NAV-kontorer", HttpStatusCode.UnprocessableEntity)
     val `det finnes flere saker på dette orgnummeret som ikke anses som avsluttet` = Feil(

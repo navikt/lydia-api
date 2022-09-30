@@ -50,7 +50,7 @@ class IASakRepository(val dataSource: DataSource) {
             )!!
         }
 
-    fun oppdaterSak(iaSak: IASak) : Either<Feil, IASak> =
+    fun oppdaterSak(iaSak: IASak): Either<Feil, IASak> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -77,6 +77,43 @@ class IASakRepository(val dataSource: DataSource) {
             ).rightIfNotNull { IASakError.`fikk ikke oppdatert sak` }
         }
 
+    fun slettSak(saksnummer: String) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                            DELETE FROM sykefravar_statistikk_grunnlag 
+                            WHERE saksnummer = :saksnummer
+                        """.trimIndent(), mapOf(
+                            "saksnummer" to saksnummer,
+                        )
+                    ).asUpdate
+                )
+                tx.run(
+                    queryOf(
+                        """
+                            DELETE FROM ia_sak 
+                            WHERE saksnummer = :saksnummer
+                        """.trimIndent(), mapOf(
+                            "saksnummer" to saksnummer,
+                        )
+                    ).asUpdate
+                )
+                tx.run(
+                    queryOf(
+                        """
+                            DELETE FROM ia_sak_hendelse 
+                            WHERE saksnummer = :saksnummer
+                        """.trimIndent(), mapOf(
+                            "saksnummer" to saksnummer,
+                        )
+                    ).asUpdate
+                )
+            }
+        }
+    }
+
     private fun mapRowToIASak(row: Row): IASak {
         return row.tilIASak()
     }
@@ -89,7 +126,13 @@ class IASakRepository(val dataSource: DataSource) {
                     SELECT *
                     FROM ia_sak
                     WHERE orgnr = :orgnr
-                    AND orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") { s -> "\'$s\'"}}
+                    AND orgnr NOT in ${
+                        NavEnheter.enheterSomSkalSkjermes.joinToString(
+                            prefix = "(",
+                            postfix = ")",
+                            separator = ","
+                        ) { s -> "\'$s\'" }
+                    }
                 """.trimMargin(),
                     mapOf(
                         "orgnr" to orgnummer,

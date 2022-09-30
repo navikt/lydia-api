@@ -234,6 +234,9 @@ class SakHelper {
                     fail(it.message)
                 })
 
+        fun IASakDto.slettSak(token: String = oauth2ServerContainer.superbruker1.token) =
+            nyHendelsePåSak(sak = this, hendelsestype = SaksHendelsestype.SLETT_SAK, token = token)
+
         fun IASakDto.nyHendelse(
             hendelsestype: SaksHendelsestype,
             token: String = oauth2ServerContainer.saksbehandler1.token,

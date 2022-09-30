@@ -22,19 +22,19 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakRequest
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
+import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -47,6 +47,59 @@ import kotlin.test.assertTrue
 
 class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
+
+    @Test
+    fun `skal kunne åpne en ny sak etter at en sak er slettet`() {
+        val orgnummer = nyttOrgnummer()
+        opprettSakForVirksomhet(orgnummer = orgnummer).slettSak()
+        hentSaker(orgnummer = orgnummer).shouldBeEmpty()
+        opprettSakForVirksomhet(orgnummer = orgnummer).also {
+            it.status shouldBe VURDERES
+        }
+        hentSaker(orgnummer = orgnummer).shouldHaveSize(1)
+    }
+
+    @Test
+    fun `skal kunne slette en sak med status Vurderes (uten eier)`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).slettSak()
+        hentSaker(sak.orgnr).none { it.saksnummer == sak.saksnummer } shouldBe true
+    }
+
+    @Test
+    fun `skal ikke kunne slette sak dersom man ikke er superbruker`() {
+        shouldFail {
+            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = mockOAuth2Server.superbruker1.token)
+                .nyHendelse(hendelsestype = SLETT_SAK, token = mockOAuth2Server.saksbehandler1.token)
+        }
+        shouldFail {
+            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = mockOAuth2Server.superbruker1.token)
+                .nyHendelse(hendelsestype = SLETT_SAK, token = mockOAuth2Server.lesebruker.token)
+        }
+    }
+
+    @Test
+    fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
+        var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val kanIkkeSletteEtterHendelser = SaksHendelsestype.values()
+            .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
+
+        kanIkkeSletteEtterHendelser.forEach {
+            sak = if (it == VIRKSOMHET_ER_IKKE_AKTUELL) {
+                sak.nyHendelse(
+                    it, payload = ValgtÅrsak(
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                    ).toJson()
+                )
+            } else {
+                sak.nyHendelse(it)
+            }
+
+            shouldFail {
+                sak.slettSak()
+            }
+        }
+    }
 
     @Test
     fun `skal kunne sette en virksomhet i kontaktes status`() {
@@ -73,12 +126,11 @@ class IASakApiTest {
             }
     }
 
-
     @Test
     fun `skal kunne vise at en virksomhet vurderes og vise status i listevisning`() {
         val utsiraKommune = Kommune(navn = "Utsira", nummer = "1151")
         val virksomhet =
-            VirksomhetHelper.lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(TestVirksomhet.beliggenhet(kommune = utsiraKommune)))
+            lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(TestVirksomhet.beliggenhet(kommune = utsiraKommune)))
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
@@ -132,10 +184,12 @@ class IASakApiTest {
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
             .statuskode() shouldBe 501
 
-        sak = sak.nyHendelse(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-            type = VIRKSOMHETEN_TAKKET_NEI,
-            begrunnelser = listOf(HAR_IKKE_KAPASITET)
-        ).toJson())
+        sak = sak.nyHendelse(
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                type = VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = listOf(HAR_IKKE_KAPASITET)
+            ).toJson()
+        )
         sak.status shouldBe IKKE_AKTUELL
 
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
@@ -165,7 +219,8 @@ class IASakApiTest {
         sak = sak.nyHendelse(FULLFØR_BISTAND)
         sak.status shouldBe FULLFØRT
 
-        val sak2Respons = opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+        val sak2Respons =
+            opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
         sak2Respons.statuskode() shouldBe 201
         val sak2 = sak2Respons.third.get()
 
@@ -422,7 +477,7 @@ class IASakApiTest {
             samarbeidshistorikk shouldHaveSize 1
             val sakshistorikk = samarbeidshistorikk.first()
             sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
-                IAProsessStatus.NY,
+                NY,
                 VURDERES,
                 VURDERES,
                 KONTAKTES,
@@ -463,6 +518,14 @@ class IASakApiTest {
     fun `skal få gyldige neste hendelser i retur - avhengig av hvem man er`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
+            hentSaker(
+                sak.orgnr,
+                token = mockOAuth2Server.superbruker1.token
+            ).filter { it.saksnummer == sak.saksnummer }
+                .forEach {
+                    it.gyldigeNesteHendelser.map { it.saksHendelsestype }
+                        .shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
+                }
             hentSaker(
                 sak.orgnr,
                 token = mockOAuth2Server.saksbehandler1.token
@@ -794,11 +857,11 @@ class IASakApiTest {
 
         // Trykk på 'Ikke aktuell', med begrunnelse
         val sakIkkeAktuell = sakIStatusViBistår.nyHendelse(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                    type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = begrunnelser
-                ).toJson()
-            ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                type = VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = begrunnelser
+            ).toJson()
+        ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
         hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
@@ -840,5 +903,4 @@ class IASakApiTest {
                 hendelseOppsummering.begrunnelser shouldContainAll begrunnelser.map { it.navn }
             }
     }
-
 }
