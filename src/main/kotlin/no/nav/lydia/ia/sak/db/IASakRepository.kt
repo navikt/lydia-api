@@ -140,5 +140,12 @@ class IASakRepository(val dataSource: DataSource) {
                 ).map(this::mapRowToIASak).asList
             )
         }
+
+    fun hentAlleSaker(): List<IASak> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT * FROM ia_sak").map(this::mapRowToIASak).asList
+            )
+        }
 }
 
