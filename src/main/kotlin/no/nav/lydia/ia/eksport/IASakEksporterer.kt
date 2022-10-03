@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class IASakEksporterer(
     val iaSakRepository: IASakRepository,
-    val iaSakProdusent: IASakProdusent
+    val iaSakProdusent: IASakProdusent?
 ) {
     companion object {
         val KJØRER_EKSPORT = AtomicBoolean(false)
@@ -19,7 +19,7 @@ class IASakEksporterer(
         KJØRER_EKSPORT.set(true)
         iaSakRepository.hentAlleSaker()
             .forEach { iaSak ->
-                iaSakProdusent.receive(iaSak)
+                iaSakProdusent?.receive(iaSak)
             }
         KJØRER_EKSPORT.set(false)
     }

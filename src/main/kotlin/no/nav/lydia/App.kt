@@ -29,9 +29,7 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
-import no.nav.lydia.ia.eksport.IASakProdusent
-import no.nav.lydia.ia.eksport.IASakshendelseProdusent
-import no.nav.lydia.ia.eksport.KafkaProdusent
+import no.nav.lydia.ia.eksport.*
 import no.nav.lydia.ia.grunnlag.GrunnlagRepository
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
@@ -165,10 +163,17 @@ fun Application.lydiaRestApi(
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
+    val iaSakRepository = IASakRepository(dataSource = dataSource)
 
     routing {
         healthChecks(HelseMonitor)
         metrics()
+        iaSakEksporterer(
+            IASakEksporterer(
+                iaSakRepository = iaSakRepository,
+                iaSakProdusent = iaSakProdusent
+            )
+        )
         virksomhetsImport(
             BrregDownloader(
                 url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
@@ -191,7 +196,7 @@ fun Application.lydiaRestApi(
             )
             iaSakRådgiver(
                 iaSakService = IASakService(
-                    iaSakRepository = IASakRepository(dataSource = dataSource),
+                    iaSakRepository = iaSakRepository,
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
                     grunnlagService = GrunnlagService(
                         grunnlagRepository = grunnlagRepository,
