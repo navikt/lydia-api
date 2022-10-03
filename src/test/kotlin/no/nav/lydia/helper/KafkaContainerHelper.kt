@@ -2,6 +2,8 @@ package no.nav.lydia.helper
 
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.time.withTimeoutOrNull
@@ -171,6 +173,23 @@ class KafkaContainerHelper(
                 delay(timeMillis = 10L)
             } while (consumerSinOffset(consumerGroup = Kafka.statistikkConsumerGroupId) <= offset)
         }
+
+    suspend fun ventOgKonsumerKafkaMeldinger(key: String, konsument: KafkaConsumer<String, String>, block: (meldinger: List<String>) -> Unit) {
+        withTimeout(Duration.ofSeconds(10)) {
+            launch {
+                while (this.isActive) {
+                    val records = konsument.poll(Duration.ofMillis(100))
+                    val meldinger = records
+                        .filter { it.key() == key }
+                        .map { it.value() }
+                    if (meldinger.isNotEmpty()) {
+                        block(meldinger)
+                        break
+                    }
+                }
+            }
+        }
+    }
 
     private fun consumerSinOffset(consumerGroup: String): Long {
         val offsetMetadata = adminClient.listConsumerGroupOffsets(consumerGroup)

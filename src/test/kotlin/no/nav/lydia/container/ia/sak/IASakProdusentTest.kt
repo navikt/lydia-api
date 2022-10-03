@@ -3,15 +3,12 @@ package no.nav.lydia.container.ia.sak
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.time.withTimeout
 import no.nav.lydia.helper.KafkaContainerHelper.Companion.iaSakTopic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.toJson
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -21,11 +18,10 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import org.junit.After
 import org.junit.Before
-import java.time.Duration
 import kotlin.test.Test
 
 class IASakProdusentTest {
-    private val konsument = TestContainerHelper.kafkaContainerHelper.nyKonsument()
+    private val konsument = kafkaContainerHelper.nyKonsument()
 
     @Before
     fun setUp() {
@@ -43,7 +39,7 @@ class IASakProdusentTest {
         runBlocking {
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
                 .nyHendelse(SaksHendelsestype.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
-            ventOgKonsumerKafkaMeldinger(sak.saksnummer) { meldinger ->
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(sak.saksnummer, konsument) { meldinger ->
                 meldinger.forAll { hendelse ->
                     hendelse shouldContain sak.saksnummer
                     hendelse shouldContain sak.orgnr
@@ -75,7 +71,7 @@ class IASakProdusentTest {
                     ).toJson()
                 )
 
-            ventOgKonsumerKafkaMeldinger(saksnummer = sak.saksnummer) { meldinger ->
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(key = sak.saksnummer, konsument) { meldinger ->
                 meldinger.forAll { hendelse ->
                     hendelse shouldContain sak.saksnummer
                     hendelse shouldContain sak.orgnr
@@ -92,18 +88,4 @@ class IASakProdusentTest {
         }
     }
 
-    private suspend fun ventOgKonsumerKafkaMeldinger(saksnummer: String, block: (meldinger: List<String>) -> Unit) {
-        withTimeout(Duration.ofSeconds(10)) {
-            launch {
-                while (this.isActive) {
-                    val records = konsument.poll(Duration.ofMillis(100))
-                    val meldinger = records.map { it.value() }.filter { it.contains(saksnummer) }
-                    if (meldinger.isNotEmpty()) {
-                        block(meldinger)
-                        break
-                    }
-                }
-            }
-        }
-    }
 }
