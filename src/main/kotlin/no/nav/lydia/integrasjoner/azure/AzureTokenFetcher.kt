@@ -41,6 +41,7 @@ class AzureTokenFetcher(
             val parameters = listOf(
                 "grant_type" to "client_credentials",
                 "scope" to "https://graph.microsoft.com/.default",
+                "client_id" to naisEnvironment.security.azureConfig.clientId,
                 "client_assertion_type" to "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
                 "client_assertion" to clientAssertion
             )
