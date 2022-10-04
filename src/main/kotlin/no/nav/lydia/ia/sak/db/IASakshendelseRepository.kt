@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
@@ -31,6 +32,13 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     FROM ia_sak_hendelse
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE saksnummer = :saksnummer
+                    AND orgnr NOT in ${
+                        NavEnheter.enheterSomSkalSkjermes.joinToString(
+                            prefix = "(",
+                            postfix = ")",
+                            separator = ","
+                        ) { s -> "\'$s\'" }
+                    }
                     GROUP BY aarsak_enum, id, type, orgnr, opprettet_av, saksnummer, opprettet
                     ORDER BY id ASC
                     """.trimIndent(),
@@ -59,6 +67,13 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     FROM ia_sak_hendelse
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE $orgnrKolonneNavn = :$orgnrKolonneNavn
+                    AND $orgnrKolonneNavn NOT in ${
+                        NavEnheter.enheterSomSkalSkjermes.joinToString(
+                            prefix = "(",
+                            postfix = ")",
+                            separator = ","
+                        ) { s -> "\'$s\'" }
+                    }
                     GROUP BY aarsak_enum, id, type, $orgnrKolonneNavn, opprettet_av, saksnummer, opprettet
                     ORDER BY id ASC
                     """.trimIndent(),

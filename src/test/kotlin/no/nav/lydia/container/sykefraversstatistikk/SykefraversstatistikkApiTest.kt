@@ -394,6 +394,16 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skal ikke kunne hente sykefravær for navenheter`() {
+        hentSykefravær(success = {
+            it.data.map { it.orgnr } shouldNotContain TestVirksomhet.NAV_KONTOR.orgnr
+            val rs =
+                postgresContainer.performQuery("select * from sykefravar_statistikk_virksomhet where orgnr = '${TestVirksomhet.NAV_KONTOR.orgnr}'")
+            rs.row shouldBe 1
+        }, ansatteFra = "999", kommuner = "${KOMMUNE_OSLO.nummer}}")
+    }
+
+    @Test
     fun `skal kunne søke på bransjeprogram`() {
         val virksomhet = nyVirksomhet(næringer = listOf(Næringsgruppe("Boligbyggelag", "41.101")))
         lastInnNyVirksomhet(nyVirksomhet = virksomhet)

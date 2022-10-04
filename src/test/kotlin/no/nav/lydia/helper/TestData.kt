@@ -56,6 +56,11 @@ class TestData(
                 sykefraværsProsent = 7.0
             )
 
+            lagData(
+                virksomhet = TestVirksomhet.NAV_KONTOR,
+                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                antallPersoner = 1001.0
+            )
             lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(Periode.gjeldendePeriode()))
             lagData(virksomhet = TestVirksomhet.OSLO_MANGLER_ADRESSER, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())

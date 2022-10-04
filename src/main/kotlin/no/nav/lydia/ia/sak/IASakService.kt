@@ -14,6 +14,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.tilgangskontroll.Rådgiver
 
 class IASakService(
@@ -55,7 +56,9 @@ class IASakService(
     }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, navIdent: String): Either<Feil, IASak> {
-        if (!iaSakRepository.hentSaker(orgnummer).all(IASak::ansesSomAvsluttet)) {
+        if (NavEnheter.enheterSomSkalSkjermes.contains(orgnummer)) {
+            return Either.Left(IASakError.`Kan ikke oppdatere sak på NAV-kontor`)
+        } else if (!iaSakRepository.hentSaker(orgnummer).all(IASak::ansesSomAvsluttet)) {
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         }
         val sak = IASak.fraFørsteHendelse(
@@ -69,6 +72,10 @@ class IASakService(
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {
+        if (NavEnheter.enheterSomSkalSkjermes.contains(hendelseDto.orgnummer)) {
+            return Either.Left(IASakError.`Kan ikke oppdatere sak på NAV-kontor`)
+        }
+
         val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.ansesSomAvsluttet() }
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)

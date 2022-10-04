@@ -1,12 +1,17 @@
 package no.nav.lydia.sykefraversstatistikk
 
 import kotlinx.datetime.toKotlinLocalDate
-import kotliquery.*
+import kotliquery.Row
+import kotliquery.TransactionalSession
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -203,6 +208,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         )
         AND statistikk.kvartal = :kvartal
         AND statistikk.arstall = :arstall
+        AND ( virksomhet.orgnr NOT in ${
+        NavEnheter.enheterSomSkalSkjermes.joinToString(
+            prefix = "(",
+            postfix = ")",
+            separator = ","
+        ) { s -> "\'$s\'" }
+    } )
                         
         ${
         søkeparametere.status?.let { status ->
@@ -245,7 +257,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
-                  WHERE (statistikk.orgnr = :orgnr)
+                  WHERE (statistikk.orgnr = :orgnr) AND statistikk.orgnr NOT in ${
+                    NavEnheter.enheterSomSkalSkjermes.joinToString(
+                        prefix = "(",
+                        postfix = ")",
+                        separator = ","
+                    ) { s -> "\'$s\'" }
+                }
                 """.trimIndent(),
                 paramMap = mapOf(
                     "orgnr" to orgnr

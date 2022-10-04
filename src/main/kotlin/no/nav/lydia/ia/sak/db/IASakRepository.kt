@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
+import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
 class IASakRepository(val dataSource: DataSource) {
@@ -125,6 +126,13 @@ class IASakRepository(val dataSource: DataSource) {
                     SELECT *
                     FROM ia_sak
                     WHERE orgnr = :orgnr
+                    AND orgnr NOT in ${
+                        NavEnheter.enheterSomSkalSkjermes.joinToString(
+                            prefix = "(",
+                            postfix = ")",
+                            separator = ","
+                        ) { s -> "\'$s\'" }
+                    }
                 """.trimMargin(),
                     mapOf(
                         "orgnr" to orgnummer,
