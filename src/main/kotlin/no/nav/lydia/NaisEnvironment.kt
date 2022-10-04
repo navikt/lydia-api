@@ -48,10 +48,17 @@ class Security(
 }
 
 class AzureConfig(
-    val audience: String = getEnvVar("AZURE_APP_CLIENT_ID"),
+    val clientId: String = getEnvVar("AZURE_APP_CLIENT_ID"),
     val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
-    val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
-)
+    val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
+    val tokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
+    val privateJwk: String = getEnvVar("AZURE_APP_JWK"),
+) {
+
+
+    override fun toString() =
+        "AzureConfig(audience='$clientId', jwksUri=$jwksUri, issuer='$issuer', tokenEndpoint='$tokenEndpoint')"
+}
 
 class FiaRoller(
     val superbrukerGroupId: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),

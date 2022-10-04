@@ -34,7 +34,7 @@ class KtorTestHelper {
                 name = "",
             ), security = Security(
                 AzureConfig(
-                    audience = "lydia-api",
+                    clientId = "lydia-api",
                     jwksUri = mockOAuth2Server.jwksUrl("default").toUrl(),
                     issuer = mockOAuth2Server.issuerUrl("default").toString()
                 ), fiaRoller = FiaRoller(

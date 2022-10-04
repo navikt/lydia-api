@@ -29,7 +29,11 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
-import no.nav.lydia.ia.eksport.*
+import no.nav.lydia.ia.eksport.IASakEksporterer
+import no.nav.lydia.ia.eksport.IASakProdusent
+import no.nav.lydia.ia.eksport.IASakshendelseProdusent
+import no.nav.lydia.ia.eksport.KafkaProdusent
+import no.nav.lydia.ia.eksport.iaSakEksporterer
 import no.nav.lydia.ia.grunnlag.GrunnlagRepository
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
@@ -38,6 +42,7 @@ import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
+import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
@@ -49,6 +54,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+import no.nav.lydia.veileder.veileder
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.virksomhet
@@ -134,7 +140,7 @@ fun Application.lydiaRestApi(
                     requireNotNull(credentials.payload.audience) {
                         "Auth: Missing audience in token"
                     }
-                    require(credentials.payload.audience.contains(naisEnvironment.security.azureConfig.audience)) {
+                    require(credentials.payload.audience.contains(naisEnvironment.security.azureConfig.clientId)) {
                         "Auth: Valid audience not found in claims"
                     }
                     JWTPrincipal(credentials.payload)
@@ -164,6 +170,7 @@ fun Application.lydiaRestApi(
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
+    val azureTokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment)
 
     routing {
         healthChecks(HelseMonitor)
@@ -215,6 +222,7 @@ fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 fiaRoller = naisEnvironment.security.fiaRoller
             )
+            veileder(tokenFetcher = azureTokenFetcher)
         }
     }
 }
