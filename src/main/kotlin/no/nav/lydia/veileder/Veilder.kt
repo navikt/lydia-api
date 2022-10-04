@@ -12,27 +12,29 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 
 @Serializable
-private data class AzureAdBruker(
+data class AzureAdBruker(
     val id: String,
-    val userPrincipalName: String?,
-    val onPremisesSamAccountName: String?,
-    val givenName: String?,
-    val surname: String?,
+    val userPrincipalName: String? = null,
+    val onPremisesSamAccountName: String? = null,
+    val givenName: String? = null,
+    val surname: String? = null,
 )
 
-private data class AzureAdBrukere(val value: List<AzureAdBruker>)
+@Serializable
+data class AzureAdBrukere(val value: List<AzureAdBruker>)
 
 @OptIn(ExperimentalSerializationApi::class)
-fun Route.veileder(tokenFetcher: AzureTokenFetcher) {
+fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFetcher) {
     get("/veiledere") {
         val accessToken = tokenFetcher.clientCredentialsToken()
-        val gruppeIder = listOf("", "")
+        val gruppeIder = listOf(naisEnvironment.security.fiaRoller.saksbehandlerGroupId, naisEnvironment.security.fiaRoller.superbrukerGroupId)
         val veiledere = gruppeIder.map { gruppeId ->
             async {
-                Json.decodeFromStream<AzureAdBrukere>("https://graph.microsoft.com/v1.0/groups/$gruppeId/members?\$select=id,givenName,surname"
+                Json.decodeFromStream<AzureAdBrukere>("${naisEnvironment.security.azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=id,givenName,surname"
                     .httpGet()
                     .authentication()
                     .bearer(token = accessToken)

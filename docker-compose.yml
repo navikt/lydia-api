@@ -1,4 +1,12 @@
 services:
+  azure:
+    container_name: azure
+    image: wiremock/wiremock
+    ports:
+      - 9090:8080
+    volumes:
+      - ./stubs:/home/wiremock
+
   postgres:
     build:
       dockerfile: postgres.Dockerfile
@@ -11,7 +19,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
 
   authserver:
-    image: ghcr.io/navikt/mock-oauth2-server:0.5.1
+    image: ghcr.io/navikt/mock-oauth2-server:0.5.4
     hostname: host.docker.internal
     environment:
       TZ: Europe/Oslo

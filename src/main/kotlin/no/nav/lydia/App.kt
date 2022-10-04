@@ -222,7 +222,7 @@ fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 fiaRoller = naisEnvironment.security.fiaRoller
             )
-            veileder(tokenFetcher = azureTokenFetcher)
+            veileder(tokenFetcher = azureTokenFetcher, naisEnvironment = naisEnvironment)
         }
     }
 }

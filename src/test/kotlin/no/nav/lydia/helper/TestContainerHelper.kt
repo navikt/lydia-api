@@ -20,7 +20,13 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
+import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -31,6 +37,8 @@ import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
+import no.nav.lydia.veileder.AzureAdBruker
+import no.nav.lydia.veileder.AzureAdBrukere
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -60,6 +68,8 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
+        private val azureMockServer = WireMockContainerHelper()
+
         val lydiaApiContainer: GenericContainer<*> =
             GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
                 .dependsOn(
@@ -74,6 +84,7 @@ class TestContainerHelper {
                 .withEnv(
                     postgresContainer.envVars()
                         .plus(oauth2ServerContainer.envVars())
+                        .plus(azureMockServer.envVars())
                         .plus(
                             kafkaContainerHelper.envVars()
                                 .plus(
@@ -472,6 +483,24 @@ class VirksomhetHelper {
             )
         }
     }
+}
+
+class VeilederHelper {
+
+    companion object {
+        fun hentVeiledere() = lydiaApiContainer.performGet("/veiledere")
+            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+            .tilListeRespons<AzureAdBruker>()
+            .third.fold(
+                success = {
+                    it
+                },
+                failure = {
+                    fail(it.message)
+                }
+            )
+    }
+
 }
 
 @OptIn(InternalSerializationApi::class)
