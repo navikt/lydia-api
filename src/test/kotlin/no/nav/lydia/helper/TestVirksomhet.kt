@@ -66,19 +66,6 @@ data class TestVirksomhet(
                 adresse = listOf("Deutchestrasse 1")
             )
         )
-        val NAV_KONTOR = TestVirksomhet(
-            orgnr = "984247664",
-            navn = "NAV Arbeidslivssenter Oslo",
-            næringsundergrupper = listOf(SCENEKUNST),
-            beliggenhet = beliggenhet(
-                landkode = "NO",
-                land = "Norge",
-                kommune = KOMMUNE_OSLO,
-                adresse = listOf("C. J. Hambros plass 2", "0164 OSLO"),
-                postnummer = "0663",
-                poststed = "Oslo"
-            )
-        )
         val MANGLER_BELIGGENHETSADRESSE = TestVirksomhet(
             orgnr = "321321321",
             navn = "Mangler beliggenhetsadresse",

@@ -4,7 +4,6 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.sykefraversstatistikk.api.geografi.NavEnheter
 import javax.sql.DataSource
 
 class GrunnlagRepository(val dataSource: DataSource) {
@@ -80,7 +79,7 @@ class GrunnlagRepository(val dataSource: DataSource) {
                         maskert,
                         opprettet
                   FROM sykefravar_statistikk_grunnlag
-                  WHERE orgnr = :orgnr AND orgnr NOT in ${NavEnheter.enheterSomSkalSkjermes.joinToString(prefix = "(", postfix = ")", separator = ",") {s -> "\'$s\'"}}
+                  WHERE orgnr = :orgnr
                 """.trimIndent(),
                 paramMap = mapOf(
                     "orgnr" to orgnr
