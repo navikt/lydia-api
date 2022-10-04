@@ -214,18 +214,22 @@ class VirksomhetRepository(val dataSource: DataSource) {
     fun finnVirksomheter(søkestreng: String): List<VirksomhetSøkeresultat> {
         val søkEtterOrgnummer = søkestreng.matches("\\d{3,9}".toRegex())
         return sessionOf(dataSource = dataSource).use { session ->
-            @Language("PostgreSQL")
             val sql = """
                     SELECT 
                         orgnr,
                         navn 
                     FROM virksomhet
-                    WHERE navn ilike :sokestreng
-                    ${if (søkEtterOrgnummer) "OR orgnr like :sokestreng" else ""}
+                    WHERE navn ilike :ekspanderbarSokestreng
+                    ${if (søkEtterOrgnummer) "OR orgnr like :ekspanderbarSokestreng" else ""}
+                    ORDER BY 
+                        (lower(navn) = lower(:sokestreng)) DESC,
+                        POSITION(LOWER(:sokestreng) IN LOWER(navn)),
+                        navn
                     LIMIT 10
                     """.trimMargin()
             val params = mapOf(
-                "sokestreng" to "$søkestreng%",
+                "sokestreng" to "$søkestreng",
+                "ekspanderbarSokestreng" to "%$søkestreng%",
             )
             session.run(
                 queryOf(

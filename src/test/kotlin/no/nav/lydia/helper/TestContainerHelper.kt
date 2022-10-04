@@ -413,9 +413,9 @@ class StatistikkHelper {
 class VirksomhetHelper {
     companion object {
         fun søkEtterVirksomheter(
-            success: (List<VirksomhetSøkeresultat>) -> Unit,
             søkestreng: String,
-            token: String = oauth2ServerContainer.saksbehandler1.token
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            success: (List<VirksomhetSøkeresultat>) -> Unit
         ) =
             lydiaApiContainer.performGet(url = "$VIRKSOMHET_PATH/finn?q=${encode(søkestreng, defaultCharset())}")
                 .authentication().bearer(token)
@@ -439,6 +439,11 @@ class VirksomhetHelper {
         fun lastInnNyVirksomhet(nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet()): TestVirksomhet {
             lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet))
             return nyVirksomhet
+        }
+
+        fun lastInnNyeVirksomheter(vararg virksomheter: TestVirksomhet): List<TestVirksomhet> {
+            return virksomheter.toList()
+                .onEach(this::lastInnNyVirksomhet)
         }
 
         fun lastInnStandardTestdata() {

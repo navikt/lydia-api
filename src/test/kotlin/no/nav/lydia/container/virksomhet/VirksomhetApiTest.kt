@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.PiaBrregOppdateringTestData
 import no.nav.lydia.helper.TestContainerHelper
@@ -74,19 +75,62 @@ class VirksomhetApiTest {
         val virksomhet = nyVirksomhet(navn = "Hei og hå")
         VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
 
-        søkEtterVirksomheter(søkestreng = "hei", success = { virksomheter ->
+        søkEtterVirksomheter(søkestreng = "hei") { virksomheter ->
             virksomheter shouldHaveAtLeastSize 1
             virksomheter.forAtLeastOne {
                 it.orgnr shouldBe virksomhet.orgnr
             }
-        })
+        }
 
-        søkEtterVirksomheter(søkestreng = virksomhet.orgnr.take(5), success = { virksomheter ->
+        søkEtterVirksomheter(søkestreng = virksomhet.orgnr.take(5)) { virksomheter ->
             virksomheter shouldHaveAtLeastSize 1
             virksomheter.forAtLeastOne {
                 it.orgnr shouldBe virksomhet.orgnr
             }
-        })
+        }
+    }
+
+    @Test
+    fun `virksomheter bør komme logisk sortert når man søker etter de`() {
+        VirksomhetHelper.lastInnNyeVirksomheter(
+            nyVirksomhet(navn = "Donald Duck Sinnemestring avd Andeby"),
+            nyVirksomhet(navn = "Andeby Elektriske"),
+            nyVirksomhet(navn = "Skrue McDuck Inc"),
+            nyVirksomhet(navn = "Donald Duck"),
+            nyVirksomhet(navn = "Crispy Duck")
+        )
+
+        // -- eksakt match burde komme først
+        søkEtterVirksomheter(søkestreng = "donald duck") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 2
+            virksomheter.map { it.navn }.first() shouldBe "Donald Duck"
+        }
+
+        // -- treff tidligere i navnet burde komme først
+        søkEtterVirksomheter(søkestreng = "andeby") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 2
+            val virksomhetsNavn = virksomheter.map { it.navn }
+            virksomhetsNavn.indexOf("Andeby Elektriske") shouldBeLessThan virksomhetsNavn.indexOf("Donald Duck Sinnemestring avd Andeby")
+        }
+
+        // -- sorter ellers på navn stigende
+        søkEtterVirksomheter(søkestreng = "duck") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 4
+            virksomheter.map { it.navn }.first() shouldBe "Crispy Duck"
+        }
+    }
+
+    @Test
+    fun `skal kunne søke etter virksomheter med treff midt i søkeordet`() {
+        val virksomhet = nyVirksomhet(navn = "Dette burde teste noe")
+        VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
+
+        søkEtterVirksomheter(søkestreng = "burde") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 1
+            virksomheter.forAtLeastOne {
+                it.orgnr shouldBe virksomhet.orgnr
+            }
+        }
     }
 
     @Test
