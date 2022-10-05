@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.0.3"
+    val ktorVersion = "2.1.1"
     val fuelVersion = "2.3.1"
 
     // Align versions of all Kotlin components
@@ -43,7 +43,7 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.9.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.9.4")
 
     // Database
     implementation("org.postgresql:postgresql:42.4.2")
