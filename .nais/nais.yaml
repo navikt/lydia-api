@@ -9,11 +9,11 @@ spec:
   image: {{image}}
   resources:
     limits:
-      cpu: 4000m
-      memory: 4Gi
+      cpu: {{limitsCpu}}
+      memory: {{limitsMemory}}
     requests:
-      cpu: 2000m
-      memory: 4Gi
+      cpu: {{requestsCpu}}
+      memory: {{requestsMemory}}
   liveness:
     path: "/internal/isalive"
     port: 8080
