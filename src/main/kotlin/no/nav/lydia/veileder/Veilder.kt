@@ -3,6 +3,7 @@ package no.nav.lydia.veileder
 import arrow.core.Either
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
@@ -65,6 +66,7 @@ private fun hentVeiledereFraAzure(
     .httpGet()
     .authentication()
     .bearer(token = accessToken)
+    .header(HttpHeaders.Accept to "application/json", HttpHeaders.ContentType to "application/json")
     .response()
     .third
     .fold(success = {
