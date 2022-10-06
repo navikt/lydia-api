@@ -1,10 +1,9 @@
 package no.nav.lydia.tilgangskontroll
 
 import arrow.core.Either
-import arrow.core.flatMap
 import arrow.core.left
-import io.ktor.http.*
-import io.ktor.server.application.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.FiaRoller
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.sak.api.Feil
@@ -20,23 +19,28 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
             return Either.Right(Rådgiver(navIdent = navIdent, fiaRoller = fiaRoller, rådgiversGrupper = grupper))
         }
 
-        fun <T> somSuperbruker(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
+        suspend fun <T> somSuperbruker(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
             somRådgiver(call, fiaRoller, block = { rådgiver ->
                 if (rådgiver.erSuperbruker()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
-        fun <T> somBrukerMedSaksbehandlertilgang(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
+        suspend fun <T> somBrukerMedSaksbehandlertilgang(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
             somRådgiver(call, fiaRoller, block = { rådgiver ->
                 if (rådgiver.erSaksbehandler()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
-        fun <T> somBrukerMedLesetilgang(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
+        suspend fun <T> somBrukerMedLesetilgang(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
             somRådgiver(call, fiaRoller, block = { rådgiver ->
                 if (rådgiver.erLesebruker()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
-        private fun <T> somRådgiver(call: ApplicationCall, fiaRoller: FiaRoller, block: (Rådgiver) -> Either<Feil, T>) =
-            from(call = call, fiaRoller = fiaRoller).flatMap(block)
+        private suspend fun <T> somRådgiver(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>): Either<Feil, T> {
+            val either = from(call = call, fiaRoller = fiaRoller)
+            return when(either) {
+                is Either.Left -> either
+                is Either.Right -> block(either.value)
+            }
+        }
     }
 
     private fun grupperTilRolle() : Rolle =

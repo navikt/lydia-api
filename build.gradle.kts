@@ -98,6 +98,7 @@ dependencies {
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:0.5.1")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.25.1")
 
 }
 

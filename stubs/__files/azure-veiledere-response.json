@@ -1,0 +1,32 @@
+{
+  "value": [
+    {
+      "id": "1",
+      "userPrincipalName": "mikke",
+      "onPremisesSamAccountName": "mikke",
+      "givenName": "Mikke Mus",
+      "surname": "Mus"
+    },
+    {
+      "id": "2",
+      "userPrincipalName": "arne",
+      "onPremisesSamAccountName": "arne",
+      "givenName": "Arne Scheie",
+      "surname": "Scheie"
+    },
+    {
+      "id": "3",
+      "userPrincipalName": "roar",
+      "onPremisesSamAccountName": "roar",
+      "givenName": "Roar Stokke",
+      "surname": "Stokke"
+    },
+    {
+      "id": "4",
+      "userPrincipalName": "harald",
+      "onPremisesSamAccountName": "harald",
+      "givenName": "Harald Rex",
+      "surname": "Rex"
+    }
+  ]
+}
