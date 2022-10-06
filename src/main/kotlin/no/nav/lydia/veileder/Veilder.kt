@@ -70,5 +70,5 @@ private fun hentVeiledereFraAzure(
     .fold(success = {
         it.toString(Charsets.UTF_8)
     }, failure = {
-        throw AzureException("Feilet under henting av veiledere fra Azure: ${it.message} ${it.response.body()}", it)
+        throw AzureException("Feilet under henting av veiledere fra Azure: ${it.message} ${it.errorData.toString(Charsets.UTF_8)}", it)
     })
