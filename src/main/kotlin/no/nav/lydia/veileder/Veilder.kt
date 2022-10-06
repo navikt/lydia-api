@@ -64,7 +64,7 @@ private fun hentVeiledereFraAzure(
     naisEnvironment: NaisEnvironment,
     gruppeId: String,
     accessToken: String
-) = "${naisEnvironment.security.azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=id,givenName,surname"
+) = "${naisEnvironment.security.azureConfig.graphDatabaseUrl}/groups/$gruppeId/members"
     .httpGet()
     .authentication()
     .bearer(token = accessToken)
