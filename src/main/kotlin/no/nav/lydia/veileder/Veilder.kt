@@ -6,6 +6,7 @@ import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
+import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -45,7 +46,9 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
                 )
                 val veiledere = gruppeIder.map { gruppeId ->
                     async {
-                        deserializer.decodeFromString<AzureAdBrukere>(hentVeiledereFraAzure(naisEnvironment, gruppeId, accessToken)).value
+                        val json = hentVeiledereFraAzure(naisEnvironment, gruppeId, accessToken)
+                        call.application.log.info("Veileder $json")
+                        deserializer.decodeFromString<AzureAdBrukere>(json).value
                     }
                 }.awaitAll()
                     .flatten()
