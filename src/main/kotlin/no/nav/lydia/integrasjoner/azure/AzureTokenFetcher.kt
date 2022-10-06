@@ -21,7 +21,7 @@ class AzureTokenFetcher(
     private companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
-    private val privateKey = RSAKey.parse(naisEnvironment.security.azureConfig.privateJwk).toRSAPrivateKey()
+    private val privateKey = RSAKey.parse(naisEnvironment.security.azureConfig.privateJwk)
 
     @Serializable
     private data class TokenResponse(val access_token: String)
@@ -33,6 +33,7 @@ class AzureTokenFetcher(
     internal fun clientCredentialsToken(): String {
         val now = Instant.now()
         val clientAssertion = JWT.create().apply {
+            withKeyId(privateKey.keyID)
             withSubject(naisEnvironment.security.azureConfig.clientId)
             withIssuer(naisEnvironment.security.azureConfig.clientId)
             withAudience(naisEnvironment.security.azureConfig.tokenEndpoint)
@@ -40,7 +41,7 @@ class AzureTokenFetcher(
             withIssuedAt(Date.from(now))
             withNotBefore(Date.from(now))
             withExpiresAt(Date.from(now.plusSeconds(120)))
-        }.sign(Algorithm.RSA256(null, privateKey))
+        }.sign(Algorithm.RSA256(null, privateKey.toRSAPrivateKey()))
         val parameters = listOf(
             "grant_type" to "client_credentials",
             "scope" to "https://graph.microsoft.com/.default",
