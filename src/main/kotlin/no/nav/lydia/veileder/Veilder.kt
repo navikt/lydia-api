@@ -32,6 +32,8 @@ data class AzureAdBruker(
 @Serializable
 data class AzureAdBrukere(val value: List<AzureAdBruker>)
 
+private val deserializer = Json { ignoreUnknownKeys = true }
+
 fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFetcher) {
     get("/veiledere") {
         somSuperbruker(call = call, fiaRoller = naisEnvironment.security.fiaRoller) {
@@ -43,7 +45,7 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
                 )
                 val veiledere = gruppeIder.map { gruppeId ->
                     async {
-                        Json.decodeFromString<AzureAdBrukere>(hentVeiledereFraAzure(naisEnvironment, gruppeId, accessToken)).value
+                        deserializer.decodeFromString<AzureAdBrukere>(hentVeiledereFraAzure(naisEnvironment, gruppeId, accessToken)).value
                     }
                 }.awaitAll()
                     .flatten()
