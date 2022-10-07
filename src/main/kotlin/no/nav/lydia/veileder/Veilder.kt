@@ -21,7 +21,7 @@ import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 
 @Serializable
-data class AzureAdBruker(
+private data class AzureAdBruker(
     val id: String,
     val onPremisesSamAccountName: String? = null,
     val givenName: String? = null,
@@ -29,14 +29,14 @@ data class AzureAdBruker(
 )
 
 @Serializable
-data class Veileder(val id: String, val navIdent: String, val fornavn: String, val etternavn: String)
-
-@Serializable
-data class AzureAdBrukere(val value: List<AzureAdBruker>)
+private data class AzureAdBrukere(val value: List<AzureAdBruker>)
 
 private val deserializer = Json { ignoreUnknownKeys = true }
 
 const val VEILEDERE_PATH = "/veiledere"
+
+@Serializable
+data class VeilederDTO(val id: String, val navIdent: String, val fornavn: String, val etternavn: String)
 
 fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFetcher) {
     get(VEILEDERE_PATH) {
@@ -55,7 +55,7 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
                 }.awaitAll()
                     .flatten()
                     .map {
-                        Veileder(
+                        VeilederDTO(
                             id = it.id,
                             fornavn = it.givenName ?: "",
                             etternavn = it.surname ?: "",

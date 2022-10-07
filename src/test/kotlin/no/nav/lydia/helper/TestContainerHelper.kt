@@ -37,8 +37,8 @@ import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
-import no.nav.lydia.veileder.AzureAdBruker
 import no.nav.lydia.veileder.VEILEDERE_PATH
+import no.nav.lydia.veileder.VeilederDTO
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -490,7 +490,7 @@ class VeilederHelper {
     companion object {
         fun hentVeiledere(token: String = oauth2ServerContainer.superbruker1.token) = lydiaApiContainer.performGet(VEILEDERE_PATH)
             .authentication().bearer(token)
-            .tilListeRespons<AzureAdBruker>()
+            .tilListeRespons<VeilederDTO>()
             .third.fold(
                 success = {
                     it
