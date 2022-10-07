@@ -6,7 +6,6 @@ import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
-import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -24,11 +23,13 @@ import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 @Serializable
 data class AzureAdBruker(
     val id: String,
-    val userPrincipalName: String? = null,
     val onPremisesSamAccountName: String? = null,
     val givenName: String? = null,
     val surname: String? = null,
 )
+
+@Serializable
+data class Veileder(val id: String, val navIdent: String, val fornavn: String, val etternavn: String)
 
 @Serializable
 data class AzureAdBrukere(val value: List<AzureAdBruker>)
@@ -49,11 +50,18 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
                 val veiledere = gruppeIder.map { gruppeId ->
                     async {
                         val json = hentVeiledereFraAzure(naisEnvironment, gruppeId, accessToken)
-                        call.application.log.info("Veileder $json")
                         deserializer.decodeFromString<AzureAdBrukere>(json).value
                     }
                 }.awaitAll()
                     .flatten()
+                    .map {
+                        Veileder(
+                            id = it.id,
+                            fornavn = it.givenName ?: "",
+                            etternavn = it.surname ?: "",
+                            navIdent = it.onPremisesSamAccountName ?: ""
+                        )
+                    }
                     .toSet()
                 veiledere
             }.mapLeft { Feil(it.message ?: "Ukjent feil under henting av veiledere", HttpStatusCode.InternalServerError) }
@@ -69,7 +77,7 @@ private fun hentVeiledereFraAzure(
     naisEnvironment: NaisEnvironment,
     gruppeId: String,
     accessToken: String
-) = "${naisEnvironment.security.azureConfig.graphDatabaseUrl}/groups/$gruppeId/members"
+) = "${naisEnvironment.security.azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=id,givenName,surname,onPremisesSamAccountName"
     .httpGet()
     .authentication()
     .bearer(token = accessToken)

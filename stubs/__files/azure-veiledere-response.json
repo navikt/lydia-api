@@ -3,28 +3,28 @@
     {
       "id": "1",
       "userPrincipalName": "mikke",
-      "onPremisesSamAccountName": "mikke",
+      "onPremisesSamAccountName": "M12345",
       "givenName": "Mikke Mus",
       "surname": "Mus"
     },
     {
       "id": "2",
       "userPrincipalName": "arne",
-      "onPremisesSamAccountName": "arne",
+      "onPremisesSamAccountName": "S12345",
       "givenName": "Arne Scheie",
       "surname": "Scheie"
     },
     {
       "id": "3",
       "userPrincipalName": "roar",
-      "onPremisesSamAccountName": "roar",
+      "onPremisesSamAccountName": "S12346",
       "givenName": "Roar Stokke",
       "surname": "Stokke"
     },
     {
       "id": "4",
       "userPrincipalName": "harald",
-      "onPremisesSamAccountName": "harald",
+      "onPremisesSamAccountName": "R12345",
       "givenName": "Harald Rex",
       "surname": "Rex"
     }
