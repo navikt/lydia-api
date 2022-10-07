@@ -25,6 +25,7 @@ import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
@@ -42,6 +43,7 @@ import no.nav.lydia.ia.eksport.iaSakEksporterer
 import no.nav.lydia.ia.grunnlag.GrunnlagRepository
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
@@ -55,13 +57,16 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+import no.nav.lydia.veileder.VEILEDERE_PATH
 import no.nav.lydia.veileder.veileder
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
+import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -139,6 +144,12 @@ fun Application.lydiaRestApi(
     }
     install(CallLogging) {
         callIdMdc("requestId")
+        disableDefaultColors()
+        filter {call ->
+            listOf(SYKEFRAVERSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH, VEILEDERE_PATH).any() {
+                call.request.path().startsWith(it)
+            }
+        }
     }
     install(IgnoreTrailingSlash)
 

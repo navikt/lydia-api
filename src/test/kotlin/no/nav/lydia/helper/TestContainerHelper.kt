@@ -38,6 +38,7 @@ import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.veileder.AzureAdBruker
+import no.nav.lydia.veileder.VEILEDERE_PATH
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -487,7 +488,7 @@ class VirksomhetHelper {
 class VeilederHelper {
 
     companion object {
-        fun hentVeiledere(token: String = oauth2ServerContainer.superbruker1.token) = lydiaApiContainer.performGet("/veiledere")
+        fun hentVeiledere(token: String = oauth2ServerContainer.superbruker1.token) = lydiaApiContainer.performGet(VEILEDERE_PATH)
             .authentication().bearer(token)
             .tilListeRespons<AzureAdBruker>()
             .third.fold(

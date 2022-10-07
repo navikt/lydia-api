@@ -35,8 +35,10 @@ data class AzureAdBrukere(val value: List<AzureAdBruker>)
 
 private val deserializer = Json { ignoreUnknownKeys = true }
 
+const val VEILEDERE_PATH = "/veiledere"
+
 fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFetcher) {
-    get("/veiledere") {
+    get(VEILEDERE_PATH) {
         somSuperbruker(call = call, fiaRoller = naisEnvironment.security.fiaRoller) {
             Either.catch {
                 val accessToken = tokenFetcher.clientCredentialsToken()
