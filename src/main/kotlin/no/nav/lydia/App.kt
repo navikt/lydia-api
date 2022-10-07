@@ -3,7 +3,9 @@
  */
 package no.nav.lydia
 
+import arrow.core.Either
 import com.auth0.jwk.JwkProviderBuilder
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -18,6 +20,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.engine.stop
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
@@ -58,6 +61,7 @@ import no.nav.lydia.veileder.veileder
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.virksomhet
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -121,6 +125,15 @@ fun Application.lydiaRestApi(
 ) {
     install(ContentNegotiation) {
         json()
+    }
+    install(CallId) {
+        header(HttpHeaders.XRequestId)
+        verify { callId: String ->
+            callId.isNotEmpty() && Either.catch { UUID.fromString(callId) }.isRight()
+        }
+        generate {
+            UUID.randomUUID().toString()
+        }
     }
     install(IgnoreTrailingSlash)
 
