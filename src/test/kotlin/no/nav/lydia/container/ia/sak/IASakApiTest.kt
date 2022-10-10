@@ -25,6 +25,7 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
@@ -33,6 +34,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
@@ -763,6 +765,28 @@ class IASakApiTest {
     }
 
     @Test
+    fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
+        // Update etter opprettelse
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(FULLFØR_BISTAND)
+
+        // Vi simulerer at hendelsene skjedde for mer enn ANTALL_DAGER_FØR_SAK_LÅSES + 1 dager siden
+        TestContainerHelper.postgresContainer.performUpdate(
+            "update ia_sak_hendelse set opprettet=(current_date - interval '${ANTALL_DAGER_FØR_SAK_LÅSES + 1}' day)" +
+                    " where saksnummer='${sak.saksnummer}';"
+        )
+        shouldFail { sak.nyHendelse(TILBAKE) }
+
+        hentSaker( orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
+            it.status shouldBe FULLFØRT
+        }
+    }
+
+    @Test
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -788,7 +812,8 @@ class IASakApiTest {
         sakEtterOvertakelse.status shouldBe FULLFØRT
         sakEtterOvertakelse.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
 
-        val sakEtterTilbake = sakEtterOvertakelse.nyHendelse(TILBAKE, token = oauth2ServerContainer.saksbehandler2.token)
+        val sakEtterTilbake =
+            sakEtterOvertakelse.nyHendelse(TILBAKE, token = oauth2ServerContainer.saksbehandler2.token)
 
         sakEtterTilbake.status shouldBe VI_BISTÅR
         sakEtterTilbake.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent

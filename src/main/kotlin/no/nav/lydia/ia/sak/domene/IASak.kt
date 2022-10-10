@@ -28,7 +28,11 @@ import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.LESE
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SAKSBEHANDLER
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.SUPERBRUKER
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
+
+const val ANTALL_DAGER_FØR_SAK_LÅSES = 10L
 
 class IASak private constructor(
     val saksnummer: String,
@@ -353,12 +357,18 @@ class IASak private constructor(
         }
     }
 
+    fun erFørFristen(endretTidspunkt: LocalDateTime?): Boolean {
+        return endretTidspunkt?.let {
+            it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
+        } ?: true
+    }
+
     private inner class FullførtTilstand : ProsessTilstand(
         status = FULLFØRT
     ) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
             SUPERBRUKER -> {
-                if (erEierAvSak(rådgiver = rådgiver)) {
+                if (erEierAvSak(rådgiver = rådgiver) && erFørFristen(this@IASak.endretTidspunkt)) {
                     listOf(
                         GyldigHendelse(saksHendelsestype = TILBAKE),
                         GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET)
@@ -371,7 +381,7 @@ class IASak private constructor(
                 }
             }
             SAKSBEHANDLER -> {
-                if (erEierAvSak(rådgiver = rådgiver)) {
+                if (erEierAvSak(rådgiver = rådgiver) && erFørFristen(this@IASak.endretTidspunkt)) {
                     listOf(GyldigHendelse(saksHendelsestype = TILBAKE))
                 } else {
                     listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
