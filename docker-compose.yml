@@ -8,8 +8,7 @@ services:
       - ./stubs:/home/wiremock
 
   postgres:
-    build:
-      dockerfile: postgres.Dockerfile
+    image: postgres:14
     restart: always
     environment:
       POSTGRES_PASSWORD: test
@@ -56,28 +55,14 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093,BROKER://0.0.0.0:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      #      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: Long.MAX_VALUE
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,BROKER://kafka:9092
       TZ: Europe/Oslo
-
-  control-center:
-    container_name: control-center
-    image: confluentinc/cp-enterprise-control-center:latest
-    depends_on:
-      - kafka
-    ports:
-      - 9021:9021
-    environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: kafka:9092
-      CONTROL_CENTER_REPLICATION_FACTOR: 1
-      PORT: 9021
 
   backend:
     platform: linux/amd64
@@ -164,6 +149,10 @@ services:
       AZURE_APP_CLIENT_SECRET: secret
       AZURE_OPENID_CONFIG_ISSUER: http://host.docker.internal:6969/azure
       AZURE_OPENID_CONFIG_TOKEN_ENDPOINT: http://host.docker.internal:6969/azure/token
+      FIA_SUPERBRUKER_GROUP_ID: ensuperbrukerGroupId
+      FIA_SAKSBEHANDLER_GROUP_ID: ensaksbehandlerGroupId
+      FIA_LESETILGANG_GROUP_ID: enlesetilgangGroupId
+
   redis:
     image: redis:7-alpine
     restart: always
@@ -171,6 +160,7 @@ services:
       - 6379:6379
     volumes:
       - redis-cache:/data
+
   wonderwall:
     image: ghcr.io/nais/wonderwall:latest
     depends_on:
