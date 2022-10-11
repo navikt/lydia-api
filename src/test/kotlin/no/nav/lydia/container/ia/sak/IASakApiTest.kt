@@ -11,6 +11,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.UnleashToggleKeys
+import no.nav.lydia.helper.*
+import no.nav.lydia.helper.FeatureToggleHelper.Companion.medFeatureToggleEnablet
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
@@ -20,18 +23,15 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakRequest
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
-import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
@@ -766,29 +766,52 @@ class IASakApiTest {
 
     @Test
     fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
-        // Update etter opprettelse
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-            .nyHendelse(FULLFØR_BISTAND)
+        medFeatureToggleEnablet(UnleashToggleKeys.fristTilbakeknapp) {
+            // Update etter opprettelse
+            val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+                .nyHendelse(TA_EIERSKAP_I_SAK)
+                .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+                .nyHendelse(VIRKSOMHET_KARTLEGGES)
+                .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+                .nyHendelse(FULLFØR_BISTAND)
+                .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
-        // Vi simulerer at hendelsene skjedde for mer enn ANTALL_DAGER_FØR_SAK_LÅSES + 1 dager siden
-        TestContainerHelper.postgresContainer.performUpdate(
-            "update ia_sak_hendelse set opprettet=(current_date - interval '${ANTALL_DAGER_FØR_SAK_LÅSES + 1}' day)" +
-                    " where saksnummer='${sak.saksnummer}';"
-        )
-        shouldFail { sak.nyHendelse(TILBAKE) }
+            shouldFail {
+                sak.nyHendelse(TILBAKE)
+            }
 
-        hentSaker( orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
-            it.status shouldBe FULLFØRT
+            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
+                it.status shouldBe FULLFØRT
+            }
         }
     }
 
     @Test
     fun `skal IKKE kunne gå tilbake til forrige tilstand fra ikke aktuell etter fristen har gått`() {
-        // Update etter opprettelse
+        medFeatureToggleEnablet(UnleashToggleKeys.fristTilbakeknapp) {
+            // Update etter opprettelse
+            val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+                .nyHendelse(TA_EIERSKAP_I_SAK)
+                .nyHendelse(
+                    hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                    ).toJson()
+                )
+                .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+
+            shouldFail {
+                sak.nyHendelse(TILBAKE)
+            }
+
+            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
+                it.status shouldBe IKKE_AKTUELL
+            }
+        }
+    }
+
+    @Test
+    fun `skal alltid kunne gå tilbake etter frist dersom frist ikke er enablet via Unleash`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(
@@ -797,17 +820,10 @@ class IASakApiTest {
                     begrunnelser = listOf(HAR_IKKE_KAPASITET)
                 ).toJson()
             )
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+            .nyHendelse(TILBAKE)
 
-        // Vi simulerer at hendelsene skjedde for mer enn ANTALL_DAGER_FØR_SAK_LÅSES + 1 dager siden
-        TestContainerHelper.postgresContainer.performUpdate(
-            "update ia_sak_hendelse set opprettet=(current_date - interval '${ANTALL_DAGER_FØR_SAK_LÅSES + 1}' day)" +
-                    " where saksnummer='${sak.saksnummer}';"
-        )
-        shouldFail { sak.nyHendelse(TILBAKE) }
-
-        hentSaker( orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
-            it.status shouldBe IKKE_AKTUELL
-        }
+        sak.status shouldBe VURDERES
     }
 
     @Test

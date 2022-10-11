@@ -29,11 +29,8 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
-import no.nav.lydia.appstatus.DatabaseHelsesjekk
-import no.nav.lydia.appstatus.HelseMonitor
-import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.appstatus.healthChecks
-import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
+import no.nav.lydia.appstatus.*
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakProdusent
@@ -204,6 +201,10 @@ fun Application.lydiaRestApi(
     routing {
         healthChecks(HelseMonitor)
         metrics()
+
+        if (naisEnvironment.miljø == LOKAL)
+            featureToggle()
+
         iaSakEksporterer(
             IASakEksporterer(
                 iaSakRepository = iaSakRepository,
