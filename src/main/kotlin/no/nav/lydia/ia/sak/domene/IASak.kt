@@ -406,7 +406,7 @@ class IASak private constructor(
                 SUPERBRUKER,
                 -> {
                     val hendelser = mutableListOf<GyldigHendelse>()
-                    if (erEierAvSak(rådgiver = rådgiver)) {
+                    if (erEierAvSak(rådgiver = rådgiver) && erFørFristen(this@IASak.endretTidspunkt)) {
                         hendelser.add(GyldigHendelse(saksHendelsestype = TILBAKE))
                     } else {
                         hendelser.add(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))

@@ -787,6 +787,30 @@ class IASakApiTest {
     }
 
     @Test
+    fun `skal IKKE kunne gå tilbake til forrige tilstand fra ikke aktuell etter fristen har gått`() {
+        // Update etter opprettelse
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                ).toJson()
+            )
+
+        // Vi simulerer at hendelsene skjedde for mer enn ANTALL_DAGER_FØR_SAK_LÅSES + 1 dager siden
+        TestContainerHelper.postgresContainer.performUpdate(
+            "update ia_sak_hendelse set opprettet=(current_date - interval '${ANTALL_DAGER_FØR_SAK_LÅSES + 1}' day)" +
+                    " where saksnummer='${sak.saksnummer}';"
+        )
+        shouldFail { sak.nyHendelse(TILBAKE) }
+
+        hentSaker( orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
+            it.status shouldBe IKKE_AKTUELL
+        }
+    }
+
+    @Test
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
