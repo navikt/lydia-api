@@ -1,16 +1,9 @@
 package no.nav.lydia.ia.sak.domene
 
 import kotliquery.Row
+import no.nav.lydia.UnleashKlient.skalSjekkeFrist
 import no.nav.lydia.ia.grunnlag.GrunnlagService
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.SLETTET
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
@@ -358,6 +351,9 @@ class IASak private constructor(
     }
 
     fun erFørFristen(endretTidspunkt: LocalDateTime?): Boolean {
+        if (!skalSjekkeFrist())
+            return true
+
         return endretTidspunkt?.let {
             it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
         } ?: true

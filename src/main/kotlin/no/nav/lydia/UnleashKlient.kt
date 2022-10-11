@@ -28,9 +28,15 @@ object UnleashKlient {
     }
 
     fun isEnabled(toggleKey: String) = unleash.isEnabled(toggleKey, false)
+    fun skruPå(toggleKey: String) = (unleash as FakeUnleash).enable(toggleKey)
+    fun skruAv(toggleKey: String) = (unleash as FakeUnleash).disable(toggleKey)
+
+    inline fun skalSjekkeFrist() = isEnabled(UnleashToggleKeys.fristTilbakeknapp)
 }
 
-object UnleashToggleKeys {}
+object UnleashToggleKeys {
+    val fristTilbakeknapp = "pia.frist-tilbakeknapp"
+}
 
 class ClusterStrategy(val miljø: NaisEnvironment.Companion.Environment) : Strategy {
     override fun getName() = "byCluster"
@@ -41,3 +47,4 @@ class ClusterStrategy(val miljø: NaisEnvironment.Companion.Environment) : Strat
         return alleClustere.contains(miljø.name.lowercase())
     }
 }
+
