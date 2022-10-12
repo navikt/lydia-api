@@ -350,21 +350,24 @@ class IASak private constructor(
         }
     }
 
-    fun erFørFristen(endretTidspunkt: LocalDateTime?): Boolean {
+    private fun erFørFristen(): Boolean {
+        // -- feature toggles av unleash
         if (!skalSjekkeFrist())
             return true
 
-        return endretTidspunkt?.let {
+        return this@IASak.endretTidspunkt?.let {
             it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
         } ?: true
     }
 
-    private inner class FullførtTilstand : ProsessTilstand(
-        status = FULLFØRT
-    ) {
+    private fun erEtterFristen() = !erFørFristen()
+
+    private abstract inner class EndeTilstand(status: IAProsessStatus) : ProsessTilstand(status = status) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
             SUPERBRUKER -> {
-                if (erEierAvSak(rådgiver = rådgiver) && erFørFristen(this@IASak.endretTidspunkt)) {
+                if (erEtterFristen()) {
+                    listOf(GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET))
+                } else if (erEierAvSak(rådgiver = rådgiver)) {
                     listOf(
                         GyldigHendelse(saksHendelsestype = TILBAKE),
                         GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET)
@@ -377,7 +380,9 @@ class IASak private constructor(
                 }
             }
             SAKSBEHANDLER -> {
-                if (erEierAvSak(rådgiver = rådgiver) && erFørFristen(this@IASak.endretTidspunkt)) {
+                if (erEtterFristen()) {
+                    emptyList()
+                } else if (erEierAvSak(rådgiver = rådgiver)) {
                     listOf(GyldigHendelse(saksHendelsestype = TILBAKE))
                 } else {
                     listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
@@ -391,33 +396,9 @@ class IASak private constructor(
         }
     }
 
+    private inner class FullførtTilstand : EndeTilstand(status = FULLFØRT)
 
-    private inner class IkkeAktuellTilstand : ProsessTilstand(
-        status = IKKE_AKTUELL
-    ) {
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> =
-            when (rådgiver.rolle) {
-                LESE -> emptyList()
-                SAKSBEHANDLER,
-                SUPERBRUKER,
-                -> {
-                    val hendelser = mutableListOf<GyldigHendelse>()
-                    if (erEierAvSak(rådgiver = rådgiver) && erFørFristen(this@IASak.endretTidspunkt)) {
-                        hendelser.add(GyldigHendelse(saksHendelsestype = TILBAKE))
-                    } else {
-                        hendelser.add(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
-                    }
-                    if (rådgiver.rolle == SUPERBRUKER) {
-                        hendelser.add(GyldigHendelse(OPPRETT_SAK_FOR_VIRKSOMHET))
-                    }
-                    hendelser
-                }
-            }
-
-        override fun tilbake() {
-            tilstand = finnForrigeTilstand()
-        }
-    }
+    private inner class IkkeAktuellTilstand : EndeTilstand(status = IKKE_AKTUELL)
 
     private inner class SlettetTilstand : ProsessTilstand(
         status = SLETTET
