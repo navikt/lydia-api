@@ -295,7 +295,7 @@ class IASakApiTest {
     @Test
     fun `tilgangskontroll - en sak UTEN eier skal kunne vises av alle med tilgangsrolle`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
             hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
             hentSakerRespons(
                 orgnummer = orgnummer,
@@ -375,7 +375,7 @@ class IASakApiTest {
     fun `tilgangskontroll - man skal kunne se en sak man selv eier`() {
         nyttOrgnummer().also { orgnummer ->
             opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker2.token)
-                .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also { sak ->
+                .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
                     hentSakerRespons(
                         orgnummer = orgnummer,
                         token = mockOAuth2Server.saksbehandler1.token
@@ -389,7 +389,7 @@ class IASakApiTest {
 
         nyttOrgnummer().also { orgnummer ->
             opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker2.token)
-                .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token).also { sak ->
+                .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token).also {
                     hentSakerRespons(
                         orgnummer = orgnummer,
                         token = mockOAuth2Server.superbruker1.token
@@ -780,8 +780,9 @@ class IASakApiTest {
                 sak.nyHendelse(TILBAKE)
             }
 
-            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
-                it.status shouldBe FULLFØRT
+            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
+                enSak.status shouldBe FULLFØRT
+                enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
             }
         }
     }
@@ -804,8 +805,9 @@ class IASakApiTest {
                 sak.nyHendelse(TILBAKE)
             }
 
-            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne {
-                it.status shouldBe IKKE_AKTUELL
+            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
+                enSak.status shouldBe IKKE_AKTUELL
+                enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
             }
         }
     }

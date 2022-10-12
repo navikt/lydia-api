@@ -264,13 +264,20 @@ class SakHelper {
         ) =
             nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
-        fun IASakDto.oppdaterHendelsesTidspunkter(antallDagerTilbake: Long) = this.also {
+        fun IASakDto.oppdaterHendelsesTidspunkter(antallDagerTilbake: Long): IASakDto {
             TestContainerHelper.postgresContainer.performUpdate(
                 """
                     update ia_sak_hendelse 
                         set opprettet=(current_date - interval '$antallDagerTilbake' day)
-                        where saksnummer='${it.saksnummer}';
+                        where saksnummer='${this.saksnummer}';
                 """.trimIndent())
+            TestContainerHelper.postgresContainer.performUpdate(
+                """
+                    update ia_sak 
+                        set endret=(current_date - interval '$antallDagerTilbake' day)
+                        where saksnummer='${this.saksnummer}';
+                """.trimIndent())
+            return requireNotNull(hentSaker(this.orgnr).find { it.saksnummer == this.saksnummer })
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
