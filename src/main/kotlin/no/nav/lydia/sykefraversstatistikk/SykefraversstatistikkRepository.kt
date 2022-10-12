@@ -2,6 +2,7 @@ package no.nav.lydia.sykefraversstatistikk
 
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.*
+import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
@@ -169,6 +170,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         return SykefraværsstatistikkListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
     }
 
+    private fun aktiveStatesArray(): String {
+        return IAProsessStatus.values().filter { !it.ansesSomAvsluttet() }.toList().joinToString(prefix = "(", postfix = ")", transform = {"'$it'"})
+    }
+
     private fun filter(
         tmpKommuneTabell: String,
         tmpNavIdenterTabell: String,
@@ -177,7 +182,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     ) = """
         FROM sykefravar_statistikk_virksomhet AS statistikk
         JOIN virksomhet USING (orgnr)
-        LEFT JOIN ia_sak USING (orgnr)
+        LEFT JOIN ia_sak ON ((ia_sak.orgnr = statistikk.orgnr) AND 
+            (ia_sak.status IN ${aktiveStatesArray()} 
+            OR ia_sak.endret > (current_date - interval '$ANTALL_DAGER_FØR_SAK_LÅSES days') 
+            OR ia_sak.status is NULL))
         JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet)
         
         WHERE (

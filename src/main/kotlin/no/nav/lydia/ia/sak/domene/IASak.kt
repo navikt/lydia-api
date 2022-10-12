@@ -65,8 +65,6 @@ class IASak private constructor(
         }
     }
 
-    fun ansesSomAvsluttet() = status == IKKE_AKTUELL || status == FULLFØRT
-
     fun lagreGrunnlag(grunnlagService: GrunnlagService) = tilstand.lagreGrunnlag(grunnlagService)
 
     fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
@@ -454,6 +452,8 @@ enum class IAProsessStatus {
     IKKE_AKTUELL,
     FULLFØRT,
     SLETTET;
+
+    fun ansesSomAvsluttet() = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
 
     companion object {
         fun filtrerbareStatuser() =

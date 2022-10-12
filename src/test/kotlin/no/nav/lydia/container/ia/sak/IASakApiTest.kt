@@ -970,4 +970,50 @@ class IASakApiTest {
                 hendelseOppsummering.begrunnelser shouldContainAll begrunnelser.map { it.navn }
             }
     }
+
+    @Test
+    fun `skal vise bare èn riktig status gjennom livsløpet til en ny sak`() {
+        hentSykefravær(
+            token = mockOAuth2Server.superbruker1.token,
+            kunMineVirksomheter = false,
+            success = { response ->
+                val org = response.data.filter { it.status == IKKE_AKTIV }.random()
+                val sak = opprettSakForVirksomhet(orgnummer = org.orgnr)
+                    .nyHendelse(TA_EIERSKAP_I_SAK)
+                    .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+                    .nyHendelse(VIRKSOMHET_KARTLEGGES)
+                    .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+                    .nyHendelse(FULLFØR_BISTAND)
+                hentSykefravær( // Tester at vi får se FULLFØRT intil fristen går ut
+                    token = mockOAuth2Server.superbruker1.token,
+                    kunMineVirksomheter = false,
+                    success = { response ->
+                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe FULLFØRT }
+                    }
+                )
+
+                sak.oppdaterHendelsesTidspunkter(ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+                hentSykefravær( // Tester at vi faller tilbake til IKKE_AKTIV når fristen har gått ut
+                    token = mockOAuth2Server.superbruker1.token,
+                    kunMineVirksomheter = false,
+                    success = { response ->
+                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IKKE_AKTIV }
+                    }
+                )
+
+                opprettSakForVirksomhet(orgnummer = org.orgnr)
+                    .nyHendelse(TA_EIERSKAP_I_SAK)
+                    .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+                    .nyHendelse(VIRKSOMHET_KARTLEGGES)
+
+                hentSykefravær( // Viser siste status når vi har fått en ny sak
+                    token = mockOAuth2Server.superbruker1.token,
+                    kunMineVirksomheter = false,
+                    success = { response ->
+                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe KARTLEGGES }
+                    }
+                )
+            }
+        )
+    }
 }
