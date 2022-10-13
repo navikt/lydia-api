@@ -5,6 +5,8 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.GyldigHendelse
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.Rådgiver
 
@@ -19,7 +21,8 @@ data class IASakDto(
     val endretTidspunkt: LocalDateTime?,
     val eidAv: String?,
     val endretAvHendelseId: String,
-    val gyldigeNesteHendelser : List<GyldigHendelse>
+    val gyldigeNesteHendelser : List<GyldigHendelse>,
+    val lukket: Boolean
 ) {
     companion object {
         fun List<IASak>.toDto(rådgiver: Rådgiver) = this.map { it.toDto(rådgiver) }
@@ -34,7 +37,8 @@ data class IASakDto(
             endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
             eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId,
-            gyldigeNesteHendelser = this.gyldigeNesteHendelser(rådgiver)
+            gyldigeNesteHendelser = this.gyldigeNesteHendelser(rådgiver),
+            lukket = this.erEtterFristen() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL)
         )
     }
 }

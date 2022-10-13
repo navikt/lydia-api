@@ -358,7 +358,7 @@ class IASak private constructor(
         } ?: true
     }
 
-    private fun erEtterFristen() = !erFørFristen()
+    fun erEtterFristen() = !erFørFristen()
 
     private abstract inner class EndeTilstand(status: IAProsessStatus) : ProsessTilstand(status = status) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
