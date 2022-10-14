@@ -2,35 +2,20 @@ package no.nav.lydia.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_KARTLEGGES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_BISTÅS
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MANGLER_PARTSGRUPPE
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MINDRE_VIRKSOMHET
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
@@ -228,8 +213,8 @@ class IASakTest {
             fullfør,
         )
         val gyldigeNesteHendelser = sak.gyldigeNesteHendelser(superbruker1)
-        gyldigeNesteHendelser.size shouldBe 2
-        gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(OPPRETT_SAK_FOR_VIRKSOMHET, TILBAKE)
+        gyldigeNesteHendelser.size shouldBe 1
+        gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
     }
 
     private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =

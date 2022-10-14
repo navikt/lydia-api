@@ -22,15 +22,12 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.IASakshendelseOppsummeringDto
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
-import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
-import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -264,7 +261,20 @@ class SakHelper {
         ) =
             nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
-        fun IASakDto.oppdaterHendelsesTidspunkter(antallDagerTilbake: Long): IASakDto {
+        fun IASakDto.nyIkkeAktuellHendelse(
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) = this.nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                token = token,
+                payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = listOf(HAR_IKKE_KAPASITET)).toJson()
+            )
+
+        fun IASakDto.oppdaterHendelsesTidspunkter(
+            antallDagerTilbake: Long,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ): IASakDto {
             TestContainerHelper.postgresContainer.performUpdate(
                 """
                     update ia_sak_hendelse 
@@ -277,7 +287,7 @@ class SakHelper {
                         set endret=(current_date - interval '$antallDagerTilbake' day)
                         where saksnummer='${this.saksnummer}';
                 """.trimIndent())
-            return requireNotNull(hentSaker(this.orgnr).find { it.saksnummer == this.saksnummer })
+            return requireNotNull(hentSaker(this.orgnr, token = token).find { it.saksnummer == this.saksnummer })
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)

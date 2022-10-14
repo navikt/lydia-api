@@ -23,6 +23,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakRequest
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
+import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
@@ -793,12 +794,7 @@ class IASakApiTest {
             // Update etter opprettelse
             val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
                 .nyHendelse(TA_EIERSKAP_I_SAK)
-                .nyHendelse(
-                    hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = listOf(HAR_IKKE_KAPASITET)
-                    ).toJson()
-                )
+                .nyIkkeAktuellHendelse()
                 .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
             shouldFail {
@@ -816,16 +812,33 @@ class IASakApiTest {
     fun `skal alltid kunne gå tilbake etter frist dersom frist ikke er enablet via Unleash`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                    type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(HAR_IKKE_KAPASITET)
-                ).toJson()
-            )
+            .nyIkkeAktuellHendelse()
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
             .nyHendelse(TILBAKE)
 
         sak.status shouldBe VURDERES
+    }
+
+    @Test
+    fun `skal ikke få OPPRETT_SAK_FOR_VIRKSOMHET som gyldig neste hendelse`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyIkkeAktuellHendelse()
+        sak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TILBAKE)
+
+        hentSaker(sak.orgnr, token = oauth2ServerContainer.superbruker1.token)
+            .filter { it.saksnummer == sak.saksnummer }
+            .forExactlyOne { sakDto ->
+                sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TA_EIERSKAP_I_SAK)
+            }
+
+        medFeatureToggleEnablet(UnleashToggleKeys.fristTilbakeknapp) {
+            sak.oppdaterHendelsesTidspunkter(
+                antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1,
+                token = oauth2ServerContainer.superbruker1.token).also { sakDto ->
+                sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe  emptyList()
+            }
+        }
     }
 
     @Test

@@ -362,21 +362,7 @@ class IASak private constructor(
 
     private abstract inner class EndeTilstand(status: IAProsessStatus) : ProsessTilstand(status = status) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
-            SUPERBRUKER -> {
-                if (erEtterFristen()) {
-                    listOf(GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET))
-                } else if (erEierAvSak(rådgiver = rådgiver)) {
-                    listOf(
-                        GyldigHendelse(saksHendelsestype = TILBAKE),
-                        GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET)
-                    )
-                } else {
-                    listOf(
-                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
-                        GyldigHendelse(saksHendelsestype = OPPRETT_SAK_FOR_VIRKSOMHET)
-                    )
-                }
-            }
+            SUPERBRUKER,
             SAKSBEHANDLER -> {
                 if (erEtterFristen()) {
                     emptyList()
