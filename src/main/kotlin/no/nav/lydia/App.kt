@@ -86,7 +86,8 @@ fun startLydiaBackend() {
         sykefraværsstatistikkService = SykefraværsstatistikkService(
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(
                 dataSource = dataSource
-            )
+            ),
+            iaSakRepository = IASakRepository(dataSource = dataSource)
         )
     ).also { HelseMonitor.leggTilHelsesjekk(it) }
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
@@ -190,12 +191,15 @@ fun Application.lydiaRestApi(
     }
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+    val iaSakRepository = IASakRepository(dataSource = dataSource)
     val sykefraværsstatistikkService =
-        SykefraværsstatistikkService(sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource))
+        SykefraværsstatistikkService(
+            sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
+            iaSakRepository = iaSakRepository
+        )
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
-    val iaSakRepository = IASakRepository(dataSource = dataSource)
     val azureTokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment)
 
     routing {

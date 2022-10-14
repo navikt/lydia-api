@@ -5,7 +5,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import java.time.LocalDateTime
 
-class SykefraversstatistikkVirksomhet(
+data class SykefraversstatistikkVirksomhet(
     val virksomhetsnavn: String,
     val kommune: Kommune,
     val orgnr: String,

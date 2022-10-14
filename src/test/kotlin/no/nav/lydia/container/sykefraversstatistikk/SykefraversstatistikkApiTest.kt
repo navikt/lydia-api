@@ -21,6 +21,9 @@ import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomh
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
+import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentAntallSider
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
@@ -43,11 +46,13 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
+import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
 import kotlin.test.fail
@@ -450,8 +455,7 @@ class SykefraversstatistikkApiTest {
             Pair(testBruker1, OSLO),
             Pair(testBruker2, BERGEN)
         ).forEach { (bruker, virksomhet) ->
-            SakHelper
-                .opprettSakForVirksomhet(virksomhet.orgnr, bruker.token)
+            opprettSakForVirksomhet(virksomhet.orgnr, bruker.token)
                 .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker.token)
         }
 
@@ -530,5 +534,26 @@ class SykefraversstatistikkApiTest {
 
         virksomheterMedSykefravær shouldContainAll endredeVirksomheter
         virksomheterMedSykefravær shouldNotContainAnyOf slettedeOgFjernedeVirksomheter
+    }
+
+    @Test
+    fun `skal returnere sist endret selv om frist har gått ut`() {
+        val testKommune = Kommune(navn = "Yoloooo", nummer = "5555")
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyIkkeAktuellHendelse()
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+
+        // -- lag en sak som er enda eldre
+        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyIkkeAktuellHendelse()
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 10)
+
+        hentSykefravær(kommuner = testKommune.nummer).also {
+            it.data.single().sistEndret shouldBe sak.endretTidspunkt?.date
+        }
+
     }
 }
