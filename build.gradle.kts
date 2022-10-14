@@ -38,7 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.2.11")
+    implementation("ch.qos.logback:logback-classic:1.4.1")
     implementation("net.logstash.logback:logstash-logback-encoder:7.2")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -95,7 +95,7 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.33.2")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.34.0")
 
 
     // Autentisering
@@ -107,8 +107,7 @@ dependencies {
 testing {
     suites {
         // Configure the built-in test suite
-        val test by getting(JvmTestSuite::class) {
-            // Use Kotlin Test test framework
+        getting(JvmTestSuite::class) {
             useKotlinTest()
         }
     }
