@@ -416,11 +416,6 @@ class StatistikkHelper {
                 .authentication().bearer(token)
                 .tilSingelRespons<SykefraværsstatistikkListResponseDto>()
 
-        fun SykefraværsstatistikkListResponseDto.hentAntallSider() =
-            total?.let {
-                (it + VIRKSOMHETER_PER_SIDE - 1) / VIRKSOMHETER_PER_SIDE
-            }
-
         fun hentSykefraværForVirksomhetRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
@@ -437,14 +432,15 @@ class StatistikkHelper {
                 .fold(success = { response -> response }, failure = { fail(it.message) })
 
         fun hentSykefraværForAlleVirksomheter(): List<SykefraversstatistikkVirksomhetDto> {
-            val førsteResultatside = hentSykefravær(side = "1")
-            val antallSider = requireNotNull(førsteResultatside.hentAntallSider()) { "Kunne ikke regne ut antall sider" }
+            var side = 1
+            val liste = mutableListOf<SykefraversstatistikkVirksomhetDto>()
 
-            fun hentSiderFraSøkeresultat(sider: IntRange) =
-                sider.flatMap { side ->
-                    hentSykefravær(side = side.toString(), skalInkludereTotaltAntall = false).data
-                }
-            return listOf( førsteResultatside.data, hentSiderFraSøkeresultat((2 .. antallSider))).flatten()
+            do {
+                val sykefravær = hentSykefravær(side = "${side++}")
+                liste.addAll(sykefravær.data)
+            } while (sykefravær.data.size == VIRKSOMHETER_PER_SIDE)
+
+            return liste.toList()
         }
     }
 }
