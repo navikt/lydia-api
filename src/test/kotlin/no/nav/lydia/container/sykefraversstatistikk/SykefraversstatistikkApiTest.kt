@@ -24,7 +24,6 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
-import no.nav.lydia.helper.StatistikkHelper.Companion.hentAntallSider
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
@@ -156,7 +155,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             fylker = "Ø30",
             success = {response ->
-                response.total!! shouldBeGreaterThan 0
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBeIn alleKommunenummerIØstViken
                 }
@@ -171,7 +170,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             kommuner = INDRE_ØSTFOLD.nummer,
             success = {response ->
-                response.total!! shouldBeGreaterThan 0
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBe INDRE_ØSTFOLD.nummer
                 }
@@ -189,7 +188,7 @@ class SykefraversstatistikkApiTest {
             fylker = "Ø30",
             kommuner = LUNNER.nummer,
             success = {response ->
-                response.total!! shouldBeGreaterThan 0
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBe LUNNER.nummer
                 }
@@ -205,7 +204,7 @@ class SykefraversstatistikkApiTest {
             kommuner = KOMMUNE_OSLO.nummer,
             fylker = "Ø30",
             success = {response ->
-                response.total!! shouldBeGreaterThan 0
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll {
                     it.kommune.nummer.substring(0..1) shouldBeIn setOf("30", "03")
                 }
@@ -351,21 +350,15 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
         hentSykefravær(success = { response ->
-            val total = response.total
-            total!! shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
             response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
             val faktiskTotal = postgresContainer.performQuery("SELECT count(*) AS faktiskTotal FROM virksomhet")
                 .getInt("faktiskTotal")
-            total shouldBeLessThanOrEqual faktiskTotal
+            VIRKSOMHETER_PER_SIDE shouldBeLessThanOrEqual faktiskTotal
 
-            val antallSider = requireNotNull(response.hentAntallSider()) { "Kunne ikke regne ut antall sider" }
-            (2..antallSider).map { it.toString() }.forEach { side ->
-                hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
-                    response.total shouldBe null
-                    response.data shouldHaveAtLeastSize 1
-                }, side = side)
-            }
+            hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
+                response.data shouldHaveAtLeastSize 1
+            }, side = "2")
         }, side = "1")
     }
 
@@ -405,7 +398,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             bransjeProgram = "${Bransjer.BYGG}",
             success = {
-                it.total!! shouldBeGreaterThanOrEqual  1
+                it.data.size shouldBeGreaterThanOrEqual  1
                 it.data.forExactlyOne { it.orgnr shouldBe virksomhet.orgnr }
             }
         )
@@ -424,7 +417,7 @@ class SykefraversstatistikkApiTest {
             bransjeProgram = "${Bransjer.BYGG},${Bransjer.SYKEHUS}",
             næringsgrupper = "42",
             success = {
-                it.total!! shouldBeGreaterThanOrEqual 3
+                it.data.size shouldBeGreaterThanOrEqual 3
                 it.data.map { virksomhet -> virksomhet.orgnr } shouldContainAll listOf(virksomhet.orgnr, virksomhet2.orgnr, virksomhet3.orgnr)
             }
         )

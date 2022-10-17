@@ -24,7 +24,7 @@ data class Søkeparametere(
     val skalInkludereTotaltAntall: Boolean = false
 ) {
     companion object {
-        const val VIRKSOMHETER_PER_SIDE = 50
+        const val VIRKSOMHETER_PER_SIDE = 100
 
         const val KVARTAL = "kvartal"
         const val ÅRSTALL = "arstall"

@@ -39,8 +39,8 @@ class SykefraværsstatistikkService(
                  it
          }
 
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter, total: ${sykefravær.total}")
-        return SykefraværsstatistikkListResponse(data = dataMedSistEndret, total = sykefravær.total)
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
+        return SykefraværsstatistikkListResponse(data = dataMedSistEndret)
     }
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
