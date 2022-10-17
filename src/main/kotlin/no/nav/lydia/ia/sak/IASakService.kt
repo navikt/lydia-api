@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak
 
 import arrow.core.Either
 import no.nav.lydia.Observer
+import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
@@ -66,6 +67,11 @@ class IASakService(
             .let { vurderHendelse -> sak.behandleHendelse(hendelse = vurderHendelse) }
             .also { sakEtterVurdering -> sakEtterVurdering.lagreGrunnlag(grunnlagService = grunnlagService) }
             .lagreOppdatering()
+            .also {
+                if (it.isRight()) {
+                    Metrics.virksomheterPrioritert.inc()
+                }
+            }
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {
