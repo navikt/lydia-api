@@ -29,6 +29,7 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
+import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
 import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
 import no.nav.lydia.appstatus.*
 import no.nav.lydia.exceptions.UautorisertException
@@ -59,6 +60,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkLandConsumer
 import no.nav.lydia.veileder.VEILEDERE_PATH
 import no.nav.lydia.veileder.veileder
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -91,6 +93,13 @@ fun startLydiaBackend() {
         )
     ).also { HelseMonitor.leggTilHelsesjekk(it) }
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
+
+    if (naisEnv.miljø == LOKAL || naisEnv.miljø == `DEV-GCP`) {
+        StatistikkLandConsumer.apply {
+            create(kafka = naisEnv.kafka)
+            run()
+        }
+    }
 
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
     val iaSakshendelseProdusent =

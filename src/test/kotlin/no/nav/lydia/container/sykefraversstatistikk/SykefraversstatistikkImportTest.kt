@@ -9,9 +9,13 @@ import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.Kafka
+import no.nav.lydia.helper.KafkaContainerHelper.Companion.statistikkLandTopic
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.SykefraværsstatistikkTestData
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.AVVIRKNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
@@ -34,6 +38,16 @@ import kotlin.test.Test
 class SykefraversstatistikkImportTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
     private val postgres = TestContainerHelper.postgresContainer
+
+    @Test
+    fun `kan konsumere meldinger på sykefraværstatistikk-land topic`() {
+        kafkaContainer.sendOgVentTilKonsumert(
+            "nøkkel",
+            "melding",
+            statistikkLandTopic,
+            Kafka.statistikkLandConsumerGroupId)
+        lydiaApiContainer shouldContainLog ("Topic: ${statistikkLandTopic} - Melding: nøkkel: melding").toRegex()
+    }
 
     @Test
     fun `kan importere statistikk for flere kvartal`() {

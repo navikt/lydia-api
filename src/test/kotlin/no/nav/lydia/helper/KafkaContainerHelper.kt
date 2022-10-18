@@ -43,6 +43,7 @@ class KafkaContainerHelper(
 ) {
     companion object {
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
+        const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
         const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
     }
@@ -70,7 +71,7 @@ class KafkaContainerHelper(
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
-            createTopic(statistikkTopic, iaSakHendelseTopic, iaSakTopic, brregOppdateringTopic)
+            createTopic(statistikkTopic, iaSakHendelseTopic, iaSakTopic, brregOppdateringTopic, statistikkLandTopic)
             kafkaProducer = producer()
         }
 
@@ -80,6 +81,7 @@ class KafkaContainerHelper(
             iaSakHendelseTopic = iaSakHendelseTopic,
             iaSakTopic = iaSakTopic,
             statistikkTopic = statistikkTopic,
+            statistikkLandTopic = statistikkLandTopic,
             brregOppdateringTopic = brregOppdateringTopic,
             consumerLoopDelay = 1,
             credstorePassword = "",
@@ -96,6 +98,7 @@ class KafkaContainerHelper(
         "KAFKA_KEYSTORE_PATH" to "",
         "KAFKA_CREDSTORE_PASSWORD" to "",
         "STATISTIKK_TOPIC" to statistikkTopic,
+        "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
         "IA_SAK_HENDELSE_TOPIC" to iaSakHendelseTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic
@@ -123,6 +126,13 @@ class KafkaContainerHelper(
             StringSerializer(),
             StringSerializer()
         )
+
+    fun sendOgVentTilKonsumert(nøkkel: String, melding: String, topic: String, konsumentGruppeId: String) {
+        runBlocking {
+            val sendtMelding = kafkaProducer.send(ProducerRecord(topic, nøkkel, melding)).get()
+            ventTilKonsumert(sendtMelding.offset(), konsumentGruppeId = konsumentGruppeId)
+        }
+    }
 
     fun sendIBulkOgVentTilKonsumert(importDtoer: List<SykefraversstatistikkImportDto>) {
         runBlocking {
@@ -166,11 +176,14 @@ class KafkaContainerHelper(
             ), gson.toJson(this)
         )
 
-    private suspend fun ventTilKonsumert(offset: Long) =
+    private suspend fun ventTilKonsumert(
+        offset: Long,
+        konsumentGruppeId: String = Kafka.statistikkConsumerGroupId
+    ) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
                 delay(timeMillis = 10L)
-            } while (consumerSinOffset(consumerGroup = Kafka.statistikkConsumerGroupId) <= offset)
+            } while (consumerSinOffset(consumerGroup = konsumentGruppeId) <= offset)
         }
 
     suspend fun ventOgKonsumerKafkaMeldinger(key: String, konsument: KafkaConsumer<String, String>, block: (meldinger: List<String>) -> Unit) {
