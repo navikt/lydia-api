@@ -1,8 +1,8 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.7.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("plugin.serialization") version "1.7.20"
     // For å bygge
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
@@ -38,7 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.4.1")
+    implementation("ch.qos.logback:logback-classic:1.4.3")
     implementation("net.logstash.logback:logstash-logback-encoder:7.2")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -58,7 +58,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.9.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.2.1")
+    implementation("org.apache.kafka:kafka-clients:3.2.3")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
