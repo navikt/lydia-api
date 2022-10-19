@@ -75,7 +75,7 @@ class KafkaContainerHelper(
             kafkaProducer = producer()
         }
 
-    fun nyKonsument() =
+    fun nyKonsument(consumerGroupId: String) =
         Kafka(
             brokers = kafkaContainer.bootstrapServers,
             iaSakHendelseTopic = iaSakHendelseTopic,
@@ -87,7 +87,7 @@ class KafkaContainerHelper(
             credstorePassword = "",
             keystoreLocation = "",
             truststoreLocation = ""
-        ).consumerProperties()
+        ).consumerProperties(consumerGroupId = consumerGroupId)
             .let { config ->
                 KafkaConsumer(config, StringDeserializer(), StringDeserializer())
             }

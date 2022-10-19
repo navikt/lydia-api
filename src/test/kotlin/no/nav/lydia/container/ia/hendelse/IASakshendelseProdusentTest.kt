@@ -23,7 +23,7 @@ import java.time.Duration
 import kotlin.test.Test
 
 class IASakshendelseProdusentTest {
-    private val konsument = TestContainerHelper.kafkaContainerHelper.nyKonsument()
+    private val konsument = TestContainerHelper.kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
     @Before
     fun setUp() {

@@ -27,7 +27,7 @@ import java.time.Duration
 import kotlin.test.Test
 
 class IASakEksportererTest {
-    private val konsument = kafkaContainerHelper.nyKonsument()
+    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
     @Before
     fun setUp() {

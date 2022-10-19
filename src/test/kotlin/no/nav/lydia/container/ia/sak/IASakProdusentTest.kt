@@ -21,7 +21,7 @@ import org.junit.Before
 import kotlin.test.Test
 
 class IASakProdusentTest {
-    private val konsument = kafkaContainerHelper.nyKonsument()
+    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
     @Before
     fun setUp() {
