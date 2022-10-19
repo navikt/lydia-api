@@ -152,12 +152,16 @@ class KafkaContainerHelper(
 
     suspend fun ventTilAlleMeldingerErKonsumert(konsumentGruppe: String, timeout: Duration = Duration.ofSeconds(10)) {
         withTimeout(timeout) {
-            val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
-                .partitionsToOffsetAndMetadata().get()
+            var topicOffset: Long?
+            do {
+                delay(timeMillis = 10L)
+                val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
+                    .partitionsToOffsetAndMetadata().get()
 
-            val topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
-                OffsetSpec.latest()
-            }).all().get().map { it.value.offset() }.first()
+                topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
+                    OffsetSpec.latest()
+                }).all().get().map { it.value.offset() }.firstOrNull()
+            } while (topicOffset == null)
 
             do {
                 delay(timeMillis = 10L)
