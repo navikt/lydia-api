@@ -22,7 +22,6 @@ data class Søkeparametere(
     val side: Int,
     val navIdenter: Set<String>,
     val bransjeprogram: Set<Bransjer>,
-    val skalInkludereTotaltAntall: Boolean = false
 ) {
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 100
@@ -41,8 +40,6 @@ data class Søkeparametere(
         const val IA_STATUS = "iaStatus"
         const val SIDE = "side"
         const val BRANSJEPROGRAM = "bransjeprogram"
-        const val SKAL_INKLUDERE_TOTALT_ANTALL = "skalInkludereTotaltAntall"
-        const val KUN_MINE_VIRKSOMHETER = "kunMineVirksomheter"
         const val IA_SAK_EIERE = "eiere"
 
         fun from(call: ApplicationCall, geografiService: GeografiService, rådgiver: Rådgiver) =
@@ -64,20 +61,15 @@ data class Søkeparametere(
                     side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1,
                     navIdenter = call.navIdenter(rådgiver = rådgiver),
                     bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
-                    skalInkludereTotaltAntall = queryParameters[SKAL_INKLUDERE_TOTALT_ANTALL].toBoolean()
                 )
             }
 
         private fun ApplicationCall.navIdenter(rådgiver: Rådgiver): Set<String> {
-            return if (request.queryParameters[KUN_MINE_VIRKSOMHETER].toBoolean()) {
-                setOf(rådgiver.navIdent)
-            } else {
-                request.queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
-                    when (rådgiver.rolle) {
-                        SUPERBRUKER,
-                        SAKSBEHANDLER -> eiere.filter { it == rådgiver.navIdent }.toSet()
-                        LESE -> emptySet()
-                    }
+            return request.queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
+                when (rådgiver.rolle) {
+                    SUPERBRUKER,
+                    SAKSBEHANDLER -> eiere.filter { it == rådgiver.navIdent }.toSet()
+                    LESE -> emptySet()
                 }
             }
         }

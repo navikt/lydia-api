@@ -358,7 +358,7 @@ class SykefraversstatistikkApiTest {
                 .getInt("faktiskTotal")
             VIRKSOMHETER_PER_SIDE shouldBeLessThanOrEqual faktiskTotal
 
-            hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
+            hentSykefravær(success = { response ->
                 response.data shouldHaveAtLeastSize 1
             }, side = "2")
         }, side = "1")
@@ -456,7 +456,7 @@ class SykefraversstatistikkApiTest {
 
         hentSykefravær(
             token = testBruker1.token,
-            kunMineVirksomheter = true,
+            eiere = testBruker1.navIdent,
             success = { response ->
                 response.data
                     .forAll {
@@ -466,7 +466,6 @@ class SykefraversstatistikkApiTest {
         )
         hentSykefravær(
             token = testBruker1.token,
-            kunMineVirksomheter = false,
             iaStatus = IAProsessStatus.VURDERES.name,
             success = { response ->
                 val sfStatistikk = response.data

@@ -311,9 +311,7 @@ class StatistikkHelper {
             ansatteTil: String = "",
             iaStatus: String = "",
             side: String = "",
-            kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
-            skalInkludereTotaltAntall: Boolean = true,
             eiere: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
@@ -331,9 +329,7 @@ class StatistikkHelper {
                 ansatteTil = ansatteTil,
                 iaStatus = iaStatus,
                 side = side,
-                kunMineVirksomheter = kunMineVirksomheter,
                 bransjeProgram = bransjeProgram,
-                skalInkludereTotaltAntall = skalInkludereTotaltAntall,
                 eiere = eiere,
                 token = token
             ).third
@@ -353,9 +349,7 @@ class StatistikkHelper {
             ansatteTil: String = "",
             iaStatus: String = "",
             side: String = "",
-            kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
-            skalInkludereTotaltAntall: Boolean = true,
             eiere: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
@@ -373,9 +367,7 @@ class StatistikkHelper {
                 ansatteTil = ansatteTil,
                 iaStatus = iaStatus,
                 side = side,
-                kunMineVirksomheter = kunMineVirksomheter,
                 bransjeProgram = bransjeProgram,
-                skalInkludereTotaltAntall = skalInkludereTotaltAntall,
                 eiere = eiere,
                 token = token
             ).third.get()
@@ -394,9 +386,7 @@ class StatistikkHelper {
             ansatteTil: String = "",
             iaStatus: String = "",
             side: String = "",
-            kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
-            skalInkludereTotaltAntall: Boolean = true,
             eiere: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
@@ -415,9 +405,7 @@ class StatistikkHelper {
                         "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
                         "&${Søkeparametere.IA_STATUS}=$iaStatus" +
                         "&${Søkeparametere.SIDE}=$side" +
-                        "&${Søkeparametere.KUN_MINE_VIRKSOMHETER}=$kunMineVirksomheter" +
                         "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
-                        "&${Søkeparametere.SKAL_INKLUDERE_TOTALT_ANTALL}=$skalInkludereTotaltAntall" +
                         "&${Søkeparametere.IA_SAK_EIERE}=$eiere"
             )
                 .authentication().bearer(token)
