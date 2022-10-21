@@ -241,7 +241,7 @@ class SakHelper {
         ) =
             nyHendelsePåSakMedRespons(sak = sak, hendelsestype = hendelsestype, payload = payload, token = token)
                 .third.fold(success = { respons -> respons }, failure = {
-                    fail(it.message)
+                    fail("${it.message} ${it.response.body().asString(null)}")
                 })
 
         fun IASakDto.slettSak(token: String = oauth2ServerContainer.superbruker1.token) =
