@@ -29,6 +29,7 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirk
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
+import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
@@ -43,6 +44,7 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFIL
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
@@ -58,7 +60,7 @@ import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
-    private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+    private val mockOAuth2Server = oauth2ServerContainer
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
@@ -441,8 +443,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på bare mine virksomheter`() {
-        val testBruker1 = TestContainerHelper.oauth2ServerContainer.superbruker1
-        val testBruker2 = TestContainerHelper.oauth2ServerContainer.superbruker2
+        val testBruker1 = oauth2ServerContainer.superbruker1
+        val testBruker2 = oauth2ServerContainer.superbruker2
 
         listOf(
             Pair(testBruker1, OSLO),
@@ -481,6 +483,18 @@ class SykefraversstatistikkApiTest {
         )
     }
 
+    @Test
+    fun `søk - skal kunne filtrere på enkelte eiere`() {
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+
+        hentSykefravær(
+            eiere = oauth2ServerContainer.saksbehandler1.navIdent,
+            token = oauth2ServerContainer.saksbehandler1.token
+        ).data.forAll {
+            it.eidAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+        }
+    }
 
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {

@@ -28,8 +28,8 @@ fun Route.sykefraversstatistikk(
     fiaRoller: FiaRoller,
 ) {
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
-            val søkeparametere = Søkeparametere.from(call, geografiService)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {rådgiver ->
+            val søkeparametere = Søkeparametere.from(call, geografiService, rådgiver = rådgiver)
             val sykefraværsstatistikkVirksomheter =
                 sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere)
             sykefraværsstatistikkVirksomheter.right()

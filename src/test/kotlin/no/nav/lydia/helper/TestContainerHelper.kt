@@ -314,6 +314,7 @@ class StatistikkHelper {
             kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
             skalInkludereTotaltAntall: Boolean = true,
+            eiere: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             hentSykefraværRespons(
@@ -333,9 +334,11 @@ class StatistikkHelper {
                 kunMineVirksomheter = kunMineVirksomheter,
                 bransjeProgram = bransjeProgram,
                 skalInkludereTotaltAntall = skalInkludereTotaltAntall,
+                eiere = eiere,
                 token = token
             ).third
                 .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
+
         fun hentSykefravær(
             kvartal: String = "",
             årstall: String = "",
@@ -353,6 +356,7 @@ class StatistikkHelper {
             kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
             skalInkludereTotaltAntall: Boolean = true,
+            eiere: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             hentSykefraværRespons(
@@ -372,6 +376,7 @@ class StatistikkHelper {
                 kunMineVirksomheter = kunMineVirksomheter,
                 bransjeProgram = bransjeProgram,
                 skalInkludereTotaltAntall = skalInkludereTotaltAntall,
+                eiere = eiere,
                 token = token
             ).third.get()
 
@@ -391,8 +396,9 @@ class StatistikkHelper {
             side: String = "",
             kunMineVirksomheter: Boolean = false,
             bransjeProgram: String = "",
+            skalInkludereTotaltAntall: Boolean = true,
+            eiere: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
-            skalInkludereTotaltAntall: Boolean = true
         ) =
             lydiaApiContainer.performGet(
                 SYKEFRAVERSSTATISTIKK_PATH +
@@ -411,7 +417,8 @@ class StatistikkHelper {
                         "&${Søkeparametere.SIDE}=$side" +
                         "&${Søkeparametere.KUN_MINE_VIRKSOMHETER}=$kunMineVirksomheter" +
                         "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
-                        "&${Søkeparametere.SKAL_INKLUDERE_TOTALT_ANTALL}=$skalInkludereTotaltAntall"
+                        "&${Søkeparametere.SKAL_INKLUDERE_TOTALT_ANTALL}=$skalInkludereTotaltAntall" +
+                        "&${Søkeparametere.IA_SAK_EIERE}=$eiere"
             )
                 .authentication().bearer(token)
                 .tilSingelRespons<SykefraværsstatistikkListResponseDto>()
