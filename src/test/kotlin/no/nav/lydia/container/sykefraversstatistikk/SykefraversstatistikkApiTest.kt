@@ -96,8 +96,9 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
+        val saksbehandler1 = mockOAuth2Server.saksbehandler1
         val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
-            .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
+            .authentication().bearer(saksbehandler1.token)
             .tilSingelRespons<FilterverdierDto>()
 
         result.fold(
@@ -110,6 +111,12 @@ class SykefraversstatistikkApiTest {
                 filterverdier.neringsgrupper.size shouldBeGreaterThan 1
                 filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
                 filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
+                filterverdier.filtrerbareEiere shouldBe listOf(
+                    EierDTO(
+                        ident = saksbehandler1.navIdent,
+                        navn = saksbehandler1.navIdent
+                    )
+                )
             }, failure = { fail(it.message) })
     }
 
@@ -351,15 +358,15 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
-        hentSykefravær(success = { response ->
-            response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
+        hentSykefravær(success = { response1 ->
+            response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
             val faktiskTotal = postgresContainer.performQuery("SELECT count(*) AS faktiskTotal FROM virksomhet")
                 .getInt("faktiskTotal")
             VIRKSOMHETER_PER_SIDE shouldBeLessThanOrEqual faktiskTotal
 
-            hentSykefravær(success = { response ->
-                response.data shouldHaveAtLeastSize 1
+            hentSykefravær(success = { response2 ->
+                response2.data shouldHaveAtLeastSize 1
             }, side = "2")
         }, side = "1")
     }
