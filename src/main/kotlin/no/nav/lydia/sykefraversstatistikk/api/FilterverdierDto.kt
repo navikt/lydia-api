@@ -21,4 +21,4 @@ data class FilterverdierDto(
 data class FylkeOgKommuner (val fylke: Fylke, val kommuner: List<Kommune>)
 
 @Serializable
-data class EierDTO (val ident: String, val navn: String)
+data class EierDTO (val navIdent: String, val navn: String)

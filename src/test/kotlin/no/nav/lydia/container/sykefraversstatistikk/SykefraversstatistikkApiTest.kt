@@ -113,7 +113,7 @@ class SykefraversstatistikkApiTest {
                 filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
                 filterverdier.filtrerbareEiere shouldBe listOf(
                     EierDTO(
-                        ident = saksbehandler1.navIdent,
+                        navIdent = saksbehandler1.navIdent,
                         navn = saksbehandler1.navIdent
                     )
                 )
