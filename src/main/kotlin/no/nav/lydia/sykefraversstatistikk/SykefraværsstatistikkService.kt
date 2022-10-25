@@ -1,6 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk
 
 import no.nav.lydia.ia.sak.db.IASakRepository
+import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
@@ -50,4 +51,7 @@ class SykefraværsstatistikkService(
         return sykefraværForVirksomhet
     }
 
+    fun hentAlleSaksbehandlere(): List<EierDTO> {
+        return emptyList()
+    }
 }
