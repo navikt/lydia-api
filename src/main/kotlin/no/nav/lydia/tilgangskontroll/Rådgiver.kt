@@ -1,6 +1,7 @@
 package no.nav.lydia.tilgangskontroll
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -34,13 +35,8 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
                 if (rådgiver.erLesebruker()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
-        private suspend fun <T> somRådgiver(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>): Either<Feil, T> {
-            val either = from(call = call, fiaRoller = fiaRoller)
-            return when(either) {
-                is Either.Left -> either
-                is Either.Right -> block(either.value)
-            }
-        }
+        private suspend fun <T> somRådgiver(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
+            from(call = call, fiaRoller = fiaRoller).flatMap { block(it) }
     }
 
     private fun grupperTilRolle() : Rolle =
