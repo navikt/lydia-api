@@ -129,7 +129,6 @@ class SykefraversstatistikkApiTest {
         val superbruker = mockOAuth2Server.superbruker1
         val alleFiltrerBareEiere = hentFilterverdier(token = superbruker.token).filtrerbareEiere
         alleFiltrerBareEiere.map { it.navIdent } shouldBe listOf(
-            superbruker.navIdent,
             "M12345",
             "S12345",
             "S12346",

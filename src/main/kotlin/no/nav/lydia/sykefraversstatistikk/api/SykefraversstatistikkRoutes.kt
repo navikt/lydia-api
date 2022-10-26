@@ -67,10 +67,10 @@ fun Route.sykefraversstatistikk(
                 val filtrerbareEiere = when (rådgiver.rolle) {
                     Rådgiver.Rolle.LESE,
                     Rådgiver.Rolle.SAKSBEHANDLER -> listOf(brukerenSelv)
-                    Rådgiver.Rolle.SUPERBRUKER -> setOf(brukerenSelv, *hentEiere(
+                    Rådgiver.Rolle.SUPERBRUKER -> hentEiere(
                         azureTokenFetcher = azureTokenFetcher,
                         security = naisEnvironment.security
-                    ).toTypedArray()).toList()
+                    )
                 }
                 return@get call.respond(
                     FilterverdierDto(
