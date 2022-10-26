@@ -242,7 +242,8 @@ fun Application.lydiaRestApi(
                 sykefraværsstatistikkService = sykefraværsstatistikkService,
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
-                fiaRoller = naisEnvironment.security.fiaRoller
+                naisEnvironment = naisEnvironment,
+                azureTokenFetcher = azureTokenFetcher
             )
             iaSakRådgiver(
                 iaSakService = IASakService(

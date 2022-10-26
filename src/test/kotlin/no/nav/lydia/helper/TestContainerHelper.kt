@@ -31,10 +31,7 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
-import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.veileder.VEILEDERE_PATH
 import no.nav.lydia.veileder.VeilederDTO
@@ -437,6 +434,13 @@ class StatistikkHelper {
 
             return liste.toList()
         }
+
+        fun hentFilterverdier(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
+                .authentication().bearer(token)
+                .tilSingelRespons<FilterverdierDto>()
+                .third
+                .fold(success = { response -> response }, failure = { fail(it.message) })
     }
 }
 
