@@ -25,7 +25,7 @@ services:
     environment:
       TZ: Europe/Oslo
       SERVER_PORT: 6969
-      JSON_CONFIG: "{\"interactiveLogin\":true,\"tokenCallbacks\":[{\"issuerId\":\"azure\",\"tokenExpiry\":3600,\"requestMappings\":[{\"requestParam\":\"grant_type\",\"claims\":{\"aud\":[\"lydia-api\"],\"NAVident\":\"Z123456\",\"groups\":[\"ensuperbrukerGroupId\"]}}]}]}"
+      JSON_CONFIG: "{\"interactiveLogin\":true,\"tokenCallbacks\":[{\"issuerId\":\"azure\",\"tokenExpiry\":3600,\"requestMappings\":[{\"requestParam\":\"grant_type\",\"claims\":{\"aud\":[\"lydia-api\"],\"NAVident\":\"Z123456\",\"name\":\"F_Z123456 E_Z123456\",\"groups\":[\"ensuperbrukerGroupId\"]}}]}]}"
     ports:
       - "6969:6969"
 

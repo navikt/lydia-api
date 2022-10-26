@@ -39,12 +39,14 @@ class IASakTest {
 
         val superbruker1 = Rådgiver(
             navIdent = navIdent1,
+            navn = "Super Bruker",
             fiaRoller = fiaroller,
             rådgiversGrupper = listOf(fiaroller.superbrukerGroupId)
         )
 
         val saksbehandler2 = Rådgiver(
             navIdent = navIdent2,
+            navn = "Saks Behandler",
             fiaRoller = fiaroller,
             rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
         )

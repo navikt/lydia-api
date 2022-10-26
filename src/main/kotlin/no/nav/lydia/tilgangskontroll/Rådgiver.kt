@@ -9,7 +9,7 @@ import no.nav.lydia.FiaRoller
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.sak.api.Feil
 
-class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: List<String>) {
+class Rådgiver(val navIdent: String, val navn: String, fiaRoller: FiaRoller, rådgiversGrupper: List<String>) {
     private val tilgang = Tilgang(fiaRoller, rådgiversGrupper)
     val rolle get() = grupperTilRolle()
 
@@ -17,7 +17,8 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
         fun from(call: ApplicationCall, fiaRoller: FiaRoller): Either<Feil, Rådgiver> {
             val navIdent = call.innloggetNavIdent() ?: return Either.Left(RådgiverError.FantIkkeNavIdent)
             val grupper = call.azureADGrupper() ?: return Either.Left(RådgiverError.FantIngenADGrupper)
-            return Either.Right(Rådgiver(navIdent = navIdent, fiaRoller = fiaRoller, rådgiversGrupper = grupper))
+            val navn = call.innloggetNavn() ?: return Either.Left(RådgiverError.FantIkkeNavn)
+            return Either.Right(Rådgiver(navIdent = navIdent, navn = navn, fiaRoller = fiaRoller, rådgiversGrupper = grupper))
         }
 
         suspend fun <T> somSuperbruker(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
@@ -65,6 +66,7 @@ class Rådgiver(val navIdent: String, fiaRoller: FiaRoller, rådgiversGrupper: L
 object RådgiverError {
     val IkkeAutorisert = Feil("Ikke autorisert", HttpStatusCode.Forbidden)
     val FantIkkeNavIdent = Feil("Fant ikke NAV-ident på tokenet", HttpStatusCode.Forbidden)
+    val FantIkkeNavn = Feil("Fant ikke navn på tokenet", HttpStatusCode.Forbidden)
     val FantIngenADGrupper = Feil("Fant ingen AD-grupper på tokenet", HttpStatusCode.Forbidden)
 }
 

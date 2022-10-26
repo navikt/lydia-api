@@ -123,8 +123,11 @@ class SykefraversstatistikkApiTest {
             .filtrerbareEiere.map { it.navIdent } shouldBe listOf(lesebruker.navIdent)
 
         val saksbehandler = mockOAuth2Server.saksbehandler1
-        hentFilterverdier(token = saksbehandler.token)
-            .filtrerbareEiere.map { it.navIdent } shouldBe listOf(saksbehandler.navIdent)
+        hentFilterverdier(token = saksbehandler.token).filtrerbareEiere
+            .also { eiere ->
+                eiere.map { it.navIdent } shouldBe listOf(saksbehandler.navIdent)
+                eiere.map { it.navn } shouldBe listOf(saksbehandler.navn)
+            }
 
         val superbruker = mockOAuth2Server.superbruker1
         val alleFiltrerBareEiere = hentFilterverdier(token = superbruker.token).filtrerbareEiere

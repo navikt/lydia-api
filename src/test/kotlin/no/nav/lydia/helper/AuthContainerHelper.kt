@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic
 import com.nimbusds.oauth2.sdk.auth.Secret
 import com.nimbusds.oauth2.sdk.id.ClientID
 import no.nav.lydia.Security.Companion.GROUPS_CLAIM
+import no.nav.lydia.Security.Companion.NAME_CLAIM
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
 import no.nav.security.mock.oauth2.OAuth2Config
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
@@ -73,21 +74,23 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
                 start()
 
                 // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
-                lesebruker = TestBruker("L54321", lesetilgangGroupId)
-                lesebrukerAudit = TestBruker("A54321", lesetilgangGroupId)
-                saksbehandler1 = TestBruker("X12345", saksbehandlerGroupId)
-                saksbehandler2 = TestBruker("Y54321", saksbehandlerGroupId)
-                superbruker1 = TestBruker("S54321", superbrukerGroupId)
-                superbruker2 = TestBruker("S22222", superbrukerGroupId)
-                brukerUtenTilgangsrolle = TestBruker("U54321", ugyldigRolleGroupId)
+                lesebruker = TestBruker(navIdent = "L54321", lesetilgangGroupId)
+                lesebrukerAudit = TestBruker(navIdent = "A54321", lesetilgangGroupId)
+                saksbehandler1 = TestBruker(navIdent = "X12345", saksbehandlerGroupId)
+                saksbehandler2 = TestBruker(navIdent = "Y54321", saksbehandlerGroupId)
+                superbruker1 = TestBruker(navIdent = "S54321", superbrukerGroupId)
+                superbruker2 = TestBruker(navIdent = "S22222", superbrukerGroupId)
+                brukerUtenTilgangsrolle = TestBruker(navIdent = "U54321", ugyldigRolleGroupId)
             }
     }
 
     inner class TestBruker(val navIdent : String, gruppe : String) {
-        val token = issueToken(
+        val navn = navIdent
+        val token: String = issueToken(
             audience = audience,
             claims = mapOf(
                 NAV_IDENT_CLAIM to navIdent,
+                NAME_CLAIM to "F_$navIdent E_$navIdent",
                 GROUPS_CLAIM to listOf(gruppe)
             )
         ).serialize()
