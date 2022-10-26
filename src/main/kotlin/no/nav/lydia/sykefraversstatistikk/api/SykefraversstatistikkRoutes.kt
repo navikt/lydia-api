@@ -1,6 +1,5 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
-import arrow.core.Either
 import arrow.core.right
 import ia.felles.definisjoner.bransjer.Bransjer
 import io.ktor.http.*
@@ -85,17 +84,11 @@ fun Route.sykefraversstatistikk(
     }
 }
 
-suspend fun hentEiere(azureTokenFetcher: AzureTokenFetcher, security: Security): List<EierDTO> {
-    val eiereEither = hentVeiledere(
+suspend fun hentEiere(azureTokenFetcher: AzureTokenFetcher, security: Security) =
+    hentVeiledere(
         tokenFetcher = azureTokenFetcher,
         security = security
-    ).map{ veiledere -> veiledere.map { it.tilEierDTO() }.toList() }
-
-    return when (eiereEither) {
-        is Either.Left -> emptyList()
-        is Either.Right -> eiereEither.value
-    }
-}
+    ).fold(ifLeft = { emptyList() }, ifRight = { veiledere -> veiledere.map { it.tilEierDTO() }.toList() })
 
 object SykefraværsstatistikkError {
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
