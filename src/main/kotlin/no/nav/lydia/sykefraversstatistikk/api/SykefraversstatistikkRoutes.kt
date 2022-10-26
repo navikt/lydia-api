@@ -63,10 +63,9 @@ fun Route.sykefraversstatistikk(
             .mapLeft { feil ->
                 call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
             }.map { rådgiver ->
-                val brukerenSelv = EierDTO(rådgiver.navIdent, rådgiver.navIdent)
                 val filtrerbareEiere = when (rådgiver.rolle) {
                     Rådgiver.Rolle.LESE,
-                    Rådgiver.Rolle.SAKSBEHANDLER -> listOf(brukerenSelv)
+                    Rådgiver.Rolle.SAKSBEHANDLER -> listOf(EierDTO(navIdent = rådgiver.navIdent, navn = rådgiver.navn))
                     Rådgiver.Rolle.SUPERBRUKER -> hentEiere(
                         azureTokenFetcher = azureTokenFetcher,
                         security = naisEnvironment.security
