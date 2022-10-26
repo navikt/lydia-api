@@ -14,6 +14,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.AzureConfig
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.exceptions.AzureException
 import no.nav.lydia.ia.sak.api.Feil
@@ -49,7 +50,7 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
                 )
                 val veiledere = gruppeIder.map { gruppeId ->
                     async {
-                        val json = hentVeiledereFraAzure(naisEnvironment, gruppeId, accessToken)
+                        val json = hentVeiledereFraAzure(naisEnvironment.security.azureConfig, gruppeId, accessToken)
                         deserializer.decodeFromString<AzureAdBrukere>(json).value
                     }
                 }.awaitAll()
@@ -74,10 +75,10 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
 }
 
 private fun hentVeiledereFraAzure(
-    naisEnvironment: NaisEnvironment,
+    azureConfig: AzureConfig,
     gruppeId: String,
     accessToken: String
-) = "${naisEnvironment.security.azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=id,givenName,surname,onPremisesSamAccountName"
+) = "${azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=id,givenName,surname,onPremisesSamAccountName"
     .httpGet()
     .authentication()
     .bearer(token = accessToken)
