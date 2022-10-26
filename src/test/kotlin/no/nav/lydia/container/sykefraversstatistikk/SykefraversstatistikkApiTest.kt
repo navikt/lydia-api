@@ -111,7 +111,7 @@ class SykefraversstatistikkApiTest {
         filterverdier.filtrerbareEiere shouldBe listOf(
             EierDTO(
                 navIdent = saksbehandler1.navIdent,
-                navn = saksbehandler1.navIdent
+                navn = saksbehandler1.navn
             )
         )
     }

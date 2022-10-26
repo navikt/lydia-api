@@ -85,12 +85,12 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     }
 
     inner class TestBruker(val navIdent : String, gruppe : String) {
-        val navn = navIdent
+        val navn = "F_$navIdent E_$navIdent"
         val token: String = issueToken(
             audience = audience,
             claims = mapOf(
                 NAV_IDENT_CLAIM to navIdent,
-                NAME_CLAIM to "F_$navIdent E_$navIdent",
+                NAME_CLAIM to navn,
                 GROUPS_CLAIM to listOf(gruppe)
             )
         ).serialize()
