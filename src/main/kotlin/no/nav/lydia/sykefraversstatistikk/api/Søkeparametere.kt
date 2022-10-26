@@ -67,9 +67,9 @@ data class Søkeparametere(
         private fun ApplicationCall.navIdenter(rådgiver: Rådgiver): Set<String> {
             return request.queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
                 when (rådgiver.rolle) {
-                    SUPERBRUKER,
-                    SAKSBEHANDLER -> eiere.filter { it == rådgiver.navIdent }.toSet()
-                    LESE -> emptySet()
+                    SUPERBRUKER -> eiere.toSet()
+                    SAKSBEHANDLER,
+                    LESE -> eiere.filter { it == rådgiver.navIdent }.toSet()
                 }
             }
         }
@@ -97,14 +97,16 @@ data class Søkeparametere(
     fun virksomheterPerSide() = VIRKSOMHETER_PER_SIDE
     fun offset() = (side - 1) * VIRKSOMHETER_PER_SIDE
 
-    internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply { addAll(
-        bransjeprogram.flatMap { bransje ->
-            bransje.næringskoder.map { næringskode ->
-                if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
-                else næringskode
+    internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply {
+        addAll(
+            bransjeprogram.flatMap { bransje ->
+                bransje.næringskoder.map { næringskode ->
+                    if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
+                    else næringskode
+                }
             }
-        }
-    ) }.toSet()
+        )
+    }.toSet()
 }
 
 class Periode(val kvartal: Int, val årstall: Int) {
