@@ -510,16 +510,72 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `søk - skal kunne filtrere på enkelte eiere`() {
+    fun `søk - skal kunne filtrere på seg selv`() {
+        val superbruker1 = oauth2ServerContainer.superbruker1
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
+
+        val `sykefravær når saksbehandler filterer på seg selv` = hentSykefravær(
+            eiere = saksbehandler1.navIdent,
+            token = saksbehandler1.token
+        ).data
+        val `sykefravær når superbruker filtrerer på seg selv` = hentSykefravær(
+            eiere = superbruker1.navIdent,
+            token = superbruker1.token
+        ).data
+
+        `sykefravær når saksbehandler filterer på seg selv`
+            .forAll {
+                it.eidAv shouldBe saksbehandler1.navIdent
+            }
+        `sykefravær når superbruker filtrerer på seg selv`
+            .forAll {
+                it.eidAv shouldBe superbruker1.navIdent
+            }
+    }
+
+    @Test
+    fun `søk - kun superbruker skal kunne filtrere på andre enn seg selv`() {
+        val superbruker1 = oauth2ServerContainer.superbruker1
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
 
         hentSykefravær(
-            eiere = oauth2ServerContainer.saksbehandler1.navIdent,
-            token = oauth2ServerContainer.saksbehandler1.token
+            eiere = saksbehandler1.navIdent,
+            token = superbruker1.token
         ).data.forAll {
-            it.eidAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+            it.eidAv shouldBe saksbehandler1.navIdent
         }
+    }
+
+    @Test
+    fun `søk - om saksbehandler velger en eier utenom seg selv skal det ikke påvirke resultatet`() {
+        val superbruker1 = oauth2ServerContainer.superbruker1
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
+
+        val ufiltrertSykefravær = hentSykefravær(token = saksbehandler1.token).data
+        val `sykefravær filtrert på brukeren selv` = hentSykefravær(
+            eiere = saksbehandler1.navIdent,
+            token = saksbehandler1.token
+        ).data
+        val `sykefravær filtrert på en annen eier` = hentSykefravær(
+            eiere = superbruker1.navIdent,
+            token = saksbehandler1.token
+        ).data
+
+        `sykefravær filtrert på en annen eier` shouldBe ufiltrertSykefravær
+        `sykefravær filtrert på brukeren selv` shouldNotBe ufiltrertSykefravær
     }
 
     @Test
