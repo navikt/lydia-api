@@ -87,11 +87,13 @@ suspend fun hentVeiledere(
     }.mapLeft { Feil(it.message ?: "Ukjent feil under henting av veiledere", HttpStatusCode.InternalServerError) }
 }
 
+val antallVeilederePerSide = 999
+
 private fun hentVeiledereFraAzure(
     azureConfig: AzureConfig,
     gruppeId: String,
     accessToken: String
-) = "${azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=id,givenName,surname,onPremisesSamAccountName"
+) = "${azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=id,givenName,surname,onPremisesSamAccountName&\$top=$antallVeilederePerSide"
     .httpGet()
     .authentication()
     .bearer(token = accessToken)
