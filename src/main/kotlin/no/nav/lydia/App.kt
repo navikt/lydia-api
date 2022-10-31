@@ -89,7 +89,6 @@ fun startLydiaBackend() {
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(
                 dataSource = dataSource
             ),
-            iaSakRepository = IASakRepository(dataSource = dataSource)
         )
     ).also { HelseMonitor.leggTilHelsesjekk(it) }
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
@@ -204,7 +203,6 @@ fun Application.lydiaRestApi(
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-            iaSakRepository = iaSakRepository
         )
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)

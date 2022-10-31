@@ -38,7 +38,7 @@ fun Route.sykefraversstatistikk(
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
             val søkeparametere = Søkeparametere.from(call, geografiService, rådgiver = rådgiver)
             val sykefraværsstatistikkVirksomheter =
-                sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere)
+                SykefraværsstatistikkListResponse(data = sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere))
             sykefraværsstatistikkVirksomheter.right()
         }.map { sykefraværsstatistikkVirksomheter ->
             call.respond(sykefraværsstatistikkVirksomheter.toDto()).right()

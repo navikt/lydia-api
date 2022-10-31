@@ -3,17 +3,19 @@ package no.nav.lydia.sykefraversstatistikk
 import arrow.core.Either
 import arrow.core.rightIfNotNull
 import io.ktor.http.*
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.db.IASakRepository
-import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
+import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
 import org.slf4j.LoggerFactory
+import java.time.LocalDate.now
 
 class SykefraværsstatistikkService(
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
-    val iaSakRepository: IASakRepository
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -25,26 +27,31 @@ class SykefraværsstatistikkService(
 
     fun hentSykefravær(
         søkeparametere: Søkeparametere
-    ): SykefraværsstatistikkListResponse {
+    ): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
         val sykefravær = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
 
-        if (sykefravær.data.isEmpty()) {
-            return sykefravær
-        }
-
-        val sistEndretDatoer = iaSakRepository.hentSistEndretDatoer(sykefravær.data.map { it.orgnr })
-            .toMap().filterValues { it != null }
-
-         val dataMedSistEndret = sykefravær.data.map {
-             if (sistEndretDatoer.containsKey(it.orgnr)) {
-                 it.copy(sistEndret = sistEndretDatoer[it.orgnr]?.date)
-             } else
-                 it
-         }
-
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
-        return SykefraværsstatistikkListResponse(data = dataMedSistEndret)
+        return sykefravær.map {
+            if(it.status.erAvsluttet() && it.sistEndret.erForeldet()) {
+                it.copy(
+                    status = IAProsessStatus.IKKE_AKTIV
+                )
+            } else {
+                it
+            }
+        }
+    }
+
+    private fun LocalDate?.erForeldet() = when(this) {
+        null -> false
+        else -> {
+            this < now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES).toKotlinLocalDate()
+        }
+    }
+    private fun IAProsessStatus?.erAvsluttet() = when(this) {
+        null -> true
+        else -> ansesSomAvsluttet()
     }
 
     fun hentTotaltAntallTreff(søkeparametere: Søkeparametere): Either<Feil, Int> =

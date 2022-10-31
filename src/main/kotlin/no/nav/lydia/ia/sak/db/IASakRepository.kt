@@ -2,8 +2,6 @@ package no.nav.lydia.ia.sak.db
 
 import arrow.core.Either
 import arrow.core.rightIfNotNull
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -141,22 +139,5 @@ class IASakRepository(val dataSource: DataSource) {
                 queryOf("SELECT * FROM ia_sak").map(this::mapRowToIASak).asList
             )
         }
-
-    fun hentSistEndretDatoer(orgnummere: List<String>): List<Pair<String, LocalDateTime?>> {
-        val sql = """
-            SELECT orgnr, max(endret) AS sistEndret FROM ia_sak 
-                WHERE orgnr IN (${
-                    orgnummere.joinToString(separator = ",") { s -> "\'$s\'" }
-                    })
-            GROUP BY orgnr
-        """
-        return using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(sql).map {
-                    it.string("orgnr") to it.localDateTimeOrNull("sistEndret")?.toKotlinLocalDateTime()
-                }.asList
-            )
-        }
-    }
 }
 
