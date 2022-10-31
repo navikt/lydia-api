@@ -1,14 +1,14 @@
 package no.nav.lydia.veileder
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -18,7 +18,6 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.AzureConfig
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.Security
-import no.nav.lydia.exceptions.AzureException
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
@@ -69,19 +68,23 @@ suspend fun hentVeiledere(
         )
         val veiledere = gruppeIder.map { gruppeId ->
             async {
-                val json = hentVeiledereFraAzure(security.azureConfig, gruppeId, accessToken)
-                deserializer.decodeFromString<AzureAdBrukere>(json).value
+                hentVeiledereFraAzure(security.azureConfig, gruppeId, accessToken)
+                    .map { json -> deserializer.decodeFromString<AzureAdBrukere>(json).value }
             }
         }.awaitAll()
-            .flatten()
-            .map {
-                VeilederDTO(
-                    id = it.id,
-                    fornavn = it.givenName ?: "",
-                    etternavn = it.surname ?: "",
-                    navIdent = it.onPremisesSamAccountName ?: ""
-                )
-            }
+            .flatMap { either ->
+                either.fold(
+                    ifLeft = { emptyList() },
+                    ifRight = { list ->
+                        list.map {
+                            VeilederDTO(
+                                id = it.id,
+                                fornavn = it.givenName ?: "",
+                                etternavn = it.surname ?: "",
+                                navIdent = it.onPremisesSamAccountName ?: ""
+                            )
+                        }
+                })}
             .toSet()
         veiledere
     }.mapLeft { Feil(it.message ?: "Ukjent feil under henting av veiledere", HttpStatusCode.InternalServerError) }
@@ -101,7 +104,7 @@ private fun hentVeiledereFraAzure(
     .response()
     .third
     .fold(success = {
-        it.toString(Charsets.UTF_8)
+        it.toString(Charsets.UTF_8).right()
     }, failure = {
-        throw AzureException("Feilet under henting av veiledere fra Azure: ${it.message} ${it.errorData.toString(Charsets.UTF_8)}", it)
+        Feil("Feilet under henting av veiledere fra Azure: ${it.message} ${it.errorData.toString(Charsets.UTF_8)}", HttpStatusCode.fromValue(it.response.statusCode)).left()
     })
