@@ -1,5 +1,9 @@
 package no.nav.lydia.sykefraversstatistikk
 
+import arrow.core.Either
+import arrow.core.rightIfNotNull
+import io.ktor.http.*
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
@@ -43,10 +47,19 @@ class SykefraværsstatistikkService(
         return SykefraværsstatistikkListResponse(data = dataMedSistEndret)
     }
 
+    fun hentTotaltAntallTreff(søkeparametere: Søkeparametere): Either<Feil, Int> =
+        sykefraversstatistikkRepository.hentTotaltAntall(søkeparametere)
+            .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
+
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhet = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
         return sykefraværForVirksomhet
     }
+}
+
+object SykefraværsstatistikkError {
+    val `feil under uthenting av sykefraværsstatistikk` =
+        Feil("Det skjedde noe feil under uthenting av sykefraværsstatistikk", HttpStatusCode.InternalServerError)
 }

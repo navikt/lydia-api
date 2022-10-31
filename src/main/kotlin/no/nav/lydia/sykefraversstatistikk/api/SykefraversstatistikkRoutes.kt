@@ -23,6 +23,7 @@ import no.nav.lydia.veileder.hentVeiledere
 
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
+val ANTALL_TREFF = "antallTreff"
 
 fun Route.sykefraversstatistikk(
     geografiService: GeografiService,
@@ -42,6 +43,16 @@ fun Route.sykefraversstatistikk(
         }.map { sykefraværsstatistikkVirksomheter ->
             call.respond(sykefraværsstatistikkVirksomheter.toDto()).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
+    }
+
+    get("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF") {
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+            val søkeparametere = Søkeparametere.from(call, geografiService, rådgiver = rådgiver)
+            sykefraværsstatistikkService.hentTotaltAntallTreff(søkeparametere = søkeparametere)
+        }.fold(
+            ifLeft = { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) },
+            ifRight = { totaltAntallTreff -> call.respond(totaltAntallTreff) }
+        )
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}") {

@@ -435,6 +435,17 @@ class StatistikkHelper {
             return liste.toList()
         }
 
+        fun hentTotaltAntallTreffISykefravær(
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ): Int {
+            return lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF")
+                .authentication().bearer(token)
+                .tilSingelRespons<Int>()
+                .third
+                .fold(success = { response -> response }, failure = { fail(it.message) })
+        }
+
+
         fun hentFilterverdier(token: String = oauth2ServerContainer.saksbehandler1.token) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
                 .authentication().bearer(token)

@@ -117,6 +117,52 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         return SykefraværsstatistikkListResponse(data = sykefraværsStatistikk)
     }
 
+    fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? =
+        using(sessionOf(dataSource)) { session ->
+            val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
+            val tmpKommuneTabell = "kommuner"
+            val tmpNæringTabell = "naringer"
+            val tmpNavIdenterTabell = "nav_identer"
+            val sql =
+                """
+                        WITH 
+                            ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
+                            ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
+                            ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
+                        SELECT
+                            COUNT(DISTINCT virksomhet.orgnr) AS total
+                        ${
+                    filter(
+                        tmpKommuneTabell = tmpKommuneTabell,
+                        tmpNavIdenterTabell = tmpNavIdenterTabell,
+                        tmpNæringTabell = tmpNæringTabell,
+                        søkeparametere = søkeparametere
+                    )
+                }
+                    """.trimIndent()
+
+            val query = queryOf(
+                statement = sql,
+                mapOf(
+                    tmpKommuneTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        søkeparametere.kommunenummer.toTypedArray()
+                    ),
+                    tmpNæringTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        næringsgrupperMedBransjer.toTypedArray()
+                    ),
+                    tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
+                        "text",
+                        søkeparametere.navIdenter.toTypedArray()
+                    ),
+                    "kvartal" to søkeparametere.periode.kvartal,
+                    "arstall" to søkeparametere.periode.årstall
+                )
+            )
+            session.run(query.map { it.int("total") }.asSingle)
+        }
+
     private fun aktiveStatesArray(): String {
         return IAProsessStatus.values().filter { !it.ansesSomAvsluttet() }.toList().joinToString(prefix = "(", postfix = ")", transform = {"'$it'"})
     }

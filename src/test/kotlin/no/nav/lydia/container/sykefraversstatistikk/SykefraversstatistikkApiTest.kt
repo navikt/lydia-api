@@ -30,6 +30,7 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirk
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
@@ -389,6 +390,12 @@ class SykefraversstatistikkApiTest {
             }, side = "2")
         }, side = "1")
     }
+
+    @Test
+    fun `skal kunne hente totalt antall treff for et søk`() {
+        hentTotaltAntallTreffISykefravær() shouldBe hentSykefraværForAlleVirksomheter().size
+    }
+
 
     @Test
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
