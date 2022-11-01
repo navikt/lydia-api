@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.domene
 
 import kotliquery.Row
-import no.nav.lydia.UnleashKlient.skalSjekkeFrist
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
@@ -349,10 +348,6 @@ class IASak private constructor(
     }
 
     private fun erFørFristen(): Boolean {
-        // -- feature toggles av unleash
-        if (!skalSjekkeFrist())
-            return true
-
         return this@IASak.endretTidspunkt?.let {
             it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
         } ?: true
