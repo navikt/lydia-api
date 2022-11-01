@@ -126,7 +126,7 @@ class IASak private constructor(
         return this
     }
 
-    private fun håndterFeilState(grunn: String = "Feil i systemet") {
+    private fun håndterFeilState(grunn: String = "Ugyldig handling for IASak") {
         log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
         throw IllegalStateException(grunn)
     }
@@ -190,7 +190,7 @@ class IASak private constructor(
 
         override fun slett() {
             if (eidAv != null) {
-                håndterFeilState()
+                håndterFeilState(grunn = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status")
             }
             tilstand = SlettetTilstand()
         }
@@ -202,7 +202,7 @@ class IASak private constructor(
 
         override fun prosesser() {
             if (eidAv.isNullOrEmpty()) {
-                håndterFeilState("En virksomhet kan ikke kontaktes før saken har en eier")
+                håndterFeilState(grunn = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status")
             }
             tilstand = KontaktesTilstand()
         }
