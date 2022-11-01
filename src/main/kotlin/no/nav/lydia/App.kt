@@ -188,13 +188,13 @@ fun Application.lydiaRestApi(
         }
     }
     install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            call.application.log.error("Det har skjedd en feil", cause)
-            call.respond(HttpStatusCode.InternalServerError)
-        }
         exception<UautorisertException> { call, cause ->
             call.application.log.error("Ikke autorisert", cause)
             call.respond(HttpStatusCode.Forbidden)
+        }
+        exception<Throwable> { call, cause ->
+            call.application.log.error("Det har skjedd en feil", cause)
+            call.respond(HttpStatusCode.InternalServerError)
         }
     }
     val næringsRepository = NæringsRepository(dataSource = dataSource)
