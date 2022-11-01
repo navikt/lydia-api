@@ -127,14 +127,13 @@ class IASak private constructor(
     }
 
     private fun håndterFeilState(grunn: String = "Feil i systemet") {
-        log.info(grunn)
-        log.info(this.status.name)
-        throw IllegalStateException()
+        log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
+        throw IllegalStateException(s = grunn)
     }
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
         open fun ikkeAktuell() {
-            håndterFeilState()
+            håndterFeilState(grunn = "IKKE_AKTUELL er ikke implementert for status $status")
         }
 
         open fun prosesser() {
@@ -142,15 +141,15 @@ class IASak private constructor(
         }
 
         open fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
-            håndterFeilState()
+            håndterFeilState(grunn = "IKKE_AKTUELL er ikke implementert for status $status")
         }
 
         open fun tilbake() {
-            håndterFeilState()
+            håndterFeilState(grunn = "TILBAKE er ikke implementert for status $status")
         }
 
         open fun slett() {
-            håndterFeilState()
+            håndterFeilState(grunn = "SLETT er ikke implementert for status $status")
         }
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
