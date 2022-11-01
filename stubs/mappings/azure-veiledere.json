@@ -10,7 +10,7 @@
   },
   "response" : {
     "status" : 200,
-    "bodyFileName": "altinn-veiledere-respons.json",
+    "bodyFileName": "azure-veiledere-response.json",
     "headers" : {
       "Content-Type" : "application/json"
     }
