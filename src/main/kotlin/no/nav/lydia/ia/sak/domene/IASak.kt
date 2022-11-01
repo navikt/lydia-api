@@ -95,7 +95,7 @@ class IASak private constructor(
             TILBAKE,
             SLETT_SAK,
             FULLFØR_BISTAND -> {
-                tilstand.prosesserHendelse(hendelse)
+                tilstand = tilstand.behandleHendelse(hendelse)
             }
 
             TA_EIERSKAP_I_SAK -> {
@@ -125,6 +125,7 @@ class IASak private constructor(
 
     fun erEtterFristen() = !erFørFristen()
 
+    // TODO
     private fun håndterFeilTilstandsovergang(grunn: String = "Ugyldig handling for IASak") {
         log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
         throw IllegalStateException(grunn)
@@ -132,18 +133,10 @@ class IASak private constructor(
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
 
-        open fun prosesserHendelse(hendelse: IASakshendelse) {
-            // TODO: hver tilstand skal håndtere dette
-//            when (hendelse.hendelsesType) {
-//                VIRKSOMHET_ER_IKKE_AKTUELL -> {
-//                    when (hendelse) {
-//                        is VirksomhetIkkeAktuellHendelse -> tilstand.behandleIkkeAktuellHendelse(hendelse = hendelse)
-//                        else -> tilstand.ikkeAktuell() // TODO...
-//                    }
-//                }
-//                else -> {}
-//            }
-            håndterFeilTilstandsovergang()
+        open fun behandleHendelse(hendelse: IASakshendelse): ProsessTilstand {
+            // TODO
+            // håndterFeilTilstandsovergang()
+            throw IllegalStateException()
         }
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
@@ -162,9 +155,11 @@ class IASak private constructor(
     private inner class StartTilstand : ProsessTilstand(
         status = NY
     ) {
-        override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = VurderesTilstand()
-        }
+        override fun behandleHendelse(hendelse: IASakshendelse) =
+            when (hendelse.hendelsesType) {
+                VIRKSOMHET_VURDERES -> VurderesTilstand()
+                else -> VurderesTilstand()
+            }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = listOf()
     }
@@ -172,14 +167,13 @@ class IASak private constructor(
     private inner class VurderesTilstand : ProsessTilstand(
         status = VURDERES
     ) {
-        override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = when (hendelse.hendelsesType) {
+        override fun behandleHendelse(hendelse: IASakshendelse) =
+            when (hendelse.hendelsesType) {
                 VIRKSOMHET_SKAL_KONTAKTES -> if (eidAv.isNullOrEmpty()) throw IllegalStateException() else KontaktesTilstand() // TODO: håndterFeilTilstandsovergang(grunn = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status")
                 SLETT_SAK -> if (eidAv != null) throw IllegalStateException() else SlettetTilstand() // TODO: håndterFeilTilstandsovergang(grunn = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status")
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
                 else -> throw IllegalStateException() // TODO
             }
-        }
 
         override fun lagreGrunnlag(grunnlagService: GrunnlagService) =
             grunnlagService.lagreGrunnlag(orgnr, saksnummer, endretAvHendelseId)
@@ -217,14 +211,13 @@ class IASak private constructor(
         status = KONTAKTES
     ) {
 
-        override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = when (hendelse.hendelsesType) {
+        override fun behandleHendelse(hendelse: IASakshendelse) =
+            when (hendelse.hendelsesType) {
                 VIRKSOMHET_KARTLEGGES -> KartleggesTilstand()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
                 TILBAKE -> finnForrigeTilstand()
                 else -> throw IllegalStateException() // TODO
             }
-        }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
@@ -244,14 +237,13 @@ class IASak private constructor(
     private inner class KartleggesTilstand : ProsessTilstand(
         status = KARTLEGGES
     ) {
-        override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = when(hendelse.hendelsesType) {
+        override fun behandleHendelse(hendelse: IASakshendelse) =
+            when(hendelse.hendelsesType) {
                 VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand()
                 TILBAKE -> finnForrigeTilstand()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
                 else -> throw IllegalStateException() // TODO
             }
-        }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
@@ -285,14 +277,12 @@ class IASak private constructor(
             }
         }
 
-        override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = when (hendelse.hendelsesType) {
+        override fun behandleHendelse(hendelse: IASakshendelse) = when (hendelse.hendelsesType) {
                 TILBAKE -> finnForrigeTilstand()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
                 FULLFØR_BISTAND -> FullførtTilstand()
                 else -> throw IllegalStateException() // TODO
             }
-        }
     }
 
     private abstract inner class EndeTilstand(status: IAProsessStatus) : ProsessTilstand(status = status) {
@@ -310,12 +300,11 @@ class IASak private constructor(
             LESE -> emptyList()
         }
 
-        override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = when (hendelse.hendelsesType) {
+        override fun behandleHendelse(hendelse: IASakshendelse) =
+            when (hendelse.hendelsesType) {
                 TILBAKE -> finnForrigeTilstand()
                 else -> throw IllegalStateException()
             }
-        }
     }
 
     private inner class FullførtTilstand : EndeTilstand(status = FULLFØRT)
