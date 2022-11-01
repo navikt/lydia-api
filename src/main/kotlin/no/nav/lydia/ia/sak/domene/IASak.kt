@@ -128,7 +128,7 @@ class IASak private constructor(
 
     private fun håndterFeilState(grunn: String = "Feil i systemet") {
         log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
-        throw IllegalStateException(s = grunn)
+        throw IllegalStateException(grunn)
     }
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
