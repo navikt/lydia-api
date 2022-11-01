@@ -91,16 +91,11 @@ class IASak private constructor(
             VIRKSOMHET_SKAL_KONTAKTES,
             VIRKSOMHET_KARTLEGGES,
             VIRKSOMHET_SKAL_BISTÅS,
-            FULLFØR_BISTAND,
-            -> {
+            VIRKSOMHET_ER_IKKE_AKTUELL,
+            TILBAKE,
+            SLETT_SAK,
+            FULLFØR_BISTAND -> {
                 tilstand.prosesserHendelse(hendelse)
-            }
-
-            VIRKSOMHET_ER_IKKE_AKTUELL -> {
-                when (hendelse) {
-                    is VirksomhetIkkeAktuellHendelse -> tilstand.behandleHendelse(hendelse = hendelse)
-                    else -> tilstand.ikkeAktuell() // TODO...
-                }
             }
 
             TA_EIERSKAP_I_SAK -> {
@@ -110,46 +105,45 @@ class IASak private constructor(
             OPPRETT_SAK_FOR_VIRKSOMHET -> {
                 throw IllegalStateException("Ikke en gyldig hendelsestype")
             }
-
-            TILBAKE -> {
-                tilstand.tilbake()
-            }
-
-            SLETT_SAK -> {
-                tilstand.slett()
-            }
         }
+        oppdaterStandardFelter(hendelse = hendelse)
+        return this
+    }
+
+    private fun oppdaterStandardFelter(hendelse: IASakshendelse) {
         endretAvHendelseId = hendelse.id
         endretAv = hendelse.opprettetAv
         endretTidspunkt = hendelse.opprettetTidspunkt
         sakshendelser.add(hendelse)
-        return this
     }
 
-    private fun håndterFeilState(grunn: String = "Ugyldig handling for IASak") {
+    private fun erFørFristen(): Boolean {
+        return this@IASak.endretTidspunkt?.let {
+            it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
+        } ?: true
+    }
+
+    fun erEtterFristen() = !erFørFristen()
+
+    private fun håndterFeilTilstandsovergang(grunn: String = "Ugyldig handling for IASak") {
         log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
         throw IllegalStateException(grunn)
     }
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
-        open fun ikkeAktuell() {
-            håndterFeilState(grunn = "IKKE_AKTUELL er ikke implementert for status $status")
-        }
 
         open fun prosesserHendelse(hendelse: IASakshendelse) {
-            håndterFeilState()
-        }
-
-        open fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
-            håndterFeilState(grunn = "IKKE_AKTUELL er ikke implementert for status $status")
-        }
-
-        open fun tilbake() {
-            håndterFeilState(grunn = "TILBAKE er ikke implementert for status $status")
-        }
-
-        open fun slett() {
-            håndterFeilState(grunn = "SLETT er ikke implementert for status $status")
+            // TODO: hver tilstand skal håndtere dette
+//            when (hendelse.hendelsesType) {
+//                VIRKSOMHET_ER_IKKE_AKTUELL -> {
+//                    when (hendelse) {
+//                        is VirksomhetIkkeAktuellHendelse -> tilstand.behandleIkkeAktuellHendelse(hendelse = hendelse)
+//                        else -> tilstand.ikkeAktuell() // TODO...
+//                    }
+//                }
+//                else -> {}
+//            }
+            håndterFeilTilstandsovergang()
         }
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
@@ -162,12 +156,6 @@ class IASak private constructor(
         open fun lagreGrunnlag(grunnlagService: GrunnlagService) {}
 
         abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse>
-
-        protected fun oppdaterStandardFelter(hendelse: IASakshendelse) {
-            endretAvHendelseId = hendelse.id
-            endretAv = hendelse.opprettetAv
-            endretTidspunkt = hendelse.opprettetTidspunkt
-        }
 
     }
 
@@ -184,27 +172,13 @@ class IASak private constructor(
     private inner class VurderesTilstand : ProsessTilstand(
         status = VURDERES
     ) {
-        override fun ikkeAktuell() {
-            tilstand = IkkeAktuellTilstand()
-        }
-
-        override fun slett() {
-            if (eidAv != null) {
-                håndterFeilState(grunn = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status")
-            }
-            tilstand = SlettetTilstand()
-        }
-
-        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
-            ikkeAktuell()
-            super.oppdaterStandardFelter(hendelse = hendelse)
-        }
-
         override fun prosesserHendelse(hendelse: IASakshendelse) {
-            if (eidAv.isNullOrEmpty()) {
-                håndterFeilState(grunn = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status")
+            tilstand = when (hendelse.hendelsesType) {
+                VIRKSOMHET_SKAL_KONTAKTES -> if (eidAv.isNullOrEmpty()) throw IllegalStateException() else KontaktesTilstand() // TODO: håndterFeilTilstandsovergang(grunn = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status")
+                SLETT_SAK -> if (eidAv != null) throw IllegalStateException() else SlettetTilstand() // TODO: håndterFeilTilstandsovergang(grunn = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status")
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
+                else -> throw IllegalStateException() // TODO
             }
-            tilstand = KontaktesTilstand()
         }
 
         override fun lagreGrunnlag(grunnlagService: GrunnlagService) =
@@ -243,17 +217,13 @@ class IASak private constructor(
         status = KONTAKTES
     ) {
 
-        override fun ikkeAktuell() {
-            tilstand = IkkeAktuellTilstand()
-        }
-
         override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = KartleggesTilstand()
-        }
-
-        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
-            ikkeAktuell()
-            super.oppdaterStandardFelter(hendelse = hendelse)
+            tilstand = when (hendelse.hendelsesType) {
+                VIRKSOMHET_KARTLEGGES -> KartleggesTilstand()
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
+                TILBAKE -> finnForrigeTilstand()
+                else -> throw IllegalStateException() // TODO
+            }
         }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
@@ -269,17 +239,18 @@ class IASak private constructor(
                 }
             }
         }
-
-        override fun tilbake() {
-            tilstand = finnForrigeTilstand()
-        }
     }
 
     private inner class KartleggesTilstand : ProsessTilstand(
         status = KARTLEGGES
     ) {
         override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = ViBistårTilstand()
+            tilstand = when(hendelse.hendelsesType) {
+                VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand()
+                TILBAKE -> finnForrigeTilstand()
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
+                else -> throw IllegalStateException() // TODO
+            }
         }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
@@ -295,20 +266,6 @@ class IASak private constructor(
                 }
             }
         }
-
-        override fun tilbake() {
-            tilstand = finnForrigeTilstand()
-        }
-
-        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
-            ikkeAktuell()
-            super.oppdaterStandardFelter(hendelse = hendelse)
-        }
-
-        override fun ikkeAktuell() {
-            tilstand = IkkeAktuellTilstand()
-        }
-
     }
 
     private inner class ViBistårTilstand : ProsessTilstand(
@@ -329,30 +286,14 @@ class IASak private constructor(
         }
 
         override fun prosesserHendelse(hendelse: IASakshendelse) {
-            tilstand = FullførtTilstand()
-        }
-
-        override fun tilbake() {
-            tilstand = finnForrigeTilstand()
-        }
-
-        override fun behandleHendelse(hendelse: VirksomhetIkkeAktuellHendelse) {
-            ikkeAktuell()
-            super.oppdaterStandardFelter(hendelse = hendelse)
-        }
-
-        override fun ikkeAktuell() {
-            tilstand = IkkeAktuellTilstand()
+            tilstand = when (hendelse.hendelsesType) {
+                TILBAKE -> finnForrigeTilstand()
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
+                FULLFØR_BISTAND -> FullførtTilstand()
+                else -> throw IllegalStateException() // TODO
+            }
         }
     }
-
-    private fun erFørFristen(): Boolean {
-        return this@IASak.endretTidspunkt?.let {
-            it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
-        } ?: true
-    }
-
-    fun erEtterFristen() = !erFørFristen()
 
     private abstract inner class EndeTilstand(status: IAProsessStatus) : ProsessTilstand(status = status) {
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
@@ -369,8 +310,11 @@ class IASak private constructor(
             LESE -> emptyList()
         }
 
-        override fun tilbake() {
-            tilstand = finnForrigeTilstand()
+        override fun prosesserHendelse(hendelse: IASakshendelse) {
+            tilstand = when (hendelse.hendelsesType) {
+                TILBAKE -> finnForrigeTilstand()
+                else -> throw IllegalStateException()
+            }
         }
     }
 
