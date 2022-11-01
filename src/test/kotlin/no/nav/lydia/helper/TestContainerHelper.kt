@@ -23,8 +23,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.ia.sak.api.*
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -201,7 +201,7 @@ class SakHelper {
 
         fun nyHendelsePåSakMedRespons(
             sak: IASakDto,
-            hendelsestype: SaksHendelsestype,
+            hendelsestype: IASakshendelseType,
             token: String = oauth2ServerContainer.saksbehandler1.token,
             payload: String? = null
         ): ResponseResultOf<IASakDto> {
@@ -212,7 +212,7 @@ class SakHelper {
         fun nyHendelsePåSakRequest(
             token: String,
             sak: IASakDto,
-            hendelsestype: SaksHendelsestype,
+            hendelsestype: IASakshendelseType,
             payload: String?
         ): Request {
             return lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
@@ -232,7 +232,7 @@ class SakHelper {
 
         fun nyHendelsePåSak(
             sak: IASakDto,
-            hendelsestype: SaksHendelsestype,
+            hendelsestype: IASakshendelseType,
             token: String = oauth2ServerContainer.saksbehandler1.token,
             payload: String? = null,
         ) =
@@ -242,17 +242,17 @@ class SakHelper {
                 })
 
         fun IASakDto.slettSak(token: String = oauth2ServerContainer.superbruker1.token) =
-            nyHendelsePåSak(sak = this, hendelsestype = SaksHendelsestype.SLETT_SAK, token = token)
+            nyHendelsePåSak(sak = this, hendelsestype = IASakshendelseType.SLETT_SAK, token = token)
 
         fun IASakDto.nyHendelse(
-            hendelsestype: SaksHendelsestype,
+            hendelsestype: IASakshendelseType,
             token: String = oauth2ServerContainer.saksbehandler1.token,
             payload: String? = null
         ) =
             nyHendelsePåSak(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
         fun IASakDto.nyHendelseRespons(
-            hendelsestype: SaksHendelsestype,
+            hendelsestype: IASakshendelseType,
             token: String = oauth2ServerContainer.saksbehandler1.token,
             payload: String? = null
         ) =

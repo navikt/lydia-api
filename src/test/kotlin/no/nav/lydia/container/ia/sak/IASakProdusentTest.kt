@@ -12,7 +12,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -38,7 +38,7 @@ class IASakProdusentTest {
     fun `sletting av feilåpnet sak produserer en slett melding på topic`() {
         runBlocking {
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-                .nyHendelse(SaksHendelsestype.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
+                .nyHendelse(IASakshendelseType.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(sak.saksnummer, konsument) { meldinger ->
                 meldinger.forAll { hendelse ->
                     hendelse shouldContain sak.saksnummer
@@ -58,10 +58,10 @@ class IASakProdusentTest {
         runBlocking {
             val orgnr = nyttOrgnummer()
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnr)
-                .nyHendelse(SaksHendelsestype.TA_EIERSKAP_I_SAK)
-                .nyHendelse(SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES)
+                .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK)
+                .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(
-                    hendelsestype = SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
+                    hendelsestype = IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
                         type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = listOf(

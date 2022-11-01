@@ -12,8 +12,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -219,7 +219,7 @@ class IASakTest {
         gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
     }
 
-    private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
+    private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, navIdent: String) =
         IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -229,8 +229,8 @@ class IASakTest {
             opprettetAv = navIdent,
         )
 
-    private fun IASakshendelse.nesteHendelse(saksHendelsestype: SaksHendelsestype) =
-        when (saksHendelsestype) {
+    private fun IASakshendelse.nesteHendelse(IASakshendelsestype: IASakshendelseType) =
+        when (IASakshendelsestype) {
             VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -239,7 +239,7 @@ class IASakTest {
                 opprettetAv = this.opprettetAv,
                 valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID))
             )
-            else -> nyHendelse(saksHendelsestype, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
+            else -> nyHendelse(IASakshendelsestype, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
         }
 
     private fun nyIASak(orgnummer: String, navIdent: String): IASak =

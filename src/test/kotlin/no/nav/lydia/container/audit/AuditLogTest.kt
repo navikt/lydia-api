@@ -10,7 +10,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
 
 class AuditLogTest {
@@ -83,7 +83,7 @@ class AuditLogTest {
                 )
                 SakHelper.nyHendelsePåSakMedRespons(
                     iaSak,
-                    SaksHendelsestype.TA_EIERSKAP_I_SAK,
+                    IASakshendelseType.TA_EIERSKAP_I_SAK,
                     token = mockOAuth2Server.lesebrukerAudit.token
                 ).also { responsPåTaEierskapMedLesebruker ->
                     lydiaApiContainer shouldContainLog auditLog(
@@ -98,7 +98,7 @@ class AuditLogTest {
 
                 SakHelper.nyHendelsePåSakMedRespons(
                     iaSak,
-                    SaksHendelsestype.TA_EIERSKAP_I_SAK,
+                    IASakshendelseType.TA_EIERSKAP_I_SAK,
                     token = mockOAuth2Server.saksbehandler1.token
                 ).also { responsPåTaEierskapMedSaksbehandler ->
                     lydiaApiContainer shouldContainLog auditLog(
