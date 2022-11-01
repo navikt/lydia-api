@@ -93,7 +93,7 @@ class IASak private constructor(
             VIRKSOMHET_SKAL_BISTÅS,
             FULLFØR_BISTAND,
             -> {
-                tilstand.prosesser()
+                tilstand.prosesserHendelse(hendelse)
             }
 
             VIRKSOMHET_ER_IKKE_AKTUELL -> {
@@ -136,7 +136,7 @@ class IASak private constructor(
             håndterFeilState(grunn = "IKKE_AKTUELL er ikke implementert for status $status")
         }
 
-        open fun prosesser() {
+        open fun prosesserHendelse(hendelse: IASakshendelse) {
             håndterFeilState()
         }
 
@@ -174,7 +174,7 @@ class IASak private constructor(
     private inner class StartTilstand : ProsessTilstand(
         status = NY
     ) {
-        override fun prosesser() {
+        override fun prosesserHendelse(hendelse: IASakshendelse) {
             tilstand = VurderesTilstand()
         }
 
@@ -200,7 +200,7 @@ class IASak private constructor(
             super.oppdaterStandardFelter(hendelse = hendelse)
         }
 
-        override fun prosesser() {
+        override fun prosesserHendelse(hendelse: IASakshendelse) {
             if (eidAv.isNullOrEmpty()) {
                 håndterFeilState(grunn = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status")
             }
@@ -247,7 +247,7 @@ class IASak private constructor(
             tilstand = IkkeAktuellTilstand()
         }
 
-        override fun prosesser() {
+        override fun prosesserHendelse(hendelse: IASakshendelse) {
             tilstand = KartleggesTilstand()
         }
 
@@ -278,7 +278,7 @@ class IASak private constructor(
     private inner class KartleggesTilstand : ProsessTilstand(
         status = KARTLEGGES
     ) {
-        override fun prosesser() {
+        override fun prosesserHendelse(hendelse: IASakshendelse) {
             tilstand = ViBistårTilstand()
         }
 
@@ -328,7 +328,7 @@ class IASak private constructor(
             }
         }
 
-        override fun prosesser() {
+        override fun prosesserHendelse(hendelse: IASakshendelse) {
             tilstand = FullførtTilstand()
         }
 
