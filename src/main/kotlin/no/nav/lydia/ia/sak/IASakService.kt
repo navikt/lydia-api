@@ -65,7 +65,7 @@ class IASakService(
 
         return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, opprettetAv = navIdent).lagre()
             .let { vurderHendelse -> sak.behandleHendelse(hendelse = vurderHendelse) }
-            .also { sakEtterVurdering -> sakEtterVurdering.lagreGrunnlag(grunnlagService = grunnlagService) }
+            .also { sakEtterVurdering -> grunnlagService.lagreGrunnlag(sakEtterVurdering) }
             .lagreOppdatering()
             .also {
                 if (it.isRight()) {

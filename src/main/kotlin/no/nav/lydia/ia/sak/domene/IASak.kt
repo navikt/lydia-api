@@ -3,7 +3,6 @@ package no.nav.lydia.ia.sak.domene
 import arrow.core.Either
 import arrow.core.right
 import kotliquery.Row
-import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
@@ -67,8 +66,6 @@ class IASak private constructor(
             SLETTET -> throw IllegalStateException()
         }
     }
-
-    fun lagreGrunnlag(grunnlagService: GrunnlagService) = tilstand.lagreGrunnlag(grunnlagService)
 
     fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
 
@@ -145,8 +142,6 @@ class IASak private constructor(
             return tilstandFraStatus(sak.status)
         }
 
-        open fun lagreGrunnlag(grunnlagService: GrunnlagService) {}
-
         abstract fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse>
 
     }
@@ -173,9 +168,6 @@ class IASak private constructor(
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
                 else -> generellFeil()
             }
-
-        override fun lagreGrunnlag(grunnlagService: GrunnlagService) =
-            grunnlagService.lagreGrunnlag(orgnr, saksnummer, endretAvHendelseId)
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
             return when (rådgiver.rolle) {
