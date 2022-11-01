@@ -1,5 +1,7 @@
 package no.nav.lydia.ia.sak.domene
 
+import arrow.core.Either
+import arrow.core.right
 import kotliquery.Row
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
@@ -14,6 +16,8 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.feil
+import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.generellFeil
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.LESE
@@ -95,7 +99,12 @@ class IASak private constructor(
             TILBAKE,
             SLETT_SAK,
             FULLFØR_BISTAND -> {
-                tilstand = tilstand.behandleHendelse(hendelse)
+                tilstand.behandleHendelse(hendelse)
+                    .map { nyTilstand -> tilstand = nyTilstand }
+                    .mapLeft { feil ->
+                        log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
+                        throw IllegalStateException(feil.feilmelding)
+                    }
             }
 
             TA_EIERSKAP_I_SAK -> {
@@ -125,19 +134,9 @@ class IASak private constructor(
 
     fun erEtterFristen() = !erFørFristen()
 
-    // TODO
-    private fun håndterFeilTilstandsovergang(grunn: String = "Ugyldig handling for IASak") {
-        log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
-        throw IllegalStateException(grunn)
-    }
-
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
 
-        open fun behandleHendelse(hendelse: IASakshendelse): ProsessTilstand {
-            // TODO
-            // håndterFeilTilstandsovergang()
-            throw IllegalStateException()
-        }
+        abstract fun behandleHendelse(hendelse: IASakshendelse): Either<TilstandsmaskinFeil, ProsessTilstand>
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
             val hendelserUtenTilbakeOgTaEierskap =
@@ -157,8 +156,8 @@ class IASak private constructor(
     ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
-                VIRKSOMHET_VURDERES -> VurderesTilstand()
-                else -> VurderesTilstand()
+                VIRKSOMHET_VURDERES -> VurderesTilstand().right()
+                else -> generellFeil()
             }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = listOf()
@@ -169,10 +168,10 @@ class IASak private constructor(
     ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
-                VIRKSOMHET_SKAL_KONTAKTES -> if (eidAv.isNullOrEmpty()) throw IllegalStateException() else KontaktesTilstand() // TODO: håndterFeilTilstandsovergang(grunn = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status")
-                SLETT_SAK -> if (eidAv != null) throw IllegalStateException() else SlettetTilstand() // TODO: håndterFeilTilstandsovergang(grunn = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status")
-                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
-                else -> throw IllegalStateException() // TODO
+                VIRKSOMHET_SKAL_KONTAKTES -> if (eidAv.isNullOrEmpty()) feil(feilmelding = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status") else KontaktesTilstand().right()
+                SLETT_SAK -> if (eidAv != null) feil(feilmelding = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status") else SlettetTilstand().right()
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
+                else -> generellFeil()
             }
 
         override fun lagreGrunnlag(grunnlagService: GrunnlagService) =
@@ -213,10 +212,10 @@ class IASak private constructor(
 
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
-                VIRKSOMHET_KARTLEGGES -> KartleggesTilstand()
-                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
-                TILBAKE -> finnForrigeTilstand()
-                else -> throw IllegalStateException() // TODO
+                VIRKSOMHET_KARTLEGGES -> KartleggesTilstand().right()
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
+                TILBAKE -> finnForrigeTilstand().right()
+                else -> generellFeil()
             }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
@@ -238,11 +237,11 @@ class IASak private constructor(
         status = KARTLEGGES
     ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
-            when(hendelse.hendelsesType) {
-                VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand()
-                TILBAKE -> finnForrigeTilstand()
-                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
-                else -> throw IllegalStateException() // TODO
+            when (hendelse.hendelsesType) {
+                VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand().right()
+                TILBAKE -> finnForrigeTilstand().right()
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
+                else -> generellFeil()
             }
 
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> {
@@ -277,11 +276,12 @@ class IASak private constructor(
             }
         }
 
-        override fun behandleHendelse(hendelse: IASakshendelse) = when (hendelse.hendelsesType) {
-                TILBAKE -> finnForrigeTilstand()
-                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand()
-                FULLFØR_BISTAND -> FullførtTilstand()
-                else -> throw IllegalStateException() // TODO
+        override fun behandleHendelse(hendelse: IASakshendelse) =
+            when (hendelse.hendelsesType) {
+                TILBAKE -> finnForrigeTilstand().right()
+                VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
+                FULLFØR_BISTAND -> FullførtTilstand().right()
+                else -> generellFeil()
             }
     }
 
@@ -302,8 +302,8 @@ class IASak private constructor(
 
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
-                TILBAKE -> finnForrigeTilstand()
-                else -> throw IllegalStateException()
+                TILBAKE -> finnForrigeTilstand().right()
+                else -> generellFeil()
             }
     }
 
@@ -311,9 +311,10 @@ class IASak private constructor(
 
     private inner class IkkeAktuellTilstand : EndeTilstand(status = IKKE_AKTUELL)
 
-    private inner class SlettetTilstand : ProsessTilstand(
-        status = SLETTET
-    ) {
+    private inner class SlettetTilstand : ProsessTilstand(status = SLETTET) {
+        override fun behandleHendelse(hendelse: IASakshendelse) =
+            feil("Kan ikke utføre noen hendelser i en slettet tilstand")
+
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = emptyList()
     }
 
@@ -371,5 +372,13 @@ enum class IAProsessStatus {
     companion object {
         fun filtrerbareStatuser() =
             values().filterNot { it == NY || it == SLETTET }
+    }
+}
+
+class TilstandsmaskinFeil(val feilmelding: String) {
+    companion object {
+        fun feil(feilmelding: String) = Either.Left(TilstandsmaskinFeil(feilmelding = feilmelding))
+
+        fun generellFeil() = feil("Forsøker å utføre en hendelse som ikke er implementert")
     }
 }
