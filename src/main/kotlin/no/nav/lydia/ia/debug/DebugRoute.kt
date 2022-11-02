@@ -27,8 +27,8 @@ fun Route.debug(
         )
 
         val ret = mapOf(
-            "feilendesaker" to sakTilHendelser.filterValues { it == null }.map { it.key.saksnummer },
-            "forskjelligesaker" to sakTilHendelser.filter { it.key.status != it.value?.status }.map { it.key.saksnummer }
+            "feilendesaker" to sakTilHendelser.filterValues { it == null }.map { Triple(it.key.saksnummer, it.key.status, it.value?.status) },
+            "forskjelligesaker" to sakTilHendelser.filter { it.key.status != it.value?.status }.map { Triple(it.key.saksnummer, it.key.status, it.value?.status) }
         )
         call.respond(HttpStatusCode.OK, ret)
     }
