@@ -109,12 +109,12 @@ class IASakTest {
         )
         val sak = IASak.fraHendelser(listOf(h1_ny_sak, h2_vurderes, h3_ta_eierskap))
         sak.gyldigeNesteHendelser(rådgiver = saksbehandler2)
-            .shouldForAtLeastOne {
-                it.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                it.gyldigeÅrsaker.shouldForAtLeastOne {
-                    it.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
-                    it.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
-                    it.begrunnelser.somBegrunnelseType().shouldContainAll(
+            .shouldForAtLeastOne { gyldigHendelse ->
+                gyldigHendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                gyldigHendelse.gyldigeÅrsaker.shouldForAtLeastOne { gyldigÅrsak ->
+                    gyldigÅrsak.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
+                    gyldigÅrsak.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
+                    gyldigÅrsak.begrunnelser.somBegrunnelseType().shouldContainAll(
                         MANGLER_PARTSGRUPPE,
                         IKKE_TILFREDSSTILLENDE_SAMARBEID,
                         FOR_LAVT_SYKEFRAVÆR,
@@ -122,10 +122,10 @@ class IASakTest {
                         MINDRE_VIRKSOMHET
                     )
                 }
-                it.gyldigeÅrsaker.shouldForAtLeastOne {
-                    it.type shouldBe VIRKSOMHETEN_TAKKET_NEI
-                    it.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
-                    it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                gyldigHendelse.gyldigeÅrsaker.shouldForAtLeastOne { gyldigÅrsak ->
+                    gyldigÅrsak.type shouldBe VIRKSOMHETEN_TAKKET_NEI
+                    gyldigÅrsak.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
+                    gyldigÅrsak.begrunnelser.somBegrunnelseType().shouldContainAll(
                         HAR_IKKE_KAPASITET,
                         GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
                         GJENNOMFØRER_TILTAK_MED_BHT
