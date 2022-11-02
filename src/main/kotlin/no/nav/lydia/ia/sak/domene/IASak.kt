@@ -123,13 +123,13 @@ class IASak private constructor(
         sakshendelser.add(hendelse)
     }
 
-    private fun erFørFristen(): Boolean {
+    private fun erFørFristenForLåsingAvSak(): Boolean {
         return this@IASak.endretTidspunkt?.let {
             it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
         } ?: true
     }
 
-    fun erEtterFristen() = !erFørFristen()
+    fun erEtterFristenForLåsingAvSak() = !erFørFristenForLåsingAvSak()
 
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
 
@@ -281,7 +281,7 @@ class IASak private constructor(
         override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
             SUPERBRUKER,
             SAKSBEHANDLER -> {
-                if (erEtterFristen()) {
+                if (erEtterFristenForLåsingAvSak()) {
                     emptyList()
                 } else if (erEierAvSak(rådgiver = rådgiver)) {
                     listOf(GyldigHendelse(saksHendelsestype = TILBAKE))

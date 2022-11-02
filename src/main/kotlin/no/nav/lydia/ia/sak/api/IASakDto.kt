@@ -38,7 +38,7 @@ data class IASakDto(
             eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId,
             gyldigeNesteHendelser = this.gyldigeNesteHendelser(rådgiver),
-            lukket = this.erEtterFristen() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL)
+            lukket = this.erEtterFristenForLåsingAvSak() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL)
         )
     }
 }
