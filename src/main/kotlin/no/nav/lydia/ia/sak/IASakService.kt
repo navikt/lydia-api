@@ -67,11 +67,7 @@ class IASakService(
             .let { vurderHendelse -> sak.behandleHendelse(hendelse = vurderHendelse) }
             .also { sakEtterVurdering -> grunnlagService.lagreGrunnlag(sakEtterVurdering) }
             .lagreOppdatering()
-            .also {
-                if (it.isRight()) {
-                    Metrics.virksomheterPrioritert.inc()
-                }
-            }
+            .tap { Metrics.virksomheterPrioritert.inc() }
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {
