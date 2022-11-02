@@ -229,8 +229,8 @@ class IASakTest {
             opprettetAv = navIdent,
         )
 
-    private fun IASakshendelse.nesteHendelse(IASakshendelsestype: IASakshendelseType) =
-        when (IASakshendelsestype) {
+    private fun IASakshendelse.nesteHendelse(iaSakshendelseType: IASakshendelseType) =
+        when (iaSakshendelseType) {
             VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -239,7 +239,7 @@ class IASakTest {
                 opprettetAv = this.opprettetAv,
                 valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID))
             )
-            else -> nyHendelse(IASakshendelsestype, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
+            else -> nyHendelse(iaSakshendelseType, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
         }
 
     private fun nyIASak(orgnummer: String, navIdent: String): IASak =
