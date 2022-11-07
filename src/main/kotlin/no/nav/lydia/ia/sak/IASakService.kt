@@ -64,8 +64,8 @@ class IASakService(
         ).lagre()
 
         return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, opprettetAv = navIdent).lagre()
-            .let { vurderHendelse -> sak.behandleHendelse(hendelse = vurderHendelse) }
-            .also { sakEtterVurdering -> grunnlagService.lagreGrunnlag(sakEtterVurdering) }
+            .let(sak::behandleHendelse)
+            .also(grunnlagService::lagreGrunnlag)
             .lagreOppdatering()
             .tap { Metrics.virksomheterPrioritert.inc() }
     }
