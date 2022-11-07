@@ -160,7 +160,10 @@ class IASak private constructor(
                 else -> generellFeil()
             }
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = listOf()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
+            SUPERBRUKER -> listOf(GyldigHendelse(VIRKSOMHET_VURDERES))
+            else -> emptyList()
+        }
     }
 
     private inner class VurderesTilstand : ProsessTilstand(
