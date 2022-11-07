@@ -1,6 +1,8 @@
 package no.nav.lydia.ia.sak
 
 import arrow.core.Either
+import arrow.core.flatMap
+import arrow.core.left
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.grunnlag.GrunnlagService
@@ -11,6 +13,7 @@ import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
@@ -76,19 +79,23 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
 
         return IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
-            .map { sakshendelse ->
+            .flatMap { sakshendelse ->
                 val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(sakshendelse.saksnummer)
-                if (hendelser.isEmpty()) return Either.Left(IASakError.`prøvde å legge til en hendelse på en tom sak`)
-                if (hendelser.last().id != hendelseDto.endretAvHendelseId) return Either.Left(IASakError.`prøvde å legge til en hendelse på en gammel sak`)
+                if (hendelser.isEmpty())
+                    return IASakError.`prøvde å legge til en hendelse på en tom sak`.left()
+                if (hendelser.last().id != hendelseDto.endretAvHendelseId)
+                    return IASakError.`prøvde å legge til en hendelse på en gammel sak`.left()
                 val sak = IASak.fraHendelser(hendelser)
-                if (sak.kanUtføreHendelse(hendelse = sakshendelse, rådgiver = rådgiver))
-                    sak.behandleHendelse(sakshendelse)
-                else {
-                    return Either.Left(IASakError.`prøvde å utføre en ugyldig hendelse`)
-                }
-                sakshendelse.lagre()
-                årsakService.lagreÅrsak(sakshendelse)
-                return sak.lagreOppdatering()
+                rådgiver.utførHendelse(sak = sak, hendelse = sakshendelse)
+                    .map { oppdatertSak ->
+                        sakshendelse.lagre()
+                        årsakService.lagreÅrsak(sakshendelse)
+                        return oppdatertSak.lagreOppdatering()
+                    }
+                    .mapLeft {
+                        return IASakError.`prøvde å utføre en ugyldig hendelse`.left()
+                    }
+
             }
     }
 
