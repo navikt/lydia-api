@@ -316,7 +316,7 @@ class IASak private constructor(
     }
 
     companion object {
-        fun Rådgiver.utførHendelse(sak: IASak, hendelse: IASakshendelse) =
+        fun Rådgiver.utførHendelsePåSak(sak: IASak, hendelse: IASakshendelse) =
             sak.utførHendelseSomRådgiver(this, hendelse)
 
         fun fraFørsteHendelse(hendelse: IASakshendelse): IASak =
