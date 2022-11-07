@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 
 @Serializable
@@ -19,7 +19,7 @@ class SakshistorikkDto(
 @Serializable
 class SakSnapshotDto(
     val status: IAProsessStatus,
-    val hendelsestype: SaksHendelsestype,
+    val hendelsestype: IASakshendelseType,
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
     val eier: String?

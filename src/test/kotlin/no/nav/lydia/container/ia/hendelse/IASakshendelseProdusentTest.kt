@@ -13,7 +13,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -41,10 +41,10 @@ class IASakshendelseProdusentTest {
         runBlocking {
             val orgnr = VirksomhetHelper.nyttOrgnummer()
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnr)
-                .nyHendelse(SaksHendelsestype.TA_EIERSKAP_I_SAK)
-                .nyHendelse(SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES)
+                .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK)
+                .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(
-                    hendelsestype = SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL,
+                    hendelsestype = IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
                         type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = listOf(BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT, BegrunnelseType.HAR_IKKE_KAPASITET)
@@ -62,11 +62,11 @@ class IASakshendelseProdusentTest {
                                 hendelse shouldContain sak.orgnr
                             }
                             meldinger shouldHaveSize 5
-                            meldinger[0] shouldContain SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET.name
-                            meldinger[1] shouldContain SaksHendelsestype.VIRKSOMHET_VURDERES.name
-                            meldinger[2] shouldContain SaksHendelsestype.TA_EIERSKAP_I_SAK.name
-                            meldinger[3] shouldContain SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES.name
-                            meldinger[4] shouldContain SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL.name
+                            meldinger[0] shouldContain IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET.name
+                            meldinger[1] shouldContain IASakshendelseType.VIRKSOMHET_VURDERES.name
+                            meldinger[2] shouldContain IASakshendelseType.TA_EIERSKAP_I_SAK.name
+                            meldinger[3] shouldContain IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES.name
+                            meldinger[4] shouldContain IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL.name
                             meldinger[4] shouldContain ÅrsakType.VIRKSOMHETEN_TAKKET_NEI.navn
                             meldinger[4] shouldContain BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT.navn
                             meldinger[4] shouldContain BegrunnelseType.HAR_IKKE_KAPASITET.navn

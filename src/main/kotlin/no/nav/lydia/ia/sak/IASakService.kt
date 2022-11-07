@@ -13,7 +13,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.tilgangskontroll.Rådgiver
 
@@ -64,14 +64,10 @@ class IASakService(
         ).lagre()
 
         return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, opprettetAv = navIdent).lagre()
-            .let { vurderHendelse -> sak.behandleHendelse(hendelse = vurderHendelse) }
-            .also { sakEtterVurdering -> sakEtterVurdering.lagreGrunnlag(grunnlagService = grunnlagService) }
+            .let(sak::behandleHendelse)
+            .also(grunnlagService::lagreGrunnlag)
             .lagreOppdatering()
-            .also {
-                if (it.isRight()) {
-                    Metrics.virksomheterPrioritert.inc()
-                }
-            }
+            .tap { Metrics.virksomheterPrioritert.inc() }
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {

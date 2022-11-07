@@ -37,8 +37,8 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -83,7 +83,7 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val kanIkkeSletteEtterHendelser = SaksHendelsestype.values()
+        val kanIkkeSletteEtterHendelser = IASakshendelseType.values()
             .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
 
         kanIkkeSletteEtterHendelser.forEach {
