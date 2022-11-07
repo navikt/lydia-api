@@ -92,7 +92,7 @@ class IASak private constructor(
         else
             generellFeil()
 
-    fun behandleHendelse(hendelse: IASakshendelse): IASak {
+    private fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES,
             VIRKSOMHET_SKAL_KONTAKTES,
