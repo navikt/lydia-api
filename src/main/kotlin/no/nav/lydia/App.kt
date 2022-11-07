@@ -33,6 +33,7 @@ import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
 import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
 import no.nav.lydia.appstatus.*
 import no.nav.lydia.exceptions.UautorisertException
+import no.nav.lydia.ia.debug.debug
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakProdusent
 import no.nav.lydia.ia.eksport.IASakshendelseProdusent
@@ -234,6 +235,8 @@ fun Application.lydiaRestApi(
                 næringsRepository = næringsRepository
             )
         )
+        debug(iaSakRepository = iaSakRepository, iaSakshendelseRepository = IASakshendelseRepository(dataSource))
+
         authenticate {
             sykefraversstatistikk(
                 geografiService = GeografiService(),
