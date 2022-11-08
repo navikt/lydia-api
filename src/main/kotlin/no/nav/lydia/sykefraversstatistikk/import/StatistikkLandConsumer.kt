@@ -32,18 +32,21 @@ object StatistikkLandConsumer : CoroutineScope {
     fun run() {
         launch {
             KafkaConsumer(
-                kafka.consumerProperties(consumerGroupId = Kafka.statistikkLandConsumerGroupId),
+                kafka.consumerProperties(consumerGroupId = Kafka.statistikkNyConsumerGroupId),
                 StringDeserializer(),
                 StringDeserializer()
             ).use { consumer ->
-                consumer.subscribe(listOf(kafka.statistikkLandTopic))
-                logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic}")
+                consumer.subscribe(listOf(
+                    kafka.statistikkLandTopic,
+                    kafka.statistikkVirksomhetTopic
+                ))
+                logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic}")
 
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         records.iterator()
-                            .forEach { logger.info("Topic: ${kafka.statistikkLandTopic} - Melding: ${it.key()}: ${it.value()}") }
+                            .forEach { logger.info("Topic: ${it.topic()} - Melding: ${it.key()}: ${it.value()}") }
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
                     }

@@ -11,6 +11,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper.Companion.statistikkLandTopic
+import no.nav.lydia.helper.KafkaContainerHelper.Companion.statistikkVirksomhetTopic
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.SykefraværsstatistikkTestData
 import no.nav.lydia.helper.TestContainerHelper
@@ -40,13 +41,19 @@ class SykefraversstatistikkImportTest {
     private val postgres = TestContainerHelper.postgresContainer
 
     @Test
-    fun `kan konsumere meldinger på sykefraværstatistikk-land topic`() {
+    fun `kan konsumere meldinger på nye sykefraværstatistikk topics`() {
         kafkaContainer.sendOgVentTilKonsumert(
-            "nøkkel",
-            "melding",
+            "nøkkel-land",
+            "melding-land",
             statistikkLandTopic,
-            Kafka.statistikkLandConsumerGroupId)
-        lydiaApiContainer shouldContainLog ("Topic: ${statistikkLandTopic} - Melding: nøkkel: melding").toRegex()
+            Kafka.statistikkNyConsumerGroupId)
+        kafkaContainer.sendOgVentTilKonsumert(
+            "nøkkel-virksomhet",
+            "melding-virksomhet",
+            statistikkVirksomhetTopic,
+            Kafka.statistikkNyConsumerGroupId)
+        lydiaApiContainer shouldContainLog ("Topic: $statistikkLandTopic - Melding: nøkkel-land: melding-land").toRegex()
+        lydiaApiContainer shouldContainLog ("Topic: $statistikkVirksomhetTopic - Melding: nøkkel-virksomhet: melding-virksomhet").toRegex()
     }
 
     @Test
