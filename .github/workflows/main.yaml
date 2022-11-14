@@ -41,7 +41,7 @@ jobs:
         cluster: [dev, prod]
     name: "Deploy app to ${{ matrix.cluster }}"
     needs: "build"
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/endre-paginering'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/konsumere-meldinger-fra-statistikk-per-kategori'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
