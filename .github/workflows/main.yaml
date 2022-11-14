@@ -44,48 +44,15 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/endre-paginering'
     runs-on: "ubuntu-latest"
     steps:
-<<<<<<< Updated upstream
       - uses: "actions/checkout@v3"
-      - name: "Deploy to DEV"
-=======
-      - uses: "actions/checkout@v2"
       - name: "Deploy application to ${{ matrix.cluster }}"
->>>>>>> Stashed changes
         uses: "nais/deploy/actions/deploy@v1"
         env:
           "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
           "CLUSTER": "${{ matrix.cluster }}-gcp"
           "RESOURCE": ".nais/nais.yaml"
-<<<<<<< Updated upstream
-          "VARS": ".nais/dev.yaml"
-
-  deployAppToProd:
-    name: "Deploy app to prod"
-    needs: "deployAppToDev"
-    if: github.ref == 'refs/heads/main'
-    runs-on: "ubuntu-latest"
-    steps:
-      - uses: "actions/checkout@v3"
-      - name: "Deploy to PROD"
-        uses: "nais/deploy/actions/deploy@v1"
-        env:
-          "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          "CLUSTER": "prod-gcp"
-          "RESOURCE": ".nais/nais.yaml"
-          "VARS": ".nais/prod.yaml"
-
-  deployTopicsToDev:
-    name: "Deploy topics to dev"
-    runs-on: "ubuntu-latest"
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/kan-slette-saker-med-status-vurderes'
-    steps:
-      - name: "Checkout code"
-        uses: "actions/checkout@v3"
-      - name: "Deploy topics to dev-gcp"
-=======
           "VARS": ".nais/${{ matrix.cluster }}.yaml"
       - name: "Deploy topics to ${{ matrix.cluster }}"
->>>>>>> Stashed changes
         uses: "nais/deploy/actions/deploy@master"
         env:
           APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
