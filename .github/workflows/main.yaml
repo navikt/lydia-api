@@ -35,19 +35,28 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:latest,${{ env.IMAGE }}
 
-  deployAppToDev:
-    name: "Deploy app to dev"
+  deploy:
+    strategy:
+      matrix:
+        cluster: [dev, prod]
+    name: "Deploy app to ${{ matrix.cluster }}"
     needs: "build"
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/endre-paginering'
     runs-on: "ubuntu-latest"
     steps:
+<<<<<<< Updated upstream
       - uses: "actions/checkout@v3"
       - name: "Deploy to DEV"
+=======
+      - uses: "actions/checkout@v2"
+      - name: "Deploy application to ${{ matrix.cluster }}"
+>>>>>>> Stashed changes
         uses: "nais/deploy/actions/deploy@v1"
         env:
           "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          "CLUSTER": "dev-gcp"
+          "CLUSTER": "${{ matrix.cluster }}-gcp"
           "RESOURCE": ".nais/nais.yaml"
+<<<<<<< Updated upstream
           "VARS": ".nais/dev.yaml"
 
   deployAppToProd:
@@ -73,24 +82,13 @@ jobs:
       - name: "Checkout code"
         uses: "actions/checkout@v3"
       - name: "Deploy topics to dev-gcp"
+=======
+          "VARS": ".nais/${{ matrix.cluster }}.yaml"
+      - name: "Deploy topics to ${{ matrix.cluster }}"
+>>>>>>> Stashed changes
         uses: "nais/deploy/actions/deploy@master"
         env:
           APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          CLUSTER: "dev-gcp"
+          CLUSTER: "${{ matrix.cluster }}-gcp"
           RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
-          VARS: ".nais/dev.yaml"
-
-  deployTopicsToProd:
-    name: "Deploy topics to prod"
-    runs-on: "ubuntu-latest"
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: "Checkout code"
-        uses: "actions/checkout@v3"
-      - name: "Deploy topics to prod-gcp"
-        uses: "nais/deploy/actions/deploy@master"
-        env:
-          APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          CLUSTER: "prod-gcp"
-          RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
-          VARS: ".nais/prod.yaml"
+          VARS: ".nais/${{ matrix.cluster }}.yaml"
