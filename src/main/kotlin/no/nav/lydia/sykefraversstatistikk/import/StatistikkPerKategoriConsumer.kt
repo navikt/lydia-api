@@ -48,9 +48,8 @@ object StatistikkPerKategoriConsumer : CoroutineScope {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         records.iterator().forEach {
-                            counter.incrementAndGet()
-                            if (counter.get() < 10 || counter.get() % 10000 == 0)
-                                logger.info("Topic: ${it.topic()} - Melding ${counter.get()}: ${it.key()}: ${it.value()}")
+                            if (counter.incrementAndGet() < 10 || counter.get() % 10000 == 0)
+                                logger.info("Topic: ${it.topic()} - Melding ${counter.get()} mottatt")
                         }
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
