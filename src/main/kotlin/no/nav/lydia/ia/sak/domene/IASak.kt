@@ -69,7 +69,7 @@ class IASak private constructor(
 
     fun gyldigeNesteHendelser(rådgiver: Rådgiver) = tilstand.gyldigeNesteHendelser(rådgiver)
 
-    fun kanUtføreHendelse(hendelse: IASakshendelse, rådgiver: Rådgiver) = when (hendelse) {
+    private fun kanUtføreHendelse(hendelse: IASakshendelse, rådgiver: Rådgiver) = when (hendelse) {
         is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(rådgiver)
             .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
             .filter { it.type == hendelse.valgtÅrsak.type }
@@ -86,7 +86,13 @@ class IASak private constructor(
 
     private fun erEierAvSak(rådgiver: Rådgiver) = eidAv == rådgiver.navIdent
 
-    fun behandleHendelse(hendelse: IASakshendelse): IASak {
+    private fun utførHendelseSomRådgiver(rådgiver: Rådgiver, hendelse: IASakshendelse) =
+        if (kanUtføreHendelse(hendelse = hendelse, rådgiver = rådgiver))
+            behandleHendelse(hendelse = hendelse).right()
+        else
+            generellFeil()
+
+    private fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
             VIRKSOMHET_VURDERES,
             VIRKSOMHET_SKAL_KONTAKTES,
@@ -123,11 +129,10 @@ class IASak private constructor(
         sakshendelser.add(hendelse)
     }
 
-    private fun erFørFristenForLåsingAvSak(): Boolean {
-        return this@IASak.endretTidspunkt?.let {
-            it.toLocalDate().atStartOfDay().plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES)).isAfter(now())
-        } ?: true
-    }
+    private fun erFørFristenForLåsingAvSak() =
+        this@IASak.endretTidspunkt?.toLocalDate()?.atStartOfDay()?.plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES))
+            ?.isAfter(now())
+            ?: true
 
     fun erEtterFristenForLåsingAvSak() = !erFørFristenForLåsingAvSak()
 
@@ -155,7 +160,10 @@ class IASak private constructor(
                 else -> generellFeil()
             }
 
-        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = listOf()
+        override fun gyldigeNesteHendelser(rådgiver: Rådgiver): List<GyldigHendelse> = when (rådgiver.rolle) {
+            SUPERBRUKER -> listOf(GyldigHendelse(VIRKSOMHET_VURDERES))
+            else -> emptyList()
+        }
     }
 
     private inner class VurderesTilstand : ProsessTilstand(
@@ -311,6 +319,9 @@ class IASak private constructor(
     }
 
     companion object {
+        fun Rådgiver.utførHendelsePåSak(sak: IASak, hendelse: IASakshendelse) =
+            sak.utførHendelseSomRådgiver(this, hendelse)
+
         fun fraFørsteHendelse(hendelse: IASakshendelse): IASak =
             IASak(
                 saksnummer = hendelse.saksnummer,
