@@ -8,9 +8,10 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 
-object StatistikkLandConsumer : CoroutineScope {
+object StatistikkPerKategoriConsumer : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     lateinit var job: Job
     lateinit var kafka: Kafka
@@ -19,7 +20,7 @@ object StatistikkLandConsumer : CoroutineScope {
         get() = Dispatchers.IO + job
 
     init {
-        Runtime.getRuntime().addShutdownHook(Thread(StatistikkLandConsumer::cancel))
+        Runtime.getRuntime().addShutdownHook(Thread(StatistikkPerKategoriConsumer::cancel))
     }
 
     fun create(kafka: Kafka) {
@@ -42,11 +43,14 @@ object StatistikkLandConsumer : CoroutineScope {
                 ))
                 logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic}")
 
+                val counter = AtomicInteger(0)
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
-                        records.iterator()
-                            .forEach { logger.info("Topic: ${it.topic()} - Melding: ${it.key()}: ${it.value()}") }
+                        records.iterator().forEach {
+                            if (counter.incrementAndGet() < 10 || counter.get() % 10000 == 0)
+                                logger.info("Topic: ${it.topic()} - Melding ${counter.get()} mottatt")
+                        }
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
                     }

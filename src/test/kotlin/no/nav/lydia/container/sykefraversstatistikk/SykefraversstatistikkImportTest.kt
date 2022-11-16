@@ -52,8 +52,8 @@ class SykefraversstatistikkImportTest {
             "melding-virksomhet",
             statistikkVirksomhetTopic,
             Kafka.statistikkNyConsumerGroupId)
-        lydiaApiContainer shouldContainLog ("Topic: $statistikkLandTopic - Melding: nøkkel-land: melding-land").toRegex()
-        lydiaApiContainer shouldContainLog ("Topic: $statistikkVirksomhetTopic - Melding: nøkkel-virksomhet: melding-virksomhet").toRegex()
+        lydiaApiContainer shouldContainLog """Topic: $statistikkLandTopic - Melding \d+ mottatt""".toRegex()
+        lydiaApiContainer shouldContainLog """Topic: $statistikkVirksomhetTopic - Melding \d+ mottatt""".toRegex()
     }
 
     @Test
