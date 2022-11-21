@@ -9,15 +9,7 @@ import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.Kafka
-import no.nav.lydia.helper.KafkaContainerHelper.Companion.statistikkLandTopic
-import no.nav.lydia.helper.KafkaContainerHelper.Companion.statistikkVirksomhetTopic
-import no.nav.lydia.helper.StatistikkHelper
-import no.nav.lydia.helper.SykefraværsstatistikkTestData
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
-import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestData.Companion.AVVIRKNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
@@ -27,11 +19,7 @@ import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.helper.TestData.Companion.SKOGSKJØTSEL
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_IMPORT
-import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.lagSykefraværsstatistikkImportDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import java.sql.ResultSet
 import kotlin.test.Test
@@ -39,22 +27,6 @@ import kotlin.test.Test
 class SykefraversstatistikkImportTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
     private val postgres = TestContainerHelper.postgresContainer
-
-    @Test
-    fun `kan konsumere meldinger på nye sykefraværstatistikk topics`() {
-        kafkaContainer.sendOgVentTilKonsumert(
-            "nøkkel-land",
-            "melding-land",
-            statistikkLandTopic,
-            Kafka.statistikkNyConsumerGroupId)
-        kafkaContainer.sendOgVentTilKonsumert(
-            "nøkkel-virksomhet",
-            "melding-virksomhet",
-            statistikkVirksomhetTopic,
-            Kafka.statistikkNyConsumerGroupId)
-        lydiaApiContainer shouldContainLog """Topic: $statistikkLandTopic - Melding \d+ mottatt""".toRegex()
-        lydiaApiContainer shouldContainLog """Topic: $statistikkVirksomhetTopic - Melding \d+ mottatt""".toRegex()
-    }
 
     @Test
     fun `kan importere statistikk for flere kvartal`() {

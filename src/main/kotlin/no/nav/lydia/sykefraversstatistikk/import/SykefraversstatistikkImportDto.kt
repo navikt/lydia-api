@@ -15,31 +15,6 @@ sealed class AggregertSykefraværsstatistikk : KvartalsvisSykefraværsstatistikk
     abstract val kode: String
 }
 
-sealed class Siste4KvartalerSykefraværsstatistikk {
-    abstract val kategori: String
-    abstract val kode: String
-    abstract val muligeDagsverk: Double
-    abstract val tapteDagsverk: Double
-    abstract val prosent: Double
-    abstract val maskert: Boolean
-    abstract val antallKvartaler: Int
-    abstract val kvartaler: String
-}
-
-data class Sykefraværsstatistikk4SisteKvartalerForVirksomhet(
-    override val kategori: String,
-    override val kode: String,
-    override val muligeDagsverk: Double,
-    override val tapteDagsverk: Double,
-    override val prosent: Double,
-    override val maskert: Boolean,
-    override val antallKvartaler: Int,
-    override val kvartaler: String,
-) : Siste4KvartalerSykefraværsstatistikk() {
-    val orgnr
-        get() = kode
-}
-
 data class NæringSykefravær(
     override val kvartal: Int,
     override val årstall: Int,

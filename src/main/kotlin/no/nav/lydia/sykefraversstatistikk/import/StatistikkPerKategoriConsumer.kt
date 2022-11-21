@@ -1,14 +1,15 @@
 package no.nav.lydia.sykefraversstatistikk.import
 
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
 import no.nav.lydia.Kafka
+import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 
 object StatistikkPerKategoriConsumer : CoroutineScope {
@@ -43,13 +44,11 @@ object StatistikkPerKategoriConsumer : CoroutineScope {
                 ))
                 logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic}")
 
-                val counter = AtomicInteger(0)
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
-                        records.iterator().forEach {
-                            if (counter.incrementAndGet() < 10 || counter.get() % 10000 == 0)
-                                logger.info("Topic: ${it.topic()} - Melding ${counter.get()} mottatt")
+                        records.toSykefraversstatistikkPerKategoriImportDto().forEach {
+                            logger.info("Statistikk for ${it.kategori} mottatt")
                         }
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
@@ -65,5 +64,15 @@ object StatistikkPerKategoriConsumer : CoroutineScope {
         logger.info("Stopping kafka consumer job for statistikk")
         job.cancel()
         logger.info("Stopped kafka consumer job for statistikk")
+    }
+
+    private fun ConsumerRecords<String, String>.toSykefraversstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {
+        val gson = GsonBuilder().create()
+        return this.map {
+            gson.fromJson(
+                it.value(),
+                SykefraversstatistikkPerKategoriImportDto::class.java
+            )
+        }
     }
 }
