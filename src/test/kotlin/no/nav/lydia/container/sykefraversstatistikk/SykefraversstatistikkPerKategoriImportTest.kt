@@ -1,10 +1,10 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
+import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import kotlin.test.Test
 
 class SykefraversstatistikkPerKategoriImportTest {
@@ -18,8 +18,20 @@ class SykefraversstatistikkPerKategoriImportTest {
             KafkaContainerHelper.statistikkVirksomhetTopic,
             Kafka.statistikkNyConsumerGroupId)
 
-        lydiaApiContainer shouldContainLog "Statistikk for VIRKSOMHET mottatt".toRegex()
+        val rs = postgresContainer.performQuery(
+            """
+                select * from sykefravar_statistikk_virksomhet_siste_4_kvartal
+                where orgnr = '999999999'
+            """.trimIndent()
+        )
+        rs.row shouldBe 1
+        rs.getString("orgnr") shouldBe "999999999"
     }
+
+//    @Test
+//    fun `tidspunktet for oppdatering av sykefraværsstatistikk per kategori oppdaterer seg`() {
+//        TODO()
+//    }
 }
 
 private val jsonKey = """

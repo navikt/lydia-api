@@ -21,7 +21,6 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     lateinit var job: Job
     lateinit var kafka: Kafka
 
-    // TODO: Er det greit å holde en datasource oppe i en coroutine scope?
     lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
 
     override val coroutineContext: CoroutineContext

@@ -1,5 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -12,11 +14,63 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
+    private val gson: Gson = GsonBuilder().create()
+
     fun insert(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertBehandletImportStatistikk(
                     behandletImportStatistikkListe = behandletImportStatistikkListe
+                )
+            }
+        }
+    }
+
+    fun insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
+        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            sykefraværsstatistikk.forEach {
+                tx.run(
+                    queryOf(
+                        """
+                            INSERT INTO sykefravar_statistikk_virksomhet_siste_4_kvartal(
+                                orgnr,
+                                tapte_dagsverk,
+                                mulige_dagsverk,
+                                prosent,
+                                maskert,
+                                antall_kvartaler,
+                                kvartaler
+                            )
+                            VALUES(
+                                :orgnr,
+                                :tapte_dagsverk,
+                                :mulige_dagsverk,
+                                :prosent,
+                                :maskert,
+                                :antall_kvartaler,
+                                :kvartaler::jsonb
+                            )
+                            ON CONFLICT (orgnr) DO UPDATE SET
+                                tapte_dagsverk = :tapte_dagsverk,
+                                mulige_dagsverk = :mulige_dagsverk,
+                                prosent = :prosent,
+                                maskert = :maskert,
+                                antall_kvartaler = :antall_kvartaler,
+                                kvartaler = :kvartaler::jsonb,
+                                sist_endret = now()
+                        """.trimIndent(),
+                        mapOf(
+                            "orgnr" to it.kode,
+                            "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
+                            "mulige_dagsverk" to it.siste4Kvartal.muligeDagsverk,
+                            "prosent" to it.siste4Kvartal.prosent,
+                            "maskert" to it.siste4Kvartal.erMaskert,
+                            "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
+                            "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                        )
+                    ).asUpdate
                 )
             }
         }

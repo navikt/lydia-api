@@ -84,19 +84,20 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
+    val sykefraværsstatistikkService = SykefraværsstatistikkService(
+        sykefraversstatistikkRepository = SykefraversstatistikkRepository(
+            dataSource = dataSource
+        ),
+    )
     statistikkConsumer(
         kafka = naisEnv.kafka,
-        sykefraværsstatistikkService = SykefraværsstatistikkService(
-            sykefraversstatistikkRepository = SykefraversstatistikkRepository(
-                dataSource = dataSource
-            ),
-        )
+        sykefraværsstatistikkService = sykefraværsstatistikkService
     ).also { HelseMonitor.leggTilHelsesjekk(it) }
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     if (naisEnv.miljø == LOKAL || naisEnv.miljø == `DEV-GCP`) {
         StatistikkPerKategoriConsumer.apply {
-            create(kafka = naisEnv.kafka)
+            create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
             run()
         }
     }

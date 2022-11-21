@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
 
@@ -23,6 +24,17 @@ class SykefraværsstatistikkService(
         val start = System.currentTimeMillis()
         sykefraversstatistikkRepository.insert(behandletImportStatistikkListe = sykefraværsstatistikkListe)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre statistikk for ${sykefraværsstatistikkListe.size} virksomheter")
+    }
+
+    fun lagreSykefraværsstatistikkPerKategori(
+        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>
+    ) {
+        val start = System.currentTimeMillis()
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
+            sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
+                .filter { it.kategori == "VIRKSOMHET" }
+        )
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre statistikk for ${sykefraværsstatistikkKategoriImportDtoListe.size} virksomheter")
     }
 
     fun hentSykefravær(
