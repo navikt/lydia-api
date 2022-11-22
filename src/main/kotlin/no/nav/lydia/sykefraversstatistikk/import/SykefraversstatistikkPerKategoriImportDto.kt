@@ -2,9 +2,13 @@ package no.nav.lydia.sykefraversstatistikk.import
 
 import com.google.gson.annotations.SerializedName
 
+enum class Kategori {
+    VIRKSOMHET, LAND
+}
+
 data class SykefraversstatistikkPerKategoriImportDto(
     @SerializedName("kategori")
-    val kategori: String,
+    val kategori: Kategori,
     @SerializedName("kode")
     val kode: String,
     @SerializedName("sistePubliserteKvartal")
