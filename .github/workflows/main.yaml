@@ -41,7 +41,32 @@ jobs:
         cluster: [dev, prod]
     name: "Deploy app to ${{ matrix.cluster }}"
     needs: "build"
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/konsumere-meldinger-fra-statistikk-per-kategori'
+    if: github.ref == 'refs/heads/main'
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v3"
+      - name: "Deploy application to ${{ matrix.cluster }}"
+        uses: "nais/deploy/actions/deploy@v1"
+        env:
+          "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
+          "CLUSTER": "${{ matrix.cluster }}-gcp"
+          "RESOURCE": ".nais/nais.yaml"
+          "VARS": ".nais/${{ matrix.cluster }}.yaml"
+      - name: "Deploy topics to ${{ matrix.cluster }}"
+        uses: "nais/deploy/actions/deploy@master"
+        env:
+          APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
+          CLUSTER: "${{ matrix.cluster }}-gcp"
+          RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
+          VARS: ".nais/${{ matrix.cluster }}.yaml"
+
+  deploy-dev-branch:
+    strategy:
+      matrix:
+        cluster: [ dev ]
+    name: "Deploy app to ${{ matrix.cluster }}"
+    needs: "build"
+    if: github.ref == 'refs/heads/hente-statistikk-over-siste-4-kvartaler'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
