@@ -1,5 +1,7 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
+import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.matchers.comparables.shouldNotBeGreaterThan
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
@@ -29,6 +31,56 @@ class SykefraversstatistikkPerKategoriImportTest {
         )
         rs.row shouldBe 1
         rs.getString("orgnr") shouldBe "999999999"
+        rs.getString("kvartaler") shouldEqualJson """[
+            {
+              "årstall": 2021,
+              "kvartal": 2
+            },
+            {
+              "årstall": 2021,
+              "kvartal": 3
+            },
+            {
+              "årstall": 2021,
+              "kvartal": 4
+            },
+            {
+              "årstall": 2022,
+              "kvartal": 1
+            }
+            ]""".trimIndent()
+    }
+
+    @Test
+    fun `vi oppdaterer sykefraværsstatistikk for virksomhet siste 4 kvartaler`() {
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(VIRKSOMHET, "999999999"),
+            jsonValue(VIRKSOMHET, "999999999"),
+            KafkaContainerHelper.statistikkVirksomhetTopic,
+            Kafka.statistikkNyConsumerGroupId)
+
+        val rs = postgresContainer.performQuery(
+            """
+                select * from sykefravar_statistikk_virksomhet_siste_4_kvartal
+                where orgnr = '999999999'
+            """.trimIndent()
+        )
+
+        val førstSkrevet = rs.getDate("sist_endret")
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(VIRKSOMHET, "999999999"),
+            jsonValue(VIRKSOMHET, "999999999"),
+            KafkaContainerHelper.statistikkVirksomhetTopic,
+            Kafka.statistikkNyConsumerGroupId)
+        val oppdatertResultset = postgresContainer.performQuery(
+            """
+                select * from sykefravar_statistikk_virksomhet_siste_4_kvartal
+                where orgnr = '999999999'
+            """.trimIndent()
+        )
+        val oppdatertDato = oppdatertResultset.getDate("sist_endret")
+
+        oppdatertDato shouldNotBeGreaterThan førstSkrevet
     }
 
     @Test
@@ -49,16 +101,10 @@ class SykefraversstatistikkPerKategoriImportTest {
         rs.getString("kode") shouldBe "NO"
         rs.getString("kategori") shouldBe "LAND"
     }
-
-
-//    @Test
-//    fun `tidspunktet for oppdatering av sykefraværsstatistikk per kategori oppdaterer seg`() {
-//        TODO()
-//    }
 }
 
 private fun jsonKey(kategori: Kategori, kode: String) =
-"""
+    """
       {
         "kategori": "${kategori.name}",
         "kode": "$kode",
@@ -106,3 +152,4 @@ private fun jsonValue(kategori: Kategori, kode: String) = """
         }
       }
 """.trimIndent()
+
