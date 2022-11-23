@@ -24,7 +24,7 @@ data class NæringSykefravær(
     override val tapteDagsverk: Double,
     override val maskert: Boolean,
     override val kategori: String,
-    override val kode: String
+    override val kode: String,
 ) : AggregertSykefraværsstatistikk()
 
 data class NæringsundergruppeSykefravær(
@@ -36,7 +36,7 @@ data class NæringsundergruppeSykefravær(
     override val tapteDagsverk: Double,
     override val maskert: Boolean,
     override val kategori: String,
-    override val kode: String
+    override val kode: String,
 ) : AggregertSykefraværsstatistikk()
 
 data class SektorSykefravær(
@@ -48,7 +48,7 @@ data class SektorSykefravær(
     override val tapteDagsverk: Double,
     override val maskert: Boolean,
     override val kategori: String,
-    override val kode: String
+    override val kode: String,
 ) : AggregertSykefraværsstatistikk()
 
 data class LandSykefravær(
@@ -60,7 +60,7 @@ data class LandSykefravær(
     override val tapteDagsverk: Double,
     override val maskert: Boolean,
     override val kategori: String,
-    override val kode: String
+    override val kode: String,
 ) : AggregertSykefraværsstatistikk()
 
 data class SykefraværsstatistikkForVirksomhet(
@@ -72,7 +72,7 @@ data class SykefraværsstatistikkForVirksomhet(
     override val tapteDagsverk: Double,
     override val maskert: Boolean,
     override val kategori: String,
-    val orgnr: String
+    val orgnr: String,
 ) : KvartalsvisSykefraværsstatistikk()
 
 data class SykefraversstatistikkImportDto(
@@ -80,11 +80,11 @@ data class SykefraversstatistikkImportDto(
     val næring5SifferSykefravær: List<NæringsundergruppeSykefravær>,
     val virksomhetSykefravær: SykefraværsstatistikkForVirksomhet,
     val landSykefravær: LandSykefravær,
-    val sektorSykefravær: SektorSykefravær
+    val sektorSykefravær: SektorSykefravær,
 )
 
 data class Key(
     val kvartal: Int,
     val årstall: Int,
-    val orgnr: String
+    val orgnr: String,
 )

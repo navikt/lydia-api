@@ -13,10 +13,12 @@ data class FilterverdierDto(
     val neringsgrupper: List<Næringsgruppe> = emptyList(),
     val bransjeprogram: List<Bransjer> = emptyList(),
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
-    val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser()
+    val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser(),
+    val filtrerbareEiere: List<EierDTO> = emptyList()
 )
 
 @Serializable
 data class FylkeOgKommuner (val fylke: Fylke, val kommuner: List<Kommune>)
 
-
+@Serializable
+data class EierDTO (val navIdent: String, val navn: String)

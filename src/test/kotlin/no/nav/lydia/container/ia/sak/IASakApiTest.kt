@@ -11,9 +11,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
-import no.nav.lydia.UnleashToggleKeys
-import no.nav.lydia.helper.*
-import no.nav.lydia.helper.FeatureToggleHelper.Companion.medFeatureToggleEnablet
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
@@ -23,6 +20,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakRequest
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
+import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
@@ -30,14 +28,17 @@ import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -82,7 +83,7 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val kanIkkeSletteEtterHendelser = SaksHendelsestype.values()
+        val kanIkkeSletteEtterHendelser = IASakshendelseType.values()
             .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
 
         kanIkkeSletteEtterHendelser.forEach {
@@ -766,66 +767,59 @@ class IASakApiTest {
 
     @Test
     fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
-        medFeatureToggleEnablet(UnleashToggleKeys.fristTilbakeknapp) {
-            // Update etter opprettelse
-            val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-                .nyHendelse(TA_EIERSKAP_I_SAK)
-                .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-                .nyHendelse(VIRKSOMHET_KARTLEGGES)
-                .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-                .nyHendelse(FULLFØR_BISTAND)
-                .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(FULLFØR_BISTAND)
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
-            shouldFail {
-                sak.nyHendelse(TILBAKE)
-            }
+        shouldFail {
+            sak.nyHendelse(TILBAKE)
+        }
 
-            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
-                enSak.status shouldBe FULLFØRT
-                enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
-            }
+        hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
+            enSak.status shouldBe FULLFØRT
+            enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
         }
     }
 
     @Test
     fun `skal IKKE kunne gå tilbake til forrige tilstand fra ikke aktuell etter fristen har gått`() {
-        medFeatureToggleEnablet(UnleashToggleKeys.fristTilbakeknapp) {
-            // Update etter opprettelse
-            val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-                .nyHendelse(TA_EIERSKAP_I_SAK)
-                .nyHendelse(
-                    hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = listOf(HAR_IKKE_KAPASITET)
-                    ).toJson()
-                )
-                .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyIkkeAktuellHendelse()
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
-            shouldFail {
-                sak.nyHendelse(TILBAKE)
-            }
+        shouldFail {
+            sak.nyHendelse(TILBAKE)
+        }
 
-            hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
-                enSak.status shouldBe IKKE_AKTUELL
-                enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
-            }
+        hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
+            enSak.status shouldBe IKKE_AKTUELL
+            enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
         }
     }
 
     @Test
-    fun `skal alltid kunne gå tilbake etter frist dersom frist ikke er enablet via Unleash`() {
+    fun `skal ikke få OPPRETT_SAK_FOR_VIRKSOMHET som gyldig neste hendelse`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                    type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(HAR_IKKE_KAPASITET)
-                ).toJson()
-            )
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
-            .nyHendelse(TILBAKE)
+            .nyIkkeAktuellHendelse()
+        sak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TILBAKE)
 
-        sak.status shouldBe VURDERES
+        hentSaker(sak.orgnr, token = oauth2ServerContainer.superbruker1.token)
+            .filter { it.saksnummer == sak.saksnummer }
+            .forExactlyOne { sakDto ->
+                sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TA_EIERSKAP_I_SAK)
+            }
+
+        sak.oppdaterHendelsesTidspunkter(
+            antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1,
+            token = oauth2ServerContainer.superbruker1.token).also { sakDto ->
+            sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe  emptyList()
+        }
     }
 
     @Test
@@ -975,7 +969,6 @@ class IASakApiTest {
     fun `skal vise bare èn riktig status gjennom livsløpet til en ny sak`() {
         hentSykefravær(
             token = mockOAuth2Server.superbruker1.token,
-            kunMineVirksomheter = false,
             success = { response ->
                 val org = response.data.filter { it.status == IKKE_AKTIV }.random()
                 val sak = opprettSakForVirksomhet(orgnummer = org.orgnr)
@@ -986,7 +979,6 @@ class IASakApiTest {
                     .nyHendelse(FULLFØR_BISTAND)
                 hentSykefravær( // Tester at vi får se FULLFØRT intil fristen går ut
                     token = mockOAuth2Server.superbruker1.token,
-                    kunMineVirksomheter = false,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe FULLFØRT }
                     }
@@ -995,7 +987,6 @@ class IASakApiTest {
                 sak.oppdaterHendelsesTidspunkter(ANTALL_DAGER_FØR_SAK_LÅSES + 1)
                 hentSykefravær( // Tester at vi faller tilbake til IKKE_AKTIV når fristen har gått ut
                     token = mockOAuth2Server.superbruker1.token,
-                    kunMineVirksomheter = false,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IKKE_AKTIV }
                     }
@@ -1008,7 +999,6 @@ class IASakApiTest {
 
                 hentSykefravær( // Viser siste status når vi har fått en ny sak
                     token = mockOAuth2Server.superbruker1.token,
-                    kunMineVirksomheter = false,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe KARTLEGGES }
                     }

@@ -1,13 +1,13 @@
 package no.nav.lydia.ia.årsak.domene
 
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somGyldigeBegrunnelser
 
 @kotlinx.serialization.Serializable
 class GyldigÅrsak(val type: ÅrsakType, val navn: String = type.navn, val begrunnelser: List<GyldigBegrunnelse>) {
     companion object {
-        fun from(saksHendelsestype: SaksHendelsestype) = when (saksHendelsestype) {
-            SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL -> listOf(
+        fun from(sakshendelseType: IASakshendelseType) = when (sakshendelseType) {
+            IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL -> listOf(
                 GyldigÅrsak(
                     type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
                     begrunnelser = listOf(

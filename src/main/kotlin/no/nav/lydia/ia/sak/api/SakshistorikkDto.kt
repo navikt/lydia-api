@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 
 @Serializable
@@ -19,7 +19,7 @@ class SakshistorikkDto(
 @Serializable
 class SakSnapshotDto(
     val status: IAProsessStatus,
-    val hendelsestype: SaksHendelsestype,
+    val hendelsestype: IASakshendelseType,
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
     val eier: String?
@@ -39,21 +39,12 @@ class SakSnapshotDto(
     }
 }
 
-fun IASak.tilSakshistorikk(): SakshistorikkDto {
-    val førsteHendelse = hendelser.first()
-    val resterendeHendelser = hendelser.minus(førsteHendelse)
-    val sak = IASak.fraFørsteHendelse(førsteHendelse)
-    val sakSnapshotDtos = mutableListOf<SakSnapshotDto>()
-    sakSnapshotDtos.add(SakSnapshotDto.from(iaSakshendelse = førsteHendelse, iaSak = sak))
-    resterendeHendelser.forEach { hendelse ->
-        sak.behandleHendelse(hendelse)
-        sakSnapshotDtos.add(SakSnapshotDto.from(iaSakshendelse = hendelse, iaSak = sak))
-    }
-
-    return SakshistorikkDto(
-        saksnummer = this.saksnummer,
-        opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
-        sakshendelser = sakSnapshotDtos.toList())
-}
+fun IASak.tilSakshistorikk() = SakshistorikkDto(
+    saksnummer = this.saksnummer,
+    opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
+    sakshendelser = hendelser.mapIndexed { index, hendelse ->
+        SakSnapshotDto.from(hendelse, IASak.fraHendelser(hendelser.subList(0, index + 1)))
+    }.toList()
+)
 
 fun List<IASak>.tilSamarbeidshistorikk() = this.map(IASak::tilSakshistorikk)

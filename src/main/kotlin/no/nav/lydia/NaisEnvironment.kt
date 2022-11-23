@@ -44,6 +44,7 @@ class Security(
     companion object {
         const val NAV_IDENT_CLAIM = "NAVident"
         const val GROUPS_CLAIM = "groups"
+        const val NAME_CLAIM = "name"
     }
 }
 
@@ -77,10 +78,13 @@ class Kafka(
     val iaSakTopic: String = getEnvVar("IA_SAK_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
     val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
+    val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
+    val statistikkVirksomhetTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_TOPIC", "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
     companion object {
         const val statistikkConsumerGroupId = "lydia-api-kafka-group-id"
+        const val statistikkNyConsumerGroupId = "lydia-api-ny-statistikk-test-consumer"
         const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
         const val clientId: String = "lydia-api"
     }

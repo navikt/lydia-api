@@ -5,7 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -110,7 +110,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
         val valgtÅrsak = årsakFraDatabase(row.stringOrNull("aarsak_enum"), row.array("begrunnelser"))
             ?: return IASakshendelse(
                 id = row.string("id"),
-                hendelsesType = SaksHendelsestype.valueOf(row.string("type")),
+                hendelsesType = IASakshendelseType.valueOf(row.string("type")),
                 orgnummer = row.string("orgnr"),
                 opprettetAv = row.string("opprettet_av"),
                 saksnummer = row.string("saksnummer"),

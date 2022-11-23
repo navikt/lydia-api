@@ -29,9 +29,11 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
+import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
 import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
 import no.nav.lydia.appstatus.*
 import no.nav.lydia.exceptions.UautorisertException
+import no.nav.lydia.ia.debug.debug
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakProdusent
 import no.nav.lydia.ia.eksport.IASakshendelseProdusent
@@ -59,6 +61,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.veileder.VEILEDERE_PATH
 import no.nav.lydia.veileder.veileder
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -81,15 +84,23 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
+    val sykefraværsstatistikkService = SykefraværsstatistikkService(
+        sykefraversstatistikkRepository = SykefraversstatistikkRepository(
+            dataSource = dataSource
+        ),
+    )
     statistikkConsumer(
         kafka = naisEnv.kafka,
-        sykefraværsstatistikkService = SykefraværsstatistikkService(
-            sykefraversstatistikkRepository = SykefraversstatistikkRepository(
-                dataSource = dataSource
-            )
-        )
+        sykefraværsstatistikkService = sykefraværsstatistikkService
     ).also { HelseMonitor.leggTilHelsesjekk(it) }
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
+
+    if (naisEnv.miljø == LOKAL || naisEnv.miljø == `DEV-GCP`) {
+        StatistikkPerKategoriConsumer.apply {
+            create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
+            run()
+        }
+    }
 
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
     val iaSakshendelseProdusent =
@@ -179,23 +190,25 @@ fun Application.lydiaRestApi(
         }
     }
     install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            call.application.log.error("Det har skjedd en feil", cause)
-            call.respond(HttpStatusCode.InternalServerError)
-        }
         exception<UautorisertException> { call, cause ->
             call.application.log.error("Ikke autorisert", cause)
             call.respond(HttpStatusCode.Forbidden)
         }
+        exception<Throwable> { call, cause ->
+            call.application.log.error("Det har skjedd en feil", cause)
+            call.respond(HttpStatusCode.InternalServerError)
+        }
     }
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+    val iaSakRepository = IASakRepository(dataSource = dataSource)
     val sykefraværsstatistikkService =
-        SykefraværsstatistikkService(sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource))
+        SykefraværsstatistikkService(
+            sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
+        )
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
-    val iaSakRepository = IASakRepository(dataSource = dataSource)
     val azureTokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment)
 
     routing {
@@ -223,13 +236,16 @@ fun Application.lydiaRestApi(
                 næringsRepository = næringsRepository
             )
         )
+        debug(iaSakRepository = iaSakRepository, iaSakshendelseRepository = IASakshendelseRepository(dataSource))
+
         authenticate {
             sykefraversstatistikk(
                 geografiService = GeografiService(),
                 sykefraværsstatistikkService = sykefraværsstatistikkService,
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
-                fiaRoller = naisEnvironment.security.fiaRoller
+                naisEnvironment = naisEnvironment,
+                azureTokenFetcher = azureTokenFetcher
             )
             iaSakRådgiver(
                 iaSakService = IASakService(

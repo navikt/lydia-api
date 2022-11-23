@@ -19,7 +19,7 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.eksport.IA_SAK_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.junit.After
 import org.junit.Before
@@ -27,7 +27,7 @@ import java.time.Duration
 import kotlin.test.Test
 
 class IASakEksportererTest {
-    private val konsument = kafkaContainerHelper.nyKonsument()
+    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
     @Before
     fun setUp() {
@@ -43,7 +43,7 @@ class IASakEksportererTest {
     @Test
     fun `skal trigge kafka-eksport av IASaker`() {
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
-            .nyHendelse(hendelsestype = SaksHendelsestype.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+            .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
         runBlocking {
             lydiaApiContainer

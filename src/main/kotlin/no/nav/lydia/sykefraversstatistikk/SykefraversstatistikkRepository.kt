@@ -1,11 +1,11 @@
 package no.nav.lydia.sykefraversstatistikk
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.*
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
-import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
@@ -14,11 +14,116 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
+    private val gson: Gson = GsonBuilder().create()
+
     fun insert(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertBehandletImportStatistikk(
                     behandletImportStatistikkListe = behandletImportStatistikkListe
+                )
+            }
+        }
+    }
+
+    fun insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
+        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            sykefraværsstatistikk.forEach {
+                tx.run(
+                    queryOf(
+                        """
+                            INSERT INTO sykefravar_statistikk_kategori_siste_4_kvartal(
+                                kategori,
+                                kode,
+                                tapte_dagsverk,
+                                mulige_dagsverk,
+                                prosent,
+                                maskert,
+                                antall_kvartaler,
+                                kvartaler
+                            )
+                            VALUES(
+                                :kategori,
+                                :kode,
+                                :tapte_dagsverk,
+                                :mulige_dagsverk,
+                                :prosent,
+                                :maskert,
+                                :antall_kvartaler,
+                                :kvartaler::jsonb
+                            )
+                            ON CONFLICT ON CONSTRAINT kategori_og_kode DO UPDATE SET
+                                tapte_dagsverk = :tapte_dagsverk,
+                                mulige_dagsverk = :mulige_dagsverk,
+                                prosent = :prosent,
+                                maskert = :maskert,
+                                antall_kvartaler = :antall_kvartaler,
+                                kvartaler = :kvartaler::jsonb,
+                                sist_endret = now()
+                        """.trimIndent(),
+                        mapOf(
+                            "kategori" to it.kategori.name,
+                            "kode" to it.kode,
+                            "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
+                            "mulige_dagsverk" to it.siste4Kvartal.muligeDagsverk,
+                            "prosent" to it.siste4Kvartal.prosent,
+                            "maskert" to it.siste4Kvartal.erMaskert,
+                            "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
+                            "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                        )
+                    ).asUpdate
+                )
+            }
+        }
+    }
+
+    fun insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
+        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            sykefraværsstatistikk.forEach {
+                tx.run(
+                    queryOf(
+                        """
+                            INSERT INTO sykefravar_statistikk_virksomhet_siste_4_kvartal(
+                                orgnr,
+                                tapte_dagsverk,
+                                mulige_dagsverk,
+                                prosent,
+                                maskert,
+                                antall_kvartaler,
+                                kvartaler
+                            )
+                            VALUES(
+                                :orgnr,
+                                :tapte_dagsverk,
+                                :mulige_dagsverk,
+                                :prosent,
+                                :maskert,
+                                :antall_kvartaler,
+                                :kvartaler::jsonb
+                            )
+                            ON CONFLICT (orgnr) DO UPDATE SET
+                                tapte_dagsverk = :tapte_dagsverk,
+                                mulige_dagsverk = :mulige_dagsverk,
+                                prosent = :prosent,
+                                maskert = :maskert,
+                                antall_kvartaler = :antall_kvartaler,
+                                kvartaler = :kvartaler::jsonb,
+                                sist_endret = now()
+                        """.trimIndent(),
+                        mapOf(
+                            "orgnr" to it.kode,
+                            "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
+                            "mulige_dagsverk" to it.siste4Kvartal.muligeDagsverk,
+                            "prosent" to it.siste4Kvartal.prosent,
+                            "maskert" to it.siste4Kvartal.erMaskert,
+                            "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
+                            "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                        )
+                    ).asUpdate
                 )
             }
         }
@@ -34,12 +139,87 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                 )
         """.trimIndent()
 
-
-    fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? {
-        if (!søkeparametere.skalInkludereTotaltAntall) {
-            return null
+    fun hentSykefravær(
+        søkeparametere: Søkeparametere,
+    ) = using(sessionOf(dataSource)) { session ->
+        val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
+        val tmpKommuneTabell = "kommuner"
+        val tmpNæringTabell = "naringer"
+        val tmpNavIdenterTabell = "nav_identer"
+        val sql = """
+                    WITH 
+                        ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
+                        ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
+                        ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
+                    SELECT
+                        virksomhet.orgnr,
+                        virksomhet.navn,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        statistikk.arstall,
+                        statistikk.kvartal,
+                        statistikk.antall_personer,
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet,
+                        ia_sak.status,
+                        ia_sak.eid_av,
+                        ia_sak.endret
+                    ${
+            filter(
+                tmpKommuneTabell = tmpKommuneTabell,
+                tmpNavIdenterTabell = tmpNavIdenterTabell,
+                tmpNæringTabell = tmpNæringTabell,
+                søkeparametere = søkeparametere
+            )
         }
-        return using(sessionOf(dataSource)) { session ->
+                    GROUP BY 
+                        virksomhet.orgnr,
+                        virksomhet.navn,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        statistikk.arstall,
+                        statistikk.kvartal,
+                        statistikk.antall_personer,
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet,
+                        ia_sak.status,
+                        ia_sak.eid_av,
+                        ia_sak.endret
+                    ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
+                    LIMIT ${søkeparametere.virksomheterPerSide()}
+                    OFFSET ${søkeparametere.offset()}
+                """.trimIndent()
+
+        val query = queryOf(
+            statement = sql,
+            mapOf(
+                tmpKommuneTabell to session.connection.underlying.createArrayOf(
+                    "text",
+                    søkeparametere.kommunenummer.toTypedArray()
+                ),
+                tmpNæringTabell to session.connection.underlying.createArrayOf(
+                    "text",
+                    næringsgrupperMedBransjer.toTypedArray()
+                ),
+                tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
+                    "text",
+                    søkeparametere.navIdenter.toTypedArray()
+                ),
+                "kvartal" to søkeparametere.periode.kvartal,
+                "arstall" to søkeparametere.periode.årstall
+            )
+        ).map(this::mapRow).asList
+        session.run(query)
+    }
+
+    fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? =
+        using(sessionOf(dataSource)) { session ->
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
             val tmpKommuneTabell = "kommuner"
             val tmpNæringTabell = "naringer"
@@ -83,109 +263,19 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             )
             session.run(query.map { it.int("total") }.asSingle)
         }
-    }
-
-    fun hentSykefravær(
-        søkeparametere: Søkeparametere
-    ): SykefraværsstatistikkListResponse {
-        val sykefraværsStatistikk = using(sessionOf(dataSource)) { session ->
-            val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
-            val tmpKommuneTabell = "kommuner"
-            val tmpNæringTabell = "naringer"
-            val tmpNavIdenterTabell = "nav_identer"
-            val sql = """
-                    WITH 
-                        ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
-                        ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
-                        ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
-                    SELECT
-                        virksomhet.orgnr,
-                        virksomhet.navn,
-                        virksomhet.kommune,
-                        virksomhet.kommunenummer,
-                        statistikk.arstall,
-                        statistikk.kvartal,
-                        statistikk.antall_personer,
-                        statistikk.tapte_dagsverk,
-                        statistikk.mulige_dagsverk,
-                        statistikk.sykefraversprosent,
-                        statistikk.maskert,
-                        statistikk.opprettet,
-                        ia_sak.status,
-                        ia_sak.eid_av,
-                        ia_sak.endret
-                    ${
-                filter(
-                    tmpKommuneTabell = tmpKommuneTabell,
-                    tmpNavIdenterTabell = tmpNavIdenterTabell,
-                    tmpNæringTabell = tmpNæringTabell,
-                    søkeparametere = søkeparametere
-                )
-            }
-                    GROUP BY 
-                        virksomhet.orgnr,
-                        virksomhet.navn,
-                        virksomhet.kommune,
-                        virksomhet.kommunenummer,
-                        statistikk.arstall,
-                        statistikk.kvartal,
-                        statistikk.antall_personer,
-                        statistikk.tapte_dagsverk,
-                        statistikk.mulige_dagsverk,
-                        statistikk.sykefraversprosent,
-                        statistikk.maskert,
-                        statistikk.opprettet,
-                        ia_sak.status,
-                        ia_sak.eid_av,
-                        ia_sak.endret
-                    ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
-                    LIMIT ${søkeparametere.virksomheterPerSide()}
-                    OFFSET ${søkeparametere.offset()}
-                """.trimIndent()
-
-            val query = queryOf(
-                statement = sql,
-                mapOf(
-                    tmpKommuneTabell to session.connection.underlying.createArrayOf(
-                        "text",
-                        søkeparametere.kommunenummer.toTypedArray()
-                    ),
-                    tmpNæringTabell to session.connection.underlying.createArrayOf(
-                        "text",
-                        næringsgrupperMedBransjer.toTypedArray()
-                    ),
-                    tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
-                        "text",
-                        søkeparametere.navIdenter.toTypedArray()
-                    ),
-                    "kvartal" to søkeparametere.periode.kvartal,
-                    "arstall" to søkeparametere.periode.årstall
-                )
-            ).map(this::mapRow).asList
-            session.run(query)
-        }
-
-        val totaltAntallVirksomheter = hentTotaltAntall(søkeparametere = søkeparametere)
-
-        return SykefraværsstatistikkListResponse(data = sykefraværsStatistikk, total = totaltAntallVirksomheter)
-    }
-
-    private fun aktiveStatesArray(): String {
-        return IAProsessStatus.values().filter { !it.ansesSomAvsluttet() }.toList().joinToString(prefix = "(", postfix = ")", transform = {"'$it'"})
-    }
 
     private fun filter(
         tmpKommuneTabell: String,
         tmpNavIdenterTabell: String,
         tmpNæringTabell: String,
-        søkeparametere: Søkeparametere
+        søkeparametere: Søkeparametere,
     ) = """
         FROM sykefravar_statistikk_virksomhet AS statistikk
         JOIN virksomhet USING (orgnr)
-        LEFT JOIN ia_sak ON ((ia_sak.orgnr = statistikk.orgnr) AND 
-            (ia_sak.status IN ${aktiveStatesArray()} 
-            OR ia_sak.endret > (current_date - interval '$ANTALL_DAGER_FØR_SAK_LÅSES days') 
-            OR ia_sak.status is NULL))
+        LEFT JOIN ia_sak ON (
+            (ia_sak.orgnr = statistikk.orgnr) AND
+            ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
+        )
         JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet)
         
         WHERE (
@@ -398,7 +488,7 @@ private fun TransactionalSession.insertBehandletNæringsStatistikk(behandletNær
     )
 
 private fun TransactionalSession.insertBehandletNæringsundergruppeStatistikk(
-    behandletNæringsundergruppeSykefraværsstatistikk: Collection<BehandletNæringsundergruppeSykefraværsstatistikk>
+    behandletNæringsundergruppeSykefraværsstatistikk: Collection<BehandletNæringsundergruppeSykefraværsstatistikk>,
 ) = insertBehandletSykefraværsstatistikk(
     tabellNavn = "sykefravar_statistikk_naringsundergruppe",
     kolonneNavn = "naringsundergruppe",
@@ -416,7 +506,7 @@ private fun TransactionalSession.insertBehandletLandStatistikk(behandletLandSyke
 private fun TransactionalSession.insertBehandletSykefraværsstatistikk(
     tabellNavn: String,
     kolonneNavn: String,
-    behandletStatistikkListe: Collection<BehandletKvartalsvisSykefraværsstatistikk>
+    behandletStatistikkListe: Collection<BehandletKvartalsvisSykefraværsstatistikk>,
 ) =
     behandletStatistikkListe.forEach { sykefraværsstatistikk ->
         run(

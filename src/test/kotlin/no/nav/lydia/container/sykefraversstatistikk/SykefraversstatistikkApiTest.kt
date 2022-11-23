@@ -21,12 +21,17 @@ import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomh
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.StatistikkHelper.Companion.hentAntallSider
+import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
+import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
+import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
@@ -41,20 +46,23 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFIL
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
+import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
-    private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
+    private val mockOAuth2Server = oauth2ServerContainer
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
@@ -90,21 +98,46 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
-        val (_, _, result) = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
-            .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
-            .tilSingelRespons<FilterverdierDto>()
+        val saksbehandler1 = mockOAuth2Server.saksbehandler1
+        val filterverdier = hentFilterverdier(token = saksbehandler1.token)
 
-        result.fold(
-            success = { filterverdier ->
-                filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
-                filterverdier.fylker[0].fylke.nummer shouldBe "03"
-                filterverdier.fylker[0].kommuner.size shouldBe 1
-                filterverdier.neringsgrupper.find { it.kode == Næringsgruppe.UOPPGITT.tilTosifret() }
-                    .shouldNotBeNull()
-                filterverdier.neringsgrupper.size shouldBeGreaterThan 1
-                filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
-                filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
-            }, failure = { fail(it.message) })
+        filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
+        filterverdier.fylker[0].fylke.nummer shouldBe "03"
+        filterverdier.fylker[0].kommuner.size shouldBe 1
+        filterverdier.neringsgrupper.find { it.kode == Næringsgruppe.UOPPGITT.tilTosifret() }
+            .shouldNotBeNull()
+        filterverdier.neringsgrupper.size shouldBeGreaterThan 1
+        filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
+        filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
+        filterverdier.filtrerbareEiere shouldBe listOf(
+            EierDTO(
+                navIdent = saksbehandler1.navIdent,
+                navn = saksbehandler1.navn
+            )
+        )
+    }
+
+    @Test
+    fun `kun superbrukere skal få lov til å se alle saksbehandlere i systemet`() {
+        val lesebruker = mockOAuth2Server.lesebruker
+        hentFilterverdier(token = lesebruker.token)
+            .filtrerbareEiere.map { it.navIdent } shouldBe listOf(lesebruker.navIdent)
+
+        val saksbehandler = mockOAuth2Server.saksbehandler1
+        hentFilterverdier(token = saksbehandler.token).filtrerbareEiere
+            .also { eiere ->
+                eiere.map { it.navIdent } shouldBe listOf(saksbehandler.navIdent)
+                eiere.map { it.navn } shouldBe listOf(saksbehandler.navn)
+            }
+
+        val superbruker = mockOAuth2Server.superbruker1
+        val alleFiltrerBareEiere = hentFilterverdier(token = superbruker.token).filtrerbareEiere
+        alleFiltrerBareEiere.map { it.navIdent } shouldBe listOf(
+            "M12345",
+            "S12345",
+            "S12346",
+            "R12345"
+        )
     }
 
     @Test
@@ -150,8 +183,8 @@ class SykefraversstatistikkApiTest {
         val alleKommunenummerIØstViken = GeografiService().hentKommunerFraFylkesnummer(listOf("Ø30")).map { it.nummer }
         hentSykefravær(
             fylker = "Ø30",
-            success = {response ->
-                response.total!! shouldBeGreaterThan 0
+            success = { response ->
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBeIn alleKommunenummerIØstViken
                 }
@@ -165,8 +198,8 @@ class SykefraversstatistikkApiTest {
         lastInnNyVirksomhet(nyVirksomhet = virksomhet)
         hentSykefravær(
             kommuner = INDRE_ØSTFOLD.nummer,
-            success = {response ->
-                response.total!! shouldBeGreaterThan 0
+            success = { response ->
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBe INDRE_ØSTFOLD.nummer
                 }
@@ -183,8 +216,8 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             fylker = "Ø30",
             kommuner = LUNNER.nummer,
-            success = {response ->
-                response.total!! shouldBeGreaterThan 0
+            success = { response ->
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
                     dto.kommune.nummer shouldBe LUNNER.nummer
                 }
@@ -199,8 +232,8 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             kommuner = KOMMUNE_OSLO.nummer,
             fylker = "Ø30",
-            success = {response ->
-                response.total!! shouldBeGreaterThan 0
+            success = { response ->
+                response.data.size shouldBeGreaterThan 0
                 response.data.forAll {
                     it.kommune.nummer.substring(0..1) shouldBeIn setOf("30", "03")
                 }
@@ -345,24 +378,24 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
-        hentSykefravær(success = { response ->
-            val total = response.total
-            total!! shouldBeGreaterThan VIRKSOMHETER_PER_SIDE
-            response.data shouldHaveSize VIRKSOMHETER_PER_SIDE
+        hentSykefravær(success = { response1 ->
+            response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
             val faktiskTotal = postgresContainer.performQuery("SELECT count(*) AS faktiskTotal FROM virksomhet")
                 .getInt("faktiskTotal")
-            total shouldBeLessThanOrEqual faktiskTotal
+            VIRKSOMHETER_PER_SIDE shouldBeLessThanOrEqual faktiskTotal
 
-            val antallSider = requireNotNull(response.hentAntallSider()) { "Kunne ikke regne ut antall sider" }
-            (2..antallSider).map { it.toString() }.forEach { side ->
-                hentSykefravær(skalInkludereTotaltAntall = false, success = { response ->
-                    response.total shouldBe null
-                    response.data shouldHaveAtLeastSize 1
-                }, side = side)
-            }
+            hentSykefravær(success = { response2 ->
+                response2.data shouldHaveAtLeastSize 1
+            }, side = "2")
         }, side = "1")
     }
+
+    @Test
+    fun `skal kunne hente totalt antall treff for et søk`() {
+        hentTotaltAntallTreffISykefravær() shouldBe hentSykefraværForAlleVirksomheter().size
+    }
+
 
     @Test
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
@@ -400,7 +433,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             bransjeProgram = "${Bransjer.BYGG}",
             success = {
-                it.total!! shouldBeGreaterThanOrEqual  1
+                it.data.size shouldBeGreaterThanOrEqual 1
                 it.data.forExactlyOne { it.orgnr shouldBe virksomhet.orgnr }
             }
         )
@@ -419,8 +452,12 @@ class SykefraversstatistikkApiTest {
             bransjeProgram = "${Bransjer.BYGG},${Bransjer.SYKEHUS}",
             næringsgrupper = "42",
             success = {
-                it.total!! shouldBeGreaterThanOrEqual 3
-                it.data.map { virksomhet -> virksomhet.orgnr } shouldContainAll listOf(virksomhet.orgnr, virksomhet2.orgnr, virksomhet3.orgnr)
+                it.data.size shouldBeGreaterThanOrEqual 3
+                it.data.map { virksomhet -> virksomhet.orgnr } shouldContainAll listOf(
+                    virksomhet.orgnr,
+                    virksomhet2.orgnr,
+                    virksomhet3.orgnr
+                )
             }
         )
     }
@@ -443,21 +480,20 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på bare mine virksomheter`() {
-        val testBruker1 = TestContainerHelper.oauth2ServerContainer.superbruker1
-        val testBruker2 = TestContainerHelper.oauth2ServerContainer.superbruker2
+        val testBruker1 = oauth2ServerContainer.superbruker1
+        val testBruker2 = oauth2ServerContainer.superbruker2
 
         listOf(
             Pair(testBruker1, OSLO),
             Pair(testBruker2, BERGEN)
         ).forEach { (bruker, virksomhet) ->
-            SakHelper
-                .opprettSakForVirksomhet(virksomhet.orgnr, bruker.token)
+            opprettSakForVirksomhet(virksomhet.orgnr, bruker.token)
                 .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker.token)
         }
 
         hentSykefravær(
             token = testBruker1.token,
-            kunMineVirksomheter = true,
+            eiere = testBruker1.navIdent,
             success = { response ->
                 response.data
                     .forAll {
@@ -467,7 +503,6 @@ class SykefraversstatistikkApiTest {
         )
         hentSykefravær(
             token = testBruker1.token,
-            kunMineVirksomheter = false,
             iaStatus = IAProsessStatus.VURDERES.name,
             success = { response ->
                 val sfStatistikk = response.data
@@ -484,6 +519,74 @@ class SykefraversstatistikkApiTest {
         )
     }
 
+    @Test
+    fun `søk - skal kunne filtrere på seg selv`() {
+        val superbruker1 = oauth2ServerContainer.superbruker1
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
+
+        val `sykefravær når saksbehandler filterer på seg selv` = hentSykefravær(
+            eiere = saksbehandler1.navIdent,
+            token = saksbehandler1.token
+        ).data
+        val `sykefravær når superbruker filtrerer på seg selv` = hentSykefravær(
+            eiere = superbruker1.navIdent,
+            token = superbruker1.token
+        ).data
+
+        `sykefravær når saksbehandler filterer på seg selv`
+            .forAll {
+                it.eidAv shouldBe saksbehandler1.navIdent
+            }
+        `sykefravær når superbruker filtrerer på seg selv`
+            .forAll {
+                it.eidAv shouldBe superbruker1.navIdent
+            }
+    }
+
+    @Test
+    fun `søk - kun superbruker skal kunne filtrere på andre enn seg selv`() {
+        val superbruker1 = oauth2ServerContainer.superbruker1
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
+
+        hentSykefravær(
+            eiere = saksbehandler1.navIdent,
+            token = superbruker1.token
+        ).data.forAll {
+            it.eidAv shouldBe saksbehandler1.navIdent
+        }
+    }
+
+    @Test
+    fun `søk - om saksbehandler velger en eier utenom seg selv skal det ikke påvirke resultatet`() {
+        val superbruker1 = oauth2ServerContainer.superbruker1
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
+
+        val ufiltrertSykefravær = hentSykefravær(token = saksbehandler1.token).data
+        val `sykefravær filtrert på brukeren selv` = hentSykefravær(
+            eiere = saksbehandler1.navIdent,
+            token = saksbehandler1.token
+        ).data
+        val `sykefravær filtrert på en annen eier` = hentSykefravær(
+            eiere = superbruker1.navIdent,
+            token = saksbehandler1.token
+        ).data
+
+        `sykefravær filtrert på en annen eier` shouldBe ufiltrertSykefravær
+        `sykefravær filtrert på brukeren selv` shouldNotBe ufiltrertSykefravær
+    }
 
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {
@@ -526,9 +629,32 @@ class SykefraversstatistikkApiTest {
     fun `skal filtrere bort slettede og fjernede virksomheter`() {
         val virksomheterMedSykefravær = hentSykefraværForAlleVirksomheter().map { it.orgnr }
         val endredeVirksomheter = endredeVirksomheter.map { it.orgnr }
-        val slettedeOgFjernedeVirksomheter = listOf(slettedeVirksomheter, fjernedeVirksomheter).flatten().map { it.orgnr }
+        val slettedeOgFjernedeVirksomheter =
+            listOf(slettedeVirksomheter, fjernedeVirksomheter).flatten().map { it.orgnr }
 
         virksomheterMedSykefravær shouldContainAll endredeVirksomheter
         virksomheterMedSykefravær shouldNotContainAnyOf slettedeOgFjernedeVirksomheter
+    }
+
+    @Test
+    fun `skal returnere sist endret selv om frist har gått ut`() {
+        val testKommune = Kommune(navn = "Yoloooo", nummer = "5555")
+        val virksomhet =
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyIkkeAktuellHendelse()
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+
+        // -- lag en sak som er enda eldre
+        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyIkkeAktuellHendelse()
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 10)
+
+        hentSykefravær(kommuner = testKommune.nummer).also {
+            it.data.single().sistEndret shouldBe sak.endretTidspunkt?.date
+        }
+
     }
 }

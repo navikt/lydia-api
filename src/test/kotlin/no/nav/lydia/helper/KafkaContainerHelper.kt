@@ -43,6 +43,8 @@ class KafkaContainerHelper(
 ) {
     companion object {
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
+        const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
+        const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
         const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
     }
@@ -53,8 +55,7 @@ class KafkaContainerHelper(
     private var kafkaProducer: KafkaProducer<String, String>
 
     val kafkaContainer = KafkaContainer(
-        DockerImageName.parse("kymeric/cp-kafka")
-            .asCompatibleSubstituteFor("confluentinc/cp-kafka")
+        DockerImageName.parse("confluentinc/cp-kafka:7.2.2")
     )
         .withNetwork(network)
         .withNetworkAliases(kafkaNetworkAlias)
@@ -71,22 +72,29 @@ class KafkaContainerHelper(
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
-            createTopic(statistikkTopic, iaSakHendelseTopic, iaSakTopic, brregOppdateringTopic)
+            createTopic(statistikkTopic,
+                iaSakHendelseTopic,
+                iaSakTopic,
+                brregOppdateringTopic,
+                statistikkLandTopic,
+                statistikkVirksomhetTopic)
             kafkaProducer = producer()
         }
 
-    fun nyKonsument() =
+    fun nyKonsument(consumerGroupId: String) =
         Kafka(
             brokers = kafkaContainer.bootstrapServers,
             iaSakHendelseTopic = iaSakHendelseTopic,
             iaSakTopic = iaSakTopic,
             statistikkTopic = statistikkTopic,
+            statistikkLandTopic = statistikkLandTopic,
+            statistikkVirksomhetTopic = statistikkVirksomhetTopic,
             brregOppdateringTopic = brregOppdateringTopic,
             consumerLoopDelay = 1,
             credstorePassword = "",
             keystoreLocation = "",
             truststoreLocation = ""
-        ).consumerProperties()
+        ).consumerProperties(consumerGroupId = consumerGroupId)
             .let { config ->
                 KafkaConsumer(config, StringDeserializer(), StringDeserializer())
             }
@@ -97,6 +105,8 @@ class KafkaContainerHelper(
         "KAFKA_KEYSTORE_PATH" to "",
         "KAFKA_CREDSTORE_PASSWORD" to "",
         "STATISTIKK_TOPIC" to statistikkTopic,
+        "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
+        "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
         "IA_SAK_HENDELSE_TOPIC" to iaSakHendelseTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic
@@ -125,6 +135,13 @@ class KafkaContainerHelper(
             StringSerializer()
         )
 
+    fun sendOgVentTilKonsumert(nøkkel: String, melding: String, topic: String, konsumentGruppeId: String) {
+        runBlocking {
+            val sendtMelding = kafkaProducer.send(ProducerRecord(topic, nøkkel, melding)).get()
+            ventTilKonsumert(sendtMelding.offset(), konsumentGruppeId = konsumentGruppeId)
+        }
+    }
+
     fun sendIBulkOgVentTilKonsumert(importDtoer: List<SykefraversstatistikkImportDto>) {
         runBlocking {
             val sendteMeldinger = importDtoer.map { melding ->
@@ -143,12 +160,16 @@ class KafkaContainerHelper(
 
     suspend fun ventTilAlleMeldingerErKonsumert(konsumentGruppe: String, timeout: Duration = Duration.ofSeconds(10)) {
         withTimeout(timeout) {
-            val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
-                .partitionsToOffsetAndMetadata().get()
+            var topicOffset: Long?
+            do {
+                delay(timeMillis = 10L)
+                val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
+                    .partitionsToOffsetAndMetadata().get()
 
-            val topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
-                OffsetSpec.latest()
-            }).all().get().map { it.value.offset() }.first()
+                topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
+                    OffsetSpec.latest()
+                }).all().get().map { it.value.offset() }.firstOrNull()
+            } while (topicOffset == null)
 
             do {
                 delay(timeMillis = 10L)
@@ -167,11 +188,14 @@ class KafkaContainerHelper(
             ), gson.toJson(this)
         )
 
-    private suspend fun ventTilKonsumert(offset: Long) =
+    private suspend fun ventTilKonsumert(
+        offset: Long,
+        konsumentGruppeId: String = Kafka.statistikkConsumerGroupId
+    ) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
                 delay(timeMillis = 10L)
-            } while (consumerSinOffset(consumerGroup = Kafka.statistikkConsumerGroupId) <= offset)
+            } while (consumerSinOffset(consumerGroup = konsumentGruppeId) <= offset)
         }
 
     suspend fun ventOgKonsumerKafkaMeldinger(key: String, konsument: KafkaConsumer<String, String>, block: (meldinger: List<String>) -> Unit) {

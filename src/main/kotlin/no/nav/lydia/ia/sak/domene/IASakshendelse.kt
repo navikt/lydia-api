@@ -11,7 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import java.time.LocalDateTime
@@ -20,7 +20,7 @@ open class IASakshendelse(
     val id: String,
     val opprettetTidspunkt: LocalDateTime,
     val saksnummer: String,
-    val hendelsesType: SaksHendelsestype,
+    val hendelsesType: IASakshendelseType,
     val orgnummer: String,
     val opprettetAv: String
 ) {
@@ -44,13 +44,13 @@ open class IASakshendelse(
                 id = saksnummer,
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = saksnummer,
-                hendelsesType = SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET,
+                hendelsesType = IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
             )
         }
 
-        fun IASak.nyHendelseBasertPåSak(hendelsestype: SaksHendelsestype, opprettetAv: String) =
+        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, opprettetAv: String) =
             IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -62,7 +62,7 @@ open class IASakshendelse(
     }
 
     @Serializable
-    private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: SaksHendelsestype, val opprettetAv: String)
+    private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: IASakshendelseType, val opprettetAv: String)
 
     internal open fun tilKeyValueJsonPair(): Pair<String, String> {
         val key = saksnummer
@@ -117,7 +117,7 @@ class VirksomhetIkkeAktuellHendelse(
         val opprettetTidspunkt: String,
         val orgnummer: String,
         val saksnummer: String,
-        val hendelsesType: SaksHendelsestype,
+        val hendelsesType: IASakshendelseType,
         val opprettetAv: String,
         val årsak: Årsak
     )
@@ -145,7 +145,7 @@ object SaksHendelseFeil {
         Feil(feilmelding = "Kunne ikke deserialisere årsak", httpStatusCode = HttpStatusCode.BadRequest)
 }
 
-enum class SaksHendelsestype {
+enum class IASakshendelseType {
     OPPRETT_SAK_FOR_VIRKSOMHET,
     VIRKSOMHET_VURDERES,
     TA_EIERSKAP_I_SAK,
@@ -160,7 +160,7 @@ enum class SaksHendelsestype {
 
 @Serializable
 class GyldigHendelse(
-    val saksHendelsestype: SaksHendelsestype
+    val saksHendelsestype: IASakshendelseType
 ) {
     val gyldigeÅrsaker: List<GyldigÅrsak> = when (saksHendelsestype) {
         VIRKSOMHET_ER_IKKE_AKTUELL -> GyldigÅrsak.from(saksHendelsestype)

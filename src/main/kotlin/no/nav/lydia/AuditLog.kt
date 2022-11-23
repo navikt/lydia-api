@@ -8,7 +8,7 @@ import io.ktor.server.request.*
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.tilgangskontroll.navIdent
+import no.nav.lydia.tilgangskontroll.innloggetNavIdent
 import org.slf4j.LoggerFactory
 
 
@@ -69,7 +69,7 @@ class AuditLog(val miljø: Environment) {
             else -> Tillat.Ja
         }
 
-        call.navIdent()?.let { navIdent ->
+        call.innloggetNavIdent()?.let { navIdent ->
             log(
                 navIdent = navIdent,
                 uri = call.request.uri,

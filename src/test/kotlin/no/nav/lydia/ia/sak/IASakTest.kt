@@ -2,35 +2,21 @@ package no.nav.lydia.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.FiaRoller
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.TILBAKE
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_KARTLEGGES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_BISTÅS
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.ia.sak.domene.SaksHendelsestype.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_LAVT_SYKEFRAVÆR
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MANGLER_PARTSGRUPPE
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.MINDRE_VIRKSOMHET
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
@@ -42,8 +28,6 @@ import kotlin.test.Test
 class IASakTest {
     companion object {
         const val orgnummer = "123456789"
-        const val navIdent1 = "A123456"
-        const val navIdent2 = "B123456"
 
         val fiaroller = FiaRoller(
             superbrukerGroupId = "123",
@@ -53,13 +37,22 @@ class IASakTest {
         )
 
         val superbruker1 = Rådgiver(
-            navIdent = navIdent1,
+            navIdent = "A123456",
+            navn = "Super Bruker 1",
             fiaRoller = fiaroller,
             rådgiversGrupper = listOf(fiaroller.superbrukerGroupId)
         )
 
-        val saksbehandler2 = Rådgiver(
-            navIdent = navIdent2,
+        val superbruker2 = Rådgiver(
+            navIdent = "A999111",
+            navn = "Super Bruker 2",
+            fiaRoller = fiaroller,
+            rådgiversGrupper = listOf(fiaroller.superbrukerGroupId)
+        )
+
+        val saksbehandler1 = Rådgiver(
+            navIdent = "B123456",
+            navn = "Saks Behandler 1",
             fiaRoller = fiaroller,
             rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
         )
@@ -67,15 +60,15 @@ class IASakTest {
 
     @Test
     fun `skal kunne merke at en virksomhet skal vurderes`() {
-        val sak = nyIASak(orgnummer = orgnummer, navIdent = navIdent1)
+        val sak = nyIASak(orgnummer = orgnummer, rådgiver = superbruker1)
 
         val vurderingsHendelse = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = sak.saksnummer,
             orgnummer = sak.orgnr,
-            navIdent = navIdent2
+            navIdent = superbruker2.navIdent
         )
-        sak.behandleHendelse(vurderingsHendelse)
+        superbruker1.utførHendelsePåSak(sak, vurderingsHendelse)
         sak.endretAv shouldBe vurderingsHendelse.opprettetAv
         sak.endretTidspunkt shouldBe vurderingsHendelse.opprettetTidspunkt
         sak.saksnummer shouldBe vurderingsHendelse.saksnummer
@@ -85,18 +78,18 @@ class IASakTest {
 
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
-        val h1 = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = navIdent1)
+        val h1 = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
         val h2 = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
-            navIdent = navIdent2
+            navIdent = superbruker2.navIdent
         )
         val h3 = nyHendelse(
             VIRKSOMHET_ER_IKKE_AKTUELL,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
-            navIdent = navIdent2
+            navIdent = superbruker2.navIdent
         )
         val sak = IASak.fraHendelser(listOf(h1, h2, h3))
         sak.status shouldBe IKKE_AKTUELL
@@ -118,16 +111,16 @@ class IASakTest {
             TA_EIERSKAP_I_SAK,
             saksnummer = h1_ny_sak.saksnummer,
             orgnummer = h1_ny_sak.orgnummer,
-            navIdent = saksbehandler2.navIdent
+            navIdent = saksbehandler1.navIdent
         )
         val sak = IASak.fraHendelser(listOf(h1_ny_sak, h2_vurderes, h3_ta_eierskap))
-        sak.gyldigeNesteHendelser(rådgiver = saksbehandler2)
-            .shouldForAtLeastOne {
-                it.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                it.gyldigeÅrsaker.shouldForAtLeastOne {
-                    it.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
-                    it.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
-                    it.begrunnelser.somBegrunnelseType().shouldContainAll(
+        sak.gyldigeNesteHendelser(rådgiver = saksbehandler1)
+            .shouldForAtLeastOne { gyldigHendelse ->
+                gyldigHendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                gyldigHendelse.gyldigeÅrsaker.shouldForAtLeastOne { gyldigÅrsak ->
+                    gyldigÅrsak.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
+                    gyldigÅrsak.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
+                    gyldigÅrsak.begrunnelser.somBegrunnelseType().shouldContainAll(
                         MANGLER_PARTSGRUPPE,
                         IKKE_TILFREDSSTILLENDE_SAMARBEID,
                         FOR_LAVT_SYKEFRAVÆR,
@@ -135,10 +128,10 @@ class IASakTest {
                         MINDRE_VIRKSOMHET
                     )
                 }
-                it.gyldigeÅrsaker.shouldForAtLeastOne {
-                    it.type shouldBe VIRKSOMHETEN_TAKKET_NEI
-                    it.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
-                    it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                gyldigHendelse.gyldigeÅrsaker.shouldForAtLeastOne { gyldigÅrsak ->
+                    gyldigÅrsak.type shouldBe VIRKSOMHETEN_TAKKET_NEI
+                    gyldigÅrsak.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
+                    gyldigÅrsak.begrunnelser.somBegrunnelseType().shouldContainAll(
                         HAR_IKKE_KAPASITET,
                         GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
                         GJENNOMFØRER_TILTAK_MED_BHT
@@ -163,7 +156,7 @@ class IASakTest {
             TA_EIERSKAP_I_SAK,
             saksnummer = h1_ny_sak.saksnummer,
             orgnummer = h1_ny_sak.orgnummer,
-            navIdent = saksbehandler2.navIdent
+            navIdent = saksbehandler1.navIdent
         )
         val hendelserPåSak = listOf(h1_ny_sak, h2_vurderes, h3_ta_eierskap)
         val sak = IASak.fraHendelser(hendelserPåSak)
@@ -185,13 +178,13 @@ class IASakTest {
         sak.status shouldBe IKKE_AKTUELL
 
         val tilbakeTilKontaktes = ikkeAktuell.nesteHendelse(TILBAKE)
-        sak.behandleHendelse(tilbakeTilKontaktes)
+        superbruker1.utførHendelsePåSak(sak, tilbakeTilKontaktes)
         sak.endretAvHendelseId shouldBe tilbakeTilKontaktes.id
         sak.status shouldBe KONTAKTES
         sak.hendelser shouldContain tilbakeTilKontaktes
 
         val tilbakeTilVurderes = tilbakeTilKontaktes.nesteHendelse(TILBAKE)
-        sak.behandleHendelse(tilbakeTilVurderes)
+        superbruker1.utførHendelsePåSak(sak, tilbakeTilVurderes)
         sak.endretAvHendelseId shouldBe tilbakeTilVurderes.id
         sak.hendelser shouldContain tilbakeTilVurderes
         sak.status shouldBe VURDERES
@@ -228,11 +221,11 @@ class IASakTest {
             fullfør,
         )
         val gyldigeNesteHendelser = sak.gyldigeNesteHendelser(superbruker1)
-        gyldigeNesteHendelser.size shouldBe 2
-        gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(OPPRETT_SAK_FOR_VIRKSOMHET, TILBAKE)
+        gyldigeNesteHendelser.size shouldBe 1
+        gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
     }
 
-    private fun nyHendelse(type: SaksHendelsestype, saksnummer: String, orgnummer: String, navIdent: String) =
+    private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, navIdent: String) =
         IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -242,8 +235,8 @@ class IASakTest {
             opprettetAv = navIdent,
         )
 
-    private fun IASakshendelse.nesteHendelse(saksHendelsestype: SaksHendelsestype) =
-        when (saksHendelsestype) {
+    private fun IASakshendelse.nesteHendelse(iaSakshendelseType: IASakshendelseType) =
+        when (iaSakshendelseType) {
             VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -252,9 +245,14 @@ class IASakTest {
                 opprettetAv = this.opprettetAv,
                 valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID))
             )
-            else -> nyHendelse(saksHendelsestype, saksnummer = this.saksnummer, orgnummer = this.orgnummer, navIdent = this.opprettetAv)
+            else -> nyHendelse(
+                iaSakshendelseType,
+                saksnummer = this.saksnummer,
+                orgnummer = this.orgnummer,
+                navIdent = this.opprettetAv
+            )
         }
 
-    private fun nyIASak(orgnummer: String, navIdent: String): IASak =
-        IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, navIdent))
+    private fun nyIASak(orgnummer: String, rådgiver: Rådgiver): IASak =
+        IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, rådgiver.navIdent))
 }

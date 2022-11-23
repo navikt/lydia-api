@@ -1,8 +1,8 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.7.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("plugin.serialization") version "1.7.20"
     // For å bygge
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.1.2"
+    val ktorVersion = "2.1.3"
     val fuelVersion = "2.3.1"
 
     // Align versions of all Kotlin components
@@ -38,7 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.2.11")
+    implementation("ch.qos.logback:logback-classic:1.4.3")
     implementation("net.logstash.logback:logstash-logback-encoder:7.2")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -58,7 +58,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.9.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.2.1")
+    implementation("org.apache.kafka:kafka-clients:3.2.3")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -95,11 +95,11 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.33.2")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.34.0")
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:0.5.4")
+    testImplementation("no.nav.security:mock-oauth2-server:0.5.5")
     implementation("com.nimbusds:nimbus-jose-jwt:9.25.4")
 
 }
@@ -107,8 +107,7 @@ dependencies {
 testing {
     suites {
         // Configure the built-in test suite
-        val test by getting(JvmTestSuite::class) {
-            // Use Kotlin Test test framework
+        getting(JvmTestSuite::class) {
             useKotlinTest()
         }
     }

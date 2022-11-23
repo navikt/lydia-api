@@ -5,7 +5,8 @@ import io.ktor.http.Parameters
 import io.ktor.server.application.ApplicationCall
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
-import no.nav.lydia.tilgangskontroll.navIdent
+import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 
 data class Søkeparametere(
     val kommunenummer: Set<String>,
@@ -21,10 +22,9 @@ data class Søkeparametere(
     val side: Int,
     val navIdenter: Set<String>,
     val bransjeprogram: Set<Bransjer>,
-    val skalInkludereTotaltAntall: Boolean = false
 ) {
     companion object {
-        const val VIRKSOMHETER_PER_SIDE = 50
+        const val VIRKSOMHETER_PER_SIDE = 100
 
         const val KVARTAL = "kvartal"
         const val ÅRSTALL = "arstall"
@@ -39,11 +39,10 @@ data class Søkeparametere(
         const val ANSATTE_TIL = "ansatteTil"
         const val IA_STATUS = "iaStatus"
         const val SIDE = "side"
-        const val KUN_MINE_VIRKSOMHETER = "kunMineVirksomheter"
         const val BRANSJEPROGRAM = "bransjeprogram"
-        const val SKAL_INKLUDERE_TOTALT_ANTALL = "skalInkludereTotaltAntall"
+        const val IA_SAK_EIERE = "eiere"
 
-        fun from(call: ApplicationCall, geografiService: GeografiService) =
+        fun from(call: ApplicationCall, geografiService: GeografiService, rådgiver: Rådgiver) =
             call.request.queryParameters.let { queryParameters ->
                 Søkeparametere(
                     kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
@@ -60,12 +59,20 @@ data class Søkeparametere(
                     ansatteTil = queryParameters[ANSATTE_TIL].tomSomNull()?.toInt(),
                     status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
                     side = queryParameters[SIDE].tomSomNull()?.toInt() ?: 1,
-                    navIdenter = if (queryParameters[KUN_MINE_VIRKSOMHETER].toBoolean()) call.navIdent()
-                        ?.let { navIdent -> setOf(navIdent) } ?: emptySet() else emptySet(),
+                    navIdenter = call.navIdenter(rådgiver = rådgiver),
                     bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
-                    skalInkludereTotaltAntall = queryParameters[SKAL_INKLUDERE_TOTALT_ANTALL].toBoolean()
                 )
             }
+
+        private fun ApplicationCall.navIdenter(rådgiver: Rådgiver): Set<String> {
+            return request.queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
+                when (rådgiver.rolle) {
+                    SUPERBRUKER -> eiere.toSet()
+                    SAKSBEHANDLER,
+                    LESE -> eiere.filter { it == rådgiver.navIdent }.toSet()
+                }
+            }
+        }
 
         private fun finnBransjeProgram(queryParams: String?): Set<Bransjer> {
             val unikeVerdier = queryParams.tilUnikeVerdier().map(String::uppercase)
@@ -90,14 +97,16 @@ data class Søkeparametere(
     fun virksomheterPerSide() = VIRKSOMHETER_PER_SIDE
     fun offset() = (side - 1) * VIRKSOMHETER_PER_SIDE
 
-    internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply { addAll(
-        bransjeprogram.flatMap { bransje ->
-            bransje.næringskoder.map { næringskode ->
-                if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
-                else næringskode
+    internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply {
+        addAll(
+            bransjeprogram.flatMap { bransje ->
+                bransje.næringskoder.map { næringskode ->
+                    if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
+                    else næringskode
+                }
             }
-        }
-    ) }.toSet()
+        )
+    }.toSet()
 }
 
 class Periode(val kvartal: Int, val årstall: Int) {
