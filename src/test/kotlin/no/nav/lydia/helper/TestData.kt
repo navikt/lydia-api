@@ -11,7 +11,7 @@ import kotlin.random.Random
 
 class TestData(
     inkluderStandardVirksomheter: Boolean = false,
-    antallTilfeldigeVirksomheter: Int = 0
+    antallTilfeldigeVirksomheter: Int = 0,
 ) {
     companion object {
         const val LANDKODE_NO = "NO"
@@ -40,6 +40,8 @@ class TestData(
     }
 
     private val kafkaMeldinger = mutableSetOf<SykefraversstatistikkImportDto>()
+    private val sykefraværsstatistikkPerKategoriKafkaMeldinger =
+        mutableSetOf<SykefraversstatistikkPerKategoriImportDto>()
     private val næringer = mutableSetOf<String>()
     private val brregVirksomheter = mutableSetOf<String>()
 
@@ -103,7 +105,7 @@ class TestData(
         sykefraværsProsent: Double = 2.0,
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
-        sektor: String = SEKTOR_STATLIG_FORVALTNING
+        sektor: String = SEKTOR_STATLIG_FORVALTNING,
     ): TestData {
         perioder.forEach { periode ->
             kafkaMeldinger.add(
@@ -114,6 +116,16 @@ class TestData(
                     antallPersoner = antallPersoner,
                     tapteDagsverk = tapteDagsverk,
                     sektor = sektor
+                )
+            )
+            sykefraværsstatistikkPerKategoriKafkaMeldinger.add(
+                lagSykefraversstatistikkPerKategoriImportDto(
+                    kategori = Kategori.VIRKSOMHET,
+                    kode = virksomhet.orgnr,
+                    periode = periode,
+                    sykefraværsProsent = sykefraværsProsent,
+                    antallPersoner = antallPersoner.toInt(),
+                    tapteDagsverk = tapteDagsverk,
                 )
             )
         }
@@ -131,6 +143,9 @@ class TestData(
 
     fun sykefraværsStatistikkMeldinger() =
         kafkaMeldinger
+
+    fun sykefraværsstatistikkPerKategoriMeldinger() =
+        sykefraværsstatistikkPerKategoriKafkaMeldinger
 
     fun brregMockData() =
         brregVirksomheter.joinToString(prefix = "[", postfix = "]", separator = ",")
@@ -166,6 +181,26 @@ class TestData(
         )
 }
 
+enum class SykefraværsstatistikkPerKategoriTestData(
+    val sykefraversstatistikkPerKategoriImportDto: SykefraversstatistikkPerKategoriImportDto,
+) {
+    testVirksomhetForrigeKvartal(
+        sykefraversstatistikkPerKategoriImportDto = lagSykefraversstatistikkPerKategoriImportDto(
+            kategori = Kategori.VIRKSOMHET,
+            kode = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
+            periode = Periode.forrigePeriode(),
+            antallPersoner = 6,
+        )
+    ),
+    testVirksomhetGjeldeneKvartal(
+        sykefraversstatistikkPerKategoriImportDto = lagSykefraversstatistikkPerKategoriImportDto(
+            kategori = Kategori.VIRKSOMHET,
+            kode = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
+            periode = Periode.gjeldendePeriode(),
+            antallPersoner = 6,
+        )
+    )
+}
 
 enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: SykefraversstatistikkImportDto) {
     testVirksomhetForrigeKvartal(
@@ -182,17 +217,6 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: S
             periode = Periode.gjeldendePeriode(),
             antallPersoner = 6.0,
             sektor = "1"
-        )
-    ),
-    testVirksomhetSomFeilaktigIkkeErMaskert(
-        sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
-            orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK.orgnr,
-            periode = Periode.forrigePeriode(),
-            antallPersoner = 4.0,
-            sykefraværsProsent = 10.0,
-            tapteDagsverk = 3000.0,
-            sektor = "1",
-            maskert = false
         )
     ),
 }
@@ -219,7 +243,7 @@ fun lagSykefraværsstatistikkImportDto(
     landKode: String = LANDKODE_NO,
     næring: String = NÆRING_JORDBRUK,
     næringsundergrupper: List<String> = listOf(DYRKING_AV_KORN.kode),
-    maskert: Boolean = false
+    maskert: Boolean = false,
 ) =
     SykefraversstatistikkImportDto(
         virksomhetSykefravær = SykefraværsstatistikkForVirksomhet(
@@ -280,6 +304,37 @@ fun lagSykefraværsstatistikkImportDto(
             )
         }
     )
+
+fun lagSykefraversstatistikkPerKategoriImportDto(
+    kategori: Kategori,
+    kode: String,
+    periode: Periode,
+    sykefraværsProsent: Double = 2.0,
+    antallPersoner: Int = 6,
+    tapteDagsverk: Double = 20.0,
+    maskert: Boolean = false,
+) =
+    SykefraversstatistikkPerKategoriImportDto(
+        kategori = kategori,
+        kode = kode,
+        sistePubliserteKvartal = SistePubliserteKvartal(
+            årstall = periode.årstall,
+            kvartal = periode.kvartal,
+            prosent = 1.5,
+            antallPersoner = antallPersoner,
+            tapteDagsverk = 12.8,
+            muligeDagsverk = 125.0,
+            erMaskert = maskert
+        ),
+        siste4Kvartal = Siste4Kvartal(
+            prosent = sykefraværsProsent,
+            tapteDagsverk = tapteDagsverk,
+            muligeDagsverk = 500.0,
+            erMaskert = maskert,
+            kvartaler = listOf()
+        )
+    )
+
 
 fun TestVirksomhet.brregUnderenhetJson() =
     """

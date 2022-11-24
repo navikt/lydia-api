@@ -53,3 +53,10 @@ data class SistePubliserteKvartal(
     @SerializedName("erMaskert")
     val erMaskert: Boolean
 )
+
+data class KeySykefraversstatistikkPerKategori(
+    val kategori: String,
+    val kode: String,
+    val kvartal: Int,
+    val årstall: Int,
+)

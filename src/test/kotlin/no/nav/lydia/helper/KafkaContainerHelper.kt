@@ -13,7 +13,9 @@ import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.sykefraversstatistikk.import.Key
+import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkPerKategori
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -34,12 +36,12 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.util.TimeZone
+import java.util.*
 
 
 class KafkaContainerHelper(
     network: Network = Network.newNetwork(),
-    log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java)
+    log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java),
 ) {
     companion object {
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
@@ -151,7 +153,25 @@ class KafkaContainerHelper(
         }
     }
 
+    fun sendSykefraversstatostikkPerKategoriIBulkOgVentTilKonsumert(
+        importDtoer: List<SykefraversstatistikkPerKategoriImportDto>,
+    ) {
+        runBlocking {
+            val sendteMeldinger = importDtoer.map { melding ->
+                kafkaProducer.send(melding.tilProducerRecord()).get()
+            }
+            ventTilKonsumert(sendteMeldinger.last().offset())
+        }
+    }
+
     fun sendSykefraversstatistikkKafkaMelding(importDto: SykefraversstatistikkImportDto) {
+        runBlocking {
+            val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
+            ventTilKonsumert(sendtMelding.offset())
+        }
+    }
+
+    fun sendSykefraversstatostikkPerKategoriKafkaMelding(importDto: SykefraversstatistikkPerKategoriImportDto) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
             ventTilKonsumert(sendtMelding.offset())
@@ -188,9 +208,21 @@ class KafkaContainerHelper(
             ), gson.toJson(this)
         )
 
+    private fun SykefraversstatistikkPerKategoriImportDto.tilProducerRecord() =
+        ProducerRecord(
+            statistikkVirksomhetTopic, gson.toJson(
+                KeySykefraversstatistikkPerKategori(
+                    kategori = kategori.name,
+                    kode = kode,
+                    årstall = sistePubliserteKvartal.årstall,
+                    kvartal = sistePubliserteKvartal.kvartal
+                ),
+            ), gson.toJson(this)
+        )
+
     private suspend fun ventTilKonsumert(
         offset: Long,
-        konsumentGruppeId: String = Kafka.statistikkConsumerGroupId
+        konsumentGruppeId: String = Kafka.statistikkConsumerGroupId,
     ) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
@@ -198,7 +230,11 @@ class KafkaContainerHelper(
             } while (consumerSinOffset(consumerGroup = konsumentGruppeId) <= offset)
         }
 
-    suspend fun ventOgKonsumerKafkaMeldinger(key: String, konsument: KafkaConsumer<String, String>, block: (meldinger: List<String>) -> Unit) {
+    suspend fun ventOgKonsumerKafkaMeldinger(
+        key: String,
+        konsument: KafkaConsumer<String, String>,
+        block: (meldinger: List<String>) -> Unit,
+    ) {
         withTimeout(Duration.ofSeconds(10)) {
             launch {
                 while (this.isActive) {
@@ -226,7 +262,7 @@ class KafkaContainerHelper(
         næringskode: String = NÆRING_JORDBRUK,
         næringsundergruppe: String = DYRKING_AV_KORN.kode,
         landKode: String = LANDKODE_NO,
-        sektorkode: String = SEKTOR_STATLIG_FORVALTNING
+        sektorkode: String = SEKTOR_STATLIG_FORVALTNING,
     ) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(

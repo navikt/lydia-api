@@ -542,6 +542,10 @@ class VirksomhetHelper {
             TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
                 testData.sykefraværsStatistikkMeldinger().toList()
             )
+
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatostikkPerKategoriIBulkOgVentTilKonsumert(
+                testData.sykefraværsstatistikkPerKategoriMeldinger().toList()
+            )
         }
     }
 }

@@ -1,15 +1,17 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import arrow.core.Either
-import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
-import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.StatistikkHelper
+import no.nav.lydia.helper.SykefraværsstatistikkPerKategoriTestData
+import no.nav.lydia.helper.SykefraværsstatistikkTestData
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.AVVIRKNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
@@ -19,8 +21,14 @@ import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.helper.TestData.Companion.SKOGSKJØTSEL
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_IMPORT
+import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.lagSykefraversstatistikkPerKategoriImportDto
+import no.nav.lydia.helper.lagSykefraværsstatistikkImportDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import java.sql.ResultSet
 import kotlin.test.Test
 
@@ -32,7 +40,12 @@ class SykefraversstatistikkImportTest {
     fun `kan importere statistikk for flere kvartal`() {
         val gjeldendePeriode = Periode.gjeldendePeriode()
         val forrigePeriode = Periode.forrigePeriode()
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(
+            importDto = SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto
+        )
+        kafkaContainer.sendSykefraversstatostikkPerKategoriKafkaMelding(
+            importDto = SykefraværsstatistikkPerKategoriTestData.testVirksomhetForrigeKvartal.sykefraversstatistikkPerKategoriImportDto
+        )
 
         hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
             .forExactlyOne {
@@ -41,7 +54,12 @@ class SykefraversstatistikkImportTest {
                 it.orgnr shouldBe TESTVIRKSOMHET_FOR_IMPORT.orgnr
             }
 
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = SykefraværsstatistikkTestData.testVirksomhetGjeldeneKvartal.sykefraværsstatistikkImportDto)
+        kafkaContainer.sendSykefraversstatistikkKafkaMelding(
+            importDto = SykefraværsstatistikkTestData.testVirksomhetGjeldeneKvartal.sykefraværsstatistikkImportDto
+        )
+        kafkaContainer.sendSykefraversstatostikkPerKategoriKafkaMelding(
+            importDto = SykefraværsstatistikkPerKategoriTestData.testVirksomhetGjeldeneKvartal.sykefraversstatistikkPerKategoriImportDto
+        )
 
         val osloAndreOgTredjeKvart = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
         osloAndreOgTredjeKvart.forExactlyOne {
@@ -59,7 +77,9 @@ class SykefraversstatistikkImportTest {
     @Test
     fun `importerte data skal kunne hentes ut og være like`() {
         val sykefraværsstatistikk = SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto
+        val sykefraværsstatistikkPerKategori = SykefraværsstatistikkPerKategoriTestData.testVirksomhetForrigeKvartal.sykefraversstatistikkPerKategoriImportDto
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(sykefraværsstatistikk)
+        kafkaContainer.sendSykefraversstatostikkPerKategoriKafkaMelding(sykefraværsstatistikkPerKategori)
 
         val dtos = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
         dtos.size shouldBeGreaterThanOrEqual 1
@@ -67,18 +87,20 @@ class SykefraversstatistikkImportTest {
             dto.orgnr shouldBe sykefraværsstatistikk.virksomhetSykefravær.orgnr
             dto.arstall shouldBe sykefraværsstatistikk.virksomhetSykefravær.årstall
             dto.kvartal shouldBe sykefraværsstatistikk.virksomhetSykefravær.kvartal
-            dto.sykefraversprosent shouldBe sykefraværsstatistikk.virksomhetSykefravær.prosent
+            dto.sykefraversprosent shouldBe sykefraværsstatistikkPerKategori.siste4Kvartal.prosent
             dto.antallPersoner shouldBe sykefraværsstatistikk.virksomhetSykefravær.antallPersoner.toInt()
-            dto.muligeDagsverk shouldBe sykefraværsstatistikk.virksomhetSykefravær.muligeDagsverk
-            dto.tapteDagsverk shouldBe sykefraværsstatistikk.virksomhetSykefravær.tapteDagsverk
+            dto.muligeDagsverk shouldBe sykefraværsstatistikkPerKategori.siste4Kvartal.muligeDagsverk
+            dto.tapteDagsverk shouldBe sykefraværsstatistikkPerKategori.siste4Kvartal.tapteDagsverk
         }
     }
 
     @Test
     fun `import av data er idempotent`() {
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
+        kafkaContainer.sendSykefraversstatostikkPerKategoriKafkaMelding(SykefraværsstatistikkPerKategoriTestData.testVirksomhetForrigeKvartal.sykefraversstatistikkPerKategoriImportDto)
         val førsteLagredeStatistikk = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
+        kafkaContainer.sendSykefraversstatostikkPerKategoriKafkaMelding(SykefraværsstatistikkPerKategoriTestData.testVirksomhetForrigeKvartal.sykefraversstatistikkPerKategoriImportDto)
         val andreLagredeStatistikk = hentSykefraværsstatistikk(TESTVIRKSOMHET_FOR_IMPORT.orgnr)
         andreLagredeStatistikk.forExactlyOne { dto ->
             dto.orgnr shouldBe førsteLagredeStatistikk[0].orgnr
@@ -127,7 +149,16 @@ class SykefraversstatistikkImportTest {
             tapteDagsverk = 16.0,
             sektor = "3"
         )
+        val opppdatertStatistikk4SisteKvartal = lagSykefraversstatistikkPerKategoriImportDto(
+            kategori = Kategori.VIRKSOMHET,
+            kode = virksomhet.orgnr,
+            periode = Periode.gjeldendePeriode(),
+            sykefraværsProsent = 3.0,
+            antallPersoner = 1337,
+            tapteDagsverk = 16.0,
+        )
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(opppdatertStatistikk)
+        kafkaContainer.sendSykefraversstatostikkPerKategoriKafkaMelding(opppdatertStatistikk4SisteKvartal)
         hentSykefraværsstatistikk(virksomhet.orgnr).forExactlyOne {
             it.sykefraversprosent shouldBe 3.0
             it.antallPersoner shouldBe 1337
@@ -192,28 +223,6 @@ class SykefraversstatistikkImportTest {
         hentStatistikk(tabell = "sykefravar_statistikk_land", kolonne = "land", kode = LANDKODE_NO, periode = periode) shouldBe LANDKODE_NO
     }
 
-    @Test
-    fun `vi stoler ikke på at sykefraværsstatistikken er maskert`() {
-        val importDto = SykefraværsstatistikkTestData.testVirksomhetSomFeilaktigIkkeErMaskert.sykefraværsstatistikkImportDto
-        listOf(
-            importDto.virksomhetSykefravær,
-            importDto.næringSykefravær,
-            importDto.sektorSykefravær,
-            importDto.landSykefravær,
-            *importDto.næring5SifferSykefravær.toTypedArray()
-        ).forAll {
-            it.maskert.shouldBeFalse()
-        }
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto)
-        hentSykefraværsstatistikk(importDto.virksomhetSykefravær.orgnr).forExactlyOne {
-            it.kvartal shouldBe importDto.virksomhetSykefravær.kvartal
-            it.arstall shouldBe importDto.virksomhetSykefravær.årstall
-            it.sykefraversprosent shouldBe 0.0
-            it.muligeDagsverk shouldBe 0.0
-            it.antallPersoner shouldBe 4.0
-            it.tapteDagsverk shouldBe 0.0
-        }
-    }
 
     private fun hentStatistikk(
         tabell: String,

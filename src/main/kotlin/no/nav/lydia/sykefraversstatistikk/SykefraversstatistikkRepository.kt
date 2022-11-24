@@ -159,11 +159,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.arstall,
                         statistikk.kvartal,
                         statistikk.antall_personer,
-                        statistikk.tapte_dagsverk,
-                        statistikk.mulige_dagsverk,
-                        statistikk.sykefraversprosent,
-                        statistikk.maskert,
-                        statistikk.opprettet,
+                        statistikk_siste4.tapte_dagsverk,
+                        statistikk_siste4.mulige_dagsverk,
+                        statistikk_siste4.prosent,
+                        statistikk_siste4.maskert,
+                        statistikk_siste4.sist_endret,
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
@@ -183,11 +183,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.arstall,
                         statistikk.kvartal,
                         statistikk.antall_personer,
-                        statistikk.tapte_dagsverk,
-                        statistikk.mulige_dagsverk,
-                        statistikk.sykefraversprosent,
-                        statistikk.maskert,
-                        statistikk.opprettet,
+                        statistikk_siste4.tapte_dagsverk,
+                        statistikk_siste4.mulige_dagsverk,
+                        statistikk_siste4.prosent,
+                        statistikk_siste4.maskert,
+                        statistikk_siste4.sist_endret,
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
@@ -270,7 +270,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         tmpNæringTabell: String,
         søkeparametere: Søkeparametere,
     ) = """
-        FROM sykefravar_statistikk_virksomhet AS statistikk
+        FROM sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4
+        join sykefravar_statistikk_virksomhet AS statistikk USING (orgnr)
         JOIN virksomhet USING (orgnr)
         LEFT JOIN ia_sak ON (
             (ia_sak.orgnr = statistikk.orgnr) AND
@@ -311,8 +312,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         } ?: ""
     }
                         
-        ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
-        ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
+        ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk_siste4.prosent >= $it " } ?: ""}
+        ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk_siste4.prosent <= $it " } ?: ""}
         
         ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
         ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
@@ -325,22 +326,23 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             val query = queryOf(
                 statement = """
                     SELECT
-                        statistikk.orgnr,
+                        statistikk_siste4.orgnr,
                         virksomhet.navn,
                         virksomhet.kommune,
                         virksomhet.kommunenummer,
                         statistikk.arstall,
                         statistikk.kvartal,
                         statistikk.antall_personer,
-                        statistikk.tapte_dagsverk,
-                        statistikk.mulige_dagsverk,
-                        statistikk.sykefraversprosent,
-                        statistikk.maskert,
-                        statistikk.opprettet,
+                        statistikk_siste4.tapte_dagsverk,
+                        statistikk_siste4.mulige_dagsverk,
+                        statistikk_siste4.prosent,
+                        statistikk_siste4.maskert,
+                        statistikk_siste4.sist_endret,
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
-                  FROM sykefravar_statistikk_virksomhet AS statistikk
+                  FROM sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4
+                  JOIN sykefravar_statistikk_virksomhet AS statistikk USING (orgnr)
                   JOIN virksomhet USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
                   WHERE (statistikk.orgnr = :orgnr)
@@ -363,9 +365,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             antallPersoner = row.double("antall_personer"),
             tapteDagsverk = row.double("tapte_dagsverk"),
             muligeDagsverk = row.double("mulige_dagsverk"),
-            sykefraversprosent = row.double("sykefraversprosent"),
+            sykefraversprosent = row.double("prosent"),
             maskert = row.boolean("maskert"),
-            opprettet = row.localDateTime("opprettet"),
+            opprettet = row.localDateTime("sist_endret"),
             status = row.stringOrNull("status")?.let {
                 IAProsessStatus.valueOf(it)
             },
