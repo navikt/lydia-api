@@ -132,14 +132,15 @@ class Periode(val kvartal: Int, val årstall: Int) {
 }
 
 private const val SYKEFRAVÆR_TABELLNAVN = "statistikk"
+private const val SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN = "statistikk_siste4"
 private const val VIRKSOMHET_TABELLNAVN = "virksomhet"
 
 enum class Sorteringsnøkkel(private val verdi: String, private val tabell: String) {
     NAVN_PÅ_VIRKSOMHET("navn", VIRKSOMHET_TABELLNAVN),
-    TAPTE_DAGSVERK("tapte_dagsverk", SYKEFRAVÆR_TABELLNAVN),
+    TAPTE_DAGSVERK("tapte_dagsverk", SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN),
     ANTALL_PERSONER("antall_personer", SYKEFRAVÆR_TABELLNAVN),
-    MULIGE_DAGSVERK("mulige_dagsverk", SYKEFRAVÆR_TABELLNAVN),
-    SYKEFRAVÆRSPROSENT("sykefraversprosent", SYKEFRAVÆR_TABELLNAVN);
+    MULIGE_DAGSVERK("mulige_dagsverk", SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN),
+    SYKEFRAVÆRSPROSENT("sykefraversprosent", SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN);
 
     companion object {
         fun from(verdi: String?) = values().find { it.verdi == verdi?.lowercase() } ?: TAPTE_DAGSVERK
