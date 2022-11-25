@@ -69,7 +69,8 @@ data class Søkeparametere(
                 when (rådgiver.rolle) {
                     SUPERBRUKER -> eiere.toSet()
                     SAKSBEHANDLER,
-                    LESE -> eiere.filter { it == rådgiver.navIdent }.toSet()
+                    LESE,
+                    -> eiere.filter { it == rådgiver.navIdent }.toSet()
                 }
             }
         }
@@ -140,14 +141,26 @@ enum class Sorteringsnøkkel(private val verdi: String, private val tabell: Stri
     TAPTE_DAGSVERK("tapte_dagsverk", SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN),
     ANTALL_PERSONER("antall_personer", SYKEFRAVÆR_TABELLNAVN),
     MULIGE_DAGSVERK("mulige_dagsverk", SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN),
-    SYKEFRAVÆRSPROSENT("sykefraversprosent", SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN);
+    SYKEFRAVÆRSPROSENT("prosent", SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN);
 
     companion object {
         fun from(verdi: String?) = values().find { it.verdi == verdi?.lowercase() } ?: TAPTE_DAGSVERK
         fun alleSorteringsNøkler() = values().map { it.toString() }
     }
 
-    fun tilOrderBy() = "ORDER BY ${tabell}.${verdi}"
+    fun tilOrderBy(brukStatistikkSiste4Kvartal: Boolean): String {
+        var oppdatertTabell = tabell
+        var oppdatertVerdi = verdi
+
+        if (!brukStatistikkSiste4Kvartal && tabell == SYKEFRAVÆR_SISTE_4_KVARTALER_TABELLNAVN) {
+            oppdatertTabell = SYKEFRAVÆR_TABELLNAVN
+            if (verdi == "prosent") {
+                oppdatertVerdi = "sykefraversprosent"
+            }
+        }
+
+        return "ORDER BY ${oppdatertTabell}.${oppdatertVerdi}"
+    }
 
     override fun toString(): String = this.verdi
 
