@@ -298,9 +298,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         tmpNæringTabell: String,
         søkeparametere: Søkeparametere,
     ) = """
-        FROM sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4
-        join sykefravar_statistikk_virksomhet AS statistikk USING (orgnr)
+        FROM sykefravar_statistikk_virksomhet AS statistikk
         JOIN virksomhet USING (orgnr)
+        LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
         LEFT JOIN ia_sak ON (
             (ia_sak.orgnr = statistikk.orgnr) AND
             ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
@@ -370,9 +370,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
-                  FROM sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4
-                  JOIN sykefravar_statistikk_virksomhet AS statistikk USING (orgnr)
+                  FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
+                  LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
                   WHERE (statistikk.orgnr = :orgnr)
                 """.trimIndent(),
