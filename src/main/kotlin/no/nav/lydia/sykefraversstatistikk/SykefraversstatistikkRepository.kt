@@ -8,7 +8,6 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.UnleashKlient.skalHenteSiste4Kvartal
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
@@ -151,25 +150,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                 )
         """.trimIndent()
 
-    private fun getTabellOgKolonneNavn(skalHentePåSiste4Kvartal: Boolean, feltnavn: String): String {
-        return when(feltnavn) {
-            "tapte_dagsverk" -> if(skalHentePåSiste4Kvartal) "statistikk_siste4.tapte_dagsverk" else "statistikk.tapte_dagsverk"
-            "mulige_dagsverk" -> if(skalHentePåSiste4Kvartal) "statistikk_siste4.mulige_dagsverk" else "statistikk.mulige_dagsverk"
-            "prosent" -> if(skalHentePåSiste4Kvartal) "statistikk_siste4.prosent" else "statistikk.sykefraversprosent"
-            "maskert" -> if(skalHentePåSiste4Kvartal) "statistikk_siste4.maskert" else "statistikk.maskert"
-            "sist_endret" -> if(skalHentePåSiste4Kvartal) "statistikk_siste4.sist_endret" else "statistikk.opprettet"
-            else -> {
-                throw RuntimeException("Ukjent felt $feltnavn")
-            }
-        }
-
-
-    }
-
     fun hentSykefravær(
         søkeparametere: Søkeparametere,
     ) = using(sessionOf(dataSource)) { session ->
-        val skalHentePåSiste4Kvartal = skalHenteSiste4Kvartal()
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
         val tmpKommuneTabell = "kommuner"
         val tmpNæringTabell = "naringer"
@@ -187,11 +170,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.arstall,
                         statistikk.kvartal,
                         statistikk.antall_personer,
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "tapte_dagsverk")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "mulige_dagsverk")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "prosent")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "maskert")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "sist_endret")},
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet,
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
@@ -211,15 +194,15 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         statistikk.arstall,
                         statistikk.kvartal,
                         statistikk.antall_personer,
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "tapte_dagsverk")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "mulige_dagsverk")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "prosent")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "maskert")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "sist_endret")},
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet,
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
-                    ${søkeparametere.sorteringsnøkkel.tilOrderBy(skalHentePåSiste4Kvartal)} ${søkeparametere.sorteringsretning} NULLS LAST
+                    ${søkeparametere.sorteringsnøkkel.tilOrderBy(brukStatistikkSiste4Kvartal = false)} ${søkeparametere.sorteringsretning} NULLS LAST
                     LIMIT ${søkeparametere.virksomheterPerSide()}
                     OFFSET ${søkeparametere.offset()}
                 """.trimIndent()
@@ -300,7 +283,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     ) = """
         FROM sykefravar_statistikk_virksomhet AS statistikk
         JOIN virksomhet USING (orgnr)
-        LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
         LEFT JOIN ia_sak ON (
             (ia_sak.orgnr = statistikk.orgnr) AND
             ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
@@ -340,8 +322,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         } ?: ""
     }
                         
-        ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk_siste4.prosent >= $it " } ?: ""}
-        ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk_siste4.prosent <= $it " } ?: ""}
+        ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk.sykefraversprosent >= $it " } ?: ""}
+        ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk.sykefraversprosent <= $it " } ?: ""}
         
         ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
         ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
@@ -350,29 +332,27 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
-        val skalHentePåSiste4Kvartal = skalHenteSiste4Kvartal()
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
                     SELECT
-                        statistikk_siste4.orgnr,
+                        statistikk.orgnr,
                         virksomhet.navn,
                         virksomhet.kommune,
                         virksomhet.kommunenummer,
                         statistikk.arstall,
                         statistikk.kvartal,
                         statistikk.antall_personer,
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "tapte_dagsverk")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "mulige_dagsverk")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "prosent")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "maskert")},
-                        ${getTabellOgKolonneNavn(skalHentePåSiste4Kvartal, "sist_endret")},
+                        statistikk.tapte_dagsverk,
+                        statistikk.mulige_dagsverk,
+                        statistikk.sykefraversprosent,
+                        statistikk.maskert,
+                        statistikk.opprettet,
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
                   FROM sykefravar_statistikk_virksomhet AS statistikk
                   JOIN virksomhet USING (orgnr)
-                  LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
                   LEFT JOIN ia_sak USING(orgnr)
                   WHERE (statistikk.orgnr = :orgnr)
                 """.trimIndent(),
@@ -394,9 +374,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             antallPersoner = row.double("antall_personer"),
             tapteDagsverk = row.double("tapte_dagsverk"),
             muligeDagsverk = row.double("mulige_dagsverk"),
-            sykefraversprosent = if (skalHenteSiste4Kvartal()) row.double("prosent") else row.double("sykefraversprosent"),
+            sykefraversprosent = row.double("sykefraversprosent"),
             maskert = row.boolean("maskert"),
-            opprettet = if (skalHenteSiste4Kvartal()) row.localDateTime("sist_endret") else row.localDateTime("opprettet"),
+            opprettet = row.localDateTime("opprettet"),
             status = row.stringOrNull("status")?.let {
                 IAProsessStatus.valueOf(it)
             },

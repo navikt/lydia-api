@@ -5,6 +5,7 @@ import arrow.core.rightIfNotNull
 import io.ktor.http.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.UnleashKlient
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -46,7 +47,12 @@ class SykefraværsstatistikkService(
         søkeparametere: Søkeparametere
     ): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        val sykefravær = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
+        var sykefravær: List<SykefraversstatistikkVirksomhet>
+        if (UnleashKlient.skalHenteSiste4Kvartal()) {
+            TODO()
+        } else {
+            sykefravær = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
+        }
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
         return sykefravær.map {
