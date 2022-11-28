@@ -2,6 +2,7 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer
+import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -113,24 +114,21 @@ class SykefraversstatistikkApiTest {
 
 
     @Test
-    fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel når statistikk siste 4 kvartaler er aktivert`() {
+    fun `skal ikke kunne hente sykefraværsstatistikk med feature henteSiste4Kvartal enablet`() {
         val sorteringsnøkkel = "tapte_dagsverk"
 
         medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
-            hentSykefravær(
-                success = { response ->
-                    val tapteDagsverk = response.data.map { it.tapteDagsverk }
-                    tapteDagsverk shouldContainInOrder tapteDagsverk.sortedDescending()
-                },
-                sorteringsnokkel = sorteringsnøkkel,
-                sorteringsretning = "desc",
-                token = mockOAuth2Server.saksbehandler1.token
-            )
-
-            hentSykefravær(success = { response ->
-                val tapteDagsverk = response.data.map { it.tapteDagsverk }
-                tapteDagsverk shouldContainInOrder tapteDagsverk.sorted()
-            }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
+            shouldFail {
+                hentSykefravær(
+                    success = { response ->
+                        val tapteDagsverk = response.data.map { it.tapteDagsverk }
+                        tapteDagsverk shouldContainInOrder tapteDagsverk.sortedDescending()
+                    },
+                    sorteringsnokkel = sorteringsnøkkel,
+                    sorteringsretning = "desc",
+                    token = mockOAuth2Server.saksbehandler1.token
+                )
+            }
         }
     }
 
