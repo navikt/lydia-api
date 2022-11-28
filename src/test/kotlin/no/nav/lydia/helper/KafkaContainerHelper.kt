@@ -153,7 +153,7 @@ class KafkaContainerHelper(
         }
     }
 
-    fun sendSykefraversstatostikkPerKategoriIBulkOgVentTilKonsumert(
+    fun sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
         importDtoer: List<SykefraversstatistikkPerKategoriImportDto>,
     ) {
         runBlocking {
@@ -171,7 +171,7 @@ class KafkaContainerHelper(
         }
     }
 
-    fun sendSykefraversstatostikkPerKategoriKafkaMelding(importDto: SykefraversstatistikkPerKategoriImportDto) {
+    fun sendSykefraversstatistikkPerKategoriKafkaMelding(importDto: SykefraversstatistikkPerKategoriImportDto) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
             ventTilKonsumert(sendtMelding.offset())

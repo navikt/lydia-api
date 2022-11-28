@@ -5,7 +5,13 @@ import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldBeOneOf
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContainAnyOf
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -16,7 +22,8 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.*
+import no.nav.lydia.UnleashToggleKeys
+import no.nav.lydia.helper.FeatureToggleHelper.Companion.medFeatureToggleEnablet
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
@@ -31,6 +38,7 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomh
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
@@ -47,12 +55,19 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.statuskode
+import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
-import no.nav.lydia.sykefraversstatistikk.api.*
+import no.nav.lydia.sykefraversstatistikk.api.EierDTO
+import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
+import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
@@ -94,6 +109,29 @@ class SykefraversstatistikkApiTest {
             val tapteDagsverk = response.data.map { it.tapteDagsverk }
             tapteDagsverk shouldContainInOrder tapteDagsverk.sorted()
         }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
+    }
+
+
+    @Test
+    fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel når statistikk siste 4 kvartaler er aktivert`() {
+        val sorteringsnøkkel = "tapte_dagsverk"
+
+        medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
+            hentSykefravær(
+                success = { response ->
+                    val tapteDagsverk = response.data.map { it.tapteDagsverk }
+                    tapteDagsverk shouldContainInOrder tapteDagsverk.sortedDescending()
+                },
+                sorteringsnokkel = sorteringsnøkkel,
+                sorteringsretning = "desc",
+                token = mockOAuth2Server.saksbehandler1.token
+            )
+
+            hentSykefravær(success = { response ->
+                val tapteDagsverk = response.data.map { it.tapteDagsverk }
+                tapteDagsverk shouldContainInOrder tapteDagsverk.sorted()
+            }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
+        }
     }
 
     @Test
