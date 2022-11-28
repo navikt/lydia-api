@@ -123,7 +123,7 @@ class TestData(
                     kategori = Kategori.VIRKSOMHET,
                     kode = virksomhet.orgnr,
                     periode = periode,
-                    sykefraværsProsent = sykefraværsProsent,
+                    sykefraværsProsent = sykefraværsProsent + 10.0,
                     antallPersoner = antallPersoner.toInt(),
                     tapteDagsverk = tapteDagsverk,
                 )

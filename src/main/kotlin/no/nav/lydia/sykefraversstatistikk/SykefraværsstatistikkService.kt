@@ -19,6 +19,7 @@ import java.time.LocalDate.now
 
 class SykefraværsstatistikkService(
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
+    val sykefraværsstatistikkSiste4KvartalRepository: SykefraværsstatistikkSiste4KvartalRepository,
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -47,11 +48,10 @@ class SykefraværsstatistikkService(
         søkeparametere: Søkeparametere
     ): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        var sykefravær: List<SykefraversstatistikkVirksomhet>
-        if (UnleashKlient.skalHenteSiste4Kvartal()) {
-            TODO()
+        val sykefravær =  if (UnleashKlient.skalHenteSiste4Kvartal()) {
+            sykefraværsstatistikkSiste4KvartalRepository.hentSykefravær(søkeparametere = søkeparametere)
         } else {
-            sykefravær = sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
+            sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
         }
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
