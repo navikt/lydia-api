@@ -543,7 +543,7 @@ class VirksomhetHelper {
                 testData.sykefraværsStatistikkMeldinger().toList()
             )
 
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatostikkPerKategoriIBulkOgVentTilKonsumert(
+            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 testData.sykefraværsstatistikkPerKategoriMeldinger().toList()
             )
         }
