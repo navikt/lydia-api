@@ -1,6 +1,5 @@
 package no.nav.lydia.sykefraversstatistikk
 
-import arrow.core.Either
 import arrow.core.rightIfNotNull
 import io.ktor.http.*
 import kotlinx.datetime.LocalDate
@@ -48,7 +47,7 @@ class SykefraværsstatistikkService(
         søkeparametere: Søkeparametere
     ): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        val sykefravær =  if (UnleashKlient.skalHenteSiste4Kvartal()) {
+        val sykefravær = if (UnleashKlient.skalHenteSiste4Kvartal()) {
             sykefraværsstatistikkSiste4KvartalRepository.hentSykefravær(søkeparametere = søkeparametere)
         } else {
             sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
@@ -56,7 +55,7 @@ class SykefraværsstatistikkService(
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
         return sykefravær.map {
-            if(it.status.erAvsluttet() && it.sistEndret.erForeldet()) {
+            if (it.status.erAvsluttet() && it.sistEndret.erForeldet()) {
                 it.copy(
                     status = IAProsessStatus.IKKE_AKTIV
                 )
@@ -66,25 +65,36 @@ class SykefraværsstatistikkService(
         }
     }
 
-    private fun LocalDate?.erForeldet() = when(this) {
+    private fun LocalDate?.erForeldet() = when (this) {
         null -> false
         else -> {
             this < now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES).toKotlinLocalDate()
         }
     }
-    private fun IAProsessStatus?.erAvsluttet() = when(this) {
+
+    private fun IAProsessStatus?.erAvsluttet() = when (this) {
         null -> true
         else -> ansesSomAvsluttet()
     }
 
-    fun hentTotaltAntallTreff(søkeparametere: Søkeparametere): Either<Feil, Int> =
-        sykefraversstatistikkRepository.hentTotaltAntall(søkeparametere)
-            .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
+    fun hentTotaltAntallTreff(søkeparametere: Søkeparametere) =
+        if (UnleashKlient.skalHenteSiste4Kvartal()) {
+            sykefraværsstatistikkSiste4KvartalRepository.hentTotaltAntall(søkeparametere)
+                .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
+        } else {
+            sykefraversstatistikkRepository.hentTotaltAntall(søkeparametere)
+                .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
+        }
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhet = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        val sykefraværForVirksomhet = if (UnleashKlient.skalHenteSiste4Kvartal()) {
+            sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        } else {
+            sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        }
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
+
         return sykefraværForVirksomhet
     }
 }
