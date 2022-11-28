@@ -55,6 +55,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkSiste4KvartalRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
@@ -88,6 +89,7 @@ fun startLydiaBackend() {
         sykefraversstatistikkRepository = SykefraversstatistikkRepository(
             dataSource = dataSource
         ),
+        sykefraværsstatistikkSiste4KvartalRepository = SykefraværsstatistikkSiste4KvartalRepository(dataSource = dataSource)
     )
     statistikkConsumer(
         kafka = naisEnv.kafka,
@@ -153,7 +155,7 @@ fun Application.lydiaRestApi(
     install(CallLogging) {
         callIdMdc("requestId")
         disableDefaultColors()
-        filter {call ->
+        filter { call ->
             listOf(SYKEFRAVERSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH, VEILEDERE_PATH).any() {
                 call.request.path().startsWith(it)
             }
@@ -205,6 +207,7 @@ fun Application.lydiaRestApi(
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
+            sykefraværsstatistikkSiste4KvartalRepository = SykefraværsstatistikkSiste4KvartalRepository(dataSource = dataSource)
         )
     val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
