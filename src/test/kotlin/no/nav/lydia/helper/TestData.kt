@@ -9,6 +9,9 @@ import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.random.Random
 
+const val MIN_PROSENT_FOR_SISTE_4_KVARTAL = 50.0
+const val MAX_PROSENT_FOR_SISTE_KVARTAL = 20
+
 class TestData(
     inkluderStandardVirksomheter: Boolean = false,
     antallTilfeldigeVirksomheter: Int = 0,
@@ -34,7 +37,7 @@ class TestData(
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(Periode.gjeldendePeriode()),
-                sykefraværsProsent = (1..20).random().toDouble()
+                sykefraværsProsent = (1..MAX_PROSENT_FOR_SISTE_KVARTAL).random().toDouble()
             )
 
     }
@@ -123,7 +126,7 @@ class TestData(
                     kategori = Kategori.VIRKSOMHET,
                     kode = virksomhet.orgnr,
                     periode = periode,
-                    sykefraværsProsent = sykefraværsProsent + 10.0,
+                    sykefraværsProsent = sykefraværsProsent + MIN_PROSENT_FOR_SISTE_4_KVARTAL,
                     antallPersoner = antallPersoner.toInt(),
                     tapteDagsverk = tapteDagsverk,
                 )

@@ -18,6 +18,8 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.UnleashToggleKeys
 import no.nav.lydia.helper.FeatureToggleHelper.Companion.medFeatureToggleEnablet
+import no.nav.lydia.helper.MAX_PROSENT_FOR_SISTE_KVARTAL
+import no.nav.lydia.helper.MIN_PROSENT_FOR_SISTE_4_KVARTAL
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
@@ -101,18 +103,42 @@ class SykefraversstatistikkApiTest {
         }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
     }
 
+    @Test
+    fun `skal kunne hente sykefraværsstatistikk avhengig av feature henteSiste4Kvartal er enablet eller ikke`() {
+        val orgnummer = nyttOrgnummer()
+        val sykefraværsprosentSiste4Kvartal = postgresContainer.performQuery(
+            "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
+        ).getDouble("prosent")
+        val sykefraværsprosentSisteKvartal = postgresContainer.performQuery(
+            """select sykefraversprosent from sykefravar_statistikk_virksomhet 
+                where orgnr='$orgnummer' 
+                and kvartal=${Periode.gjeldendePeriode().kvartal}
+                and arstall=${Periode.gjeldendePeriode().årstall}
+                """.trimMargin()
+        ).getDouble("sykefraversprosent")
+
+        medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
+            hentSykefraværForVirksomhet(orgnummer = orgnummer).forAtLeastOne {
+                it.sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
+            }
+        }
+
+        hentSykefraværForVirksomhet(orgnummer = orgnummer).forAtLeastOne {
+            it.sykefraversprosent shouldBe sykefraværsprosentSisteKvartal
+        }
+    }
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk med feature henteSiste4Kvartal enablet`() {
-        val sorteringsnøkkel = "tapte_dagsverk"
+        val sorteringsnøkkel = "prosent"
 
         medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
             hentSykefravær(
                 success = { response ->
-                    val tapteDagsverk = response.data.map { it.tapteDagsverk }
-                    tapteDagsverk shouldContainInOrder tapteDagsverk.sortedDescending()
+                    val prosent = response.data.map { it.sykefraversprosent }
+                    prosent shouldContainInOrder prosent.sortedDescending()
                     response.data.forAll {
-                        it.sykefraversprosent shouldBeGreaterThanOrEqual 10.0
+                        it.sykefraversprosent shouldBeGreaterThanOrEqual MIN_PROSENT_FOR_SISTE_4_KVARTAL
                     }
                 },
                 sorteringsnokkel = sorteringsnøkkel,
@@ -120,17 +146,19 @@ class SykefraversstatistikkApiTest {
                 token = mockOAuth2Server.saksbehandler1.token
             )
         }
-    }
 
-    @Test
-    fun `skal kunne hente sykefraværsstatistikk for en virksomhet med feature henteSiste4Kvartal enablet`() {
-        val orgnummer = nyttOrgnummer()
-
-        medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
-            hentSykefraværForVirksomhet(orgnummer = orgnummer).forAtLeastOne {
-                it.sykefraversprosent shouldBeGreaterThanOrEqual 10.0
-            }
-        }
+        hentSykefravær(
+            success = { response ->
+                val prosent = response.data.map { it.sykefraversprosent }
+                prosent shouldContainInOrder prosent.sortedDescending()
+                response.data.forAll {
+                    it.sykefraversprosent shouldBeLessThanOrEqual MAX_PROSENT_FOR_SISTE_KVARTAL.toDouble()
+                }
+            },
+            sorteringsnokkel = sorteringsnøkkel,
+            sorteringsretning = "desc",
+            token = mockOAuth2Server.saksbehandler1.token
+        )
     }
 
     @Test
