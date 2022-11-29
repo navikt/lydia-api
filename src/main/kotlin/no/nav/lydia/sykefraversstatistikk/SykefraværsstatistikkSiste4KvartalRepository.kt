@@ -17,7 +17,6 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
     fun hentSykefravær(
         søkeparametere: Søkeparametere,
     ) = using(sessionOf(dataSource)) { session ->
-        val skalHentePåSiste4Kvartal = UnleashKlient.skalHenteSiste4Kvartal()
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
         val tmpKommuneTabell = "kommuner"
         val tmpNæringTabell = "naringer"
@@ -67,7 +66,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
-                    ${søkeparametere.sorteringsnøkkel.tilOrderBy(skalHentePåSiste4Kvartal)} ${søkeparametere.sorteringsretning} NULLS LAST
+                    ${søkeparametere.sorteringsnøkkel.tilOrderBy(true)} ${søkeparametere.sorteringsretning} NULLS LAST
                     LIMIT ${søkeparametere.virksomheterPerSide()}
                     OFFSET ${søkeparametere.offset()}
                 """.trimIndent()
@@ -231,11 +230,9 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             antallPersoner = row.double("antall_personer"),
             tapteDagsverk = row.double("tapte_dagsverk"),
             muligeDagsverk = row.double("mulige_dagsverk"),
-            sykefraversprosent = if (UnleashKlient.skalHenteSiste4Kvartal()) row.double("prosent") else row.double("sykefraversprosent"),
+            sykefraversprosent = row.double("prosent"),
             maskert = row.boolean("maskert"),
-            opprettet = if (UnleashKlient.skalHenteSiste4Kvartal()) row.localDateTime("sist_endret") else row.localDateTime(
-                "opprettet"
-            ),
+            opprettet = row.localDateTime("sist_endret"),
             status = row.stringOrNull("status")?.let {
                 IAProsessStatus.valueOf(it)
             },
