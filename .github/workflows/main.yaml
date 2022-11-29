@@ -66,7 +66,7 @@ jobs:
         cluster: [ dev ]
     name: "Deploy app to ${{ matrix.cluster }}"
     needs: "build"
-    if: github.ref == 'refs/heads/hente-statistikk-over-siste-4-kvartaler--IKKE-DEPLOY-ENDA'
+    if: github.ref == 'refs/heads/hente-statistikk-over-siste-4-kvartaler'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
