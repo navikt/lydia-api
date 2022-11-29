@@ -38,27 +38,27 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.4.3")
+    implementation("ch.qos.logback:logback-classic:1.4.5")
     implementation("net.logstash.logback:logstash-logback-encoder:7.2")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.9.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.10.1")
 
     // Database
     implementation("org.postgresql:postgresql:42.5.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:9.4.0")
+    implementation("org.flywaydb:flyway-core:9.8.2")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.2.3")
+    implementation("org.apache.kafka:kafka-clients:3.3.1")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -70,7 +70,7 @@ dependencies {
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
     // featuretoggling med unleash
-    implementation("io.getunleash:unleash-client-java:6.0.1")
+    implementation("io.getunleash:unleash-client-java:6.1.0")
 
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:0.0.5")
@@ -82,12 +82,12 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.5.0"
+    val kotestVerstion = "5.5.4"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.17.5"
+    val testcontainersVersion = "1.17.6"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
@@ -95,12 +95,12 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.34.0")
+    testImplementation("com.github.tomakehurst:wiremock-jre8-standalone:2.35.0")
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:0.5.5")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.25.4")
+    testImplementation("no.nav.security:mock-oauth2-server:0.5.6")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.25.6")
 
 }
 
