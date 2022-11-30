@@ -105,7 +105,7 @@ class TestData(
     fun lagData(
         virksomhet: TestVirksomhet,
         perioder: List<Periode>,
-        sykefraværsProsent: Double = 2.0,
+        sykefraværsProsent: Double = (1..MAX_PROSENT_FOR_SISTE_KVARTAL).random().toDouble(),
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
         sektor: String = SEKTOR_STATLIG_FORVALTNING,

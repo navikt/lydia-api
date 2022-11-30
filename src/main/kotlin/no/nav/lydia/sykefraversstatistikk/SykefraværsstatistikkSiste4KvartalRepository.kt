@@ -5,8 +5,9 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.UnleashKlient
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
@@ -66,7 +67,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
-                    ${søkeparametere.sorteringsnøkkel.tilOrderBy(true)} ${søkeparametere.sorteringsretning} NULLS LAST
+                    ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
                     LIMIT ${søkeparametere.virksomheterPerSide()}
                     OFFSET ${søkeparametere.offset()}
                 """.trimIndent()
@@ -83,6 +84,16 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             )
         ).map(this::mapRow).asList
         session.run(query)
+    }
+
+    private fun Sorteringsnøkkel.tilOrderBy(): String {
+        return when(this) {
+            NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn"
+            ANTALL_PERSONER -> "ORDER BY statistikk.antall_personer"
+            SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk_siste4.prosent"
+            TAPTE_DAGSVERK -> "ORDER BY statistikk_siste4.tapte_dagsverk"
+            MULIGE_DAGSVERK -> "ORDER BY statistikk_siste4.mulige_dagsverk"
+        }
     }
 
     fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
