@@ -25,6 +25,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope {
     init {
         Runtime.getRuntime().addShutdownHook(Thread(StatistikkPerKategoriConsumer::cancel))
     }
+
     fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
         logger.info("Creating kafka consumer job for statistikk")
         this.job = Job()
@@ -40,18 +41,22 @@ object StatistikkPerKategoriConsumer : CoroutineScope {
                 StringDeserializer(),
                 StringDeserializer()
             ).use { consumer ->
-                consumer.subscribe(listOf(
-                    kafka.statistikkLandTopic,
-                    kafka.statistikkVirksomhetTopic
-                ))
+                consumer.subscribe(
+                    listOf(
+                        kafka.statistikkLandTopic,
+                        kafka.statistikkVirksomhetTopic
+                    )
+                )
                 logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic}")
 
                 while (job.isActive) {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
-                        sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
-                            records.toSykefraversstatistikkPerKategoriImportDto()
-                        )
+                        if (!records.isEmpty) {
+                            sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
+                                records.toSykefraversstatistikkPerKategoriImportDto()
+                            )
+                        }
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
                     }
