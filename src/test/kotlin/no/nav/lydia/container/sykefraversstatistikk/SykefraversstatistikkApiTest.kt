@@ -130,7 +130,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk med feature henteSiste4Kvartal enablet`() {
-        val sorteringsnøkkel = "prosent"
+        val sorteringsnøkkel = Sorteringsnøkkel.SYKEFRAVÆRSPROSENT.verdi
 
         medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
             hentSykefravær(

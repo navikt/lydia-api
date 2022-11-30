@@ -3,24 +3,15 @@ package no.nav.lydia.sykefraversstatistikk
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.datetime.toKotlinLocalDate
-import kotliquery.Row
-import kotliquery.TransactionalSession
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
+import kotliquery.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
-import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletKvartalsvisSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletLandSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletNæringSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletNæringsundergruppeSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletSektorSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletVirksomhetSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
+import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
@@ -202,7 +193,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         ia_sak.status,
                         ia_sak.eid_av,
                         ia_sak.endret
-                    ${søkeparametere.sorteringsnøkkel.tilOrderBy(brukStatistikkSiste4Kvartal = false)} ${søkeparametere.sorteringsretning} NULLS LAST
+                    ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
                     LIMIT ${søkeparametere.virksomheterPerSide()}
                     OFFSET ${søkeparametere.offset()}
                 """.trimIndent()
@@ -227,6 +218,16 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             )
         ).map(this::mapRow).asList
         session.run(query)
+    }
+
+    private fun Sorteringsnøkkel.tilOrderBy(): String {
+        return when(this) {
+            NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn"
+            ANTALL_PERSONER -> "ORDER BY statistikk.antall_personer"
+            SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk.sykefraversprosent"
+            TAPTE_DAGSVERK -> "ORDER BY statistikk.tapte_dagsverk"
+            MULIGE_DAGSVERK -> "ORDER BY statistikk.mulige_dagsverk"
+        }
     }
 
     fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? =
