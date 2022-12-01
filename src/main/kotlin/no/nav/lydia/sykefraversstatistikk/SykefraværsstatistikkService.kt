@@ -40,7 +40,7 @@ class SykefraværsstatistikkService(
             sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
                 .filter { it.kategori != VIRKSOMHET }
         )
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre statistikk for ${sykefraværsstatistikkKategoriImportDtoListe.size} virksomheter")
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
     }
 
     fun hentSykefravær(

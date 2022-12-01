@@ -70,7 +70,8 @@ class KtorTestHelper {
                 iaSakHendelseTopic = "",
                 iaSakTopic = "",
                 brregOppdateringTopic = "",
-                consumerLoopDelay = 200L
+                consumerLoopDelay = 200L,
+                statistikkVirksomhetTopic = "",
             ), integrasjoner = Integrasjoner(
                 ssbNæringsUrl = næringMockUrl,
                 brregUnderEnhetUrl = brregMockUrl
