@@ -3,6 +3,8 @@ package no.nav.lydia.sykefraversstatistikk.import
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
 import no.nav.lydia.Kafka
+import no.nav.lydia.appstatus.Helse
+import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -13,7 +15,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 
-object StatistikkPerKategoriConsumer : CoroutineScope {
+object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     lateinit var job: Job
     lateinit var kafka: Kafka
@@ -82,4 +84,6 @@ object StatistikkPerKategoriConsumer : CoroutineScope {
             )
         }
     }
+
+    override fun helse() = if (StatistikkConsumer.isRunning()) Helse.UP else Helse.DOWN
 }

@@ -5,40 +5,26 @@ package no.nav.lydia
 
 import arrow.core.Either
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.application.log
-import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
-import io.ktor.server.engine.addShutdownHook
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.engine.stop
-import io.ktor.server.metrics.micrometer.MicrometerMetrics
-import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.callid.CallId
-import io.ktor.server.plugins.callid.callIdMdc
-import io.ktor.server.plugins.callloging.CallLogging
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.path
-import io.ktor.server.response.respond
-import io.ktor.server.routing.IgnoreTrailingSlash
-import io.ktor.server.routing.routing
-import no.nav.lydia.NaisEnvironment.Companion.Environment.`DEV-GCP`
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.engine.*
+import io.ktor.server.metrics.micrometer.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.callid.*
+import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
 import no.nav.lydia.appstatus.*
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.debug.debug
-import no.nav.lydia.ia.eksport.IASakEksporterer
-import no.nav.lydia.ia.eksport.IASakProdusent
-import no.nav.lydia.ia.eksport.IASakshendelseProdusent
-import no.nav.lydia.ia.eksport.KafkaProdusent
-import no.nav.lydia.ia.eksport.iaSakEksporterer
+import no.nav.lydia.ia.eksport.*
 import no.nav.lydia.ia.grunnlag.GrunnlagRepository
 import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
@@ -55,8 +41,8 @@ import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
-import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkSiste4KvartalRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkSiste4KvartalRepository
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
@@ -69,7 +55,7 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.virksomhet
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
@@ -97,12 +83,10 @@ fun startLydiaBackend() {
     ).also { HelseMonitor.leggTilHelsesjekk(it) }
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
-    if (naisEnv.miljø == LOKAL || naisEnv.miljø == `DEV-GCP`) {
-        StatistikkPerKategoriConsumer.apply {
-            create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
-            run()
-        }
-    }
+    StatistikkPerKategoriConsumer.apply {
+        create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
+        run()
+    }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
     val iaSakshendelseProdusent =
