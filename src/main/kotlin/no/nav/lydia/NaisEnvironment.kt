@@ -84,7 +84,7 @@ class Kafka(
 ) {
     companion object {
         const val statistikkConsumerGroupId = "lydia-api-kafka-group-id"
-        const val statistikkNyConsumerGroupId = "lydia-api-statistikk-per-kategori-consumer"
+        const val statistikkPerKategoriGroupId = "lydia-api-statistikk-per-kategori-consumer"
         const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
         const val clientId: String = "lydia-api"
     }

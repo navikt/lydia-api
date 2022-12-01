@@ -29,17 +29,17 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
-        logger.info("Creating kafka consumer job for statistikk")
+        logger.info("Creating kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
-        logger.info("Created kafka consumer job for statistikk")
+        logger.info("Created kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
     }
 
     fun run() {
         launch {
             KafkaConsumer(
-                kafka.consumerProperties(consumerGroupId = Kafka.statistikkNyConsumerGroupId),
+                kafka.consumerProperties(consumerGroupId = Kafka.statistikkPerKategoriGroupId),
                 StringDeserializer(),
                 StringDeserializer()
             ).use { consumer ->
@@ -70,9 +70,9 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun cancel() {
-        logger.info("Stopping kafka consumer job for statistikk")
+        logger.info("Stopping kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
         job.cancel()
-        logger.info("Stopped kafka consumer job for statistikk")
+        logger.info("Stopped kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
     }
 
     private fun ConsumerRecords<String, String>.toSykefraversstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {
@@ -85,5 +85,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
         }
     }
 
-    override fun helse() = if (StatistikkConsumer.isRunning()) Helse.UP else Helse.DOWN
+    fun isRunning() = job.isActive
+
+    override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN
 }

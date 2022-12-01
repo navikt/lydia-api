@@ -21,7 +21,7 @@ class SykefraversstatistikkPerKategoriImportTest {
             jsonKey(VIRKSOMHET, "999999999"),
             jsonValue(VIRKSOMHET, "999999999"),
             KafkaContainerHelper.statistikkVirksomhetTopic,
-            Kafka.statistikkNyConsumerGroupId)
+            Kafka.statistikkPerKategoriGroupId)
 
         val rs = postgresContainer.performQuery(
             """
@@ -57,7 +57,7 @@ class SykefraversstatistikkPerKategoriImportTest {
             jsonKey(VIRKSOMHET, "999999999"),
             jsonValue(VIRKSOMHET, "999999999"),
             KafkaContainerHelper.statistikkVirksomhetTopic,
-            Kafka.statistikkNyConsumerGroupId)
+            Kafka.statistikkPerKategoriGroupId)
 
         val rs = postgresContainer.performQuery(
             """
@@ -71,7 +71,7 @@ class SykefraversstatistikkPerKategoriImportTest {
             jsonKey(VIRKSOMHET, "999999999"),
             jsonValue(VIRKSOMHET, "999999999"),
             KafkaContainerHelper.statistikkVirksomhetTopic,
-            Kafka.statistikkNyConsumerGroupId)
+            Kafka.statistikkPerKategoriGroupId)
         val oppdatertResultset = postgresContainer.performQuery(
             """
                 select * from sykefravar_statistikk_virksomhet_siste_4_kvartal
@@ -89,7 +89,7 @@ class SykefraversstatistikkPerKategoriImportTest {
             jsonKey(LAND, "NO"),
             jsonValue(LAND, "NO"),
             KafkaContainerHelper.statistikkLandTopic,
-            Kafka.statistikkNyConsumerGroupId)
+            Kafka.statistikkPerKategoriGroupId)
 
         val rs = postgresContainer.performQuery(
             """
