@@ -31,7 +31,7 @@ fun Route.sykefraversstatistikk(
     næringsRepository: NæringsRepository,
     auditLog: AuditLog,
     naisEnvironment: NaisEnvironment,
-    azureTokenFetcher: AzureTokenFetcher
+    azureTokenFetcher: AzureTokenFetcher,
 ) {
     val fiaRoller = naisEnvironment.security.fiaRoller
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
@@ -62,6 +62,21 @@ fun Route.sykefraversstatistikk(
             sykefraværsstatistikkService.hentSykefraværForVirksomhet(orgnummer).right()
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
+        }.map { sykefraværsstatistikkListe ->
+            call.respond(sykefraværsstatistikkListe.toDto())
+        }.mapLeft { feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/sistetilgjengeligekvartal") {
+        val orgnummer =
+            call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+            sykefraværsstatistikkService.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer).right()
+        }.also {
+            auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikk ->
             call.respond(sykefraværsstatistikk.toDto())
         }.mapLeft { feil ->
@@ -76,7 +91,8 @@ fun Route.sykefraversstatistikk(
             }.map { rådgiver ->
                 val filtrerbareEiere = when (rådgiver.rolle) {
                     Rådgiver.Rolle.LESE,
-                    Rådgiver.Rolle.SAKSBEHANDLER -> listOf(EierDTO(navIdent = rådgiver.navIdent, navn = rådgiver.navn))
+                    Rådgiver.Rolle.SAKSBEHANDLER,
+                    -> listOf(EierDTO(navIdent = rådgiver.navIdent, navn = rådgiver.navn))
                     Rådgiver.Rolle.SUPERBRUKER -> hentEiere(
                         azureTokenFetcher = azureTokenFetcher,
                         security = naisEnvironment.security
