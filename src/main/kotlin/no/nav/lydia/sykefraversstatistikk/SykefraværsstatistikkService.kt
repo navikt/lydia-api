@@ -29,7 +29,7 @@ class SykefraværsstatistikkService(
     }
 
     fun lagreSykefraværsstatistikkPerKategori(
-        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>
+        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>,
     ) {
         val start = System.currentTimeMillis()
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
@@ -44,7 +44,7 @@ class SykefraværsstatistikkService(
     }
 
     fun hentSykefravær(
-        søkeparametere: Søkeparametere
+        søkeparametere: Søkeparametere,
     ): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
         val sykefravær = if (UnleashKlient.skalHenteSiste4Kvartal()) {
@@ -96,6 +96,14 @@ class SykefraværsstatistikkService(
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhet
+    }
+
+    fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnr: String): SykefraversstatistikkVirksomhet {
+        val start = System.currentTimeMillis()
+        val sykefraværForVirksomhet = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
+
+        return sykefraværForVirksomhet.get(0)
     }
 }
 

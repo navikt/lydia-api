@@ -32,6 +32,7 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
 import no.nav.lydia.helper.TestContainerHelper
@@ -70,6 +71,22 @@ import kotlin.test.fail
 class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val mockOAuth2Server = oauth2ServerContainer
+
+    @Test
+    fun `skal kunne hente sykefraværsstatistikk fra siste tilgjengelige kvartal`() {
+        val orgnummer = nyttOrgnummer()
+        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.performQuery(
+            """select sykefraversprosent from sykefravar_statistikk_virksomhet 
+                where orgnr='$orgnummer' 
+                and kvartal=${Periode.gjeldendePeriode().kvartal}
+                and arstall=${Periode.gjeldendePeriode().årstall}
+                """.trimMargin()
+        ).getDouble("sykefraversprosent")
+
+        val result: SykefraversstatistikkVirksomhetDto =
+            hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = orgnummer)
+        result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
+    }
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
