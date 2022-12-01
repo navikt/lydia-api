@@ -36,7 +36,7 @@ class TestData(
         fun fraVirksomhet(virksomhet: TestVirksomhet) =
             TestData().lagData(
                 virksomhet = virksomhet,
-                perioder = listOf(Periode.gjeldendePeriode()),
+                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
                 sykefraværsProsent = (1..MAX_PROSENT_FOR_SISTE_KVARTAL).random().toDouble()
             )
 
