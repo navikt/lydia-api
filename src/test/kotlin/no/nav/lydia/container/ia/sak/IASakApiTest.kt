@@ -1006,4 +1006,32 @@ class IASakApiTest {
             }
         )
     }
+
+    @Test
+    fun `nye versjoner av tilstandsmaskinen skal ikke gi andre statuser for gammel evntrekke`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(TILBAKE)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(TILBAKE)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
+                ).toJson())
+            .nyHendelse(TILBAKE)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(TILBAKE)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(FULLFØR_BISTAND)
+
+        hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
+            enSak.status shouldBe FULLFØRT
+        }
+    }
+
 }
