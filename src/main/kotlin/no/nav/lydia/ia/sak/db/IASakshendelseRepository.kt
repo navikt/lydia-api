@@ -32,7 +32,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE saksnummer = :saksnummer
                     GROUP BY aarsak_enum, id, type, orgnr, opprettet_av, saksnummer, opprettet
-                    ORDER BY id ASC
+                    ORDER BY opprettet ASC
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer
@@ -60,7 +60,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
                     WHERE $orgnrKolonneNavn = :$orgnrKolonneNavn
                     GROUP BY aarsak_enum, id, type, $orgnrKolonneNavn, opprettet_av, saksnummer, opprettet
-                    ORDER BY id ASC
+                    ORDER BY opprettet ASC
                     """.trimIndent(),
                     mapOf(
                         orgnrKolonneNavn to orgnr
