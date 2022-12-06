@@ -22,10 +22,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.UnleashToggleKeys
-import no.nav.lydia.helper.FeatureToggleHelper.Companion.medFeatureToggleEnablet
-import no.nav.lydia.helper.MAX_PROSENT_FOR_SISTE_KVARTAL
-import no.nav.lydia.helper.MIN_PROSENT_FOR_SISTE_4_KVARTAL
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
@@ -41,7 +38,6 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomh
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
@@ -52,15 +48,11 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.LUNNER
-import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
-import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.statuskode
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
@@ -70,7 +62,6 @@ import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
@@ -139,61 +130,15 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `skal kunne hente sykefraværsstatistikk avhengig av feature henteSiste4Kvartal er enablet eller ikke`() {
+    fun `skal få sykefraværsstatistikk for siste fire kvartal`() {
         val orgnummer = nyttOrgnummer()
         val sykefraværsprosentSiste4Kvartal = postgresContainer.performQuery(
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
         ).getDouble("prosent")
-        val sykefraværsprosentSisteKvartal = postgresContainer.performQuery(
-            """select sykefraversprosent from sykefravar_statistikk_virksomhet 
-                where orgnr='$orgnummer' 
-                and kvartal=${Periode.gjeldendePeriode().kvartal}
-                and arstall=${Periode.gjeldendePeriode().årstall}
-                """.trimMargin()
-        ).getDouble("sykefraversprosent")
-
-        medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
-            hentSykefraværForVirksomhet(orgnummer = orgnummer).forAtLeastOne {
-                it.sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
-            }
-        }
 
         hentSykefraværForVirksomhet(orgnummer = orgnummer).forAtLeastOne {
-            it.sykefraversprosent shouldBe sykefraværsprosentSisteKvartal
+            it.sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
         }
-    }
-
-    @Test
-    fun `skal kunne hente sykefraværsstatistikk med feature henteSiste4Kvartal enablet`() {
-        val sorteringsnøkkel = Sorteringsnøkkel.SYKEFRAVÆRSPROSENT.verdi
-
-        medFeatureToggleEnablet(UnleashToggleKeys.henteSiste4Kvartal) {
-            hentSykefravær(
-                success = { response ->
-                    val prosent = response.data.map { it.sykefraversprosent }
-                    prosent shouldContainInOrder prosent.sortedDescending()
-                    response.data.forAll {
-                        it.sykefraversprosent shouldBeGreaterThanOrEqual MIN_PROSENT_FOR_SISTE_4_KVARTAL
-                    }
-                },
-                sorteringsnokkel = sorteringsnøkkel,
-                sorteringsretning = "desc",
-                token = mockOAuth2Server.saksbehandler1.token
-            )
-        }
-
-        hentSykefravær(
-            success = { response ->
-                val prosent = response.data.map { it.sykefraversprosent }
-                prosent shouldContainInOrder prosent.sortedDescending()
-                response.data.forAll {
-                    it.sykefraversprosent shouldBeLessThanOrEqual MAX_PROSENT_FOR_SISTE_KVARTAL.toDouble()
-                }
-            },
-            sorteringsnokkel = sorteringsnøkkel,
-            sorteringsretning = "desc",
-            token = mockOAuth2Server.saksbehandler1.token
-        )
     }
 
     @Test
@@ -582,12 +527,15 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne filtrere på bare mine virksomheter`() {
         val testBruker1 = oauth2ServerContainer.superbruker1
         val testBruker2 = oauth2ServerContainer.superbruker2
+        val ornummer1 = nyttOrgnummer()
+        val ornummer2 = nyttOrgnummer()
+
 
         listOf(
-            Pair(testBruker1, OSLO),
-            Pair(testBruker2, BERGEN)
+            Pair(testBruker1, ornummer1),
+            Pair(testBruker2, ornummer2)
         ).forEach { (bruker, virksomhet) ->
-            opprettSakForVirksomhet(virksomhet.orgnr, bruker.token)
+            opprettSakForVirksomhet(virksomhet, bruker.token)
                 .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker.token)
         }
 
@@ -608,12 +556,12 @@ class SykefraversstatistikkApiTest {
                 val sfStatistikk = response.data
                 sfStatistikk
                     .forAtLeastOne {
-                        it.eidAv shouldBe testBruker2.navIdent
-                        it.orgnr shouldBe BERGEN.orgnr
+                        it.eidAv shouldBe testBruker1.navIdent
+                        it.orgnr shouldBe ornummer1
                     }
                     .forAtLeastOne {
-                        it.eidAv shouldBe testBruker1.navIdent
-                        it.orgnr shouldBe OSLO.orgnr
+                        it.eidAv shouldBe testBruker2.navIdent
+                        it.orgnr shouldBe ornummer2
                     }
             }
         )

@@ -4,7 +4,6 @@ import arrow.core.rightIfNotNull
 import io.ktor.http.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
-import no.nav.lydia.UnleashKlient
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -47,11 +46,7 @@ class SykefraværsstatistikkService(
         søkeparametere: Søkeparametere,
     ): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        val sykefravær = if (UnleashKlient.skalHenteSiste4Kvartal()) {
-            sykefraværsstatistikkSiste4KvartalRepository.hentSykefravær(søkeparametere = søkeparametere)
-        } else {
-            sykefraversstatistikkRepository.hentSykefravær(søkeparametere = søkeparametere)
-        }
+        val sykefravær = sykefraværsstatistikkSiste4KvartalRepository.hentSykefravær(søkeparametere = søkeparametere)
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
         return sykefravær.map {
@@ -78,21 +73,12 @@ class SykefraværsstatistikkService(
     }
 
     fun hentTotaltAntallTreff(søkeparametere: Søkeparametere) =
-        if (UnleashKlient.skalHenteSiste4Kvartal()) {
-            sykefraværsstatistikkSiste4KvartalRepository.hentTotaltAntall(søkeparametere)
-                .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
-        } else {
-            sykefraversstatistikkRepository.hentTotaltAntall(søkeparametere)
-                .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
-        }
+        sykefraværsstatistikkSiste4KvartalRepository.hentTotaltAntall(søkeparametere)
+            .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhet = if (UnleashKlient.skalHenteSiste4Kvartal()) {
-            sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
-        } else {
-            sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
-        }
+        val sykefraværForVirksomhet = sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhet

@@ -30,12 +30,10 @@ object UnleashKlient {
     fun isEnabled(toggleKey: String) = unleash.isEnabled(toggleKey, false)
     fun skruPå(toggleKey: String) = (unleash as FakeUnleash).enable(toggleKey)
     fun skruAv(toggleKey: String) = (unleash as FakeUnleash).disable(toggleKey)
-
-    inline fun skalHenteSiste4Kvartal() = isEnabled(UnleashToggleKeys.henteSiste4Kvartal)
 }
 
 object UnleashToggleKeys {
-    val henteSiste4Kvartal = "pia.hente-siste-4-kvartal"
+
 }
 
 class ClusterStrategy(val miljø: NaisEnvironment.Companion.Environment) : Strategy {

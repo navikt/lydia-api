@@ -9,8 +9,7 @@ import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.random.Random
 
-const val MIN_PROSENT_FOR_SISTE_4_KVARTAL = 50.0
-const val MAX_PROSENT_FOR_SISTE_KVARTAL = 20
+const val MAX_SYKEFRAVÆRSPROSENT = 20
 
 class TestData(
     inkluderStandardVirksomheter: Boolean = false,
@@ -37,7 +36,6 @@ class TestData(
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
-                sykefraværsProsent = (1..MAX_PROSENT_FOR_SISTE_KVARTAL).random().toDouble()
             )
 
     }
@@ -105,7 +103,7 @@ class TestData(
     fun lagData(
         virksomhet: TestVirksomhet,
         perioder: List<Periode>,
-        sykefraværsProsent: Double = (1..MAX_PROSENT_FOR_SISTE_KVARTAL).random().toDouble(),
+        sykefraværsProsent: Double? = null,
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
         sektor: String = SEKTOR_STATLIG_FORVALTNING,
@@ -115,7 +113,7 @@ class TestData(
                 lagSykefraværsstatistikkImportDto(
                     orgnr = virksomhet.orgnr,
                     periode = periode,
-                    sykefraværsProsent = sykefraværsProsent,
+                    sykefraværsProsent = sykefraværsProsent ?: (1..MAX_SYKEFRAVÆRSPROSENT).random().toDouble(),
                     antallPersoner = antallPersoner,
                     tapteDagsverk = tapteDagsverk,
                     sektor = sektor
@@ -126,7 +124,7 @@ class TestData(
                     kategori = Kategori.VIRKSOMHET,
                     kode = virksomhet.orgnr,
                     periode = periode,
-                    sykefraværsProsent = sykefraværsProsent + MIN_PROSENT_FOR_SISTE_4_KVARTAL,
+                    sykefraværsProsent = sykefraværsProsent ?: (1..MAX_SYKEFRAVÆRSPROSENT).random().toDouble(),
                     antallPersoner = antallPersoner.toInt(),
                     tapteDagsverk = tapteDagsverk,
                 )

@@ -10,6 +10,8 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.ia.grunnlag.GrunnlagRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkSiste4KvartalRepository
 import org.junit.Test
 import java.time.LocalDateTime
 
@@ -18,8 +20,10 @@ class GrunnlagTest {
 
     val dataSource = TestContainerHelper.postgresContainer.getDataSource()
     val grunnlagRepository = GrunnlagRepository(dataSource)
-    val sykefraversstatistikkRepository =
-        SykefraversstatistikkRepository(dataSource)
+    val sykefraversstatistikkService = SykefraværsstatistikkService(
+        sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource),
+        sykefraværsstatistikkSiste4KvartalRepository = SykefraværsstatistikkSiste4KvartalRepository(dataSource)
+    )
 
     @Test
     fun `når man oppretter en sak, skal gjeldende sykefraværstatistikk som grunnlag i saken`() {
@@ -27,7 +31,7 @@ class GrunnlagTest {
         val iaSakDto = SakHelper.opprettSakForVirksomhet(orgnummer = orgnummer)
 
         val sykefraversstatistikkVirksomhetListe =
-            sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnummer).also {
+            sykefraversstatistikkService.hentSykefraværForVirksomhet(orgnr = orgnummer).also {
                 it shouldHaveAtLeastSize 1
             }
 
