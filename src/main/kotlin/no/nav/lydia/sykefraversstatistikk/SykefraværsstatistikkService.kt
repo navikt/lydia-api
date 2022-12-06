@@ -78,7 +78,8 @@ class SykefraværsstatistikkService(
 
     fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhet = sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        val sykefraværForVirksomhet =
+            sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhet
@@ -89,8 +90,16 @@ class SykefraværsstatistikkService(
         val sykefraværForVirksomhet = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
-        return sykefraværForVirksomhet.get(0)
+        return sykefraværForVirksomhet.getSisteTilgjengeligKvartal()
     }
+}
+
+fun List<SykefraversstatistikkVirksomhet>.getSisteTilgjengeligKvartal(): SykefraversstatistikkVirksomhet {
+    val sykefraversstatistikkVirksomhet = this.sortedWith(
+        compareByDescending<SykefraversstatistikkVirksomhet> { it.arstall }
+            .thenByDescending { it.kvartal }
+    )
+    return sykefraversstatistikkVirksomhet[0]
 }
 
 object SykefraværsstatistikkError {
