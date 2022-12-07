@@ -239,9 +239,9 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             arstall = row.int("arstall"),
             kvartal = row.int("kvartal"),
             antallPersoner = row.double("antall_personer"),
-            tapteDagsverk = row.double("tapte_dagsverk"),
-            muligeDagsverk = row.double("mulige_dagsverk"),
-            sykefraversprosent = row.double("prosent"),
+            tapteDagsverk = row.doubleOrNull("tapte_dagsverk") ?: 0.0,
+            muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
+            sykefraversprosent = row.doubleOrNull("prosent") ?: 0.0,
             maskert = row.boolean("maskert"),
             opprettet = row.localDateTime("sist_endret"),
             status = row.stringOrNull("status")?.let {
