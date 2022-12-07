@@ -1,5 +1,8 @@
 package no.nav.lydia.sykefraversstatistikk
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import arrow.core.rightIfNotNull
 import io.ktor.http.*
 import kotlinx.datetime.LocalDate
@@ -85,7 +88,7 @@ class SykefraværsstatistikkService(
         return sykefraværForVirksomhet
     }
 
-    fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnr: String): SykefraversstatistikkVirksomhet {
+    fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnr: String): Either<Feil, SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhet = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
@@ -94,15 +97,18 @@ class SykefraværsstatistikkService(
     }
 }
 
-fun List<SykefraversstatistikkVirksomhet>.getSisteTilgjengeligKvartal(): SykefraversstatistikkVirksomhet {
-    val sykefraversstatistikkVirksomhet = this.sortedWith(
+fun List<SykefraversstatistikkVirksomhet>.getSisteTilgjengeligKvartal(): Either<Feil, SykefraversstatistikkVirksomhet> {
+    if (this.isEmpty()) return SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+
+    return this.sortedWith(
         compareByDescending<SykefraversstatistikkVirksomhet> { it.arstall }
             .thenByDescending { it.kvartal }
-    )
-    return sykefraversstatistikkVirksomhet[0]
+    )[0].right()
 }
 
 object SykefraværsstatistikkError {
     val `feil under uthenting av sykefraværsstatistikk` =
         Feil("Det skjedde noe feil under uthenting av sykefraværsstatistikk", HttpStatusCode.InternalServerError)
+    val `ingen sykefraværsstatistikk` =
+        Feil("Ingen sykefraværsstatistikk funnet for virksomhet", HttpStatusCode.NotFound)
 }

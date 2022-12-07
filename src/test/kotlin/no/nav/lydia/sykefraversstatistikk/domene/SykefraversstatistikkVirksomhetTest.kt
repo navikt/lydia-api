@@ -1,8 +1,10 @@
 package no.nav.lydia.sykefraversstatistikk.domene
 
-import io.kotest.assertions.throwables.shouldThrow
+import arrow.core.left
+import arrow.core.right
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkError
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.getSisteTilgjengeligKvartal
 import java.time.LocalDateTime.now
@@ -42,18 +44,17 @@ class SykefraversstatistikkVirksomhetTest {
             sykefravær_2021_4,
             sykefravær_2022_2,
             sykefravær_2021_2
-        ).getSisteTilgjengeligKvartal() shouldBe sykefravær_2022_2
-        listOf(sykefravær_2021_1).getSisteTilgjengeligKvartal() shouldBe sykefravær_2021_1
+        ).getSisteTilgjengeligKvartal() shouldBe sykefravær_2022_2.right()
+        listOf(sykefravær_2021_1).getSisteTilgjengeligKvartal() shouldBe sykefravær_2021_1.right()
     }
 
     @Test
     fun `skal hente siste tilgjengelige kvartal fra en liste med bare én sykefraværsstatistikk`() {
-        listOf(sykefravær_2021_1).getSisteTilgjengeligKvartal() shouldBe sykefravær_2021_1
+        listOf(sykefravær_2021_1).getSisteTilgjengeligKvartal() shouldBe sykefravær_2021_1.right()
     }
 
     @Test
-    fun `kaster exception dersom liste av sykefraværsstatistikk er tom`() {
-        shouldThrow<IndexOutOfBoundsException> { listOf<SykefraversstatistikkVirksomhet>().getSisteTilgjengeligKvartal() }
+    fun `returnerer en feil dersom liste av sykefraværsstatistikk er tom`() {
+        listOf<SykefraversstatistikkVirksomhet>().getSisteTilgjengeligKvartal() shouldBe SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
-
 }
