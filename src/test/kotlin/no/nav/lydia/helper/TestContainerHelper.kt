@@ -330,7 +330,9 @@ class StatistikkHelper {
                 eiere = eiere,
                 token = token
             ).third
-                .fold(success = { response -> success.invoke(response) }, failure = { fail(it.message) })
+                .fold(success = { response -> success.invoke(response) }, failure = {
+                    fail("${it.message} - ${it.response.body().asString("text/plain")}")
+                })
 
         fun hentSykefravær(
             kvartal: String = "",

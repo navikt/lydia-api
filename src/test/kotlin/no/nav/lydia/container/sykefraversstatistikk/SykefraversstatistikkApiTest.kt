@@ -705,4 +705,18 @@ class SykefraversstatistikkApiTest {
         }
 
     }
+
+    @Test
+    fun `feil i input skal gi 400 Bad request`() {
+        hentSykefraværRespons(sykefraværsprosentFra = "-1").statuskode() shouldBe 400
+        hentSykefraværRespons(sykefraværsprosentTil = "101").statuskode() shouldBe 400
+        hentSykefraværRespons(sykefraværsprosentFra = "NaN").statuskode() shouldBe 400
+        hentSykefraværRespons(sykefraværsprosentFra = "aaa").statuskode() shouldBe 400
+        hentSykefraværRespons(side = "side").statuskode() shouldBe 400
+        hentSykefraværRespons(kvartal = "5").statuskode() shouldBe 400
+        hentSykefraværRespons(kvartal = "kvartal").statuskode() shouldBe 400
+        hentSykefraværRespons(årstall = "årstall").statuskode() shouldBe 400
+        hentSykefraværRespons(ansatteFra = "ansatteFra").statuskode() shouldBe 400
+        hentSykefraværRespons(ansatteTil = "ansatteTil").statuskode() shouldBe 400
+    }
 }
