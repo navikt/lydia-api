@@ -1,5 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
+import arrow.core.flatMap
 import arrow.core.right
 import ia.felles.definisjoner.bransjer.Bransjer
 import io.ktor.http.*
@@ -16,6 +17,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse.Companion.toDto
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
@@ -36,10 +38,9 @@ fun Route.sykefraversstatistikk(
     val fiaRoller = naisEnvironment.security.fiaRoller
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            val søkeparametere = Søkeparametere.from(call, geografiService, rådgiver = rådgiver)
-            val sykefraværsstatistikkVirksomheter =
-                SykefraværsstatistikkListResponse(data = sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere))
-            sykefraværsstatistikkVirksomheter.right()
+            call.request.søkeparametere(geografiService, rådgiver = rådgiver)
+        }.map { søkeparametere ->
+           SykefraværsstatistikkListResponse(data = sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere))
         }.map { sykefraværsstatistikkVirksomheter ->
             call.respond(sykefraværsstatistikkVirksomheter.toDto()).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
@@ -47,7 +48,8 @@ fun Route.sykefraversstatistikk(
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            val søkeparametere = Søkeparametere.from(call, geografiService, rådgiver = rådgiver)
+            call.request.søkeparametere(geografiService, rådgiver = rådgiver)
+        }.flatMap { søkeparametere ->
             sykefraværsstatistikkService.hentTotaltAntallTreff(søkeparametere = søkeparametere)
         }.fold(
             ifLeft = { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) },
