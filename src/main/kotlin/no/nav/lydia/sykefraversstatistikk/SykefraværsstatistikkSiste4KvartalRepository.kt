@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
@@ -12,6 +13,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
+import java.time.LocalDate
 import javax.sql.DataSource
 
 class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) {
@@ -174,7 +176,9 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         ${
         søkeparametere.status?.let { status ->
             when (status) {
-                IAProsessStatus.IKKE_AKTIV -> " AND ia_sak.status IS NULL"
+                IAProsessStatus.IKKE_AKTIV -> " AND (ia_sak.status IS NULL " +
+                        "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
+                        "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
                 else -> " AND ia_sak.status = '$status'"
             }
         } ?: ""
