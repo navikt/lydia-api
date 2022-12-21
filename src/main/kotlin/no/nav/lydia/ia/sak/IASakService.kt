@@ -5,7 +5,6 @@ import arrow.core.flatMap
 import arrow.core.left
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
 import no.nav.lydia.ia.sak.api.IASakError
@@ -24,7 +23,6 @@ import no.nav.lydia.tilgangskontroll.Rådgiver
 class IASakService(
     private val iaSakRepository: IASakRepository,
     private val iaSakshendelseRepository: IASakshendelseRepository,
-    private val grunnlagService: GrunnlagService,
     private val årsakService: ÅrsakService,
     private val iaSakshendelseObservers: MutableList<Observer<IASakshendelse>> = mutableListOf(),
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
@@ -71,7 +69,6 @@ class IASakService(
             .let { vurderesHendelse -> rådgiver.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
-                grunnlagService.lagreGrunnlag(oppdatertSak)
                 oppdatertSak.lagreOppdatering()
             }
             .tap { Metrics.virksomheterPrioritert.inc() }
