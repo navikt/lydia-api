@@ -1,0 +1,1 @@
+drop table sykefravar_statistikk_grunnlag;

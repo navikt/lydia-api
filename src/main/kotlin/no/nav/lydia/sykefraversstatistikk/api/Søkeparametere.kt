@@ -192,7 +192,7 @@ class Sykefraværsprosent private constructor(val sykefraværsProsent: Double) {
                 "$this er ikke en gyldig sykefraværsprosent. Sykefraværsprosent er forventet å være '0.0 >= prosent <= 100.0'".invalidNel()
     }
 
-    override fun toString() = sykefraværsProsent.toString()
+    override fun toString() = sykefraværsProsent. toString()
 }
 
 private fun String.tilValidertFlyttall() = try {

@@ -82,16 +82,6 @@ class IASakRepository(val dataSource: DataSource) {
                 tx.run(
                     queryOf(
                         """
-                            DELETE FROM sykefravar_statistikk_grunnlag 
-                            WHERE saksnummer = :saksnummer
-                        """.trimIndent(), mapOf(
-                            "saksnummer" to saksnummer,
-                        )
-                    ).asUpdate
-                )
-                tx.run(
-                    queryOf(
-                        """
                             DELETE FROM ia_sak 
                             WHERE saksnummer = :saksnummer
                         """.trimIndent(), mapOf(

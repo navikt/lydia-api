@@ -25,8 +25,6 @@ import no.nav.lydia.appstatus.*
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.debug.debug
 import no.nav.lydia.ia.eksport.*
-import no.nav.lydia.ia.grunnlag.GrunnlagRepository
-import no.nav.lydia.ia.grunnlag.GrunnlagService
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
@@ -193,7 +191,6 @@ fun Application.lydiaRestApi(
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
             sykefraværsstatistikkSiste4KvartalRepository = SykefraværsstatistikkSiste4KvartalRepository(dataSource = dataSource)
         )
-    val grunnlagRepository = GrunnlagRepository(dataSource = dataSource)
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
     val azureTokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment)
@@ -238,10 +235,6 @@ fun Application.lydiaRestApi(
                 iaSakService = IASakService(
                     iaSakRepository = iaSakRepository,
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-                    grunnlagService = GrunnlagService(
-                        grunnlagRepository = grunnlagRepository,
-                        sykefraværsstatistikkService = sykefraværsstatistikkService
-                    ),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ).apply {
                     iaSakshendelseProdusent?.also { leggTilIASakshendelseObserver(it) }
