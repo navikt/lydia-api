@@ -89,7 +89,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
     }
 
     private fun Sorteringsnøkkel.tilOrderBy(): String {
-        return when(this) {
+        return when (this) {
             NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn"
             ANTALL_PERSONER -> "ORDER BY statistikk.antall_personer"
             SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk_siste4.prosent"
@@ -179,6 +179,11 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
                 IAProsessStatus.IKKE_AKTIV -> " AND (ia_sak.status IS NULL " +
                         "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
                         "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
+
+                IAProsessStatus.IKKE_AKTUELL, IAProsessStatus.FULLFØRT, IAProsessStatus.SLETTET ->
+                    " AND ia_sak.status = '$status' " +
+                            "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
+
                 else -> " AND ia_sak.status = '$status'"
             }
         } ?: ""

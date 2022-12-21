@@ -712,8 +712,8 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `skal kunne søke på IKKE_AKTIV status endret når frist har gått ut`() {
-        val testKommune = Kommune(navn = "Yoloooo", nummer = "5555")
+    fun `skal kunne søke på IKKE_AKTIV status endret når frist har gått ut (og ikke få de opp på de utløpte statusene)`() {
+        val testKommune = Kommune(navn = "YoYoYo", nummer = "6666")
         // -- lag en virksomhet med en IkkeAktuell sak som er gått ut på dato
         val virksomhet1 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet1.orgnr)
@@ -723,7 +723,7 @@ class SykefraversstatistikkApiTest {
         // -- lag en virksomhet med en Slettet sak
         val virksomhet2 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet2.orgnr)
-            .slettSak()
+            .slettSak() // Kan ikke sette tilbake tidspunktet på det vi sletter fra databasen
         // -- lag en virksomhet med en Fullført sak som er gått ut på dato
         val virksomhet3 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet3.orgnr)
@@ -743,14 +743,19 @@ class SykefraversstatistikkApiTest {
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 7)
 
         hentSykefravær(kommuner = testKommune.nummer).data
-            .also { it.size shouldBeGreaterThanOrEqual 3 }
+            .also { it.size shouldBe 4 }
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IAProsessStatus.IKKE_AKTUELL.name).data
+            .also { it.size shouldBe 0 }
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IAProsessStatus.FULLFØRT.name).data
+            .also { it.size shouldBe 0 }
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IAProsessStatus.SLETTET.name).data
+            .also { it.size shouldBe 0 } // Ikke en bra test siden SLETTET blir borte fra databasen
 
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IAProsessStatus.IKKE_AKTIV.name).data //
-            .also { it.size shouldBeGreaterThanOrEqual 2 }
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IAProsessStatus.IKKE_AKTIV.name).data
+            .also { it.size shouldBe 3 }
             .forEach {
                 it.status shouldBe IAProsessStatus.IKKE_AKTIV
             }
-
     }
 
     @Test
