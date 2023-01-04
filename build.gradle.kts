@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.1.3"
+    val ktorVersion = "2.2.2"
     val fuelVersion = "2.3.1"
 
     // Align versions of all Kotlin components
@@ -45,12 +45,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.10.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.10.2")
 
     // Database
-    implementation("org.postgresql:postgresql:42.5.0")
+    implementation("org.postgresql:postgresql:42.5.1")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:9.8.2")
+    implementation("org.flywaydb:flyway-core:9.10.2")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -70,7 +70,7 @@ dependencies {
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
     // featuretoggling med unleash
-    implementation("io.getunleash:unleash-client-java:6.1.0")
+    implementation("io.getunleash:unleash-client-java:7.0.0")
 
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:0.0.5")
@@ -99,8 +99,8 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:0.5.6")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.25.6")
+    testImplementation("no.nav.security:mock-oauth2-server:0.5.7")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.27")
 
 }
 
