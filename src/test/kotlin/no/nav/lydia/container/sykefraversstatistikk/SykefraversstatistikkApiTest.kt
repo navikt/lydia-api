@@ -53,6 +53,7 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFIL
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnTestdata
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -99,6 +100,28 @@ class SykefraversstatistikkApiTest {
 
         val result: SykefraversstatistikkVirksomhetDto =
             hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = orgnummer)
+        result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
+    }
+
+    @Test
+    fun `skal kunne hente sykefraværsstatistikk riktig når vi mangler siste periode`() {
+        val virksomhet = nyVirksomhet()
+        lastInnTestdata(
+            TestData().lagData(
+                virksomhet = virksomhet,
+                perioder = listOf(Periode.forrigePeriode()), // uten siste periode
+            )
+        )
+        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.performQuery(
+            """select sykefraversprosent from sykefravar_statistikk_virksomhet 
+                where orgnr='${virksomhet.orgnr}' 
+                and kvartal=${Periode.forrigePeriode().kvartal}
+                and arstall=${Periode.forrigePeriode().årstall}
+                """.trimMargin()
+        ).getDouble("sykefraversprosent")
+
+        val result: SykefraversstatistikkVirksomhetDto =
+            hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
         result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
@@ -715,17 +738,20 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne søke på IKKE_AKTIV status endret når frist har gått ut (og ikke få de opp på de utløpte statusene)`() {
         val testKommune = Kommune(navn = "YoYoYo", nummer = "6666")
         // -- lag en virksomhet med en IkkeAktuell sak som er gått ut på dato
-        val virksomhet1 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val virksomhet1 =
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet1.orgnr)
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyIkkeAktuellHendelse()
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 10)
         // -- lag en virksomhet med en Slettet sak
-        val virksomhet2 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val virksomhet2 =
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet2.orgnr)
             .slettSak() // Kan ikke sette tilbake tidspunktet på det vi sletter fra databasen
         // -- lag en virksomhet med en Fullført sak som er gått ut på dato
-        val virksomhet3 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val virksomhet3 =
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet3.orgnr)
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -734,7 +760,8 @@ class SykefraversstatistikkApiTest {
             .nyHendelse(FULLFØR_BISTAND)
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 8)
         // -- lag en virksomhet med en ViBistår sak
-        val virksomhet4 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val virksomhet4 =
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet4.orgnr)
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
