@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkForVirksomhetSiste4Kvartaler
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
@@ -83,6 +84,15 @@ class SykefraværsstatistikkService(
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhet =
             sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
+
+        return sykefraværForVirksomhet
+    }
+
+    fun hentSykefraværForVirksomhetSiste4Kvartaler(orgnr: String): List<SykefraversstatistikkForVirksomhetSiste4Kvartaler> {
+        val start = System.currentTimeMillis()
+        val sykefraværForVirksomhet =
+            sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhetSiste4Kvartaler(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhet

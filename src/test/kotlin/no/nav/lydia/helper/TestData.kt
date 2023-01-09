@@ -332,7 +332,7 @@ fun lagSykefraversstatistikkPerKategoriImportDto(
             tapteDagsverk = tapteDagsverk,
             muligeDagsverk = 500.0,
             erMaskert = maskert,
-            kvartaler = listOf()
+            kvartaler = listOf(Periode.gjeldendePeriode().tilKvartal(), Periode.forrigePeriode().tilKvartal())
         )
     )
 

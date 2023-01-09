@@ -8,6 +8,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
+import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 
@@ -146,6 +147,7 @@ class Periode(val kvartal: Int, val årstall: Int) {
                 else -> Periode(kvartal = sisteKvartal() - 1, årstall = sisteÅr())
             }
     }
+    fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)
 }
 
 enum class Sorteringsnøkkel(val verdi: String) {

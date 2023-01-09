@@ -1,5 +1,8 @@
 package no.nav.lydia.sykefraversstatistikk
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.Row
 import kotliquery.queryOf
@@ -11,12 +14,15 @@ import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
+import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkForVirksomhetSiste4Kvartaler
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
+import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import java.time.LocalDate
 import javax.sql.DataSource
 
 class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) {
+    private val gson: Gson = GsonBuilder().create()
     fun hentSykefravær(
         søkeparametere: Søkeparametere,
     ) = using(sessionOf(dataSource)) { session ->
@@ -231,6 +237,41 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         }
     }
 
+    fun hentSykefraværForVirksomhetSiste4Kvartaler(orgnr: String): List<SykefraversstatistikkForVirksomhetSiste4Kvartaler> {
+        return using(sessionOf(dataSource)) { session ->
+            val query = queryOf(
+                statement = """
+                    SELECT
+                        statistikk_siste4.orgnr,
+                        virksomhet.navn,
+                        virksomhet.kommune,
+                        virksomhet.kommunenummer,
+                        statistikk.arstall,
+                        statistikk.kvartal,
+                        statistikk.antall_personer,
+                        statistikk_siste4.tapte_dagsverk,
+                        statistikk_siste4.mulige_dagsverk,
+                        statistikk_siste4.prosent,
+                        statistikk_siste4.maskert,
+                        statistikk_siste4.sist_endret,
+                        statistikk_siste4.antall_kvartaler,
+                        statistikk_siste4.kvartaler,
+                        ia_sak.status,
+                        ia_sak.eid_av,
+                        ia_sak.endret
+                  FROM sykefravar_statistikk_virksomhet AS statistikk
+                  JOIN virksomhet USING (orgnr)
+                  LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
+                  LEFT JOIN ia_sak USING(orgnr)
+                  WHERE (statistikk.orgnr = :orgnr)
+                """.trimIndent(), paramMap = mapOf(
+                    "orgnr" to orgnr
+                )
+            ).map(this::mapRowTo4Kvaraler).asList
+            session.run(query)
+        }
+    }
+
     private fun filterVerdi(filterNavn: String, filterVerdier: Set<String>) = """
             $filterNavn (inkluderAlle, filterverdi) AS (
                     VALUES (
@@ -258,6 +299,30 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             },
             eidAv = row.stringOrNull("eid_av"),
             sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate()
+        )
+    }
+
+    private fun mapRowTo4Kvaraler(row: Row): SykefraversstatistikkForVirksomhetSiste4Kvartaler {
+        val kvartalListeType = object : TypeToken<List<Kvartal>>() {}.type
+        return SykefraversstatistikkForVirksomhetSiste4Kvartaler(
+            virksomhetsnavn = row.string("navn"),
+            kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
+            orgnr = row.string("orgnr"),
+            arstall = row.int("arstall"),
+            kvartal = row.int("kvartal"),
+            antallPersoner = row.double("antall_personer"),
+            tapteDagsverk = row.doubleOrNull("tapte_dagsverk") ?: 0.0,
+            muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
+            sykefraversprosent = row.doubleOrNull("prosent") ?: 0.0,
+            maskert = row.boolean("maskert"),
+            opprettet = row.localDateTime("sist_endret"),
+            status = row.stringOrNull("status")?.let {
+                IAProsessStatus.valueOf(it)
+            },
+            eidAv = row.stringOrNull("eid_av"),
+            sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate(),
+            antallKvartaler = row.int("antall_kvartaler"),
+            kvartaler = gson.fromJson(row.string("kvartaler"), kvartalListeType),
         )
     }
 }

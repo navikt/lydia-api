@@ -36,6 +36,7 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
@@ -134,6 +135,22 @@ class SykefraversstatistikkApiTest {
                 it.orgnr shouldBe orgnr
                 it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
                 it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
+            }
+    }
+
+    @Test
+    fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift for de siste 4 kvartaler`() {
+        val orgnr = BERGEN.orgnr
+        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr)
+            .also { it.size shouldBeGreaterThanOrEqual 1 }
+            .forEach {
+                it.orgnr shouldBe orgnr
+                it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
+                it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
+                it.antallKvartaler shouldBe 2
+                it.kvartaler.size shouldBe 2
+                it.kvartaler[0].kvartal shouldBe Periode.gjeldendePeriode().kvartal
+                it.kvartaler[0].årstall shouldBe Periode.gjeldendePeriode().årstall
             }
     }
 
