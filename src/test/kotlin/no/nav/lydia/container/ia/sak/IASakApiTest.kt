@@ -52,6 +52,16 @@ class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
 
     @Test
+    fun `skal validere at begrunnelse tilhører riktig årsak`() {
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelseRespons(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                type = NAV_IGANGSETTER_IKKE_TILTAK,
+                begrunnelser = listOf(HAR_IKKE_KAPASITET)
+            ).toJson()).statuskode() shouldBe 400
+    }
+
+    @Test
     fun `skal kunne åpne en ny sak etter at en sak er slettet`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer).slettSak()

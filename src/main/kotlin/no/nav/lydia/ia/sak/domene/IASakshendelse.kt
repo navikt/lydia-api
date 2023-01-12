@@ -14,6 +14,7 @@ import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
 import java.time.LocalDateTime
 
 open class IASakshendelse(
@@ -96,14 +97,19 @@ class VirksomhetIkkeAktuellHendelse(
     companion object {
         fun fromDto(dto: IASakshendelseDto, navIdent: String): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
+
                 try {
+                    val valgtÅrsak: ValgtÅrsak = Json.decodeFromString(dto.payload)
+                    if (!valgtÅrsak.validerBegrunnelser())
+                        return SaksHendelseFeil.`valgte begrunnelser tilhører ikke riktig årsak`.left()
+
                     VirksomhetIkkeAktuellHendelse(
                         id = ULID.random(),
                         opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = dto.saksnummer,
                         orgnummer = dto.orgnummer,
                         opprettetAv = navIdent,
-                        valgtÅrsak = Json.decodeFromString(dto.payload)
+                        valgtÅrsak = valgtÅrsak
                     ).right()
                 } catch (e: Exception) {
                     SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
@@ -141,6 +147,8 @@ class VirksomhetIkkeAktuellHendelse(
 }
 
 object SaksHendelseFeil {
+    val `valgte begrunnelser tilhører ikke riktig årsak` =
+        Feil(feilmelding = "valgte begrunnelser tilhører ikke riktig årsak", httpStatusCode = HttpStatusCode.BadRequest)
     val `kunne ikke deserialisere årsak` =
         Feil(feilmelding = "Kunne ikke deserialisere årsak", httpStatusCode = HttpStatusCode.BadRequest)
 }

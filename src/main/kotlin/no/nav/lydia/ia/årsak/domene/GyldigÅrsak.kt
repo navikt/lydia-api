@@ -6,27 +6,29 @@ import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somGyldigeBegru
 @kotlinx.serialization.Serializable
 class GyldigÅrsak(val type: ÅrsakType, val navn: String = type.navn, val begrunnelser: List<GyldigBegrunnelse>) {
     companion object {
-        fun from(sakshendelseType: IASakshendelseType) = when (sakshendelseType) {
-            IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL -> listOf(
-                GyldigÅrsak(
-                    type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
-                    begrunnelser = listOf(
-                        BegrunnelseType.MANGLER_PARTSGRUPPE,
-                        BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID,
-                        BegrunnelseType.FOR_LAVT_SYKEFRAVÆR,
-                        BegrunnelseType.IKKE_TID,
-                        BegrunnelseType.MINDRE_VIRKSOMHET
-                    ).somGyldigeBegrunnelser()
-                ),
-                GyldigÅrsak(
-                    type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(
-                        BegrunnelseType.HAR_IKKE_KAPASITET,
-                        BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
-                        BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
-                    ).somGyldigeBegrunnelser()
-                )
+        val GYLDIGE_ÅRSAKER_FOR_IKKE_AKTUELL = listOf(
+            GyldigÅrsak(
+                type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
+                begrunnelser = listOf(
+                    BegrunnelseType.MANGLER_PARTSGRUPPE,
+                    BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID,
+                    BegrunnelseType.FOR_LAVT_SYKEFRAVÆR,
+                    BegrunnelseType.IKKE_TID,
+                    BegrunnelseType.MINDRE_VIRKSOMHET
+                ).somGyldigeBegrunnelser()
+            ),
+            GyldigÅrsak(
+                type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
+                begrunnelser = listOf(
+                    BegrunnelseType.HAR_IKKE_KAPASITET,
+                    BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
+                    BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
+                ).somGyldigeBegrunnelser()
             )
+        )
+
+        fun from(sakshendelseType: IASakshendelseType) = when (sakshendelseType) {
+            IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL -> GYLDIGE_ÅRSAKER_FOR_IKKE_AKTUELL
             else -> emptyList()
         }
     }
