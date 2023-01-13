@@ -7,11 +7,18 @@ import io.ktor.server.routing.*
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
+import java.lang.RuntimeException
+
+val KAST_FEIL_ENDEPUNKT = "internal/kastfeil"
+val KAST_FEIL_ENDEPUNKT_MELDING = "Kaster feil intensjonelt"
 
 fun Route.debug(
     iaSakRepository: IASakRepository,
     iaSakshendelseRepository: IASakshendelseRepository
 ) {
+    get(KAST_FEIL_ENDEPUNKT) {
+        throw RuntimeException(KAST_FEIL_ENDEPUNKT_MELDING)
+    }
     get("internal/tilstandsmaskin") {
         val alleSaker = iaSakRepository.hentAlleSaker()
 

@@ -179,7 +179,7 @@ fun Application.lydiaRestApi(
             call.respond(HttpStatusCode.Forbidden)
         }
         exception<Throwable> { call, cause ->
-            call.application.log.error("Det har skjedd en feil", cause)
+            call.application.log.error("Det har skjedd en feil: ${cause.message}", cause)
             call.respond(HttpStatusCode.InternalServerError)
         }
     }
