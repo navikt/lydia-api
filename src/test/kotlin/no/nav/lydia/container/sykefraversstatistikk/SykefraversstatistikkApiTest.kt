@@ -75,6 +75,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -205,6 +206,7 @@ class SykefraversstatistikkApiTest {
                 navn = saksbehandler1.navn
             )
         )
+        filterverdier.sektorer shouldBe Sektor.values().asList()
     }
 
     @Test

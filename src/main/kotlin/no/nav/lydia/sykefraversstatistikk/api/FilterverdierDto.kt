@@ -6,6 +6,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Fylke
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.virksomhet.domene.Sektor
 
 @Serializable
 data class FilterverdierDto(
@@ -14,7 +15,8 @@ data class FilterverdierDto(
     val bransjeprogram: List<Bransjer> = emptyList(),
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
     val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser(),
-    val filtrerbareEiere: List<EierDTO> = emptyList()
+    val filtrerbareEiere: List<EierDTO> = emptyList(),
+    val sektorer: List<Sektor> = Sektor.values().asList(),
 )
 
 @Serializable
