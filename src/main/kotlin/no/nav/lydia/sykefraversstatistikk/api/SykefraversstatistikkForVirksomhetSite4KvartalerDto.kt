@@ -67,3 +67,6 @@ data class KvartalDto(val kvartal: Int, val årstall: Int) {
             )
     }
 }
+
+@Serializable
+class KvartalerFraTilDto(val fra: KvartalDto, val til: KvartalDto)

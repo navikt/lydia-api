@@ -27,6 +27,7 @@ import no.nav.lydia.veileder.hentVeiledere
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
 val ANTALL_TREFF = "antallTreff"
+val GJELDENDE_PERIODE_SISTE4KVARTAL = "gjeldendeperiodesiste4kvartal"
 
 fun Route.sykefraversstatistikk(
     geografiService: GeografiService,
@@ -96,6 +97,16 @@ fun Route.sykefraversstatistikk(
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikk ->
             call.respond(sykefraværsstatistikk.toDto())
+        }.mapLeft { feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    get ("$SYKEFRAVERSSTATISTIKK_PATH/$GJELDENDE_PERIODE_SISTE4KVARTAL") {
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+            sykefraværsstatistikkService.hentGjeldendePeriodeSiste4Kvartal()
+        }.map { kvartalerFraTil ->
+            call.respond(kvartalerFraTil.toDto())
         }.mapLeft { feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }

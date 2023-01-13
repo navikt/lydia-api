@@ -10,11 +10,15 @@ import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
+import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
+import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkForVirksomhetSiste4Kvartaler
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
+import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
@@ -105,6 +109,13 @@ class SykefraværsstatistikkService(
 
         return sykefraværForVirksomhet.getSisteTilgjengeligKvartal()
     }
+
+    fun hentGjeldendePeriodeSiste4Kvartal(): Either<Feil, KvartalerFraTil> {
+        return KvartalerFraTil(
+            fra = Periode.forrigePeriode().forrigePeriode().forrigePeriode().tilKvartal(),
+            til = Periode.gjeldendePeriode().tilKvartal()
+        ).right()
+    }
 }
 
 fun List<SykefraversstatistikkVirksomhet>.getSisteTilgjengeligKvartal(): Either<Feil, SykefraversstatistikkVirksomhet> {
@@ -121,4 +132,10 @@ object SykefraværsstatistikkError {
         Feil("Det skjedde noe feil under uthenting av sykefraværsstatistikk", HttpStatusCode.InternalServerError)
     val `ingen sykefraværsstatistikk` =
         Feil("Ingen sykefraværsstatistikk funnet for virksomhet", HttpStatusCode.NotFound)
+}
+
+class KvartalerFraTil(val fra: Kvartal, val til: Kvartal) {
+    fun toDto(): KvartalerFraTilDto {
+        return KvartalerFraTilDto(fra = fra.toDto(), til = til.toDto())
+    }
 }

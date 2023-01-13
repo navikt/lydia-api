@@ -426,6 +426,13 @@ class StatistikkHelper {
                 .authentication().bearer(token)
                 .tilListeRespons<SykefraversstatistikkForVirksomhetSite4KvartalerDto>()
 
+        fun hentGjeldendePeriodeForSiste4KvartalerRespons(
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$GJELDENDE_PERIODE_SISTE4KVARTAL")
+                .authentication().bearer(token)
+                .tilSingelRespons<KvartalerFraTilDto>()
+
         fun hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
@@ -446,6 +453,12 @@ class StatistikkHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             hentSykefraværForVirksomhetSiste4KvartalerRespons(orgnummer = orgnummer, token = token).third
+                .fold(success = { response -> response }, failure = { fail(it.message) })
+
+        fun hentGjeldendePeriodeForSiste4Kvartaler(
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            hentGjeldendePeriodeForSiste4KvartalerRespons(token).third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
 
         fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(
