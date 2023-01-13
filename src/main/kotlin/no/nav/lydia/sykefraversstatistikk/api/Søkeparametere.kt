@@ -11,6 +11,8 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
+import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.virksomhet.domene.tilSektor
 
 data class Søkeparametere(
     val kommunenummer: Set<String>,
@@ -26,6 +28,7 @@ data class Søkeparametere(
     val side: Int,
     val navIdenter: Set<String>,
     val bransjeprogram: Set<Bransjer>,
+    val sektor: Set<Sektor>,
 ) {
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 100
@@ -45,6 +48,7 @@ data class Søkeparametere(
         const val SIDE = "side"
         const val BRANSJEPROGRAM = "bransjeprogram"
         const val IA_SAK_EIERE = "eiere"
+        const val SEKTOR = "sektor"
 
         fun ApplicationRequest.søkeparametere(geografiService: GeografiService, rådgiver: Rådgiver) =
                 queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().zip(
@@ -68,6 +72,7 @@ data class Søkeparametere(
                         status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
                         navIdenter = navIdenter(rådgiver = rådgiver),
                         bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
+                        sektor = finnSektor(queryParameters[SEKTOR])
                     )
             }.mapLeft {
                 Feil(it.joinToString(separator = "\n"), HttpStatusCode.BadRequest)
@@ -83,6 +88,9 @@ data class Søkeparametere(
                 }
             }
         }
+
+        private fun finnSektor(queryParams: String?): Set<Sektor> =
+            queryParams.tomSomNull()?.tilUnikeVerdier()?.map { it.tilSektor() }?.requireNoNulls()?.toSet() ?: emptySet()
 
         private fun finnBransjeProgram(queryParams: String?): Set<Bransjer> {
             val unikeVerdier = queryParams.tilUnikeVerdier().map(String::uppercase)

@@ -387,6 +387,7 @@ class StatistikkHelper {
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
+            sektor: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             lydiaApiContainer.performGet(
@@ -405,7 +406,8 @@ class StatistikkHelper {
                         "&${Søkeparametere.IA_STATUS}=$iaStatus" +
                         "&${Søkeparametere.SIDE}=$side" +
                         "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
-                        "&${Søkeparametere.IA_SAK_EIERE}=$eiere"
+                        "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
+                        "&${Søkeparametere.SEKTOR}=$sektor"
             )
                 .authentication().bearer(token)
                 .tilSingelRespons<SykefraværsstatistikkListResponseDto>()
