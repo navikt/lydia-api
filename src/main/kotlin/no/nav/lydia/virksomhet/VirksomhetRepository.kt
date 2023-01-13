@@ -11,6 +11,7 @@ import kotliquery.using
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Virksomhet
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
+import no.nav.lydia.virksomhet.domene.tilSektor
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
@@ -201,7 +202,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     navn = naring.split("∞")[1]
                                 )
                             },
-                        sektor = row.stringOrNull("sektor"),
+                        sektor = row.stringOrNull("sektor")?.tilSektor(),
                         oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
                         opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),
                         sistEndretTidspunkt = row.instant("sistEndretTidspunkt").toKotlinInstant()
@@ -228,7 +229,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     LIMIT 10
                     """.trimMargin()
             val params = mapOf(
-                "sokestreng" to "$søkestreng",
+                "sokestreng" to søkestreng,
                 "ekspanderbarSokestreng" to "%$søkestreng%",
             )
             session.run(

@@ -32,17 +32,9 @@ fun Virksomhet.toDto() = VirksomhetDto(
     postnummer = this.postnummer,
     poststed = this.poststed,
     neringsgrupper = this.næringsgrupper,
-    sektor = sektorKodeTilBeskrivelse(),
+    sektor = sektor?.beskrivelse ?: "Ukjent",
     oppdatertAvBrregOppdateringsId = this.oppdatertAvBrregOppdateringsId,
     opprettetTidspunkt = this.opprettetTidspunkt,
     sistEndretTidspunkt = this.sistEndretTidspunkt
 )
 
-fun Virksomhet.sektorKodeTilBeskrivelse(): String {
-    return when (sektor) {
-        "1" -> "Statlig forvaltning"
-        "2" -> "Kommunal forvaltning"
-        "3" -> "Privat og offentlig næringsvirksomhet"
-        else -> "Ukjent"
-    }
-}

@@ -17,7 +17,7 @@ data class Virksomhet(
     val land: String,
     val landkode: String,
     val næringsgrupper: List<Næringsgruppe>,
-    val sektor: String?,
+    val sektor: Sektor?,
     val oppdatertAvBrregOppdateringsId: Long?,
     val opprettetTidspunkt: Instant,
     val sistEndretTidspunkt: Instant,
