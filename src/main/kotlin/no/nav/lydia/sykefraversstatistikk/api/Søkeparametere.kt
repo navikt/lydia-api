@@ -150,12 +150,15 @@ class Periode(val kvartal: Int, val årstall: Int) {
             Periode(kvartal = sisteKvartal(), årstall = sisteÅr())
 
         fun forrigePeriode() =
-            when (sisteKvartal()) {
-                1 -> Periode(kvartal = 4, årstall = sisteÅr() - 1)
-                else -> Periode(kvartal = sisteKvartal() - 1, årstall = sisteÅr())
-            }
+            gjeldendePeriode().forrigePeriode()
     }
     fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)
+
+    fun forrigePeriode() =
+        when (this.kvartal) {
+            1 -> Periode(kvartal = 4, årstall = this.årstall - 1)
+            else -> Periode(kvartal = this.kvartal - 1, årstall = this.årstall)
+        }
 }
 
 enum class Sorteringsnøkkel(val verdi: String) {

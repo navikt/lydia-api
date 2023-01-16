@@ -27,6 +27,9 @@ import no.nav.lydia.veileder.hentVeiledere
 val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 val FILTERVERDIER_PATH = "filterverdier"
 val ANTALL_TREFF = "antallTreff"
+val SISTE_4_KVARTALER = "siste4kvartaler"
+val GJELDENDE_PERIODE_SISTE_4_KVARTALER = "gjeldendeperiodesiste4kvartaler"
+val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
 
 fun Route.sykefraversstatistikk(
     geografiService: GeografiService,
@@ -72,7 +75,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/siste4kvartaler") {
+     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$SISTE_4_KVARTALER") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
@@ -86,7 +89,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/sistetilgjengeligekvartal") {
+    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$SISTE_TILGJENGELIGE_KVARTAL") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
@@ -96,6 +99,16 @@ fun Route.sykefraversstatistikk(
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikk ->
             call.respond(sykefraværsstatistikk.toDto())
+        }.mapLeft { feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    get ("$SYKEFRAVERSSTATISTIKK_PATH/$GJELDENDE_PERIODE_SISTE_4_KVARTALER") {
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+            sykefraværsstatistikkService.hentGjeldendePeriodeSiste4Kvartal()
+        }.map { kvartalerFraTil ->
+            call.respond(kvartalerFraTil.toDto())
         }.mapLeft { feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
