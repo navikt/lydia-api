@@ -27,14 +27,17 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         søkeparametere: Søkeparametere,
     ) = using(sessionOf(dataSource)) { session ->
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
+        val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
         val tmpKommuneTabell = "kommuner"
         val tmpNæringTabell = "naringer"
         val tmpNavIdenterTabell = "nav_identer"
+        val tmpSektorTabell = "sektorer"
         val sql = """
                     WITH 
                         ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
                         ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
-                        ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
+                        ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)},
+                        ${filterVerdi(tmpSektorTabell, sektorer)}
                     SELECT
                         virksomhet.orgnr,
                         virksomhet.navn,
@@ -56,6 +59,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
                 tmpKommuneTabell = tmpKommuneTabell,
                 tmpNavIdenterTabell = tmpNavIdenterTabell,
                 tmpNæringTabell = tmpNæringTabell,
+                tmpSektorTabell = tmpSektorTabell,
                 søkeparametere = søkeparametere
             )
         }
@@ -84,11 +88,17 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             statement = sql, mapOf(
                 tmpKommuneTabell to session.connection.underlying.createArrayOf(
                     "text", søkeparametere.kommunenummer.toTypedArray()
-                ), tmpNæringTabell to session.connection.underlying.createArrayOf(
+                ),
+                tmpNæringTabell to session.connection.underlying.createArrayOf(
                     "text", næringsgrupperMedBransjer.toTypedArray()
-                ), tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
+                ),
+                tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
                     "text", søkeparametere.navIdenter.toTypedArray()
-                ), "kvartal" to søkeparametere.periode.kvartal, "arstall" to søkeparametere.periode.årstall
+                ),
+                tmpSektorTabell to session.connection.underlying.createArrayOf(
+                    "text", sektorer.toTypedArray()
+                ),
+                "kvartal" to søkeparametere.periode.kvartal, "arstall" to søkeparametere.periode.årstall
             )
         ).map(this::mapRow).asList
         session.run(query)
@@ -106,14 +116,17 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
 
     fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
+        val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
         val tmpKommuneTabell = "kommuner"
         val tmpNæringTabell = "naringer"
         val tmpNavIdenterTabell = "nav_identer"
+        val tmpSektorTabell = "sektorer"
         val sql = """
                         WITH 
                             ${filterVerdi(tmpKommuneTabell, søkeparametere.kommunenummer)},
                             ${filterVerdi(tmpNæringTabell, næringsgrupperMedBransjer)},
-                            ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)}
+                            ${filterVerdi(tmpNavIdenterTabell, søkeparametere.navIdenter)},
+                            ${filterVerdi(tmpSektorTabell, sektorer)}
                         SELECT
                             COUNT(DISTINCT virksomhet.orgnr) AS total
                         ${
@@ -121,6 +134,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
                 tmpKommuneTabell = tmpKommuneTabell,
                 tmpNavIdenterTabell = tmpNavIdenterTabell,
                 tmpNæringTabell = tmpNæringTabell,
+                tmpSektorTabell = tmpSektorTabell,
                 søkeparametere = søkeparametere
             )
         }
@@ -130,11 +144,17 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             statement = sql, mapOf(
                 tmpKommuneTabell to session.connection.underlying.createArrayOf(
                     "text", søkeparametere.kommunenummer.toTypedArray()
-                ), tmpNæringTabell to session.connection.underlying.createArrayOf(
+                ),
+                tmpNæringTabell to session.connection.underlying.createArrayOf(
                     "text", næringsgrupperMedBransjer.toTypedArray()
-                ), tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
+                ),
+                tmpNavIdenterTabell to session.connection.underlying.createArrayOf(
                     "text", søkeparametere.navIdenter.toTypedArray()
-                ), "kvartal" to søkeparametere.periode.kvartal, "arstall" to søkeparametere.periode.årstall
+                ),
+                tmpSektorTabell to session.connection.underlying.createArrayOf(
+                    "text", sektorer.toTypedArray()
+                ),
+                "kvartal" to søkeparametere.periode.kvartal, "arstall" to søkeparametere.periode.årstall
             )
         )
         session.run(query.map { it.int("total") }.asSingle)
@@ -144,11 +164,13 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         tmpKommuneTabell: String,
         tmpNavIdenterTabell: String,
         tmpNæringTabell: String,
+        tmpSektorTabell: String,
         søkeparametere: Søkeparametere,
     ) = """
         FROM sykefravar_statistikk_virksomhet AS statistikk
         JOIN virksomhet USING (orgnr)
         LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
+        LEFT JOIN virksomhet_statistikk_metadata USING (orgnr)
         LEFT JOIN ia_sak ON (
             (ia_sak.orgnr = statistikk.orgnr) AND
             ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
@@ -162,6 +184,10 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         AND (
             (SELECT inkluderAlle FROM $tmpNavIdenterTabell) IS TRUE OR
             ia_sak.eid_av in (select unnest($tmpNavIdenterTabell.filterverdi) FROM $tmpNavIdenterTabell)
+        )
+        AND (
+            (SELECT inkluderAlle FROM $tmpSektorTabell) IS TRUE OR
+            virksomhet_statistikk_metadata.sektor in (select unnest($tmpSektorTabell.filterverdi) FROM $tmpSektorTabell)
         )
         AND (
             (SELECT inkluderAlle FROM $tmpNæringTabell) IS TRUE

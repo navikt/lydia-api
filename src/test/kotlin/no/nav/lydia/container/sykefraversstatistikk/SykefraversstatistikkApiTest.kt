@@ -47,6 +47,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
+import no.nav.lydia.helper.TestData.Companion.SEKTOR_KOMMUNAL_FORVALTNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
@@ -54,6 +55,7 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.LUNNER
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnTestdata
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
@@ -83,6 +85,21 @@ import kotlin.test.fail
 class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val mockOAuth2Server = oauth2ServerContainer
+
+    @Test
+    fun `skal kunne filtrere sykefraværsstatistikk på sektor`() {
+        lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(), sektor = SEKTOR_KOMMUNAL_FORVALTNING)
+        val sykefraværstatistikkKommunalSektor = hentSykefravær(sektor = SEKTOR_KOMMUNAL_FORVALTNING).data
+        sykefraværstatistikkKommunalSektor.size shouldBeGreaterThan 0
+        sykefraværstatistikkKommunalSektor.forAll { sykefraværstatistikk ->
+           hentVirksomhetsinformasjon(
+               orgnummer = sykefraværstatistikk.orgnr,
+               token = mockOAuth2Server.saksbehandler1.token
+           ).sektor shouldBe Sektor.KOMMUNAL.beskrivelse
+        }
+
+        hentTotaltAntallTreffISykefravær(sektor = SEKTOR_KOMMUNAL_FORVALTNING) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
+    }
 
     @Test
     fun `Test for å hente datasource`() {

@@ -18,6 +18,7 @@ class TestData(
     companion object {
         const val LANDKODE_NO = "NO"
         const val SEKTOR_STATLIG_FORVALTNING = "1"
+        const val SEKTOR_KOMMUNAL_FORVALTNING = "2"
         const val SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET = "3"
         const val NÆRING_JORDBRUK = "01"
         const val NÆRING_SKOGBRUK = "02"
@@ -32,10 +33,11 @@ class TestData(
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
 
-        fun fraVirksomhet(virksomhet: TestVirksomhet) =
+        fun fraVirksomhet(virksomhet: TestVirksomhet, sektor: String = SEKTOR_STATLIG_FORVALTNING) =
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                sektor = sektor
             )
 
     }

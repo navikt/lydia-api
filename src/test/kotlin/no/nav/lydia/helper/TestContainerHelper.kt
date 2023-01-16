@@ -22,6 +22,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
@@ -350,6 +351,7 @@ class StatistikkHelper {
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
+            sektor: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             hentSykefraværRespons(
@@ -368,6 +370,7 @@ class StatistikkHelper {
                 side = side,
                 bransjeProgram = bransjeProgram,
                 eiere = eiere,
+                sektor = sektor,
                 token = token
             ).third.get()
 
@@ -483,9 +486,42 @@ class StatistikkHelper {
         }
 
         fun hentTotaltAntallTreffISykefravær(
-            token: String = oauth2ServerContainer.saksbehandler1.token
+            kvartal: String = "",
+            årstall: String = "",
+            kommuner: String = "",
+            fylker: String = "",
+            næringsgrupper: String = "",
+            sorteringsnokkel: String = "",
+            sorteringsretning: String = "",
+            sykefraværsprosentFra: String = "",
+            sykefraværsprosentTil: String = "",
+            ansatteFra: String = "",
+            ansatteTil: String = "",
+            iaStatus: String = "",
+            side: String = "",
+            bransjeProgram: String = "",
+            eiere: String = "",
+            sektor: String = "",
+            token: String = oauth2ServerContainer.saksbehandler1.token,
         ): Int {
-            return lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF")
+            return lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF" +
+                    "?${Søkeparametere.KVARTAL}=$kvartal" +
+                    "&${Søkeparametere.ÅRSTALL}=$årstall" +
+                    "&${Søkeparametere.KOMMUNER}=$kommuner" +
+                    "&${Søkeparametere.FYLKER}=$fylker" +
+                    "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
+                    "&${Søkeparametere.SORTERINGSNØKKEL}=$sorteringsnokkel" +
+                    "&${Søkeparametere.SORTERINGSRETNING}=$sorteringsretning" +
+                    "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
+                    "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
+                    "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
+                    "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
+                    "&${Søkeparametere.IA_STATUS}=$iaStatus" +
+                    "&${Søkeparametere.SIDE}=$side" +
+                    "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
+                    "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
+                    "&${Søkeparametere.SEKTOR}=$sektor"
+            )
                 .authentication().bearer(token)
                 .tilSingelRespons<Int>()
                 .third
@@ -555,8 +591,11 @@ class VirksomhetHelper {
 
         fun nyttOrgnummer() = lastInnNyVirksomhet().orgnr
 
-        fun lastInnNyVirksomhet(nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet()): TestVirksomhet {
-            lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet))
+        fun lastInnNyVirksomhet(
+            nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet(),
+            sektor: String = SEKTOR_STATLIG_FORVALTNING
+        ): TestVirksomhet {
+            lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet, sektor = sektor))
             return nyVirksomhet
         }
 
