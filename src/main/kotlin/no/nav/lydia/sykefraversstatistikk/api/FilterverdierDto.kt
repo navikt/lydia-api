@@ -16,7 +16,7 @@ data class FilterverdierDto(
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
     val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser(),
     val filtrerbareEiere: List<EierDTO> = emptyList(),
-    val sektorer: List<Sektor> = Sektor.values().asList(),
+    val sektorer: List<SektorDto> = Sektor.values().map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },
 )
 
 @Serializable
@@ -24,3 +24,6 @@ data class FylkeOgKommuner (val fylke: Fylke, val kommuner: List<Kommune>)
 
 @Serializable
 data class EierDTO (val navIdent: String, val navn: String)
+
+@Serializable
+data class SektorDto(val kode: String, val beskrivelse: String)

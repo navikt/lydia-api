@@ -236,7 +236,7 @@ class SykefraversstatistikkApiTest {
                 navn = saksbehandler1.navn
             )
         )
-        filterverdier.sektorer shouldBe Sektor.values().asList()
+        filterverdier.sektorer.map { it.kode } shouldBe Sektor.values().map { it.kode }
     }
 
     @Test
