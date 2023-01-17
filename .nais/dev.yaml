@@ -7,7 +7,7 @@ fiaLesetilgangGroup: 30f17df5-c36c-4ad7-b862-48f56c95ebb2
 teamPiaGroup: 02b25498-1a81-45b5-84cb-876a8899c809
 dbTier: db-f1-micro
 dbAutoresizeDisk: false
-limitsCpu: 1000m
+limitsCpu: 2000m
 limitsMemory: 1Gi
 requestsCpu: 200m
 requestsMemory: 1Gi

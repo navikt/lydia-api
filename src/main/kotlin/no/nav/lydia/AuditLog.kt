@@ -31,9 +31,10 @@ class AuditLog(val miljø: Environment) {
         orgnummer: String?,
         auditType: AuditType,
         tillat: Tillat,
-        saksnummer: String?
+        saksnummer: String?,
+        melding: String?,
+        severity: String
     ) {
-        val severity = if (orgnummer.isNullOrEmpty()) "WARN" else "INFO"
         val logstring =
             "CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=${System.currentTimeMillis()} " +
                     "suid=$navIdent " +
@@ -48,7 +49,8 @@ class AuditLog(val miljø: Environment) {
                     } " +
                     "flexString1Label=Decision " +
                     "flexString1=${tillat.tillat}" +
-                    (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "")
+                    (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
+                    (melding?.let { " msg=$it" } ?: "")
 
         when (miljø) {
             `PROD-GCP` -> auditLog.info(logstring)
@@ -62,7 +64,9 @@ class AuditLog(val miljø: Environment) {
         either: Either<Feil, Any>,
         orgnummer: String?,
         saksnummer: String? = null,
-        auditType: AuditType
+        melding: String? = null,
+        auditType: AuditType,
+        severity: String = if (orgnummer.isNullOrEmpty()) "WARN" else "INFO"
     ) {
         val tillat = when (either) {
             is Either.Left -> either.value.httpStatusCode.tilTillat()
@@ -77,7 +81,9 @@ class AuditLog(val miljø: Environment) {
                 orgnummer = orgnummer,
                 auditType = auditType,
                 tillat = tillat,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
+                melding = melding,
+                severity = severity
             )
         }
     }

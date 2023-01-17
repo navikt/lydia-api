@@ -30,6 +30,21 @@ data class Søkeparametere(
     val bransjeprogram: Set<Bransjer>,
     val sektor: Set<Sektor>,
 ) {
+    fun toLogString() = "Søk med parametere:" +
+            (sykefraværsprosentFra?.let { " $SYKEFRAVÆRSPROSENT_FRA=$sykefraværsprosentFra" } ?: "") +
+            (sykefraværsprosentTil?.let { " $SYKEFRAVÆRSPROSENT_TIL=$sykefraværsprosentTil" } ?: "") +
+            " $KVARTAL=${periode.kvartal} $ÅRSTALL=${periode.årstall}" +
+            (ansatteFra?.let { " $ANSATTE_FRA=$ansatteFra" } ?: "") +
+            (ansatteTil?.let { " $ANSATTE_TIL=$ansatteTil" } ?: "") +
+            (if (kommunenummer.isNotEmpty()) " $KOMMUNER=$kommunenummer" else "") +
+            (if (næringsgruppeKoder.isNotEmpty()) " $NÆRINGSGRUPPER=$næringsgruppeKoder" else "") +
+            (if (navIdenter.isNotEmpty()) " $IA_SAK_EIERE=$navIdenter" else "") +
+            (status?.let { " $IA_STATUS=$ansatteTil" } ?: "") +
+            (if (bransjeprogram.isNotEmpty()) " $BRANSJEPROGRAM=$bransjeprogram" else "") +
+            " $SORTERINGSNØKKEL=$sorteringsnøkkel" +
+            " $SORTERINGSRETNING=$sorteringsretning" +
+            " $SIDE=$side"
+
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 100
 
@@ -51,29 +66,29 @@ data class Søkeparametere(
         const val SEKTOR = "sektor"
 
         fun ApplicationRequest.søkeparametere(geografiService: GeografiService, rådgiver: Rådgiver) =
-                queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().zip(
-                    queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent(),
-                    Periode.tilValidertPeriode(kvartal = queryParameters[KVARTAL], årstall = queryParameters[ÅRSTALL]),
-                    queryParameters[SIDE].tomSomNull()?.tilValidertHeltall() ?: Valid(1),
-                    queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall() ?: Valid(null),
-                    queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall() ?: Valid(null)
-                ) { sykefraværsProsentFra, sykefraværsProsentTil, periode, side, ansatteFra, ansatteTil ->
-                    Søkeparametere(
-                        sykefraværsprosentFra = sykefraværsProsentFra,
-                        sykefraværsprosentTil = sykefraværsProsentTil,
-                        periode = periode,
-                        side = side,
-                        ansatteFra = ansatteFra,
-                        ansatteTil = ansatteTil,
-                        kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
-                        næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
-                        sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
-                        sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
-                        status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
-                        navIdenter = navIdenter(rådgiver = rådgiver),
-                        bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
-                        sektor = finnSektor(queryParameters[SEKTOR])
-                    )
+            queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().zip(
+                queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent(),
+                Periode.tilValidertPeriode(kvartal = queryParameters[KVARTAL], årstall = queryParameters[ÅRSTALL]),
+                queryParameters[SIDE].tomSomNull()?.tilValidertHeltall() ?: Valid(1),
+                queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall() ?: Valid(null),
+                queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall() ?: Valid(null)
+            ) { sykefraværsProsentFra, sykefraværsProsentTil, periode, side, ansatteFra, ansatteTil ->
+                Søkeparametere(
+                    sykefraværsprosentFra = sykefraværsProsentFra,
+                    sykefraværsprosentTil = sykefraværsProsentTil,
+                    periode = periode,
+                    side = side,
+                    ansatteFra = ansatteFra,
+                    ansatteTil = ansatteTil,
+                    kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
+                    næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
+                    sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
+                    sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
+                    status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
+                    navIdenter = navIdenter(rådgiver = rådgiver),
+                    bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
+                    sektor = finnSektor(queryParameters[SEKTOR])
+                )
             }.mapLeft {
                 Feil(it.joinToString(separator = "\n"), HttpStatusCode.BadRequest)
             }.toEither()
@@ -131,13 +146,13 @@ class Periode(val kvartal: Int, val årstall: Int) {
         fun tilValidertPeriode(kvartal: String?, årstall: String?) =
             kvartal.tilValidertKvartal().zip(
                 årstall.tomSomNull()?.tilValidertHeltall() ?: Valid(sisteÅr())
-            ) {
-                validertKvartal, validertÅrstall -> Periode(kvartal = validertKvartal, årstall = validertÅrstall)
+            ) { validertKvartal, validertÅrstall ->
+                Periode(kvartal = validertKvartal, årstall = validertÅrstall)
             }
 
         private fun String?.tilValidertKvartal() =
             tomSomNull()?.tilValidertHeltall()?.andThen {
-                if ((1 .. 4).contains(it))
+                if ((1..4).contains(it))
                     it.valid()
                 else
                     "$it er ikke et gyldig kvartal. Kvartal er forventet å være 1 >= kvartal <= 4".invalidNel()
@@ -152,6 +167,7 @@ class Periode(val kvartal: Int, val årstall: Int) {
         fun forrigePeriode() =
             gjeldendePeriode().forrigePeriode()
     }
+
     fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)
 
     fun forrigePeriode() =
@@ -205,7 +221,7 @@ class Sykefraværsprosent private constructor(val sykefraværsProsent: Double) {
                 "$this er ikke en gyldig sykefraværsprosent. Sykefraværsprosent er forventet å være '0.0 >= prosent <= 100.0'".invalidNel()
     }
 
-    override fun toString() = sykefraværsProsent. toString()
+    override fun toString() = sykefraværsProsent.toString()
 }
 
 private fun String.tilValidertFlyttall() = try {
