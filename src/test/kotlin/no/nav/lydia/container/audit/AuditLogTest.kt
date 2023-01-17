@@ -220,23 +220,95 @@ class AuditLogTest {
         }
     }
 
+    @Test
+    fun `auditlogger søk med få parametere`() {
+        val saksbehandler = mockOAuth2Server.saksbehandler1
+        StatistikkHelper.hentSykefravær()
+        .also {
+            lydiaApiContainer shouldContainLog auditLog(
+                path = "/sykefraversstatistikk?kvartal=&arstall=&kommuner=&fylker=&neringsgrup",
+                method = "GET",
+                navIdent = saksbehandler.navIdent,
+                auditType = AuditType.access,
+                tillat = Tillat.Ja,
+                melding = "Søk med parametere: kvartal=3 arstall=2022 sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
+            )
+        }
+    }
+
+    @Test
+    fun `auditlogger søk med masse parametere`() {
+        val saksbehandler = mockOAuth2Server.saksbehandler1
+        StatistikkHelper.hentSykefravær(
+            kvartal = "3",
+            årstall = "2022",
+            kommuner = "1750",
+            fylker = "17",
+            næringsgrupper = "bil",
+            sorteringsnokkel = "båt",
+            sorteringsretning = "asc",
+            sykefraværsprosentFra = "5",
+            sykefraværsprosentTil = "30",
+            ansatteFra = "10",
+            ansatteTil = "50",
+            iaStatus = "FULLFØRT",
+            side = "2",
+            bransjeProgram = "fly",
+            eiere = "N123"
+        )
+            .also {
+                lydiaApiContainer shouldContainLog auditLog(
+                    path = "/sykefraversstatistikk?kvartal=3&arstall=2022&kommuner=1750&fylker=17&",
+                    method = "GET",
+                    navIdent = saksbehandler.navIdent,
+                    auditType = AuditType.access,
+                    tillat = Tillat.Ja,
+                    melding = "Søk med parametere: sykefraversprosentFra=5.0 sykefraversprosentTil=30.0 kvartal=3 arstall=2022 ansatteFra=10 ansatteTil=50 kommuner=[1750] neringsgrupper=[bil] iaStatus=50 sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2"
+                )
+            }
+    }
 
     private fun auditLog(
         request: Request,
         navIdent: String,
-        orgnummer: String?,
+        orgnummer: String? = null,
         auditType: AuditType,
         tillat: Tillat,
         saksnummer: String? = null,
         severity: String = "INFO"
+    ): Regex {
+        return auditLog(
+            method = request.method.toString(),
+            path = request.url.path,
+            navIdent = navIdent,
+            orgnummer = orgnummer,
+            auditType = auditType,
+            tillat = tillat,
+            saksnummer = saksnummer,
+            severity = severity
+        )
+    }
+
+    private fun auditLog(
+        method: String,
+        path: String,
+        navIdent: String,
+        orgnummer: String? = null,
+        auditType: AuditType,
+        tillat: Tillat,
+        saksnummer: String? = null,
+        melding: String? = null,
+        severity: String = "INFO"
     ) =
-        ("CEF:0\\|fia-api\\|auditLog\\|1.0\\|audit:${auditType.name}\\|fia-api\\|$severity\\|end=[0-9]+ " +
+        ("CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=[0-9]+ " +
                 "suid=$navIdent " +
                 (orgnummer?.let { "duid=$it " } ?: "") +
                 "sproc=.{26} " +
-                "requestMethod=${request.method} " +
-                "request=${request.url.path} " +
+                "requestMethod=$method " +
+                "request=$path " +
                 "flexString1Label=Decision " +
                 "flexString1=${tillat.tillat}" +
-                (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "")).toRegex()
+                (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
+                (melding?.let { " msg=${it.replace("[","\\[").replace("]","\\]")}" } ?: "")
+                ).replace("|", "\\|").replace("?", "\\?").toRegex()
 }

@@ -43,8 +43,11 @@ fun Route.sykefraversstatistikk(
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
             call.request.søkeparametere(geografiService, rådgiver = rådgiver)
+        }.also {
+            auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
+                melding = it.orNull()?.toLogString(), severity = "INFO")
         }.map { søkeparametere ->
-           SykefraværsstatistikkListResponse(data = sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere))
+            SykefraværsstatistikkListResponse(data = sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere))
         }.map { sykefraværsstatistikkVirksomheter ->
             call.respond(sykefraværsstatistikkVirksomheter.toDto()).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
