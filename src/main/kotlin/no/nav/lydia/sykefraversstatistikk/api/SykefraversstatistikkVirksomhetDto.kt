@@ -3,14 +3,12 @@ package no.nav.lydia.sykefraversstatistikk.api
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
 
 @Serializable
 data class SykefraversstatistikkVirksomhetDto(
     val orgnr: String,
     val virksomhetsnavn: String,
-    val kommune: Kommune,
     val sektor: String,
     val neringsgruppe: String,
     val arstall: Int,
@@ -32,7 +30,6 @@ data class SykefraversstatistikkVirksomhetDto(
             SykefraversstatistikkVirksomhetDto(
                 orgnr = this.orgnr,
                 virksomhetsnavn = this.virksomhetsnavn,
-                kommune = this.kommune,
                 sektor = "",
                 neringsgruppe = "",
                 arstall = this.arstall,

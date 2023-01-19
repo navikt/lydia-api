@@ -17,7 +17,6 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkForVirksomhetSite4KvartalerDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
-import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponse.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.Rådgiver
@@ -47,9 +46,9 @@ fun Route.sykefraversstatistikk(
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")
         }.map { søkeparametere ->
-            SykefraværsstatistikkListResponse(data = sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere))
+            sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere)
         }.map { sykefraværsstatistikkVirksomheter ->
-            call.respond(sykefraværsstatistikkVirksomheter.toDto()).right()
+            call.respond(SykefraværsstatistikkListResponseDto(data = sykefraværsstatistikkVirksomheter.toDto())).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 
@@ -101,7 +100,7 @@ fun Route.sykefraversstatistikk(
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikk ->
-            call.respond(sykefraværsstatistikk.toDto())
+            call.respond(sykefraværsstatistikk)
         }.mapLeft { feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }

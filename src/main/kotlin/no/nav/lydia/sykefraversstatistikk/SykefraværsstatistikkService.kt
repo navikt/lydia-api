@@ -16,6 +16,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkForVirksomhetSiste4Kvartaler
 import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
+import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhetSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
@@ -102,12 +103,12 @@ class SykefraværsstatistikkService(
         return sykefraværForVirksomhet
     }
 
-    fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnr: String): Either<Feil, SykefraversstatistikkVirksomhet> {
+    fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnr: String): Either<Feil, SykefraversstatistikkVirksomhetSisteKvartal> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhet = sykefraversstatistikkRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        val sykefraværForVirksomhetSisteKvartal = sykefraversstatistikkRepository.hentSisteSykefraværForVirksomhet(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
-        return sykefraværForVirksomhet.getSisteTilgjengeligKvartal()
+        return sykefraværForVirksomhetSisteKvartal?.right() ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
     fun hentGjeldendePeriodeSiste4Kvartal(): Either<Feil, KvartalerFraTil> {
@@ -116,15 +117,6 @@ class SykefraværsstatistikkService(
             til = Periode.gjeldendePeriode().tilKvartal()
         ).right()
     }
-}
-
-fun List<SykefraversstatistikkVirksomhet>.getSisteTilgjengeligKvartal(): Either<Feil, SykefraversstatistikkVirksomhet> {
-    if (this.isEmpty()) return SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
-
-    return this.sortedWith(
-        compareByDescending<SykefraversstatistikkVirksomhet> { it.arstall }
-            .thenByDescending { it.kvartal }
-    )[0].right()
 }
 
 object SykefraværsstatistikkError {

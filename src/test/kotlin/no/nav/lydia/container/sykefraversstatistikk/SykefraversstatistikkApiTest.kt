@@ -79,12 +79,15 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
+import java.sql.ResultSet
 import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val mockOAuth2Server = oauth2ServerContainer
+
+
 
     @Test
     fun `skal kunne filtrere sykefraværsstatistikk på sektor`() {
@@ -102,12 +105,6 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `Test for å hente datasource`() {
-        val jdbcUrl = postgresContainer.getDataSource().jdbcUrl
-        jdbcUrl shouldStartWith "jdbc:postgresql"
-    }
-
-    @Test
     fun `skal kunne hente sykefraværsstatistikk fra siste tilgjengelige kvartal`() {
         val orgnummer = nyttOrgnummer()
         val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.performQuery(
@@ -118,7 +115,7 @@ class SykefraversstatistikkApiTest {
                 """.trimMargin()
         ).getDouble("sykefraversprosent")
 
-        val result: SykefraversstatistikkVirksomhetDto =
+        val result =
             hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = orgnummer)
         result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
@@ -140,20 +137,18 @@ class SykefraversstatistikkApiTest {
                 """.trimMargin()
         ).getDouble("sykefraversprosent")
 
-        val result: SykefraversstatistikkVirksomhetDto =
+        val result =
             hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
         result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
     @Test
-    fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift`() {
+    fun `skal kunne hente sykefraværsstatistikk for en enkelt virksomhet`() {
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhet(orgnummer = orgnr)
             .also { it.size shouldBeGreaterThanOrEqual 1 }
             .forEach {
                 it.orgnr shouldBe orgnr
-                it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
-                it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
             }
     }
 
@@ -279,8 +274,6 @@ class SykefraversstatistikkApiTest {
             response.data.forAtLeastOne { testVirksomhet ->
                 testVirksomhet.virksomhetsnavn shouldBe virksomhet.navn
                 testVirksomhet.orgnr shouldBe virksomhet.orgnr
-                testVirksomhet.kommune.navn shouldBe virksomhet.beliggenhet?.kommune
-                testVirksomhet.kommune.nummer shouldBe virksomhet.beliggenhet?.kommunenummer
             }
         }, kommuner = kommunenummer)
     }
@@ -292,8 +285,10 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { testVirksomhet ->
-                testVirksomhet.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
-                testVirksomhet.kommune.nummer shouldStartWith fylkesnummer
+                testVirksomhet.matcher {
+                    it.getString("kommune") shouldBe BERGEN.beliggenhet?.kommune
+                    it.getString("kommunenummer") shouldStartWith fylkesnummer
+                }
             }
         }, fylker = fylkesnummer)
     }
@@ -308,7 +303,9 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
-                    dto.kommune.nummer shouldBeIn alleKommunenummerIØstViken
+                    dto.matcher {
+                        it.getString("kommunenummer") shouldBeIn alleKommunenummerIØstViken
+                    }
                 }
             }
         )
@@ -323,7 +320,9 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
-                    dto.kommune.nummer shouldBe INDRE_ØSTFOLD.nummer
+                    dto.matcher {
+                        it.getString("kommunenummer") shouldBe INDRE_ØSTFOLD.nummer
+                    }
                 }
             }
         )
@@ -341,7 +340,9 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
-                    dto.kommune.nummer shouldBe LUNNER.nummer
+                    dto.matcher {
+                        it.getString("kommunenummer") shouldBe LUNNER.nummer
+                    }
                 }
             }
         )
@@ -356,8 +357,10 @@ class SykefraversstatistikkApiTest {
             fylker = "Ø30",
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
-                response.data.forAll {
-                    it.kommune.nummer.substring(0..1) shouldBeIn setOf("30", "03")
+                response.data.forAll { dto ->
+                    dto.matcher {
+                        it.getString("kommunenummer").substring(0..1) shouldBeIn setOf("30", "03")
+                    }
                 }
             }
         )
@@ -370,9 +373,11 @@ class SykefraversstatistikkApiTest {
         val kommunenummer = "0301" // Oslo kommune
 
         hentSykefravær(success = { response ->
-            response.data.forAll {
+            response.data.forAll { dto ->
                 setOf("46", "03").forAtLeastOne { fylke ->
-                    it.kommune.nummer.substring(0..1) shouldBe fylke
+                    dto.matcher {
+                        it.getString("kommunenummer").substring(0..1) shouldBe fylke
+                    }
                 }
             }
         }, kommuner = kommunenummer, fylker = fylkesnummer)
@@ -416,9 +421,11 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
-                response.data.forAll {
+                response.data.forAll { dto ->
                     listOf(oslo, nordreFollo).forAtLeastOne { knr ->
-                        it.kommune.nummer shouldBe knr
+                        dto.matcher {
+                            it.getString("kommunenummer") shouldBe knr
+                        }
                     }
                 }
             },
@@ -847,4 +854,9 @@ class SykefraversstatistikkApiTest {
         hentSykefraværRespons(ansatteFra = "ansatteFra").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteTil = "ansatteTil").statuskode() shouldBe 400
     }
+}
+
+private fun SykefraversstatistikkVirksomhetDto.matcher(block: (rs: ResultSet) -> Unit) {
+    val rs = postgresContainer.performQuery("select * from virksomhet where orgnr = '$orgnr'")
+    block(rs)
 }

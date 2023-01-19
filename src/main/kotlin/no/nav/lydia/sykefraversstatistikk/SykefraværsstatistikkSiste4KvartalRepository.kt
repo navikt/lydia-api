@@ -34,8 +34,6 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             SELECT
                 virksomhet.orgnr,
                 virksomhet.navn,
-                virksomhet.kommune,
-                virksomhet.kommunenummer,
                 statistikk.arstall,
                 statistikk.kvartal,
                 statistikk.antall_personer,
@@ -84,8 +82,6 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             GROUP BY 
                 virksomhet.orgnr,
                 virksomhet.navn,
-                virksomhet.kommune,
-                virksomhet.kommunenummer,
                 statistikk.arstall,
                 statistikk.kvartal,
                 statistikk.antall_personer,
@@ -304,7 +300,6 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
     private fun mapRow(row: Row): SykefraversstatistikkVirksomhet {
         return SykefraversstatistikkVirksomhet(
             virksomhetsnavn = row.string("navn"),
-            kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
             orgnr = row.string("orgnr"),
             arstall = row.int("arstall"),
             kvartal = row.int("kvartal"),

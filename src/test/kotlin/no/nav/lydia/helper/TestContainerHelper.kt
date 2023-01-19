@@ -34,6 +34,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
+import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhetSisteKvartal
 import no.nav.lydia.veileder.VEILEDERE_PATH
 import no.nav.lydia.veileder.VeilederDTO
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -444,7 +445,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer/$SISTE_TILGJENGELIGE_KVARTAL")
                 .authentication().bearer(token)
-                .tilSingelRespons<SykefraversstatistikkVirksomhetDto>()
+                .tilSingelRespons<SykefraversstatistikkVirksomhetSisteKvartal>()
 
         fun hentSykefraværForVirksomhet(
             orgnummer: String,
