@@ -15,6 +15,7 @@ import java.sql.Statement
 class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(PostgrestContainerHelper::class.java)) {
     private val postgresNetworkAlias = "postgrescontainer"
     val lydiaDbName = "lydia-api-container-db"
+    var migreringErKjørt = false
     val postgresContainer: PostgreSQLContainer<*> =
         PostgreSQLContainer("postgres:14")
             .withLogConsumer(
@@ -34,7 +35,10 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
             username = postgresContainer.username
             password = postgresContainer.password
         }).also {
-            runMigration(it)
+            if (!migreringErKjørt) {
+                runMigration(it)
+                migreringErKjørt = true
+            }
         }
 
     fun performQuery(sql: String): ResultSet {
