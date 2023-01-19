@@ -35,9 +35,8 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentGjeldendePeriodeForSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
-import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhet
-import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4KvartalerRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
@@ -145,7 +144,7 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt virksomhet`() {
         val orgnr = BERGEN.orgnr
-        hentSykefraværForVirksomhet(orgnummer = orgnr)
+        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr)
             .also { it.size shouldBeGreaterThanOrEqual 1 }
             .forEach {
                 it.orgnr shouldBe orgnr
@@ -195,7 +194,7 @@ class SykefraversstatistikkApiTest {
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
         ).getDouble("prosent")
 
-        hentSykefraværForVirksomhet(orgnummer = orgnummer).forAtLeastOne {
+        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).forAtLeastOne {
             it.sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
         }
     }
@@ -739,19 +738,19 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk for en virksomhet`() {
         val orgnr = BERGEN.orgnr
-        hentSykefraværForVirksomhetRespons(
+        hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
             token = mockOAuth2Server.lesebruker.token
         ).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(
+        hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
             token = mockOAuth2Server.saksbehandler1.token
         ).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(
+        hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
             token = mockOAuth2Server.superbruker1.token
         ).statuskode() shouldBe 200
-        hentSykefraværForVirksomhetRespons(
+        hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
             token = mockOAuth2Server.brukerUtenTilgangsrolle.token
         ).statuskode() shouldBe 403

@@ -166,7 +166,7 @@ class AuditLogTest {
     @Test
     fun `auditlogger uthenting av sykefraværsstatistikk på en enkelt virksomhet`() {
         val orgnummer = "917482498"
-        StatistikkHelper.hentSykefraværForVirksomhetRespons(orgnummer, token = mockOAuth2Server.lesebruker.token).also {
+        StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
                 navIdent = mockOAuth2Server.lesebruker.navIdent,
@@ -175,8 +175,8 @@ class AuditLogTest {
                 tillat = Tillat.Ja,
             )
         }
-        StatistikkHelper.hentSykefraværForVirksomhetRespons(
-            orgnummer,
+        StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(
+            orgnummer = orgnummer,
             token = mockOAuth2Server.brukerUtenTilgangsrolle.token
         ).also {
             lydiaApiContainer shouldContainLog auditLog(

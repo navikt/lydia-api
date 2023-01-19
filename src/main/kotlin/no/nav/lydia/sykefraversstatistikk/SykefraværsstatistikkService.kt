@@ -55,7 +55,7 @@ class SykefraværsstatistikkService(
         søkeparametere: Søkeparametere,
     ): List<SykefraversstatistikkVirksomhet> {
         val start = System.currentTimeMillis()
-        val sykefravær = sykefraværsstatistikkSiste4KvartalRepository.hentSykefravær(søkeparametere = søkeparametere)
+        val sykefravær = sykefraværsstatistikkSiste4KvartalRepository.søkEtterVirksomheter(søkeparametere = søkeparametere)
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
         return sykefravær.map {
@@ -82,17 +82,8 @@ class SykefraværsstatistikkService(
     }
 
     fun hentTotaltAntallTreff(søkeparametere: Søkeparametere) =
-        sykefraværsstatistikkSiste4KvartalRepository.hentTotaltAntall(søkeparametere)
+        sykefraværsstatistikkSiste4KvartalRepository.hentTotaltAntallForSøk(søkeparametere)
             .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
-
-    fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
-        val start = System.currentTimeMillis()
-        val sykefraværForVirksomhet =
-            sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
-
-        return sykefraværForVirksomhet
-    }
 
     fun hentSykefraværForVirksomhetSiste4Kvartaler(orgnr: String): List<SykefraversstatistikkForVirksomhetSiste4Kvartaler> {
         val start = System.currentTimeMillis()

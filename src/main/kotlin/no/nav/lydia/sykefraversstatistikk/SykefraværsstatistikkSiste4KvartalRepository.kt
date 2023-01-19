@@ -24,7 +24,7 @@ import javax.sql.DataSource
 class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
 
-    fun hentSykefravær(
+    fun søkEtterVirksomheter(
         søkeparametere: Søkeparametere,
     ) = using(sessionOf(dataSource)) { session ->
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
@@ -171,7 +171,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         }
     }
 
-    fun hentTotaltAntall(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
+    fun hentTotaltAntallForSøk(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
         val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
 
@@ -227,39 +227,6 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
             )
         )
         session.run(query.map { it.int("total") }.asSingle)
-    }
-
-    fun hentSykefraværForVirksomhet(orgnr: String): List<SykefraversstatistikkVirksomhet> {
-        return using(sessionOf(dataSource)) { session ->
-            val query = queryOf(
-                statement = """
-                    SELECT
-                        statistikk_siste4.orgnr,
-                        virksomhet.navn,
-                        virksomhet.kommune,
-                        virksomhet.kommunenummer,
-                        statistikk.arstall,
-                        statistikk.kvartal,
-                        statistikk.antall_personer,
-                        statistikk_siste4.tapte_dagsverk,
-                        statistikk_siste4.mulige_dagsverk,
-                        statistikk_siste4.prosent,
-                        statistikk_siste4.maskert,
-                        statistikk_siste4.sist_endret,
-                        ia_sak.status,
-                        ia_sak.eid_av,
-                        ia_sak.endret
-                  FROM sykefravar_statistikk_virksomhet AS statistikk
-                  JOIN virksomhet USING (orgnr)
-                  LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
-                  LEFT JOIN ia_sak USING(orgnr)
-                  WHERE (statistikk.orgnr = :orgnr)
-                """.trimIndent(), paramMap = mapOf(
-                    "orgnr" to orgnr
-                )
-            ).map(this::mapRow).asList
-            session.run(query)
-        }
     }
 
     fun hentSykefraværForVirksomhetSiste4Kvartaler(orgnr: String): List<SykefraversstatistikkForVirksomhetSiste4Kvartaler> {
