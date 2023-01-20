@@ -71,8 +71,8 @@ import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto
-import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkListResponseDto
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktResponsDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
@@ -401,13 +401,13 @@ class SykefraversstatistikkApiTest {
         val resultatMedTommeParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
-                .tilSingelRespons<SykefraværsstatistikkListResponseDto>().third
+                .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
 
 
         val resultatUtenParametre =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
-                .tilSingelRespons<SykefraværsstatistikkListResponseDto>().third
+                .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
 
         resultatMedTommeParametre.get().data shouldContainAll resultatUtenParametre.get().data
     }
@@ -855,7 +855,7 @@ class SykefraversstatistikkApiTest {
     }
 }
 
-private fun SykefraversstatistikkVirksomhetDto.matcher(block: (rs: ResultSet) -> Unit) {
+private fun VirksomhetsoversiktDto.matcher(block: (rs: ResultSet) -> Unit) {
     val rs = postgresContainer.performQuery("select * from virksomhet where orgnr = '$orgnr'")
     block(rs)
 }

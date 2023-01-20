@@ -34,7 +34,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhetSisteKvartal
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.veileder.VEILEDERE_PATH
 import no.nav.lydia.veileder.VeilederDTO
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -296,7 +296,7 @@ class SakHelper {
 class StatistikkHelper {
     companion object {
         fun hentSykefravær(
-            success: (SykefraværsstatistikkListResponseDto) -> Unit,
+            success: (VirksomhetsoversiktResponsDto) -> Unit,
             kvartal: String = "",
             årstall: String = "",
             kommuner: String = "",
@@ -414,7 +414,7 @@ class StatistikkHelper {
                         "&${Søkeparametere.SEKTOR}=$sektor"
             )
                 .authentication().bearer(token)
-                .tilSingelRespons<SykefraværsstatistikkListResponseDto>()
+                .tilSingelRespons<VirksomhetsoversiktResponsDto>()
 
         fun hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer: String,
@@ -422,7 +422,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer/$SISTE_4_KVARTALER")
                 .authentication().bearer(token)
-                .tilListeRespons<SykefraversstatistikkForVirksomhetSite4KvartalerDto>()
+                .tilListeRespons<VirksomhetsdetaljerDto>()
 
         fun hentGjeldendePeriodeForSiste4KvartalerRespons(
             token: String = oauth2ServerContainer.saksbehandler1.token
@@ -437,7 +437,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer/$SISTE_TILGJENGELIGE_KVARTAL")
                 .authentication().bearer(token)
-                .tilSingelRespons<SykefraversstatistikkVirksomhetSisteKvartal>()
+                .tilSingelRespons<VirksomhetsstatistikkSisteKvartal>()
 
         fun hentSykefraværForVirksomhetSiste4Kvartaler(
             orgnummer: String,
@@ -459,9 +459,9 @@ class StatistikkHelper {
             hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(orgnummer = orgnummer, token = token).third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
 
-        fun hentSykefraværForAlleVirksomheter(): List<SykefraversstatistikkVirksomhetDto> {
+        fun hentSykefraværForAlleVirksomheter(): List<VirksomhetsoversiktDto> {
             var side = 1
-            val liste = mutableListOf<SykefraversstatistikkVirksomhetDto>()
+            val liste = mutableListOf<VirksomhetsoversiktDto>()
 
             do {
                 val sykefravær = hentSykefravær(side = "${side++}")

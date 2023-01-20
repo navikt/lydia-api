@@ -3,10 +3,10 @@ package no.nav.lydia.sykefraversstatistikk.api
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
+import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 
 @Serializable
-data class SykefraversstatistikkVirksomhetDto(
+data class VirksomhetsoversiktDto(
     val orgnr: String,
     val virksomhetsnavn: String,
     val sektor: String,
@@ -23,11 +23,11 @@ data class SykefraversstatistikkVirksomhetDto(
 ) {
 
     companion object {
-        fun List<SykefraversstatistikkVirksomhet>.toDto(): List<SykefraversstatistikkVirksomhetDto> =
+        fun List<Virksomhetsoversikt>.toDto(): List<VirksomhetsoversiktDto> =
             this.map { it.toDto() }
-        
-        fun SykefraversstatistikkVirksomhet.toDto() : SykefraversstatistikkVirksomhetDto =
-            SykefraversstatistikkVirksomhetDto(
+
+        fun Virksomhetsoversikt.toDto() : VirksomhetsoversiktDto =
+            VirksomhetsoversiktDto(
                 orgnr = this.orgnr,
                 virksomhetsnavn = this.virksomhetsnavn,
                 sektor = "",

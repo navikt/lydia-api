@@ -3,7 +3,6 @@ package no.nav.lydia.sykefraversstatistikk
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotliquery.*
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhetSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.*
 import javax.sql.DataSource
 
@@ -122,42 +121,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             }
         }
     }
-
-    fun hentSisteSykefraværForVirksomhet(orgnr: String) =
-        using(sessionOf(dataSource)) { session ->
-            val query = queryOf(
-                statement = """
-                    SELECT
-                        orgnr,
-                        arstall,
-                        kvartal,
-                        antall_personer,
-                        tapte_dagsverk,
-                        mulige_dagsverk,
-                        sykefraversprosent,
-                        maskert
-                  FROM sykefravar_statistikk_virksomhet
-                  WHERE (orgnr = :orgnr)
-                  ORDER BY arstall, kvartal DESC
-                  LIMIT 1
-                """.trimIndent(),
-                paramMap = mapOf(
-                    "orgnr" to orgnr
-                )
-            ).map { mapRow(it) }.asSingle
-            session.run(query)
-        }
-
-    private fun mapRow(row: Row) = SykefraversstatistikkVirksomhetSisteKvartal(
-        orgnr = row.string("orgnr"),
-        arstall = row.int("arstall"),
-        kvartal = row.int("kvartal"),
-        antallPersoner = row.double("antall_personer"),
-        tapteDagsverk = row.double("tapte_dagsverk"),
-        muligeDagsverk = row.double("mulige_dagsverk"),
-        sykefraversprosent = row.double("sykefraversprosent"),
-        maskert = row.boolean("maskert"),
-    )
 }
 
 private fun TransactionalSession.insertMetadataForVirksomhet(behandletImportStatistikk: List<BehandletImportStatistikk>) =

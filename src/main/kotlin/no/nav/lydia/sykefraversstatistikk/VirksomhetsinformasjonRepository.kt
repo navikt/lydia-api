@@ -14,14 +14,15 @@ import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkForVirksomhetSiste4Kvartaler
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
+import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsdetaljer
+import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import java.time.LocalDate
 import javax.sql.DataSource
 
-class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) {
+class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
 
     fun søkEtterVirksomheter(
@@ -109,7 +110,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
                 "sektorer" to session.createArrayOf("text", sektorer),
                 "eiere" to session.createArrayOf("text", søkeparametere.navIdenter),
             )
-        ).map(this::mapRow).asList
+        ).map(this::mapRowToOversikt).asList
         session.run(query)
     }
 
@@ -171,7 +172,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         }
     }
 
-    fun hentTotaltAntallForSøk(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
+    fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
         val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
 
@@ -229,7 +230,7 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         session.run(query.map { it.int("total") }.asSingle)
     }
 
-    fun hentSykefraværForVirksomhetSiste4Kvartaler(orgnr: String): List<SykefraversstatistikkForVirksomhetSiste4Kvartaler> {
+    fun hentSykefraværForVirksomhet(orgnr: String): List<Virksomhetsdetaljer> {
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
@@ -259,13 +260,49 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
                 """.trimIndent(), paramMap = mapOf(
                     "orgnr" to orgnr
                 )
-            ).map(this::mapRowTo4Kvaraler).asList
+            ).map(this::mapRowToDetaljer).asList
             session.run(query)
         }
     }
 
-    private fun mapRow(row: Row): SykefraversstatistikkVirksomhet {
-        return SykefraversstatistikkVirksomhet(
+    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String) =
+        using(sessionOf(dataSource)) { session ->
+            val query = queryOf(
+                statement = """
+                    SELECT
+                        orgnr,
+                        arstall,
+                        kvartal,
+                        antall_personer,
+                        tapte_dagsverk,
+                        mulige_dagsverk,
+                        sykefraversprosent,
+                        maskert
+                  FROM sykefravar_statistikk_virksomhet
+                  WHERE (orgnr = :orgnr)
+                  ORDER BY arstall, kvartal DESC
+                  LIMIT 1
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "orgnr" to orgnr
+                )
+            ).map { mapRowToSisteKvartal(it) }.asSingle
+            session.run(query)
+        }
+
+    private fun mapRowToSisteKvartal(row: Row) = VirksomhetsstatistikkSisteKvartal(
+        orgnr = row.string("orgnr"),
+        arstall = row.int("arstall"),
+        kvartal = row.int("kvartal"),
+        antallPersoner = row.double("antall_personer"),
+        tapteDagsverk = row.double("tapte_dagsverk"),
+        muligeDagsverk = row.double("mulige_dagsverk"),
+        sykefraversprosent = row.double("sykefraversprosent"),
+        maskert = row.boolean("maskert"),
+    )
+
+    private fun mapRowToOversikt(row: Row): Virksomhetsoversikt {
+        return Virksomhetsoversikt(
             virksomhetsnavn = row.string("navn"),
             orgnr = row.string("orgnr"),
             arstall = row.int("arstall"),
@@ -284,9 +321,9 @@ class SykefraværsstatistikkSiste4KvartalRepository(val dataSource: DataSource) 
         )
     }
 
-    private fun mapRowTo4Kvaraler(row: Row): SykefraversstatistikkForVirksomhetSiste4Kvartaler {
+    private fun mapRowToDetaljer(row: Row): Virksomhetsdetaljer {
         val kvartalListeType = object : TypeToken<List<Kvartal>>() {}.type
-        return SykefraversstatistikkForVirksomhetSiste4Kvartaler(
+        return Virksomhetsdetaljer(
             virksomhetsnavn = row.string("navn"),
             kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
             orgnr = row.string("orgnr"),

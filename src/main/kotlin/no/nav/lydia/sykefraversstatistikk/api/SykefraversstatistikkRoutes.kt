@@ -15,8 +15,8 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkForVirksomhetSite4KvartalerDto.Companion.toDto
-import no.nav.lydia.sykefraversstatistikk.api.SykefraversstatistikkVirksomhetDto.Companion.toDto
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsdetaljerDto.Companion.toDto
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.Rådgiver
@@ -46,9 +46,9 @@ fun Route.sykefraversstatistikk(
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")
         }.map { søkeparametere ->
-            sykefraværsstatistikkService.hentSykefravær(søkeparametere = søkeparametere)
+            sykefraværsstatistikkService.søkEtterVirksomheter(søkeparametere = søkeparametere)
         }.map { sykefraværsstatistikkVirksomheter ->
-            call.respond(SykefraværsstatistikkListResponseDto(data = sykefraværsstatistikkVirksomheter.toDto())).right()
+            call.respond(VirksomhetsoversiktResponsDto(data = sykefraværsstatistikkVirksomheter.toDto())).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 
@@ -56,7 +56,7 @@ fun Route.sykefraversstatistikk(
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
             call.request.søkeparametere(geografiService, rådgiver = rådgiver)
         }.flatMap { søkeparametere ->
-            sykefraværsstatistikkService.hentTotaltAntallTreff(søkeparametere = søkeparametere)
+            sykefraværsstatistikkService.hentTotaltAntallVirksomheter(søkeparametere = søkeparametere)
         }.fold(
             ifLeft = { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) },
             ifRight = { totaltAntallTreff -> call.respond(totaltAntallTreff) }
@@ -67,7 +67,7 @@ fun Route.sykefraversstatistikk(
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
-            sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer).right()
+            sykefraværsstatistikkService.hentSykefraværForVirksomhet(orgnummer).right()
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikkListe ->
@@ -82,7 +82,7 @@ fun Route.sykefraversstatistikk(
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
-            sykefraværsstatistikkService.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer)
+            sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikk ->

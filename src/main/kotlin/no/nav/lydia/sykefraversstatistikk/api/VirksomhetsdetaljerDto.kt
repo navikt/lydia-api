@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkForVirksomhetSiste4Kvartaler
+import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsdetaljer
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 
 @Serializable
-data class SykefraversstatistikkForVirksomhetSite4KvartalerDto(
+data class VirksomhetsdetaljerDto(
     val orgnr: String,
     val virksomhetsnavn: String,
     val kommune: Kommune,
@@ -29,11 +29,11 @@ data class SykefraversstatistikkForVirksomhetSite4KvartalerDto(
 ) {
 
     companion object {
-        fun List<SykefraversstatistikkForVirksomhetSiste4Kvartaler>.toDto(): List<SykefraversstatistikkForVirksomhetSite4KvartalerDto> =
+        fun List<Virksomhetsdetaljer>.toDto(): List<VirksomhetsdetaljerDto> =
             this.map { it.toDto() }
 
-        fun SykefraversstatistikkForVirksomhetSiste4Kvartaler.toDto() : SykefraversstatistikkForVirksomhetSite4KvartalerDto =
-            SykefraversstatistikkForVirksomhetSite4KvartalerDto(
+        fun Virksomhetsdetaljer.toDto() : VirksomhetsdetaljerDto =
+            VirksomhetsdetaljerDto(
                 orgnr = this.orgnr,
                 virksomhetsnavn = this.virksomhetsnavn,
                 kommune = this.kommune,

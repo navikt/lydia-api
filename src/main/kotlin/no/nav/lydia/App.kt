@@ -40,7 +40,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkSiste4KvartalRepository
+import no.nav.lydia.sykefraversstatistikk.VirksomhetsinformasjonRepository
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
@@ -73,7 +73,7 @@ fun startLydiaBackend() {
         sykefraversstatistikkRepository = SykefraversstatistikkRepository(
             dataSource = dataSource
         ),
-        sykefraværsstatistikkSiste4KvartalRepository = SykefraværsstatistikkSiste4KvartalRepository(dataSource = dataSource)
+        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
     )
     statistikkConsumer(
         kafka = naisEnv.kafka,
@@ -189,7 +189,7 @@ fun Application.lydiaRestApi(
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-            sykefraværsstatistikkSiste4KvartalRepository = SykefraværsstatistikkSiste4KvartalRepository(dataSource = dataSource)
+            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
         )
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)

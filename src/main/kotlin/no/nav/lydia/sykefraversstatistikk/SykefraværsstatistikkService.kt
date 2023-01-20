@@ -14,9 +14,9 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkForVirksomhetSiste4Kvartaler
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhet
-import no.nav.lydia.sykefraversstatistikk.domene.SykefraversstatistikkVirksomhetSisteKvartal
+import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsdetaljer
+import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
@@ -26,7 +26,7 @@ import java.time.LocalDate.now
 
 class SykefraværsstatistikkService(
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
-    val sykefraværsstatistikkSiste4KvartalRepository: SykefraværsstatistikkSiste4KvartalRepository,
+    val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -51,11 +51,11 @@ class SykefraværsstatistikkService(
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
     }
 
-    fun hentSykefravær(
+    fun søkEtterVirksomheter(
         søkeparametere: Søkeparametere,
-    ): List<SykefraversstatistikkVirksomhet> {
+    ): List<Virksomhetsoversikt> {
         val start = System.currentTimeMillis()
-        val sykefravær = sykefraværsstatistikkSiste4KvartalRepository.søkEtterVirksomheter(søkeparametere = søkeparametere)
+        val sykefravær = virksomhetsinformasjonRepository.søkEtterVirksomheter(søkeparametere = søkeparametere)
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
         return sykefravær.map {
@@ -81,22 +81,22 @@ class SykefraværsstatistikkService(
         else -> ansesSomAvsluttet()
     }
 
-    fun hentTotaltAntallTreff(søkeparametere: Søkeparametere) =
-        sykefraværsstatistikkSiste4KvartalRepository.hentTotaltAntallForSøk(søkeparametere)
+    fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere) =
+        virksomhetsinformasjonRepository.hentTotaltAntallVirksomheter(søkeparametere)
             .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
 
-    fun hentSykefraværForVirksomhetSiste4Kvartaler(orgnr: String): List<SykefraversstatistikkForVirksomhetSiste4Kvartaler> {
+    fun hentSykefraværForVirksomhet(orgnr: String): List<Virksomhetsdetaljer> {
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhet =
-            sykefraværsstatistikkSiste4KvartalRepository.hentSykefraværForVirksomhetSiste4Kvartaler(orgnr = orgnr)
+            virksomhetsinformasjonRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhet
     }
 
-    fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnr: String): Either<Feil, SykefraversstatistikkVirksomhetSisteKvartal> {
+    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhetSisteKvartal = sykefraversstatistikkRepository.hentSisteSykefraværForVirksomhet(orgnr = orgnr)
+        val sykefraværForVirksomhetSisteKvartal = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhetSisteKvartal?.right() ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
