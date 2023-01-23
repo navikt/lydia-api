@@ -280,7 +280,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         maskert
                   FROM sykefravar_statistikk_virksomhet
                   WHERE (orgnr = :orgnr)
-                  ORDER BY arstall, kvartal DESC
+                  ORDER BY arstall DESC, kvartal DESC
                   LIMIT 1
                 """.trimIndent(),
                 paramMap = mapOf(

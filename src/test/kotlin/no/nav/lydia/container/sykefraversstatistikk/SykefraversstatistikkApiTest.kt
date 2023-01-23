@@ -86,17 +86,16 @@ class SykefraversstatistikkApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
 
 
-
     @Test
     fun `skal kunne filtrere sykefraværsstatistikk på sektor`() {
         lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(), sektor = SEKTOR_KOMMUNAL_FORVALTNING)
         val sykefraværstatistikkKommunalSektor = hentSykefravær(sektor = SEKTOR_KOMMUNAL_FORVALTNING).data
         sykefraværstatistikkKommunalSektor.size shouldBeGreaterThan 0
         sykefraværstatistikkKommunalSektor.forAll { sykefraværstatistikk ->
-           hentVirksomhetsinformasjon(
-               orgnummer = sykefraværstatistikk.orgnr,
-               token = mockOAuth2Server.saksbehandler1.token
-           ).sektor shouldBe Sektor.KOMMUNAL.beskrivelse
+            hentVirksomhetsinformasjon(
+                orgnummer = sykefraværstatistikk.orgnr,
+                token = mockOAuth2Server.saksbehandler1.token
+            ).sektor shouldBe Sektor.KOMMUNAL.beskrivelse
         }
 
         hentTotaltAntallTreffISykefravær(sektor = SEKTOR_KOMMUNAL_FORVALTNING) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
@@ -104,17 +103,27 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk fra siste tilgjengelige kvartal`() {
-        val orgnummer = nyttOrgnummer()
+        val virksomhet = nyVirksomhet()
+        lastInnTestdata(
+            TestData().lagData(
+                virksomhet = virksomhet,
+                perioder = listOf(Periode.gjeldendePeriode(),
+                    Periode.forrigePeriode(),
+                    Periode(kvartal = 4, årstall = 2019)),
+            )
+        )
         val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
             """select sykefraversprosent from sykefravar_statistikk_virksomhet 
-                where orgnr='$orgnummer' 
+                where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${Periode.gjeldendePeriode().kvartal}
                 and arstall=${Periode.gjeldendePeriode().årstall}
                 """.trimMargin()
         )
 
         val result =
-            hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = orgnummer)
+            hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
+        result.arstall shouldBe Periode.gjeldendePeriode().årstall
+        result.kvartal shouldBe Periode.gjeldendePeriode().kvartal
         result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
@@ -510,7 +519,8 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(success = { response1 ->
             response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
-            val faktiskTotal = postgresContainer.hentEnkelKolonne<Int>("SELECT count(*) AS faktiskTotal FROM virksomhet")
+            val faktiskTotal =
+                postgresContainer.hentEnkelKolonne<Int>("SELECT count(*) AS faktiskTotal FROM virksomhet")
             VIRKSOMHETER_PER_SIDE shouldBeLessThanOrEqual faktiskTotal
 
             hentSykefravær(success = { response2 ->
