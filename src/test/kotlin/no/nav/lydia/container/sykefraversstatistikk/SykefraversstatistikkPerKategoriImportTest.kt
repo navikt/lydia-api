@@ -1,7 +1,7 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import io.kotest.assertions.json.shouldEqualJson
-import io.kotest.matchers.comparables.shouldNotBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
@@ -10,6 +10,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.LAND
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
+import java.sql.Timestamp
 import kotlin.test.Test
 
 class SykefraversstatistikkPerKategoriImportTest {
@@ -23,15 +24,19 @@ class SykefraversstatistikkPerKategoriImportTest {
             KafkaContainerHelper.statistikkVirksomhetTopic,
             Kafka.statistikkPerKategoriGroupId)
 
-        val rs = postgresContainer.performQuery(
+        postgresContainer.hentEnkelKolonne<String>(sql =
             """
-                select * from sykefravar_statistikk_virksomhet_siste_4_kvartal
+                select orgnr from sykefravar_statistikk_virksomhet_siste_4_kvartal
                 where orgnr = '999999999'
             """.trimIndent()
-        )
-        rs.row shouldBe 1
-        rs.getString("orgnr") shouldBe "999999999"
-        rs.getString("kvartaler") shouldEqualJson """[
+        ) shouldBe "999999999"
+
+        postgresContainer.hentEnkelKolonne<String>(sql =
+            """
+                select kvartaler::text from sykefravar_statistikk_virksomhet_siste_4_kvartal
+                where orgnr = '999999999'
+            """.trimIndent()
+        ) shouldEqualJson """[
             {
               "årstall": 2021,
               "kvartal": 2
@@ -53,34 +58,26 @@ class SykefraversstatistikkPerKategoriImportTest {
 
     @Test
     fun `vi oppdaterer sykefraværsstatistikk for virksomhet siste 4 kvartaler`() {
+        val hentSistEndretSql = """
+                select sist_endret from sykefravar_statistikk_virksomhet_siste_4_kvartal
+                where orgnr = '999999999'
+            """.trimIndent()
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(VIRKSOMHET, "999999999"),
             jsonValue(VIRKSOMHET, "999999999"),
             KafkaContainerHelper.statistikkVirksomhetTopic,
             Kafka.statistikkPerKategoriGroupId)
 
-        val rs = postgresContainer.performQuery(
-            """
-                select * from sykefravar_statistikk_virksomhet_siste_4_kvartal
-                where orgnr = '999999999'
-            """.trimIndent()
-        )
+        val førstSkrevet = postgresContainer.hentEnkelKolonne<Timestamp>(sql = hentSistEndretSql)
 
-        val førstSkrevet = rs.getDate("sist_endret")
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(VIRKSOMHET, "999999999"),
             jsonValue(VIRKSOMHET, "999999999"),
             KafkaContainerHelper.statistikkVirksomhetTopic,
             Kafka.statistikkPerKategoriGroupId)
-        val oppdatertResultset = postgresContainer.performQuery(
-            """
-                select * from sykefravar_statistikk_virksomhet_siste_4_kvartal
-                where orgnr = '999999999'
-            """.trimIndent()
-        )
-        val oppdatertDato = oppdatertResultset.getDate("sist_endret")
+        val oppdatertDato = postgresContainer.hentEnkelKolonne<Timestamp>(sql = hentSistEndretSql)
 
-        oppdatertDato shouldNotBeGreaterThan førstSkrevet
+        oppdatertDato shouldBeGreaterThan førstSkrevet
     }
 
     @Test
@@ -91,15 +88,18 @@ class SykefraversstatistikkPerKategoriImportTest {
             KafkaContainerHelper.statistikkLandTopic,
             Kafka.statistikkPerKategoriGroupId)
 
-        val rs = postgresContainer.performQuery(
+        postgresContainer.hentEnkelKolonne<String>(
             """
-                select * from sykefravar_statistikk_kategori_siste_4_kvartal
+                select kode from sykefravar_statistikk_kategori_siste_4_kvartal
                 where kode = 'NO' and kategori = 'LAND'
             """.trimIndent()
-        )
-        rs.row shouldBe 1
-        rs.getString("kode") shouldBe "NO"
-        rs.getString("kategori") shouldBe "LAND"
+        )  shouldBe "NO"
+        postgresContainer.hentEnkelKolonne<String>(
+            """
+                select kategori from sykefravar_statistikk_kategori_siste_4_kvartal
+                where kode = 'NO' and kategori = 'LAND'
+            """.trimIndent()
+        )  shouldBe "LAND"
     }
 }
 

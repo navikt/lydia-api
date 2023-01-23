@@ -27,12 +27,10 @@ class BrregDownloaderTest {
     val postgres = PostgrestContainerHelper()
 
     init {
-        postgres.getDataSource().use { dataSource ->
-            NæringsDownloader(
-                url = naisEnvironment.integrasjoner.ssbNæringsUrl,
-                næringsRepository = NæringsRepository(dataSource = dataSource)
-            ).lastNedNæringer()
-        }
+        NæringsDownloader(
+            url = naisEnvironment.integrasjoner.ssbNæringsUrl,
+            næringsRepository = NæringsRepository(dataSource = postgres.dataSource)
+        ).lastNedNæringer()
     }
 
     @AfterTest
@@ -46,21 +44,20 @@ class BrregDownloaderTest {
         withTestApplication({
             lydiaRestApi(
                 naisEnvironment = naisEnvironment,
-                dataSource = postgres.getDataSource()
+                dataSource = postgres.dataSource
             )
         }) {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
 
-                val resultSetFlereAdresser =
-                    postgres.performQuery("select * from virksomhet where orgnr = '${OSLO_FLERE_ADRESSER.orgnr}'")
-                resultSetFlereAdresser.row shouldBe 1
-                (resultSetFlereAdresser.getArray("adresse").array as? Array<out Any?>)
+                val adresser =
+                    postgres.hentEnkelKolonne<java.sql.Array>("select adresse from virksomhet where orgnr = '${OSLO_FLERE_ADRESSER.orgnr}'")
+                (adresser.array as? Array<out Any?>)
                     ?.filterIsInstance<String>() shouldContainExactly OSLO_FLERE_ADRESSER.beliggenhet?.adresse!!
 
-                val resultSetManglerAdresser =
-                    postgres.performQuery("select * from virksomhet where orgnr = '${OSLO_MANGLER_ADRESSER.orgnr}'")
-                resultSetManglerAdresser.row shouldBe 1
+                val manglerAdresser =
+                    postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${OSLO_MANGLER_ADRESSER.orgnr}'")
+                manglerAdresser shouldBe 1
             }
         }
     }
@@ -70,43 +67,35 @@ class BrregDownloaderTest {
         withTestApplication({
             lydiaRestApi(
                 naisEnvironment = naisEnvironment,
-                dataSource = postgres.getDataSource()
+                dataSource = postgres.dataSource
             )
         }) {
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
 
-                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '${BERGEN.orgnr}'")
-                resultSet.row shouldBe 1
+                val id = postgres.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${BERGEN.orgnr}'")
 
-                val id = resultSet.getLong("id")
+                val næringsKode =
+                    postgres.hentEnkelKolonne<String>("select narings_kode from virksomhet_naring where virksomhet = '$id'")
+                næringsKode shouldBe BEDRIFTSRÅDGIVNING.kode
 
+                val antallUtenPostnummer =
+                    postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${UTENLANDSK.orgnr}'")
+                antallUtenPostnummer shouldBe 0
 
-                val resultSetFraVirksomhetNæring =
-                    postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
-                resultSetFraVirksomhetNæring.row shouldBe 1
-                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe BEDRIFTSRÅDGIVNING.kode
-
-                val resultSetUtenPostnummer =
-                    postgres.performQuery("select * from virksomhet where orgnr = '${UTENLANDSK.orgnr}'")
-                resultSetUtenPostnummer.row shouldBe 0
-
-                val resultSetUtenBeliggenhetsadresse =
-                    postgres.performQuery("select * from virksomhet where orgnr = '${MANGLER_BELIGGENHETSADRESSE.orgnr}'")
-                resultSetUtenBeliggenhetsadresse.row shouldBe 0
+                val antallUtenBeliggenhetsadresse =
+                    postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${MANGLER_BELIGGENHETSADRESSE.orgnr}'")
+                antallUtenBeliggenhetsadresse shouldBe 0
             }
 
             // sjekk at næringer blir populert på nytt ved ny import av virksomheter
             postgres.performUpdate("delete from virksomhet_naring")
             with(handleRequest(HttpMethod.Get, VIRKSOMHETSIMPORT_PATH)) {
                 this.response.status() shouldBe OK
-                val resultSet = postgres.performQuery("select id from virksomhet where orgnr = '${BERGEN.orgnr}'")
-                resultSet.row shouldBe 1
-                val id = resultSet.getLong("id")
-                val resultSetFraVirksomhetNæring =
-                    postgres.performQuery("select * from virksomhet_naring where virksomhet = '$id'")
-                resultSetFraVirksomhetNæring.row shouldBe 1
-                resultSetFraVirksomhetNæring.getString("narings_kode") shouldBe BEDRIFTSRÅDGIVNING.kode
+                val id = postgres.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${BERGEN.orgnr}'")
+                val næringsKode =
+                    postgres.hentEnkelKolonne<String>("select narings_kode from virksomhet_naring where virksomhet = '$id'")
+                næringsKode shouldBe BEDRIFTSRÅDGIVNING.kode
             }
         }
     }

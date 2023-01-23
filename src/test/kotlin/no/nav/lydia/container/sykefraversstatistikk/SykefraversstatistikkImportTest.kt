@@ -1,6 +1,5 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
-import arrow.core.Either
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
@@ -29,7 +28,6 @@ import no.nav.lydia.helper.lagSykefraversstatistikkPerKategoriImportDto
 import no.nav.lydia.helper.lagSykefraværsstatistikkImportDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
-import java.sql.ResultSet
 import kotlin.test.Test
 
 class SykefraversstatistikkImportTest {
@@ -117,10 +115,10 @@ class SykefraversstatistikkImportTest {
     fun `vi lagrer metadata ved import`() {
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
 
-        val rs =
-            postgres.performQuery("SELECT * FROM virksomhet_statistikk_metadata WHERE orgnr = '${TESTVIRKSOMHET_FOR_IMPORT.orgnr}'")
+        val antallMetadata =
+            postgres.hentEnkelKolonne<Int>("SELECT count(*) FROM virksomhet_statistikk_metadata WHERE orgnr = '${TESTVIRKSOMHET_FOR_IMPORT.orgnr}'")
 
-        rs.row shouldBe 1
+        antallMetadata shouldBeGreaterThanOrEqual 1
     }
 
     @Test
@@ -139,7 +137,7 @@ class SykefraversstatistikkImportTest {
             it.antallPersoner shouldBe 100
             it.tapteDagsverk shouldBe 20.0
         }
-        hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet, "endret").getOrNull("endret").shouldBeNull()
+        hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet, "endret").shouldBeNull()
 
         val opppdatertStatistikk = lagSykefraværsstatistikkImportDto(
             orgnr = virksomhet.orgnr,
@@ -165,7 +163,7 @@ class SykefraversstatistikkImportTest {
             it.tapteDagsverk shouldBe 16.0
         }
 
-        hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet, "endret").getOrNull("endret").shouldNotBeNull()
+        hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet, "endret").shouldNotBeNull()
     }
 
     @Test
@@ -229,17 +227,17 @@ class SykefraversstatistikkImportTest {
         kolonne: String,
         kode: String,
         periode: Periode
-    ) = postgres.performQuery("""
+    ) = postgres.hentEnkelKolonne<Any?>("""
             select $kolonne
             from $tabell
             where $kolonne = '$kode' and
             arstall = ${periode.årstall} and
             kvartal = ${periode.kvartal}
-        """.trimIndent()).getOrNull(kolonne)
+        """.trimIndent())
 
 
     private fun hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet: TestVirksomhet, kolonneNavn: String) =
-        postgres.performQuery(
+        postgres.hentEnkelKolonne<Any?>(
             """
                 select $kolonneNavn from sykefravar_statistikk_virksomhet 
                 where 
@@ -248,8 +246,4 @@ class SykefraversstatistikkImportTest {
                 kvartal = ${Periode.gjeldendePeriode().kvartal}
             """.trimIndent()
         )
-
-    private fun ResultSet.getOrNull(columnLabel: String): Any? = Either.catch {
-        this.getObject(columnLabel)
-    }.orNull()
 }

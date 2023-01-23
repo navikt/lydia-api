@@ -105,7 +105,7 @@ class TestContainerHelper {
 
         val brregOppdateringContainer = PiaBrregOppdateringContainerHelper(network = network, log = log, httpMock = httpMock)
 
-        private val dataSource = postgresContainer.getDataSource()
+        private val dataSource = postgresContainer.nyDataSource()
         val næringsRepository = NæringsRepository(dataSource = dataSource)
         val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
 

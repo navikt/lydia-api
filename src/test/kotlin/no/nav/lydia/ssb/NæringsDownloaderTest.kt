@@ -19,14 +19,12 @@ class NæringsDownloaderTest {
 
     @Test
     fun `kan laste ned og hente ut næringer`() {
-        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.getDataSource()) }) {
+        withTestApplication({ lydiaRestApi(naisEnvironment = naisEnvironment, dataSource = postgres.dataSource) }) {
             with(handleRequest(HttpMethod.Get, NÆRINGSIMPORT_URL)) {
                 this.response.status() shouldBe HttpStatusCode.OK
 
-                val rs = postgres.performQuery("select * from naring where kode = '${SCENEKUNST.kode}'")
-                rs.row shouldBe 1
-                rs.getString("navn") shouldBe SCENEKUNST.navn
-                rs.getString("kort_navn") shouldBe "Kortnavn for ${SCENEKUNST.kode}"
+                postgres.hentEnkelKolonne<String>("select navn from naring where kode = '${SCENEKUNST.kode}'") shouldBe SCENEKUNST.navn
+                postgres.hentEnkelKolonne<String>("select kort_navn from naring where kode = '${SCENEKUNST.kode}'") shouldBe "Kortnavn for ${SCENEKUNST.kode}"
             }
         }
     }

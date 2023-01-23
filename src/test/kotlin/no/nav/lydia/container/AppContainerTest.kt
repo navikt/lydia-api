@@ -34,7 +34,7 @@ class AppContainerTest {
 
     @Test
     fun `lydia skal ha satt opp databasen`() {
-        val resultSet = postgresContainer.performQuery(
+        val databaseErSattOpp = postgresContainer.hentEnkelKolonne<Boolean>(
             """
             SELECT EXISTS(
                 SELECT * 
@@ -44,8 +44,7 @@ class AppContainerTest {
                 )
         """.trimIndent()
         )
-        val result = resultSet.getBoolean(1)
-        result.shouldBeTrue()
+        databaseErSattOpp.shouldBeTrue()
     }
 
     @Test

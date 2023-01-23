@@ -78,7 +78,6 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
-import java.sql.ResultSet
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -106,13 +105,13 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne hente sykefraværsstatistikk fra siste tilgjengelige kvartal`() {
         val orgnummer = nyttOrgnummer()
-        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.performQuery(
+        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
             """select sykefraversprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='$orgnummer' 
                 and kvartal=${Periode.gjeldendePeriode().kvartal}
                 and arstall=${Periode.gjeldendePeriode().årstall}
                 """.trimMargin()
-        ).getDouble("sykefraversprosent")
+        )
 
         val result =
             hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = orgnummer)
@@ -128,13 +127,13 @@ class SykefraversstatistikkApiTest {
                 perioder = listOf(Periode.forrigePeriode()), // uten siste periode
             )
         )
-        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.performQuery(
+        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
             """select sykefraversprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${Periode.forrigePeriode().kvartal}
                 and arstall=${Periode.forrigePeriode().årstall}
                 """.trimMargin()
-        ).getDouble("sykefraversprosent")
+        )
 
         val result =
             hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
@@ -190,9 +189,9 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal få sykefraværsstatistikk for siste fire kvartal`() {
         val orgnummer = nyttOrgnummer()
-        val sykefraværsprosentSiste4Kvartal = postgresContainer.performQuery(
+        val sykefraværsprosentSiste4Kvartal = postgresContainer.hentEnkelKolonne<Double>(
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
-        ).getDouble("prosent")
+        )
 
         hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).forAtLeastOne {
             it.sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
@@ -284,9 +283,11 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { testVirksomhet ->
-                testVirksomhet.matcher {
-                    it.getString("kommune") shouldBe BERGEN.beliggenhet?.kommune
-                    it.getString("kommunenummer") shouldStartWith fylkesnummer
+                testVirksomhet.matcher<String>(kolonne = "kommune") {
+                    it shouldBe BERGEN.beliggenhet?.kommune
+                }
+                testVirksomhet.matcher<String>(kolonne = "kommunenummer") {
+                    it shouldStartWith fylkesnummer
                 }
             }
         }, fylker = fylkesnummer)
@@ -302,8 +303,8 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
-                    dto.matcher {
-                        it.getString("kommunenummer") shouldBeIn alleKommunenummerIØstViken
+                    dto.matcher<String>(kolonne = "kommunenummer") {
+                        it shouldBeIn alleKommunenummerIØstViken
                     }
                 }
             }
@@ -319,8 +320,8 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
-                    dto.matcher {
-                        it.getString("kommunenummer") shouldBe INDRE_ØSTFOLD.nummer
+                    dto.matcher<String>(kolonne = "kommunenummer") {
+                        it shouldBe INDRE_ØSTFOLD.nummer
                     }
                 }
             }
@@ -339,8 +340,8 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
-                    dto.matcher {
-                        it.getString("kommunenummer") shouldBe LUNNER.nummer
+                    dto.matcher<String>(kolonne = "kommunenummer") {
+                        it shouldBe LUNNER.nummer
                     }
                 }
             }
@@ -357,8 +358,8 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 response.data.size shouldBeGreaterThan 0
                 response.data.forAll { dto ->
-                    dto.matcher {
-                        it.getString("kommunenummer").substring(0..1) shouldBeIn setOf("30", "03")
+                    dto.matcher<String>(kolonne = "kommunenummer") {
+                        it.substring(0..1) shouldBeIn setOf("30", "03")
                     }
                 }
             }
@@ -374,8 +375,8 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(success = { response ->
             response.data.forAll { dto ->
                 setOf("46", "03").forAtLeastOne { fylke ->
-                    dto.matcher {
-                        it.getString("kommunenummer").substring(0..1) shouldBe fylke
+                    dto.matcher<String>(kolonne = "kommunenummer") {
+                        it.substring(0..1) shouldBe fylke
                     }
                 }
             }
@@ -386,12 +387,12 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente alle virksomheter i en gitt næring`() {
         hentSykefravær(success = { response ->
             response.data.forAll {
-                postgresContainer.performQuery(
+                postgresContainer.hentEnkelKolonne<Int>(
                     """
-                        SELECT * FROM virksomhet AS v JOIN virksomhet_naring AS vn ON (v.id = vn.virksomhet)
+                        SELECT count(*) FROM virksomhet AS v JOIN virksomhet_naring AS vn ON (v.id = vn.virksomhet)
                         WHERE v.orgnr = '${it.orgnr}' AND vn.narings_kode = '${SCENEKUNST.kode}'
                     """.trimIndent()
-                ).row shouldBe 1
+                ) shouldBeGreaterThanOrEqual 1
             }
         }, næringsgrupper = SCENEKUNST.kode)
     }
@@ -422,8 +423,8 @@ class SykefraversstatistikkApiTest {
                 response.data shouldHaveAtLeastSize 1
                 response.data.forAll { dto ->
                     listOf(oslo, nordreFollo).forAtLeastOne { knr ->
-                        dto.matcher {
-                            it.getString("kommunenummer") shouldBe knr
+                        dto.matcher<String>(kolonne = "kommunenummer") {
+                            it shouldBe knr
                         }
                     }
                 }
@@ -509,8 +510,7 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(success = { response1 ->
             response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
-            val faktiskTotal = postgresContainer.performQuery("SELECT count(*) AS faktiskTotal FROM virksomhet")
-                .getInt("faktiskTotal")
+            val faktiskTotal = postgresContainer.hentEnkelKolonne<Int>("SELECT count(*) AS faktiskTotal FROM virksomhet")
             VIRKSOMHETER_PER_SIDE shouldBeLessThanOrEqual faktiskTotal
 
             hentSykefravær(success = { response2 ->
@@ -855,7 +855,8 @@ class SykefraversstatistikkApiTest {
     }
 }
 
-private fun VirksomhetsoversiktDto.matcher(block: (rs: ResultSet) -> Unit) {
-    val rs = postgresContainer.performQuery("select * from virksomhet where orgnr = '$orgnr'")
-    block(rs)
+private fun <T> VirksomhetsoversiktDto.matcher(kolonne: String, test: (kolonne: T) -> Unit) {
+    test(
+        postgresContainer.hentEnkelKolonne<T>("select $kolonne from virksomhet where orgnr = '$orgnr'")
+    )
 }

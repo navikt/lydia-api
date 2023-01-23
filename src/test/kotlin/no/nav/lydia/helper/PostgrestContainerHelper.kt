@@ -2,6 +2,7 @@ package no.nav.lydia.helper
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.kotest.matchers.shouldBe
 import no.nav.lydia.runMigration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -9,8 +10,6 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
-import java.sql.ResultSet
-import java.sql.Statement
 
 class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(PostgrestContainerHelper::class.java)) {
     private val postgresNetworkAlias = "postgrescontainer"
@@ -29,7 +28,9 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
                 start()
             }
 
-    fun getDataSource() =
+    val dataSource = nyDataSource()
+
+    fun nyDataSource() =
         HikariDataSource(HikariConfig().apply {
             jdbcUrl = postgresContainer.jdbcUrl
             username = postgresContainer.username
@@ -41,19 +42,22 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
             }
         }
 
-    fun performQuery(sql: String): ResultSet {
-        getDataSource().use { dataSource ->
-            val statement: Statement = dataSource.connection.createStatement()
+    fun <T> hentEnkelKolonne(sql: String): T {
+        dataSource.connection.use { connection ->
+            val statement = connection.createStatement()
             statement.execute(sql)
-            val resultSet: ResultSet = statement.resultSet
-            resultSet.next()
-            return resultSet
+            val rs = statement.resultSet
+            rs.next()
+            rs.row shouldBe 1
+            return rs.getObject(1) as T
         }
     }
-    fun performUpdate(sql: String){
-        getDataSource().use { dataSource ->
-            val statement: Statement = dataSource.connection.createStatement()
-            statement.execute(sql)
+
+    fun performUpdate(sql: String) {
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                statement.execute(sql)
+            }
         }
     }
 
