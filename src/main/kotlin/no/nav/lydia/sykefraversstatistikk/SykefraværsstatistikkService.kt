@@ -14,7 +14,7 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
-import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsdetaljer
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
@@ -85,13 +85,13 @@ class SykefraværsstatistikkService(
         virksomhetsinformasjonRepository.hentTotaltAntallVirksomheter(søkeparametere)
             .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
 
-    fun hentSykefraværForVirksomhet(orgnr: String): List<Virksomhetsdetaljer> {
+    fun hentSykefraværForVirksomhetSiste4Kvartal(orgnr: String): Either<Feil, VirksomhetsstatistikkSiste4Kvartal> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhet =
-            virksomhetsinformasjonRepository.hentSykefraværForVirksomhet(orgnr = orgnr)
+        val sykefraværForVirksomhetSiste4Kvartal =
+            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSiste4Kvartal(orgnr = orgnr)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
-        return sykefraværForVirksomhet
+        return sykefraværForVirksomhetSiste4Kvartal?.right() ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
     fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
