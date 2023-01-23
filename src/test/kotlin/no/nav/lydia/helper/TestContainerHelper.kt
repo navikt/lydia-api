@@ -422,7 +422,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer/$SISTE_4_KVARTALER")
                 .authentication().bearer(token)
-                .tilListeRespons<VirksomhetsdetaljerDto>()
+                .tilSingelRespons<VirksomhetsstatistikkSiste4KvartalDto>()
 
         fun hentGjeldendePeriodeForSiste4KvartalerRespons(
             token: String = oauth2ServerContainer.saksbehandler1.token

@@ -13,8 +13,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
-import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
-import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsdetaljer
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
@@ -230,37 +229,25 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         session.run(query.map { it.int("total") }.asSingle)
     }
 
-    fun hentSykefraværForVirksomhet(orgnr: String): List<Virksomhetsdetaljer> {
+    fun hentVirksomhetsstatistikkSiste4Kvartal(orgnr: String): VirksomhetsstatistikkSiste4Kvartal? {
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
                     SELECT
-                        statistikk_siste4.orgnr,
-                        virksomhet.navn,
-                        virksomhet.kommune,
-                        virksomhet.kommunenummer,
-                        statistikk.arstall,
-                        statistikk.kvartal,
-                        statistikk.antall_personer,
-                        statistikk_siste4.tapte_dagsverk,
-                        statistikk_siste4.mulige_dagsverk,
-                        statistikk_siste4.prosent,
-                        statistikk_siste4.maskert,
-                        statistikk_siste4.sist_endret,
-                        statistikk_siste4.antall_kvartaler,
-                        statistikk_siste4.kvartaler,
-                        ia_sak.status,
-                        ia_sak.eid_av,
-                        ia_sak.endret
-                  FROM sykefravar_statistikk_virksomhet AS statistikk
-                  JOIN virksomhet USING (orgnr)
-                  LEFT JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
-                  LEFT JOIN ia_sak USING(orgnr)
-                  WHERE (statistikk.orgnr = :orgnr)
+                        orgnr,
+                        tapte_dagsverk,
+                        mulige_dagsverk,
+                        prosent,
+                        maskert,
+                        sist_endret,
+                        antall_kvartaler,
+                        kvartaler
+                  FROM sykefravar_statistikk_virksomhet_siste_4_kvartal
+                  WHERE (orgnr = :orgnr)
                 """.trimIndent(), paramMap = mapOf(
                     "orgnr" to orgnr
                 )
-            ).map(this::mapRowToDetaljer).asList
+            ).map(this::mapRowToSiste4Kvartal).asSingle
             session.run(query)
         }
     }
@@ -321,25 +308,15 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         )
     }
 
-    private fun mapRowToDetaljer(row: Row): Virksomhetsdetaljer {
+    private fun mapRowToSiste4Kvartal(row: Row): VirksomhetsstatistikkSiste4Kvartal {
         val kvartalListeType = object : TypeToken<List<Kvartal>>() {}.type
-        return Virksomhetsdetaljer(
-            virksomhetsnavn = row.string("navn"),
-            kommune = Kommune(row.string("kommune"), row.string("kommunenummer")),
+        return VirksomhetsstatistikkSiste4Kvartal(
             orgnr = row.string("orgnr"),
-            arstall = row.int("arstall"),
-            kvartal = row.int("kvartal"),
-            antallPersoner = row.double("antall_personer"),
             tapteDagsverk = row.doubleOrNull("tapte_dagsverk") ?: 0.0,
             muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
             sykefraversprosent = row.doubleOrNull("prosent") ?: 0.0,
             maskert = row.boolean("maskert"),
             opprettet = row.localDateTime("sist_endret"),
-            status = row.stringOrNull("status")?.let {
-                IAProsessStatus.valueOf(it)
-            },
-            eidAv = row.stringOrNull("eid_av"),
-            sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate(),
             antallKvartaler = row.int("antall_kvartaler"),
             kvartaler = gson.fromJson(row.string("kvartaler"), kvartalListeType),
         )

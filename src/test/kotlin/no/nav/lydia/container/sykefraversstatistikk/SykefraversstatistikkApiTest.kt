@@ -6,7 +6,6 @@ import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeIn
-import io.kotest.matchers.collections.shouldBeOneOf
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -153,8 +152,7 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente sykefraværsstatistikk for en enkelt virksomhet`() {
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr)
-            .also { it.size shouldBeGreaterThanOrEqual 1 }
-            .forEach {
+            .also {
                 it.orgnr shouldBe orgnr
             }
     }
@@ -162,12 +160,8 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift for de siste 4 kvartaler`() {
         val orgnr = BERGEN.orgnr
-        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr)
-            .also { it.size shouldBeGreaterThanOrEqual 1 }
-            .forEach {
+        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr).also {
                 it.orgnr shouldBe orgnr
-                it.kvartal shouldBeOneOf listOf(1, 2, 3, 4)
-                it.kommune.navn shouldBe BERGEN.beliggenhet?.kommune
                 it.antallKvartaler shouldBe 2
                 it.kvartaler.size shouldBe 2
                 it.kvartaler[0].kvartal shouldBe Periode.gjeldendePeriode().kvartal
@@ -202,9 +196,7 @@ class SykefraversstatistikkApiTest {
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
         )
 
-        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).forAtLeastOne {
-            it.sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
-        }
+        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
     }
 
     @Test
