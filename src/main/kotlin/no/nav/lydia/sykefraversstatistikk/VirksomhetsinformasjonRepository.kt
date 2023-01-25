@@ -239,7 +239,6 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         mulige_dagsverk,
                         prosent,
                         maskert,
-                        sist_endret,
                         antall_kvartaler,
                         kvartaler
                   FROM sykefravar_statistikk_virksomhet_siste_4_kvartal
