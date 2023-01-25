@@ -240,6 +240,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         prosent,
                         maskert,
                         antall_kvartaler,
+                        sist_endret,
                         kvartaler
                   FROM sykefravar_statistikk_virksomhet_siste_4_kvartal
                   WHERE (orgnr = :orgnr)
