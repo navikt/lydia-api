@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
@@ -24,6 +25,7 @@ import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "hendelse"
 val SAMARBEIDSHISTORIKK_PATH = "historikk"
+val IA_SAK_LEVERANSE_PATH = "leveranser"
 
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
@@ -126,6 +128,27 @@ fun Route.iaSakRådgiver(
             }
         }
     }
+
+    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{saksnummer}") {
+        val saksnummer = call.parameters["saksnummer"] ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+           iaSakService.hentIaSak(saksnummer = saksnummer)
+        }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = it.getOrElse { null }?.orgnr,
+                auditType = AuditType.update,
+                saksnummer = saksnummer
+            )
+        }.flatMap {
+            iaSakService.hentLeveranser(saksnummer = it.saksnummer)
+        }.map {
+            call.respond(it.tilDto())
+        }.mapLeft {
+            call.respond(message = it.feilmelding, status = it.httpStatusCode)
+        }
+    }
 }
 
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode) {
@@ -143,7 +166,10 @@ object IASakError {
     val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
     val `fikk ikke slettet sak` = Feil("Fikk ikke slettet sak", HttpStatusCode.InternalServerError)
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
+    val `ugyldig saksnummer` = Feil("Ugyldig saksnummer", HttpStatusCode.BadRequest)
     val `det finnes flere saker på dette orgnummeret som ikke anses som avsluttet` = Feil(
         "Det finnes flere saker på dette orgnummeret som ikke anses som avsluttet", HttpStatusCode.NotImplemented
     )
+
+    val `generell feil under uthenting` = Feil("Generell feil under uthenting", HttpStatusCode.InternalServerError)
 }

@@ -28,6 +28,7 @@ import no.nav.lydia.ia.eksport.*
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
+import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
@@ -235,6 +236,7 @@ fun Application.lydiaRestApi(
                 iaSakService = IASakService(
                     iaSakRepository = iaSakRepository,
                     iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+                    iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ).apply {
                     iaSakshendelseProdusent?.also { leggTilIASakshendelseObserver(it) }
