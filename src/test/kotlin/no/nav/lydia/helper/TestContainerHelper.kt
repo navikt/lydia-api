@@ -147,6 +147,11 @@ class SakHelper {
                 .authentication().bearer(token = token)
                 .tilListeRespons<IASakDto>()
 
+        fun hentIASakLeveranser(saksnummer: String, token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$saksnummer")
+                .authentication().bearer(token = token)
+                .tilListeRespons<IASakLeveranseDto>()
+
         fun hentSamarbeidshistorikk(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token

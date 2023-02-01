@@ -3,12 +3,14 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
+import arrow.core.right
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -23,6 +25,7 @@ import no.nav.lydia.tilgangskontroll.Rådgiver
 class IASakService(
     private val iaSakRepository: IASakRepository,
     private val iaSakshendelseRepository: IASakshendelseRepository,
+    private val iaSakLeveranseRepository: IASakLeveranseRepository,
     private val årsakService: ÅrsakService,
     private val iaSakshendelseObservers: MutableList<Observer<IASakshendelse>> = mutableListOf(),
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
@@ -111,5 +114,15 @@ class IASakService(
 
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> =
         iaSakshendelseRepository.hentHendelserForOrgnummer(orgnr = orgnr)
+
+    fun hentIaSak(saksnummer: String) =
+        iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
+
+    fun hentLeveranser(saksnummer: String) =
+        try {
+            iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = saksnummer).right()
+        } catch (e: Exception) {
+            IASakError.`generell feil under uthenting`.left()
+        }
 
 }
