@@ -4,10 +4,10 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.Aktivitet
+import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.LeveranseStatus
-import no.nav.lydia.ia.sak.domene.Område
+import no.nav.lydia.ia.sak.domene.IATjeneste
 import javax.sql.DataSource
 
 class IASakLeveranseRepository (val dataSource: DataSource) {
@@ -42,9 +42,9 @@ class IASakLeveranseRepository (val dataSource: DataSource) {
         IASakLeveranse(
             id = row.int("id"),
             saksnummer = row.string("saksnummer"),
-            aktivitet = Aktivitet(
+            modul = Modul(
                 id = row.int("aktivitetsId"),
-                område = Område(
+                iaTjeneste = IATjeneste(
                     id = row.int("omraadeId"),
                     navn = row.string("omraadeNavn")
                 ),
