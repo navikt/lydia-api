@@ -21,6 +21,8 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSa
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.tilgangskontroll.Rådgiver
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class IASakService(
     private val iaSakRepository: IASakRepository,
@@ -30,6 +32,7 @@ class IASakService(
     private val iaSakshendelseObservers: MutableList<Observer<IASakshendelse>> = mutableListOf(),
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
 ) {
+    private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     private fun IASakshendelse.lagre() =
         iaSakshendelseRepository.lagreHendelse(this).also(::varsleIASakshendelseObservers)
@@ -122,6 +125,7 @@ class IASakService(
         try {
             iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = saksnummer).right()
         } catch (e: Exception) {
+            log.error("Noe gikk feil ved uthenting av leveranser: ${e.message}", e)
             IASakError.`generell feil under uthenting`.left()
         }
 
