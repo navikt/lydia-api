@@ -131,7 +131,7 @@ fun Route.iaSakRådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
            iaSakService.hentIaSak(saksnummer = saksnummer)
         }.also {
             auditLog.auditloggEither(
