@@ -13,7 +13,7 @@ import javax.sql.DataSource
 class IASakLeveranseRepository (val dataSource: DataSource) {
     fun hentIASakLeveranser(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
-            val sql = """"
+            val sql = """
                 select
                     iasak_leveranse.id,
                     iasak_leveranse.saksnummer,
@@ -22,15 +22,15 @@ class IASakLeveranseRepository (val dataSource: DataSource) {
                     iasak_leveranse.opprettet_av,
                     iasak_leveranse.sist_endret,
                     iasak_leveranse.sist_endret_av,
-                    aktivitet.id as aktivitetsId
-                    aktivitet.navn as aktivitetsNavn,
-                    omraade.id as omraadeId
-                    omraade.navn omraadeNavn,
+                    modul.id as modulId,
+                    modul.navn as modulNavn,
+                    ia_tjeneste.id as iaTjenesteId,
+                    ia_tjeneste.navn iaTjenesteNavn
                 from iasak_leveranse
-                join aktivitet on (iasak_leveranse.aktivitet = aktivitet.id)
-                join omraade on (aktivitet.omraade = omraade.id)
+                join modul on (iasak_leveranse.modul = modul.id)
+                join ia_tjeneste on (modul.ia_tjeneste = ia_tjeneste.id)
                 where iasak_leveranse.saksnummer = :saksnummer
-                """".trimMargin()
+            """.trimMargin()
             val query = queryOf(sql, mapOf(
                 "saksnummer" to saksnummer
             )).map(this::mapTilIASakLeveranse).asList
@@ -43,12 +43,12 @@ class IASakLeveranseRepository (val dataSource: DataSource) {
             id = row.int("id"),
             saksnummer = row.string("saksnummer"),
             modul = Modul(
-                id = row.int("aktivitetsId"),
+                id = row.int("modulId"),
                 iaTjeneste = IATjeneste(
-                    id = row.int("omraadeId"),
-                    navn = row.string("omraadeNavn")
+                    id = row.int("iaTjenesteId"),
+                    navn = row.string("iaTjenesteNavn")
                 ),
-                navn = row.string("aktivitetsNavn")
+                navn = row.string("modulNavn")
             ),
             frist = row.localDate("frist"),
             status = LeveranseStatus.valueOf(row.string("status")),
