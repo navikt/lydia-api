@@ -4,19 +4,19 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import io.ktor.http.*
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.*
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
-import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
@@ -128,5 +128,23 @@ class IASakService(
             log.error("Noe gikk feil ved uthenting av leveranser: ${e.message}", e)
             IASakError.`generell feil under uthenting`.left()
         }
+
+    fun opprettLeveranse(leveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
+        val sak = iaSakRepository.hentIASak(leveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
+        if (sak.eidAv != rådgiver.navIdent)
+            return IASakError.`ikke eier av sak`.left()
+        if (sak.status != IAProsessStatus.VI_BISTÅR)
+            return Feil(feilmelding = "Kan kun opprette leveranser på saker som er i 'Vi Bistår'", httpStatusCode = HttpStatusCode.Conflict).left()
+
+        val moduler = iaSakLeveranseRepository.hentModuler()
+        moduler.firstOrNull { it.id == leveranse.modulId } ?: return IASakError.`ugyldig modul`.left()
+
+        return try {
+            iaSakLeveranseRepository.opprettLeveranse(leveranse, rådgiver)?.right() ?: IASakError.`generell feil under uthenting`.left()
+        } catch (e: Exception) {
+            log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
+            IASakError.`generell feil under uthenting`.left()
+        }
+    }
 
 }

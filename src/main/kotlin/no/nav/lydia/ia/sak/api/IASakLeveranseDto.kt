@@ -12,17 +12,23 @@ data class IASakLeveranseDto (
     val id : Int,
     val saksnummer: String,
     val modul: Modul,
-    val frist: LocalDate?,
+    val frist: LocalDate,
     val status: LeveranseStatus
 )
 
+@Serializable
+data class IASakLeveranseOpprettelsesDto (
+    val saksnummer: String,
+    val modulId: Int,
+    val frist: LocalDate
+)
 
 fun IASakLeveranse.tilDto() =
     IASakLeveranseDto(
         id = id,
         saksnummer = saksnummer,
         modul = modul,
-        frist = frist?.toKotlinLocalDate(),
+        frist = frist.toKotlinLocalDate(),
         status = status
     )
 

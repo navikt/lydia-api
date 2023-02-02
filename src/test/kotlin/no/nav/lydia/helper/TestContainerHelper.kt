@@ -9,6 +9,7 @@ import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
@@ -236,6 +237,36 @@ class SakHelper {
                     )
                 )
         }
+
+        fun opprettLeveranse(
+            saksnummer: String,
+            frist: LocalDate,
+            modulId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH")
+                .authentication().bearer(token)
+                .jsonBody(
+                    Json.encodeToString(
+                    IASakLeveranseOpprettelsesDto(
+                        saksnummer = saksnummer,
+                        modulId = modulId,
+                        frist = frist
+                    ))
+                )
+
+        fun IASakDto.opprettLeveranse(
+            frist: LocalDate,
+            modulId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            opprettLeveranse(saksnummer = saksnummer, frist = frist, modulId = modulId, token = token)
+                .tilSingelRespons<IASakLeveranseDto>().third.fold(
+                    success = { it },
+                    failure = {
+                        fail("${it.message} ${it.response.body().asString("text/plain")}")
+                    })
+
 
         fun nyHendelsePåSak(
             sak: IASakDto,
