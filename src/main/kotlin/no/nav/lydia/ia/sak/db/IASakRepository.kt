@@ -130,7 +130,7 @@ class IASakRepository(val dataSource: DataSource) {
                     """
                     SELECT *
                     FROM ia_sak
-                    WHERE saksnummer = :saknummer
+                    WHERE saksnummer = :saksnummer
                 """.trimMargin(),
                     mapOf(
                         "saksnummer" to saksnummer,
