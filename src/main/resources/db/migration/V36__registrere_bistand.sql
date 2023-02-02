@@ -14,7 +14,7 @@ create table iasak_leveranse (
     id             serial primary key,
     saksnummer     varchar(20) not null,
     modul          integer     not null,
-    frist          date,
+    frist          date        not null,
     status         varchar     not null default 'UNDER_ARBEID',
     opprettet_av   varchar     not null,
     sist_endret    timestamp   not null default current_timestamp,
