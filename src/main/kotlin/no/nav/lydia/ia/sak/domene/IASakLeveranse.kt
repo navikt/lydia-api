@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 data class IASakLeveranse(
     val id: Int,
     val saksnummer: String,
-    val aktivitet: Aktivitet,
+    val modul: Modul,
     val frist: LocalDate,
     val status: LeveranseStatus,
     val opprettetAv: String,
@@ -20,14 +20,14 @@ enum class LeveranseStatus {
 }
 
 @Serializable
-data class Område (
+data class IATjeneste (
     val id: Int,
     val navn: String
 )
 
 @Serializable
-data class Aktivitet (
+data class Modul (
     val id: Int,
-    val område: Område,
+    val iaTjeneste: IATjeneste,
     val navn: String
 )
