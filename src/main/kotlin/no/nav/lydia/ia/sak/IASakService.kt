@@ -157,7 +157,7 @@ class IASakService(
     fun hentModuler() = try {
         iaSakLeveranseRepository.hentModuler().right()
     } catch (e: Exception) {
-        log.error("Noe gikk feil ved henting av tjenester: ${e.message}", e)
+        log.error("Noe gikk feil ved henting av moduler: ${e.message}", e)
         IASakError.`generell feil under uthenting`.left()
     }
 }
