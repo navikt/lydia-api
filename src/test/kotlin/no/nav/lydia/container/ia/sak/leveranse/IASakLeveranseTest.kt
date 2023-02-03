@@ -1,4 +1,4 @@
-package no.nav.lydia.container.ia.leveranse
+package no.nav.lydia.container.ia.sak.leveranse
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -84,4 +84,9 @@ class IASakLeveranseTest {
             it.modul.id shouldBe 2
         }
     }
+
+//    @Test
+//    fun `skal kunne hente IATjenester`() {
+//        val tjenester = hentIATjenester()
+//    }
 }
