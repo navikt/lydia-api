@@ -176,6 +176,26 @@ fun Route.iaSakRådgiver(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+
+    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/tjenester") {
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
+            iaSakService.hentTjenester()
+        }.map {
+            call.respond(it)
+        }.mapLeft {
+            call.respond(message = it.feilmelding, status = it.httpStatusCode)
+        }
+    }
+
+    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/moduler") {
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
+            iaSakService.hentModuler()
+        }.map {
+            call.respond(it)
+        }.mapLeft {
+            call.respond(message = it.feilmelding, status = it.httpStatusCode)
+        }
+    }
 }
 
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode) {

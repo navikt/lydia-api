@@ -43,6 +43,19 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
+    fun hentTjenster() =
+        using(sessionOf(dataSource)) { session ->
+        val sql = """
+                select 
+                    ia_tjeneste.id as iaTjenesteId,
+                    ia_tjeneste.navn as iaTjenesteNavn,
+                from ia_tjeneste
+            """.trimIndent()
+
+        val query = queryOf(sql).map { mapTilTjeneste(it) }.asList
+        session.run(query)
+    }
+
     fun hentModuler() =
         using(sessionOf(dataSource)) { session ->
             val sql = """
@@ -105,12 +118,14 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             sistEndretAv = rad.string("sist_endret_av")
         )
 
+    private fun mapTilTjeneste(rad: Row) = IATjeneste(
+        id = rad.int("iaTjenesteId"),
+        navn = rad.string("iaTjenesteNavn")
+    )
+
     private fun mapTilModul(rad: Row) = Modul(
         id = rad.int("modulId"),
-        iaTjeneste = IATjeneste(
-            id = rad.int("iaTjenesteId"),
-            navn = rad.string("iaTjenesteNavn")
-        ),
+        iaTjeneste = mapTilTjeneste(rad),
         navn = rad.string("modulNavn")
     )
 
