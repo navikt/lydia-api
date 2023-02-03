@@ -27,6 +27,8 @@ import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IATjeneste
+import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -152,6 +154,24 @@ class SakHelper {
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$saksnummer")
                 .authentication().bearer(token = token)
                 .tilListeRespons<IASakLeveranseDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = {
+                        fail(it.stackTraceToString())
+                    })
+
+        fun hentIATjenester(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH")
+                .authentication().bearer(token = token)
+                .tilListeRespons<IATjeneste>().third.fold(
+                    success = { respons -> respons },
+                    failure = {
+                        fail(it.stackTraceToString())
+                    })
+
+        fun hentModuler(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH")
+                .authentication().bearer(token = token)
+                .tilListeRespons<Modul>().third.fold(
                     success = { respons -> respons },
                     failure = {
                         fail(it.stackTraceToString())
@@ -564,6 +584,7 @@ class StatistikkHelper {
     }
 }
 
+@Suppress("unused")
 class FeatureToggleHelper {
     companion object {
         private fun skruPåToggle(toggleKey: String) =

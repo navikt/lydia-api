@@ -26,6 +26,8 @@ val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "hendelse"
 val SAMARBEIDSHISTORIKK_PATH = "historikk"
 val IA_SAK_LEVERANSE_PATH = "leveranse"
+val IA_TJENESTER_PATH = "tjenester"
+val IA_MODULER_PATH = "moduler"
 
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
@@ -177,7 +179,7 @@ fun Route.iaSakRådgiver(
         }
     }
 
-    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/tjenester") {
+    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
             iaSakService.hentTjenester()
         }.map {
@@ -187,7 +189,7 @@ fun Route.iaSakRådgiver(
         }
     }
 
-    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/moduler") {
+    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
             iaSakService.hentModuler()
         }.map {

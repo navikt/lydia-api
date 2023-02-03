@@ -5,6 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
+import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
+import no.nav.lydia.helper.SakHelper.Companion.hentModuler
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
@@ -85,8 +87,15 @@ class IASakLeveranseTest {
         }
     }
 
-//    @Test
-//    fun `skal kunne hente IATjenester`() {
-//        val tjenester = hentIATjenester()
-//    }
+    @Test
+    fun `skal kunne hente IATjenester`() {
+        val tjenester = hentIATjenester()
+        tjenester shouldHaveSize 3
+    }
+
+    @Test
+    fun `skal kunne hente moduler`() {
+        val moduler = hentModuler()
+        moduler shouldHaveSize 11
+    }
 }
