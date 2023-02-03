@@ -48,7 +48,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
         val sql = """
                 select 
                     ia_tjeneste.id as iaTjenesteId,
-                    ia_tjeneste.navn as iaTjenesteNavn,
+                    ia_tjeneste.navn as iaTjenesteNavn
                 from ia_tjeneste
             """.trimIndent()
 
