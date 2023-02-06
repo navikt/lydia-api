@@ -156,8 +156,11 @@ class SakHelper {
                 .authentication().bearer(token = token)
                 .tilListeRespons<IASakDto>()
 
-        fun hentIASakLeveranser(saksnummer: String, token: String = oauth2ServerContainer.saksbehandler1.token) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$saksnummer")
+        fun hentIASakLeveranser(
+            orgnr: String,
+            saksnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
                 .authentication().bearer(token = token)
                 .tilListeRespons<IASakLeveranseDto>().third.fold(
                     success = { respons -> respons },
@@ -269,12 +272,13 @@ class SakHelper {
         }
 
         fun opprettLeveranse(
+            orgnr: String,
             saksnummer: String,
             frist: LocalDate,
             modulId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH")
+            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
                 .authentication().bearer(token)
                 .jsonBody(
                     Json.encodeToString(
@@ -286,16 +290,19 @@ class SakHelper {
                 )
 
         fun slettIASakLeveranse(
+            orgnr: String,
+            saksnummer: String,
             iaSakLeveranseId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            lydiaApiContainer.performDelete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$iaSakLeveranseId")
+            lydiaApiContainer.performDelete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
                 .authentication().bearer(token)
 
         fun IASakLeveranseDto.slettIASakLeveranse(
+            orgnr: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            slettIASakLeveranse(iaSakLeveranseId = id, token = token).tilSingelRespons<Int>().third.fold(
+            slettIASakLeveranse(orgnr = orgnr, saksnummer = saksnummer, iaSakLeveranseId = id, token = token).tilSingelRespons<Int>().third.fold(
                 success = { it },
                 failure = {
                     fail("${it.message} ${it.response.body().asString("text/plain")}")
@@ -306,8 +313,13 @@ class SakHelper {
             modulId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            opprettLeveranse(saksnummer = saksnummer, frist = frist, modulId = modulId, token = token)
-                .tilSingelRespons<IASakLeveranseDto>().third.fold(
+            opprettLeveranse(
+                orgnr = orgnr,
+                saksnummer = saksnummer,
+                frist = frist,
+                modulId = modulId,
+                token = token
+            ).tilSingelRespons<IASakLeveranseDto>().third.fold(
                     success = { it },
                     failure = {
                         fail("${it.message} ${it.response.body().asString("text/plain")}")

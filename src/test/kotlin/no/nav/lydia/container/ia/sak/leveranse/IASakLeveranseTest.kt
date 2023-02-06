@@ -35,6 +35,7 @@ class IASakLeveranseTest {
 
         sakIStatusKartlegges.status shouldBe IAProsessStatus.KARTLEGGES
         opprettLeveranse(
+            orgnr = sakIStatusKartlegges.orgnr,
             saksnummer = sakIStatusKartlegges.saksnummer,
             frist = LocalDate.now().toKotlinLocalDate(),
             modulId = 1
@@ -74,7 +75,9 @@ class IASakLeveranseTest {
             modulId = 2
         )
 
-        val leveranser = hentIASakLeveranser(saksnummer = sakIStatusViBistår.saksnummer)
+        val leveranser = hentIASakLeveranser(
+            orgnr = sakIStatusViBistår.orgnr,
+            saksnummer = sakIStatusViBistår.saksnummer)
         leveranser shouldHaveSize 2
         leveranser.forExactlyOne {
             it.frist shouldBe nå
@@ -95,15 +98,15 @@ class IASakLeveranseTest {
             token = mockOAuth2Server.saksbehandler1.token
         )
 
-        hentIASakLeveranser(saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 1
+        hentIASakLeveranser(orgnr = sakIStatusViBistår.orgnr, saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 1
 
         shouldFail {
-            leveranse.slettIASakLeveranse(token = mockOAuth2Server.saksbehandler2.token)
+            leveranse.slettIASakLeveranse(orgnr = sakIStatusViBistår.orgnr, token = mockOAuth2Server.saksbehandler2.token)
         }
-        hentIASakLeveranser(saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 1
+        hentIASakLeveranser(orgnr = sakIStatusViBistår.orgnr, saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 1
 
-        leveranse.slettIASakLeveranse(token = mockOAuth2Server.saksbehandler1.token)
-        hentIASakLeveranser(saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 0
+        leveranse.slettIASakLeveranse(orgnr = sakIStatusViBistår.orgnr, token = mockOAuth2Server.saksbehandler1.token)
+        hentIASakLeveranser(orgnr = sakIStatusViBistår.orgnr, saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 0
     }
 
     @Test
@@ -115,7 +118,7 @@ class IASakLeveranseTest {
         )
         sakIViBistår.nyHendelse(FULLFØR_BISTAND)
         shouldFail {
-            iaSakLeveranse.slettIASakLeveranse()
+            iaSakLeveranse.slettIASakLeveranse(orgnr = sakIViBistår.orgnr)
         }
     }
 

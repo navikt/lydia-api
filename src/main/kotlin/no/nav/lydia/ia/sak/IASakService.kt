@@ -117,11 +117,8 @@ class IASakService(
 
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> =
         iaSakshendelseRepository.hentHendelserForOrgnummer(orgnr = orgnr)
-
-    fun hentIaSak(saksnummer: String) =
-        iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
-
-    fun hentLeveranser(saksnummer: String) =
+    
+    fun hentIASakLeveranser(saksnummer: String) =
         try {
             iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = saksnummer).right()
         } catch (e: Exception) {
@@ -129,7 +126,7 @@ class IASakService(
             IASakError.`generell feil under uthenting`.left()
         }
 
-    fun opprettLeveranse(leveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
+    fun opprettIASakLeveranse(leveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
         val sak = iaSakRepository.hentIASak(leveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
         if (sak.eidAv != rådgiver.navIdent)
             return IASakError.`ikke eier av sak`.left()
@@ -147,9 +144,9 @@ class IASakService(
         }
     }
 
-    fun slettIALeveranse(iaSakLeveranseId: Int, rådgiver: Rådgiver): Either<Feil, Int> {
+    fun slettIASakLeveranse(iaSakLeveranseId: Int, rådgiver: Rådgiver): Either<Feil, Int> {
         val iaSakLeveranse = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)
-            ?: return IASakError.`ugyldig leveranseId`.left()
+            ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
         val sak = iaSakRepository.hentIASak(iaSakLeveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
         if (sak.eidAv != rådgiver.navIdent)
             return IASakError.`ikke eier av sak`.left()
