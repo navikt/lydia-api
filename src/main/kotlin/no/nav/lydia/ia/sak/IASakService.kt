@@ -140,15 +140,32 @@ class IASakService(
         moduler.firstOrNull { it.id == leveranse.modulId } ?: return IASakError.`ugyldig modul`.left()
 
         return try {
-            iaSakLeveranseRepository.opprettLeveranse(leveranse, rådgiver)?.right() ?: IASakError.`generell feil under uthenting`.left()
+            iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, rådgiver)
         } catch (e: Exception) {
             log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
             IASakError.`generell feil under uthenting`.left()
         }
     }
 
+    fun slettIALeveranse(iaSakLeveranseId: Int, rådgiver: Rådgiver): Either<Feil, Int> {
+        val iaSakLeveranse = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)
+            ?: return IASakError.`ugyldig leveranseId`.left()
+        val sak = iaSakRepository.hentIASak(iaSakLeveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
+        if (sak.eidAv != rådgiver.navIdent)
+            return IASakError.`ikke eier av sak`.left()
+        if (sak.status != IAProsessStatus.VI_BISTÅR)
+            return Feil(feilmelding = "Kan kun opprette leveranser på saker som er i 'Vi Bistår'", httpStatusCode = HttpStatusCode.Conflict).left()
+
+        return try {
+            iaSakLeveranseRepository.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId).right()
+        } catch (e: Exception) {
+            log.error("Noe gikk feil ved letting av leveranse med id $iaSakLeveranseId: ${e.message}", e)
+            IASakError.`generell feil under uthenting`.left()
+        }
+    }
+
     fun hentTjenester() = try {
-            iaSakLeveranseRepository.hentTjenster().right()
+            iaSakLeveranseRepository.hentIATjenster().right()
         } catch (e: Exception) {
             log.error("Noe gikk feil ved henting av tjenester: ${e.message}", e)
             IASakError.`generell feil under uthenting`.left()

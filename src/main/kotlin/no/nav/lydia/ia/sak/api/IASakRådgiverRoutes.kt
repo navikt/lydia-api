@@ -8,8 +8,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
+import io.ktor.server.routing.*
 import io.ktor.server.routing.post
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -179,6 +178,19 @@ fun Route.iaSakRådgiver(
         }
     }
 
+    delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{iaSakLeveranseId}") {
+        val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@delete call.respond(HttpStatusCode.BadRequest, "Mangler iaSakLeveranseId")
+        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+            iaSakService.slettIALeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), rådgiver)
+        }.also {
+            // TODO AUDITLOG
+        }.map {
+            call.respond(it)
+        }.mapLeft {
+            call.respond(message = it.feilmelding, status = it.httpStatusCode)
+        }
+    }
+
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
             iaSakService.hentTjenester()
@@ -216,6 +228,7 @@ object IASakError {
     val `fikk ikke slettet sak` = Feil("Fikk ikke slettet sak", HttpStatusCode.InternalServerError)
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
     val `ugyldig saksnummer` = Feil("Ugyldig saksnummer", HttpStatusCode.BadRequest)
+    val `ugyldig leveranseId` = Feil("Ugyldig leveranseId", HttpStatusCode.BadRequest)
     val `ugyldig modul` = Feil("Ugyldig modul", HttpStatusCode.BadRequest)
     val `ikke eier av sak` = Feil("Ikke eier av sak", HttpStatusCode.BadRequest)
     val `det finnes flere saker på dette orgnummeret som ikke anses som avsluttet` = Feil(

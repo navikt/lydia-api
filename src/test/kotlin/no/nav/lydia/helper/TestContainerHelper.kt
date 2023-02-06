@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
+import com.github.kittinunf.fuel.httpDelete
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.serialization.responseObject
@@ -21,6 +22,7 @@ import no.nav.lydia.appstatus.FEATURE_TOGGLE_ENABLE_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.httpMock
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
@@ -130,6 +132,7 @@ class TestContainerHelper {
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
+        fun GenericContainer<*>.performDelete(url: String) = buildUrl(url = url).httpDelete()
 
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
     }
@@ -281,6 +284,22 @@ class SakHelper {
                         frist = frist
                     ))
                 )
+
+        fun slettIASakLeveranse(
+            iaSakLeveranseId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performDelete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$iaSakLeveranseId")
+                .authentication().bearer(token)
+
+        fun IASakLeveranseDto.slettIASakLeveranse(
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            slettIASakLeveranse(iaSakLeveranseId = id, token = token).tilSingelRespons<Int>().third.fold(
+                success = { it },
+                failure = {
+                    fail("${it.message} ${it.response.body().asString("text/plain")}")
+                })
 
         fun IASakDto.opprettLeveranse(
             frist: LocalDate,

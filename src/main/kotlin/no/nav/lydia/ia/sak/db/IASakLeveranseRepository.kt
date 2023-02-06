@@ -1,10 +1,13 @@
 package no.nav.lydia.ia.sak.db
 
+import arrow.core.left
+import arrow.core.right
 import kotlinx.datetime.toJavaLocalDate
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
@@ -13,25 +16,29 @@ import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import javax.sql.DataSource
 
+private val hentIASakLeveranserSql = """
+                    select
+                        iasak_leveranse.id,
+                        iasak_leveranse.saksnummer,
+                        iasak_leveranse.frist,
+                        iasak_leveranse.status,
+                        iasak_leveranse.opprettet_av,
+                        iasak_leveranse.sist_endret,
+                        iasak_leveranse.sist_endret_av,
+                        modul.id as modulId,
+                        modul.navn as modulNavn,
+                        ia_tjeneste.id as iaTjenesteId,
+                        ia_tjeneste.navn iaTjenesteNavn
+                    from iasak_leveranse
+                    join modul on (iasak_leveranse.modul = modul.id)
+                    join ia_tjeneste on (modul.ia_tjeneste = ia_tjeneste.id)
+""".trimIndent()
+
 class IASakLeveranseRepository(val dataSource: DataSource) {
     fun hentIASakLeveranser(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             val sql = """
-                select
-                    iasak_leveranse.id,
-                    iasak_leveranse.saksnummer,
-                    iasak_leveranse.frist,
-                    iasak_leveranse.status,
-                    iasak_leveranse.opprettet_av,
-                    iasak_leveranse.sist_endret,
-                    iasak_leveranse.sist_endret_av,
-                    modul.id as modulId,
-                    modul.navn as modulNavn,
-                    ia_tjeneste.id as iaTjenesteId,
-                    ia_tjeneste.navn iaTjenesteNavn
-                from iasak_leveranse
-                join modul on (iasak_leveranse.modul = modul.id)
-                join ia_tjeneste on (modul.ia_tjeneste = ia_tjeneste.id)
+                $hentIASakLeveranserSql
                 where iasak_leveranse.saksnummer = :saksnummer
             """.trimMargin()
             val query = queryOf(
@@ -43,7 +50,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-    fun hentTjenster() =
+    fun hentIATjenster() =
         using(sessionOf(dataSource)) { session ->
         val sql = """
                 select 
@@ -52,7 +59,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 from ia_tjeneste
             """.trimIndent()
 
-        val query = queryOf(sql).map { mapTilTjeneste(it) }.asList
+        val query = queryOf(sql).map { mapTilIATjeneste(it) }.asList
         session.run(query)
     }
 
@@ -71,7 +78,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-    fun opprettLeveranse(leveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver) =
+    fun opprettIASakLeveranse(iaSakleveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver) =
         using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
             val sql = """
                 insert into iasak_leveranse (
@@ -90,20 +97,43 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 )
             """.trimIndent()
 
-            val id = session.run(
+            val iaSakLeveranseId = session.run(
                 queryOf(
                     sql, mapOf(
-                        "saksnummer" to leveranse.saksnummer,
-                        "modul" to leveranse.modulId,
-                        "frist" to leveranse.frist.toJavaLocalDate(),
+                        "saksnummer" to iaSakleveranse.saksnummer,
+                        "modul" to iaSakleveranse.modulId,
+                        "frist" to iaSakleveranse.frist.toJavaLocalDate(),
                         "opprettetAv" to rådgiver.navIdent,
                     )
                 ).asUpdateAndReturnGeneratedKey
-            )
+            ) ?: return@using IASakError.`generell feil under uthenting`.left()
 
-            hentIASakLeveranser(saksnummer = leveranse.saksnummer).firstOrNull {
-                it.id.toLong() == id
-            }
+            hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt())?.right() ?:IASakError.`generell feil under uthenting`.left()
+        }
+
+    fun hentIASakLeveranse(iaSakLeveranseId: Int) =
+        using(sessionOf(dataSource)) { session ->
+            val sql = """
+                $hentIASakLeveranserSql
+                where iasak_leveranse.id = :iaSakLeveranseId
+            """.trimIndent()
+
+            val query  = queryOf(sql, mapOf(
+                "iaSakLeveranseId" to iaSakLeveranseId
+            )).map { mapTilIASakLeveranse(it) }.asSingle
+            session.run(query)
+        }
+
+    fun slettIASakLeveranse(iaSakLeveranseId: Int) =
+        using(sessionOf(dataSource = dataSource)) { session ->
+            val query = queryOf(
+                "delete from iasak_leveranse where id = :iaSakLeveranseId",
+                mapOf(
+                    "iaSakLeveranseId" to iaSakLeveranseId
+                )
+            ).asUpdate
+
+            session.run(query)
         }
 
     private fun mapTilIASakLeveranse(rad: Row) =
@@ -118,14 +148,14 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             sistEndretAv = rad.string("sist_endret_av")
         )
 
-    private fun mapTilTjeneste(rad: Row) = IATjeneste(
+    private fun mapTilIATjeneste(rad: Row) = IATjeneste(
         id = rad.int("iaTjenesteId"),
         navn = rad.string("iaTjenesteNavn")
     )
 
     private fun mapTilModul(rad: Row) = Modul(
         id = rad.int("modulId"),
-        iaTjeneste = mapTilTjeneste(rad),
+        iaTjeneste = mapTilIATjeneste(rad),
         navn = rad.string("modulNavn")
     )
 
