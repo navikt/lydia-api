@@ -21,8 +21,8 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerP
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåStatus
-import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
