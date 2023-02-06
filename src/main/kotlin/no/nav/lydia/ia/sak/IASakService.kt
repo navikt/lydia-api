@@ -117,7 +117,7 @@ class IASakService(
 
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> =
         iaSakshendelseRepository.hentHendelserForOrgnummer(orgnr = orgnr)
-    
+
     fun hentIASakLeveranser(saksnummer: String) =
         try {
             iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = saksnummer).right()

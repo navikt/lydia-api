@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 
 
 enum class AuditType {
-    access, update, create
+    access, update, create, delete
 }
 
 enum class Tillat(val tillat: String) {

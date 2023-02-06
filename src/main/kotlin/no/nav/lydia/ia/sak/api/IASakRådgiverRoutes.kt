@@ -183,7 +183,7 @@ fun Route.iaSakRådgiver(
                 call = call,
                 either = it,
                 orgnummer = orgnr,
-                auditType = AuditType.update,
+                auditType = AuditType.delete,
                 saksnummer = saksnummer
             )
         }.map {
