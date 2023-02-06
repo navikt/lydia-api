@@ -3,30 +3,36 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
+import arrow.core.right
+import io.ktor.http.*
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.*
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
-import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.tilgangskontroll.Rådgiver
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class IASakService(
     private val iaSakRepository: IASakRepository,
     private val iaSakshendelseRepository: IASakshendelseRepository,
+    private val iaSakLeveranseRepository: IASakLeveranseRepository,
     private val årsakService: ÅrsakService,
     private val iaSakshendelseObservers: MutableList<Observer<IASakshendelse>> = mutableListOf(),
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
 ) {
+    private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     private fun IASakshendelse.lagre() =
         iaSakshendelseRepository.lagreHendelse(this).also(::varsleIASakshendelseObservers)
@@ -112,4 +118,46 @@ class IASakService(
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> =
         iaSakshendelseRepository.hentHendelserForOrgnummer(orgnr = orgnr)
 
+    fun hentIaSak(saksnummer: String) =
+        iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
+
+    fun hentLeveranser(saksnummer: String) =
+        try {
+            iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = saksnummer).right()
+        } catch (e: Exception) {
+            log.error("Noe gikk feil ved uthenting av leveranser: ${e.message}", e)
+            IASakError.`generell feil under uthenting`.left()
+        }
+
+    fun opprettLeveranse(leveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
+        val sak = iaSakRepository.hentIASak(leveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
+        if (sak.eidAv != rådgiver.navIdent)
+            return IASakError.`ikke eier av sak`.left()
+        if (sak.status != IAProsessStatus.VI_BISTÅR)
+            return Feil(feilmelding = "Kan kun opprette leveranser på saker som er i 'Vi Bistår'", httpStatusCode = HttpStatusCode.Conflict).left()
+
+        val moduler = iaSakLeveranseRepository.hentModuler()
+        moduler.firstOrNull { it.id == leveranse.modulId } ?: return IASakError.`ugyldig modul`.left()
+
+        return try {
+            iaSakLeveranseRepository.opprettLeveranse(leveranse, rådgiver)?.right() ?: IASakError.`generell feil under uthenting`.left()
+        } catch (e: Exception) {
+            log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
+            IASakError.`generell feil under uthenting`.left()
+        }
+    }
+
+    fun hentTjenester() = try {
+            iaSakLeveranseRepository.hentTjenster().right()
+        } catch (e: Exception) {
+            log.error("Noe gikk feil ved henting av tjenester: ${e.message}", e)
+            IASakError.`generell feil under uthenting`.left()
+        }
+
+    fun hentModuler() = try {
+        iaSakLeveranseRepository.hentModuler().right()
+    } catch (e: Exception) {
+        log.error("Noe gikk feil ved henting av moduler: ${e.message}", e)
+        IASakError.`generell feil under uthenting`.left()
+    }
 }

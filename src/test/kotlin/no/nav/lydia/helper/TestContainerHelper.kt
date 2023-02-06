@@ -9,6 +9,7 @@ import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
@@ -26,6 +27,8 @@ import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IATjeneste
+import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -150,6 +153,33 @@ class SakHelper {
                 .authentication().bearer(token = token)
                 .tilListeRespons<IASakDto>()
 
+        fun hentIASakLeveranser(saksnummer: String, token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$saksnummer")
+                .authentication().bearer(token = token)
+                .tilListeRespons<IASakLeveranseDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = {
+                        fail(it.stackTraceToString())
+                    })
+
+        fun hentIATjenester(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH")
+                .authentication().bearer(token = token)
+                .tilListeRespons<IATjeneste>().third.fold(
+                    success = { respons -> respons },
+                    failure = {
+                        fail(it.stackTraceToString())
+                    })
+
+        fun hentModuler(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH")
+                .authentication().bearer(token = token)
+                .tilListeRespons<Modul>().third.fold(
+                    success = { respons -> respons },
+                    failure = {
+                        fail(it.stackTraceToString())
+                    })
+
         fun hentSamarbeidshistorikk(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -234,6 +264,36 @@ class SakHelper {
                     )
                 )
         }
+
+        fun opprettLeveranse(
+            saksnummer: String,
+            frist: LocalDate,
+            modulId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH")
+                .authentication().bearer(token)
+                .jsonBody(
+                    Json.encodeToString(
+                    IASakLeveranseOpprettelsesDto(
+                        saksnummer = saksnummer,
+                        modulId = modulId,
+                        frist = frist
+                    ))
+                )
+
+        fun IASakDto.opprettLeveranse(
+            frist: LocalDate,
+            modulId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            opprettLeveranse(saksnummer = saksnummer, frist = frist, modulId = modulId, token = token)
+                .tilSingelRespons<IASakLeveranseDto>().third.fold(
+                    success = { it },
+                    failure = {
+                        fail("${it.message} ${it.response.body().asString("text/plain")}")
+                    })
+
 
         fun nyHendelsePåSak(
             sak: IASakDto,
@@ -484,7 +544,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer/$SISTE_4_KVARTALER")
                 .authentication().bearer(token)
-                .tilListeRespons<VirksomhetsdetaljerDto>()
+                .tilSingelRespons<VirksomhetsstatistikkSiste4KvartalDto>()
 
         fun hentGjeldendePeriodeForSiste4KvartalerRespons(
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -586,6 +646,7 @@ class StatistikkHelper {
     }
 }
 
+@Suppress("unused")
 class FeatureToggleHelper {
     companion object {
         private fun skruPåToggle(toggleKey: String) =

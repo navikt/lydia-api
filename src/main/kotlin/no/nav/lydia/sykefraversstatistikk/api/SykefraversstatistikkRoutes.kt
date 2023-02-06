@@ -15,7 +15,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsdetaljerDto.Companion.toDto
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsstatistikkSiste4KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
@@ -67,7 +67,7 @@ fun Route.sykefraversstatistikk(
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
-            sykefraværsstatistikkService.hentSykefraværForVirksomhet(orgnummer).right()
+            sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikkListe ->

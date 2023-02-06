@@ -123,6 +123,22 @@ class IASakRepository(val dataSource: DataSource) {
             )
         }
 
+    fun hentIASak(saksnummer: String): IASak? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak
+                    WHERE saksnummer = :saksnummer
+                """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    )
+                ).map(this::mapRowToIASak).asSingle
+            )
+        }
+
     fun hentAlleSaker(): List<IASak> =
         using(sessionOf(dataSource)) { session ->
             session.run(
