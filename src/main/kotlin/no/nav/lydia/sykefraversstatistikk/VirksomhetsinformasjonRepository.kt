@@ -8,18 +8,25 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
-import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.ANTALL_PERSONER
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.MULIGE_DAGSVERK
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.NAVN_PÅ_VIRKSOMHET
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.SYKEFRAVÆRSPROSENT
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.TAPTE_DAGSVERK
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåBransjeOgNæring
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåStatus
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsdetaljer
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
-import java.time.LocalDate
 import javax.sql.DataSource
 
 class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
@@ -114,53 +121,6 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         session.run(query)
     }
 
-    private fun filtrerPåEiere(søkeparametere: Søkeparametere) =
-        if (søkeparametere.navIdenter.isEmpty()) ""
-        else " AND ia_sak.eid_av in (select unnest(:eiere)) "
-
-    private fun filtrerPåSektor(søkeparametere: Søkeparametere) =
-        if(søkeparametere.sektor.isEmpty()) ""
-        else " AND virksomhet_statistikk_metadata.sektor in (select unnest(:sektorer)) "
-
-    private fun filtrerPåStatus(søkeparametere: Søkeparametere) =
-        søkeparametere.status?.let { status ->
-            when (status) {
-                IAProsessStatus.IKKE_AKTIV -> " AND (ia_sak.status IS NULL " +
-                        "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
-                        "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
-
-                IAProsessStatus.IKKE_AKTUELL, IAProsessStatus.FULLFØRT, IAProsessStatus.SLETTET ->
-                    " AND ia_sak.status = '$status' " +
-                            "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
-
-                else -> " AND ia_sak.status = '$status'"
-            }
-        } ?: ""
-
-    private fun filtrerPåKommuner(søkeparametere: Søkeparametere) =
-        if (søkeparametere.kommunenummer.isEmpty()) ""
-        else " AND virksomhet.kommunenummer in (select unnest(:kommuner)) "
-
-    private fun filtrerPåBransjeOgNæring(søkeparametere: Søkeparametere): String {
-        val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
-        return if (næringsgrupperMedBransjer.isEmpty())
-            ""
-        else
-            """
-                AND (
-                    substr(vn.narings_kode, 1, 2) in (select unnest(:naringer))
-                    ${
-                        if (søkeparametere.bransjeprogram.isNotEmpty()) {
-                            val koder = søkeparametere.bransjeprogram.flatMap { it.næringskoder }.groupBy {
-                                it.length
-                            }
-                            val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
-                            femsifrede?.let { "OR (vn.narings_kode in (select (unnest(:naringer))))" } ?: ""
-                        } else ""
-                    }
-                    )
-            """.trimIndent()
-    }
 
     private fun Sorteringsnøkkel.tilOrderBy(): String {
         return when (this) {
