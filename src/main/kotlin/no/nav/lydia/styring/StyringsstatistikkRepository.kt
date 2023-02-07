@@ -23,7 +23,7 @@ class StyringsstatistikkRepository(val dataSource: DataSource) {
 
         val sql = """
             SELECT
-                count(ia_sak.status) as antall, ia_sak.status
+                count(*) as antall, ia_sak.status
             FROM 
                 sykefravar_statistikk_virksomhet AS statistikk
                 JOIN virksomhet USING (orgnr)
@@ -32,10 +32,7 @@ class StyringsstatistikkRepository(val dataSource: DataSource) {
             if (sektorer.isNotEmpty()) " LEFT JOIN virksomhet_statistikk_metadata USING (orgnr) "
             else ""
         }
-                LEFT JOIN ia_sak ON (
-                    (ia_sak.orgnr = statistikk.orgnr) AND
-                    ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
-                )
+                LEFT JOIN ia_sak ON ( ia_sak.orgnr = statistikk.orgnr )
                 ${
             if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) "
             else ""

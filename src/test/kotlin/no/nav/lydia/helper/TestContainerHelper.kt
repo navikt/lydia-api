@@ -413,7 +413,7 @@ class StyringsstatistikkHelper {
             eiere = eiere,
             sektor = sektor,
             token = token
-        ).third.get()
+        )
 
         fun hentStyringsstatistikkRespons(
             kommuner: String = "",

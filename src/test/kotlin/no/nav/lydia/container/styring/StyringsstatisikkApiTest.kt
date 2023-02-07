@@ -17,7 +17,33 @@ class StyringsstatisikkApiTest {
     private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     @Test
-    fun `skal kunne filtrere sykefraværsstatistikk på sektor`() {
+    fun `skal hente styringsstatistikk for de som ikke er aktive`() {
+        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet())
+
+        val styringsstatistikkKommunalSektor =
+            StyringsstatistikkHelper.hentStyringsstatistikk(
+                sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING,
+                token = mockOAuth2Server.superbruker1.token
+            ).third.get().data
+
+        styringsstatistikkKommunalSektor.size shouldBeGreaterThan 0
+        styringsstatistikkKommunalSektor.first { styringsstatistikk ->
+            styringsstatistikk.status == IAProsessStatus.IKKE_AKTIV
+        }.antall shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun `skal ikke kunne hente styringsstatistikk dersom man ikke er superbruker`() {
+        StyringsstatistikkHelper.hentStyringsstatistikk(
+            token = mockOAuth2Server.lesebruker.token
+        ).second.statusCode shouldBe 403
+        StyringsstatistikkHelper.hentStyringsstatistikk(
+            token = mockOAuth2Server.saksbehandler1.token
+        ).second.statusCode shouldBe 403
+    }
+
+    @Test
+    fun `skal kunne filtrere på sektor`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(),
             sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING)
 
@@ -36,7 +62,7 @@ class StyringsstatisikkApiTest {
             StyringsstatistikkHelper.hentStyringsstatistikk(
                 sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING,
                 token = mockOAuth2Server.superbruker1.token
-            ).data
+            ).third.get().data
         styringsstatistikkKommunalSektor.size shouldBeGreaterThan 0
         styringsstatistikkKommunalSektor.first { styringsstatistikk ->
             styringsstatistikk.status == IAProsessStatus.FULLFØRT
