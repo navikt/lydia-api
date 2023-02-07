@@ -1,10 +1,10 @@
-package no.nav.lydia.container.styring
+package no.nav.lydia.container.lederstatistikk
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.helper.LederstatistikkHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.StyringsstatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
@@ -13,31 +13,31 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
 
-class StyringsstatisikkApiTest {
+class LederstatisikkApiTest {
     private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     @Test
-    fun `skal hente styringsstatistikk for de som ikke er aktive`() {
+    fun `skal hente lederstatistikk for de som ikke er aktive`() {
         VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet())
 
-        val styringsstatistikkKommunalSektor =
-            StyringsstatistikkHelper.hentStyringsstatistikk(
+        val lederstatistikkKommunalSektor =
+            LederstatistikkHelper.hentLederstatistikk(
                 sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING,
                 token = mockOAuth2Server.superbruker1.token
             ).third.get().data
 
-        styringsstatistikkKommunalSektor.size shouldBeGreaterThan 0
-        styringsstatistikkKommunalSektor.first { styringsstatistikk ->
-            styringsstatistikk.status == IAProsessStatus.IKKE_AKTIV
+        lederstatistikkKommunalSektor.size shouldBeGreaterThan 0
+        lederstatistikkKommunalSektor.first { lederstatistikk ->
+            lederstatistikk.status == IAProsessStatus.IKKE_AKTIV
         }.antall shouldBeGreaterThan 0
     }
 
     @Test
-    fun `skal ikke kunne hente styringsstatistikk dersom man ikke er superbruker`() {
-        StyringsstatistikkHelper.hentStyringsstatistikk(
+    fun `skal ikke kunne hente lederstatistikk dersom man ikke er superbruker`() {
+        LederstatistikkHelper.hentLederstatistikk(
             token = mockOAuth2Server.lesebruker.token
         ).second.statusCode shouldBe 403
-        StyringsstatistikkHelper.hentStyringsstatistikk(
+        LederstatistikkHelper.hentLederstatistikk(
             token = mockOAuth2Server.saksbehandler1.token
         ).second.statusCode shouldBe 403
     }
@@ -58,14 +58,14 @@ class StyringsstatisikkApiTest {
         sakerForVirksomheten.size shouldBe 1
         sakerForVirksomheten.first().status shouldBe IAProsessStatus.FULLFØRT
 
-        val styringsstatistikkKommunalSektor =
-            StyringsstatistikkHelper.hentStyringsstatistikk(
+        val lederstatistikkKommunalSektor =
+            LederstatistikkHelper.hentLederstatistikk(
                 sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING,
                 token = mockOAuth2Server.superbruker1.token
             ).third.get().data
-        styringsstatistikkKommunalSektor.size shouldBeGreaterThan 0
-        styringsstatistikkKommunalSektor.first { styringsstatistikk ->
-            styringsstatistikk.status == IAProsessStatus.FULLFØRT
+        lederstatistikkKommunalSektor.size shouldBeGreaterThan 0
+        lederstatistikkKommunalSektor.first { lederstatistikk ->
+            lederstatistikk.status == IAProsessStatus.FULLFØRT
         }.antall shouldBeGreaterThan 0
     }
 }

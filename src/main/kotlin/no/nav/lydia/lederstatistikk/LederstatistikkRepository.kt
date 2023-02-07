@@ -1,4 +1,4 @@
-package no.nav.lydia.styring
+package no.nav.lydia.lederstatistikk
 
 import kotliquery.Row
 import kotliquery.queryOf
@@ -13,9 +13,9 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerP
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
-class StyringsstatistikkRepository(val dataSource: DataSource) {
+class LederstatistikkRepository(val dataSource: DataSource) {
 
-    fun hentStyringsstatistikk(
+    fun hentLederstatistikk(
         søkeparametere: Søkeparametere,
     ) = using(sessionOf(dataSource)) { session ->
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
@@ -67,12 +67,12 @@ class StyringsstatistikkRepository(val dataSource: DataSource) {
                 "sektorer" to session.createArrayOf("text", sektorer),
                 "eiere" to session.createArrayOf("text", søkeparametere.navIdenter),
             )
-        ).map(this::mapRowToStyrringsstatistikk).asList
+        ).map(this::mapRowToLederstatistikk).asList
         session.run(query)
     }
 
-    private fun mapRowToStyrringsstatistikk(rad: Row): Styringsstatistikk {
-        return Styringsstatistikk(
+    private fun mapRowToLederstatistikk(rad: Row): Lederstatistikk {
+        return Lederstatistikk(
             status = rad.stringOrNull("status")?.let {
                 IAProsessStatus.valueOf(it)
             },

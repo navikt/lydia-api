@@ -39,9 +39,9 @@ import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
-import no.nav.lydia.styring.StyringsstatistikkRepository
-import no.nav.lydia.styring.StyringsstatistikkService
-import no.nav.lydia.styring.api.styringsstatistikk
+import no.nav.lydia.lederstatistikk.LederstatistikkRepository
+import no.nav.lydia.lederstatistikk.LederstatistikkService
+import no.nav.lydia.lederstatistikk.api.lederstatistikk
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.VirksomhetsinformasjonRepository
@@ -254,10 +254,10 @@ fun Application.lydiaRestApi(
                 fiaRoller = naisEnvironment.security.fiaRoller
             )
             veileder(tokenFetcher = azureTokenFetcher, naisEnvironment = naisEnvironment)
-            styringsstatistikk(
+            lederstatistikk(
                 geografiService = GeografiService(),
-                styringsstatistikkService = StyringsstatistikkService(
-                    styringsstatistikkRepository = StyringsstatistikkRepository(dataSource = dataSource)
+                lederstatistikkService = LederstatistikkService(
+                    lederstatistikkRepository = LederstatistikkRepository(dataSource = dataSource)
                 ),
                 auditLog = auditLog,
                 naisEnvironment = naisEnvironment

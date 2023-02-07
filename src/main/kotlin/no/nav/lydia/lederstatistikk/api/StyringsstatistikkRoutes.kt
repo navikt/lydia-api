@@ -1,4 +1,4 @@
-package no.nav.lydia.styring.api
+package no.nav.lydia.lederstatistikk.api
 
 import arrow.core.right
 import io.ktor.server.application.*
@@ -7,31 +7,31 @@ import io.ktor.server.routing.*
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.styring.StyringsstatistikkResponsDto
-import no.nav.lydia.styring.StyringsstatistikkService
+import no.nav.lydia.lederstatistikk.LederstatistikkResponsDto
+import no.nav.lydia.lederstatistikk.LederstatistikkService
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 
-const val STYRINGSSTATISTIKK_PATH = "styringsstatistikk"
+const val LEDERSTATISTIKK_PATH = "lederstatistikk"
 
-fun Route.styringsstatistikk(
+fun Route.lederstatistikk(
     geografiService: GeografiService,
-    styringsstatistikkService: StyringsstatistikkService,
+    lederstatistikkService: LederstatistikkService,
     auditLog: AuditLog,
     naisEnvironment: NaisEnvironment,
 ) {
     val fiaRoller = naisEnvironment.security.fiaRoller
-    get("$STYRINGSSTATISTIKK_PATH/") {
+    get("$LEDERSTATISTIKK_PATH/") {
         somSuperbruker(call = call, fiaRoller = fiaRoller) { superbruker ->
             call.request.søkeparametere(geografiService, rådgiver = superbruker)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")
         }.map { søkeparametere ->
-            styringsstatistikkService.søkEtterStyringsstatistikk(søkeparametere = søkeparametere)
-        }.map { styringsstatistikkList ->
-            call.respond(StyringsstatistikkResponsDto(data = styringsstatistikkList)).right()
+            lederstatistikkService.søkEtterLederstatistikk(søkeparametere = søkeparametere)
+        }.map { lederstatistikkList ->
+            call.respond(LederstatistikkResponsDto(data = lederstatistikkList)).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 
