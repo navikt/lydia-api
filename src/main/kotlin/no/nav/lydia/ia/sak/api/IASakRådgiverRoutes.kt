@@ -9,7 +9,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import io.ktor.server.routing.post
-import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
@@ -192,14 +191,6 @@ fun Route.iaSakRådgiver(
         }.mapLeft {
             call.respond(message = it.feilmelding, status = it.httpStatusCode)
         }
-
-        call.respond(HttpStatusCode.OK, IASakLeveranseDto(
-            id= 1,
-            saksnummer = saksnummer,
-            modul = Modul(id = 1, navn = "", iaTjeneste = IATjeneste(id = 1, navn = "")),
-            status = IASakLeveranseStatus.LEVERT,
-            frist = java.time.LocalDate.now().toKotlinLocalDate()
-        ))
     }
 
     delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}/{iaSakLeveranseId}") {
