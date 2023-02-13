@@ -1,12 +1,10 @@
 package no.nav.lydia.helper
 
+import com.github.kittinunf.fuel.*
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
-import com.github.kittinunf.fuel.httpDelete
-import com.github.kittinunf.fuel.httpGet
-import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
@@ -24,9 +22,11 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IATjeneste
@@ -133,6 +133,7 @@ class TestContainerHelper {
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
         fun GenericContainer<*>.performDelete(url: String) = buildUrl(url = url).httpDelete()
+        fun GenericContainer<*>.performPut(url: String) = buildUrl(url = url).httpPut()
 
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
     }
@@ -271,23 +272,34 @@ class SakHelper {
                 )
         }
 
-        fun opprettLeveranse(
+        fun oppdaterIASakLeveranse(
             orgnr: String,
             saksnummer: String,
-            frist: LocalDate,
-            modulId: Int,
+            iaSakLeveranseId: Int,
+            status: IASakLeveranseStatus?,
             token: String = oauth2ServerContainer.saksbehandler1.token
-        ) =
-            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
-                .authentication().bearer(token)
-                .jsonBody(
-                    Json.encodeToString(
-                    IASakLeveranseOpprettelsesDto(
-                        saksnummer = saksnummer,
-                        modulId = modulId,
-                        frist = frist
-                    ))
+        ) = lydiaApiContainer.performPut("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
+            .authentication().bearer(token)
+            .jsonBody(Json.encodeToString(
+                IASakLeveranseOppdateringsDto(
+                    frist = null,
+                    status = status
                 )
+            ))
+
+        fun IASakLeveranseDto.oppdaterIASakLeveranse(
+            orgnr: String,
+            status: IASakLeveranseStatus?
+        ) = oppdaterIASakLeveranse(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            iaSakLeveranseId = id,
+            status = status
+        ).tilSingelRespons<IASakLeveranseDto>().third.fold(
+                success = { it },
+                failure = {
+                    fail("${it.message} ${it.response.body().asString("text/plain")}")
+                })
 
         fun slettIASakLeveranse(
             orgnr: String,
@@ -308,12 +320,12 @@ class SakHelper {
                     fail("${it.message} ${it.response.body().asString("text/plain")}")
                 })
 
-        fun IASakDto.opprettLeveranse(
+        fun IASakDto.opprettIASakLeveranse(
             frist: LocalDate,
             modulId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            opprettLeveranse(
+            opprettIASakLeveranse(
                 orgnr = orgnr,
                 saksnummer = saksnummer,
                 frist = frist,
@@ -324,6 +336,24 @@ class SakHelper {
                     failure = {
                         fail("${it.message} ${it.response.body().asString("text/plain")}")
                     })
+
+        fun opprettIASakLeveranse(
+            orgnr: String,
+            saksnummer: String,
+            frist: LocalDate,
+            modulId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
+                .authentication().bearer(token)
+                .jsonBody(
+                    Json.encodeToString(
+                        IASakLeveranseOpprettelsesDto(
+                            saksnummer = saksnummer,
+                            modulId = modulId,
+                            frist = frist
+                        ))
+                )
 
 
         fun nyHendelsePåSak(

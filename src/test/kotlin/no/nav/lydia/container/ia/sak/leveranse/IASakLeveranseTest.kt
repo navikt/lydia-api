@@ -9,7 +9,8 @@ import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
 import no.nav.lydia.helper.SakHelper.Companion.hentModuler
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.SakHelper.Companion.opprettLeveranse
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
+import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
@@ -19,7 +20,7 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
-import no.nav.lydia.ia.sak.domene.LeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import java.time.LocalDate
 import kotlin.test.Test
 
@@ -34,7 +35,7 @@ class IASakLeveranseTest {
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
 
         sakIStatusKartlegges.status shouldBe IAProsessStatus.KARTLEGGES
-        opprettLeveranse(
+        opprettIASakLeveranse(
             orgnr = sakIStatusKartlegges.orgnr,
             saksnummer = sakIStatusKartlegges.saksnummer,
             frist = LocalDate.now().toKotlinLocalDate(),
@@ -48,14 +49,14 @@ class IASakLeveranseTest {
         val sakIStatusViBistår = sakIViBistår()
 
         sakIStatusViBistår.status shouldBe VI_BISTÅR
-        val leveranse = sakIStatusViBistår.opprettLeveranse(
+        val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
             frist = frist,
             modulId = 1
         )
 
         leveranse.modul.id shouldBe 1
         leveranse.saksnummer shouldBe sakIStatusViBistår.saksnummer
-        leveranse.status shouldBe LeveranseStatus.UNDER_ARBEID
+        leveranse.status shouldBe IASakLeveranseStatus.UNDER_ARBEID
         leveranse.frist shouldBe frist
     }
 
@@ -66,11 +67,11 @@ class IASakLeveranseTest {
 
         val sakIStatusViBistår = sakIViBistår()
 
-        sakIStatusViBistår.opprettLeveranse(
+        sakIStatusViBistår.opprettIASakLeveranse(
             frist = nå,
             modulId = 1
         )
-        sakIStatusViBistår.opprettLeveranse(
+        sakIStatusViBistår.opprettIASakLeveranse(
             frist = imorgen,
             modulId = 2
         )
@@ -92,7 +93,7 @@ class IASakLeveranseTest {
     @Test
     fun `kun eier av sak skal kunne slette leveranse`() {
         val sakIStatusViBistår = sakIViBistår(eier = mockOAuth2Server.saksbehandler1.token)
-        val leveranse = sakIStatusViBistår.opprettLeveranse(
+        val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
             frist = LocalDate.now().toKotlinLocalDate(),
             modulId = 1,
             token = mockOAuth2Server.saksbehandler1.token
@@ -112,13 +113,27 @@ class IASakLeveranseTest {
     @Test
     fun `skal ikke kunne slette leveranser på en sak som ikke er i Vi Bistår`() {
         val sakIViBistår = sakIViBistår()
-        val iaSakLeveranse = sakIViBistår.opprettLeveranse(
+        val iaSakLeveranse = sakIViBistår.opprettIASakLeveranse(
             frist = LocalDate.now().toKotlinLocalDate(),
             modulId = 1
         )
         sakIViBistår.nyHendelse(FULLFØR_BISTAND)
         shouldFail {
             iaSakLeveranse.slettIASakLeveranse(orgnr = sakIViBistår.orgnr)
+        }
+    }
+
+    @Test
+    fun `skal kunne fullføre en leveranse`() {
+        val sakIViBistår = sakIViBistår()
+
+        val leveranseDto = sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = 1)
+        val fullførtLeveranse = leveranseDto.oppdaterIASakLeveranse(orgnr = sakIViBistår.orgnr, status = IASakLeveranseStatus.LEVERT)
+        fullførtLeveranse.status shouldBe IASakLeveranseStatus.LEVERT
+
+        hentIASakLeveranser(orgnr = sakIViBistår.orgnr, saksnummer = sakIViBistår.saksnummer).forExactlyOne {
+            it.id shouldBe leveranseDto.id
+            it.status shouldBe IASakLeveranseStatus.LEVERT
         }
     }
 

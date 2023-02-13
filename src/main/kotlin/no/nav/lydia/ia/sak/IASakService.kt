@@ -7,11 +7,8 @@ import arrow.core.right
 import io.ktor.http.*
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
-import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
-import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
@@ -173,5 +170,22 @@ class IASakService(
     } catch (e: Exception) {
         log.error("Noe gikk feil ved henting av moduler: ${e.message}", e)
         IASakError.`generell feil under uthenting`.left()
+    }
+
+    fun oppdaterIASakLeveranse(iaSakLeveranseId: Int, oppdateringsDto: IASakLeveranseOppdateringsDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
+        val iaSakLeveranse = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)
+            ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
+        val sak = iaSakRepository.hentIASak(iaSakLeveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
+        if (sak.eidAv != rådgiver.navIdent)
+            return IASakError.`ikke eier av sak`.left()
+        if (sak.status != IAProsessStatus.VI_BISTÅR)
+            return Feil(feilmelding = "Kan kun opprette leveranser på saker som er i 'Vi Bistår'", httpStatusCode = HttpStatusCode.Conflict).left()
+
+        return try {
+            iaSakLeveranseRepository.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId, oppdateringsDto = oppdateringsDto)
+        }  catch (e: Exception) {
+            log.error("Noe gikk feil ved henting av moduler: ${e.message}", e)
+            IASakError.`generell feil under uthenting`.left()
+        }
     }
 }

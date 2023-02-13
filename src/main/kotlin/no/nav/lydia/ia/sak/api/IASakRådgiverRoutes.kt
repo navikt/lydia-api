@@ -9,13 +9,13 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import io.ktor.server.routing.post
+import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
-import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil
+import no.nav.lydia.ia.sak.domene.*
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandlertilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
@@ -169,6 +169,37 @@ fun Route.iaSakRådgiver(
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
+    }
+
+    put("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}/{iaSakLeveranseId}") {
+        val orgnr = call.parameters["orgnr"] ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.parameters["saksnummer"] ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
+        val oppdateringsDto = call.receive<IASakLeveranseOppdateringsDto>()
+
+        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+            iaSakService.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), oppdateringsDto = oppdateringsDto, rådgiver = rådgiver)
+        }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = orgnr,
+                auditType = AuditType.update,
+                saksnummer = saksnummer
+            )
+        }.map {
+            call.respond(it.tilDto())
+        }.mapLeft {
+            call.respond(message = it.feilmelding, status = it.httpStatusCode)
+        }
+
+        call.respond(HttpStatusCode.OK, IASakLeveranseDto(
+            id= 1,
+            saksnummer = saksnummer,
+            modul = Modul(id = 1, navn = "", iaTjeneste = IATjeneste(id = 1, navn = "")),
+            status = IASakLeveranseStatus.LEVERT,
+            frist = java.time.LocalDate.now().toKotlinLocalDate()
+        ))
     }
 
     delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}/{iaSakLeveranseId}") {

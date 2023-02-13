@@ -5,7 +5,7 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
-import no.nav.lydia.ia.sak.domene.LeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 
 @Serializable
 data class IASakLeveranseDto (
@@ -13,7 +13,7 @@ data class IASakLeveranseDto (
     val saksnummer: String,
     val modul: Modul,
     val frist: LocalDate,
-    val status: LeveranseStatus
+    val status: IASakLeveranseStatus
 )
 
 @Serializable
@@ -21,6 +21,12 @@ data class IASakLeveranseOpprettelsesDto (
     val saksnummer: String,
     val modulId: Int,
     val frist: LocalDate
+)
+
+@Serializable
+data class IASakLeveranseOppdateringsDto (
+    val frist: LocalDate?,
+    val status: IASakLeveranseStatus?
 )
 
 fun IASakLeveranse.tilDto() =

@@ -9,13 +9,13 @@ data class IASakLeveranse(
     val saksnummer: String,
     val modul: Modul,
     val frist: LocalDate,
-    val status: LeveranseStatus,
+    val status: IASakLeveranseStatus,
     val opprettetAv: String,
     val sistEndret: LocalDateTime,
     val sistEndretAv: String,
 )
 
-enum class LeveranseStatus {
+enum class IASakLeveranseStatus {
     UNDER_ARBEID, LEVERT // AVBRUTT?
 }
 

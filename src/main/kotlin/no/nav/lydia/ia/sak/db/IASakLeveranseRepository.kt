@@ -7,11 +7,10 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
+import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
-import no.nav.lydia.ia.sak.domene.LeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import javax.sql.DataSource
@@ -136,13 +135,29 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
+    fun oppdaterIASakLeveranse(
+        iaSakLeveranseId: Int,
+        oppdateringsDto: IASakLeveranseOppdateringsDto
+    ) = using(sessionOf(dataSource = dataSource)) { session ->
+        val query = queryOf(
+            "update iasak_leveranse set status = :status where id = :iaSakLeveranseId",
+            mapOf(
+                "iaSakLeveranseId" to iaSakLeveranseId,
+                "status" to oppdateringsDto.status?.name // TODO: Ta hensyn til at status kan være null (13/2-23)
+            )
+        ).asUpdate
+        session.run(query)
+
+        hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.right() ?: IASakError.`ugyldig iaSakLeveranseId`.left()
+    }
+
     private fun mapTilIASakLeveranse(rad: Row) =
         IASakLeveranse(
             id = rad.int("id"),
             saksnummer = rad.string("saksnummer"),
             modul = mapTilModul(rad),
             frist = rad.localDate("frist"),
-            status = LeveranseStatus.valueOf(rad.string("status")),
+            status = IASakLeveranseStatus.valueOf(rad.string("status")),
             opprettetAv = rad.string("opprettet_av"),
             sistEndret = rad.localDateTime("sist_endret"),
             sistEndretAv = rad.string("sist_endret_av")
