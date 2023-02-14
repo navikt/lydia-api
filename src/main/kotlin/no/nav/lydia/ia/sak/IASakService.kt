@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import io.ktor.http.*
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.*
@@ -124,17 +123,12 @@ class IASakService(
         }
 
     fun opprettIASakLeveranse(leveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
-        val sak = iaSakRepository.hentIASak(leveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
-        if (sak.eidAv != rådgiver.navIdent)
-            return IASakError.`ikke eier av sak`.left()
-        if (sak.status != IAProsessStatus.VI_BISTÅR)
-            return Feil(feilmelding = "Kan kun opprette leveranser på saker som er i 'Vi Bistår'", httpStatusCode = HttpStatusCode.Conflict).left()
-
-        val moduler = iaSakLeveranseRepository.hentModuler()
-        moduler.firstOrNull { it.id == leveranse.modulId } ?: return IASakError.`ugyldig modul`.left()
-
         return try {
-            iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, rådgiver)
+            val moduler = iaSakLeveranseRepository.hentModuler()
+            moduler.firstOrNull { it.id == leveranse.modulId } ?: return IASakError.`ugyldig modul`.left()
+            somEierAvSakIViBistår(saksnummer = leveranse.saksnummer, rådgiver = rådgiver) {
+                iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, rådgiver)
+            }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
             IASakError.`generell feil under uthenting`.left()
@@ -142,28 +136,37 @@ class IASakService(
     }
 
     fun slettIASakLeveranse(iaSakLeveranseId: Int, rådgiver: Rådgiver): Either<Feil, Int> {
-        val iaSakLeveranse = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)
-            ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
-        val sak = iaSakRepository.hentIASak(iaSakLeveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
-        if (sak.eidAv != rådgiver.navIdent)
-            return IASakError.`ikke eier av sak`.left()
-        if (sak.status != IAProsessStatus.VI_BISTÅR)
-            return Feil(feilmelding = "Kan kun opprette leveranser på saker som er i 'Vi Bistår'", httpStatusCode = HttpStatusCode.Conflict).left()
-
         return try {
-            iaSakLeveranseRepository.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId).right()
+            val saksnummer = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.saksnummer
+                ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
+            somEierAvSakIViBistår(saksnummer = saksnummer, rådgiver = rådgiver) {
+                iaSakLeveranseRepository.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId).right()
+            }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved letting av leveranse med id $iaSakLeveranseId: ${e.message}", e)
             IASakError.`generell feil under uthenting`.left()
         }
     }
 
-    fun hentTjenester() = try {
-            iaSakLeveranseRepository.hentIATjenster().right()
-        } catch (e: Exception) {
-            log.error("Noe gikk feil ved henting av tjenester: ${e.message}", e)
+    fun oppdaterIASakLeveranse(iaSakLeveranseId: Int, oppdateringsDto: IASakLeveranseOppdateringsDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
+        return try {
+            val saksnummer = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.saksnummer
+                ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
+            somEierAvSakIViBistår(saksnummer = saksnummer, rådgiver = rådgiver) {
+                iaSakLeveranseRepository.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId, oppdateringsDto = oppdateringsDto)
+            }
+        }  catch (e: Exception) {
+            log.error("Noe gikk feil ved oppdatering av IASakLeveranse: ${e.message}", e)
             IASakError.`generell feil under uthenting`.left()
         }
+    }
+
+    fun hentTjenester() = try {
+        iaSakLeveranseRepository.hentIATjenster().right()
+    } catch (e: Exception) {
+        log.error("Noe gikk feil ved henting av tjenester: ${e.message}", e)
+        IASakError.`generell feil under uthenting`.left()
+    }
 
     fun hentModuler() = try {
         iaSakLeveranseRepository.hentModuler().right()
@@ -172,20 +175,19 @@ class IASakService(
         IASakError.`generell feil under uthenting`.left()
     }
 
-    fun oppdaterIASakLeveranse(iaSakLeveranseId: Int, oppdateringsDto: IASakLeveranseOppdateringsDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
-        val iaSakLeveranse = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)
-            ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
-        val sak = iaSakRepository.hentIASak(iaSakLeveranse.saksnummer) ?: return IASakError.`ugyldig saksnummer`.left()
-        if (sak.eidAv != rådgiver.navIdent)
-            return IASakError.`ikke eier av sak`.left()
-        if (sak.status != IAProsessStatus.VI_BISTÅR)
-            return Feil(feilmelding = "Kan kun opprette leveranser på saker som er i 'Vi Bistår'", httpStatusCode = HttpStatusCode.Conflict).left()
+    private fun hentIASak(saksnummer: String) =
+        iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
 
-        return try {
-            iaSakLeveranseRepository.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId, oppdateringsDto = oppdateringsDto)
-        }  catch (e: Exception) {
-            log.error("Noe gikk feil ved henting av moduler: ${e.message}", e)
-            IASakError.`generell feil under uthenting`.left()
+    private fun <T> somEierAvSak(saksnummer: String, rådgiver: Rådgiver, block: (IASak) -> Either<Feil, T>) =
+       hentIASak(saksnummer = saksnummer)
+           .flatMap { sak ->
+               if (sak.eidAv == rådgiver.navIdent) block(sak)
+               else IASakError.`ikke eier av sak`.left()
+           }
+
+    private fun <T> somEierAvSakIViBistår(saksnummer: String, rådgiver: Rådgiver, block: (IASak) -> Either<Feil, T>) =
+        somEierAvSak(saksnummer = saksnummer, rådgiver = rådgiver) { sak ->
+            if (sak.status == IAProsessStatus.VI_BISTÅR) block(sak)
+            else IASakError.`fikk ikke oppdatert sak`.left()
         }
-    }
 }
