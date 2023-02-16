@@ -76,17 +76,20 @@ class IASakLeveranseTest {
             modulId = 2
         )
 
-        val leveranser = hentIASakLeveranser(
+        val iaSakLeveranserPerTjeneste = hentIASakLeveranser(
             orgnr = sakIStatusViBistår.orgnr,
             saksnummer = sakIStatusViBistår.saksnummer)
-        leveranser shouldHaveSize 2
-        leveranser.forExactlyOne {
-            it.frist shouldBe nå
-            it.modul.id shouldBe 1
-        }
-        leveranser.forExactlyOne {
-            it.frist shouldBe imorgen
-            it.modul.id shouldBe 2
+
+        iaSakLeveranserPerTjeneste.forExactlyOne { iaSakLeveranseForTjeneste ->
+            iaSakLeveranseForTjeneste.leveranser shouldHaveSize 2
+            iaSakLeveranseForTjeneste.leveranser.forExactlyOne {
+                it.frist shouldBe nå
+                it.modul.id shouldBe 1
+            }
+            iaSakLeveranseForTjeneste.leveranser.forExactlyOne {
+                it.frist shouldBe imorgen
+                it.modul.id shouldBe 2
+            }
         }
     }
 
@@ -131,9 +134,11 @@ class IASakLeveranseTest {
         val fullførtLeveranse = leveranseDto.oppdaterIASakLeveranse(orgnr = sakIViBistår.orgnr, status = IASakLeveranseStatus.LEVERT)
         fullførtLeveranse.status shouldBe IASakLeveranseStatus.LEVERT
 
-        hentIASakLeveranser(orgnr = sakIViBistår.orgnr, saksnummer = sakIViBistår.saksnummer).forExactlyOne {
-            it.id shouldBe leveranseDto.id
-            it.status shouldBe IASakLeveranseStatus.LEVERT
+        hentIASakLeveranser(orgnr = sakIViBistår.orgnr, saksnummer = sakIViBistår.saksnummer).forExactlyOne {iaSakLeveranserForTjeneste ->
+            iaSakLeveranserForTjeneste.leveranser.forExactlyOne {
+                it.id shouldBe leveranseDto.id
+                it.status shouldBe IASakLeveranseStatus.LEVERT
+            }
         }
     }
 

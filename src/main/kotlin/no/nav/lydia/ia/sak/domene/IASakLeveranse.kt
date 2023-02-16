@@ -25,7 +25,6 @@ data class IATjeneste (
     val navn: String
 )
 
-@Serializable
 data class Modul (
     val id: Int,
     val iaTjeneste: IATjeneste,

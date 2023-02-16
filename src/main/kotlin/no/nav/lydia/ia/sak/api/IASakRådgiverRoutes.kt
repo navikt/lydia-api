@@ -142,7 +142,7 @@ fun Route.iaSakRådgiver(
                 saksnummer = saksnummer
             )
         }.map {
-            call.respond(it.tilDto())
+            call.respond(it.tilIASakLeveranserPerTjenesteDto())
         }.mapLeft {
             call.respond(message = it.feilmelding, status = it.httpStatusCode)
         }
@@ -229,7 +229,7 @@ fun Route.iaSakRådgiver(
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
             iaSakService.hentModuler()
         }.map {
-            call.respond(it)
+            call.respond(it.map { modul -> modul.tilDto() })
         }.mapLeft {
             call.respond(message = it.feilmelding, status = it.httpStatusCode)
         }
