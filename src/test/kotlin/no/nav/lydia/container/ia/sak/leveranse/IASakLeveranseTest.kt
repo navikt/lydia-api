@@ -28,6 +28,26 @@ class IASakLeveranseTest {
     private val mockOAuth2Server = oauth2ServerContainer
 
     @Test
+    fun `skal ikke kunne legge til duplikate leveranser`() {
+        val sakIViBistårStatus = sakIViBistår()
+
+        sakIViBistårStatus.opprettIASakLeveranse(
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = 1
+        )
+
+        opprettIASakLeveranse(
+            orgnr = sakIViBistårStatus.orgnr,
+            saksnummer = sakIViBistårStatus.saksnummer,
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = 1).response().statuskode() shouldBe HttpStatusCode.Conflict.value
+
+        hentIASakLeveranser(
+            orgnr = sakIViBistårStatus.orgnr,
+            saksnummer = sakIViBistårStatus.saksnummer) shouldHaveSize 1
+    }
+
+    @Test
     fun `skal ikke kunne legge til leveranser dersom en sak ikke er i status Vi Bistår`() {
         val sakIStatusKartlegges = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)

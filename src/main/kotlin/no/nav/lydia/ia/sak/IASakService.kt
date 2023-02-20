@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import io.ktor.http.*
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.*
@@ -126,6 +127,12 @@ class IASakService(
         return try {
             val moduler = iaSakLeveranseRepository.hentModuler()
             moduler.firstOrNull { it.id == leveranse.modulId } ?: return IASakError.`ugyldig modul`.left()
+
+            val finnesFraFør = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = leveranse.saksnummer)
+                .any { it.modul.id == leveranse.modulId }
+            if (finnesFraFør)
+                return Feil("Det finnes allerede en leveranse med denne modulen", HttpStatusCode.Conflict).left()
+
             somEierAvSakIViBistår(saksnummer = leveranse.saksnummer, rådgiver = rådgiver) {
                 iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, rådgiver)
             }
