@@ -11,8 +11,10 @@ import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.tilgangskontroll.Rådgiver
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 private val hentIASakLeveranserSql = """
@@ -24,6 +26,7 @@ private val hentIASakLeveranserSql = """
                         iasak_leveranse.opprettet_av,
                         iasak_leveranse.sist_endret,
                         iasak_leveranse.sist_endret_av,
+                        iasak_leveranse.fullfort,
                         modul.id as modulId,
                         modul.navn as modulNavn,
                         ia_tjeneste.id as iaTjenesteId,
@@ -139,11 +142,16 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
         iaSakLeveranseId: Int,
         oppdateringsDto: IASakLeveranseOppdateringsDto
     ) = using(sessionOf(dataSource = dataSource)) { session ->
+        val fullførtDato = when (oppdateringsDto.status) {
+            LEVERT -> LocalDateTime.now()
+            else -> null
+        }
         val query = queryOf(
-            "update iasak_leveranse set status = :status where id = :iaSakLeveranseId",
+            "update iasak_leveranse set status = :status, fullfort = :fullfort where id = :iaSakLeveranseId",
             mapOf(
                 "iaSakLeveranseId" to iaSakLeveranseId,
-                "status" to oppdateringsDto.status?.name // TODO: Ta hensyn til at status kan være null (13/2-23)
+                "status" to oppdateringsDto.status.name,
+                "fullfort" to fullførtDato
             )
         ).asUpdate
         session.run(query)
@@ -160,7 +168,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             status = IASakLeveranseStatus.valueOf(rad.string("status")),
             opprettetAv = rad.string("opprettet_av"),
             sistEndret = rad.localDateTime("sist_endret"),
-            sistEndretAv = rad.string("sist_endret_av")
+            sistEndretAv = rad.string("sist_endret_av"),
+            fullført = rad.localDateTimeOrNull("fullfort")
         )
 
     private fun mapTilIATjeneste(rad: Row) = IATjeneste(

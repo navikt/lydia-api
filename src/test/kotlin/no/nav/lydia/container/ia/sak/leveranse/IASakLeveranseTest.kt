@@ -2,9 +2,12 @@ package no.nav.lydia.container.ia.sak.leveranse
 
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
 import no.nav.lydia.helper.SakHelper.Companion.hentModuler
@@ -26,6 +29,29 @@ import kotlin.test.Test
 
 class IASakLeveranseTest {
     private val mockOAuth2Server = oauth2ServerContainer
+
+    @Test
+    fun `skal få ut fullførtdato for leveranser`() {
+        val sakIViBistårStatus = sakIViBistår()
+        val leveranse = sakIViBistårStatus.opprettIASakLeveranse(
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = 1
+        )
+        leveranse.oppdaterIASakLeveranse(
+            orgnr = sakIViBistårStatus.orgnr,
+            status = IASakLeveranseStatus.LEVERT
+        )
+
+        hentIASakLeveranser(
+            orgnr = sakIViBistårStatus.orgnr,
+            saksnummer = sakIViBistårStatus.saksnummer
+        ).forExactlyOne {
+            it.leveranser.forExactlyOne { leveranse ->
+                leveranse.fullført shouldNotBe null
+                leveranse.fullført?.shouldBeGreaterThan(LocalDate.now().atStartOfDay().toKotlinLocalDateTime())
+            }
+        }
+    }
 
     @Test
     fun `skal ikke kunne legge til duplikate leveranser`() {

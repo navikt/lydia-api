@@ -275,20 +275,19 @@ class SakHelper {
             orgnr: String,
             saksnummer: String,
             iaSakLeveranseId: Int,
-            status: IASakLeveranseStatus?,
+            status: IASakLeveranseStatus,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) = lydiaApiContainer.performPut("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
             .authentication().bearer(token)
             .jsonBody(Json.encodeToString(
                 IASakLeveranseOppdateringsDto(
-                    frist = null,
                     status = status
                 )
             ))
 
         fun IASakLeveranseDto.oppdaterIASakLeveranse(
             orgnr: String,
-            status: IASakLeveranseStatus?
+            status: IASakLeveranseStatus
         ) = oppdaterIASakLeveranse(
             orgnr = orgnr,
             saksnummer = saksnummer,

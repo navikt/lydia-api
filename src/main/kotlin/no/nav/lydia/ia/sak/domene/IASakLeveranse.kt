@@ -13,6 +13,7 @@ data class IASakLeveranse(
     val opprettetAv: String,
     val sistEndret: LocalDateTime,
     val sistEndretAv: String,
+    val fullført: LocalDateTime?
 )
 
 enum class IASakLeveranseStatus {

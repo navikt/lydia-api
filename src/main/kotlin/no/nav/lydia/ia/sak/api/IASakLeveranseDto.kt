@@ -1,7 +1,9 @@
 package no.nav.lydia.ia.sak.api
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
@@ -14,7 +16,8 @@ data class IASakLeveranseDto (
     val saksnummer: String,
     val modul: ModulDto,
     val frist: LocalDate,
-    val status: IASakLeveranseStatus
+    val status: IASakLeveranseStatus,
+    val fullført: LocalDateTime?
 )
 
 @Serializable
@@ -33,8 +36,7 @@ data class IASakLeveranseOpprettelsesDto (
 
 @Serializable
 data class IASakLeveranseOppdateringsDto (
-    val frist: LocalDate?,
-    val status: IASakLeveranseStatus?
+    val status: IASakLeveranseStatus
 )
 
 fun Modul.tilDto() = ModulDto(
@@ -49,7 +51,8 @@ fun IASakLeveranse.tilDto() =
         saksnummer = saksnummer,
         modul = modul.tilDto(),
         frist = frist.toKotlinLocalDate(),
-        status = status
+        status = status,
+        fullført = fullført?.toKotlinLocalDateTime()
     )
 
 fun List<IASakLeveranse>.tilDto() = this.map { it.tilDto() }
