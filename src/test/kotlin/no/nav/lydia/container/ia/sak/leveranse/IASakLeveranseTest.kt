@@ -17,6 +17,7 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
@@ -29,6 +30,21 @@ import kotlin.test.Test
 
 class IASakLeveranseTest {
     private val mockOAuth2Server = oauth2ServerContainer
+
+    @Test
+    fun `skal få tjenester sortert etter navn`() {
+        hentIATjenester().map { it.navn } shouldBe hentIATjenesterFraDatabase().sorted()
+
+        val sakIViBistår = sakIViBistår()
+        hentModuler().forEach {
+            sakIViBistår.opprettIASakLeveranse(modulId = it.id)
+        }
+
+        hentIASakLeveranser(
+            orgnr = sakIViBistår.orgnr,
+            saksnummer = sakIViBistår.saksnummer
+        ).map { it.iaTjeneste.navn } shouldBe hentIATjenesterFraDatabase().sorted()
+    }
 
     @Test
     fun `skal få ut fullførtdato for leveranser`() {
@@ -209,4 +225,7 @@ class IASakLeveranseTest {
         .nyHendelse(VIRKSOMHET_SKAL_BISTÅS).also {
             it.status shouldBe VI_BISTÅR
         }
+
+    private fun hentIATjenesterFraDatabase() =
+        postgresContainer.hentAlleKolonner<String>("select navn from ia_tjeneste")
 }

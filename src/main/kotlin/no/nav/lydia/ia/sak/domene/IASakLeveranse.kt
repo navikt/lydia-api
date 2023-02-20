@@ -24,7 +24,10 @@ enum class IASakLeveranseStatus {
 data class IATjeneste (
     val id: Int,
     val navn: String
-)
+): Comparable<IATjeneste> {
+    override fun compareTo(other: IATjeneste) =
+        compareValuesBy(this, other) { it.navn }
+}
 
 data class Modul (
     val id: Int,

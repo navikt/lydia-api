@@ -9,6 +9,7 @@ import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
@@ -319,7 +320,7 @@ class SakHelper {
                 })
 
         fun IASakDto.opprettIASakLeveranse(
-            frist: LocalDate,
+            frist: LocalDate = java.time.LocalDate.now().toKotlinLocalDate(),
             modulId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =

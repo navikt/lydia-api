@@ -70,4 +70,9 @@ fun List<IASakLeveranse>.tilIASakLeveranserPerTjenesteDto() =
 data class IASakLeveranserPerTjenesteDto(
     val iaTjeneste: IATjeneste,
     val leveranser: List<IASakLeveranseDto>
-)
+): Comparable<IASakLeveranserPerTjenesteDto> {
+    override fun compareTo(other: IASakLeveranserPerTjenesteDto) =
+        compareValuesBy(this, other) {
+            it.iaTjeneste
+        }
+}
