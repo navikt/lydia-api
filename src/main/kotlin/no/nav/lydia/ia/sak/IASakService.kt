@@ -138,7 +138,7 @@ class IASakService(
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
-            IASakError.`generell feil under uthenting`.left()
+            Feil("Feil ved opprettelse av leveranse", HttpStatusCode.InternalServerError).left()
         }
     }
 
@@ -151,7 +151,7 @@ class IASakService(
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved letting av leveranse med id $iaSakLeveranseId: ${e.message}", e)
-            IASakError.`generell feil under uthenting`.left()
+            Feil("Feil ved sletting av leveranse", HttpStatusCode.InternalServerError).left()
         }
     }
 
@@ -164,7 +164,7 @@ class IASakService(
             }
         }  catch (e: Exception) {
             log.error("Noe gikk feil ved oppdatering av IASakLeveranse: ${e.message}", e)
-            IASakError.`generell feil under uthenting`.left()
+            Feil("Feil ved oppdatering av leveranse", HttpStatusCode.InternalServerError).left()
         }
     }
 
