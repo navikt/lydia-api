@@ -72,6 +72,36 @@ fun Route.iaSakRådgiver(
             })
     }
 
+    get("$IA_SAK_RADGIVER_PATH/{orgnummer}/aktiv") {
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+            iaSakService.hentSakerForOrgnummer(orgnummer)
+                .sortedByDescending { it.opprettetTidspunkt }
+                .toDto(rådgiver = rådgiver)
+                .firstOrNull { !it.lukket }
+                .right()
+        }.also { either ->
+            auditLog.auditloggEither(
+                call = call,
+                either = either,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+            )
+        }.fold(
+            ifRight = {
+                when(it) {
+                    null -> call.respond(HttpStatusCode.NoContent)
+                    else -> call.respond(it)
+                }
+            },
+            ifLeft = {
+                call.respond(
+                    status = it.httpStatusCode,
+                    message = it.feilmelding
+                )
+            })
+    }
+
     get("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {

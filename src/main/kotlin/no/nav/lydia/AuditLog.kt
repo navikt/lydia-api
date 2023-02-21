@@ -61,7 +61,7 @@ class AuditLog(val miljø: Environment) {
 
     fun auditloggEither(
         call: ApplicationCall,
-        either: Either<Feil, Any>,
+        either: Either<Feil, Any?>,
         orgnummer: String?,
         saksnummer: String? = null,
         melding: String? = null,
