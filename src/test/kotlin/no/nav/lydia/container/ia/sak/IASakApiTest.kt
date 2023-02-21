@@ -11,6 +11,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
+import no.nav.lydia.helper.SakHelper.Companion.hentAktivSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
@@ -65,17 +67,17 @@ class IASakApiTest {
     fun `skal kunne åpne en ny sak etter at en sak er slettet`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer).slettSak()
-        hentSaker(orgnummer = orgnummer).shouldBeEmpty()
+        hentAktivSakRespons(orgnummer = orgnummer).statuskode() shouldBe HttpStatusCode.NoContent.value
         opprettSakForVirksomhet(orgnummer = orgnummer).also {
             it.status shouldBe VURDERES
         }
-        hentSaker(orgnummer = orgnummer).shouldHaveSize(1)
+        hentAktivSak(orgnummer).status shouldBe VURDERES
     }
 
     @Test
     fun `skal kunne slette en sak med status Vurderes (uten eier)`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).slettSak()
-        hentSaker(sak.orgnr).none { it.saksnummer == sak.saksnummer } shouldBe true
+        hentAktivSakRespons(sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
 
     @Test
@@ -419,13 +421,11 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
 
-        val iaSaker = hentSaker(orgnummer)
-        iaSaker.forAtLeastOne {
-            it.orgnr shouldBe orgnummer
-            it.status shouldBe VURDERES
-            it.opprettetAv shouldBe mockOAuth2Server.superbruker1.navIdent
-            it.saksnummer shouldBe sak.saksnummer
-        }
+        val aktivSak = hentAktivSak(orgnummer)
+        aktivSak.orgnr shouldBe orgnummer
+        aktivSak.status shouldBe VURDERES
+        aktivSak.opprettetAv shouldBe mockOAuth2Server.superbruker1.navIdent
+        aktivSak.saksnummer shouldBe sak.saksnummer
 
         nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
             it.orgnr shouldBe orgnummer
@@ -531,27 +531,26 @@ class IASakApiTest {
     fun `skal få gyldige neste hendelser i retur - avhengig av hvem man er`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
-            hentSaker(
+            hentAktivSak(
                 sak.orgnr,
                 token = mockOAuth2Server.superbruker1.token
-            ).filter { it.saksnummer == sak.saksnummer }
-                .forEach {
-                    it.gyldigeNesteHendelser.map { it.saksHendelsestype }
-                        .shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
-                }
-            hentSaker(
+            ).also { aktivSak ->
+                aktivSak.gyldigeNesteHendelser.map { it.saksHendelsestype }
+                    .shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
+            }
+
+            hentAktivSak(
                 sak.orgnr,
                 token = mockOAuth2Server.saksbehandler1.token
-            ).filter { it.saksnummer == sak.saksnummer }
-                .forEach {
-                    it.gyldigeNesteHendelser.forAll {
-                        it.saksHendelsestype shouldBe TA_EIERSKAP_I_SAK
-                    }
+            ).also { aktivSak ->
+                aktivSak.gyldigeNesteHendelser.forAll {
+                    it.saksHendelsestype shouldBe TA_EIERSKAP_I_SAK
                 }
-            hentSaker(orgnummer, token = mockOAuth2Server.lesebruker.token).filter { it.saksnummer == sak.saksnummer }
-                .forEach {
-                    it.gyldigeNesteHendelser.shouldBeEmpty()
-                }
+            }
+
+            hentAktivSak(orgnummer, token = mockOAuth2Server.lesebruker.token).also { aktivSak ->
+                aktivSak.gyldigeNesteHendelser.shouldBeEmpty()
+            }
         }
     }
 
@@ -789,10 +788,7 @@ class IASakApiTest {
             sak.nyHendelse(TILBAKE)
         }
 
-        hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
-            enSak.status shouldBe FULLFØRT
-            enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
-        }
+        hentAktivSakRespons(orgnummer = sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
 
     @Test
@@ -806,10 +802,7 @@ class IASakApiTest {
             sak.nyHendelse(TILBAKE)
         }
 
-        hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
-            enSak.status shouldBe IKKE_AKTUELL
-            enSak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf()
-        }
+        hentAktivSakRespons(orgnummer = sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
 
     @Test
@@ -819,9 +812,8 @@ class IASakApiTest {
             .nyIkkeAktuellHendelse()
         sak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TILBAKE)
 
-        hentSaker(sak.orgnr, token = oauth2ServerContainer.superbruker1.token)
-            .filter { it.saksnummer == sak.saksnummer }
-            .forExactlyOne { sakDto ->
+        hentAktivSak(sak.orgnr, token = oauth2ServerContainer.superbruker1.token)
+            .also { sakDto ->
                 sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TA_EIERSKAP_I_SAK)
             }
 
@@ -1039,7 +1031,7 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .nyHendelse(FULLFØR_BISTAND)
 
-        hentSaker(orgnummer = sak.orgnr).filter { it.saksnummer == sak.saksnummer }.forExactlyOne { enSak ->
+        hentAktivSak(orgnummer = sak.orgnr).also { enSak ->
             enSak.status shouldBe FULLFØRT
         }
     }

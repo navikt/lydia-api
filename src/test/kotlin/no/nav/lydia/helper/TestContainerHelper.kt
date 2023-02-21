@@ -157,6 +157,26 @@ class SakHelper {
                 .authentication().bearer(token = token)
                 .tilListeRespons<IASakDto>()
 
+        fun hentAktivSak(orgnummer: String, token: String = oauth2ServerContainer.saksbehandler1.token) : IASakDto {
+            val triple = hentAktivSakRespons(orgnummer = orgnummer, token = token)
+
+            if (triple.statuskode() == 200) {
+                return triple.third.get()
+            } else if (triple.statuskode() == 204) {
+                fail("Ingen aktive saker funnet")
+            } else {
+                fail(triple.third.toString())
+            }
+        }
+
+        fun hentAktivSakRespons(
+            orgnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer/aktiv")
+                .authentication().bearer(token = token)
+                .responseObject(IASakDto.serializer())
+
         fun hentIASakLeveranser(
             orgnr: String,
             saksnummer: String,

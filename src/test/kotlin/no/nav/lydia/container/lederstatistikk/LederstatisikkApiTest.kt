@@ -4,6 +4,7 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.LederstatistikkHelper
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
@@ -54,9 +55,8 @@ class LederstatisikkApiTest {
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
             .nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
 
-        val sakerForVirksomheten = SakHelper.hentSaker(orgnummer = virksomhet.orgnr)
-        sakerForVirksomheten.size shouldBe 1
-        sakerForVirksomheten.first().status shouldBe IAProsessStatus.FULLFØRT
+        val aktivSak = hentAktivSak(orgnummer = virksomhet.orgnr)
+        aktivSak.status shouldBe IAProsessStatus.FULLFØRT
 
         val lederstatistikkKommunalSektor =
             LederstatistikkHelper.hentLederstatistikk(
