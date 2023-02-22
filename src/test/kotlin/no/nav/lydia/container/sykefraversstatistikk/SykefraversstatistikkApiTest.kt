@@ -4,8 +4,10 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
+import io.kotest.inspectors.forNone
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -21,7 +23,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.*
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
@@ -39,10 +40,12 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomh
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_KOMMUNAL_FORVALTNING
@@ -57,22 +60,21 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnTestdata
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.statuskode
+import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktResponsDto
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -106,9 +108,11 @@ class SykefraversstatistikkApiTest {
         lastInnTestdata(
             TestData().lagData(
                 virksomhet = virksomhet,
-                perioder = listOf(Periode.gjeldendePeriode(),
+                perioder = listOf(
+                    Periode.gjeldendePeriode(),
                     Periode.forrigePeriode(),
-                    Periode(kvartal = 4, årstall = 2019)),
+                    Periode(kvartal = 4, årstall = 2019)
+                ),
             )
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
@@ -161,12 +165,12 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift for de siste 4 kvartaler`() {
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr).also {
-                it.orgnr shouldBe orgnr
-                it.antallKvartaler shouldBe 2
-                it.kvartaler.size shouldBe 2
-                it.kvartaler[0].kvartal shouldBe Periode.gjeldendePeriode().kvartal
-                it.kvartaler[0].årstall shouldBe Periode.gjeldendePeriode().årstall
-            }
+            it.orgnr shouldBe orgnr
+            it.antallKvartaler shouldBe 2
+            it.kvartaler.size shouldBe 2
+            it.kvartaler[0].kvartal shouldBe Periode.gjeldendePeriode().kvartal
+            it.kvartaler[0].årstall shouldBe Periode.gjeldendePeriode().årstall
+        }
     }
 
     @Test
@@ -678,6 +682,34 @@ class SykefraversstatistikkApiTest {
         `sykefravær når superbruker filtrerer på seg selv`
             .forAll {
                 it.eidAv shouldBe superbruker1.navIdent
+            }
+    }
+
+    @Test
+    fun `søk - superbruker skal kunne søke på flere eiere samtidig`() {
+        val superbruker1 = oauth2ServerContainer.superbruker1
+        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+        val saksbehandler2 = oauth2ServerContainer.saksbehandler2
+
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler2.token)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
+
+        val `sykefravær når superbruker filterer på seg selv og saksbehandler1` = hentSykefravær(
+            eiere = "${superbruker1.navIdent},${saksbehandler1.navIdent}",
+            token = superbruker1.token,
+        ).data
+
+        `sykefravær når superbruker filterer på seg selv og saksbehandler1`
+            .forNone {
+                it.eidAv shouldBe saksbehandler2.navIdent
+            }
+        `sykefravær når superbruker filterer på seg selv og saksbehandler1`
+            .forAll {
+                listOf(superbruker1.navIdent, saksbehandler1.navIdent) shouldContain it.eidAv
             }
     }
 
