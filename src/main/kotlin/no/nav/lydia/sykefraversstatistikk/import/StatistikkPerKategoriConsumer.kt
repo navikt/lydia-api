@@ -58,6 +58,8 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                             sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
                                 records.toSykefraversstatistikkPerKategoriImportDto()
                             )
+                            logger.info("Lagret ${records.count()} meldinger om sykefraværsstatistikk per kategori")
+                            consumer.commitSync()
                         }
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
