@@ -37,8 +37,8 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.lederstatistikk.LederstatistikkResponsDto
-import no.nav.lydia.lederstatistikk.api.LEDERSTATISTIKK_PATH
+import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
+import no.nav.lydia.statusoverikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
@@ -436,9 +436,9 @@ class SakHelper {
     }
 }
 
-class LederstatistikkHelper {
+class StatusoversiktHelper {
     companion object {
-        fun hentLederstatistikk(
+        fun hentStatusoversikt(
             kommuner: String = "",
             fylker: String = "",
             næringsgrupper: String = "",
@@ -450,7 +450,7 @@ class LederstatistikkHelper {
             eiere: String = "",
             sektor: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = hentLederstatistikkRespons(
+        ) = hentStatusoversiktRespons(
             kommuner = kommuner,
             fylker = fylker,
             næringsgrupper = næringsgrupper,
@@ -464,7 +464,7 @@ class LederstatistikkHelper {
             token = token
         )
 
-        fun hentLederstatistikkRespons(
+        fun hentStatusoversiktRespons(
             kommuner: String = "",
             fylker: String = "",
             næringsgrupper: String = "",
@@ -478,7 +478,7 @@ class LederstatistikkHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             lydiaApiContainer.performGet(
-                LEDERSTATISTIKK_PATH +
+                STATUSOVERSIKT_PATH +
                         "?${Søkeparametere.KOMMUNER}=$kommuner" +
                         "&${Søkeparametere.FYLKER}=$fylker" +
                         "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
@@ -491,7 +491,7 @@ class LederstatistikkHelper {
                         "&${Søkeparametere.SEKTOR}=$sektor"
             )
                 .authentication().bearer(token)
-                .tilSingelRespons<LederstatistikkResponsDto>()
+                .tilSingelRespons<StatusoversiktResponsDto>()
     }
 }
 

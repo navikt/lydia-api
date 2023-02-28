@@ -1,4 +1,4 @@
-package no.nav.lydia.lederstatistikk.api
+package no.nav.lydia.statusoverikt.api
 
 import arrow.core.right
 import io.ktor.server.application.*
@@ -7,31 +7,31 @@ import io.ktor.server.routing.*
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.lederstatistikk.LederstatistikkResponsDto
-import no.nav.lydia.lederstatistikk.LederstatistikkService
+import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
+import no.nav.lydia.statusoverikt.StatusoversiktService
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
-import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
+import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandlertilgang
 
-const val LEDERSTATISTIKK_PATH = "lederstatistikk"
+const val STATUSOVERSIKT_PATH = "statusoversikt"
 
-fun Route.lederstatistikk(
+fun Route.statusoversikt(
     geografiService: GeografiService,
-    lederstatistikkService: LederstatistikkService,
+    statusoversiktService: StatusoversiktService,
     auditLog: AuditLog,
     naisEnvironment: NaisEnvironment,
 ) {
     val fiaRoller = naisEnvironment.security.fiaRoller
-    get("$LEDERSTATISTIKK_PATH/") {
-        somSuperbruker(call = call, fiaRoller = fiaRoller) { superbruker ->
-            call.request.søkeparametere(geografiService, rådgiver = superbruker)
+    get("$STATUSOVERSIKT_PATH/") {
+        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { saksbehandler ->
+            call.request.søkeparametere(geografiService, rådgiver = saksbehandler)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")
         }.map { søkeparametere ->
-            lederstatistikkService.søkEtterLederstatistikk(søkeparametere = søkeparametere)
-        }.map { lederstatistikkList ->
-            call.respond(LederstatistikkResponsDto(data = lederstatistikkList)).right()
+            statusoversiktService.søkEtterStatusoversikt(søkeparametere = søkeparametere)
+        }.map { statusoversiktList ->
+            call.respond(StatusoversiktResponsDto(data = statusoversiktList)).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 

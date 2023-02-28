@@ -1,9 +1,9 @@
-package no.nav.lydia.lederstatistikk
+package no.nav.lydia.statusoverikt
 
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 
 @kotlinx.serialization.Serializable
-data class Lederstatistikk(
+data class Statusoversikt(
     val status: IAProsessStatus?,
     val antall: Int,
 )
