@@ -213,7 +213,7 @@ class IASakLeveranseTest {
     @Test
     fun `skal kunne hente moduler`() {
         val moduler = hentModuler()
-        moduler shouldHaveSize 11
+        moduler shouldHaveSize 14
     }
 
     private fun sakIViBistår(
