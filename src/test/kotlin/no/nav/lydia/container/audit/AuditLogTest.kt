@@ -11,6 +11,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.sykefraversstatistikk.api.Periode.Companion.gjeldendePeriode
 import kotlin.test.Test
 
 class AuditLogTest {
@@ -231,7 +232,7 @@ class AuditLogTest {
                 navIdent = saksbehandler.navIdent,
                 auditType = AuditType.access,
                 tillat = Tillat.Ja,
-                melding = "Søk med parametere: kvartal=3 arstall=2022 sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
+                melding = "Søk med parametere: kvartal=${gjeldendePeriode().kvartal} arstall=${gjeldendePeriode().årstall} sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
             )
         }
     }

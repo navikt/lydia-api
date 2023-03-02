@@ -208,7 +208,7 @@ class Periode(val kvartal: Int, val årstall: Int) {
                     "$it er ikke et gyldig kvartal. Kvartal er forventet å være 1 >= kvartal <= 4".invalidNel()
             } ?: Valid(sisteKvartal())
 
-        private fun sisteKvartal() = 3
+        private fun sisteKvartal() = 4
         private fun sisteÅr() = 2022
 
         fun gjeldendePeriode() =
