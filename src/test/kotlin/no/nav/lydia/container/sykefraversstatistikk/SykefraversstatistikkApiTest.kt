@@ -86,6 +86,12 @@ class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val mockOAuth2Server = oauth2ServerContainer
 
+    // Denne testen bruker vi for å hente en dump lokalt (les README)
+    @Test
+    fun `Test for å hente datasource`() {
+        val jdbcUrl = postgresContainer.dataSource.jdbcUrl
+        jdbcUrl shouldStartWith "jdbc:postgresql"
+    }
 
     @Test
     fun `skal kunne filtrere sykefraværsstatistikk på sektor`() {
