@@ -106,6 +106,35 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             hendelse
         }
 
+    fun hentHendelse(hendelseId: String): IASakshendelse? {
+        val idKolonneNavn = "id"
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT 
+                        $idKolonneNavn,
+                        type,
+                        orgnr,
+                        opprettet_av,
+                        saksnummer,
+                        opprettet,
+                        aarsak_enum,
+                        array_agg(begrunnelse_enum) as begrunnelser
+                    FROM ia_sak_hendelse
+                    LEFT JOIN hendelse_begrunnelse ON (ia_sak_hendelse.id = hendelse_begrunnelse.hendelse_id) 
+                    WHERE $idKolonneNavn = :$idKolonneNavn
+                    GROUP BY id, aarsak_enum
+                    """.trimIndent(),
+                    mapOf(
+                        idKolonneNavn to hendelseId
+                    )
+                )
+                    .map(this::mapRow).asSingle
+            )
+        }
+    }
+
     private fun mapRow(row: Row): IASakshendelse {
         val valgtÅrsak = årsakFraDatabase(row.stringOrNull("aarsak_enum"), row.array("begrunnelser"))
             ?: return IASakshendelse(

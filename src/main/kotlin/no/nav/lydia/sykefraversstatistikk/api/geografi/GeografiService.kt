@@ -125,4 +125,11 @@ class GeografiService {
             *kommunenummerISøk.toTypedArray()
         )
     }
+
+    fun finnFylke(kommunenummer: String): Fylke? {
+        val fylkeOgKommuner = hentFylkerOgKommuner()
+        return fylkeOgKommuner
+            .firstOrNull { it.kommuner.any { kommune -> kommune.nummer == kommunenummer } }
+            ?.fylke
+    }
 }

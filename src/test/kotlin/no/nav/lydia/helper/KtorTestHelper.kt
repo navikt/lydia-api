@@ -69,6 +69,8 @@ class KtorTestHelper {
                 statistikkLandTopic = "",
                 iaSakHendelseTopic = "",
                 iaSakTopic = "",
+                iaSakStatistikkTopic = "",
+                iaLeveranseStatistikkTopic = "",
                 brregOppdateringTopic = "",
                 consumerLoopDelay = 200L,
                 statistikkVirksomhetTopic = "",

@@ -1,6 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk.import
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
 
 enum class Kategori {
     VIRKSOMHET, LAND
@@ -30,6 +31,7 @@ data class Siste4Kvartal(
     val kvartaler: List<Kvartal>
 )
 
+@Serializable
 data class Kvartal(
     @SerializedName("årstall")
     val årstall: Int,
