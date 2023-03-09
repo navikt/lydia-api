@@ -202,11 +202,13 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal få sykefraværsstatistikk for siste fire kvartal`() {
         val orgnummer = nyttOrgnummer()
+
+        val sykefraversprosent = hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraversprosent
+
         val sykefraværsprosentSiste4Kvartal = postgresContainer.hentEnkelKolonne<Double>(
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
         )
-
-        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
+        sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
     }
 
     @Test
