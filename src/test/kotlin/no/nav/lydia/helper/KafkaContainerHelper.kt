@@ -49,6 +49,8 @@ class KafkaContainerHelper(
         const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
         const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
+        const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
+        const val iaLeveranseStatistikkTopic = "pia.ia-leveranse-statistikk-v1"
     }
 
     private val gson = GsonBuilder().create()
@@ -88,6 +90,8 @@ class KafkaContainerHelper(
             brokers = kafkaContainer.bootstrapServers,
             iaSakHendelseTopic = iaSakHendelseTopic,
             iaSakTopic = iaSakTopic,
+            iaSakStatistikkTopic = iaSakStatistikkTopic,
+            iaLeveranseStatistikkTopic = iaLeveranseStatistikkTopic,
             statistikkTopic = statistikkTopic,
             statistikkLandTopic = statistikkLandTopic,
             statistikkVirksomhetTopic = statistikkVirksomhetTopic,
@@ -111,6 +115,8 @@ class KafkaContainerHelper(
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
         "IA_SAK_HENDELSE_TOPIC" to iaSakHendelseTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
+        "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
+        "IA_LEVERANSE_STATISTIKK_TOPIC" to iaLeveranseStatistikkTopic,
         "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic
     )
 

@@ -90,17 +90,28 @@ fun startLydiaBackend() {
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
+    val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource))
+
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
     val iaSakshendelseProdusent =
         IASakshendelseProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakHendelseTopic)
     val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakTopic)
+    val iaSakStatistikkProdusent = IASakStatistikkProdusent(
+        produsent = kafkaProdusent,
+        virksomhetService = virksomhetService,
+        sykefraværsstatistikkService = sykefraværsstatistikkService,
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        geografiService = GeografiService(),
+        topic = naisEnv.kafka.iaSakStatistikkTopic
+    )
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
             naisEnvironment = naisEnv,
             dataSource = dataSource,
             iaSakshendelseProdusent = iaSakshendelseProdusent,
-            iaSakProdusent = iaSakProdusent
+            iaSakProdusent = iaSakProdusent,
+            iaSakStatistikkProdusent = iaSakStatistikkProdusent
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -124,7 +135,8 @@ fun Application.lydiaRestApi(
     naisEnvironment: NaisEnvironment,
     dataSource: DataSource,
     iaSakshendelseProdusent: IASakshendelseProdusent? = null,
-    iaSakProdusent: IASakProdusent? = null
+    iaSakProdusent: IASakProdusent? = null,
+    iaSakStatistikkProdusent: IASakStatistikkProdusent? = null,
 ) {
     install(ContentNegotiation) {
         json()
@@ -142,7 +154,7 @@ fun Application.lydiaRestApi(
         callIdMdc("requestId")
         disableDefaultColors()
         filter { call ->
-            listOf(SYKEFRAVERSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH, VEILEDERE_PATH).any() {
+            listOf(SYKEFRAVERSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH, VEILEDERE_PATH).any {
                 call.request.path().startsWith(it)
             }
         }
@@ -244,6 +256,7 @@ fun Application.lydiaRestApi(
                 ).apply {
                     iaSakshendelseProdusent?.also { leggTilIASakshendelseObserver(it) }
                     iaSakProdusent?.also { leggTilIASakObserver(it) }
+                    iaSakStatistikkProdusent?.also { leggTilIASakObserver(it) }
                 },
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog

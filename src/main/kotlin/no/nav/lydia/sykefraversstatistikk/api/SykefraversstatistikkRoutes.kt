@@ -23,12 +23,12 @@ import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.veileder.hentVeiledere
 
-val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
-val FILTERVERDIER_PATH = "filterverdier"
-val ANTALL_TREFF = "antallTreff"
-val SISTE_4_KVARTALER = "siste4kvartaler"
-val GJELDENDE_PERIODE_SISTE_4_KVARTALER = "gjeldendeperiodesiste4kvartaler"
-val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
+const val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
+const val FILTERVERDIER_PATH = "filterverdier"
+const val ANTALL_TREFF = "antallTreff"
+const val SISTE_4_KVARTALER = "siste4kvartaler"
+const val GJELDENDE_PERIODE_SISTE_4_KVARTALER = "gjeldendeperiodesiste4kvartaler"
+const val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
 
 fun Route.sykefraversstatistikk(
     geografiService: GeografiService,
@@ -70,8 +70,8 @@ fun Route.sykefraversstatistikk(
             sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
-        }.map { sykefraværsstatistikkListe ->
-            call.respond(sykefraværsstatistikkListe.toDto())
+        }.map { virksomhetsstatistikkSiste4Kvartal ->
+            call.respond(virksomhetsstatistikkSiste4Kvartal.toDto())
         }.mapLeft { feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
