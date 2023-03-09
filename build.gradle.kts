@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.2.2"
+    val ktorVersion = "2.2.4"
     val fuelVersion = "2.3.1"
 
     // Align versions of all Kotlin components
