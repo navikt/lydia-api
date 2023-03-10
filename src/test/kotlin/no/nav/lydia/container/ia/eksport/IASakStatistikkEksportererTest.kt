@@ -4,10 +4,7 @@ import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.string.shouldContain
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.time.withTimeout
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -18,10 +15,8 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
-import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.junit.After
 import org.junit.Before
-import java.time.Duration
 import kotlin.test.Test
 
 class IASakStatistikkEksportererTest {
@@ -48,7 +43,10 @@ class IASakStatistikkEksportererTest {
             .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
         runBlocking {
-            ventOgKonsumerKafkaMeldinger(konsument = konsument) { meldinger ->
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = sak.saksnummer,
+                konsument = konsument
+            ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
                 meldinger.forAtLeastOne {
                     it shouldContain sak.saksnummer
@@ -62,24 +60,4 @@ class IASakStatistikkEksportererTest {
             }
         }
     }
-
-    private suspend fun ventOgKonsumerKafkaMeldinger(
-        konsument: KafkaConsumer<String, String>,
-        block: (meldinger: List<String>) -> Unit
-    ) {
-        withTimeout(Duration.ofSeconds(10)) {
-            launch {
-                while (this.isActive) {
-                    val records = konsument.poll(Duration.ofMillis(100))
-                    val meldinger = records
-                        .map { it.value() }
-                    if (meldinger.isNotEmpty()) {
-                        block(meldinger)
-                        break
-                    }
-                }
-            }
-        }
-    }
-
 }
