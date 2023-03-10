@@ -64,7 +64,9 @@ class IASakStatistikkEksportererTest {
                     it shouldContain sak.saksnummer
                     it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
                     it shouldContain IAProsessStatus.VURDERES.name
-                    it shouldContain "sykefraværsstatistikkSiste4Kvartal"
+                    it shouldContain "antallPersoner"
+                    it shouldContain "sykefraversprosent"
+                    it shouldContain "sykefraversprosentSiste4Kvartal"
                     it shouldContain Bransjer.BYGG.name
                 }
             }
