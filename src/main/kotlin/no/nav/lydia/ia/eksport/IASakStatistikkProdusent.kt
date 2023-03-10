@@ -83,7 +83,7 @@ class IASakStatistikkProdusent(
                 kvartaler = virksomhetsstatistikkSiste4Kvartal?.kvartaler ?: emptyList(),
                 sektor = virksomhet?.sektor,
                 næringer = virksomhet?.næringsgrupper ?: emptyList(),
-                hovedbransje = finnBransje(virksomhet?.næringsgrupper),
+                bransjeprogram = finnBransje(virksomhet?.næringsgrupper),
                 postnummer = virksomhet?.postnummer,
                 kommuneNummer = virksomhet?.kommunenummer,
                 fylkesnummer = fylkesnummer
@@ -117,7 +117,7 @@ class IASakStatistikkProdusent(
         val kvartaler: List<Kvartal>,
         val sektor: Sektor?,
         val næringer: List<Næringsgruppe>,
-        val hovedbransje: Bransjer?,
+        val bransjeprogram: Bransjer?,
         val postnummer: String?,
         val kommuneNummer: String?,
         val fylkesnummer: String?,
