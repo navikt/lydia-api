@@ -126,10 +126,9 @@ class GeografiService {
         )
     }
 
-    fun finnFylke(kommunenummer: String): Fylke? {
-        val fylkeOgKommuner = hentFylkerOgKommuner()
-        return fylkeOgKommuner
-            .firstOrNull { it.kommuner.any { kommune -> kommune.nummer == kommunenummer } }
-            ?.fylke
-    }
+    fun finnFylke(kommunenummer: String): Fylke? =
+        hentFylkerOgKommuner().firstOrNull { it.harKommune(kommunenummer) }?.fylke
+
+    private fun FylkeOgKommuner.harKommune(kommunenummer: String) =
+        kommuner.map { it.nummer }.contains(kommunenummer)
 }
