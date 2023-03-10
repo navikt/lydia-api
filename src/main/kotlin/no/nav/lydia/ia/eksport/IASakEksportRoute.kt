@@ -11,7 +11,7 @@ val IA_SAK_EKSPORT_PATH = "internal/iasakeksport"
 fun Route.iaSakEksporterer(iaSakEksporterer: IASakEksporterer) {
     get(IA_SAK_EKSPORT_PATH) {
         if (IASakEksporterer.KJØRER_EKSPORT.get()) {
-            call.application.log.warn("Kjører allerede import av bedrifter.")
+            call.application.log.warn("Kjører allerede eksport av ia-saker.")
             return@get call.respond(HttpStatusCode.Conflict)
         }
         launch {
