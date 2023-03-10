@@ -125,8 +125,14 @@ class IASakStatistikkProdusent(
 }
 
 fun finnBransje(næringsgrupper: List<Næringsgruppe>?): Bransjer? {
-    val hovedkode = næringsgrupper?.firstOrNull()?.kode ?: return null
-    val utenPunktum = if (hovedkode.length > 5) "${hovedkode.take(2)}${hovedkode.takeLast(3)}" else hovedkode
+    val næringskoderUtenPunktum = næringsgrupper?.map{ it.kode }?.map { kode ->
+        kode.replace(".", "")
+    }
+
     return Bransjer.values()
-        .firstOrNull { bransje -> bransje.næringskoder.any { næringskode -> utenPunktum.startsWith(næringskode) } }
+        .firstOrNull { bransje ->
+            næringskoderUtenPunktum?.any { næringskode ->
+                bransje.næringskoder.any { næringskode.startsWith(it)}
+            } ?: false
+        }
 }
