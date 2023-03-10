@@ -7,24 +7,33 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
 
 class IASakStatistikkEksportererUnitTest {
+    val næringsgruppeIkkeIBransjeprogram = Næringsgruppe("Denne næringen finnes ikke i et bransjeprogram", "99999")
+    val næringsgruppeBygg = Næringsgruppe("Bygg og sånt", "${Bransjer.BYGG.næringskoder.first()}.123")
     @Test
     fun `skal finne riktig bransje fra næringskoder i bygg (2 siffet kode)`() {
-        val næringskode = "${Bransjer.BYGG.næringskoder.first()}.123"
-        finnBransje(listOf(Næringsgruppe("Bygg og sånt", næringskode))) shouldBe Bransjer.BYGG
+        finnBransje(listOf(næringsgruppeBygg)) shouldBe Bransjer.BYGG
     }
 
     @Test
     fun `skal finne riktig bransje fra næringskoder i barnehage (5 siffret kode)`() {
-        val næringskode = "${
+        val næringskodeBarnehage = "${
             Bransjer.BARNEHAGER.næringskoder.first().take(2)
         }.${
             Bransjer.BARNEHAGER.næringskoder.first().takeLast(3)
         }"
-        finnBransje(listOf(Næringsgruppe("Bygg og sånt", næringskode))) shouldBe Bransjer.BARNEHAGER
+        finnBransje(listOf(Næringsgruppe("Barn og sånt", næringskodeBarnehage))) shouldBe Bransjer.BARNEHAGER
     }
 
     @Test
     fun `skal ikke finne ukjent bransje fra næringskoder`() {
-        finnBransje(listOf(Næringsgruppe("Bygg og sånt", "99999"))) shouldBe null
+        finnBransje(listOf(næringsgruppeIkkeIBransjeprogram)) shouldBe null
+    }
+
+    @Test
+    fun `skal kunne finne bransje basert på flere næringsgrupper`() {
+        finnBransje(listOf(
+            næringsgruppeIkkeIBransjeprogram,
+            næringsgruppeBygg
+        )) shouldBe Bransjer.BYGG
     }
 }
