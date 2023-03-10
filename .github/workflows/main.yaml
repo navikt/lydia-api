@@ -64,7 +64,7 @@ jobs:
         env:
           APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
           CLUSTER: "${{ matrix.cluster }}-gcp"
-          RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml"
+          RESOURCE: ".nais/topics/ia-sak-hendelse-topic.yaml,.nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml"
           VARS: ".nais/${{ matrix.cluster }}.yaml"
 
   deploy-dev-branch:
