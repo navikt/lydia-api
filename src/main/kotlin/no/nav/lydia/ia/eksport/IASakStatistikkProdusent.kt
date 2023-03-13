@@ -85,7 +85,7 @@ class IASakStatistikkProdusent(
                 næringer = virksomhet?.næringsgrupper ?: emptyList(),
                 bransjeprogram = finnBransje(virksomhet?.næringsgrupper),
                 postnummer = virksomhet?.postnummer,
-                kommuneNummer = virksomhet?.kommunenummer,
+                kommunenummer = virksomhet?.kommunenummer,
                 fylkesnummer = fylkesnummer
             )
             return key to Json.encodeToString(value)
@@ -119,7 +119,7 @@ class IASakStatistikkProdusent(
         val næringer: List<Næringsgruppe>,
         val bransjeprogram: Bransjer?,
         val postnummer: String?,
-        val kommuneNummer: String?,
+        val kommunenummer: String?,
         val fylkesnummer: String?,
     )
 }
