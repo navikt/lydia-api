@@ -2,7 +2,7 @@
 
 # Komme i gang med lydia-api
 
-Kjør ./run.sh
+Kjør ./run.sh -cif
 
 Besøk deretter http://localhost:2222 i din favorittbrowser
 
