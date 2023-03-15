@@ -77,7 +77,7 @@ class Kafka(
     val iaSakHendelseTopic: String = getEnvVar("IA_SAK_HENDELSE_TOPIC"),
     val iaSakTopic: String = getEnvVar("IA_SAK_TOPIC"),
     val iaSakStatistikkTopic: String = getEnvVar("IA_SAK_STATISTIKK_TOPIC"),
-    val iaLeveranseStatistikkTopic: String = getEnvVar("IA_LEVERANSE_STATISTIKK_TOPIC"),
+    val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
     val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
     val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),

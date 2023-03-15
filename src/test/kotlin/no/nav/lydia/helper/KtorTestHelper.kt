@@ -70,7 +70,7 @@ class KtorTestHelper {
                 iaSakHendelseTopic = "",
                 iaSakTopic = "",
                 iaSakStatistikkTopic = "",
-                iaLeveranseStatistikkTopic = "",
+                iaSakLeveranseTopic = "",
                 brregOppdateringTopic = "",
                 consumerLoopDelay = 200L,
                 statistikkVirksomhetTopic = "",

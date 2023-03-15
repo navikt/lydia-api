@@ -63,8 +63,8 @@ spec:
       value: pia.ia-sak-v1
     - name: IA_SAK_STATISTIKK_TOPIC
       value: pia.ia-sak-statistikk-v1
-    - name: IA_LEVERANSE_STATISTIKK_TOPIC
-      value: pia.ia-leveranse-statistikk-v1
+    - name: IA_SAK_LEVERANSE_TOPIC
+      value: pia.ia-leveranse-v1
     - name: BRREG_OPPDATERING_TOPIC
       value: pia.brreg-oppdatering
     - name: STATISTIKK_TOPIC

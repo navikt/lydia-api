@@ -14,10 +14,14 @@ data class IASakLeveranse(
     val sistEndret: LocalDateTime,
     val sistEndretAv: String,
     val fullført: LocalDateTime?
-)
+) {
+    fun slettet(): IASakLeveranse = this.copy(
+        status = IASakLeveranseStatus.SLETTET,
+    )
+}
 
 enum class IASakLeveranseStatus {
-    UNDER_ARBEID, LEVERT // AVBRUTT?
+    UNDER_ARBEID, LEVERT, SLETTET
 }
 
 @Serializable
@@ -29,6 +33,7 @@ data class IATjeneste (
         compareValuesBy(this, other) { it.navn }
 }
 
+@Serializable
 data class Modul (
     val id: Int,
     val iaTjeneste: IATjeneste,

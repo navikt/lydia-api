@@ -28,6 +28,7 @@ class IASakService(
     private val årsakService: ÅrsakService,
     private val iaSakshendelseObservers: MutableList<Observer<IASakshendelse>> = mutableListOf(),
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
+    private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -58,6 +59,13 @@ class IASakService(
 
     private fun varsleIASakObservers(sak: IASak) {
         iaSakObservers.forEach { observer -> observer.receive(sak) }
+    }
+
+    fun leggTilIASakLeveranseObserver(observer: Observer<IASakLeveranse>) {
+        iaSaksLeveranseObservers.add(observer)
+    }
+    private fun varsleIASakLeveranseObservers(leveranse: IASakLeveranse) {
+        iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
     }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, rådgiver: Rådgiver): Either<Feil, IASak> {
@@ -135,6 +143,7 @@ class IASakService(
 
             somEierAvSakIViBistår(saksnummer = leveranse.saksnummer, rådgiver = rådgiver) {
                 iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, rådgiver)
+                    .tap( ::varsleIASakLeveranseObservers)
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
@@ -144,10 +153,11 @@ class IASakService(
 
     fun slettIASakLeveranse(iaSakLeveranseId: Int, rådgiver: Rådgiver): Either<Feil, Int> {
         return try {
-            val saksnummer = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.saksnummer
-                ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
+            val iaSakLeveranse = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)
+            val saksnummer = iaSakLeveranse?.saksnummer ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
             somEierAvSakIViBistår(saksnummer = saksnummer, rådgiver = rådgiver) {
                 iaSakLeveranseRepository.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId).right()
+                    .tap{ varsleIASakLeveranseObservers(iaSakLeveranse.slettet()) }
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved letting av leveranse med id $iaSakLeveranseId: ${e.message}", e)
@@ -161,6 +171,7 @@ class IASakService(
                 ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
             somEierAvSakIViBistår(saksnummer = saksnummer, rådgiver = rådgiver) {
                 iaSakLeveranseRepository.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId, oppdateringsDto = oppdateringsDto)
+                    .tap(::varsleIASakLeveranseObservers)
             }
         }  catch (e: Exception) {
             log.error("Noe gikk feil ved oppdatering av IASakLeveranse: ${e.message}", e)

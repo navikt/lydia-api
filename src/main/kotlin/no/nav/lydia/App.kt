@@ -104,6 +104,10 @@ fun startLydiaBackend() {
         geografiService = GeografiService(),
         topic = naisEnv.kafka.iaSakStatistikkTopic
     )
+    val iaSakLevelanseProdusent = IASakLeveranseProdusent(
+        produsent = kafkaProdusent,
+        topic = naisEnv.kafka.iaSakLeveranseTopic
+    )
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
@@ -111,7 +115,8 @@ fun startLydiaBackend() {
             dataSource = dataSource,
             iaSakshendelseProdusent = iaSakshendelseProdusent,
             iaSakProdusent = iaSakProdusent,
-            iaSakStatistikkProdusent = iaSakStatistikkProdusent
+            iaSakStatistikkProdusent = iaSakStatistikkProdusent,
+            iaSakLevelanseProdusent = iaSakLevelanseProdusent,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -137,6 +142,7 @@ fun Application.lydiaRestApi(
     iaSakshendelseProdusent: IASakshendelseProdusent? = null,
     iaSakProdusent: IASakProdusent? = null,
     iaSakStatistikkProdusent: IASakStatistikkProdusent? = null,
+    iaSakLevelanseProdusent: IASakLeveranseProdusent? = null,
 ) {
     install(ContentNegotiation) {
         json()
@@ -257,6 +263,7 @@ fun Application.lydiaRestApi(
                     iaSakshendelseProdusent?.also { leggTilIASakshendelseObserver(it) }
                     iaSakProdusent?.also { leggTilIASakObserver(it) }
                     iaSakStatistikkProdusent?.also { leggTilIASakObserver(it) }
+                    iaSakLevelanseProdusent?.also { leggTilIASakLeveranseObserver(it) }
                 },
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog
