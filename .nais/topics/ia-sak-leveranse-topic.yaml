@@ -1,7 +1,7 @@
 apiVersion: kafka.nais.io/v1
 kind: Topic
 metadata:
-  name: ia-leveranse-v1
+  name: ia-sak-leveranse-v1
   namespace: pia
   labels:
     team: pia
