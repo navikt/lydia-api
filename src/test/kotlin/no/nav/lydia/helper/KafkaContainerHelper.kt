@@ -50,7 +50,7 @@ class KafkaContainerHelper(
         const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
-        const val iaSakLeveranseTopic = "pia.ia-sak-leveranse-v1"
+        const val iaSakLeveranseTopic = "pia.ia-leveranse-v1"
     }
 
     private val gson = GsonBuilder().create()
