@@ -308,12 +308,14 @@ class SakHelper {
 
         fun IASakLeveranseDto.oppdaterIASakLeveranse(
             orgnr: String,
-            status: IASakLeveranseStatus
+            status: IASakLeveranseStatus,
+            token: String = oauth2ServerContainer.saksbehandler1.token
         ) = oppdaterIASakLeveranse(
             orgnr = orgnr,
             saksnummer = saksnummer,
             iaSakLeveranseId = id,
-            status = status
+            status = status,
+            token = token,
         ).tilSingelRespons<IASakLeveranseDto>().third.fold(
                 success = { it },
                 failure = {

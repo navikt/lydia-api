@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -62,38 +63,48 @@ class IASakLeveranseEksportererTest {
     }
 
     @Test
-    fun `skal trigge kafka-eksport av IASakLeveranse ved sletting`() {
+    fun `skal trigge kafka-eksport av IASakLeveranse ved alle endringer`() {
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
             .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_KARTLEGGES)
             .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
-        val leveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
-        leveranse.slettIASakLeveranse(sak.orgnr, token = oauth2ServerContainer.saksbehandler1.token)
+        val nyLeveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
+        sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
+
+        val levertLeveranse = nyLeveranse.oppdaterIASakLeveranse(
+            orgnr = sak.orgnr, status = IASakLeveranseStatus.LEVERT, token = oauth2ServerContainer.saksbehandler2.token)
+        levertLeveranse.slettIASakLeveranse(sak.orgnr, token = oauth2ServerContainer.saksbehandler2.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = leveranse.id.toString(),
+                key = nyLeveranse.id.toString(),
                 konsument = konsument
             ) { meldinger ->
-                meldinger shouldHaveAtLeastSize 2
+                meldinger shouldHaveAtLeastSize 3
                 meldinger.forExactlyOne {
-                    it shouldContain leveranse.id.toString()
+                    it shouldContain nyLeveranse.id.toString()
                     it shouldContain sak.saksnummer
                     it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
-                    it shouldContain leveranse.modul.navn
-                    it shouldContain leveranse.frist.toString()
-                    it shouldContain leveranse.status.toString()
-                    it shouldContain leveranse.fullført.toString()
+                    it shouldContain nyLeveranse.modul.navn
+                    it shouldContain nyLeveranse.frist.toString()
+                    it shouldContain nyLeveranse.status.toString()
                 }
                 meldinger.forExactlyOne {
-                    it shouldContain leveranse.id.toString()
+                    it shouldContain levertLeveranse.id.toString()
                     it shouldContain sak.saksnummer
-                    it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
-                    it shouldContain leveranse.modul.navn
-                    it shouldContain leveranse.frist.toString()
+                    it shouldContain oauth2ServerContainer.saksbehandler2.navIdent
+                    it shouldContain levertLeveranse.modul.navn
+                    it shouldContain levertLeveranse.frist.toString()
+                    it shouldContain IASakLeveranseStatus.LEVERT.toString()
+                }
+                meldinger.forExactlyOne {
+                    it shouldContain levertLeveranse.id.toString()
+                    it shouldContain sak.saksnummer
+                    it shouldContain oauth2ServerContainer.saksbehandler2.navIdent
+                    it shouldContain levertLeveranse.modul.navn
+                    it shouldContain levertLeveranse.frist.toString()
                     it shouldContain IASakLeveranseStatus.SLETTET.toString()
-                    it shouldContain leveranse.fullført.toString()
                 }
             }
         }

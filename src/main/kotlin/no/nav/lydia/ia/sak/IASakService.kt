@@ -170,7 +170,7 @@ class IASakService(
             val saksnummer = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.saksnummer
                 ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
             somEierAvSakIViBistår(saksnummer = saksnummer, rådgiver = rådgiver) {
-                iaSakLeveranseRepository.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId, oppdateringsDto = oppdateringsDto)
+                iaSakLeveranseRepository.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId, oppdateringsDto = oppdateringsDto, rådgiver = rådgiver)
                     .tap(::varsleIASakLeveranseObservers)
             }
         }  catch (e: Exception) {

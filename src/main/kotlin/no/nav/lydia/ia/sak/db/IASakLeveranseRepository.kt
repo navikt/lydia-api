@@ -140,18 +140,28 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
 
     fun oppdaterIASakLeveranse(
         iaSakLeveranseId: Int,
-        oppdateringsDto: IASakLeveranseOppdateringsDto
+        oppdateringsDto: IASakLeveranseOppdateringsDto,
+        rådgiver: Rådgiver,
     ) = using(sessionOf(dataSource = dataSource)) { session ->
         val fullførtDato = when (oppdateringsDto.status) {
             LEVERT -> LocalDateTime.now()
             else -> null
         }
         val query = queryOf(
-            "update iasak_leveranse set status = :status, fullfort = :fullfort where id = :iaSakLeveranseId",
+            """
+                update iasak_leveranse set 
+                    status = :status,
+                    fullfort = :fullfort,
+                    sist_endret = :sistEndret,
+                    sist_endret_av = :sistEndretAv
+                where id = :iaSakLeveranseId
+            """.trimIndent(),
             mapOf(
                 "iaSakLeveranseId" to iaSakLeveranseId,
                 "status" to oppdateringsDto.status.name,
-                "fullfort" to fullførtDato
+                "fullfort" to fullførtDato,
+                "sistEndret" to LocalDateTime.now(),
+                "sistEndretAv" to rådgiver.navIdent
             )
         ).asUpdate
         session.run(query)
