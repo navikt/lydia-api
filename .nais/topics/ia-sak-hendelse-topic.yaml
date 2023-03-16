@@ -18,9 +18,3 @@ spec:
     - team: pia
       application: lydia-api
       access: readwrite   # read, write, readwrite
-    - team: team-dialog
-      application: sf-sykefravaersstatistikk
-      access: read
-    - team: pia
-      application: pia-devops
-      access: read
