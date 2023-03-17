@@ -10,6 +10,7 @@ import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
+import no.nav.lydia.tilgangskontroll.Rådgiver
 import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
@@ -24,6 +25,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         type,
                         orgnr,
                         opprettet_av,
+                        opprettet_av_rolle,
                         saksnummer,
                         opprettet,
                         aarsak_enum,
@@ -52,6 +54,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         type,
                         $orgnrKolonneNavn,
                         opprettet_av,
+                        opprettet_av_rolle,
                         saksnummer,
                         opprettet,
                         aarsak_enum,
@@ -82,6 +85,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         orgnr,
                         type,
                         opprettet_av,
+                        opprettet_av_rolle,
                         opprettet
                     )
                     VALUES (
@@ -90,6 +94,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         :orgnr,
                         :type,
                         :opprettet_av,
+                        :opprettet_av_rolle,
                         :opprettet
                     ) 
                 """.trimMargin(),
@@ -99,6 +104,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         "orgnr" to hendelse.orgnummer,
                         "type" to hendelse.hendelsesType.name,
                         "opprettet_av" to hendelse.opprettetAv,
+                        "opprettet_av_rolle" to hendelse.opprettetAvRolle?.toString(),
                         "opprettet" to hendelse.opprettetTidspunkt
                     )
                 ).asUpdate
@@ -117,6 +123,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         type,
                         orgnr,
                         opprettet_av,
+                        opprettet_av_rolle,
                         saksnummer,
                         opprettet,
                         aarsak_enum,
@@ -139,19 +146,21 @@ class IASakshendelseRepository(val dataSource: DataSource) {
         val valgtÅrsak = årsakFraDatabase(row.stringOrNull("aarsak_enum"), row.array("begrunnelser"))
             ?: return IASakshendelse(
                 id = row.string("id"),
+                opprettetTidspunkt = row.localDateTime("opprettet"),
+                saksnummer = row.string("saksnummer"),
                 hendelsesType = IASakshendelseType.valueOf(row.string("type")),
                 orgnummer = row.string("orgnr"),
                 opprettetAv = row.string("opprettet_av"),
-                saksnummer = row.string("saksnummer"),
-                opprettetTidspunkt = row.localDateTime("opprettet"),
+                opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) }
             )
         return VirksomhetIkkeAktuellHendelse(
             id = row.string("id"),
+            opprettetTidspunkt = row.localDateTime("opprettet"),
+            saksnummer = row.string("saksnummer"),
             orgnummer = row.string("orgnr"),
             opprettetAv = row.string("opprettet_av"),
-            saksnummer = row.string("saksnummer"),
-            opprettetTidspunkt = row.localDateTime("opprettet"),
-            valgtÅrsak = valgtÅrsak
+            opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) },
+            valgtÅrsak = valgtÅrsak,
         )
     }
 

@@ -1,0 +1,1 @@
+alter table ia_sak_hendelse add column opprettet_av_rolle varchar default null;
