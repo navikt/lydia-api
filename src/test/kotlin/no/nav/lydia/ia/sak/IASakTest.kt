@@ -66,7 +66,7 @@ class IASakTest {
             VIRKSOMHET_VURDERES,
             saksnummer = sak.saksnummer,
             orgnummer = sak.orgnr,
-            navIdent = superbruker2.navIdent
+            rådgiver = superbruker2
         )
         superbruker1.utførHendelsePåSak(sak, vurderingsHendelse)
         sak.endretAv shouldBe vurderingsHendelse.opprettetAv
@@ -78,18 +78,18 @@ class IASakTest {
 
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
-        val h1 = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val h1 = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
         val h2 = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
-            navIdent = superbruker2.navIdent
+            rådgiver = superbruker2
         )
         val h3 = nyHendelse(
             VIRKSOMHET_ER_IKKE_AKTUELL,
             saksnummer = h1.saksnummer,
             orgnummer = h1.orgnummer,
-            navIdent = superbruker2.navIdent
+            rådgiver = superbruker2
         )
         val sak = IASak.fraHendelser(listOf(h1, h2, h3))
         sak.status shouldBe IKKE_AKTUELL
@@ -100,18 +100,18 @@ class IASakTest {
 
     @Test
     fun `skal få en liste over gyldige begrunnelser for når en virksomhet ikke er aktuell`() {
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
             orgnummer = h1_ny_sak.orgnummer,
-            navIdent = superbruker1.navIdent
+            rådgiver = superbruker1
         )
         val h3_ta_eierskap = nyHendelse(
             TA_EIERSKAP_I_SAK,
             saksnummer = h1_ny_sak.saksnummer,
             orgnummer = h1_ny_sak.orgnummer,
-            navIdent = saksbehandler1.navIdent
+            rådgiver = saksbehandler1
         )
         val sak = IASak.fraHendelser(listOf(h1_ny_sak, h2_vurderes, h3_ta_eierskap))
         sak.gyldigeNesteHendelser(rådgiver = saksbehandler1)
@@ -145,18 +145,18 @@ class IASakTest {
 
     @Test
     fun `en sak skal inneholde alle sine hendelser`(){
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
             orgnummer = h1_ny_sak.orgnummer,
-            navIdent = superbruker1.navIdent
+            rådgiver = superbruker1
         )
         val h3_ta_eierskap = nyHendelse(
             TA_EIERSKAP_I_SAK,
             saksnummer = h1_ny_sak.saksnummer,
             orgnummer = h1_ny_sak.orgnummer,
-            navIdent = saksbehandler1.navIdent
+            rådgiver = saksbehandler1
         )
         val hendelserPåSak = listOf(h1_ny_sak, h2_vurderes, h3_ta_eierskap)
         val sak = IASak.fraHendelser(hendelserPåSak)
@@ -166,7 +166,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå an å angre på en sak`(){
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -192,7 +192,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå ann å fullføre en sak`() {
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = superbruker1.navIdent)
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -225,14 +225,15 @@ class IASakTest {
         gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
     }
 
-    private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, navIdent: String) =
+    private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, rådgiver: Rådgiver) =
         IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
             saksnummer = saksnummer,
             hendelsesType = type,
             orgnummer = orgnummer,
-            opprettetAv = navIdent,
+            opprettetAv = rådgiver.navIdent,
+            opprettetAvRolle = rådgiver.rolle
         )
 
     private fun IASakshendelse.nesteHendelse(iaSakshendelseType: IASakshendelseType) =
@@ -242,17 +243,21 @@ class IASakTest {
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = saksnummer,
                 orgnummer = orgnummer,
-                opprettetAv = this.opprettetAv,
+                opprettetAv = opprettetAv,
+                opprettetAvRolle = opprettetAvRolle,
                 valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID))
             )
-            else -> nyHendelse(
-                iaSakshendelseType,
-                saksnummer = this.saksnummer,
-                orgnummer = this.orgnummer,
-                navIdent = this.opprettetAv
+            else -> IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                hendelsesType = iaSakshendelseType,
+                orgnummer = orgnummer,
+                opprettetAv = opprettetAv,
+                opprettetAvRolle = opprettetAvRolle
             )
         }
 
     private fun nyIASak(orgnummer: String, rådgiver: Rådgiver): IASak =
-        IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, rådgiver.navIdent))
+        IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, rådgiver))
 }

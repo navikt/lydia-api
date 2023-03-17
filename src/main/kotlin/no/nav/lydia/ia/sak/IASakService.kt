@@ -73,10 +73,10 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         }
         val sak = IASak.fraFørsteHendelse(
-            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, opprettetAv = rådgiver.navIdent).lagre()
+            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, rådgiver = rådgiver).lagre()
         ).lagre()
 
-        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, opprettetAv = rådgiver.navIdent).lagre()
+        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, rådgiver = rådgiver).lagre()
             .let { vurderesHendelse -> rådgiver.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
@@ -91,7 +91,7 @@ class IASakService(
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
 
-        return IASakshendelse.fromDto(hendelseDto, rådgiver.navIdent)
+        return IASakshendelse.fromDto(hendelseDto, rådgiver)
             .flatMap { sakshendelse ->
                 val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(sakshendelse.saksnummer)
                 if (hendelser.isEmpty())

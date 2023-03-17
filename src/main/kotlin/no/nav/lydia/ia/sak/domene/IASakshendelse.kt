@@ -15,6 +15,8 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
+import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import java.time.LocalDateTime
 
 open class IASakshendelse(
@@ -23,23 +25,25 @@ open class IASakshendelse(
     val saksnummer: String,
     val hendelsesType: IASakshendelseType,
     val orgnummer: String,
-    val opprettetAv: String
+    val opprettetAv: String,
+    val opprettetAvRolle: Rolle?
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, navIdent: String) =
+        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver) =
             when (dto.hendelsesType) {
-                VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, navIdent)
+                VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, rådgiver)
                 else -> IASakshendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
                     saksnummer = dto.saksnummer,
                     hendelsesType = dto.hendelsesType,
                     orgnummer = dto.orgnummer,
-                    opprettetAv = navIdent,
+                    opprettetAv = rådgiver.navIdent,
+                    opprettetAvRolle = rådgiver.rolle
                 ).right()
             }
 
-        fun nyFørsteHendelse(orgnummer : String, opprettetAv: String): IASakshendelse {
+        fun nyFørsteHendelse(orgnummer : String, rådgiver: Rådgiver): IASakshendelse {
             val saksnummer = ULID.random()
             return IASakshendelse(
                 id = saksnummer,
@@ -47,18 +51,20 @@ open class IASakshendelse(
                 saksnummer = saksnummer,
                 hendelsesType = IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
                 orgnummer = orgnummer,
-                opprettetAv = opprettetAv,
+                opprettetAv = rådgiver.navIdent,
+                opprettetAvRolle = rådgiver.rolle
             )
         }
 
-        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, opprettetAv: String) =
+        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, rådgiver: Rådgiver) =
             IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = this.saksnummer,
                 hendelsesType = hendelsestype,
                 orgnummer = this.orgnr,
-                opprettetAv = opprettetAv,
+                opprettetAv = rådgiver.navIdent,
+                opprettetAvRolle = rådgiver.rolle
             )
     }
 
@@ -85,6 +91,7 @@ class VirksomhetIkkeAktuellHendelse(
     saksnummer: String,
     orgnummer: String,
     opprettetAv: String,
+    opprettetAvRolle: Rolle?,
     val valgtÅrsak: ValgtÅrsak
 ) : IASakshendelse(
     id,
@@ -92,10 +99,11 @@ class VirksomhetIkkeAktuellHendelse(
     saksnummer = saksnummer,
     hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
     orgnummer = orgnummer,
-    opprettetAv = opprettetAv
+    opprettetAv = opprettetAv,
+    opprettetAvRolle = opprettetAvRolle
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, navIdent: String): Either<Feil, VirksomhetIkkeAktuellHendelse> =
+        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
 
                 try {
@@ -108,7 +116,8 @@ class VirksomhetIkkeAktuellHendelse(
                         opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = dto.saksnummer,
                         orgnummer = dto.orgnummer,
-                        opprettetAv = navIdent,
+                        opprettetAv = rådgiver.navIdent,
+                        opprettetAvRolle = rådgiver.rolle,
                         valgtÅrsak = valgtÅrsak
                     ).right()
                 } catch (e: Exception) {

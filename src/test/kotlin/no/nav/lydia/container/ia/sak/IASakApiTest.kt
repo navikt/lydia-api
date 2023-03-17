@@ -30,6 +30,7 @@ import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
@@ -1034,6 +1035,20 @@ class IASakApiTest {
         hentAktivSak(orgnummer = sak.orgnr).also { enSak ->
             enSak.status shouldBe FULLFØRT
         }
+    }
+
+    @Test
+    fun `rolle til innlogget ansatt skal bli lagret på hendelsene`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+
+        postgresContainer.hentAlleKolonner<String>(
+            "select opprettet_av_rolle from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by opprettet") shouldBe listOf(
+                "SUPERBRUKER",
+                "SUPERBRUKER",
+                "SAKSBEHANDLER"
+            )
+
     }
 
 }
