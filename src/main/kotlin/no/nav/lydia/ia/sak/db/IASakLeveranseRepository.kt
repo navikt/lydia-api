@@ -7,13 +7,16 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.api.*
-import no.nav.lydia.ia.sak.domene.Modul
+import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
+import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IATjeneste
+import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -26,6 +29,7 @@ private val hentIASakLeveranserSql = """
                         iasak_leveranse.opprettet_av,
                         iasak_leveranse.sist_endret,
                         iasak_leveranse.sist_endret_av,
+                        iasak_leveranse.sist_endret_av_rolle,
                         iasak_leveranse.fullfort,
                         modul.id as modulId,
                         modul.navn as modulNavn,
@@ -88,14 +92,16 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                     modul,
                     frist,
                     opprettet_av,
-                    sist_endret_av
+                    sist_endret_av,
+                    sist_endret_av_rolle
                 ) 
                 values (
                     :saksnummer,
                     :modul,
                     :frist,
                     :opprettetAv,
-                    :opprettetAv
+                    :opprettetAv,
+                    :opprettetAvRolle
                 )
             """.trimIndent()
 
@@ -106,6 +112,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                         "modul" to iaSakleveranse.modulId,
                         "frist" to iaSakleveranse.frist.toJavaLocalDate(),
                         "opprettetAv" to rådgiver.navIdent,
+                        "opprettetAvRolle" to rådgiver.rolle.name,
                     )
                 ).asUpdateAndReturnGeneratedKey
             ) ?: return@using IASakError.`generell feil under uthenting`.left()
@@ -153,7 +160,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                     status = :status,
                     fullfort = :fullfort,
                     sist_endret = :sistEndret,
-                    sist_endret_av = :sistEndretAv
+                    sist_endret_av = :sistEndretAv,
+                    sist_endret_av_rolle = :sistEndretAvRolle
                 where id = :iaSakLeveranseId
             """.trimIndent(),
             mapOf(
@@ -161,7 +169,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 "status" to oppdateringsDto.status.name,
                 "fullfort" to fullførtDato,
                 "sistEndret" to LocalDateTime.now(),
-                "sistEndretAv" to rådgiver.navIdent
+                "sistEndretAv" to rådgiver.navIdent,
+                "sistEndretAvRolle" to rådgiver.rolle.name,
             )
         ).asUpdate
         session.run(query)
@@ -179,6 +188,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             opprettetAv = rad.string("opprettet_av"),
             sistEndret = rad.localDateTime("sist_endret"),
             sistEndretAv = rad.string("sist_endret_av"),
+            sistEndretAvRolle = rad.stringOrNull("sist_endret_av_rolle")?.let { Rolle.valueOf(it) },
             fullført = rad.localDateTimeOrNull("fullfort")
         )
 

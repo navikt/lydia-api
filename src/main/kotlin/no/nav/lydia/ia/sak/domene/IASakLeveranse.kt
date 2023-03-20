@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.domene
 
 import kotlinx.serialization.Serializable
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -13,6 +14,7 @@ data class IASakLeveranse(
     val opprettetAv: String,
     val sistEndret: LocalDateTime,
     val sistEndretAv: String,
+    val sistEndretAvRolle: Rolle?,
     val fullført: LocalDateTime?
 ) {
     fun slettet(): IASakLeveranse = this.copy(

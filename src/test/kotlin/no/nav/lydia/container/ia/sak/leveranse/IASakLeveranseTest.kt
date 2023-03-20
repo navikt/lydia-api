@@ -23,8 +23,9 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import java.time.LocalDate
 import kotlin.test.Test
 
@@ -113,13 +114,22 @@ class IASakLeveranseTest {
         sakIStatusViBistår.status shouldBe VI_BISTÅR
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
             frist = frist,
-            modulId = 1
+            modulId = 1,
+            token = oauth2ServerContainer.saksbehandler1.token
         )
 
         leveranse.modul.id shouldBe 1
         leveranse.saksnummer shouldBe sakIStatusViBistår.saksnummer
         leveranse.status shouldBe IASakLeveranseStatus.UNDER_ARBEID
         leveranse.frist shouldBe frist
+
+        postgresContainer.hentEnkelKolonne<String>("""
+            select sist_endret_av_rolle from iasak_leveranse where id = ${leveranse.id}
+        """.trimIndent()) shouldBe Rolle.SAKSBEHANDLER.name
+
+        postgresContainer.hentEnkelKolonne<String>("""
+            select sist_endret_av from iasak_leveranse where id = ${leveranse.id}
+        """.trimIndent()) shouldBe oauth2ServerContainer.saksbehandler1.navIdent
     }
 
     @Test

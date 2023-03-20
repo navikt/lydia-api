@@ -1,0 +1,1 @@
+alter table iasak_leveranse add column sist_endret_av_rolle varchar default null;
