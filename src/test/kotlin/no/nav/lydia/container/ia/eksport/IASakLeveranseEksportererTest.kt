@@ -16,6 +16,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
@@ -86,6 +87,7 @@ class IASakLeveranseEksportererTest {
                     it shouldContain nyLeveranse.id.toString()
                     it shouldContain sak.saksnummer
                     it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
+                    it shouldContain Rolle.SAKSBEHANDLER.name
                     it shouldContain nyLeveranse.modul.navn
                     it shouldContain nyLeveranse.frist.toString()
                     it shouldContain nyLeveranse.status.toString()
@@ -94,6 +96,7 @@ class IASakLeveranseEksportererTest {
                     it shouldContain levertLeveranse.id.toString()
                     it shouldContain sak.saksnummer
                     it shouldContain oauth2ServerContainer.saksbehandler2.navIdent
+                    it shouldContain Rolle.SAKSBEHANDLER.name
                     it shouldContain levertLeveranse.modul.navn
                     it shouldContain levertLeveranse.frist.toString()
                     it shouldContain IASakLeveranseStatus.LEVERT.toString()
@@ -102,6 +105,7 @@ class IASakLeveranseEksportererTest {
                     it shouldContain levertLeveranse.id.toString()
                     it shouldContain sak.saksnummer
                     it shouldContain oauth2ServerContainer.saksbehandler2.navIdent
+                    it shouldContain Rolle.SAKSBEHANDLER.name
                     it shouldContain levertLeveranse.modul.navn
                     it shouldContain levertLeveranse.frist.toString()
                     it shouldContain IASakLeveranseStatus.SLETTET.toString()
