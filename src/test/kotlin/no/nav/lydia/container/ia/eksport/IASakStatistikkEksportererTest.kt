@@ -14,6 +14,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
 import org.junit.Before
@@ -39,7 +40,7 @@ class IASakStatistikkEksportererTest {
         val virksomhet = TestVirksomhet.nyVirksomhet(næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygg og ting")))
         VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
 
-        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = oauth2ServerContainer.superbruker1.token)
             .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
         runBlocking {
@@ -56,6 +57,7 @@ class IASakStatistikkEksportererTest {
                     it shouldContain "sykefraversprosent"
                     it shouldContain "sykefraversprosentSiste4Kvartal"
                     it shouldContain Bransjer.BYGG.name
+                    it shouldContain Rolle.SAKSBEHANDLER.name
                 }
             }
         }

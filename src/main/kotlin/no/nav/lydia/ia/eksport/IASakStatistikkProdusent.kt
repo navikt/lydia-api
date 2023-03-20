@@ -18,6 +18,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
+import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -66,6 +67,8 @@ class IASakStatistikkProdusent(
                 status = this.status,
                 endretAvHendelseId = this.endretAvHendelseId,
                 hendelse = hendelse?.hendelsesType,
+                endretAv = hendelse?.opprettetAv,
+                endretAvRolle = hendelse?.opprettetAvRolle,
                 ikkeAktuelBegrunnelse = if (hendelse is VirksomhetIkkeAktuellHendelse) hendelse.valgtÅrsak.begrunnelser.toString() else null,
                 opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
                 endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime()
@@ -101,6 +104,8 @@ class IASakStatistikkProdusent(
         val status: IAProsessStatus,
         val endretAvHendelseId: String,
         val hendelse: IASakshendelseType?,
+        val endretAv: String?,
+        val endretAvRolle: Rolle?,
         val ikkeAktuelBegrunnelse: String?,
         val opprettetTidspunkt: LocalDateTime,
         val endretTidspunkt: LocalDateTime,
