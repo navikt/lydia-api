@@ -14,6 +14,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
@@ -35,11 +36,15 @@ class IASakStatistikkProdusent(
 
     override fun receive(input: IASak) {
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
+        val periode = hendelse?.tilPeriode()
         val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
         val virksomhetsstatistikkSiste4Kvartal =
-            sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).orNull()
+            if (periode == Periode.gjeldendePeriode())
+                sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).orNull()
+            else
+                null
         val virksomhetsstatistikkSisteKvartal =
-            sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(input.orgnr).orNull()
+            sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(input.orgnr, periode = periode).orNull()
         val fylkesnummer = virksomhet?.let { geografiService.finnFylke(it.kommunenummer) }
         val kafkaMelding = input.tilKafkaMelding(
             hendelse,
@@ -97,7 +102,7 @@ class IASakStatistikkProdusent(
     }
 
     @Serializable
-    private data class IASakStatistikkValue(
+    data class IASakStatistikkValue(
         val saksnummer: String,
         val orgnr: String,
         val eierAvSak: String?,
@@ -141,3 +146,5 @@ fun finnBransje(næringsgrupper: List<Næringsgruppe>?): Bransjer? {
             } ?: false
         }
 }
+
+private fun IASakshendelse.tilPeriode() = Periode(årstall = opprettetTidspunkt.year, kvartal = opprettetTidspunkt.monthValue / 4 + 1).forrigePeriode()

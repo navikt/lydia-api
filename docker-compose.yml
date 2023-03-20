@@ -148,6 +148,8 @@ services:
       FIA_SUPERBRUKER_GROUP_ID: ensuperbrukerGroupId
       FIA_SAKSBEHANDLER_GROUP_ID: ensaksbehandlerGroupId
       FIA_LESETILGANG_GROUP_ID: enlesetilgangGroupId
+      CSRF_SECRET: csrfHemmelighet
+      COOKIE_SECRET: cookieHemmelighet
 
   redis:
     image: redis:7-alpine

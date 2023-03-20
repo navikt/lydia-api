@@ -1,17 +1,18 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.definisjoner.bransjer.Bransjer
-import io.kotest.inspectors.forAtLeastOne
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.doubles.plusOrMinus
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import no.nav.lydia.helper.KafkaContainerHelper
-import no.nav.lydia.helper.SakHelper
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
@@ -48,18 +49,36 @@ class IASakStatistikkEksportererTest {
                 key = sak.saksnummer,
                 konsument = konsument
             ) { meldinger ->
-                meldinger shouldHaveAtLeastSize 1
-                meldinger.forAtLeastOne {
-                    it shouldContain sak.saksnummer
-                    it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
-                    it shouldContain IAProsessStatus.VURDERES.name
-                    it shouldContain "antallPersoner"
-                    it shouldContain "sykefraversprosent"
-                    it shouldContain "sykefraversprosentSiste4Kvartal"
-                    it shouldContain Bransjer.BYGG.name
-                    it shouldContain Rolle.SAKSBEHANDLER.name
+                val objektene = meldinger.map {
+                    Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
+                }
+                objektene shouldHaveSize 3
+                objektene.forExactlyOne {
+                    it.saksnummer shouldBe sak.saksnummer
+                    it.eierAvSak shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+                    it.status shouldBe IAProsessStatus.VURDERES
+                    it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
+                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
+                    it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
+                    it.bransjeprogram shouldBe Bransjer.BYGG
+                    it.endretAvRolle shouldBe Rolle.SAKSBEHANDLER
                 }
             }
         }
     }
+
+    private fun hentFraKvartal(
+        it: IASakStatistikkProdusent.IASakStatistikkValue,
+        kolonne: String,
+    ) =
+        postgresContainer.hentEnkelKolonne<Double>("select $kolonne from sykefravar_statistikk_virksomhet where orgnr = '${it.orgnr}' and kvartal = ${it.kvartal} and arstall = ${it.arstall}")
+            .plusOrMinus(0.01)
+
+    private fun hentFraSiste4Kvartaler(
+        it: IASakStatistikkProdusent.IASakStatistikkValue,
+        kolonne: String,
+    ) =
+        postgresContainer.hentEnkelKolonne<Double>("select $kolonne from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr = '${it.orgnr}'")
+            .plusOrMinus(0.01)
 }
+

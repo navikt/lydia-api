@@ -225,9 +225,14 @@ fun Application.lydiaRestApi(
             featureToggle()
 
         iaSakEksporterer(
-            IASakEksporterer(
+            iaSakEksporterer = IASakEksporterer(
                 iaSakRepository = iaSakRepository,
                 iaSakProdusent = iaSakProdusent
+            ),
+            iaSakStatistikkEksporterer = IASakStatistikkEksporterer(
+                iaSakRepository = iaSakRepository,
+                iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+                iaSakStatistikkProdusent = iaSakStatistikkProdusent,
             )
         )
         virksomhetsImport(

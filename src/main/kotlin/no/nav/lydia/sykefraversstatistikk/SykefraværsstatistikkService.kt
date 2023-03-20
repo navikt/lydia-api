@@ -94,9 +94,9 @@ class SykefraværsstatistikkService(
         return sykefraværForVirksomhetSiste4Kvartal?.right() ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
-    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
+    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String, periode: Periode? = null): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhetSisteKvartal = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr)
+        val sykefraværForVirksomhetSisteKvartal = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr, periode = periode)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhetSisteKvartal?.right() ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()

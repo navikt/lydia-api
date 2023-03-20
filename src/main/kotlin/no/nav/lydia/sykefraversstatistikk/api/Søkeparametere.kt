@@ -191,7 +191,7 @@ data class Søkeparametere(
     }.toSet()
 }
 
-class Periode(val kvartal: Int, val årstall: Int) {
+data class Periode(val kvartal: Int, val årstall: Int) {
     companion object {
         fun tilValidertPeriode(kvartal: String?, årstall: String?) =
             kvartal.tilValidertKvartal().zip(

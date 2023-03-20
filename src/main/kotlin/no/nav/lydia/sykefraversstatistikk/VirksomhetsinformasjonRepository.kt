@@ -9,6 +9,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.ANTALL_PERSONER
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.MULIGE_DAGSVERK
@@ -212,7 +213,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         }
     }
 
-    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String) =
+    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String, periode: Periode? = null) =
         using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
@@ -227,6 +228,12 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         maskert
                   FROM sykefravar_statistikk_virksomhet
                   WHERE (orgnr = :orgnr)
+                  ${
+                      periode?.let { """
+                          AND kvartal = ${it.kvartal}
+                          AND arstall = ${it.årstall}
+                      """.trimIndent() } ?: ""
+                  }
                   ORDER BY arstall DESC, kvartal DESC
                   LIMIT 1
                 """.trimIndent(),
