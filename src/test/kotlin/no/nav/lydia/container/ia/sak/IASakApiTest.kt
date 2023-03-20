@@ -1039,7 +1039,7 @@ class IASakApiTest {
 
     @Test
     fun `rolle til innlogget ansatt skal bli lagret på hendelsene`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = oauth2ServerContainer.superbruker1.token)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
         postgresContainer.hentAlleKolonner<String>(
