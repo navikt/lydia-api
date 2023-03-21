@@ -15,6 +15,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
+import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import java.time.LocalDateTime
@@ -67,6 +68,8 @@ open class IASakshendelse(
                 opprettetAvRolle = rådgiver.rolle
             )
     }
+
+    fun tilPeriode() = Periode.fraDato(opprettetTidspunkt)
 
     @Serializable
     private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: IASakshendelseType, val opprettetAv: String)

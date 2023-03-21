@@ -15,6 +15,7 @@ import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
 import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.tilSektor
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class Søkeparametere(
     val kommunenummer: Set<String>,
@@ -193,6 +194,8 @@ data class Søkeparametere(
 
 data class Periode(val kvartal: Int, val årstall: Int) {
     companion object {
+        fun fraDato(dato: LocalDateTime) = Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
+
         fun tilValidertPeriode(kvartal: String?, årstall: String?) =
             kvartal.tilValidertKvartal().zip(
                 årstall.tomSomNull()?.tilValidertHeltall() ?: Valid(sisteÅr())

@@ -29,9 +29,9 @@ fun Route.iaSakEksporterer(
             call.application.log.warn("Kjører allerede eksport av ia-sak-statistikk.")
             return@get call.respond(HttpStatusCode.Conflict)
         }
-        launch {
-            iaSakStatistikkEksporterer.eksporter()
-        }
+
+        iaSakStatistikkEksporterer.eksporter()
+
         call.respond(HttpStatusCode.OK)
     }
 }

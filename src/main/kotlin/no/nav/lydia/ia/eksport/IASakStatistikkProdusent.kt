@@ -146,5 +146,3 @@ fun finnBransje(næringsgrupper: List<Næringsgruppe>?): Bransjer? {
             } ?: false
         }
 }
-
-private fun IASakshendelse.tilPeriode() = Periode(årstall = opprettetTidspunkt.year, kvartal = opprettetTidspunkt.monthValue / 4 + 1).forrigePeriode()

@@ -20,6 +20,7 @@ class IASakStatistikkEksporterer(
 
     fun eksporter() {
         if (iaSakStatistikkProdusent == null) {
+            log.warn("iaSakStatistikkProdusent er ikke satt. dropper replay")
             return
         }
         KJØRER_EKSPORT.set(true)

@@ -33,10 +33,13 @@ class TestData(
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
 
-        fun fraVirksomhet(virksomhet: TestVirksomhet, sektor: String = SEKTOR_STATLIG_FORVALTNING) =
+        fun fraVirksomhet(
+            virksomhet: TestVirksomhet,
+            sektor: String = SEKTOR_STATLIG_FORVALTNING,
+            perioder: List<Periode> = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode())) =
             TestData().lagData(
                 virksomhet = virksomhet,
-                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                perioder = perioder,
                 sektor = sektor
             )
 
