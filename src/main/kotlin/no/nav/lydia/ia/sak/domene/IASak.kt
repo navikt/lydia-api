@@ -105,7 +105,7 @@ class IASak private constructor(
                 tilstand.behandleHendelse(hendelse)
                     .map { nyTilstand -> tilstand = nyTilstand }
                     .mapLeft { feil ->
-                        log.error("Prøver å utføre en ugyldig hendelse på sak $saksnummer med status ${status.name}")
+                        log.error("Prøver å utføre en ugyldig hendelse (${hendelse.hendelsesType.name}) på sak $saksnummer med status ${status.name}")
                         throw IllegalStateException(feil.feilmelding)
                     }
             }
