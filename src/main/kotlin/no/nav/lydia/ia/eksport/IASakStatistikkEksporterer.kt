@@ -26,14 +26,21 @@ class IASakStatistikkEksporterer(
         KJØRER_STATISTIKK_EKSPORT.set(true)
         val alleSaker = iaSakRepository.hentAlleSaker()
         log.info("Starter re-eksport av ${alleSaker.size} saker")
-        alleSaker.forEach { nåværendeIaSak ->
-            val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(nåværendeIaSak.saksnummer)
+        try {
 
-            hendelser.mapIndexed { index, hendelse ->
-                IASak.fraHendelser(hendelser.subList(0, index + 1))
-            }.forEach { historiskIaSak ->
-                iaSakStatistikkProdusent.receive(historiskIaSak)
+            alleSaker.forEach { nåværendeIaSak ->
+                val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(nåværendeIaSak.saksnummer)
+
+                hendelser.mapIndexed { index, hendelse ->
+                    IASak.fraHendelser(hendelser.subList(0, index + 1))
+                }.forEach { historiskIaSak ->
+                    iaSakStatistikkProdusent.receive(historiskIaSak)
+                }
             }
+        } catch (e: Exception) {
+            KJØRER_STATISTIKK_EKSPORT.set(false)
+            log.error("Klarte ikke å kjøre eksport av statistikk", e)
+            throw e
         }
         log.info("Ferdig med re-eksport av ${alleSaker.size} saker")
         KJØRER_STATISTIKK_EKSPORT.set(false)
