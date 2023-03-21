@@ -10,18 +10,18 @@ class IASakEksporterer(
     val iaSakProdusent: IASakProdusent?
 ) {
     companion object {
-        val KJØRER_EKSPORT = AtomicBoolean(false)
+        val KJØRER_SAKS_EKSPORT = AtomicBoolean(false)
     }
 
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun eksporter() {
-        KJØRER_EKSPORT.set(true)
+        KJØRER_SAKS_EKSPORT.set(true)
         iaSakRepository.hentAlleSaker()
             .forEach { iaSak ->
                 iaSakProdusent?.receive(iaSak)
             }
-        KJØRER_EKSPORT.set(false)
+        KJØRER_SAKS_EKSPORT.set(false)
     }
 
 }

@@ -2,8 +2,12 @@ package no.nav.lydia.container.ia.eksport
 
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -11,9 +15,14 @@ import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
+import no.nav.lydia.ia.eksport.IA_SAK_LEVERANSE_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
@@ -110,6 +119,40 @@ class IASakLeveranseEksportererTest {
                     it shouldContain levertLeveranse.frist.toString()
                     it shouldContain IASakLeveranseStatus.SLETTET.toString()
                 }
+            }
+        }
+    }
+
+    @Test
+    fun  `spille av leveranser burde gi samme resultat`() {
+        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+        val nyLeveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
+
+        var melding: IASakLeveranseValue? = null
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = nyLeveranse.id.toString(),
+                konsument = konsument
+            ) { meldinger ->
+                meldinger shouldHaveSize 1
+                melding = Json.decodeFromString(meldinger.first())
+            }
+        }
+
+        lydiaApiContainer.performGet(IA_SAK_LEVERANSE_EKSPORT_PATH).tilSingelRespons<Unit>()
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = nyLeveranse.id.toString(),
+                konsument = konsument
+            ) { meldinger ->
+                meldinger shouldHaveSize 1
+                Json.decodeFromString<IASakLeveranseValue>(meldinger.first()) shouldBe melding
             }
         }
     }

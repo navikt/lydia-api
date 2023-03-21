@@ -45,7 +45,7 @@ class IASakLeveranseProdusent(
     }
 
     @Serializable
-    private data class IASakLeveranseValue(
+    data class IASakLeveranseValue(
         val id: Int,
         val saksnummer: String,
         val modul: Modul,

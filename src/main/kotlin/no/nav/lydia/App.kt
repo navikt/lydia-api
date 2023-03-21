@@ -116,7 +116,7 @@ fun startLydiaBackend() {
             iaSakshendelseProdusent = iaSakshendelseProdusent,
             iaSakProdusent = iaSakProdusent,
             iaSakStatistikkProdusent = iaSakStatistikkProdusent,
-            iaSakLevelanseProdusent = iaSakLevelanseProdusent,
+            iaSakLeveranseProdusent = iaSakLevelanseProdusent,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -142,7 +142,7 @@ fun Application.lydiaRestApi(
     iaSakshendelseProdusent: IASakshendelseProdusent? = null,
     iaSakProdusent: IASakProdusent? = null,
     iaSakStatistikkProdusent: IASakStatistikkProdusent? = null,
-    iaSakLevelanseProdusent: IASakLeveranseProdusent? = null,
+    iaSakLeveranseProdusent: IASakLeveranseProdusent? = null,
 ) {
     install(ContentNegotiation) {
         json()
@@ -233,6 +233,10 @@ fun Application.lydiaRestApi(
                 iaSakRepository = iaSakRepository,
                 iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
                 iaSakStatistikkProdusent = iaSakStatistikkProdusent,
+            ),
+            iaSakLeveranseEksportør = IASakLeveranseEksportør(
+                iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
+                iaSakLeveranseProdusent = iaSakLeveranseProdusent,
             )
         )
         virksomhetsImport(
@@ -268,7 +272,7 @@ fun Application.lydiaRestApi(
                     iaSakshendelseProdusent?.also { leggTilIASakshendelseObserver(it) }
                     iaSakProdusent?.also { leggTilIASakObserver(it) }
                     iaSakStatistikkProdusent?.also { leggTilIASakObserver(it) }
-                    iaSakLevelanseProdusent?.also { leggTilIASakLeveranseObserver(it) }
+                    iaSakLeveranseProdusent?.also { leggTilIASakLeveranseObserver(it) }
                 },
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog

@@ -13,7 +13,7 @@ class IASakStatistikkEksporterer(
     val iaSakStatistikkProdusent: IASakStatistikkProdusent?,
 ) {
     companion object {
-        val KJØRER_EKSPORT = AtomicBoolean(false)
+        val KJØRER_STATISTIKK_EKSPORT = AtomicBoolean(false)
     }
 
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -23,7 +23,7 @@ class IASakStatistikkEksporterer(
             log.warn("iaSakStatistikkProdusent er ikke satt. dropper replay")
             return
         }
-        KJØRER_EKSPORT.set(true)
+        KJØRER_STATISTIKK_EKSPORT.set(true)
         val alleSaker = iaSakRepository.hentAlleSaker()
         log.info("Starter re-eksport av ${alleSaker.size} saker")
         alleSaker.forEach { nåværendeIaSak ->
@@ -36,6 +36,6 @@ class IASakStatistikkEksporterer(
             }
         }
         log.info("Ferdig med re-eksport av ${alleSaker.size} saker")
-        KJØRER_EKSPORT.set(false)
+        KJØRER_STATISTIKK_EKSPORT.set(false)
     }
 }

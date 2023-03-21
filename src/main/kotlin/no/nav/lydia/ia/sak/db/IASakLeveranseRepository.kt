@@ -178,6 +178,13 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
         hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.right() ?: IASakError.`ugyldig iaSakLeveranseId`.left()
     }
 
+    fun hentAlleIASakLeveranser() = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(hentIASakLeveranserSql)
+                .map(this::mapTilIASakLeveranse).asList
+        )
+    }
+
     private fun mapTilIASakLeveranse(rad: Row) =
         IASakLeveranse(
             id = rad.int("id"),
