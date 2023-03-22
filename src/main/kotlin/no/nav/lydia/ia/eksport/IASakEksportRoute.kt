@@ -32,7 +32,9 @@ fun Route.iaSakEksporterer(
             return@get call.respond(HttpStatusCode.Conflict)
         }
 
-        iaSakStatistikkEksporterer.eksporter()
+        launch {
+            iaSakStatistikkEksporterer.eksporter()
+        }
 
         call.respond(HttpStatusCode.OK)
     }
