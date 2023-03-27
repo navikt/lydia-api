@@ -62,7 +62,7 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
                         if (records.count() < 1) continue
                         logger.info("Fant ${records.count()} nye ${kafka.statistikkTopic} meldinger")
                         if (naisEnv.miljø == NaisEnvironment.Companion.Environment.`DEV-GCP`) {
-                            records.forEach { logger.debug("Record: ${it.key()} -> ${it.value()}") }
+                            records.forEach { logger.info("DEBUG: Record key: ${it.key()} value: ${it.value()}") }
                         }
                         // TODO: Feilhåndtering (og alarmering?)
                         sykefraværsstatistikkService.lagre(
