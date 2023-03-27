@@ -972,8 +972,8 @@ class IASakApiTest {
     fun `skal vise bare èn riktig status gjennom livsløpet til en ny sak`() {
         hentSykefravær(
             token = mockOAuth2Server.superbruker1.token,
-            success = { response ->
-                val org = response.data.filter { it.status == IKKE_AKTIV }.random()
+            success = { mainResponse ->
+                val org = mainResponse.data.filter { it.status == IKKE_AKTIV }.random()
                 val sak = opprettSakForVirksomhet(orgnummer = org.orgnr)
                     .nyHendelse(TA_EIERSKAP_I_SAK)
                     .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
