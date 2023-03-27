@@ -10,7 +10,11 @@ import io.ktor.server.routing.get
 
 fun Routing.healthChecks(helseMonitor: HelseMonitor) {
     get("internal/isalive") {
-        call.respondText { "OK" }
+        if (helseMonitor.erFrisk()) {
+            call.respondText { "OK" }
+        } else {
+            call.respond(HttpStatusCode.ServiceUnavailable, "Unhealthy")
+        }
     }
     get("internal/isready") {
         if (helseMonitor.erFrisk()) {
