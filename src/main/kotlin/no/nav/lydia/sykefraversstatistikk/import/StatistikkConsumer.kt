@@ -2,7 +2,10 @@ package no.nav.lydia.sykefraversstatistikk.import
 
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
+import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
@@ -22,6 +25,8 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     lateinit var kafka: Kafka
 
     lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
+
+    val naisEnv = NaisEnvironment()
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -52,17 +57,20 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
                     try {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         if (records.count() < 1) continue
-                        logger.info("Fant ${records.count()} nye meldinger")
+                        logger.info("Fant ${records.count()} nye ${kafka.statistikkTopic} meldinger")
+                        if (naisEnv.miljø == NaisEnvironment.Companion.Environment.`DEV-GCP`) {
+                            logger.info(Json.encodeToString(records))
+                        }
                         // TODO: Feilhåndtering (og alarmering?)
                         sykefraværsstatistikkService.lagre(
                             sykefraværsstatistikkListe =
                             records.toSykefraversstatistikkImportDto().tilBehandletStatistikk()
                         )
-                        logger.info("Lagret ${records.count()} meldinger")
+                        logger.info("Lagret ${records.count()} ${kafka.statistikkTopic} meldinger")
 
                         consumer.commitSync()
                     } catch (e: RetriableException) {
-                        logger.warn("Had a retriable exception, retrying", e)
+                        logger.warn("Had a retriable exception for ${kafka.statistikkTopic} topic, retrying", e)
                     } catch (e: Exception) {
                         logger.error("Exception is shutting down kafka listner for ${kafka.statistikkTopic}", e)
                         job.cancel(CancellationException(e.message))
