@@ -86,5 +86,5 @@ data class SykefraversstatistikkImportDto(
 data class Key(
     val kvartal: Int,
     val årstall: Int,
-    val orgnr: String,
+    val orgnr: String?, // Key er egentlig ugyldig når orgnr er null
 )

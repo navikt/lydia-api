@@ -7,6 +7,7 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -136,6 +137,7 @@ class TestContainerHelper {
         fun GenericContainer<*>.performPut(url: String) = buildUrl(url = url).httpPut()
 
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
+        infix fun GenericContainer<*>.shouldNotContainLog(regex: Regex) = logs shouldNotContain regex
     }
 }
 

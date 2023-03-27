@@ -170,6 +170,13 @@ class KafkaContainerHelper(
         }
     }
 
+    fun sendProducerRecordKafkaMelding(producerRecord: ProducerRecord<String, String>) {
+        runBlocking {
+            val sendtMelding = kafkaProducer.send(producerRecord).get()
+            ventTilKonsumert(sendtMelding.offset())
+        }
+    }
+
     fun sendSykefraversstatistikkKafkaMelding(importDto: SykefraversstatistikkImportDto) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()

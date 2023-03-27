@@ -36,7 +36,8 @@ class TestData(
         fun fraVirksomhet(
             virksomhet: TestVirksomhet,
             sektor: String = SEKTOR_STATLIG_FORVALTNING,
-            perioder: List<Periode> = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode())) =
+            perioder: List<Periode> = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+        ) =
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = perioder,
@@ -388,4 +389,36 @@ fun TestVirksomhet.brregUnderenhetJson() =
     }
             "links" : [ ]
         }
+    """.trimIndent()
+
+val sektorStatistikk = """
+    {
+        "kategori": "SEKTOR",
+        "kode": "0",
+        "sistePubliserteKvartal": {
+            "årstall": 2022,
+            "kvartal": 4,
+            "prosent": 2.3,
+            "tapteDagsverk": 1740.5,
+            "muligeDagsverk": 76139.3,
+            "antallPersoner": 1723,
+            "erMaskert": false
+        },
+        "siste4Kvartal": {
+            "prosent": 2.7,
+            "tapteDagsverk": 8020.0,
+            "muligeDagsverk": 300991.3,
+            "erMaskert": false,
+            "kvartaler": [
+                {
+                    "årstall": 2022,
+                    "kvartal": 3
+                },
+                {
+                    "årstall": 2022,
+                    "kvartal": 4
+                }
+            ]
+        }
+    }
     """.trimIndent()

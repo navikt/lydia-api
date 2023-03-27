@@ -13,6 +13,7 @@ import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk.Companion.tilBehandletStatistikk
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -30,7 +31,7 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
 
     val naisEnv = NaisEnvironment()
-
+    val gson = GsonBuilder().create()
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
 
@@ -88,12 +89,22 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     }
 
     private fun ConsumerRecords<String, String>.toSykefraversstatistikkImportDto(): List<SykefraversstatistikkImportDto> {
-        val gson = GsonBuilder().create()
-        return this.map {
+        return this.filter { erMeldingenGyldig(it) }.map {
             gson.fromJson(
                 it.value(),
                 SykefraversstatistikkImportDto::class.java
             )
+        }
+    }
+
+    private fun erMeldingenGyldig(consumerRecord: ConsumerRecord<String, String>): Boolean {
+        val key = gson.fromJson(consumerRecord.key(), Key::class.java)
+
+        return if (key.orgnr?.length == 9) {
+            true
+        } else {
+            logger.warn("Feil formatert Kafka melding i topic ${kafka.statistikkTopic} for key ${consumerRecord.key()}")
+            false
         }
     }
 
