@@ -1,9 +1,13 @@
 package no.nav.lydia.sykefraversstatistikk.import
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import kotlinx.coroutines.*
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import no.nav.lydia.Kafka
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.appstatus.Helse
@@ -59,7 +63,7 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
                         if (records.count() < 1) continue
                         logger.info("Fant ${records.count()} nye ${kafka.statistikkTopic} meldinger")
                         if (naisEnv.miljø == NaisEnvironment.Companion.Environment.`DEV-GCP`) {
-                            logger.info(Json.encodeToString(records))
+                            logger.info(Gson().toJson(records))
                         }
                         // TODO: Feilhåndtering (og alarmering?)
                         sykefraværsstatistikkService.lagre(
