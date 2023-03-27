@@ -63,6 +63,10 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                         }
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
+                    } catch (e: Exception) {
+                        logger.error("Exception is shutting down kafka listner for ${kafka.statistikkLandTopic}", e)
+                        job.cancel(CancellationException(e.message))
+                        throw e
                     }
                     delay(kafka.consumerLoopDelay)
                 }

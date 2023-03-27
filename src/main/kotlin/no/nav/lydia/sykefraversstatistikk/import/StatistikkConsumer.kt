@@ -54,13 +54,21 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
                         if (records.count() < 1) continue
                         logger.info("Fant ${records.count()} nye meldinger")
                         // TODO: Feilhåndtering (og alarmering?)
-                        sykefraværsstatistikkService.lagre(sykefraværsstatistikkListe = records.toSykefraversstatistikkImportDto().tilBehandletStatistikk())
+                        sykefraværsstatistikkService.lagre(
+                            sykefraværsstatistikkListe =
+                            records.toSykefraversstatistikkImportDto().tilBehandletStatistikk()
+                        )
                         logger.info("Lagret ${records.count()} meldinger")
 
                         consumer.commitSync()
                     } catch (e: RetriableException) {
                         logger.warn("Had a retriable exception, retrying", e)
+                    } catch (e: Exception) {
+                        logger.error("Exception is shutting down kafka listner for ${kafka.statistikkTopic}", e)
+                        job.cancel(CancellationException(e.message))
+                        throw e
                     }
+
                     delay(kafka.consumerLoopDelay)
                 }
 
