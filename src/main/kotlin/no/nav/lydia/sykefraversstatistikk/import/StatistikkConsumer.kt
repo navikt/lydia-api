@@ -8,7 +8,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import no.nav.lydia.Kafka
-import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
@@ -30,7 +29,6 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
 
     lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
 
-    val naisEnv = NaisEnvironment()
     val gson = GsonBuilder().create()
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -40,11 +38,11 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
-        logger.info("Creating kafka consumer job for statistikk")
+        logger.info("Creating kafka consumer job for ${kafka.statistikkTopic}")
         this.job = Job()
         this.kafka = kafka
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
-        logger.info("Created kafka consumer job for statistikk")
+        logger.info("Created kafka consumer job for ${kafka.statistikkTopic}")
     }
 
     fun run() {
@@ -62,10 +60,6 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         if (records.count() < 1) continue
                         logger.info("Fant ${records.count()} nye ${kafka.statistikkTopic} meldinger")
-                        if (naisEnv.miljø == NaisEnvironment.Companion.Environment.`DEV-GCP`) {
-                            records.forEach { logger.info("DEBUG: Record key: ${it.key()} value: ${it.value()}") }
-                        }
-                        // TODO: Feilhåndtering (og alarmering?)
                         sykefraværsstatistikkService.lagre(
                             sykefraværsstatistikkListe =
                             records.toSykefraversstatistikkImportDto().tilBehandletStatistikk()
@@ -114,9 +108,9 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun cancel() {
-        logger.info("Stopping kafka consumer job for statistikk")
+        logger.info("Stopping kafka consumer job for ${kafka.statistikkTopic}")
         job.cancel()
-        logger.info("Stopped kafka consumer job for statistikk")
+        logger.info("Stopped kafka consumer job for ${kafka.statistikkTopic}")
     }
 
     override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN

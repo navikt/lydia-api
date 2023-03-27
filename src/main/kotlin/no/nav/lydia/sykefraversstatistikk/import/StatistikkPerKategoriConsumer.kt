@@ -29,11 +29,11 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
-        logger.info("Creating kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
+        logger.info("Creating kafka consumer job i StatistikkPerKategoriConsumer")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
-        logger.info("Created kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
+        logger.info("Created kafka consumer job i StatistikkPerKategoriConsumer")
     }
 
     fun run() {
@@ -49,7 +49,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                         kafka.statistikkVirksomhetTopic
                     )
                 )
-                logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic}")
+                logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic} i StatistikkPerKategoriConsumer")
 
                 while (job.isActive) {
                     try {
@@ -58,13 +58,13 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                             sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
                                 records.toSykefraversstatistikkPerKategoriImportDto()
                             )
-                            logger.info("Lagret ${records.count()} meldinger om sykefraværsstatistikk per kategori")
+                            logger.info("Lagret ${records.count()} meldinger om i StatistikkPerKategoriConsumer per kategori")
                             consumer.commitSync()
                         }
                     } catch (e: RetriableException) {
-                        logger.warn("Had a retriable exception, retrying", e)
+                        logger.warn("Had a retriable exception i StatistikkPerKategoriConsumer, retrying", e)
                     } catch (e: Exception) {
-                        logger.error("Exception is shutting down kafka listner for ${kafka.statistikkLandTopic}", e)
+                        logger.error("Exception is shutting down kafka listner i StatistikkPerKategoriConsumer", e)
                         job.cancel(CancellationException(e.message))
                         throw e
                     }
@@ -76,9 +76,9 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
     }
 
     fun cancel() {
-        logger.info("Stopping kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
+        logger.info("Stopping kafka consumer job i StatistikkPerKategoriConsumer")
         job.cancel()
-        logger.info("Stopped kafka consumer job for ${Kafka.statistikkPerKategoriGroupId}")
+        logger.info("Stopped kafka consumer job i StatistikkPerKategoriConsumer")
     }
 
     private fun ConsumerRecords<String, String>.toSykefraversstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {

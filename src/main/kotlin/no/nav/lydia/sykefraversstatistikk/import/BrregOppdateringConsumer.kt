@@ -38,11 +38,11 @@ object BrregOppdateringConsumer : CoroutineScope {
     }
 
     fun create(kafka: Kafka, repository: VirksomhetRepository) {
-        logger.info("Creating kafka consumer job for brreg oppdatering")
+        logger.info("Creating kafka consumer job for ${kafka.brregOppdateringTopic}")
         this.job = Job()
         this.kafka = kafka
         this.repository = repository
-        logger.info("Created kafka consumer job for brreg oppdatering")
+        logger.info("Created kafka consumer job for ${kafka.brregOppdateringTopic}")
     }
 
     fun run() {
@@ -61,7 +61,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                         val antallMeldinger = records.count()
                         if (antallMeldinger < 1) continue
                         var antallIrrelevanteBedrifter = 0
-                        logger.info("Fant $antallMeldinger nye meldinger")
+                        logger.info("Fant $antallMeldinger nye meldinger for ${kafka.brregOppdateringTopic}")
                         records.forEach { record ->
                             val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
                             when (oppdateringVirksomhet.endringstype) {
@@ -86,13 +86,13 @@ object BrregOppdateringConsumer : CoroutineScope {
                                 )
                             }
                         }
-                        logger.info("Lagret $antallMeldinger meldinger")
+                        logger.info("Lagret $antallMeldinger meldinger for ${kafka.brregOppdateringTopic}")
                         if (antallIrrelevanteBedrifter > 0) {
                             logger.info("Fant $antallIrrelevanteBedrifter irrelevante bedrifter.")
                         }
                         consumer.commitSync()
                     } catch (e: RetriableException) {
-                        logger.warn("Had a retriable exception, retrying", e)
+                        logger.warn("Had a retriable exception for ${kafka.brregOppdateringTopic}, retrying", e)
                     } catch (e: Exception) {
                         logger.error("Exception is shutting down kafka listner for ${kafka.brregOppdateringTopic}", e)
                         job.cancel(CancellationException(e.message))
@@ -105,9 +105,9 @@ object BrregOppdateringConsumer : CoroutineScope {
     }
 
     fun cancel() {
-        logger.info("Stopping kafka consumer job for brreg oppdatering")
+        logger.info("Stopping kafka consumer job for ${kafka.brregOppdateringTopic}")
         job.cancel()
-        logger.info("Stopped kafka consumer job for brreg oppdatering")
+        logger.info("Stopped kafka consumer job for ${kafka.brregOppdateringTopic}")
     }
 
     @kotlinx.serialization.Serializable
