@@ -233,7 +233,7 @@ class SakHelper {
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnr")
                 .authentication().bearer(token = token)
-                .tilListeRespons<IASakshendelseOppsummeringDto>()
+                .tilListeRespons<SakshistorikkDto>()
 
         fun opprettSakForVirksomhetRespons(
             orgnummer: String,

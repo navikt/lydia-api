@@ -11,6 +11,8 @@ import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.tilgangskontroll.Rådgiver
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class IASakshendelseRepository(val dataSource: DataSource) {
@@ -42,7 +44,8 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                 )
                     .map(this::mapRow).asList
             )
-        }
+        }.verifiserAtViIkkeHarDuplikater()
+
     fun hentHendelserForOrgnummer(orgnr: String): List<IASakshendelse> {
         val orgnrKolonneNavn = "orgnr"
         return using(sessionOf(dataSource)) { session ->
@@ -71,7 +74,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                 )
                     .map(this::mapRow).asList
             )
-        }
+        }.verifiserAtViIkkeHarDuplikater()
     }
 
     fun lagreHendelse(hendelse: IASakshendelse) =
@@ -170,4 +173,21 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             val valgtBegrunnelser = begrunnelser.filterNotNull().map(BegrunnelseType::valueOf)
             ValgtÅrsak(type = valgtÅrsak, begrunnelser = valgtBegrunnelser)
         }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
+        private fun List<IASakshendelse>.verifiserAtViIkkeHarDuplikater(): List<IASakshendelse> {
+            val listSize = this.size
+            if (listSize >= 2) {
+                val nestSiste = this[listSize - 2]
+                val siste = this.last()
+                if (siste.hendelsesType != IASakshendelseType.TILBAKE && siste.hendelsesType == nestSiste.hendelsesType) {
+                    logger.warn("Feil! IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}")
+                    throw IllegalStateException("IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}")
+                }
+            }
+            return this
+        }
+    }
 }

@@ -29,8 +29,10 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
@@ -48,11 +50,13 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
+import no.nav.lydia.tilgangskontroll.Rådgiver
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
+    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
 
     @Test
     fun `skal validere at begrunnelse tilhører riktig årsak`() {
@@ -212,6 +216,100 @@ class IASakApiTest {
             .statuskode() shouldBe 201
 
         hentSaker(orgnummer = orgnummer).size shouldBe 2
+    }
+
+    @Test
+    fun `skal logge doble eventer`() {
+        val orgnummer = nyttOrgnummer()
+        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        postgresContainer.performUpdate(
+            """
+                    INSERT INTO ia_sak_hendelse (
+                        id,
+                        saksnummer,
+                        orgnr,
+                        type,
+                        opprettet_av,
+                        opprettet_av_rolle,
+                        opprettet
+                    )
+                    VALUES (
+                        '777',
+                        '${sak.saksnummer}',
+                        '${sak.orgnr}',
+                        '${VIRKSOMHET_SKAL_BISTÅS.name}',
+                        '${sak.eidAv}',
+                        '${Rådgiver.Rolle.SUPERBRUKER}',
+                        '${sak.endretTidspunkt}'
+                    ) 
+                """.trimIndent())
+        sak.status shouldBe VI_BISTÅR
+
+        hentSaker(orgnummer = orgnummer).size shouldBe 1
+
+        val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
+        response.statuskode() shouldBe HttpStatusCode.InternalServerError.value
+        lydiaApiContainer shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
+    }
+
+    @Test
+    fun `skal logge doble eventer i midten`() {
+        val orgnummer = nyttOrgnummer()
+        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        postgresContainer.performUpdate(
+            """
+                    INSERT INTO ia_sak_hendelse (
+                        id,
+                        saksnummer,
+                        orgnr,
+                        type,
+                        opprettet_av,
+                        opprettet_av_rolle,
+                        opprettet
+                    )
+                    VALUES (
+                        '888',
+                        '${sak.saksnummer}',
+                        '${sak.orgnr}',
+                        '${VIRKSOMHET_SKAL_BISTÅS.name}',
+                        '${sak.eidAv}',
+                        '${Rådgiver.Rolle.SUPERBRUKER}',
+                        '${sak.endretTidspunkt}'
+                    ) 
+                """.trimIndent())
+        sak.status shouldBe VI_BISTÅR
+        shouldFail { sak.nyHendelse(TILBAKE) }
+
+        lydiaApiContainer shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
+    }
+
+    @Test
+    fun `skal takle dobbelt tilbake event`() {
+        val orgnummer = nyttOrgnummer()
+        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(TILBAKE)
+            .nyHendelse(TILBAKE)
+        sak.status shouldBe KONTAKTES
+
+        hentSaker(orgnummer = orgnummer).size shouldBe 1
+
+        val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+        val resultat = response.third.get()
+        resultat.size shouldBe 1
+        resultat[0].sakshendelser.size shouldBe 8
     }
 
     @Test
