@@ -236,6 +236,7 @@ enum class Sorteringsnøkkel(val verdi: String) {
     ANTALL_PERSONER("antall_personer"),
     MULIGE_DAGSVERK("mulige_dagsverk"),
     SYKEFRAVÆRSPROSENT("sykefraversprosent");
+//    SIST_ENDRET("sist_endret");
 
     companion object {
         fun from(verdi: String?) = values().find { it.verdi == verdi?.lowercase() } ?: TAPTE_DAGSVERK
