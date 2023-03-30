@@ -129,6 +129,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk_siste4.prosent"
             TAPTE_DAGSVERK -> "ORDER BY statistikk_siste4.tapte_dagsverk"
             MULIGE_DAGSVERK -> "ORDER BY statistikk_siste4.mulige_dagsverk"
+//            SIST_ENDRET -> "ORDER BY ia_sak.endret"
         }
     }
 
