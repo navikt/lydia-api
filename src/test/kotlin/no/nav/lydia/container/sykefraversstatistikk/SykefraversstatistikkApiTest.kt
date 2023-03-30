@@ -2,6 +2,7 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer
+import io.kotest.assertions.print.print
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
@@ -196,6 +197,29 @@ class SykefraversstatistikkApiTest {
         hentSykefravær(success = { response ->
             val tapteDagsverk = response.data.map { it.tapteDagsverk }
             tapteDagsverk shouldContainInOrder tapteDagsverk.sorted()
+        }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
+    }
+
+    @Test
+    fun `skal kunne sortere sykefraværsstatistikk etter sist endret-dato`() {
+        val sorteringsnøkkel = "sist_endret"
+        // TODO gjer hendingar på to sakar så vi kan sjekke sortering
+
+        hentSykefravær(
+            success = { response ->
+                val sistEndret = response.data.map { it.sistEndret }
+                println("Sist endret dsc: $sistEndret")
+                sistEndret shouldContainInOrder sistEndret.sortedByDescending { it?.toEpochDays()}
+            },
+            sorteringsnokkel = sorteringsnøkkel,
+            sorteringsretning = "desc",
+            token = mockOAuth2Server.saksbehandler1.token
+        )
+
+        hentSykefravær(success = { response ->
+            val sistEndret = response.data.map { it.sistEndret }
+            println("Sist endret: $sistEndret")
+            sistEndret shouldContainInOrder sistEndret.sortedBy { it?.toEpochDays()}
         }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
     }
 
