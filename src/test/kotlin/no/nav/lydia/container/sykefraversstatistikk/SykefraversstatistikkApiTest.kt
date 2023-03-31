@@ -2,7 +2,6 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer
-import io.kotest.assertions.print.print
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
@@ -217,6 +216,7 @@ class SykefraversstatistikkApiTest {
             success = { response ->
                 val sistEndret = response.data.map { it.sistEndret }
                 println("Sist endret dsc: $sistEndret")
+                println("Sist endret dsc shouldBe: ${sistEndret.sortedByDescending { it?.toEpochDays()}}")
                 sistEndret shouldContainInOrder sistEndret.sortedByDescending { it?.toEpochDays()}
             },
             sorteringsnokkel = sorteringsnøkkel,
@@ -226,7 +226,8 @@ class SykefraversstatistikkApiTest {
 
         hentSykefravær(success = { response ->
             val sistEndret = response.data.map { it.sistEndret }
-            println("Sist endret: $sistEndret")
+            println("Sist endret asc: $sistEndret")
+            println("Sist endret asc shouldBe: ${sistEndret.sortedByDescending { it?.toEpochDays()}}")
             sistEndret shouldContainInOrder sistEndret.sortedBy { it?.toEpochDays()}
         }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
     }
