@@ -202,6 +202,14 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne sortere sykefraværsstatistikk etter sist endret-dato`() {
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+                .oppdaterHendelsesTidspunkter(antallDagerTilbake = 5)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+
+
+
+
+
         val sorteringsnøkkel = "sist_endret"
         // TODO gjer hendingar på to sakar så vi kan sjekke sortering
 
