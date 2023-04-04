@@ -228,6 +228,13 @@ data class Periode(val kvartal: Int, val årstall: Int) {
             1 -> Periode(kvartal = 4, årstall = this.årstall - 1)
             else -> Periode(kvartal = this.kvartal - 1, årstall = this.årstall)
         }
+
+    operator fun compareTo(annen: Periode): Int {
+        if (årstall.compareTo(annen.årstall) == 0) {
+            return kvartal.compareTo(annen.kvartal)
+        }
+        return årstall.compareTo(annen.årstall)
+    }
 }
 
 enum class Sorteringsnøkkel(val verdi: String) {

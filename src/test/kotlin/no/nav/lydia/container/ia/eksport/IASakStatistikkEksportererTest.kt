@@ -50,7 +50,7 @@ class IASakStatistikkEksportererTest {
     fun `skal trigge kafka-eksport av IASakStatistikk`() {
         val næringskode = "${Bransjer.BYGG.næringskoder.first()}.123"
         val virksomhet = TestVirksomhet.nyVirksomhet(næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygg og ting")))
-        VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
+        lastInnNyVirksomhet(virksomhet)
 
         val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = oauth2ServerContainer.superbruker1.token)
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
