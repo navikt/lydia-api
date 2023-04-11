@@ -313,6 +313,27 @@ class IASakApiTest {
     }
 
     @Test
+    fun `skal takle dobbelt ta eierskap event`() {
+        val orgnummer = nyttOrgnummer()
+        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+        sak.status shouldBe VI_BISTÅR
+
+        hentSaker(orgnummer = orgnummer).size shouldBe 1
+
+        val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
+        response.statuskode() shouldBe HttpStatusCode.OK.value
+        val resultat = response.third.get()
+        resultat.size shouldBe 1
+        resultat[0].sakshendelser.size shouldBe 8
+    }
+
+    @Test
     fun `skal kunne opprette ny sak dersom de andre sakene anses som ikke fullført`() {
         val orgnummer = nyttOrgnummer()
         var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
