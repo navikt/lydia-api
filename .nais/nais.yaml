@@ -28,6 +28,9 @@ spec:
     enabled: true
     path: "/metrics"
   accessPolicy:
+    outbound:
+      external:
+        - host: "https://data.brreg.no"
     inbound:
       rules:
         - application: lydia-radgiver-frontend

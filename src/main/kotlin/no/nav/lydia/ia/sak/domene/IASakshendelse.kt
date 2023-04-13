@@ -69,7 +69,12 @@ open class IASakshendelse(
             )
     }
 
-    fun tilPeriode() = Periode.fraDato(opprettetTidspunkt)
+    fun tilPeriode(): Periode {
+        // TODO: Gjør denne enda mer presis.
+        if (Periode.fraDato(opprettetTidspunkt) > Periode.gjeldendePeriode())
+            return Periode.gjeldendePeriode()
+        return Periode.fraDato(opprettetTidspunkt)
+    }
 
     @Serializable
     private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: IASakshendelseType, val opprettetAv: String)

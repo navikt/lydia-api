@@ -182,7 +182,11 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             if (listSize >= 2) {
                 val nestSiste = this[listSize - 2]
                 val siste = this.last()
-                if (siste.hendelsesType != IASakshendelseType.TILBAKE && siste.hendelsesType == nestSiste.hendelsesType) {
+                if (
+                    siste.hendelsesType != IASakshendelseType.TILBAKE
+                    && siste.hendelsesType != IASakshendelseType.TA_EIERSKAP_I_SAK
+                    && siste.hendelsesType == nestSiste.hendelsesType
+                ) {
                     logger.warn("Feil! IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}")
                     throw IllegalStateException("IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}")
                 }

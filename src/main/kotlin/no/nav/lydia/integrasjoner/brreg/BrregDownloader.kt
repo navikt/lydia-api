@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.Headers
 import com.github.kittinunf.fuel.httpGet
 import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
+import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.slf4j.Logger
@@ -69,8 +70,9 @@ class BrregDownloader(
                 val brregVirksomhet = gson.fromJson<BrregVirksomhetDto>(reader, BrregVirksomhetDto::class.java)
                 when (brregVirksomhet) {
                     null -> {
-                        log.debug("Skipper lagring av virksomhet da den er null fra JsonReader")
                         feilendeBedrifter++
+                        log.debug("Skipper lagring av virksomhet da den er null fra JsonReader")
+                        Metrics.brregVirksomheterImportertFeilet.inc()
                     }
                     else -> {
                         try {
@@ -79,13 +81,16 @@ class BrregDownloader(
                                     val virksomhet = brregVirksomhet.tilVirksomhet(status = VirksomhetStatus.AKTIV, oppdateringsId = null)
                                     virksomhetRepository.insert(virksomhet = virksomhet)
                                     importerteBedrifter++
+                                    Metrics.brregVirksomheterImportert.inc()
                                 } else {
                                     ikkeRelevanteBedrifter++
+                                    Metrics.brregVirksomheterImportertIkkeRelevant.inc()
                                 }
                             }
                         } catch (e: Exception) {
                             feilendeBedrifter++
                             log.error("Lagring av virksomhet feilet", e)
+                            Metrics.brregVirksomheterImportertFeilet.inc()
                         }
                     }
                 }

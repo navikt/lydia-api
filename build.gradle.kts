@@ -1,8 +1,8 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.8.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "1.7.20"
+    kotlin("plugin.serialization") version "1.8.20"
     // For å bygge
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
@@ -38,24 +38,24 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.4.5")
-    implementation("net.logstash.logback:logstash-logback-encoder:7.2")
+    implementation("ch.qos.logback:logback-classic:1.4.6")
+    implementation("net.logstash.logback:logstash-logback-encoder:7.3")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.10.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.10.5")
 
     // Database
-    implementation("org.postgresql:postgresql:42.5.1")
+    implementation("org.postgresql:postgresql:42.6.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:9.10.2")
+    implementation("org.flywaydb:flyway-core:9.16.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.10")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Kafka
     implementation("org.apache.kafka:kafka-clients:3.4.0")
@@ -70,7 +70,7 @@ dependencies {
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
     // featuretoggling med unleash
-    implementation("io.getunleash:unleash-client-java:7.0.0")
+    implementation("io.getunleash:unleash-client-java:7.1.0")
 
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:0.0.5")
@@ -87,7 +87,7 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.17.6"
+    val testcontainersVersion = "1.18.0"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
@@ -99,8 +99,8 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:0.5.7")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.27")
+    testImplementation("no.nav.security:mock-oauth2-server:0.5.8")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.30.2")
 
     constraints {
         implementation("net.minidev:json-smart:2.4.10") {
