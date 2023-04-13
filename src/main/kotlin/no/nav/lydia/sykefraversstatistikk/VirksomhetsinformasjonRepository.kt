@@ -11,11 +11,7 @@ import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
-import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.ANTALL_PERSONER
-import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.MULIGE_DAGSVERK
-import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.NAVN_PÅ_VIRKSOMHET
-import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.SYKEFRAVÆRSPROSENT
-import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.TAPTE_DAGSVERK
+import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåBransjeOgNæring
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
@@ -129,7 +125,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk_siste4.prosent"
             TAPTE_DAGSVERK -> "ORDER BY statistikk_siste4.tapte_dagsverk"
             MULIGE_DAGSVERK -> "ORDER BY statistikk_siste4.mulige_dagsverk"
-//            SIST_ENDRET -> "ORDER BY ia_sak.endret"
+            SIST_ENDRET -> "ORDER BY ia_sak.endret"
         }
     }
 
