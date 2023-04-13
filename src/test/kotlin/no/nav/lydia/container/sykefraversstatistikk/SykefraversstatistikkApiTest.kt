@@ -201,35 +201,41 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne sortere sykefraværsstatistikk etter sist endret-dato`() {
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-                .oppdaterHendelsesTidspunkter(antallDagerTilbake = 5)
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val testKommune = Kommune(navn = "Jimmyyy", nummer = "0555")
+        val virksomhet1 =
+                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val virksomhet2 =
+                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val virksomhet3 =
+                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+        val virksomhet4 =
+                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
 
-
-
-
+        opprettSakForVirksomhet(orgnummer = virksomhet1.orgnr)
+        opprettSakForVirksomhet(orgnummer = virksomhet2.orgnr).oppdaterHendelsesTidspunkter(antallDagerTilbake = 5)
+        opprettSakForVirksomhet(orgnummer = virksomhet3.orgnr)
+        opprettSakForVirksomhet(orgnummer = virksomhet4.orgnr).oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
 
         val sorteringsnøkkel = "sist_endret"
-        // TODO gjer hendingar på to sakar så vi kan sjekke sortering
 
         hentSykefravær(
             success = { response ->
                 val sistEndret = response.data.map { it.sistEndret }
-                println("Sist endret dsc: $sistEndret")
-                println("Sist endret dsc shouldBe: ${sistEndret.sortedByDescending { it?.toEpochDays()}}")
                 sistEndret shouldContainInOrder sistEndret.sortedByDescending { it?.toEpochDays()}
             },
+            kommuner = testKommune.nummer,
             sorteringsnokkel = sorteringsnøkkel,
             sorteringsretning = "desc",
-            token = mockOAuth2Server.saksbehandler1.token
         )
 
-        hentSykefravær(success = { response ->
-            val sistEndret = response.data.map { it.sistEndret }
-            println("Sist endret asc: $sistEndret")
-            println("Sist endret asc shouldBe: ${sistEndret.sortedByDescending { it?.toEpochDays()}}")
-            sistEndret shouldContainInOrder sistEndret.sortedBy { it?.toEpochDays()}
-        }, sorteringsnokkel = sorteringsnøkkel, sorteringsretning = "asc")
+        hentSykefravær(
+                success = { response ->
+                    val sistEndret = response.data.map { it.sistEndret }
+                    sistEndret shouldContainInOrder sistEndret.sortedBy { it?.toEpochDays() }
+                },
+                kommuner = testKommune.nummer,
+                sorteringsnokkel = sorteringsnøkkel,
+                sorteringsretning = "asc")
     }
 
     @Test
