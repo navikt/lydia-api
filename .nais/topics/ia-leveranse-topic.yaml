@@ -9,3 +9,7 @@ metadata:
     team: pia
 spec:
   pool: {{kafkaPool}}
+  acl:
+    - team: pia
+      application: lydia-api
+      access: readwrite   # read, write, readwrite
