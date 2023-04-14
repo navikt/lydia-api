@@ -67,7 +67,6 @@ class KtorTestHelper {
                 credstorePassword = "",
                 statistikkTopic = "",
                 statistikkLandTopic = "",
-                iaSakHendelseTopic = "",
                 iaSakTopic = "",
                 iaSakStatistikkTopic = "",
                 iaSakLeveranseTopic = "",
