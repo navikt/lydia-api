@@ -200,6 +200,47 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skal kunne sortere sykefraværsstatistikk alfabetisk etter norsk alfabet`() {
+        val sorteringsnøkkel = "navn"
+
+        val testKommune = Kommune(navn = "Testkommune", nummer = "0455")
+        val testBeliggenhet =  beliggenhet(kommune = testKommune)
+
+        val virksomhet1 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(navn = "Bare ting og greier AS", beliggenhet = testBeliggenhet))
+        val virksomhet2 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(navn = "Annet og litt ENK", beliggenhet = testBeliggenhet))
+        val virksomhet3 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(navn = "Ordentlig AS", beliggenhet = testBeliggenhet))
+        val virksomhet4 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(navn = "Åsmunds rariteter AS", beliggenhet = testBeliggenhet))
+        val virksomhet5 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(navn = "Ørlandet skrot og skrap", beliggenhet = testBeliggenhet))
+        val virksomhet6 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(navn = "Ettellerannet skrimmelskrammel", beliggenhet = testBeliggenhet))
+        val virksomhet7 = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(navn = "Ærlig arbeid ASA", beliggenhet = testBeliggenhet))
+
+        val alfabetiskStigende = listOf(virksomhet2.navn, virksomhet1.navn, virksomhet6.navn, virksomhet3.navn, virksomhet7.navn, virksomhet5.navn, virksomhet4.navn)
+        val alfabetiskSynkende = listOf(virksomhet4.navn, virksomhet5.navn, virksomhet7.navn, virksomhet3.navn, virksomhet6.navn, virksomhet1.navn, virksomhet2.navn)
+
+        hentSykefravær(
+            success = { response ->
+                val navn = response.data.map { it.virksomhetsnavn }
+                navn shouldContainInOrder alfabetiskStigende
+            },
+            kommuner = testKommune.nummer,
+            sorteringsnokkel = sorteringsnøkkel,
+            sorteringsretning = "asc",
+            token = mockOAuth2Server.saksbehandler1.token
+        )
+
+        hentSykefravær(
+            success = { response ->
+                val navn = response.data.map { it.virksomhetsnavn }
+                navn shouldContainInOrder alfabetiskSynkende
+            },
+            kommuner = testKommune.nummer,
+            sorteringsnokkel = sorteringsnøkkel,
+            sorteringsretning = "desc",
+            token = mockOAuth2Server.saksbehandler1.token
+        )
+    }
+
+    @Test
     fun `skal kunne sortere sykefraværsstatistikk etter sist endret-dato`() {
         val testKommune = Kommune(navn = "Jimmyyy", nummer = "0555")
         val virksomhet1 =
