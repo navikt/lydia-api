@@ -7,3 +7,5 @@ metadata:
     kafka.nais.io/removeDataWhenResourceIsDeleted: "true"
   labels:
     team: pia
+spec:
+  pool: {{kafkaPool}}
