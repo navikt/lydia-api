@@ -32,17 +32,17 @@ class IASakService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    private fun IASakshendelse.lagre() =
-        iaSakshendelseRepository.lagreHendelse(this).also(::varsleIASakshendelseObservers)
+    private fun IASakshendelse.lagre(sistEndretAvHendelseId: String?) =
+        iaSakshendelseRepository.lagreHendelse(this, sistEndretAvHendelseId).also(::varsleIASakshendelseObservers)
 
     private fun IASak.lagre() =
         iaSakRepository.opprettSak(this).also(::varsleIASakObservers)
 
-    private fun IASak.lagreOppdatering(): Either<Feil, IASak> {
+    private fun IASak.lagreOppdatering(sistEndretAvHendelseId: String?): Either<Feil, IASak> {
         if (this.status == IAProsessStatus.SLETTET) {
-            return slettSak(this).tap(::varsleIASakObservers)
+            return slettSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
         }
-            return iaSakRepository.oppdaterSak(this).tap(::varsleIASakObservers)
+            return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
     }
 
     fun leggTilIASakshendelseObserver(observer: Observer<IASakshendelse>) {
@@ -73,14 +73,15 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         }
         val sak = IASak.fraFørsteHendelse(
-            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, rådgiver = rådgiver).lagre()
+            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, rådgiver = rådgiver).lagre(null)
         ).lagre()
+        val sistEndretAvHendelseId = sak.endretAvHendelseId
 
-        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, rådgiver = rådgiver).lagre()
+        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, rådgiver = rådgiver).lagre(null)
             .let { vurderesHendelse -> rådgiver.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
-                oppdatertSak.lagreOppdatering()
+                oppdatertSak.lagreOppdatering(sistEndretAvHendelseId)
             }
             .tap { Metrics.virksomheterPrioritert.inc() }
 
@@ -90,6 +91,7 @@ class IASakService(
         val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.ansesSomAvsluttet() }
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
+        val sistEndretAvHendelseId = aktiveSaker.firstOrNull()?.endretAvHendelseId
 
         return IASakshendelse.fromDto(hendelseDto, rådgiver)
             .flatMap { sakshendelse ->
@@ -101,18 +103,18 @@ class IASakService(
                 val sak = IASak.fraHendelser(hendelser)
                 rådgiver.utførHendelsePåSak(sak = sak, hendelse = sakshendelse)
                     .map { oppdatertSak ->
-                        sakshendelse.lagre()
+                        sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         årsakService.lagreÅrsak(sakshendelse)
-                        return oppdatertSak.lagreOppdatering()
+                        return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
                     .mapLeft{ it.tilFeilMedHttpFeilkode() }
 
             }
     }
 
-    private fun slettSak(sak: IASak) =
+    private fun slettSak(sak: IASak, sistEndretAvHendelseId: String?) =
         try {
-            iaSakRepository.slettSak(sak.saksnummer)
+            iaSakRepository.slettSak(sak.saksnummer, sistEndretAvHendelseId)
             Either.Right(sak)
         } catch (exception: Exception) {
             Either.Left(IASakError.`fikk ikke slettet sak`)

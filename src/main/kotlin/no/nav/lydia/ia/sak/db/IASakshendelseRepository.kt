@@ -4,6 +4,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.db.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
@@ -77,41 +78,44 @@ class IASakshendelseRepository(val dataSource: DataSource) {
         }.verifiserAtViIkkeHarDuplikater()
     }
 
-    fun lagreHendelse(hendelse: IASakshendelse) =
+    fun lagreHendelse(hendelse: IASakshendelse, sistEndretAvHendelseId: String?) =
         using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    INSERT INTO ia_sak_hendelse (
-                        id,
-                        saksnummer,
-                        orgnr,
-                        type,
-                        opprettet_av,
-                        opprettet_av_rolle,
-                        opprettet
-                    )
-                    VALUES (
-                        :id,
-                        :saksnummer,
-                        :orgnr,
-                        :type,
-                        :opprettet_av,
-                        :opprettet_av_rolle,
-                        :opprettet
-                    ) 
-                """.trimMargin(),
-                    mapOf(
-                        "id" to hendelse.id,
-                        "saksnummer" to hendelse.saksnummer,
-                        "orgnr" to hendelse.orgnummer,
-                        "type" to hendelse.hendelsesType.name,
-                        "opprettet_av" to hendelse.opprettetAv,
-                        "opprettet_av_rolle" to hendelse.opprettetAvRolle?.toString(),
-                        "opprettet" to hendelse.opprettetTidspunkt
-                    )
-                ).asUpdate
-            )
+            session.transaction { tx ->
+                tx.validerAtSakHarRiktigEndretAvHendelse(hendelse.saksnummer, sistEndretAvHendelseId)
+                tx.run(
+                    queryOf(
+                        """
+                            INSERT INTO ia_sak_hendelse (
+                                id,
+                                saksnummer,
+                                orgnr,
+                                type,
+                                opprettet_av,
+                                opprettet_av_rolle,
+                                opprettet
+                            )
+                            VALUES (
+                                :id,
+                                :saksnummer,
+                                :orgnr,
+                                :type,
+                                :opprettet_av,
+                                :opprettet_av_rolle,
+                                :opprettet
+                            ) 
+                        """.trimMargin(),
+                        mapOf(
+                            "id" to hendelse.id,
+                            "saksnummer" to hendelse.saksnummer,
+                            "orgnr" to hendelse.orgnummer,
+                            "type" to hendelse.hendelsesType.name,
+                            "opprettet_av" to hendelse.opprettetAv,
+                            "opprettet_av_rolle" to hendelse.opprettetAvRolle?.toString(),
+                            "opprettet" to hendelse.opprettetTidspunkt
+                        )
+                    ).asUpdate
+                )
+            }
             hendelse
         }
 
