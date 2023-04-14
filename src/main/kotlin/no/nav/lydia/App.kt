@@ -93,8 +93,6 @@ fun startLydiaBackend() {
     val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource))
 
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
-    val iaSakshendelseProdusent =
-        IASakshendelseProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakHendelseTopic)
     val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakTopic)
     val iaSakStatistikkProdusent = IASakStatistikkProdusent(
         produsent = kafkaProdusent,
@@ -113,7 +111,6 @@ fun startLydiaBackend() {
         lydiaRestApi(
             naisEnvironment = naisEnv,
             dataSource = dataSource,
-            iaSakshendelseProdusent = iaSakshendelseProdusent,
             iaSakProdusent = iaSakProdusent,
             iaSakStatistikkProdusent = iaSakStatistikkProdusent,
             iaSakLeveranseProdusent = iaSakLevelanseProdusent,
@@ -139,7 +136,6 @@ private fun brregConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
 fun Application.lydiaRestApi(
     naisEnvironment: NaisEnvironment,
     dataSource: DataSource,
-    iaSakshendelseProdusent: IASakshendelseProdusent? = null,
     iaSakProdusent: IASakProdusent? = null,
     iaSakStatistikkProdusent: IASakStatistikkProdusent? = null,
     iaSakLeveranseProdusent: IASakLeveranseProdusent? = null,
@@ -269,7 +265,6 @@ fun Application.lydiaRestApi(
                     iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ).apply {
-                    iaSakshendelseProdusent?.also { leggTilIASakshendelseObserver(it) }
                     iaSakProdusent?.also { leggTilIASakObserver(it) }
                     iaSakStatistikkProdusent?.also { leggTilIASakObserver(it) }
                     iaSakLeveranseProdusent?.also { leggTilIASakLeveranseObserver(it) }

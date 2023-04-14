@@ -3,6 +3,8 @@ kind: Topic
 metadata:
   name: ia-sak-hendelse-v1
   namespace: pia
+  annotations:
+    kafka.nais.io/removeDataWhenResourceIsDeleted: "true"
   labels:
     team: pia
 spec:

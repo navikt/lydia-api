@@ -60,8 +60,6 @@ spec:
   kafka:
     pool: {{kafkaPool}}
   env:
-    - name: IA_SAK_HENDELSE_TOPIC
-      value: pia.ia-sak-hendelse-v1
     - name: IA_SAK_TOPIC
       value: pia.ia-sak-v1
     - name: IA_SAK_STATISTIKK_TOPIC

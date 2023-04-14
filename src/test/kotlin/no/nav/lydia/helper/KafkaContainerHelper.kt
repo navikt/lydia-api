@@ -47,7 +47,6 @@ class KafkaContainerHelper(
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
         const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
         const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
-        const val iaSakHendelseTopic = "pia.ia-sak-hendelse-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
         const val iaSakLeveranseTopic = "pia.ia-sak-leveranse-v1"
@@ -77,7 +76,6 @@ class KafkaContainerHelper(
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
             createTopic(statistikkTopic,
-                iaSakHendelseTopic,
                 iaSakTopic,
                 brregOppdateringTopic,
                 statistikkLandTopic,
@@ -88,7 +86,6 @@ class KafkaContainerHelper(
     fun nyKonsument(consumerGroupId: String) =
         Kafka(
             brokers = kafkaContainer.bootstrapServers,
-            iaSakHendelseTopic = iaSakHendelseTopic,
             iaSakTopic = iaSakTopic,
             iaSakStatistikkTopic = iaSakStatistikkTopic,
             iaSakLeveranseTopic = iaSakLeveranseTopic,
@@ -113,7 +110,6 @@ class KafkaContainerHelper(
         "STATISTIKK_TOPIC" to statistikkTopic,
         "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
-        "IA_SAK_HENDELSE_TOPIC" to iaSakHendelseTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
         "IA_SAK_LEVERANSE_TOPIC" to iaSakLeveranseTopic,
