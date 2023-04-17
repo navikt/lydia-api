@@ -1,4 +1,5 @@
 {
+  "@odata.nextLink": "http://host.testcontainers.internal:42421/v1.0/groups/12345/nesteside",
   "value": [
     {
       "id": "1",

@@ -10,7 +10,7 @@ class VeilederTest {
     @Test
     fun `skal kunne hente ned en liste med veiledere dersom man er superbruker`() {
         val veiledere = VeilederHelper.hentVeiledere()
-        veiledere shouldHaveSize 4
+        veiledere shouldHaveSize 8
         shouldFail {
             VeilederHelper.hentVeiledere(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
         }
