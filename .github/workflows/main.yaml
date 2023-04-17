@@ -59,13 +59,6 @@ jobs:
           "CLUSTER": "${{ matrix.cluster }}-gcp"
           "RESOURCE": ".nais/nais.yaml"
           "VARS": ".nais/${{ matrix.cluster }}.yaml"
-      - name: "Deploy topics to ${{ matrix.cluster }}"
-        uses: "nais/deploy/actions/deploy@master"
-        env:
-          APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          CLUSTER: "${{ matrix.cluster }}-gcp"
-          RESOURCE: ".nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml"
-          VARS: ".nais/${{ matrix.cluster }}.yaml"
 
   deploy-dev-branch:
     strategy:
@@ -84,10 +77,3 @@ jobs:
           "CLUSTER": "${{ matrix.cluster }}-gcp"
           "RESOURCE": ".nais/nais.yaml"
           "VARS": ".nais/${{ matrix.cluster }}.yaml"
-      - name: "Deploy topics to ${{ matrix.cluster }}"
-        uses: "nais/deploy/actions/deploy@master"
-        env:
-          APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          CLUSTER: "${{ matrix.cluster }}-gcp"
-          RESOURCE: ".nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml"
-          VARS: ".nais/${{ matrix.cluster }}.yaml"
