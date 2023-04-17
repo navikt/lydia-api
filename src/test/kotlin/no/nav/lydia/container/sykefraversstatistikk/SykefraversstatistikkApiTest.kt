@@ -269,7 +269,7 @@ class SykefraversstatistikkApiTest {
         tromsOgFinnmark.kommuner.forExactlyOne {
             it.nummer shouldBe "5441"
             it.navn shouldBe "Deatnu"
-            it.alternativtNavn shouldBe "Tana"
+            it.navnNorsk shouldBe "Tana"
         }
 
     }
