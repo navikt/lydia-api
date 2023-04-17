@@ -5,7 +5,7 @@ on:
       - main
     paths:
       - ".nais/topics/**" # Deploy topics ved endringer i topics-mappen
-      - ".nais/topics.yaml" # Deploy topics ved endringer i topics.yaml
+      - ".github/workflows/topics.yaml" # Deploy topics ved endringer i topics.yaml
 
 jobs:
   deploy:
