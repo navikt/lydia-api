@@ -263,6 +263,18 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skal returnere både samiske og norske kommunenavn`() {
+        val filterverdier = hentFilterverdier()
+        val tromsOgFinnmark = filterverdier.fylker.first { it.fylke.nummer == "54" }
+        tromsOgFinnmark.kommuner.forExactlyOne {
+            it.nummer shouldBe "5441"
+            it.navn shouldBe "Deatnu"
+            it.alternativtNavn shouldBe "Tana"
+        }
+
+    }
+
+    @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
         val saksbehandler1 = mockOAuth2Server.saksbehandler1
         val filterverdier = hentFilterverdier(token = saksbehandler1.token)
