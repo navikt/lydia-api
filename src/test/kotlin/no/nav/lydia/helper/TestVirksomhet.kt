@@ -6,7 +6,6 @@ import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
-import kotlin.random.Random
 
 data class TestVirksomhet(
     val orgnr: String,
@@ -14,11 +13,14 @@ data class TestVirksomhet(
     val næringsundergrupper: List<Næringsgruppe>,
     val beliggenhet: Beliggenhetsadresse?
 ) {
+
+
     val næringsundergruppe1 = næringsundergrupper.first()
     val næringsundergruppe2 = næringsundergrupper.getOrNull(1)
     val næringsundergruppe3 = næringsundergrupper.getOrNull(2)
 
     companion object {
+        private val brukteOrnummere = mutableSetOf<Int>()
 
         private val NÆRINGER_LISTE = listOf(DYRKING_AV_RIS, SCENEKUNST, BEDRIFTSRÅDGIVNING)
         val KOMMUNE_OSLO = Kommune(navn = "OSLO", nummer = "0301")
@@ -82,17 +84,25 @@ data class TestVirksomhet(
             )
         )
 
-        private val tilfeldigGenerator = Random(1)
         val TESTVIRKSOMHET_FOR_IMPORT = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_STATUSFILTER = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_GRUNNLAG = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_OPPDATERING = nyVirksomhet()
         val TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK = nyVirksomhet()
 
+        private fun hentUniktOrgnummer(): String {
+            var orgnr: Int
+            do {
+                // tilfeldige virksomheter har orgnummer som starter på 8
+                orgnr = (800000000 .. 899999999).random()
+            } while (!brukteOrnummere.add(orgnr))
+            return orgnr.toString()
+        }
+
         fun nyVirksomhet(
             beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
             næringer: List<Næringsgruppe> = tilfeldigeNæringsgrupper(),
-            orgnr: String = (800000000 .. 899999999).random(tilfeldigGenerator).toString(), // tilfeldige virksomheter har orgnummer som starter på 8
+            orgnr: String = hentUniktOrgnummer(),
             navn: String = "Navn $orgnr"
         ): TestVirksomhet {
             return TestVirksomhet(
