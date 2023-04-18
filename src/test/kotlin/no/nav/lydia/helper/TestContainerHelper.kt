@@ -125,7 +125,9 @@ class TestContainerHelper {
             brregOppdateringContainer.start()
             runBlocking {
                 log.info("Venter på at alle meldinger fra brregOppdatering er konsumert")
-                kafkaContainerHelper.ventTilAlleMeldingerErKonsumert(Kafka.brregConsumerGroupId)
+                kafkaContainerHelper.ventTilAlleMeldingerErKonsumert(
+                    konsumentGruppe = Kafka.brregConsumerGroupId,
+                )
                 log.info("Alle meldinger fra brregOppdatering er konsumert")
             }
         }

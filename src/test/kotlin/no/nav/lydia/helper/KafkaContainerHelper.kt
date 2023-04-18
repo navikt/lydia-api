@@ -25,6 +25,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.RecordMetadata
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
@@ -142,7 +143,10 @@ class KafkaContainerHelper(
     fun sendOgVentTilKonsumert(nøkkel: String, melding: String, topic: String, konsumentGruppeId: String) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(ProducerRecord(topic, nøkkel, melding)).get()
-            ventTilKonsumert(sendtMelding.offset(), konsumentGruppeId = konsumentGruppeId)
+            ventTilKonsumert(
+                konsumentGruppeId = konsumentGruppeId,
+                recordMetadata = sendtMelding
+            )
         }
     }
 
@@ -151,7 +155,10 @@ class KafkaContainerHelper(
             val sendteMeldinger = importDtoer.map { melding ->
                 kafkaProducer.send(melding.tilProducerRecord()).get()
             }
-            ventTilKonsumert(sendteMeldinger.last().offset())
+            ventTilKonsumert(
+                konsumentGruppeId = Kafka.statistikkConsumerGroupId,
+                recordMetadata = sendteMeldinger.last()
+            )
         }
     }
 
@@ -162,34 +169,49 @@ class KafkaContainerHelper(
             val sendteMeldinger = importDtoer.map { melding ->
                 kafkaProducer.send(melding.tilProducerRecord()).get()
             }
-            ventTilKonsumert(sendteMeldinger.last().offset())
+            ventTilKonsumert(
+                konsumentGruppeId = Kafka.statistikkPerKategoriGroupId,
+                recordMetadata = sendteMeldinger.last()
+            )
         }
     }
 
     fun sendProducerRecordKafkaMelding(producerRecord: ProducerRecord<String, String>) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(producerRecord).get()
-            ventTilKonsumert(sendtMelding.offset())
+            ventTilKonsumert(
+                konsumentGruppeId = Kafka.statistikkConsumerGroupId,
+                recordMetadata = sendtMelding
+            )
         }
     }
 
     fun sendSykefraversstatistikkKafkaMelding(importDto: SykefraversstatistikkImportDto) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
-            ventTilKonsumert(sendtMelding.offset())
+            ventTilKonsumert(
+                konsumentGruppeId = Kafka.statistikkConsumerGroupId,
+                recordMetadata = sendtMelding
+            )
         }
     }
 
     fun sendSykefraversstatistikkPerKategoriKafkaMelding(importDto: SykefraversstatistikkPerKategoriImportDto) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
-            ventTilKonsumert(sendtMelding.offset())
+            ventTilKonsumert(
+                konsumentGruppeId = Kafka.statistikkPerKategoriGroupId,
+                recordMetadata = sendtMelding
+            )
         }
     }
 
-    suspend fun ventTilAlleMeldingerErKonsumert(konsumentGruppe: String, timeout: Duration = Duration.ofSeconds(10)) {
+    suspend fun ventTilAlleMeldingerErKonsumert(
+        konsumentGruppe: String,
+        timeout: Duration = Duration.ofSeconds(10)
+    ) {
         withTimeout(timeout) {
-            var topicOffset: Long?
+            var topicOffset: Pair<String, Long>?
             do {
                 delay(timeMillis = 10L)
                 val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
@@ -197,12 +219,12 @@ class KafkaContainerHelper(
 
                 topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
                     OffsetSpec.latest()
-                }).all().get().map { it.value.offset() }.firstOrNull()
+                }).all().get().map { Pair(it.key.topic(), it.value.offset()) }.firstOrNull()
             } while (topicOffset == null)
 
             do {
                 delay(timeMillis = 10L)
-            } while (topicOffset - consumerSinOffset(konsumentGruppe) != 0L)
+            } while (topicOffset.second - consumerSinOffset(consumerGroup = konsumentGruppe, topic = topicOffset.first) != 0L)
         }
     }
 
@@ -230,13 +252,13 @@ class KafkaContainerHelper(
         )
 
     private suspend fun ventTilKonsumert(
-        offset: Long,
-        konsumentGruppeId: String = Kafka.statistikkConsumerGroupId,
+        konsumentGruppeId: String,
+        recordMetadata: RecordMetadata
     ) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
                 delay(timeMillis = 10L)
-            } while (consumerSinOffset(consumerGroup = konsumentGruppeId) <= offset)
+            } while (consumerSinOffset(consumerGroup = konsumentGruppeId, topic = recordMetadata.topic()) <= recordMetadata.offset())
         }
 
     suspend fun ventOgKonsumerKafkaMeldinger(
@@ -260,10 +282,10 @@ class KafkaContainerHelper(
         }
     }
 
-    private fun consumerSinOffset(consumerGroup: String): Long {
+    private fun consumerSinOffset(consumerGroup: String, topic: String): Long {
         val offsetMetadata = adminClient.listConsumerGroupOffsets(consumerGroup)
             .partitionsToOffsetAndMetadata().get()
-        return offsetMetadata[offsetMetadata.keys.firstOrNull()]?.offset() ?: -1
+        return offsetMetadata[offsetMetadata.keys.firstOrNull{ it.topic().contains(topic) }]?.offset() ?: -1
     }
 
     fun sendKafkameldingSomString(
@@ -347,7 +369,7 @@ class KafkaContainerHelper(
             """.trimIndent()
                 )
             ).get()
-            ventTilKonsumert(sendtMelding.offset())
+            ventTilKonsumert(konsumentGruppeId = Kafka.statistikkConsumerGroupId, recordMetadata = sendtMelding)
         }
     }
 
