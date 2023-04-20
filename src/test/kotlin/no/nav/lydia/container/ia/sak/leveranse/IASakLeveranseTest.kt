@@ -1,7 +1,10 @@
 package no.nav.lydia.container.ia.sak.leveranse
 
 import io.kotest.assertions.shouldFail
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -21,9 +24,12 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
+import no.nav.lydia.ia.sak.api.IATjenesteDto
+import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
 import java.time.LocalDate
@@ -56,7 +62,7 @@ class IASakLeveranseTest {
         )
         leveranse.oppdaterIASakLeveranse(
             orgnr = sakIViBistårStatus.orgnr,
-            status = IASakLeveranseStatus.LEVERT
+            status = LEVERT
         )
 
         hentIASakLeveranser(
@@ -203,13 +209,13 @@ class IASakLeveranseTest {
         val sakIViBistår = sakIViBistår()
 
         val leveranseDto = sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = 1)
-        val fullførtLeveranse = leveranseDto.oppdaterIASakLeveranse(orgnr = sakIViBistår.orgnr, status = IASakLeveranseStatus.LEVERT)
-        fullførtLeveranse.status shouldBe IASakLeveranseStatus.LEVERT
+        val fullførtLeveranse = leveranseDto.oppdaterIASakLeveranse(orgnr = sakIViBistår.orgnr, status = LEVERT)
+        fullførtLeveranse.status shouldBe LEVERT
 
         hentIASakLeveranser(orgnr = sakIViBistår.orgnr, saksnummer = sakIViBistår.saksnummer).forExactlyOne {iaSakLeveranserForTjeneste ->
             iaSakLeveranserForTjeneste.leveranser.forExactlyOne {
                 it.id shouldBe leveranseDto.id
-                it.status shouldBe IASakLeveranseStatus.LEVERT
+                it.status shouldBe LEVERT
             }
         }
     }
@@ -217,13 +223,93 @@ class IASakLeveranseTest {
     @Test
     fun `skal kunne hente IATjenester`() {
         val tjenester = hentIATjenester()
-        tjenester shouldHaveSize 3
+        tjenester shouldHaveAtLeastSize 3
     }
 
     @Test
     fun `skal kunne hente moduler`() {
         val moduler = hentModuler()
-        moduler shouldHaveSize 14
+        moduler shouldHaveAtLeastSize 14
+    }
+
+    @Test
+    fun `skal ikke få deaktiverte moduler og tjenester`() {
+        val deaktivertTjenese = IATjenesteDto(id = 1000, navn = "Test", deaktivert = true)
+        val aktivModulIDeaktivertTjeneste = ModulDto(id = 1000, iaTjeneste = 1000, navn = "Test", deaktivert = false)
+        leggTilIATjeneste(deaktivertTjenese)
+        leggTilModul(aktivModulIDeaktivertTjeneste)
+
+        val aktivTjenesteMedDeaktivertModul = IATjenesteDto(id = 1001, navn = "Test", deaktivert = false)
+        val deaktivertModul = ModulDto(id = 1001, iaTjeneste = 1001, navn = "Test", deaktivert = true)
+        val aktivModul = ModulDto(id = 1002, iaTjeneste = 1001, navn = "Test", deaktivert = false)
+        leggTilIATjeneste(aktivTjenesteMedDeaktivertModul)
+        leggTilModul(deaktivertModul)
+        leggTilModul(aktivModul)
+
+        val iaTjenester = hentIATjenester()
+        iaTjenester shouldNotContain deaktivertTjenese
+        iaTjenester shouldContain aktivTjenesteMedDeaktivertModul
+
+        val moduler = hentModuler()
+        moduler shouldNotContain deaktivertModul
+        moduler shouldNotContain aktivModulIDeaktivertTjeneste
+        moduler shouldContain aktivModul
+    }
+
+    @Test
+    fun `skal kunne liste opp leveranser med deaktiverte tjenester og moduler`() {
+        val tjeneste = IATjenesteDto(id = 2000, navn = "Test", deaktivert = false)
+        val modul = ModulDto(id = 2000, navn = "Test", iaTjeneste = tjeneste.id, deaktivert = false)
+        leggTilIATjeneste(iaTjeneste = tjeneste)
+        leggTilModul(modul = modul)
+
+        val sak = sakIViBistår()
+        sak.opprettIASakLeveranse(modulId = modul.id)
+
+        deaktiverModul(modul = modul)
+        hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer) shouldHaveSize 1
+
+        deaktiverTjeneste(iaTjeneste = tjeneste)
+        hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer) shouldHaveSize 1
+    }
+
+    @Test
+    fun `skal ikke kunne legge til leveranse på deaktivert modul eller tjeneste`() {
+        val deaktivertTjeneste = IATjenesteDto(id = 3000, navn = "Test", deaktivert = true)
+        val aktivModulIDeaktivertTjeneste = ModulDto(id = 3000, navn = "Test", iaTjeneste = deaktivertTjeneste.id, deaktivert = false)
+        leggTilIATjeneste(iaTjeneste = deaktivertTjeneste)
+        leggTilModul(modul = aktivModulIDeaktivertTjeneste)
+
+        val aktivTjeneste = IATjenesteDto(id = 4000, navn = "Test", deaktivert = false)
+        val deaktivertModul = ModulDto(id = 4000, navn = "Test", iaTjeneste = aktivTjeneste.id, deaktivert = true)
+        leggTilIATjeneste(iaTjeneste = aktivTjeneste)
+        leggTilModul(modul = deaktivertModul)
+
+        val sak = sakIViBistår()
+        shouldFail {
+            sak.opprettIASakLeveranse(modulId = aktivModulIDeaktivertTjeneste.id)
+        }
+        shouldFail {
+            sak.opprettIASakLeveranse(modulId = deaktivertModul.id)
+        }
+    }
+
+    @Test
+    fun `skal kunne fullføre en leveranse med deaktivert modul`() {
+        val tjeneste = IATjenesteDto(id = 5000, navn = "Test", deaktivert = false)
+        val modul = ModulDto(id = 5000, navn = "Test", iaTjeneste = tjeneste.id, deaktivert = false)
+        leggTilIATjeneste(iaTjeneste = tjeneste)
+        leggTilModul(modul = modul)
+
+        val sak  = sakIViBistår()
+        val leveranse = sak.opprettIASakLeveranse(modulId = modul.id)
+        deaktiverModul(modul = modul)
+        val levert = leveranse.oppdaterIASakLeveranse(orgnr = sak.orgnr, status = LEVERT)
+        levert.status shouldBe LEVERT
+
+        hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer).forExactlyOne {
+            it.leveranser shouldContain levert
+        }
     }
 
     private fun sakIViBistår(
@@ -238,4 +324,38 @@ class IASakLeveranseTest {
 
     private fun hentIATjenesterFraDatabase() =
         postgresContainer.hentAlleKolonner<String>("select navn from ia_tjeneste")
+
+    private fun leggTilModul(modul: ModulDto) =
+        postgresContainer.performUpdate(
+            """
+                insert into modul (id, ia_tjeneste, navn, deaktivert) values (
+                    ${modul.id},
+                    ${modul.iaTjeneste},
+                    '${modul.navn}',
+                    ${modul.deaktivert}
+                )
+            """.trimIndent()
+        )
+
+    private fun leggTilIATjeneste(iaTjeneste: IATjenesteDto) =
+        postgresContainer.performUpdate(
+            """
+                insert into ia_tjeneste (id, navn, deaktivert) values (
+                    ${iaTjeneste.id},
+                    '${iaTjeneste.navn}',
+                    ${iaTjeneste.deaktivert}
+                )
+            """.trimIndent()
+        )
+
+    private fun deaktiverModul(modul: ModulDto) =
+        postgresContainer.performUpdate("""
+            update modul set deaktivert = true where id = ${modul.id}
+        """.trimIndent())
+
+    private fun deaktiverTjeneste(iaTjeneste: IATjenesteDto) =
+        postgresContainer.performUpdate("""
+            update ia_tjeneste set deaktivert = true where id = ${iaTjeneste.id}
+        """.trimIndent())
+
 }

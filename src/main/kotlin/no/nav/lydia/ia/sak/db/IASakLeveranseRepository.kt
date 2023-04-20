@@ -33,8 +33,10 @@ private val hentIASakLeveranserSql = """
                         iasak_leveranse.fullfort,
                         modul.id as modulId,
                         modul.navn as modulNavn,
+                        modul.deaktivert as modulDeaktivert,
                         ia_tjeneste.id as iaTjenesteId,
-                        ia_tjeneste.navn iaTjenesteNavn
+                        ia_tjeneste.navn iaTjenesteNavn,
+                        ia_tjeneste.deaktivert as iaTjenesteDeaktivert
                     from iasak_leveranse
                     join modul on (iasak_leveranse.modul = modul.id)
                     join ia_tjeneste on (modul.ia_tjeneste = ia_tjeneste.id)
@@ -61,8 +63,10 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
         val sql = """
                 select 
                     ia_tjeneste.id as iaTjenesteId,
-                    ia_tjeneste.navn as iaTjenesteNavn
+                    ia_tjeneste.navn as iaTjenesteNavn,
+                    ia_tjeneste.deaktivert as iaTjenesteDeaktivert
                 from ia_tjeneste
+                where deaktivert = false
             """.trimIndent()
 
         val query = queryOf(sql).map { mapTilIATjeneste(it) }.asList
@@ -75,9 +79,14 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 select 
                     ia_tjeneste.id as iaTjenesteId,
                     ia_tjeneste.navn as iaTjenesteNavn,
+                    ia_tjeneste.deaktivert as iaTjenesteDeaktivert,
                     modul.id as modulId,
-                    modul.navn as modulNavn
+                    modul.navn as modulNavn,
+                    modul.deaktivert as modulDeaktivert
                 from ia_tjeneste join modul on (ia_tjeneste.id = modul.ia_tjeneste)
+                where 
+                    modul.deaktivert = false AND
+                    ia_tjeneste.deaktivert = false
             """.trimIndent()
 
             val query = queryOf(sql).map { mapTilModul(it) }.asList
@@ -201,13 +210,15 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
 
     private fun mapTilIATjeneste(rad: Row) = IATjeneste(
         id = rad.int("iaTjenesteId"),
-        navn = rad.string("iaTjenesteNavn")
+        navn = rad.string("iaTjenesteNavn"),
+        deaktivert = rad.boolean("iaTjenesteDeaktivert"),
     )
 
     private fun mapTilModul(rad: Row) = Modul(
         id = rad.int("modulId"),
         iaTjeneste = mapTilIATjeneste(rad),
-        navn = rad.string("modulNavn")
+        navn = rad.string("modulNavn"),
+        deaktivert = rad.boolean("modulDeaktivert"),
     )
 
 

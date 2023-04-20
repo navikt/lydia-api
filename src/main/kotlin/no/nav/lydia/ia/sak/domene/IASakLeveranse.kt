@@ -29,15 +29,14 @@ enum class IASakLeveranseStatus {
 @Serializable
 data class IATjeneste (
     val id: Int,
-    val navn: String
-): Comparable<IATjeneste> {
-    override fun compareTo(other: IATjeneste) =
-        compareValuesBy(this, other) { it.navn }
-}
+    val navn: String,
+    val deaktivert: Boolean,
+)
 
 @Serializable
 data class Modul (
     val id: Int,
     val iaTjeneste: IATjeneste,
-    val navn: String
+    val navn: String,
+    val deaktivert: Boolean,
 )

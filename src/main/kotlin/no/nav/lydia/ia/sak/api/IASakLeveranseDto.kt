@@ -21,10 +21,34 @@ data class IASakLeveranseDto (
 )
 
 @Serializable
+data class IATjenesteDto (
+    val id: Int,
+    val navn: String,
+    val deaktivert: Boolean,
+): Comparable<IATjenesteDto> {
+    override fun compareTo(other: IATjenesteDto) =
+        compareValuesBy(this, other) { it.navn }
+}
+
+fun IATjeneste.tilDto() = IATjenesteDto(
+    id = id,
+    navn = navn,
+    deaktivert = deaktivert
+)
+
+@Serializable
 data class ModulDto (
     val id: Int,
     val iaTjeneste: Int,
-    val navn: String
+    val navn: String,
+    val deaktivert: Boolean,
+)
+
+fun Modul.tilDto() = ModulDto(
+    id = id,
+    navn = navn,
+    iaTjeneste = iaTjeneste.id,
+    deaktivert = deaktivert,
 )
 
 @Serializable
@@ -37,12 +61,6 @@ data class IASakLeveranseOpprettelsesDto (
 @Serializable
 data class IASakLeveranseOppdateringsDto (
     val status: IASakLeveranseStatus
-)
-
-fun Modul.tilDto() = ModulDto(
-    id = id,
-    navn = navn,
-    iaTjeneste = iaTjeneste.id
 )
 
 fun IASakLeveranse.tilDto() =
@@ -61,14 +79,14 @@ fun List<IASakLeveranse>.tilIASakLeveranserPerTjenesteDto() =
         it.modul.iaTjeneste
     }.map {
         IASakLeveranserPerTjenesteDto(
-            iaTjeneste = it.key,
+            iaTjeneste = it.key.tilDto(),
             leveranser = it.value.tilDto()
         )
     }
 
 @Serializable
 data class IASakLeveranserPerTjenesteDto(
-    val iaTjeneste: IATjeneste,
+    val iaTjeneste: IATjenesteDto,
     val leveranser: List<IASakLeveranseDto>
 ): Comparable<IASakLeveranserPerTjenesteDto> {
     override fun compareTo(other: IASakLeveranserPerTjenesteDto) =

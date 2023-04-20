@@ -249,7 +249,7 @@ fun Route.iaSakRådgiver(
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
             iaSakService.hentTjenester()
         }.map {
-            call.respond(it.sorted())
+            call.respond(it.map(IATjeneste::tilDto).sorted())
         }.mapLeft {
             call.respond(message = it.feilmelding, status = it.httpStatusCode)
         }
