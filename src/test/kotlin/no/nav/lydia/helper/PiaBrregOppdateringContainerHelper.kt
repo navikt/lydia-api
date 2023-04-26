@@ -71,9 +71,10 @@ class PiaBrregOppdateringTestData {
         private val virksomheterSomSkalOppdateres: MutableMap<TestVirksomhet, BrregVirksomhetEndringstype> =
             mutableMapOf()
         private val testData = TestData()
-        val endredeVirksomheter = lagVirksomheterForOppdatering(endringstype = Endring)
-        val fjernedeVirksomheter = lagVirksomheterForOppdatering(endringstype = Fjernet)
-        val slettedeVirksomheter = lagVirksomheterForOppdatering(endringstype = Sletting)
+        val gjeldendePeriode = TestData.gjeldendePeriode
+        val endredeVirksomheter = lagVirksomheterForOppdatering(endringstype = Endring, gjeldendePeriode = gjeldendePeriode)
+        val fjernedeVirksomheter = lagVirksomheterForOppdatering(endringstype = Fjernet, gjeldendePeriode = gjeldendePeriode)
+        val slettedeVirksomheter = lagVirksomheterForOppdatering(endringstype = Sletting, gjeldendePeriode = gjeldendePeriode)
         val nyeVirksomheter: MutableList<TestVirksomhet> = mutableListOf()
         val virksomhetSomSkalFåNæringskodeOppdatert =
             TestVirksomhet.nyVirksomhet(
@@ -85,13 +86,13 @@ class PiaBrregOppdateringTestData {
             )
         val virksomhetUtenAdresse = TestVirksomhet.nyVirksomhet(beliggenhet = Beliggenhetsadresse())
 
-        private fun lagVirksomheterForOppdatering(endringstype: BrregVirksomhetEndringstype) =
+        private fun lagVirksomheterForOppdatering(endringstype: BrregVirksomhetEndringstype, gjeldendePeriode: Periode) =
             (1..5).map {
                 val virksomhet = TestVirksomhet.nyVirksomhet()
                 virksomheterSomSkalOppdateres[virksomhet] = endringstype
                 testData.lagData(
                     virksomhet = virksomhet,
-                    perioder = listOf(Periode.gjeldendePeriode())
+                    perioder = listOf(gjeldendePeriode)
                 )
                 virksomhet
             }
@@ -102,9 +103,10 @@ class PiaBrregOppdateringTestData {
                 nyeVirksomheter.add(virksomhet)
                 virksomheterSomSkalOppdateres[virksomhet] = Ny
             }
+            val gjeldendePeriode = TestData.gjeldendePeriode
 
-            testData.lagData(virksomhetSomSkalFåNæringskodeOppdatert, perioder = listOf(Periode.gjeldendePeriode()))
-            testData.lagData(virksomhetUtenAdresse, perioder = listOf(Periode.gjeldendePeriode()))
+            testData.lagData(virksomhetSomSkalFåNæringskodeOppdatert, perioder = listOf(gjeldendePeriode))
+            testData.lagData(virksomhetUtenAdresse, perioder = listOf(gjeldendePeriode))
             virksomheterSomSkalOppdateres[virksomhetUtenAdresse] = Endring
             virksomheterSomSkalOppdateres[virksomhetSomSkalFåNæringskodeOppdatert.copy(
                 næringsundergrupper = listOf(

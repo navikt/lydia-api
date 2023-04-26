@@ -117,10 +117,11 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `sykefraværsstatistikk skal oppdateres om det kommer nye versjoner av samme nøkler`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = TestVirksomhet.nyVirksomhet()
         val originalStatistikk = TestData().lagData(
             virksomhet = virksomhet,
-            perioder = listOf(Periode.gjeldendePeriode()),
+            perioder = listOf(gjeldendePeriode),
             antallPersoner = 100.0,
             tapteDagsverk = 20.0,
             sykefraværsProsent = 2.0
@@ -134,7 +135,7 @@ class SykefraversstatistikkImportTest {
 
         val opppdatertStatistikk = lagSykefraværsstatistikkImportDto(
             orgnr = virksomhet.orgnr,
-            periode = Periode.gjeldendePeriode(),
+            periode = gjeldendePeriode,
             sykefraværsProsent = 3.0,
             antallPersoner = 1337.0,
             tapteDagsverk = 16.0,
@@ -143,7 +144,7 @@ class SykefraversstatistikkImportTest {
         val opppdatertStatistikk4SisteKvartal = lagSykefraversstatistikkPerKategoriImportDto(
             kategori = Kategori.VIRKSOMHET,
             kode = virksomhet.orgnr,
-            periode = Periode.gjeldendePeriode(),
+            periode = gjeldendePeriode,
             sykefraværsProsent = 3.0,
             antallPersoner = 1337,
             tapteDagsverk = 16.0,
@@ -287,14 +288,16 @@ class SykefraversstatistikkImportTest {
         """.trimIndent())
 
 
-    private fun hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet: TestVirksomhet, kolonneNavn: String) =
-        postgres.hentEnkelKolonne<Any?>(
+    private fun hentKolonneFraSykefraværsstatistikkVirksomhet(virksomhet: TestVirksomhet, kolonneNavn: String): Any? {
+        val gjeldendePeriode = TestData.gjeldendePeriode
+        return postgres.hentEnkelKolonne(
             """
                 select $kolonneNavn from sykefravar_statistikk_virksomhet 
                 where 
                 orgnr = '${virksomhet.orgnr}' and
-                arstall = ${Periode.gjeldendePeriode().årstall} and
-                kvartal = ${Periode.gjeldendePeriode().kvartal}
+                arstall = ${gjeldendePeriode.årstall} and
+                kvartal = ${gjeldendePeriode.kvartal}
             """.trimIndent()
         )
+    }
 }

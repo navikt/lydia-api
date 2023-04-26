@@ -13,8 +13,8 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
@@ -31,15 +31,17 @@ class IASakStatistikkProdusent(
     private val sykefraværsstatistikkService: SykefraværsstatistikkService,
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val geografiService: GeografiService,
+    private val sistePubliseringService: SistePubliseringService,
     private val topic: String,
 ) : Observer<IASak> {
 
     override fun receive(input: IASak) {
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
-        val periode = hendelse?.tilPeriode()
+        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+        val periode = hendelse?.tilPeriode(gjeldendePeriode)
         val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
         val virksomhetsstatistikkSiste4Kvartal =
-            if (periode == Periode.gjeldendePeriode())
+            if (periode == gjeldendePeriode)
                 sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).orNull()
             else
                 null

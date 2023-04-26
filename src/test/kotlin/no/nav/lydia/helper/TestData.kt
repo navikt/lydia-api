@@ -33,10 +33,11 @@ class TestData(
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
 
+        val gjeldendePeriode = Periode(årstall = 2022, kvartal = 4)
         fun fraVirksomhet(
             virksomhet: TestVirksomhet,
             sektor: String = SEKTOR_STATLIG_FORVALTNING,
-            perioder: List<Periode> = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+            perioder: List<Periode> = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
         ) =
             TestData().lagData(
                 virksomhet = virksomhet,
@@ -56,40 +57,40 @@ class TestData(
         if (inkluderStandardVirksomheter) {
             lagData(
                 virksomhet = TestVirksomhet.OSLO,
-                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                perioder = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
                 antallPersoner = 6.0
             )
             lagData(
                 virksomhet = TestVirksomhet.BERGEN,
-                perioder = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                perioder = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
                 sykefraværsProsent = 7.0
             )
 
-            lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(Periode.gjeldendePeriode()))
+            lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(gjeldendePeriode))
             lagData(virksomhet = TestVirksomhet.OSLO_MANGLER_ADRESSER, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.MANGLER_BELIGGENHETSADRESSE, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.UTENLANDSK, perioder = listOf())
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT, emptyList())
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER,
-                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
                 sykefraværsProsent = 6.0
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG,
-                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
                 antallPersoner = 42.0,
                 sykefraværsProsent = 6.0
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_OPPDATERING,
-                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
                 antallPersoner = 42.0,
                 sykefraværsProsent = 6.0
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK,
-                listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode()),
+                listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
             )
 
         }
@@ -100,7 +101,7 @@ class TestData(
         (0..antallVirksomheter).forEach { _ ->
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
-                perioder = listOf(Periode.gjeldendePeriode()),
+                perioder = listOf(gjeldendePeriode),
                 sektor = (0..3).random().toString()
             )
         }
@@ -195,7 +196,7 @@ enum class SykefraværsstatistikkPerKategoriTestData(
         sykefraversstatistikkPerKategoriImportDto = lagSykefraversstatistikkPerKategoriImportDto(
             kategori = Kategori.VIRKSOMHET,
             kode = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = Periode.forrigePeriode(),
+            periode = TestData.gjeldendePeriode.forrigePeriode(),
             antallPersoner = 6,
         )
     ),
@@ -203,7 +204,7 @@ enum class SykefraværsstatistikkPerKategoriTestData(
         sykefraversstatistikkPerKategoriImportDto = lagSykefraversstatistikkPerKategoriImportDto(
             kategori = Kategori.VIRKSOMHET,
             kode = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = Periode.gjeldendePeriode(),
+            periode = TestData.gjeldendePeriode,
             antallPersoner = 6,
         )
     )
@@ -213,7 +214,7 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: S
     testVirksomhetForrigeKvartal(
         sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = Periode.forrigePeriode(),
+            periode = TestData.gjeldendePeriode.forrigePeriode(),
             antallPersoner = 6.0,
             sektor = "1"
         )
@@ -221,7 +222,7 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: S
     testVirksomhetGjeldeneKvartal(
         sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = Periode.gjeldendePeriode(),
+            periode = TestData.gjeldendePeriode,
             antallPersoner = 6.0,
             sektor = "1"
         )
@@ -338,7 +339,7 @@ fun lagSykefraversstatistikkPerKategoriImportDto(
             tapteDagsverk = tapteDagsverk,
             muligeDagsverk = 500.0,
             erMaskert = maskert,
-            kvartaler = listOf(Periode.gjeldendePeriode().tilKvartal(), Periode.forrigePeriode().tilKvartal())
+            kvartaler = listOf(TestData.gjeldendePeriode.tilKvartal(), TestData.gjeldendePeriode.forrigePeriode().tilKvartal())
         )
     )
 

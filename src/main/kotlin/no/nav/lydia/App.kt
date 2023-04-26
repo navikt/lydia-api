@@ -42,6 +42,8 @@ import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.statusoverikt.StatusoversiktRepository
 import no.nav.lydia.statusoverikt.StatusoversiktService
 import no.nav.lydia.statusoverikt.api.statusoversikt
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringRepository
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.VirksomhetsinformasjonRepository
@@ -73,7 +75,9 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
+    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
     val sykefraværsstatistikkService = SykefraværsstatistikkService(
+        sistePubliseringService = sistePubliseringService,
         sykefraversstatistikkRepository = SykefraversstatistikkRepository(
             dataSource = dataSource
         ),
@@ -100,6 +104,7 @@ fun startLydiaBackend() {
         sykefraværsstatistikkService = sykefraværsstatistikkService,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         geografiService = GeografiService(),
+        sistePubliseringService = sistePubliseringService,
         topic = naisEnv.kafka.iaSakStatistikkTopic
     )
     val iaSakLevelanseProdusent = IASakLeveranseProdusent(
@@ -206,12 +211,14 @@ fun Application.lydiaRestApi(
     val iaSakRepository = IASakRepository(dataSource = dataSource)
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
+            sistePubliseringService = SistePubliseringService(sistePubliseringRepository = SistePubliseringRepository(dataSource = dataSource)),
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
             virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
         )
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
     val azureTokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment)
+    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
 
     routing {
         healthChecks(HelseMonitor)
@@ -256,7 +263,8 @@ fun Application.lydiaRestApi(
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
                 naisEnvironment = naisEnvironment,
-                azureTokenFetcher = azureTokenFetcher
+                azureTokenFetcher = azureTokenFetcher,
+                sistePubliseringService = sistePubliseringService,
             )
             iaSakRådgiver(
                 iaSakService = IASakService(
@@ -279,6 +287,7 @@ fun Application.lydiaRestApi(
             )
             veileder(tokenFetcher = azureTokenFetcher, naisEnvironment = naisEnvironment)
             statusoversikt(
+                sistePubliseringService = sistePubliseringService,
                 geografiService = GeografiService(),
                 statusoversiktService = StatusoversiktService(
                     statusoversiktRepository = StatusoversiktRepository(dataSource = dataSource)

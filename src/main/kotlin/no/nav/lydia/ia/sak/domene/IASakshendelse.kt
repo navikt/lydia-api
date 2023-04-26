@@ -69,10 +69,10 @@ open class IASakshendelse(
             )
     }
 
-    fun tilPeriode(): Periode {
+    fun tilPeriode(gjeldendePeriode: Periode): Periode {
         // TODO: Gjør denne enda mer presis.
-        if (Periode.fraDato(opprettetTidspunkt) > Periode.gjeldendePeriode())
-            return Periode.gjeldendePeriode()
+        if (Periode.fraDato(opprettetTidspunkt) > gjeldendePeriode)
+            return gjeldendePeriode
         return Periode.fraDato(opprettetTidspunkt)
     }
 

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
 
 class SykefraværsstatistikkService(
+    val sistePubliseringService: SistePubliseringService,
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
 ) {
@@ -103,9 +104,10 @@ class SykefraværsstatistikkService(
     }
 
     fun hentGjeldendePeriodeSiste4Kvartal(): Either<Feil, KvartalerFraTil> {
+        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
         return KvartalerFraTil(
-            fra = Periode.forrigePeriode().forrigePeriode().forrigePeriode().tilKvartal(),
-            til = Periode.gjeldendePeriode().tilKvartal()
+            fra = gjeldendePeriode.forrigePeriode().forrigePeriode().forrigePeriode().tilKvartal(),
+            til = gjeldendePeriode.tilKvartal()
         ).right()
     }
 }

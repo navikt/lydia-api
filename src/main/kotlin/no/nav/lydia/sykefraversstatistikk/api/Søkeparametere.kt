@@ -68,10 +68,10 @@ data class Søkeparametere(
         const val IA_SAK_EIERE = "eiere"
         const val SEKTOR = "sektor"
 
-        fun ApplicationRequest.søkeparametere(geografiService: GeografiService, rådgiver: Rådgiver) =
+        fun ApplicationRequest.søkeparametere(gjeldendePeriode: Periode, geografiService: GeografiService, rådgiver: Rådgiver) =
             queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().zip(
                 queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent(),
-                Periode.tilValidertPeriode(kvartal = queryParameters[KVARTAL], årstall = queryParameters[ÅRSTALL]),
+                Periode.tilValidertPeriode(kvartal = queryParameters[KVARTAL], årstall = queryParameters[ÅRSTALL], gjeldendePeriode),
                 queryParameters[SIDE].tomSomNull()?.tilValidertHeltall() ?: Valid(1),
                 queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall() ?: Valid(null),
                 queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall() ?: Valid(null)
@@ -196,29 +196,20 @@ data class Periode(val kvartal: Int, val årstall: Int) {
     companion object {
         fun fraDato(dato: LocalDateTime) = Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
 
-        fun tilValidertPeriode(kvartal: String?, årstall: String?) =
-            kvartal.tilValidertKvartal().zip(
-                årstall.tomSomNull()?.tilValidertHeltall() ?: Valid(sisteÅr())
+        fun tilValidertPeriode(kvartal: String?, årstall: String?, gjeldendePeriode: Periode) =
+            kvartal.tilValidertKvartal(gjeldendePeriode).zip(
+                årstall.tomSomNull()?.tilValidertHeltall() ?: Valid(gjeldendePeriode.årstall)
             ) { validertKvartal, validertÅrstall ->
                 Periode(kvartal = validertKvartal, årstall = validertÅrstall)
             }
 
-        private fun String?.tilValidertKvartal() =
+        private fun String?.tilValidertKvartal(gjeldendePeriode: Periode) =
             tomSomNull()?.tilValidertHeltall()?.andThen {
                 if ((1..4).contains(it))
                     it.valid()
                 else
                     "$it er ikke et gyldig kvartal. Kvartal er forventet å være 1 >= kvartal <= 4".invalidNel()
-            } ?: Valid(sisteKvartal())
-
-        private fun sisteKvartal() = 4
-        private fun sisteÅr() = 2022
-
-        fun gjeldendePeriode() =
-            Periode(kvartal = sisteKvartal(), årstall = sisteÅr())
-
-        fun forrigePeriode() =
-            gjeldendePeriode().forrigePeriode()
+            } ?: Valid(gjeldendePeriode.kvartal)
     }
 
     fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)

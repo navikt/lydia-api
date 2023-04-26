@@ -789,7 +789,7 @@ class VirksomhetHelper {
         fun lastInnNyVirksomhet(
             nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet(),
             sektor: String = SEKTOR_STATLIG_FORVALTNING,
-            perioder: List<Periode> = listOf(Periode.gjeldendePeriode(), Periode.forrigePeriode())
+            perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode())
         ): TestVirksomhet {
             lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet, sektor = sektor, perioder = perioder))
             return nyVirksomhet

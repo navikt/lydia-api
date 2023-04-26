@@ -110,13 +110,14 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk fra siste tilgjengelige kvartal`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = nyVirksomhet()
         lastInnTestdata(
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(
-                    Periode.gjeldendePeriode(),
-                    Periode.forrigePeriode(),
+                    gjeldendePeriode,
+                    gjeldendePeriode.forrigePeriode(),
                     Periode(kvartal = 4, årstall = 2019)
                 ),
             )
@@ -124,32 +125,33 @@ class SykefraversstatistikkApiTest {
         val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
             """select sykefraversprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
-                and kvartal=${Periode.gjeldendePeriode().kvartal}
-                and arstall=${Periode.gjeldendePeriode().årstall}
+                and kvartal=${gjeldendePeriode.kvartal}
+                and arstall=${gjeldendePeriode.årstall}
                 """.trimMargin()
         )
 
         val result =
             hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
-        result.arstall shouldBe Periode.gjeldendePeriode().årstall
-        result.kvartal shouldBe Periode.gjeldendePeriode().kvartal
+        result.arstall shouldBe gjeldendePeriode.årstall
+        result.kvartal shouldBe gjeldendePeriode.kvartal
         result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk riktig når vi mangler siste periode`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = nyVirksomhet()
         lastInnTestdata(
             TestData().lagData(
                 virksomhet = virksomhet,
-                perioder = listOf(Periode.forrigePeriode()), // uten siste periode
+                perioder = listOf(gjeldendePeriode.forrigePeriode()), // uten siste periode
             )
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
             """select sykefraversprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
-                and kvartal=${Periode.forrigePeriode().kvartal}
-                and arstall=${Periode.forrigePeriode().årstall}
+                and kvartal=${gjeldendePeriode.forrigePeriode().kvartal}
+                and arstall=${gjeldendePeriode.forrigePeriode().årstall}
                 """.trimMargin()
         )
 
@@ -169,13 +171,14 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift for de siste 4 kvartaler`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr).also {
             it.orgnr shouldBe orgnr
             it.antallKvartaler shouldBe 2
             it.kvartaler.size shouldBe 2
-            it.kvartaler[0].kvartal shouldBe Periode.gjeldendePeriode().kvartal
-            it.kvartaler[0].årstall shouldBe Periode.gjeldendePeriode().årstall
+            it.kvartaler[0].kvartal shouldBe gjeldendePeriode.kvartal
+            it.kvartaler[0].årstall shouldBe gjeldendePeriode.årstall
         }
     }
 
@@ -252,7 +255,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal få gjeldende periode for sykefravær siste fire kvartal`() {
-        val tilPeriode = Periode.gjeldendePeriode()
+        val tilPeriode = TestData.gjeldendePeriode
         val fraPeriode = tilPeriode.forrigePeriode().forrigePeriode().forrigePeriode()
         val hentetPeriode = hentGjeldendePeriodeForSiste4Kvartaler()
 
@@ -507,7 +510,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal bare få statistikk for siste periode hvis periode er uspesifisert`() {
-        val gjeldendePeriode = Periode.gjeldendePeriode()
+        val gjeldendePeriode = TestData.gjeldendePeriode
+
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll {
@@ -519,7 +523,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente virksomheter for et bestemt år og kvartal`() {
-        val forrigePeriode = Periode.forrigePeriode()
+        val forrigePeriode = TestData.gjeldendePeriode.forrigePeriode()
         hentSykefravær(
             success = { response ->
                 response.data shouldHaveAtLeastSize 1

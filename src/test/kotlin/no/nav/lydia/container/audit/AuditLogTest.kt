@@ -7,11 +7,11 @@ import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.sykefraversstatistikk.api.Periode.Companion.gjeldendePeriode
 import kotlin.test.Test
 
 class AuditLogTest {
@@ -223,6 +223,7 @@ class AuditLogTest {
 
     @Test
     fun `auditlogger søk med få parametere`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
         val saksbehandler = mockOAuth2Server.saksbehandler1
         StatistikkHelper.hentSykefravær()
         .also {
@@ -232,7 +233,7 @@ class AuditLogTest {
                 navIdent = saksbehandler.navIdent,
                 auditType = AuditType.access,
                 tillat = Tillat.Ja,
-                melding = "Søk med parametere: kvartal=${gjeldendePeriode().kvartal} arstall=${gjeldendePeriode().årstall} sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
+                melding = "Søk med parametere: kvartal=${gjeldendePeriode.kvartal} arstall=${gjeldendePeriode.årstall} sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
             )
         }
     }

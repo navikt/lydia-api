@@ -80,11 +80,12 @@ class IASakStatistikkEksportererTest {
 
     @Test
     fun `sjekk at vi får riktig sykefraværsstatistikk basert på når hendelsen skjedde`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
         val sak = opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = listOf(
-            Periode.gjeldendePeriode(),
-            Periode.forrigePeriode(),
-            Periode.forrigePeriode().forrigePeriode(),
-            Periode.forrigePeriode().forrigePeriode().forrigePeriode(),
+            gjeldendePeriode,
+            gjeldendePeriode.forrigePeriode(),
+            gjeldendePeriode.forrigePeriode().forrigePeriode(),
+            gjeldendePeriode.forrigePeriode().forrigePeriode().forrigePeriode(),
         )).orgnr)
         sak.oppdaterHendelsesTidspunkter(180)
         sak.nyHendelse(TA_EIERSKAP_I_SAK)
@@ -103,7 +104,7 @@ class IASakStatistikkEksportererTest {
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
                     it.hendelse shouldBe VIRKSOMHET_VURDERES
-                    Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()) shouldNotBe Periode.gjeldendePeriode()
+                    Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()) shouldNotBe gjeldendePeriode
                     it.arstall shouldBe Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()).årstall
                     it.kvartal shouldBe Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()).kvartal
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
@@ -113,8 +114,8 @@ class IASakStatistikkEksportererTest {
                 objektene.forAtLeastOne {
                     it.saksnummer shouldBe sak.saksnummer
                     it.hendelse shouldBe TA_EIERSKAP_I_SAK
-                    it.arstall shouldBe Periode.gjeldendePeriode().årstall
-                    it.kvartal shouldBe Periode.gjeldendePeriode().kvartal
+                    it.arstall shouldBe gjeldendePeriode.årstall
+                    it.kvartal shouldBe gjeldendePeriode.kvartal
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")

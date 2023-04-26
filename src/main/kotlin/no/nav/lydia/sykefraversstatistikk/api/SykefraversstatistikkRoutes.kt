@@ -14,6 +14,7 @@ import no.nav.lydia.Security
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsstatistikkSiste4KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto.Companion.toDto
@@ -31,6 +32,7 @@ const val GJELDENDE_PERIODE_SISTE_4_KVARTALER = "gjeldendeperiodesiste4kvartaler
 const val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
 
 fun Route.sykefraversstatistikk(
+    sistePubliseringService: SistePubliseringService,
     geografiService: GeografiService,
     sykefraværsstatistikkService: SykefraværsstatistikkService,
     næringsRepository: NæringsRepository,
@@ -41,7 +43,8 @@ fun Route.sykefraversstatistikk(
     val fiaRoller = naisEnvironment.security.fiaRoller
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            call.request.søkeparametere(geografiService, rådgiver = rådgiver)
+            val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+            call.request.søkeparametere(gjeldendePeriode, geografiService, rådgiver = rådgiver)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")
@@ -54,7 +57,8 @@ fun Route.sykefraversstatistikk(
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF") {
         somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            call.request.søkeparametere(geografiService, rådgiver = rådgiver)
+            val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+            call.request.søkeparametere(gjeldendePeriode, geografiService, rådgiver = rådgiver)
         }.flatMap { søkeparametere ->
             sykefraværsstatistikkService.hentTotaltAntallVirksomheter(søkeparametere = søkeparametere)
         }.fold(
