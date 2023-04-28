@@ -81,7 +81,7 @@ fun hentNavenhet(
 ): Either<Feil, String> =
     Either.catch {
         val accessToken = tokenFetcher.clientCredentialsToken()
-        val url = "${security.azureConfig.graphDatabaseUrl}/me\$select=streetAddress"
+        val url = "${security.azureConfig.graphDatabaseUrl}/me?\$select=streetAddress"
         hentEnSideFraAzure(url, accessToken).getOrElse { "FEIL" }
     }.mapLeft { Feil(it.message ?: "Feil ved uthenting fra azure", HttpStatusCode.InternalServerError) }
 
