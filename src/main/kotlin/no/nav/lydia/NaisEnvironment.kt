@@ -45,6 +45,7 @@ class Security(
         const val NAV_IDENT_CLAIM = "NAVident"
         const val GROUPS_CLAIM = "groups"
         const val NAME_CLAIM = "name"
+        const val OBJECT_ID_CLAIM = "oid"
     }
 }
 

@@ -24,6 +24,7 @@ import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
+import no.nav.lydia.tilgangskontroll.objectId
 import java.io.IOException
 
 @Serializable
@@ -65,7 +66,7 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
 
     get(NAV_ENHET) {
         somBrukerMedLesetilgang(call = call, fiaRoller = naisEnvironment.security.fiaRoller) {
-            hentNavenhet(tokenFetcher = tokenFetcher, security = naisEnvironment.security)
+            hentNavenhet(objectId = call.objectId(), tokenFetcher = tokenFetcher, security = naisEnvironment.security)
         }.fold(ifRight = {
             call.respond(it)
         },
@@ -76,12 +77,13 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
 }
 
 fun hentNavenhet(
+    objectId: String?,
     tokenFetcher: AzureTokenFetcher,
     security: Security
 ): Either<Feil, String> =
     Either.catch {
         val accessToken = tokenFetcher.clientCredentialsToken()
-        val url = "${security.azureConfig.graphDatabaseUrl}/me?\$select=streetAddress"
+        val url = "${security.azureConfig.graphDatabaseUrl}/users/${objectId}?\$select=streetAddress,department"
         hentEnSideFraAzure(url, accessToken).getOrElse { "FEIL" }
     }.mapLeft { Feil(it.message ?: "Feil ved uthenting fra azure", HttpStatusCode.InternalServerError) }
 
