@@ -77,7 +77,10 @@ class IASak private constructor(
                 hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
                     .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
             }
-
+        is FullførBistandHendelse ->
+            gyldigeNesteHendelser(rådgiver)
+                .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
+                .contains(hendelse.hendelsesType)
         else ->
             gyldigeNesteHendelser(rådgiver)
                 .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
