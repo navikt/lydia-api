@@ -22,6 +22,7 @@ import no.nav.lydia.Security
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
+import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
 import java.io.IOException
 
@@ -43,6 +44,7 @@ private data class AzureAdBruker(
 private val deserializer = Json { ignoreUnknownKeys = true }
 
 const val VEILEDERE_PATH = "/veiledere"
+const val NAV_ENHET = "/nav-enhet"
 
 @Serializable
 data class VeilederDTO(val id: String, val navIdent: String, val fornavn: String, val etternavn: String) {
@@ -60,7 +62,28 @@ fun Route.veileder(naisEnvironment: NaisEnvironment, tokenFetcher: AzureTokenFet
             call.respond(it)
         })
     }
+
+    get(NAV_ENHET) {
+        somBrukerMedLesetilgang(call = call, fiaRoller = naisEnvironment.security.fiaRoller) {
+            hentNavenhet(tokenFetcher = tokenFetcher, security = naisEnvironment.security)
+        }.fold(ifRight = {
+            call.respond(it)
+        },
+        ifLeft = {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        })
+    }
 }
+
+fun hentNavenhet(
+    tokenFetcher: AzureTokenFetcher,
+    security: Security
+): Either<Feil, String> =
+    Either.catch {
+        val accessToken = tokenFetcher.clientCredentialsToken()
+        val url = "${security.azureConfig.graphDatabaseUrl}/me\$select=streetAddress"
+        hentEnSideFraAzure(url, accessToken).getOrElse { "FEIL" }
+    }.mapLeft { Feil(it.message ?: "Feil ved uthenting fra azure", HttpStatusCode.InternalServerError) }
 
 suspend fun hentVeiledere(
     tokenFetcher: AzureTokenFetcher,
