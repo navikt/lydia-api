@@ -10,9 +10,7 @@ import io.ktor.server.routing.*
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.Security
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
@@ -22,7 +20,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkepar
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
-import no.nav.lydia.veileder.hentVeiledere
+import no.nav.lydia.integrasjoner.azure.AzureService
 
 const val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 const val FILTERVERDIER_PATH = "filterverdier"
@@ -39,7 +37,7 @@ fun Route.sykefraversstatistikk(
     næringsRepository: NæringsRepository,
     auditLog: AuditLog,
     naisEnvironment: NaisEnvironment,
-    azureTokenFetcher: AzureTokenFetcher,
+    azureService: AzureService,
 ) {
     val fiaRoller = naisEnvironment.security.fiaRoller
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
@@ -124,12 +122,8 @@ fun Route.sykefraversstatistikk(
             }.map { rådgiver ->
                 val filtrerbareEiere = when (rådgiver.rolle) {
                     Rådgiver.Rolle.LESE,
-                    Rådgiver.Rolle.SAKSBEHANDLER,
-                    -> listOf(EierDTO(navIdent = rådgiver.navIdent, navn = rådgiver.navn))
-                    Rådgiver.Rolle.SUPERBRUKER -> hentEiere(
-                        azureTokenFetcher = azureTokenFetcher,
-                        security = naisEnvironment.security
-                    )
+                    Rådgiver.Rolle.SAKSBEHANDLER -> listOf(EierDTO(navIdent = rådgiver.navIdent, navn = rådgiver.navn))
+                    Rådgiver.Rolle.SUPERBRUKER -> hentEiere(azureService = azureService)
                 }
                 return@get call.respond(
                     FilterverdierDto(
@@ -143,11 +137,9 @@ fun Route.sykefraversstatistikk(
     }
 }
 
-suspend fun hentEiere(azureTokenFetcher: AzureTokenFetcher, security: Security) =
-    hentVeiledere(
-        tokenFetcher = azureTokenFetcher,
-        security = security
-    ).fold(ifLeft = { emptyList() }, ifRight = { veiledere -> veiledere.map { it.tilEierDTO() }.toList() })
+suspend fun hentEiere(azureService: AzureService) =
+    azureService.hentVeiledere()
+        .fold(ifLeft = { emptyList() }, ifRight = { veiledere -> veiledere.map { it.tilEierDTO() }.toList() })
 
 object SykefraværsstatistikkError {
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)

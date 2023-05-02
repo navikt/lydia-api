@@ -42,19 +42,14 @@ import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.statusoverikt.StatusoversiktRepository
 import no.nav.lydia.statusoverikt.StatusoversiktService
 import no.nav.lydia.statusoverikt.api.statusoversikt
-import no.nav.lydia.sykefraversstatistikk.SistePubliseringRepository
-import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
-import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
-import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraversstatistikk.VirksomhetsinformasjonRepository
+import no.nav.lydia.sykefraversstatistikk.*
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
-import no.nav.lydia.veileder.VEILEDERE_PATH
-import no.nav.lydia.veileder.veileder
+import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -161,7 +156,7 @@ fun Application.lydiaRestApi(
         callIdMdc("requestId")
         disableDefaultColors()
         filter { call ->
-            listOf(SYKEFRAVERSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH, VEILEDERE_PATH).any {
+            listOf(SYKEFRAVERSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH).any {
                 call.request.path().startsWith(it)
             }
         }
@@ -217,7 +212,6 @@ fun Application.lydiaRestApi(
         )
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
-    val azureTokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment)
     val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
 
     routing {
@@ -263,7 +257,10 @@ fun Application.lydiaRestApi(
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
                 naisEnvironment = naisEnvironment,
-                azureTokenFetcher = azureTokenFetcher,
+                azureService = AzureService(
+                    tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
+                    security = naisEnvironment.security
+                ),
                 sistePubliseringService = sistePubliseringService,
             )
             iaSakRådgiver(
@@ -285,7 +282,6 @@ fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 fiaRoller = naisEnvironment.security.fiaRoller
             )
-            veileder(tokenFetcher = azureTokenFetcher, naisEnvironment = naisEnvironment)
             statusoversikt(
                 sistePubliseringService = sistePubliseringService,
                 geografiService = GeografiService(),

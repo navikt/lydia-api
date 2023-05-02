@@ -1,10 +1,13 @@
 package no.nav.lydia.helper
 
-import com.github.kittinunf.fuel.*
 import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
+import com.github.kittinunf.fuel.httpDelete
+import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.fuel.httpPost
+import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -24,8 +27,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
@@ -43,8 +46,6 @@ import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
-import no.nav.lydia.veileder.VEILEDERE_PATH
-import no.nav.lydia.veileder.VeilederDTO
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -844,25 +845,6 @@ class VirksomhetHelper {
             )
         }
     }
-}
-
-class VeilederHelper {
-
-    companion object {
-        fun hentVeiledere(token: String = oauth2ServerContainer.superbruker1.token) =
-            lydiaApiContainer.performGet(VEILEDERE_PATH)
-                .authentication().bearer(token)
-                .tilListeRespons<VeilederDTO>()
-                .third.fold(
-                    success = {
-                        it
-                    },
-                    failure = {
-                        fail(it.message)
-                    }
-                )
-    }
-
 }
 
 @OptIn(InternalSerializationApi::class)
