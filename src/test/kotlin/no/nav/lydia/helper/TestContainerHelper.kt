@@ -39,6 +39,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoverikt.api.STATUSOVERSIKT_PATH
+import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
@@ -638,6 +639,13 @@ class StatistikkHelper {
                 .authentication().bearer(token)
                 .tilSingelRespons<KvartalerFraTilDto>()
 
+        fun hentPubliseringsinfoRespons(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) =
+            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$PUBLISERINGSINFO")
+                .authentication().bearer(token)
+                .tilSingelRespons<Publiseringsinfo>()
+
         fun hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -657,6 +665,12 @@ class StatistikkHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             hentGjeldendePeriodeForSiste4KvartalerRespons(token).third
+                .fold(success = { response -> response }, failure = { fail(it.message) })
+
+        fun hentPubliseringsinfo(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) =
+            hentPubliseringsinfoRespons(token).third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
 
         fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(

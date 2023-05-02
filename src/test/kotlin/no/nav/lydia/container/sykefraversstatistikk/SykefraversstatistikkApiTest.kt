@@ -33,6 +33,7 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentGjeldendePeriodeForSiste4Kvartaler
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
@@ -67,7 +68,11 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.Periode
@@ -263,6 +268,20 @@ class SykefraversstatistikkApiTest {
         hentetPeriode.fra.årstall shouldBe fraPeriode.årstall
         hentetPeriode.til.kvartal shouldBe tilPeriode.kvartal
         hentetPeriode.til.årstall shouldBe tilPeriode.årstall
+    }
+
+    @Test
+    fun `skal få riktig publiseringsinfo`() {
+        val tilPeriode = TestData.gjeldendePeriode
+        val fraPeriode = tilPeriode.forrigePeriode().forrigePeriode().forrigePeriode()
+        val hentetPubliseringsinfo = hentPubliseringsinfo()
+
+        hentetPubliseringsinfo.nestePubliseringsdato shouldNotBe null
+        hentetPubliseringsinfo.sistePubliseringsdato shouldNotBe null
+        hentetPubliseringsinfo.fraTil.fra.årstall shouldBe fraPeriode.årstall
+        hentetPubliseringsinfo.fraTil.fra.kvartal shouldBe fraPeriode.kvartal
+        hentetPubliseringsinfo.fraTil.til.årstall shouldBe tilPeriode.årstall
+        hentetPubliseringsinfo.fraTil.til.kvartal shouldBe tilPeriode.kvartal
     }
 
     @Test

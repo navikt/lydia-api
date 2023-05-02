@@ -4,12 +4,12 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo.Companion.tilPubliseringsinfo
+import no.nav.lydia.sykefraversstatistikk.PubliseringsinfoDto.Companion.tilPubliseringsinfo
 import javax.sql.DataSource
 
 class SistePubliseringRepository(val dataSource: DataSource) {
 
-    fun hentPubliseringsinfo(): Publiseringsinfo =
+    fun hentPubliseringsinfo(): PubliseringsinfoDto =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -23,7 +23,7 @@ class SistePubliseringRepository(val dataSource: DataSource) {
             ) ?: throw NoSuchElementException("Ingen publiseringsinfo funnet")
         }
 
-    private fun mapRowToPubliseringsinfo(row: Row): Publiseringsinfo {
+    private fun mapRowToPubliseringsinfo(row: Row): PubliseringsinfoDto {
         return row.tilPubliseringsinfo()
     }
 }

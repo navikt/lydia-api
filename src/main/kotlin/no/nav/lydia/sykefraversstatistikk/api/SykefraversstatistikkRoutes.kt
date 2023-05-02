@@ -29,6 +29,7 @@ const val FILTERVERDIER_PATH = "filterverdier"
 const val ANTALL_TREFF = "antallTreff"
 const val SISTE_4_KVARTALER = "siste4kvartaler"
 const val GJELDENDE_PERIODE_SISTE_4_KVARTALER = "gjeldendeperiodesiste4kvartaler"
+const val PUBLISERINGSINFO = "publiseringsinfo"
 const val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
 
 fun Route.sykefraversstatistikk(
@@ -101,6 +102,16 @@ fun Route.sykefraversstatistikk(
             sykefraværsstatistikkService.hentGjeldendePeriodeSiste4Kvartal()
         }.map { kvartalerFraTil ->
             call.respond(kvartalerFraTil.toDto())
+        }.mapLeft { feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    get ("$SYKEFRAVERSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
+        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+            sistePubliseringService.hentPubliseringsinfo()
+        }.map { publiseringsinfo ->
+            call.respond(publiseringsinfo)
         }.mapLeft { feil ->
             call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
         }
