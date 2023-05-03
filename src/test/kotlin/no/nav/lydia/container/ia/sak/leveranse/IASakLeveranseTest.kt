@@ -225,10 +225,9 @@ class IASakLeveranseTest {
     fun `skal ikke kunne fullføre sak med ufullførte leveranser`() {
         val sakIViBistår = sakIViBistår()
         sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = 1)
-
-        val oppdatertSak = sakIViBistår.nyHendelse(FULLFØR_BISTAND)
-        // TODO: oppdatertSak.status shouldBe VI_BISTÅR
-
+        shouldFail {
+            sakIViBistår.nyHendelse(FULLFØR_BISTAND)
+        }
     }
 
     @Test
