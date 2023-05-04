@@ -96,7 +96,9 @@ class IASakStatistikkProdusent(
                 bransjeprogram = finnBransje(virksomhet?.næringsgrupper),
                 postnummer = virksomhet?.postnummer,
                 kommunenummer = virksomhet?.kommunenummer,
-                fylkesnummer = fylkesnummer
+                fylkesnummer = fylkesnummer,
+                enhetsnummer = hendelse?.navEnhet?.enhetsnummer,
+                enhetsnavn = hendelse?.navEnhet?.enhetsnavn,
             )
             return key to Json.encodeToString(value)
 
@@ -133,6 +135,8 @@ class IASakStatistikkProdusent(
         val postnummer: String?,
         val kommunenummer: String?,
         val fylkesnummer: String?,
+        val enhetsnummer: String?,
+        val enhetsnavn: String?,
     )
 }
 

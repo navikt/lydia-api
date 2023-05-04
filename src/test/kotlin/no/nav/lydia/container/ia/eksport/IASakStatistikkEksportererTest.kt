@@ -73,6 +73,8 @@ class IASakStatistikkEksportererTest {
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
                     it.bransjeprogram shouldBe Bransjer.BYGG
                     it.endretAvRolle shouldBe Rolle.SAKSBEHANDLER
+                    it.enhetsnummer shouldBe "2900"
+                    it.enhetsnavn shouldBe "IT-avdelingen"
                 }
             }
         }

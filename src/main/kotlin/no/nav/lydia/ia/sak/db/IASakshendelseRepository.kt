@@ -172,7 +172,10 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                 orgnummer = row.string("orgnr"),
                 opprettetAv = row.string("opprettet_av"),
                 opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) },
-                navEnhet = NavEnhet(enhetsnummer = "nav_enhet_nummer", enhetsnavn = "nav_enhet_navn"),
+                navEnhet = NavEnhet(
+                    enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
+                    enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
+                ),
             )
         return VirksomhetIkkeAktuellHendelse(
             id = row.string("id"),
@@ -182,7 +185,10 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             opprettetAv = row.string("opprettet_av"),
             opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) },
             valgtÅrsak = valgtÅrsak,
-            navEnhet = NavEnhet(enhetsnummer = "nav_enhet_nummer", enhetsnavn = "nav_enhet_navn"),
+            navEnhet = NavEnhet(
+                enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
+                enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
+            ),
         )
     }
 
