@@ -27,14 +27,13 @@ class IASakService(
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val iaSakLeveranseRepository: IASakLeveranseRepository,
     private val årsakService: ÅrsakService,
-    private val iaSakshendelseObservers: MutableList<Observer<IASakshendelse>> = mutableListOf(),
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
     private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     private fun IASakshendelse.lagre(sistEndretAvHendelseId: String?) =
-        iaSakshendelseRepository.lagreHendelse(this, sistEndretAvHendelseId).also(::varsleIASakshendelseObservers)
+        iaSakshendelseRepository.lagreHendelse(this, sistEndretAvHendelseId)
 
     private fun IASak.lagre() =
         iaSakRepository.opprettSak(this).also(::varsleIASakObservers)
@@ -44,14 +43,6 @@ class IASakService(
             return slettSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
         }
             return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
-    }
-
-    fun leggTilIASakshendelseObserver(observer: Observer<IASakshendelse>) {
-        iaSakshendelseObservers.add(observer)
-    }
-
-    private fun varsleIASakshendelseObservers(hendelse: IASakshendelse) {
-        iaSakshendelseObservers.forEach { observer -> observer.receive(hendelse) }
     }
 
     fun leggTilIASakObserver(observer: Observer<IASak>) {
