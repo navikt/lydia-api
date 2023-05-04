@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -68,16 +69,16 @@ class IASakService(
         iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
     }
 
-    fun opprettSakOgMerkSomVurdert(orgnummer: String, rådgiver: Rådgiver): Either<Feil, IASak> {
+    fun opprettSakOgMerkSomVurdert(orgnummer: String, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, IASak> {
         if (!iaSakRepository.hentSaker(orgnummer).all{ it.status.ansesSomAvsluttet() }) {
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         }
         val sak = IASak.fraFørsteHendelse(
-            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, rådgiver = rådgiver).lagre(null)
+            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, rådgiver = rådgiver, navEnhet = navEnhet).lagre(null)
         ).lagre()
         val sistEndretAvHendelseId = sak.endretAvHendelseId
 
-        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, rådgiver = rådgiver).lagre(null)
+        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, rådgiver = rådgiver, navEnhet = navEnhet).lagre(null)
             .let { vurderesHendelse -> rådgiver.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
@@ -87,13 +88,13 @@ class IASakService(
 
     }
 
-    fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, IASak> {
+    fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, IASak> {
         val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.ansesSomAvsluttet() }
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         val sistEndretAvHendelseId = aktiveSaker.firstOrNull()?.endretAvHendelseId
 
-        return IASakshendelse.fromDto(hendelseDto, rådgiver)
+        return IASakshendelse.fromDto(hendelseDto, rådgiver, navEnhet)
             .flatMap { sakshendelse ->
                 val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(sakshendelse.saksnummer)
                 if (hendelser.isEmpty())

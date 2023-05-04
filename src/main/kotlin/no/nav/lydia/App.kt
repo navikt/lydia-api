@@ -213,6 +213,10 @@ fun Application.lydiaRestApi(
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
     val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
+    val azureService = AzureService(
+        tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
+        security = naisEnvironment.security
+    )
 
     routing {
         healthChecks(HelseMonitor)
@@ -257,10 +261,7 @@ fun Application.lydiaRestApi(
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
                 naisEnvironment = naisEnvironment,
-                azureService = AzureService(
-                    tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
-                    security = naisEnvironment.security
-                ),
+                azureService = azureService,
                 sistePubliseringService = sistePubliseringService,
             )
             iaSakRådgiver(
@@ -275,7 +276,8 @@ fun Application.lydiaRestApi(
                     iaSakLeveranseProdusent?.also { leggTilIASakLeveranseObserver(it) }
                 },
                 fiaRoller = naisEnvironment.security.fiaRoller,
-                auditLog = auditLog
+                auditLog = auditLog,
+                azureService = azureService,
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),

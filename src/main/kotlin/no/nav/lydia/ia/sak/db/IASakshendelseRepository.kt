@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,6 +32,8 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         opprettet_av_rolle,
                         saksnummer,
                         opprettet,
+                        nav_enhet_nummer,
+                        nav_enhet_navn,
                         aarsak_enum,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
@@ -61,6 +64,8 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         opprettet_av_rolle,
                         saksnummer,
                         opprettet,
+                        nav_enhet_nummer,
+                        nav_enhet_navn,
                         aarsak_enum,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
@@ -92,7 +97,9 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                                 type,
                                 opprettet_av,
                                 opprettet_av_rolle,
-                                opprettet
+                                opprettet,
+                                nav_enhet_nummer,
+                                nav_enhet_navn
                             )
                             VALUES (
                                 :id,
@@ -101,7 +108,9 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                                 :type,
                                 :opprettet_av,
                                 :opprettet_av_rolle,
-                                :opprettet
+                                :opprettet,
+                                :enhetsnummer,
+                                :enhetsnavn
                             ) 
                         """.trimMargin(),
                         mapOf(
@@ -111,7 +120,9 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                             "type" to hendelse.hendelsesType.name,
                             "opprettet_av" to hendelse.opprettetAv,
                             "opprettet_av_rolle" to hendelse.opprettetAvRolle?.toString(),
-                            "opprettet" to hendelse.opprettetTidspunkt
+                            "opprettet" to hendelse.opprettetTidspunkt,
+                            "enhetsnummer" to hendelse.navEnhet.enhetsnummer,
+                            "enhetsnavn" to hendelse.navEnhet.enhetsnavn,
                         )
                     ).asUpdate
                 )
@@ -133,6 +144,8 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                         opprettet_av_rolle,
                         saksnummer,
                         opprettet,
+                        nav_enhet_nummer,
+                        nav_enhet_navn,
                         aarsak_enum,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
@@ -158,7 +171,8 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                 hendelsesType = IASakshendelseType.valueOf(row.string("type")),
                 orgnummer = row.string("orgnr"),
                 opprettetAv = row.string("opprettet_av"),
-                opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) }
+                opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) },
+                navEnhet = NavEnhet(enhetsnummer = "nav_enhet_nummer", enhetsnavn = "nav_enhet_navn"),
             )
         return VirksomhetIkkeAktuellHendelse(
             id = row.string("id"),
@@ -168,6 +182,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             opprettetAv = row.string("opprettet_av"),
             opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) },
             valgtÅrsak = valgtÅrsak,
+            navEnhet = NavEnhet(enhetsnummer = "nav_enhet_nummer", enhetsnavn = "nav_enhet_navn"),
         )
     }
 

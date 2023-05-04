@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
@@ -15,9 +16,11 @@ import no.nav.lydia.FiaRoller
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandlertilgang
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
+import no.nav.lydia.tilgangskontroll.objectId
 
 val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 val SAK_HENDELSE_SUB_PATH = "hendelse"
@@ -29,12 +32,19 @@ val IA_MODULER_PATH = "moduler"
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
     fiaRoller: FiaRoller,
-    auditLog: AuditLog
+    auditLog: AuditLog,
+    azureService: AzureService,
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         somSuperbruker(call = call, fiaRoller = fiaRoller) { superbruker ->
-            iaSakService.opprettSakOgMerkSomVurdert(orgnummer, superbruker).map { it.toDto(superbruker) }
+            azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
+                iaSakService.opprettSakOgMerkSomVurdert(
+                    orgnummer = orgnummer,
+                    rådgiver = superbruker,
+                    navEnhet = navEnhet
+                ).map { it.toDto(superbruker) }
+            }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -141,7 +151,9 @@ fun Route.iaSakRådgiver(
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
         somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
-            iaSakService.behandleHendelse(hendelseDto, rådgiver = rådgiver).map { it.toDto(rådgiver) }
+            azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
+                iaSakService.behandleHendelse(hendelseDto, rådgiver = rådgiver, navEnhet = navEnhet).map { it.toDto(rådgiver) }
+            }
         }.also {
             auditLog.auditloggEither(
                 call = call,

@@ -59,6 +59,20 @@ class IASakApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
 
     @Test
+    fun `skal lagre navenhet på hendelser`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+        postgresContainer.hentAlleKolonner<String>(
+            """
+                select nav_enhet_nummer from ia_sak_hendelse
+                  where saksnummer = '${sak.saksnummer}'
+            """.trimIndent()
+        ).forAll {
+            it shouldBe "2900"
+        }
+    }
+
+    @Test
     fun `skal validere at begrunnelse tilhører riktig årsak`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)

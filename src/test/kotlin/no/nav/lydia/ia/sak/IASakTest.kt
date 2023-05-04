@@ -21,6 +21,7 @@ import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseT
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import java.time.LocalDateTime
 import kotlin.test.Test
@@ -56,6 +57,11 @@ class IASakTest {
             fiaRoller = fiaroller,
             rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
         )
+
+        val navEnhet = NavEnhet(
+            enhetsnummer = "2900",
+            enhetsnavn = "IT-Utvikling",
+        )
     }
 
     @Test
@@ -78,7 +84,7 @@ class IASakTest {
 
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
-        val h1 = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
+        val h1 = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1, navEnhet = navEnhet)
         val h2 = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
@@ -100,7 +106,7 @@ class IASakTest {
 
     @Test
     fun `skal få en liste over gyldige begrunnelser for når en virksomhet ikke er aktuell`() {
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1, navEnhet = navEnhet)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
@@ -145,7 +151,7 @@ class IASakTest {
 
     @Test
     fun `en sak skal inneholde alle sine hendelser`(){
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1, navEnhet = navEnhet)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
@@ -166,7 +172,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå an å angre på en sak`(){
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -192,7 +198,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå ann å fullføre en sak`() {
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1)
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, rådgiver = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -225,7 +231,7 @@ class IASakTest {
         gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
     }
 
-    private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, rådgiver: Rådgiver) =
+    private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, rådgiver: Rådgiver, navEnhet: NavEnhet = IASakTest.navEnhet) =
         IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -233,7 +239,8 @@ class IASakTest {
             hendelsesType = type,
             orgnummer = orgnummer,
             opprettetAv = rådgiver.navIdent,
-            opprettetAvRolle = rådgiver.rolle
+            opprettetAvRolle = rådgiver.rolle,
+            navEnhet = navEnhet
         )
 
     private fun IASakshendelse.nesteHendelse(iaSakshendelseType: IASakshendelseType) =
@@ -245,7 +252,8 @@ class IASakTest {
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
-                valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID))
+                valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID)),
+                navEnhet = navEnhet
             )
             else -> IASakshendelse(
                 id = ULID.random(),
@@ -254,10 +262,11 @@ class IASakTest {
                 hendelsesType = iaSakshendelseType,
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
-                opprettetAvRolle = opprettetAvRolle
+                opprettetAvRolle = opprettetAvRolle,
+                navEnhet = navEnhet
             )
         }
 
-    private fun nyIASak(orgnummer: String, rådgiver: Rådgiver): IASak =
-        IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, rådgiver))
+    private fun nyIASak(orgnummer: String, rådgiver: Rådgiver, navEnhet: NavEnhet = IASakTest.navEnhet): IASak =
+        IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, rådgiver, navEnhet))
 }

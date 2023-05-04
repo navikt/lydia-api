@@ -37,7 +37,7 @@ private data class AzureAdBruker(
 )
 
 @Serializable
-data class NavEnhetDto(
+data class NavEnhet(
     val enhetsnummer: String,
     val enhetsnavn: String,
 )
@@ -60,15 +60,15 @@ class AzureService(
 
     fun hentNavenhet(
         objectId: String?,
-    ): Either<Feil, NavEnhetDto> {
+    ): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
         val url = "${security.azureConfig.graphDatabaseUrl}/users/${objectId}?\$select=$azureAdProps"
         return hentFraAzure(url, accessToken)
             .map { json -> deserializer.decodeFromString<AzureAdBruker>(json) }
             .map { azureAdBruker ->
-                NavEnhetDto(
-                    enhetsnummer = azureAdBruker.streetAddress ?: "N/A",
-                    enhetsnavn = azureAdBruker.department ?: "N/A",
+                NavEnhet(
+                    enhetsnummer = azureAdBruker.streetAddress ?: "Ukjent",
+                    enhetsnavn = azureAdBruker.department ?: "Ukjent",
                 )
             }
     }

@@ -16,6 +16,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
+import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.tilgangskontroll.Rådgiver
 import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
@@ -28,19 +29,21 @@ open class IASakshendelse(
     val hendelsesType: IASakshendelseType,
     val orgnummer: String,
     val opprettetAv: String,
-    val opprettetAvRolle: Rolle?
+    val opprettetAvRolle: Rolle?,
+    val navEnhet: NavEnhet,
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver) =
+        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet) =
             when (dto.hendelsesType) {
-                VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, rådgiver)
+                VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, rådgiver, navEnhet)
                 FULLFØR_BISTAND -> FullførBistandHendelse(
-                        id = ULID.random(),
-                        opprettetTidspunkt = LocalDateTime.now(),
-                        saksnummer = dto.saksnummer,
-                        orgnummer = dto.orgnummer,
-                        opprettetAv = rådgiver.navIdent,
-                        opprettetAvRolle = rådgiver.rolle
+                    id = ULID.random(),
+                    opprettetTidspunkt = LocalDateTime.now(),
+                    saksnummer = dto.saksnummer,
+                    orgnummer = dto.orgnummer,
+                    opprettetAv = rådgiver.navIdent,
+                    opprettetAvRolle = rådgiver.rolle,
+                    navEnhet = navEnhet
                 ).right()
                 else -> IASakshendelse(
                     id = ULID.random(),
@@ -49,11 +52,12 @@ open class IASakshendelse(
                     hendelsesType = dto.hendelsesType,
                     orgnummer = dto.orgnummer,
                     opprettetAv = rådgiver.navIdent,
-                    opprettetAvRolle = rådgiver.rolle
+                    opprettetAvRolle = rådgiver.rolle,
+                    navEnhet = navEnhet,
                 ).right()
             }
 
-        fun nyFørsteHendelse(orgnummer : String, rådgiver: Rådgiver): IASakshendelse {
+        fun nyFørsteHendelse(orgnummer : String, rådgiver: Rådgiver, navEnhet: NavEnhet): IASakshendelse {
             val saksnummer = ULID.random()
             return IASakshendelse(
                 id = saksnummer,
@@ -62,11 +66,12 @@ open class IASakshendelse(
                 hendelsesType = IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
                 orgnummer = orgnummer,
                 opprettetAv = rådgiver.navIdent,
-                opprettetAvRolle = rådgiver.rolle
+                opprettetAvRolle = rådgiver.rolle,
+                navEnhet = navEnhet
             )
         }
 
-        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, rådgiver: Rådgiver) =
+        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, rådgiver: Rådgiver, navEnhet: NavEnhet) =
             IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -74,7 +79,8 @@ open class IASakshendelse(
                 hendelsesType = hendelsestype,
                 orgnummer = this.orgnr,
                 opprettetAv = rådgiver.navIdent,
-                opprettetAvRolle = rådgiver.rolle
+                opprettetAvRolle = rådgiver.rolle,
+                navEnhet = navEnhet,
             )
     }
 
@@ -108,7 +114,8 @@ class FullførBistandHendelse (
         saksnummer: String,
         orgnummer: String,
         opprettetAv: String,
-        opprettetAvRolle: Rolle?
+        opprettetAvRolle: Rolle?,
+        navEnhet: NavEnhet,
 ) : IASakshendelse(
         id,
         opprettetTidspunkt = opprettetTidspunkt,
@@ -116,7 +123,8 @@ class FullførBistandHendelse (
         hendelsesType = FULLFØR_BISTAND,
         orgnummer = orgnummer,
         opprettetAv = opprettetAv,
-        opprettetAvRolle = opprettetAvRolle
+        opprettetAvRolle = opprettetAvRolle,
+        navEnhet = navEnhet
 )
 
 class VirksomhetIkkeAktuellHendelse(
@@ -126,6 +134,7 @@ class VirksomhetIkkeAktuellHendelse(
     orgnummer: String,
     opprettetAv: String,
     opprettetAvRolle: Rolle?,
+    navEnhet: NavEnhet,
     val valgtÅrsak: ValgtÅrsak
 ) : IASakshendelse(
     id,
@@ -134,10 +143,11 @@ class VirksomhetIkkeAktuellHendelse(
     hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
     orgnummer = orgnummer,
     opprettetAv = opprettetAv,
-    opprettetAvRolle = opprettetAvRolle
+    opprettetAvRolle = opprettetAvRolle,
+    navEnhet = navEnhet,
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver): Either<Feil, VirksomhetIkkeAktuellHendelse> =
+        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
 
                 try {
@@ -152,7 +162,8 @@ class VirksomhetIkkeAktuellHendelse(
                         orgnummer = dto.orgnummer,
                         opprettetAv = rådgiver.navIdent,
                         opprettetAvRolle = rådgiver.rolle,
-                        valgtÅrsak = valgtÅrsak
+                        valgtÅrsak = valgtÅrsak,
+                        navEnhet = navEnhet
                     ).right()
                 } catch (e: Exception) {
                     SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
