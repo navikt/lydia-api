@@ -27,7 +27,6 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IATjenesteDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
@@ -222,7 +221,7 @@ class IASakLeveranseTest {
     }
 
     @Test
-    fun `skal ikke kunne fullføre sak med ufullførte leveranser`() {
+    fun `skal ikke kunne fullføre sak med leveranser som er under arbeid`() {
         val sakIViBistår = sakIViBistår()
         sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = 1)
         shouldFail {

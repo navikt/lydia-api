@@ -4,14 +4,13 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -36,15 +35,6 @@ open class IASakshendelse(
         fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet) =
             when (dto.hendelsesType) {
                 VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, rådgiver, navEnhet)
-                FULLFØR_BISTAND -> FullførBistandHendelse(
-                    id = ULID.random(),
-                    opprettetTidspunkt = LocalDateTime.now(),
-                    saksnummer = dto.saksnummer,
-                    orgnummer = dto.orgnummer,
-                    opprettetAv = rådgiver.navIdent,
-                    opprettetAvRolle = rådgiver.rolle,
-                    navEnhet = navEnhet
-                ).right()
                 else -> IASakshendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
@@ -107,25 +97,6 @@ open class IASakshendelse(
         return key to Json.encodeToString(value)
     }
 }
-
-class FullførBistandHendelse (
-        id: String,
-        opprettetTidspunkt: LocalDateTime,
-        saksnummer: String,
-        orgnummer: String,
-        opprettetAv: String,
-        opprettetAvRolle: Rolle?,
-        navEnhet: NavEnhet,
-) : IASakshendelse(
-        id,
-        opprettetTidspunkt = opprettetTidspunkt,
-        saksnummer = saksnummer,
-        hendelsesType = FULLFØR_BISTAND,
-        orgnummer = orgnummer,
-        opprettetAv = opprettetAv,
-        opprettetAvRolle = opprettetAvRolle,
-        navEnhet = navEnhet
-)
 
 class VirksomhetIkkeAktuellHendelse(
     id: String,

@@ -85,6 +85,11 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         val sistEndretAvHendelseId = aktiveSaker.firstOrNull()?.endretAvHendelseId
 
+        val alleLeveranserPåEnSak = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = hendelseDto.saksnummer)
+        val aktiveLeveranserPåEnSak = alleLeveranserPåEnSak.filter { it.status == IASakLeveranseStatus.UNDER_ARBEID }
+        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND && aktiveLeveranserPåEnSak.isNotEmpty())
+            return IASakError.`kan ikke fullføre med gjenstående leveranser`.left()
+
         return IASakshendelse.fromDto(hendelseDto, rådgiver, navEnhet)
             .flatMap { sakshendelse ->
                 val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(sakshendelse.saksnummer)

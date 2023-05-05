@@ -303,4 +303,6 @@ object IASakError {
         "Det finnes flere saker på dette orgnummeret som ikke anses som avsluttet", HttpStatusCode.NotImplemented
     )
     val `generell feil under uthenting` = Feil("Generell feil under uthenting", HttpStatusCode.InternalServerError)
+
+    val `kan ikke fullføre med gjenstående leveranser` = Feil("Kan ikke fullføre med gjenstående leveranser", HttpStatusCode.BadRequest)
 }
