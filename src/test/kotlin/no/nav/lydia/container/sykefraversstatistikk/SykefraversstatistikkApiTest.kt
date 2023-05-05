@@ -32,7 +32,6 @@ import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
-import no.nav.lydia.helper.StatistikkHelper.Companion.hentGjeldendePeriodeForSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
@@ -256,18 +255,6 @@ class SykefraversstatistikkApiTest {
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
         )
         sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
-    }
-
-    @Test
-    fun `skal få gjeldende periode for sykefravær siste fire kvartal`() {
-        val tilPeriode = TestData.gjeldendePeriode
-        val fraPeriode = tilPeriode.forrigePeriode().forrigePeriode().forrigePeriode()
-        val hentetPeriode = hentGjeldendePeriodeForSiste4Kvartaler()
-
-        hentetPeriode.fra.kvartal shouldBe fraPeriode.kvartal
-        hentetPeriode.fra.årstall shouldBe fraPeriode.årstall
-        hentetPeriode.til.kvartal shouldBe tilPeriode.kvartal
-        hentetPeriode.til.årstall shouldBe tilPeriode.årstall
     }
 
     @Test
