@@ -198,7 +198,7 @@ class IASakLeveranseTest {
             frist = LocalDate.now().toKotlinLocalDate(),
             modulId = 1
         )
-        sakIViBistår.nyHendelse(FULLFØR_BISTAND)
+        sakIViBistår.nyHendelse(TILBAKE)
         shouldFail {
             iaSakLeveranse.slettIASakLeveranse(orgnr = sakIViBistår.orgnr)
         }
