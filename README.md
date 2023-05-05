@@ -1,5 +1,12 @@
 # lydia-api
 
+# Ved ny publisering
+
+## Oppdatere gjeldende kvartal og publiseringsdato
+Hvert kvartal publiserer NAV ny statistikk for sykefravær iht [publiseringkalender](https://www.nav.no/no/nav-og-samfunn/statistikk/publiseringskalender) 
+
+Lydia-api mottar de nye data via Kafka. Etter importen er ferdig må vi legge til et nytt script som oppdaterer tabellen `siste_publiseringsinfo`
+
 # Komme i gang med lydia-api
 
 Kjør ./run.sh -cif
