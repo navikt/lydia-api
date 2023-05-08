@@ -6,6 +6,9 @@ import arrow.core.right
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -17,6 +20,7 @@ import no.nav.lydia.AzureConfig
 import no.nav.lydia.Security
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
+import no.nav.lydia.tilgangskontroll.innloggetNavIdent
 import org.slf4j.LoggerFactory
 
 @Serializable
@@ -69,6 +73,22 @@ class AzureService(
                 NavEnhet(
                     enhetsnummer = azureAdBruker.streetAddress ?: "Ukjent",
                     enhetsnavn = azureAdBruker.department ?: "Ukjent",
+                )
+            }
+    }
+
+    fun hentNavenhetFraNavIdent(
+        navIdent: String?,
+    ): Either<Feil, NavEnhet> {
+        val accessToken = tokenFetcher.clientCredentialsToken()
+        val url = "${security.azureConfig.graphDatabaseUrl}/users?\$search=\"onPremisesSamAccountName:$navIdent\"&\$select=$azureAdProps"
+        return hentFraAzure(url, accessToken)
+            .map { json -> deserializer.decodeFromString<AzureResponse>(json) }
+            .map { azureResponse -> azureResponse.value.firstOrNull() }
+            .map { azureAdBruker ->
+                NavEnhet(
+                    enhetsnummer = azureAdBruker?.streetAddress ?: "Ukjent",
+                    enhetsnavn = azureAdBruker?.department ?: "Ukjent",
                 )
             }
     }
@@ -146,4 +166,10 @@ class AzureService(
                     httpStatusCode = HttpStatusCode.InternalServerError
                 ).left()
             })
+}
+
+fun Route.navEnhet(azureService: AzureService) {
+    get("nav-enhet") {
+        call.respond(azureService.hentNavenhetFraNavIdent(call.innloggetNavIdent()))
+    }
 }

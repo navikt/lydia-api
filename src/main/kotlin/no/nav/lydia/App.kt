@@ -50,6 +50,7 @@ import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.integrasjoner.azure.navEnhet
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -293,6 +294,7 @@ fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 naisEnvironment = naisEnvironment
             )
+            navEnhet(azureService = azureService)
         }
     }
 }
