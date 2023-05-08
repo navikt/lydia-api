@@ -155,7 +155,10 @@ class AzureService(
         url.httpGet()
             .authentication()
             .bearer(token = accessToken)
-            .header(HttpHeaders.Accept to "application/json", HttpHeaders.ContentType to "application/json")
+            .header(
+                HttpHeaders.Accept to "application/json", HttpHeaders.ContentType to "application/json",
+                "ConsistencyLevel" to "eventual"
+            )
             .response()
             .third
             .fold(success = {
