@@ -170,6 +170,11 @@ class AzureService(
 
 fun Route.navEnhet(azureService: AzureService) {
     get("nav-enhet") {
-        call.respond(azureService.hentNavenhetFraNavIdent(call.innloggetNavIdent()))
+        val navIdent = call.innloggetNavIdent() ?: return@get call.respond(HttpStatusCode.BadRequest, "mangler nav-ident")
+        azureService.hentNavenhetFraNavIdent(navIdent).map {
+            call.respond(it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
     }
 }
