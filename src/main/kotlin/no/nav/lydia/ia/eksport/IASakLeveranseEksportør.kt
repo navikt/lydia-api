@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class IASakLeveranseEksportør(
     val iaSakLeveranseRepository: IASakLeveranseRepository,
-    val iaSakLeveranseProdusent: IASakLeveranseProdusent?,
+    val iaSakLeveranseProdusent: IASakLeveranseProdusent,
 ) {
     companion object {
         val KJØRER_LEVERANSE_EKSPORT = AtomicBoolean(false)
@@ -16,10 +16,6 @@ class IASakLeveranseEksportør(
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun eksporter() {
-        if (iaSakLeveranseProdusent == null) {
-            log.warn("iaSakLeveranseProdusent er ikke satt. dropper replay")
-            return
-        }
         KJØRER_LEVERANSE_EKSPORT.set(true)
         val alleLeveranser = iaSakLeveranseRepository.hentAlleIASakLeveranser()
         log.info("Starter re-eksport av ${alleLeveranser.size} leveranser")

@@ -8,11 +8,9 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.PiaBrregOppdateringTestData
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -20,6 +18,21 @@ import kotlin.test.Test
 
 class VirksomhetApiTest {
     private val mockOAuthContainer = TestContainerHelper.oauth2ServerContainer
+    private val postgres = TestContainerHelper.postgresContainer
+
+    @Test
+    fun `sanity sjekk, test at vi har fått lastet inn virksomheter og næringer`() {
+        val id = postgres.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${TestVirksomhet.BERGEN.orgnr}'")
+        val næringsKode =
+            postgres.hentEnkelKolonne<String>("select narings_kode from virksomhet_naring where virksomhet = '$id'")
+        næringsKode shouldBe TestData.BEDRIFTSRÅDGIVNING.kode
+        val antallUtenPostnummer =
+            postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${TestVirksomhet.UTENLANDSK.orgnr}'")
+        antallUtenPostnummer shouldBe 0
+        val antallUtenBeliggenhetsadresse =
+            postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${TestVirksomhet.MANGLER_BELIGGENHETSADRESSE.orgnr}'")
+        antallUtenBeliggenhetsadresse shouldBe 0
+    }
 
     @Test
     fun `skal kunne hente ut opplysninger om en virksomhet`() {

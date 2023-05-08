@@ -90,31 +90,10 @@ fun startLydiaBackend() {
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
-    val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource))
-
-    val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
-    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakTopic)
-    val iaSakStatistikkProdusent = IASakStatistikkProdusent(
-        produsent = kafkaProdusent,
-        virksomhetService = virksomhetService,
-        sykefraværsstatistikkService = sykefraværsstatistikkService,
-        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-        geografiService = GeografiService(),
-        sistePubliseringService = sistePubliseringService,
-        topic = naisEnv.kafka.iaSakStatistikkTopic
-    )
-    val iaSakLevelanseProdusent = IASakLeveranseProdusent(
-        produsent = kafkaProdusent,
-        topic = naisEnv.kafka.iaSakLeveranseTopic
-    )
-
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
             naisEnvironment = naisEnv,
             dataSource = dataSource,
-            iaSakProdusent = iaSakProdusent,
-            iaSakStatistikkProdusent = iaSakStatistikkProdusent,
-            iaSakLeveranseProdusent = iaSakLevelanseProdusent,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -137,10 +116,39 @@ private fun brregConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
 fun Application.lydiaRestApi(
     naisEnvironment: NaisEnvironment,
     dataSource: DataSource,
-    iaSakProdusent: IASakProdusent? = null,
-    iaSakStatistikkProdusent: IASakStatistikkProdusent? = null,
-    iaSakLeveranseProdusent: IASakLeveranseProdusent? = null,
 ) {
+    val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource))
+    val næringsRepository = NæringsRepository(dataSource = dataSource)
+    val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+    val iaSakRepository = IASakRepository(dataSource = dataSource)
+    val sykefraværsstatistikkService =
+        SykefraværsstatistikkService(
+            sistePubliseringService = SistePubliseringService(sistePubliseringRepository = SistePubliseringRepository(dataSource = dataSource)),
+            sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
+            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
+        )
+    val årsakRepository = ÅrsakRepository(dataSource = dataSource)
+    val auditLog = AuditLog(naisEnvironment.miljø)
+    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
+    val kafkaProdusent = KafkaProdusent(naisEnvironment.kafka)
+    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnvironment.kafka.iaSakTopic)
+    val iaSakStatistikkProdusent = IASakStatistikkProdusent(
+        produsent = kafkaProdusent,
+        virksomhetService = virksomhetService,
+        sykefraværsstatistikkService = sykefraværsstatistikkService,
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        geografiService = GeografiService(),
+        sistePubliseringService = sistePubliseringService,
+        topic = naisEnvironment.kafka.iaSakStatistikkTopic
+    )
+    val azureService = AzureService(
+        tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
+        security = naisEnvironment.security
+    )
+    val iaSakLeveranseProdusent = IASakLeveranseProdusent(
+        produsent = kafkaProdusent,
+        topic = naisEnvironment.kafka.iaSakLeveranseTopic,
+    )
     install(ContentNegotiation) {
         json()
     }
@@ -202,22 +210,6 @@ fun Application.lydiaRestApi(
             call.respond(HttpStatusCode.InternalServerError)
         }
     }
-    val næringsRepository = NæringsRepository(dataSource = dataSource)
-    val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-    val iaSakRepository = IASakRepository(dataSource = dataSource)
-    val sykefraværsstatistikkService =
-        SykefraværsstatistikkService(
-            sistePubliseringService = SistePubliseringService(sistePubliseringRepository = SistePubliseringRepository(dataSource = dataSource)),
-            sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
-        )
-    val årsakRepository = ÅrsakRepository(dataSource = dataSource)
-    val auditLog = AuditLog(naisEnvironment.miljø)
-    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
-    val azureService = AzureService(
-        tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
-        security = naisEnvironment.security
-    )
 
     routing {
         healthChecks(HelseMonitor)
@@ -272,9 +264,9 @@ fun Application.lydiaRestApi(
                     iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ).apply {
-                    iaSakProdusent?.also { leggTilIASakObserver(it) }
-                    iaSakStatistikkProdusent?.also { leggTilIASakObserver(it) }
-                    iaSakLeveranseProdusent?.also { leggTilIASakLeveranseObserver(it) }
+                    iaSakProdusent.also { leggTilIASakObserver(it) }
+                    iaSakStatistikkProdusent.also { leggTilIASakObserver(it) }
+                    iaSakLeveranseProdusent.also { leggTilIASakLeveranseObserver(it) }
                 },
                 fiaRoller = naisEnvironment.security.fiaRoller,
                 auditLog = auditLog,
