@@ -230,6 +230,12 @@ class IASakLeveranseTest {
     }
 
     @Test
+    fun `skal kunne fullføre sak uten leveranser`() {
+        val sakIViBistår = sakIViBistår()
+        sakIViBistår.nyHendelse(FULLFØR_BISTAND)
+    }
+
+    @Test
     fun `skal kunne hente IATjenester`() {
         val tjenester = hentIATjenester()
         tjenester shouldHaveAtLeastSize 3
