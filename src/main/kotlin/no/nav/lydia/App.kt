@@ -148,6 +148,7 @@ fun Application.lydiaRestApi(
     val iaSakLeveranseProdusent = IASakLeveranseProdusent(
         produsent = kafkaProdusent,
         topic = naisEnvironment.kafka.iaSakLeveranseTopic,
+        azureService = azureService
     )
     install(ContentNegotiation) {
         json()

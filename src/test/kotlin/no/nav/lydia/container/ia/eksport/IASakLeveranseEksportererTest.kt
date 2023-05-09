@@ -58,15 +58,21 @@ class IASakLeveranseEksportererTest {
                 key = leveranse.id.toString(),
                 konsument = konsument
             ) { meldinger ->
-                meldinger shouldHaveAtLeastSize 1
-                meldinger.forAtLeastOne {
-                    it shouldContain leveranse.id.toString()
-                    it shouldContain sak.saksnummer
-                    it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
-                    it shouldContain leveranse.modul.navn
-                    it shouldContain leveranse.frist.toString()
-                    it shouldContain leveranse.status.toString()
-                    it shouldContain leveranse.fullført.toString()
+                val objektene = meldinger.map {
+                    Json.decodeFromString<IASakLeveranseValue>(it)
+                }
+                objektene shouldHaveAtLeastSize 1
+                objektene.forAtLeastOne {
+                    it.id shouldBe leveranse.id
+                    it.saksnummer shouldBe sak.saksnummer
+                    it.opprettetAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+                    it.sistEndretAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+                    it.modul.navn shouldBe leveranse.modul.navn
+                    it.frist shouldBe leveranse.frist
+                    it.status shouldBe leveranse.status
+                    it.fullført shouldBe leveranse.fullført
+                    it.enhetsnavn shouldBe "IT-avdelingen"
+                    it.enhetsnummer shouldBe "2900"
                 }
             }
         }
