@@ -8,7 +8,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.FiaRoller
+import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
@@ -19,11 +19,11 @@ const val VIRKSOMHET_PATH = "virksomhet"
 fun Route.virksomhet(
     virksomhetService: VirksomhetService,
     auditLog: AuditLog,
-    fiaRoller: FiaRoller
+    adGrupper: ADGrupper
 ) {
     get("$VIRKSOMHET_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
             virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto().rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)

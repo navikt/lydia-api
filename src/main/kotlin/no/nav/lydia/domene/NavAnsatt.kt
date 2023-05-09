@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import io.ktor.server.application.*
+import no.nav.lydia.ADGrupper
 import no.nav.lydia.domene.NavAnsatt.Lesebruker.Companion.lesebruker
 import no.nav.lydia.domene.NavAnsatt.Saksbehandler.Companion.saksbehandler
 import no.nav.lydia.domene.NavAnsatt.Superbruker.Companion.superbruker
@@ -14,12 +15,6 @@ import no.nav.lydia.tilgangskontroll.RådgiverError
 import no.nav.lydia.tilgangskontroll.azureADGrupper
 import no.nav.lydia.tilgangskontroll.innloggetNavIdent
 import no.nav.lydia.tilgangskontroll.innloggetNavn
-
-object ADGrupper {
-    const val lesebrukerGruppe = "lesebruker"
-    const val saksbehandlerGruppe = "saksbehandler"
-    const val superbrukerGruppe = "suberbruker"
-}
 
 sealed class NavAnsatt private constructor(
     val navIdent: String,
@@ -52,8 +47,8 @@ sealed class NavAnsatt private constructor(
 
     class Lesebruker private constructor(navAnsatt: UverifisertBruker) : NavAnsatt(navAnsatt) {
         companion object {
-            fun UverifisertBruker.lesebruker() =
-                validert(ansattesGrupper.contains(ADGrupper.lesebrukerGruppe)) {
+            fun UverifisertBruker.lesebruker(adGrupper: ADGrupper) =
+                validert(ansattesGrupper.contains(adGrupper.lesebrukerGruppe)) {
                     Lesebruker(this)
                 }
         }
@@ -61,8 +56,8 @@ sealed class NavAnsatt private constructor(
 
     class Saksbehandler private constructor(navAnsatt: UverifisertBruker) : NavAnsatt(navAnsatt) {
         companion object {
-            fun UverifisertBruker.saksbehandler() =
-                validert(ansattesGrupper.contains(ADGrupper.saksbehandlerGruppe)) {
+            fun UverifisertBruker.saksbehandler(adGrupper: ADGrupper) =
+                validert(ansattesGrupper.contains(adGrupper.saksbehandlerGruppe)) {
                     Saksbehandler(this)
                 }
         }
@@ -70,8 +65,8 @@ sealed class NavAnsatt private constructor(
 
     class Superbruker private constructor(navAnsatt: UverifisertBruker) : NavAnsatt(navAnsatt) {
         companion object {
-            fun UverifisertBruker.superbruker() =
-                validert(ansattesGrupper.contains(ADGrupper.superbrukerGruppe)) {
+            fun UverifisertBruker.superbruker(adGrupper: ADGrupper) =
+                validert(ansattesGrupper.contains(adGrupper.superbrukerGruppe)) {
                     Superbruker(this)
                 }
         }
@@ -79,19 +74,19 @@ sealed class NavAnsatt private constructor(
 
 }
 
-fun <T> ApplicationCall.somLesebruker(block: (NavAnsatt.Lesebruker) -> T) =
+fun <T> ApplicationCall.somLesebruker(adGrupper: ADGrupper, block: (NavAnsatt.Lesebruker) -> T) =
     this.navAnsatt()
-        .flatMap { it.lesebruker() }
+        .flatMap { it.lesebruker(adGrupper = adGrupper) }
         .map { block(it) }
 
-fun <T> ApplicationCall.somSaksbehandler(block: (NavAnsatt.Saksbehandler) -> T) =
+fun <T> ApplicationCall.somSaksbehandler(adGrupper: ADGrupper, block: (NavAnsatt.Saksbehandler) -> T) =
     this.navAnsatt()
-        .flatMap { it.saksbehandler() }
+        .flatMap { it.saksbehandler(adGrupper = adGrupper) }
         .map { block(it) }
 
-fun <T> ApplicationCall.somSuperbruker(block: (NavAnsatt.Superbruker) -> T) =
+fun <T> ApplicationCall.somSuperbruker(adGrupper: ADGrupper, block: (NavAnsatt.Superbruker) -> T) =
     this.navAnsatt()
-        .flatMap { it.superbruker() }
+        .flatMap { it.superbruker(adGrupper = adGrupper) }
         .map { block(it) }
 
 private fun <T> validert(condition: Boolean, provider: () -> T) =

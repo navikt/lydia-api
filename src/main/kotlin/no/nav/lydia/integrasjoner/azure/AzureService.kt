@@ -97,8 +97,8 @@ class AzureService(
         Either.catch {
             val accessToken = tokenFetcher.clientCredentialsToken()
             val gruppeIder = listOf(
-                security.fiaRoller.saksbehandlerGroupId,
-                security.fiaRoller.superbrukerGroupId
+                security.adGrupper.saksbehandlerGruppe,
+                security.adGrupper.superbrukerGruppe
             )
             val veiledere = gruppeIder.map { gruppeId ->
                 async {

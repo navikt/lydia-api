@@ -5,39 +5,39 @@ import arrow.core.flatMap
 import arrow.core.left
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import no.nav.lydia.FiaRoller
+import no.nav.lydia.ADGrupper
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.sak.api.Feil
 
-class Rådgiver(val navIdent: String, val navn: String, fiaRoller: FiaRoller, rådgiversGrupper: List<String>) {
-    private val tilgang = Tilgang(fiaRoller, rådgiversGrupper)
+class Rådgiver(val navIdent: String, val navn: String, adGrupper: ADGrupper, rådgiversGrupper: List<String>) {
+    private val tilgang = Tilgang(adGrupper, rådgiversGrupper)
     val rolle get() = grupperTilRolle()
 
     companion object {
-        fun from(call: ApplicationCall, fiaRoller: FiaRoller): Either<Feil, Rådgiver> {
+        fun from(call: ApplicationCall, adGrupper: ADGrupper): Either<Feil, Rådgiver> {
             val navIdent = call.innloggetNavIdent() ?: return Either.Left(RådgiverError.FantIkkeNavIdent)
             val grupper = call.azureADGrupper() ?: return Either.Left(RådgiverError.FantIngenADGrupper)
             val navn = call.innloggetNavn() ?: return Either.Left(RådgiverError.FantIkkeNavn)
-            return Either.Right(Rådgiver(navIdent = navIdent, navn = navn, fiaRoller = fiaRoller, rådgiversGrupper = grupper))
+            return Either.Right(Rådgiver(navIdent = navIdent, navn = navn, adGrupper = adGrupper, rådgiversGrupper = grupper))
         }
 
-        suspend fun <T> somSuperbruker(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
-            somRådgiver(call, fiaRoller, block = { rådgiver ->
+        suspend fun <T> somSuperbruker(call: ApplicationCall, adGrupper: ADGrupper, block: suspend (Rådgiver) -> Either<Feil, T>) =
+            somRådgiver(call, adGrupper, block = { rådgiver ->
                 if (rådgiver.erSuperbruker()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
-        suspend fun <T> somBrukerMedSaksbehandlertilgang(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
-            somRådgiver(call, fiaRoller, block = { rådgiver ->
+        suspend fun <T> somBrukerMedSaksbehandlertilgang(call: ApplicationCall, adGrupper: ADGrupper, block: suspend (Rådgiver) -> Either<Feil, T>) =
+            somRådgiver(call, adGrupper, block = { rådgiver ->
                 if (rådgiver.erSaksbehandler()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
-        suspend fun <T> somBrukerMedLesetilgang(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
-            somRådgiver(call, fiaRoller, block = { rådgiver ->
+        suspend fun <T> somBrukerMedLesetilgang(call: ApplicationCall, adGrupper: ADGrupper, block: suspend (Rådgiver) -> Either<Feil, T>) =
+            somRådgiver(call, adGrupper, block = { rådgiver ->
                 if (rådgiver.erLesebruker()) block(rådgiver) else RådgiverError.IkkeAutorisert.left()
             })
 
-        private suspend fun <T> somRådgiver(call: ApplicationCall, fiaRoller: FiaRoller, block: suspend (Rådgiver) -> Either<Feil, T>) =
-            from(call = call, fiaRoller = fiaRoller).flatMap { block(it) }
+        private suspend fun <T> somRådgiver(call: ApplicationCall, adGrupper: ADGrupper, block: suspend (Rådgiver) -> Either<Feil, T>) =
+            from(call = call, adGrupper = adGrupper).flatMap { block(it) }
     }
 
     private fun grupperTilRolle() : Rolle =
@@ -50,10 +50,10 @@ class Rådgiver(val navIdent: String, val navn: String, fiaRoller: FiaRoller, r�
     fun erSaksbehandler() = tilgang.harSaksbehandlerTilgang()
     fun erLesebruker() = tilgang.harLeseTilgang()
 
-    private inner class Tilgang(private val fiaRoller: FiaRoller, private val rådgiversGrupper: List<String>){
-        fun harSuperbrukerTilgang() = rådgiversGrupper.contains(fiaRoller.superbrukerGroupId)
-        fun harSaksbehandlerTilgang() = rådgiversGrupper.contains(fiaRoller.saksbehandlerGroupId) || harSuperbrukerTilgang()
-        fun harLeseTilgang() = rådgiversGrupper.contains(fiaRoller.lesetilgangGroupId) || harSaksbehandlerTilgang()
+    private inner class Tilgang(private val adGrupper: ADGrupper, private val rådgiversGrupper: List<String>){
+        fun harSuperbrukerTilgang() = rådgiversGrupper.contains(adGrupper.superbrukerGruppe)
+        fun harSaksbehandlerTilgang() = rådgiversGrupper.contains(adGrupper.saksbehandlerGruppe) || harSuperbrukerTilgang()
+        fun harLeseTilgang() = rådgiversGrupper.contains(adGrupper.lesebrukerGruppe) || harSaksbehandlerTilgang()
     }
 
     enum class Rolle {

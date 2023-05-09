@@ -38,9 +38,9 @@ fun Route.sykefraversstatistikk(
     naisEnvironment: NaisEnvironment,
     azureService: AzureService,
 ) {
-    val fiaRoller = naisEnvironment.security.fiaRoller
+    val adGrupper = naisEnvironment.security.adGrupper
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
             call.request.søkeparametere(gjeldendePeriode, geografiService, rådgiver = rådgiver)
         }.also {
@@ -54,7 +54,7 @@ fun Route.sykefraversstatistikk(
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF") {
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
             call.request.søkeparametere(gjeldendePeriode, geografiService, rådgiver = rådgiver)
         }.flatMap { søkeparametere ->
@@ -68,7 +68,7 @@ fun Route.sykefraversstatistikk(
      get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$SISTE_4_KVARTALER") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
             sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
@@ -83,7 +83,7 @@ fun Route.sykefraversstatistikk(
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
             sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
@@ -95,7 +95,7 @@ fun Route.sykefraversstatistikk(
     }
 
     get ("$SYKEFRAVERSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
             sistePubliseringService.hentPubliseringsinfo()
         }.map { publiseringsinfo ->
             call.respond(publiseringsinfo)
@@ -105,7 +105,7 @@ fun Route.sykefraversstatistikk(
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
-        Rådgiver.from(call = call, fiaRoller = fiaRoller)
+        Rådgiver.from(call = call, adGrupper = adGrupper)
             .mapLeft { feil ->
                 call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
             }.map { rådgiver ->

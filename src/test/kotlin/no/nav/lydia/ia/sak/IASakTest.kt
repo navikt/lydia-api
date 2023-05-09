@@ -7,7 +7,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.FiaRoller
+import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
@@ -30,32 +30,31 @@ class IASakTest {
     companion object {
         const val orgnummer = "123456789"
 
-        val fiaroller = FiaRoller(
-            superbrukerGroupId = "123",
-            saksbehandlerGroupId = "456",
-            lesetilgangGroupId = "789",
-            teamPiaGroupId = "1011"
+        val adGrupper = ADGrupper(
+            superbrukerGruppe = "123",
+            saksbehandlerGruppe = "456",
+            lesebrukerGruppe = "789",
         )
 
         val superbruker1 = Rådgiver(
             navIdent = "A123456",
             navn = "Super Bruker 1",
-            fiaRoller = fiaroller,
-            rådgiversGrupper = listOf(fiaroller.superbrukerGroupId)
+            adGrupper = adGrupper,
+            rådgiversGrupper = listOf(adGrupper.superbrukerGruppe)
         )
 
         val superbruker2 = Rådgiver(
             navIdent = "A999111",
             navn = "Super Bruker 2",
-            fiaRoller = fiaroller,
-            rådgiversGrupper = listOf(fiaroller.superbrukerGroupId)
+            adGrupper = adGrupper,
+            rådgiversGrupper = listOf(adGrupper.superbrukerGruppe)
         )
 
         val saksbehandler1 = Rådgiver(
             navIdent = "B123456",
             navn = "Saks Behandler 1",
-            fiaRoller = fiaroller,
-            rådgiversGrupper = listOf(fiaroller.saksbehandlerGroupId)
+            adGrupper = adGrupper,
+            rådgiversGrupper = listOf(adGrupper.saksbehandlerGruppe)
         )
 
         val navEnhet = NavEnhet(
