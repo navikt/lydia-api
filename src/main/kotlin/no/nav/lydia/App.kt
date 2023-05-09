@@ -268,14 +268,14 @@ fun Application.lydiaRestApi(
                     iaSakStatistikkProdusent.also { leggTilIASakObserver(it) }
                     iaSakLeveranseProdusent.also { leggTilIASakLeveranseObserver(it) }
                 },
-                fiaRoller = naisEnvironment.security.fiaRoller,
+                adGrupper = naisEnvironment.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
                 auditLog = auditLog,
-                fiaRoller = naisEnvironment.security.fiaRoller
+                adGrupper = naisEnvironment.security.adGrupper
             )
             statusoversikt(
                 sistePubliseringService = sistePubliseringService,

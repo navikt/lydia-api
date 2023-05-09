@@ -23,10 +23,10 @@ fun Route.statusoversikt(
     auditLog: AuditLog,
     naisEnvironment: NaisEnvironment,
 ) {
-    val fiaRoller = naisEnvironment.security.fiaRoller
+    val adGrupper = naisEnvironment.security.adGrupper
     get("$STATUSOVERSIKT_PATH/") {
         val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { saksbehandler ->
+        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { saksbehandler ->
             call.request.søkeparametere(gjeldendePeriode, geografiService, rådgiver = saksbehandler)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,

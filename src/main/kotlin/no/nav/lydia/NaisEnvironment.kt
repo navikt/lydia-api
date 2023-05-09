@@ -39,7 +39,7 @@ class Database(
 
 class Security(
     val azureConfig: AzureConfig = AzureConfig(),
-    val fiaRoller: FiaRoller = FiaRoller()
+    val adGrupper: ADGrupper = ADGrupper()
 ) {
     companion object {
         const val NAV_IDENT_CLAIM = "NAVident"
@@ -63,11 +63,10 @@ class AzureConfig(
         "AzureConfig(audience='$clientId', jwksUri=$jwksUri, issuer='$issuer', tokenEndpoint='$tokenEndpoint')"
 }
 
-class FiaRoller(
-    val superbrukerGroupId: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),
-    val saksbehandlerGroupId: String = getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID"),
-    val lesetilgangGroupId: String = getEnvVar("FIA_LESETILGANG_GROUP_ID"),
-    val teamPiaGroupId: String = getEnvVar("TEAM_PIA_GROUP_ID")
+class ADGrupper(
+    val superbrukerGruppe: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),
+    val saksbehandlerGruppe: String = getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID"),
+    val lesebrukerGruppe: String = getEnvVar("FIA_LESETILGANG_GROUP_ID"),
 )
 
 class Kafka(

@@ -12,7 +12,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.routing.post
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.FiaRoller
+import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.domene.*
@@ -31,13 +31,13 @@ val IA_MODULER_PATH = "moduler"
 
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
-    fiaRoller: FiaRoller,
+    adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        somSuperbruker(call = call, fiaRoller = fiaRoller) { superbruker ->
+        somSuperbruker(call = call, adGrupper = adGrupper) { superbruker ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
                 iaSakService.opprettSakOgMerkSomVurdert(
                     orgnummer = orgnummer,
@@ -63,7 +63,7 @@ fun Route.iaSakRådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }.toDto(rådgiver = rådgiver).right()
         }.also { either ->
             auditLog.auditloggEither(
@@ -84,7 +84,7 @@ fun Route.iaSakRådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/aktiv") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             iaSakService.hentSakerForOrgnummer(orgnummer)
                 .sortedByDescending { it.opprettetTidspunkt }
                 .toDto(rådgiver = rådgiver)
@@ -114,7 +114,7 @@ fun Route.iaSakRådgiver(
 
     get("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) {
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
             iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
                 .groupBy { it.saksnummer }
                 .map { IASak.fraHendelser(it.value) }
@@ -150,7 +150,7 @@ fun Route.iaSakRådgiver(
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
-        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
                 iaSakService.behandleHendelse(hendelseDto, rådgiver = rådgiver, navEnhet = navEnhet).map { it.toDto(rådgiver) }
             }
@@ -173,7 +173,7 @@ fun Route.iaSakRådgiver(
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}") {
         val orgnr = call.parameters["orgnr"] ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { _ ->
             iaSakService.hentIASakLeveranser(saksnummer = saksnummer)
         }.also {
             auditLog.auditloggEither(
@@ -195,7 +195,7 @@ fun Route.iaSakRådgiver(
         val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val leveranse = call.receive<IASakLeveranseOpprettelsesDto>()
 
-        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             iaSakService.opprettIASakLeveranse(leveranse = leveranse, rådgiver = rådgiver)
         }.also {
             auditLog.auditloggEither(
@@ -218,7 +218,7 @@ fun Route.iaSakRådgiver(
         val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
         val oppdateringsDto = call.receive<IASakLeveranseOppdateringsDto>()
 
-        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             iaSakService.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), oppdateringsDto = oppdateringsDto, rådgiver = rådgiver)
         }.also {
             auditLog.auditloggEither(
@@ -240,7 +240,7 @@ fun Route.iaSakRådgiver(
         val saksnummer = call.parameters["saksnummer"] ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
         val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@delete call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
 
-        somBrukerMedSaksbehandlertilgang(call = call, fiaRoller = fiaRoller) { rådgiver ->
+        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
             iaSakService.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), rådgiver)
         }.also {
             auditLog.auditloggEither(
@@ -258,7 +258,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH") {
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { _ ->
             iaSakService.hentTjenester()
         }.map {
             call.respond(it.map(IATjeneste::tilDto).sorted())
@@ -268,7 +268,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH") {
-        somBrukerMedLesetilgang(call = call, fiaRoller = fiaRoller) { _ ->
+        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { _ ->
             iaSakService.hentModuler()
         }.map {
             call.respond(it.map { modul -> modul.tilDto() })
