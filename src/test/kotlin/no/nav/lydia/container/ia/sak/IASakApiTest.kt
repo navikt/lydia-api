@@ -201,7 +201,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal kunne opprette ny sak dersom de andre sakene anses som ikke aktuell`() {
+    fun `skal kunne opprette ny sak dersom de andre sakene regnes som ikke aktuell`() {
         val orgnummer = nyttOrgnummer()
         var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -348,7 +348,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal kunne opprette ny sak dersom de andre sakene anses som ikke fullført`() {
+    fun `skal kunne opprette ny sak dersom de andre sakene regnes som ikke fullført`() {
         val orgnummer = nyttOrgnummer()
         var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)

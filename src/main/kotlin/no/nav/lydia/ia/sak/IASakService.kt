@@ -62,13 +62,9 @@ class IASakService(
         iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
     }
 
-    fun opprettSakOgMerkSomVurdert(
-        orgnummer: String,
-        superbruker: Superbruker,
-        navEnhet: NavEnhet
-    ): Either<Feil, IASak> {
-        if (!iaSakRepository.hentSaker(orgnummer).all { it.status.ansesSomAvsluttet() }) {
-            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
+    fun opprettSakOgMerkSomVurdert(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet): Either<Feil, IASak> {
+        if (!iaSakRepository.hentSaker(orgnummer).all{ it.status.regnesSomAvsluttet() }) {
+            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
         val sak = IASak.fraFørsteHendelse(
             IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker, navEnhet = navEnhet)
@@ -90,14 +86,10 @@ class IASakService(
 
     }
 
-    fun behandleHendelse(
-        hendelseDto: IASakshendelseDto,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet
-    ): Either<Feil, IASak> {
-        val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.ansesSomAvsluttet() }
+    fun behandleHendelse(hendelseDto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet): Either<Feil, IASak> {
+        val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.regnesSomAvsluttet() }
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
-            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
+            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         val sistEndretAvHendelseId = aktiveSaker.firstOrNull()?.endretAvHendelseId
 
         val alleLeveranserPåEnSak = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = hendelseDto.saksnummer)

@@ -283,8 +283,8 @@ object IASakError {
     val `ugyldig iaSakLeveranseId` = Feil("Ugyldig leveranseId", HttpStatusCode.BadRequest)
     val `ugyldig modul` = Feil("Ugyldig modul", HttpStatusCode.BadRequest)
     val `ikke eier av sak` = Feil("Ikke eier av sak", HttpStatusCode.BadRequest)
-    val `det finnes flere saker på dette orgnummeret som ikke anses som avsluttet` = Feil(
-        "Det finnes flere saker på dette orgnummeret som ikke anses som avsluttet", HttpStatusCode.NotImplemented
+    val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` = Feil(
+        "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet", HttpStatusCode.NotImplemented
     )
     val `generell feil under uthenting` = Feil("Generell feil under uthenting", HttpStatusCode.InternalServerError)
 
