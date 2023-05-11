@@ -369,7 +369,7 @@ enum class IAProsessStatus {
     FULLFØRT,
     SLETTET;
 
-    fun ansesSomAvsluttet() = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
+    fun regnesSomAvsluttet() = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
 
     companion object {
         fun filtrerbareStatuser() =
