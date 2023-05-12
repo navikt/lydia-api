@@ -13,7 +13,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
+import no.nav.lydia.tilgangskontroll.Rolle
 
 class IASakLeveranseProdusent(
     private val produsent: KafkaProdusent,

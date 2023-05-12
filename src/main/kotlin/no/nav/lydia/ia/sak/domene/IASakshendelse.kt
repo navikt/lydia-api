@@ -17,8 +17,9 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.Rolle
 import java.time.LocalDateTime
 
 open class IASakshendelse(
@@ -32,22 +33,22 @@ open class IASakshendelse(
     val navEnhet: NavEnhet,
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet) =
+        fun fromDto(dto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet) =
             when (dto.hendelsesType) {
-                VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, rådgiver, navEnhet)
+                VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
                 else -> IASakshendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
                     saksnummer = dto.saksnummer,
                     hendelsesType = dto.hendelsesType,
                     orgnummer = dto.orgnummer,
-                    opprettetAv = rådgiver.navIdent,
-                    opprettetAvRolle = rådgiver.rolle,
+                    opprettetAv = saksbehandler.navIdent,
+                    opprettetAvRolle = saksbehandler.rolle,
                     navEnhet = navEnhet,
                 ).right()
             }
 
-        fun nyFørsteHendelse(orgnummer : String, rådgiver: Rådgiver, navEnhet: NavEnhet): IASakshendelse {
+        fun nyFørsteHendelse(orgnummer : String, superbruker: Superbruker, navEnhet: NavEnhet): IASakshendelse {
             val saksnummer = ULID.random()
             return IASakshendelse(
                 id = saksnummer,
@@ -55,21 +56,21 @@ open class IASakshendelse(
                 saksnummer = saksnummer,
                 hendelsesType = IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
                 orgnummer = orgnummer,
-                opprettetAv = rådgiver.navIdent,
-                opprettetAvRolle = rådgiver.rolle,
+                opprettetAv = superbruker.navIdent,
+                opprettetAvRolle = superbruker.rolle,
                 navEnhet = navEnhet
             )
         }
 
-        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, rådgiver: Rådgiver, navEnhet: NavEnhet) =
+        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, superbruker: Superbruker, navEnhet: NavEnhet) =
             IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = this.saksnummer,
                 hendelsesType = hendelsestype,
                 orgnummer = this.orgnr,
-                opprettetAv = rådgiver.navIdent,
-                opprettetAvRolle = rådgiver.rolle,
+                opprettetAv = superbruker.navIdent,
+                opprettetAvRolle = superbruker.rolle,
                 navEnhet = navEnhet,
             )
     }
@@ -118,7 +119,7 @@ class VirksomhetIkkeAktuellHendelse(
     navEnhet = navEnhet,
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, VirksomhetIkkeAktuellHendelse> =
+        fun fromDto(dto: IASakshendelseDto, navAnsatt: no.nav.lydia.tilgangskontroll.NavAnsatt, navEnhet: NavEnhet): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
 
                 try {
@@ -131,8 +132,8 @@ class VirksomhetIkkeAktuellHendelse(
                         opprettetTidspunkt = LocalDateTime.now(),
                         saksnummer = dto.saksnummer,
                         orgnummer = dto.orgnummer,
-                        opprettetAv = rådgiver.navIdent,
-                        opprettetAvRolle = rådgiver.rolle,
+                        opprettetAv = navAnsatt.navIdent,
+                        opprettetAvRolle = navAnsatt.rolle,
                         valgtÅrsak = valgtÅrsak,
                         navEnhet = navEnhet
                     ).right()

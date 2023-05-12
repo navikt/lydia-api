@@ -1,5 +1,6 @@
 package no.nav.lydia.virksomhet.api
 
+import arrow.core.right
 import arrow.core.rightIfNotNull
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -11,7 +12,7 @@ import no.nav.lydia.AuditType
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkError
-import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
+import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
 
 const val VIRKSOMHET_PATH = "virksomhet"
@@ -23,7 +24,7 @@ fun Route.virksomhet(
 ) {
     get("$VIRKSOMHET_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto().rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
@@ -36,8 +37,13 @@ fun Route.virksomhet(
 
     get("$VIRKSOMHET_PATH/finn") {
         val søkestreng = call.request.queryParameters["q"] ?: return@get call.respond(VirksomhetFeil.`mangler søkestreng`)
-        val virksomheter = virksomhetService.finnVirksomheter(søkestreng = søkestreng)
-        call.respond(HttpStatusCode.OK, virksomheter)
+        call.somLesebruker(adGrupper = adGrupper) {
+            virksomhetService.finnVirksomheter(søkestreng = søkestreng).right()
+        }.map {
+            call.respond(it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
     }
 }
 

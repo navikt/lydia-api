@@ -12,7 +12,7 @@ import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.Rolle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -171,7 +171,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                 hendelsesType = IASakshendelseType.valueOf(row.string("type")),
                 orgnummer = row.string("orgnr"),
                 opprettetAv = row.string("opprettet_av"),
-                opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) },
+                opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rolle.valueOf(it) },
                 navEnhet = NavEnhet(
                     enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
                     enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
@@ -183,7 +183,7 @@ class IASakshendelseRepository(val dataSource: DataSource) {
             saksnummer = row.string("saksnummer"),
             orgnummer = row.string("orgnr"),
             opprettetAv = row.string("opprettet_av"),
-            opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rådgiver.Rolle.valueOf(it) },
+            opprettetAvRolle = row.stringOrNull("opprettet_av_rolle")?.let { Rolle.valueOf(it) },
             valgtÅrsak = valgtÅrsak,
             navEnhet = NavEnhet(
                 enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",

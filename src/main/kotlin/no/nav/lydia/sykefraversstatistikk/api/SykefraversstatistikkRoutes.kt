@@ -1,6 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.right
 import ia.felles.definisjoner.bransjer.Bransjer
 import io.ktor.http.*
@@ -18,9 +19,8 @@ import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
-import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
 import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.tilgangskontroll.*
 
 const val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
 const val FILTERVERDIER_PATH = "filterverdier"
@@ -40,9 +40,9 @@ fun Route.sykefraversstatistikk(
 ) {
     val adGrupper = naisEnvironment.security.adGrupper
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
+        call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-            call.request.søkeparametere(gjeldendePeriode, geografiService, rådgiver = rådgiver)
+            call.request.søkeparametere(gjeldendePeriode, geografiService, navAnsatt = navAnsatt)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")
@@ -54,21 +54,22 @@ fun Route.sykefraversstatistikk(
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF") {
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
+        call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-            call.request.søkeparametere(gjeldendePeriode, geografiService, rådgiver = rådgiver)
+            call.request.søkeparametere(gjeldendePeriode, geografiService, navAnsatt = navAnsatt)
         }.flatMap { søkeparametere ->
             sykefraværsstatistikkService.hentTotaltAntallVirksomheter(søkeparametere = søkeparametere)
-        }.fold(
-            ifLeft = { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) },
-            ifRight = { totaltAntallTreff -> call.respond(totaltAntallTreff) }
-        )
+        }.map {
+            call.respond(it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
     }
 
      get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$SISTE_4_KVARTALER") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
@@ -83,7 +84,7 @@ fun Route.sykefraversstatistikk(
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
@@ -95,7 +96,7 @@ fun Route.sykefraversstatistikk(
     }
 
     get ("$SYKEFRAVERSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             sistePubliseringService.hentPubliseringsinfo()
         }.map { publiseringsinfo ->
             call.respond(publiseringsinfo)
@@ -105,24 +106,25 @@ fun Route.sykefraversstatistikk(
     }
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
-        Rådgiver.from(call = call, adGrupper = adGrupper)
-            .mapLeft { feil ->
-                call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
-            }.map { rådgiver ->
-                val filtrerbareEiere = when (rådgiver.rolle) {
-                    Rådgiver.Rolle.LESE,
-                    Rådgiver.Rolle.SAKSBEHANDLER -> listOf(EierDTO(navIdent = rådgiver.navIdent, navn = rådgiver.navn))
-                    Rådgiver.Rolle.SUPERBRUKER -> hentEiere(azureService = azureService)
-                }
-                return@get call.respond(
-                    FilterverdierDto(
-                        fylker = geografiService.hentFylkerOgKommuner(),
-                        neringsgrupper = næringsRepository.hentNæringer(),
-                        bransjeprogram = Bransjer.values().asList(),
-                        filtrerbareEiere = filtrerbareEiere,
-                    )
+        val filtrerbareEiere = call.superbruker(adGrupper = adGrupper).map {
+            hentEiere(azureService)
+        }.getOrElse {
+            listOf(
+                EierDTO(
+                    navIdent = call.innloggetNavIdent() ?: "",
+                    navn = call.innloggetNavn() ?: ""
                 )
-            }
+            )
+        }
+
+        call.respond(
+            FilterverdierDto(
+                fylker = geografiService.hentFylkerOgKommuner(),
+                neringsgrupper = næringsRepository.hentNæringer(),
+                bransjeprogram = Bransjer.values().asList(),
+                filtrerbareEiere = filtrerbareEiere,
+            )
+        )
     }
 }
 

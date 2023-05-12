@@ -79,7 +79,7 @@ class SykefraværsstatistikkService(
 
     private fun IAProsessStatus?.erAvsluttet() = when (this) {
         null -> true
-        else -> regnesSomAvsluttet()
+        else -> ansesSomAvsluttet()
     }
 
     fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere) =

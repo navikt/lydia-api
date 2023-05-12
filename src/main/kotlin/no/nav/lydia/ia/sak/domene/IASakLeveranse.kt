@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.domene
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
+import no.nav.lydia.tilgangskontroll.Rolle
 import java.time.LocalDate
 import java.time.LocalDateTime
 
