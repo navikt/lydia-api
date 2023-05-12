@@ -18,7 +18,8 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSa
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -42,7 +43,7 @@ class IASakService(
         if (this.status == IAProsessStatus.SLETTET) {
             return slettSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
         }
-            return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
+        return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
     }
 
     fun leggTilIASakObserver(observer: Observer<IASak>) {
@@ -56,21 +57,31 @@ class IASakService(
     fun leggTilIASakLeveranseObserver(observer: Observer<IASakLeveranse>) {
         iaSaksLeveranseObservers.add(observer)
     }
+
     private fun varsleIASakLeveranseObservers(leveranse: IASakLeveranse) {
         iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
     }
 
-    fun opprettSakOgMerkSomVurdert(orgnummer: String, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, IASak> {
-        if (!iaSakRepository.hentSaker(orgnummer).all{ it.status.regnesSomAvsluttet() }) {
-            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
+    fun opprettSakOgMerkSomVurdert(
+        orgnummer: String,
+        superbruker: Superbruker,
+        navEnhet: NavEnhet
+    ): Either<Feil, IASak> {
+        if (!iaSakRepository.hentSaker(orgnummer).all { it.status.ansesSomAvsluttet() }) {
+            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         }
         val sak = IASak.fraFørsteHendelse(
-            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, rådgiver = rådgiver, navEnhet = navEnhet).lagre(null)
+            IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker, navEnhet = navEnhet)
+                .lagre(null)
         ).lagre()
         val sistEndretAvHendelseId = sak.endretAvHendelseId
 
-        return sak.nyHendelseBasertPåSak(hendelsestype = VIRKSOMHET_VURDERES, rådgiver = rådgiver, navEnhet = navEnhet).lagre(null)
-            .let { vurderesHendelse -> rådgiver.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
+        return sak.nyHendelseBasertPåSak(
+            hendelsestype = VIRKSOMHET_VURDERES,
+            superbruker = superbruker,
+            navEnhet = navEnhet
+        ).lagre(null)
+            .let { vurderesHendelse -> superbruker.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
                 oppdatertSak.lagreOppdatering(sistEndretAvHendelseId)
@@ -79,10 +90,14 @@ class IASakService(
 
     }
 
-    fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, IASak> {
-        val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.regnesSomAvsluttet() }
+    fun behandleHendelse(
+        hendelseDto: IASakshendelseDto,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet
+    ): Either<Feil, IASak> {
+        val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.ansesSomAvsluttet() }
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
-            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
+            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
         val sistEndretAvHendelseId = aktiveSaker.firstOrNull()?.endretAvHendelseId
 
         val alleLeveranserPåEnSak = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = hendelseDto.saksnummer)
@@ -90,7 +105,7 @@ class IASakService(
         if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND && aktiveLeveranserPåEnSak.isNotEmpty())
             return IASakError.`kan ikke fullføre med gjenstående leveranser`.left()
 
-        return IASakshendelse.fromDto(hendelseDto, rådgiver, navEnhet)
+        return IASakshendelse.fromDto(hendelseDto, saksbehandler, navEnhet)
             .flatMap { sakshendelse ->
                 val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(sakshendelse.saksnummer)
                 if (hendelser.isEmpty())
@@ -98,13 +113,13 @@ class IASakService(
                 if (hendelser.last().id != hendelseDto.endretAvHendelseId)
                     return IASakError.`prøvde å legge til en hendelse på en gammel sak`.left()
                 val sak = IASak.fraHendelser(hendelser)
-                rådgiver.utførHendelsePåSak(sak = sak, hendelse = sakshendelse)
+                saksbehandler.utførHendelsePåSak(sak = sak, hendelse = sakshendelse)
                     .map { oppdatertSak ->
                         sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         årsakService.lagreÅrsak(sakshendelse)
                         return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
-                    .mapLeft{ it.tilFeilMedHttpFeilkode() }
+                    .mapLeft { it.tilFeilMedHttpFeilkode() }
 
             }
     }
@@ -130,7 +145,10 @@ class IASakService(
             IASakError.`generell feil under uthenting`.left()
         }
 
-    fun opprettIASakLeveranse(leveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
+    fun opprettIASakLeveranse(
+        leveranse: IASakLeveranseOpprettelsesDto,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle
+    ): Either<Feil, IASakLeveranse> {
         return try {
             val moduler = iaSakLeveranseRepository.hentModuler()
             moduler.firstOrNull { it.id == leveranse.modulId } ?: return IASakError.`ugyldig modul`.left()
@@ -140,9 +158,9 @@ class IASakService(
             if (finnesFraFør)
                 return Feil("Det finnes allerede en leveranse med denne modulen", HttpStatusCode.Conflict).left()
 
-            somEierAvSakIViBistår(saksnummer = leveranse.saksnummer, rådgiver = rådgiver) {
-                iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, rådgiver)
-                    .tap( ::varsleIASakLeveranseObservers)
+            somEierAvSakIViBistår(saksnummer = leveranse.saksnummer, saksbehandler = saksbehandler) {
+                iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, saksbehandler)
+                    .tap(::varsleIASakLeveranseObservers)
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
@@ -150,13 +168,16 @@ class IASakService(
         }
     }
 
-    fun slettIASakLeveranse(iaSakLeveranseId: Int, rådgiver: Rådgiver): Either<Feil, Int> {
+    fun slettIASakLeveranse(
+        iaSakLeveranseId: Int,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle
+    ): Either<Feil, Int> {
         return try {
             val iaSakLeveranse = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)
             val saksnummer = iaSakLeveranse?.saksnummer ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
-            somEierAvSakIViBistår(saksnummer = saksnummer, rådgiver = rådgiver) {
+            somEierAvSakIViBistår(saksnummer = saksnummer, saksbehandler = saksbehandler) {
                 iaSakLeveranseRepository.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId).right()
-                    .tap{ varsleIASakLeveranseObservers(iaSakLeveranse.slettet()) }
+                    .tap { varsleIASakLeveranseObservers(iaSakLeveranse.slettet()) }
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved letting av leveranse med id $iaSakLeveranseId: ${e.message}", e)
@@ -164,15 +185,24 @@ class IASakService(
         }
     }
 
-    fun oppdaterIASakLeveranse(iaSakLeveranseId: Int, oppdateringsDto: IASakLeveranseOppdateringsDto, rådgiver: Rådgiver): Either<Feil, IASakLeveranse> {
+    fun oppdaterIASakLeveranse(
+        iaSakLeveranseId: Int,
+        oppdateringsDto: IASakLeveranseOppdateringsDto,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle
+    ): Either<Feil, IASakLeveranse> {
         return try {
-            val saksnummer = iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.saksnummer
-                ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
-            somEierAvSakIViBistår(saksnummer = saksnummer, rådgiver = rådgiver) {
-                iaSakLeveranseRepository.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId, oppdateringsDto = oppdateringsDto, rådgiver = rådgiver)
+            val saksnummer =
+                iaSakLeveranseRepository.hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId)?.saksnummer
+                    ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
+            somEierAvSakIViBistår(saksnummer = saksnummer, saksbehandler = saksbehandler) {
+                iaSakLeveranseRepository.oppdaterIASakLeveranse(
+                    iaSakLeveranseId = iaSakLeveranseId,
+                    oppdateringsDto = oppdateringsDto,
+                    saksbehandler = saksbehandler
+                )
                     .tap(::varsleIASakLeveranseObservers)
             }
-        }  catch (e: Exception) {
+        } catch (e: Exception) {
             log.error("Noe gikk feil ved oppdatering av IASakLeveranse: ${e.message}", e)
             Feil("Feil ved oppdatering av leveranse", HttpStatusCode.InternalServerError).left()
         }
@@ -195,15 +225,19 @@ class IASakService(
     private fun hentIASak(saksnummer: String) =
         iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
 
-    private fun <T> somEierAvSak(saksnummer: String, rådgiver: Rådgiver, block: (IASak) -> Either<Feil, T>) =
-       hentIASak(saksnummer = saksnummer)
-           .flatMap { sak ->
-               if (sak.eidAv == rådgiver.navIdent) block(sak)
-               else IASakError.`ikke eier av sak`.left()
-           }
+    private fun <T> somEierAvSak(saksnummer: String, saksbehandler: NavAnsattMedSaksbehandlerRolle, block: (IASak) -> Either<Feil, T>) =
+        hentIASak(saksnummer = saksnummer)
+            .flatMap { sak ->
+                if (sak.eidAv == saksbehandler.navIdent) block(sak)
+                else IASakError.`ikke eier av sak`.left()
+            }
 
-    private fun <T> somEierAvSakIViBistår(saksnummer: String, rådgiver: Rådgiver, block: (IASak) -> Either<Feil, T>) =
-        somEierAvSak(saksnummer = saksnummer, rådgiver = rådgiver) { sak ->
+    private fun <T> somEierAvSakIViBistår(
+        saksnummer: String,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        block: (IASak) -> Either<Feil, T>
+    ) =
+        somEierAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) { sak ->
             if (sak.status == IAProsessStatus.VI_BISTÅR) block(sak)
             else IASakError.`fikk ikke oppdatert sak`.left()
         }

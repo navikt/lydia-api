@@ -15,8 +15,8 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.Modul
-import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.Rolle
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -93,7 +93,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-    fun opprettIASakLeveranse(iaSakleveranse: IASakLeveranseOpprettelsesDto, rådgiver: Rådgiver) =
+    fun opprettIASakLeveranse(iaSakleveranse: IASakLeveranseOpprettelsesDto, saksbehandler: NavAnsattMedSaksbehandlerRolle) =
         using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
             val sql = """
                 insert into iasak_leveranse (
@@ -120,8 +120,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                         "saksnummer" to iaSakleveranse.saksnummer,
                         "modul" to iaSakleveranse.modulId,
                         "frist" to iaSakleveranse.frist.toJavaLocalDate(),
-                        "opprettetAv" to rådgiver.navIdent,
-                        "opprettetAvRolle" to rådgiver.rolle.name,
+                        "opprettetAv" to saksbehandler.navIdent,
+                        "opprettetAvRolle" to saksbehandler.rolle?.name,
                     )
                 ).asUpdateAndReturnGeneratedKey
             ) ?: return@using IASakError.`generell feil under uthenting`.left()
@@ -157,7 +157,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
     fun oppdaterIASakLeveranse(
         iaSakLeveranseId: Int,
         oppdateringsDto: IASakLeveranseOppdateringsDto,
-        rådgiver: Rådgiver,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
     ) = using(sessionOf(dataSource = dataSource)) { session ->
         val fullførtDato = when (oppdateringsDto.status) {
             LEVERT -> LocalDateTime.now()
@@ -178,8 +178,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 "status" to oppdateringsDto.status.name,
                 "fullfort" to fullførtDato,
                 "sistEndret" to LocalDateTime.now(),
-                "sistEndretAv" to rådgiver.navIdent,
-                "sistEndretAvRolle" to rådgiver.rolle.name,
+                "sistEndretAv" to saksbehandler.navIdent,
+                "sistEndretAvRolle" to saksbehandler.rolle?.name,
             )
         ).asUpdate
         session.run(query)

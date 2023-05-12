@@ -25,7 +25,7 @@ import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
 import no.nav.lydia.ia.eksport.IA_SAK_LEVERANSE_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
+import no.nav.lydia.tilgangskontroll.Rolle
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test

@@ -10,8 +10,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
-import no.nav.lydia.tilgangskontroll.Rådgiver
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle.*
+import no.nav.lydia.tilgangskontroll.NavAnsatt
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.tilSektor
 import java.time.LocalDate
@@ -68,7 +68,7 @@ data class Søkeparametere(
         const val IA_SAK_EIERE = "eiere"
         const val SEKTOR = "sektor"
 
-        fun ApplicationRequest.søkeparametere(gjeldendePeriode: Periode, geografiService: GeografiService, rådgiver: Rådgiver) =
+        fun ApplicationRequest.søkeparametere(gjeldendePeriode: Periode, geografiService: GeografiService, navAnsatt: NavAnsatt) =
             queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().zip(
                 queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent(),
                 Periode.tilValidertPeriode(kvartal = queryParameters[KVARTAL], årstall = queryParameters[ÅRSTALL], gjeldendePeriode),
@@ -88,7 +88,7 @@ data class Søkeparametere(
                     sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
                     sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
                     status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
-                    navIdenter = navIdenter(rådgiver = rådgiver),
+                    navIdenter = navIdenter(navAnsatt = navAnsatt),
                     bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
                     sektor = finnSektor(queryParameters[SEKTOR])
                 )
@@ -144,13 +144,11 @@ data class Søkeparametere(
             """.trimIndent()
         }
 
-        private fun ApplicationRequest.navIdenter(rådgiver: Rådgiver): Set<String> {
+        private fun ApplicationRequest.navIdenter(navAnsatt: NavAnsatt): Set<String> {
             return queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
-                when (rådgiver.rolle) {
-                    SUPERBRUKER -> eiere.toSet()
-                    SAKSBEHANDLER,
-                    LESE,
-                    -> eiere.filter { it == rådgiver.navIdent }.toSet()
+                when (navAnsatt) {
+                    is Superbruker -> eiere.toSet()
+                    else -> eiere.filter { it == navAnsatt.navIdent }.toSet()
                 }
             }
         }

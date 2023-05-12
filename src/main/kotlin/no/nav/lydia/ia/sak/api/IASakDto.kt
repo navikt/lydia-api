@@ -8,7 +8,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.NavAnsatt
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 
 @Serializable
 data class IASakDto(
@@ -25,9 +26,9 @@ data class IASakDto(
     val lukket: Boolean
 ) {
     companion object {
-        fun List<IASak>.toDto(rådgiver: Rådgiver) = this.map { it.toDto(rådgiver) }
+        fun List<IASak>.toDto(navAnsatt: NavAnsatt) = this.map { it.toDto(navAnsatt) }
 
-        fun IASak.toDto(rådgiver: Rådgiver) = IASakDto(
+        fun IASak.toDto(navAnsatt: NavAnsatt) = IASakDto(
             saksnummer = this.saksnummer,
             orgnr = this.orgnr,
             status = this.status,
@@ -37,7 +38,10 @@ data class IASakDto(
             endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
             eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId,
-            gyldigeNesteHendelser = this.gyldigeNesteHendelser(rådgiver),
+            gyldigeNesteHendelser = when(navAnsatt) {
+                is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt)
+                else -> listOf()
+            },
             lukket = this.erEtterFristenForLåsingAvSak() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL)
         )
     }

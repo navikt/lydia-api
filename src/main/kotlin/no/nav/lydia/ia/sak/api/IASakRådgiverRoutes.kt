@@ -1,33 +1,30 @@
 package no.nav.lydia.ia.sak.api
 
-import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.right
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.routing.post
+import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
-import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IATjeneste
+import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedLesetilgang
-import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somBrukerMedSaksbehandlertilgang
-import no.nav.lydia.tilgangskontroll.Rådgiver.Companion.somSuperbruker
-import no.nav.lydia.tilgangskontroll.objectId
+import no.nav.lydia.tilgangskontroll.*
 
-val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
-val SAK_HENDELSE_SUB_PATH = "hendelse"
-val SAMARBEIDSHISTORIKK_PATH = "historikk"
-val IA_SAK_LEVERANSE_PATH = "leveranse"
-val IA_TJENESTER_PATH = "tjenester"
-val IA_MODULER_PATH = "moduler"
+const val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
+const val SAK_HENDELSE_SUB_PATH = "hendelse"
+const val SAMARBEIDSHISTORIKK_PATH = "historikk"
+const val IA_SAK_LEVERANSE_PATH = "leveranse"
+const val IA_TJENESTER_PATH = "tjenester"
+const val IA_MODULER_PATH = "moduler"
 
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
@@ -37,11 +34,11 @@ fun Route.iaSakRådgiver(
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
-        somSuperbruker(call = call, adGrupper = adGrupper) { superbruker ->
+        call.somSuperbruker(adGrupper = adGrupper) { superbruker ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
                 iaSakService.opprettSakOgMerkSomVurdert(
                     orgnummer = orgnummer,
-                    rådgiver = superbruker,
+                    superbruker = superbruker,
                     navEnhet = navEnhet
                 ).map { it.toDto(superbruker) }
             }
@@ -53,18 +50,17 @@ fun Route.iaSakRådgiver(
                 auditType = AuditType.create,
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.orNull()
             )
-        }.also { iaSakEither ->
-            when (iaSakEither) {
-                is Either.Left -> call.respond(iaSakEither.value.httpStatusCode, iaSakEither.value.feilmelding)
-                is Either.Right -> call.respond(HttpStatusCode.Created, iaSakEither.value)
-            }
+        }.map {
+            call.respond(HttpStatusCode.Created, it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
-            iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }.toDto(rådgiver = rådgiver).right()
+        call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
+            iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }.toDto(navAnsatt = navAnsatt).right()
         }.also { either ->
             auditLog.auditloggEither(
                 call = call,
@@ -72,22 +68,19 @@ fun Route.iaSakRådgiver(
                 orgnummer = orgnummer,
                 auditType = AuditType.access,
             )
-        }.fold(
-            ifRight = { call.respond(it) },
-            ifLeft = {
-                call.respond(
-                    status = it.httpStatusCode,
-                    message = it.feilmelding
-                )
-            })
+        }.map {
+           call.respond(it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/aktiv") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { rådgiver ->
+        call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             iaSakService.hentSakerForOrgnummer(orgnummer)
                 .sortedByDescending { it.opprettetTidspunkt }
-                .toDto(rådgiver = rådgiver)
+                .toDto(navAnsatt = navAnsatt)
                 .firstOrNull { !it.lukket }
                 .right()
         }.also { either ->
@@ -97,24 +90,17 @@ fun Route.iaSakRådgiver(
                 orgnummer = orgnummer,
                 auditType = AuditType.access,
             )
-        }.fold(
-            ifRight = {
-                when(it) {
-                    null -> call.respond(HttpStatusCode.NoContent)
-                    else -> call.respond(it)
-                }
-            },
-            ifLeft = {
-                call.respond(
-                    status = it.httpStatusCode,
-                    message = it.feilmelding
-                )
-            })
+        }.map {
+            val response = it ?: HttpStatusCode.NoContent
+            call.respond(response)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode,message = it.feilmelding)
+        }
     }
 
     get("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) {
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
                 .groupBy { it.saksnummer }
                 .map { IASak.fraHendelser(it.value) }
@@ -140,7 +126,6 @@ fun Route.iaSakRådgiver(
                     )
                 }
             }
-
         }.map { iaSaker ->
             call.respond(iaSaker.tilSamarbeidshistorikk()).right()
         }.mapLeft {
@@ -150,9 +135,9 @@ fun Route.iaSakRådgiver(
 
     post("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH") {
         val hendelseDto = call.receive<IASakshendelseDto>()
-        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
-                iaSakService.behandleHendelse(hendelseDto, rådgiver = rådgiver, navEnhet = navEnhet).map { it.toDto(rådgiver) }
+                iaSakService.behandleHendelse(hendelseDto, saksbehandler = saksbehandler, navEnhet = navEnhet).map { it.toDto(saksbehandler) }
             }
         }.also {
             auditLog.auditloggEither(
@@ -162,18 +147,17 @@ fun Route.iaSakRådgiver(
                 auditType = AuditType.update,
                 saksnummer = hendelseDto.saksnummer
             )
-        }.also {
-            when (it) {
-                is Either.Left -> call.respond(it.value.httpStatusCode, it.value.feilmelding)
-                is Either.Right -> call.respond(HttpStatusCode.Created, it.value)
-            }
+        }.map {
+            call.respond(HttpStatusCode.Created, it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
 
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}") {
         val orgnr = call.parameters["orgnr"] ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { _ ->
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASakLeveranser(saksnummer = saksnummer)
         }.also {
             auditLog.auditloggEither(
@@ -195,8 +179,8 @@ fun Route.iaSakRådgiver(
         val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val leveranse = call.receive<IASakLeveranseOpprettelsesDto>()
 
-        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
-            iaSakService.opprettIASakLeveranse(leveranse = leveranse, rådgiver = rådgiver)
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaSakService.opprettIASakLeveranse(leveranse = leveranse, saksbehandler = saksbehandler)
         }.also {
             auditLog.auditloggEither(
                 call = call,
@@ -218,8 +202,8 @@ fun Route.iaSakRådgiver(
         val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
         val oppdateringsDto = call.receive<IASakLeveranseOppdateringsDto>()
 
-        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
-            iaSakService.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), oppdateringsDto = oppdateringsDto, rådgiver = rådgiver)
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaSakService.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), oppdateringsDto = oppdateringsDto, saksbehandler = saksbehandler)
         }.also {
             auditLog.auditloggEither(
                 call = call,
@@ -240,8 +224,8 @@ fun Route.iaSakRådgiver(
         val saksnummer = call.parameters["saksnummer"] ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
         val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@delete call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
 
-        somBrukerMedSaksbehandlertilgang(call = call, adGrupper = adGrupper) { rådgiver ->
-            iaSakService.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), rådgiver)
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaSakService.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), saksbehandler)
         }.also {
             auditLog.auditloggEither(
                 call = call,
@@ -258,7 +242,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH") {
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { _ ->
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentTjenester()
         }.map {
             call.respond(it.map(IATjeneste::tilDto).sorted())
@@ -268,7 +252,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH") {
-        somBrukerMedLesetilgang(call = call, adGrupper = adGrupper) { _ ->
+        call.somSaksbehandler(adGrupper = adGrupper) { _ ->
             iaSakService.hentModuler()
         }.map {
             call.respond(it.map { modul -> modul.tilDto() })
@@ -299,8 +283,8 @@ object IASakError {
     val `ugyldig iaSakLeveranseId` = Feil("Ugyldig leveranseId", HttpStatusCode.BadRequest)
     val `ugyldig modul` = Feil("Ugyldig modul", HttpStatusCode.BadRequest)
     val `ikke eier av sak` = Feil("Ikke eier av sak", HttpStatusCode.BadRequest)
-    val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` = Feil(
-        "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet", HttpStatusCode.NotImplemented
+    val `det finnes flere saker på dette orgnummeret som ikke anses som avsluttet` = Feil(
+        "Det finnes flere saker på dette orgnummeret som ikke anses som avsluttet", HttpStatusCode.NotImplemented
     )
     val `generell feil under uthenting` = Feil("Generell feil under uthenting", HttpStatusCode.InternalServerError)
 

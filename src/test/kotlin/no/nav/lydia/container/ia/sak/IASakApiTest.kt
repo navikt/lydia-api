@@ -50,7 +50,7 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
-import no.nav.lydia.tilgangskontroll.Rådgiver
+import no.nav.lydia.tilgangskontroll.Rolle
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -201,7 +201,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal kunne opprette ny sak dersom de andre sakene regnes som ikke aktuell`() {
+    fun `skal kunne opprette ny sak dersom de andre sakene anses som ikke aktuell`() {
         val orgnummer = nyttOrgnummer()
         var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -257,7 +257,7 @@ class IASakApiTest {
                         '${sak.orgnr}',
                         '${VIRKSOMHET_SKAL_BISTÅS.name}',
                         '${sak.eidAv}',
-                        '${Rådgiver.Rolle.SUPERBRUKER}',
+                        '${Rolle.SUPERBRUKER}',
                         '${sak.endretTidspunkt}'
                     ) 
                 """.trimIndent())
@@ -295,7 +295,7 @@ class IASakApiTest {
                         '${sak.orgnr}',
                         '${VIRKSOMHET_SKAL_BISTÅS.name}',
                         '${sak.eidAv}',
-                        '${Rådgiver.Rolle.SUPERBRUKER}',
+                        '${Rolle.SUPERBRUKER}',
                         '${sak.endretTidspunkt}'
                     ) 
                 """.trimIndent())
@@ -348,7 +348,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal kunne opprette ny sak dersom de andre sakene regnes som ikke fullført`() {
+    fun `skal kunne opprette ny sak dersom de andre sakene anses som ikke fullført`() {
         val orgnummer = nyttOrgnummer()
         var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)

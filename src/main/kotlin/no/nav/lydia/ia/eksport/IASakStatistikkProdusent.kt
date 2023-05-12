@@ -19,7 +19,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
-import no.nav.lydia.tilgangskontroll.Rådgiver.Rolle
+import no.nav.lydia.tilgangskontroll.Rolle
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -80,7 +80,7 @@ class IASakStatistikkProdusent(
                 opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
                 endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime()
                     ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-                avsluttetTidspunkt = if (this.status.regnesSomAvsluttet()) this.endretTidspunkt?.toKotlinLocalDateTime() else null,
+                avsluttetTidspunkt = if (this.status.ansesSomAvsluttet()) this.endretTidspunkt?.toKotlinLocalDateTime() else null,
                 antallPersoner = virksomhetsstatistikkSisteKvartal?.antallPersoner,
                 tapteDagsverk = virksomhetsstatistikkSisteKvartal?.tapteDagsverk,
                 muligeDagsverk = virksomhetsstatistikkSisteKvartal?.muligeDagsverk,
