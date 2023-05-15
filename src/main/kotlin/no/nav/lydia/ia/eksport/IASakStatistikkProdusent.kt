@@ -80,7 +80,7 @@ class IASakStatistikkProdusent(
                 opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
                 endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime()
                     ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-                avsluttetTidspunkt = if (this.status.ansesSomAvsluttet()) this.endretTidspunkt?.toKotlinLocalDateTime() else null,
+                avsluttetTidspunkt = if (this.status.regnesSomAvsluttet()) this.endretTidspunkt?.toKotlinLocalDateTime() else null,
                 antallPersoner = virksomhetsstatistikkSisteKvartal?.antallPersoner,
                 tapteDagsverk = virksomhetsstatistikkSisteKvartal?.tapteDagsverk,
                 muligeDagsverk = virksomhetsstatistikkSisteKvartal?.muligeDagsverk,

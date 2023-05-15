@@ -61,8 +61,8 @@ class IASakService(
     }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, IASak> {
-        if (!iaSakRepository.hentSaker(orgnummer).all{ it.status.ansesSomAvsluttet() }) {
-            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
+        if (!iaSakRepository.hentSaker(orgnummer).all{ it.status.regnesSomAvsluttet() }) {
+            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
         val sak = IASak.fraFørsteHendelse(
             IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, rådgiver = rådgiver, navEnhet = navEnhet).lagre(null)
@@ -80,9 +80,9 @@ class IASakService(
     }
 
     fun behandleHendelse(hendelseDto: IASakshendelseDto, rådgiver: Rådgiver, navEnhet: NavEnhet): Either<Feil, IASak> {
-        val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.ansesSomAvsluttet() }
+        val aktiveSaker = iaSakRepository.hentSaker(hendelseDto.orgnummer).filter { !it.status.regnesSomAvsluttet() }
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer)
-            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke anses som avsluttet`)
+            return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         val sistEndretAvHendelseId = aktiveSaker.firstOrNull()?.endretAvHendelseId
 
         val alleLeveranserPåEnSak = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = hendelseDto.saksnummer)
