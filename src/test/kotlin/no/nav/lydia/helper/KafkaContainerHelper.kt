@@ -50,6 +50,7 @@ class KafkaContainerHelper(
         const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
+        const val iaSakStatusTopic = "pia.ia-sak-status-v1"
         const val iaSakLeveranseTopic = "pia.ia-sak-leveranse-v1"
     }
 
@@ -89,6 +90,7 @@ class KafkaContainerHelper(
             brokers = kafkaContainer.bootstrapServers,
             iaSakTopic = iaSakTopic,
             iaSakStatistikkTopic = iaSakStatistikkTopic,
+            iaSakStatusTopic = iaSakStatusTopic,
             iaSakLeveranseTopic = iaSakLeveranseTopic,
             statistikkTopic = statistikkTopic,
             statistikkLandTopic = statistikkLandTopic,
@@ -113,6 +115,7 @@ class KafkaContainerHelper(
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
+        "IA_SAK_STATUS_TOPIC" to iaSakStatusTopic,
         "IA_SAK_LEVERANSE_TOPIC" to iaSakLeveranseTopic,
         "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic
     )

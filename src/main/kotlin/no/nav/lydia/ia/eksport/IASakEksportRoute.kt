@@ -8,11 +8,13 @@ import kotlinx.coroutines.launch
 
 val IA_SAK_EKSPORT_PATH = "internal/iasakeksport"
 val IA_SAK_STATISTIKK_EKSPORT_PATH = "$IA_SAK_EKSPORT_PATH/statistikk"
+val IA_SAK_STATUS_EKSPORT_PATH = "$IA_SAK_EKSPORT_PATH/status"
 val IA_SAK_LEVERANSE_EKSPORT_PATH = "$IA_SAK_EKSPORT_PATH/leveranse"
 
 fun Route.iaSakEksporterer(
     iaSakEksporterer: IASakEksporterer,
     iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
+    iaSakStatusExportør: IASakStatusEksportør,
     iaSakLeveranseEksportør: IASakLeveranseEksportør,
 ) {
     get(IA_SAK_EKSPORT_PATH) {
@@ -34,6 +36,19 @@ fun Route.iaSakEksporterer(
 
         launch {
             iaSakStatistikkEksporterer.eksporter()
+        }
+
+        call.respond(HttpStatusCode.OK)
+    }
+
+    get(IA_SAK_STATUS_EKSPORT_PATH) {
+        if (IASakStatistikkEksporterer.KJØRER_STATISTIKK_EKSPORT.get()) {
+            call.application.log.warn("Kjører allerede eksport av ia-sak-status.")
+            return@get call.respond(HttpStatusCode.Conflict)
+        }
+
+        launch {
+            iaSakStatusExportør.eksporter()
         }
 
         call.respond(HttpStatusCode.OK)

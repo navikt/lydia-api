@@ -141,6 +141,10 @@ fun Application.lydiaRestApi(
         sistePubliseringService = sistePubliseringService,
         topic = naisEnvironment.kafka.iaSakStatistikkTopic
     )
+    val iaSakStatusProdusent = IASakStatusProdusent(
+        produsent = kafkaProdusent,
+        topic = naisEnvironment.kafka.iaSakStatusTopic,
+    )
     val azureService = AzureService(
         tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
         security = naisEnvironment.security
@@ -231,6 +235,10 @@ fun Application.lydiaRestApi(
             iaSakLeveranseEksportør = IASakLeveranseEksportør(
                 iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
                 iaSakLeveranseProdusent = iaSakLeveranseProdusent,
+            ),
+            iaSakStatusExportør = IASakStatusEksportør(
+                iaSakRepository = IASakRepository(dataSource = dataSource),
+                iaSakStatusProdusent = iaSakStatusProdusent,
             )
         )
         virksomhetsImport(
@@ -266,6 +274,7 @@ fun Application.lydiaRestApi(
                 ).apply {
                     iaSakProdusent.also { leggTilIASakObserver(it) }
                     iaSakStatistikkProdusent.also { leggTilIASakObserver(it) }
+                    iaSakStatusProdusent.also { leggTilIASakObserver(it) }
                     iaSakLeveranseProdusent.also { leggTilIASakLeveranseObserver(it) }
                 },
                 adGrupper = naisEnvironment.security.adGrupper,

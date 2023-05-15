@@ -76,6 +76,7 @@ class Kafka(
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
     val iaSakTopic: String = getEnvVar("IA_SAK_TOPIC"),
     val iaSakStatistikkTopic: String = getEnvVar("IA_SAK_STATISTIKK_TOPIC"),
+    val iaSakStatusTopic: String = getEnvVar("IA_SAK_STATUS_TOPIC"),
     val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
     val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
