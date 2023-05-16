@@ -4,7 +4,7 @@ plugins {
     // Skru json-serialisering
     kotlin("plugin.serialization") version "1.8.21"
     // For å bygge
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
