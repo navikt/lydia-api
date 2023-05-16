@@ -87,7 +87,7 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.18.0"
+    val testcontainersVersion = "1.18.1"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
