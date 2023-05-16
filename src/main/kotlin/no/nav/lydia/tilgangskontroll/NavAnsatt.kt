@@ -12,68 +12,59 @@ import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Su
 sealed class NavAnsatt private constructor(
     val navIdent: String,
     val navn: String,
+    internal val ansattesGrupper: Set<String>,
 ) {
-    private constructor(uverifisertBruker: UverifisertBruker) : this(uverifisertBruker.navIdent, uverifisertBruker.navn)
-
     val rolle
         get() = when (this) {
             is Lesebruker -> Rolle.LESE
             is Saksbehandler -> Rolle.SAKSBEHANDLER
             is Superbruker -> Rolle.SUPERBRUKER
-            is UverifisertBruker -> null
         }
 
-    class UverifisertBruker (
-        navIdent: String,
-        navn: String,
-        internal val ansattesGrupper: Set<String>
-    ) : NavAnsatt(
-        navIdent = navIdent,
-        navn = navn,
-    ) {
+    class Lesebruker private constructor(navIdent: String, navn: String, ansattesGrupper: Set<String>) : NavAnsatt(navIdent, navn, ansattesGrupper) {
         companion object {
-            fun ApplicationCall.navAnsatt(): Either<Feil, UverifisertBruker> {
+            fun ApplicationCall.lesebruker(adGrupper: ADGrupper): Either<Feil, Lesebruker> {
                 val navIdent = this.innloggetNavIdent() ?: return TilgangskontrollFeil.FantIkkeNavIdent.left()
                 val navn = this.innloggetNavn() ?: return TilgangskontrollFeil.FantIkkeNavn.left()
                 val ansattesGrupper = this.azureADGrupper() ?: return TilgangskontrollFeil.FantIngenADGrupper.left()
 
-                return UverifisertBruker(
-                    navIdent = navIdent,
-                    navn = navn,
-                    ansattesGrupper = ansattesGrupper.toSet()
-                ).right()
-            }
-        }
-    }
-
-    class Lesebruker private constructor(navAnsatt: UverifisertBruker) : NavAnsatt(navAnsatt) {
-        companion object {
-            fun UverifisertBruker.lesebruker(adGrupper: ADGrupper) =
-                validert(
+                return validert(
                     setOf(
                         adGrupper.lesebrukerGruppe,
                         adGrupper.saksbehandlerGruppe,
                         adGrupper.superbrukerGruppe
                     ).any { ansattesGrupper.contains(it) }) {
-                    Lesebruker(this)
+                    Lesebruker(navIdent = navIdent,
+                        navn = navn,
+                        ansattesGrupper = ansattesGrupper.toSet())
                 }
+            }
         }
     }
 
-    sealed class NavAnsattMedSaksbehandlerRolle private constructor(navAnsatt: UverifisertBruker): NavAnsatt(navAnsatt) {
+    sealed class NavAnsattMedSaksbehandlerRolle private constructor(navIdent: String, navn: String, ansattesGrupper: Set<String>) : NavAnsatt(navIdent, navn, ansattesGrupper) {
         companion object {
-            fun UverifisertBruker.navAnsattMedSaksbehandlerRolle(adGrupper: ADGrupper) =
-                if(ansattesGrupper.contains(adGrupper.superbrukerGruppe))
+            fun ApplicationCall.navAnsattMedSaksbehandlerRolle(adGrupper: ADGrupper): Either<Feil, NavAnsattMedSaksbehandlerRolle> {
+                val navIdent = this.innloggetNavIdent() ?: return TilgangskontrollFeil.FantIkkeNavIdent.left()
+                val navn = this.innloggetNavn() ?: return TilgangskontrollFeil.FantIkkeNavn.left()
+                val ansattesGrupper = this.azureADGrupper() ?: return TilgangskontrollFeil.FantIngenADGrupper.left()
+
+                return if(ansattesGrupper.contains(adGrupper.superbrukerGruppe))
                     validert(true) {
-                        Superbruker(this)
+                        Superbruker(navIdent = navIdent,
+                            navn = navn,
+                            ansattesGrupper = ansattesGrupper.toSet())
                     }
                 else
                     validert(ansattesGrupper.contains(adGrupper.saksbehandlerGruppe)) {
-                        Saksbehandler(this)
+                        Saksbehandler(navIdent = navIdent,
+                            navn = navn,
+                            ansattesGrupper = ansattesGrupper.toSet())
                     }
+            }
         }
-        class Saksbehandler internal constructor(navAnsatt: UverifisertBruker) : NavAnsattMedSaksbehandlerRolle(navAnsatt)
-        class Superbruker internal constructor(navAnsatt: UverifisertBruker) : NavAnsattMedSaksbehandlerRolle(navAnsatt)
+        class Saksbehandler internal constructor(navIdent: String, navn: String, ansattesGrupper: Set<String>) : NavAnsattMedSaksbehandlerRolle(navIdent, navn, ansattesGrupper)
+        class Superbruker internal constructor(navIdent: String, navn: String, ansattesGrupper: Set<String>) : NavAnsattMedSaksbehandlerRolle(navIdent, navn, ansattesGrupper)
     }
 
 }

@@ -12,22 +12,17 @@ import no.nav.lydia.tilgangskontroll.NavAnsatt.Lesebruker.Companion.lesebruker
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Companion.navAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
-import no.nav.lydia.tilgangskontroll.NavAnsatt.UverifisertBruker.Companion.navAnsatt
 
 fun <T> ApplicationCall.somLesebruker(adGrupper: ADGrupper, block: (Lesebruker) -> Either<Feil, T>) =
-    this.navAnsatt()
-        .flatMap { it.lesebruker(adGrupper = adGrupper) }
+    this.lesebruker(adGrupper)
         .flatMap { block(it) }
 
 fun <T> ApplicationCall.somSaksbehandler(adGrupper: ADGrupper, block: (NavAnsattMedSaksbehandlerRolle) -> Either<Feil, T>) =
-    this.navAnsatt()
-        .flatMap { it.navAnsattMedSaksbehandlerRolle(adGrupper) }
+    this.navAnsattMedSaksbehandlerRolle(adGrupper)
         .flatMap { block(it) }
 
 fun ApplicationCall.superbruker(adGrupper: ADGrupper) =
-    navAnsatt().flatMap {
-        it.navAnsattMedSaksbehandlerRolle(adGrupper)
-    }.flatMap {
+    navAnsattMedSaksbehandlerRolle(adGrupper).flatMap {
         when(it) {
             is Superbruker -> it.right()
             else -> TilgangskontrollFeil.IkkeAutorisert.left()
@@ -38,15 +33,12 @@ fun <T> ApplicationCall.somSuperbruker(adGrupper: ADGrupper, block: (Superbruker
 
 
 
-fun <T> ApplicationCall.somHøyestTilgang(adGrupper: ADGrupper, block: (NavAnsatt) -> Either<Feil, T>) =
-    this.navAnsatt().flatMap { navAnsatt ->
-        val harSaksbehandlerRolle = navAnsatt.navAnsattMedSaksbehandlerRolle(adGrupper)
-        val erLesebruker = navAnsatt.lesebruker(adGrupper)
+fun <T> ApplicationCall.somHøyestTilgang(adGrupper: ADGrupper, block: (NavAnsatt) -> Either<Feil, T>): Either<Feil, T> {
+    val harSaksbehandlerRolle = navAnsattMedSaksbehandlerRolle(adGrupper)
+    val erLesebruker = lesebruker(adGrupper)
 
-        if (harSaksbehandlerRolle.isRight())
-            harSaksbehandlerRolle
-        else
-            erLesebruker
-    }.flatMap {
-        block(it)
-    }
+    return if (harSaksbehandlerRolle.isRight())
+        harSaksbehandlerRolle.flatMap{ block(it) }
+    else
+        erLesebruker.flatMap { block(it) }
+}

@@ -23,7 +23,7 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.NavAnsatt
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Companion.navAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
 import kotlin.test.Test
@@ -38,23 +38,23 @@ class IASakTest {
             lesebrukerGruppe = "789",
         )
 
-        val superbruker1 = NavAnsatt.UverifisertBruker(
+        val superbruker1 = Superbruker(
             navIdent = "A123456",
             navn = "Super Bruker 1",
             ansattesGrupper = setOf(adGrupper.superbrukerGruppe)
-        ).navAnsattMedSaksbehandlerRolle(adGrupper).orNull()!!
+        )
 
-        val superbruker2 = NavAnsatt.UverifisertBruker(
+        val superbruker2 = Superbruker(
             navIdent = "A999111",
             navn = "Super Bruker 2",
             ansattesGrupper = setOf(adGrupper.superbrukerGruppe)
-        ).navAnsattMedSaksbehandlerRolle(adGrupper).orNull()!!
+        )
 
-        val saksbehandler1 = NavAnsatt.UverifisertBruker(
+        val saksbehandler1 = Saksbehandler(
             navIdent = "B123456",
             navn = "Saks Behandler 1",
             ansattesGrupper = setOf(adGrupper.saksbehandlerGruppe)
-        ).navAnsattMedSaksbehandlerRolle(adGrupper).orNull()!!
+        )
 
         val navEnhet = NavEnhet(
             enhetsnummer = "2900",
@@ -64,7 +64,7 @@ class IASakTest {
 
     @Test
     fun `skal kunne merke at en virksomhet skal vurderes`() {
-        val sak = nyIASak(orgnummer = orgnummer, superbruker = superbruker1.superbruker())
+        val sak = nyIASak(orgnummer = orgnummer, superbruker = superbruker1)
 
         val vurderingsHendelse = nyHendelse(
             VIRKSOMHET_VURDERES,
@@ -82,7 +82,7 @@ class IASakTest {
 
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
-        val h1 = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1.superbruker(), navEnhet = navEnhet)
+        val h1 = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
         val h2 = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
@@ -104,7 +104,7 @@ class IASakTest {
 
     @Test
     fun `skal få en liste over gyldige begrunnelser for når en virksomhet ikke er aktuell`() {
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1.superbruker(), navEnhet = navEnhet)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
@@ -149,7 +149,7 @@ class IASakTest {
 
     @Test
     fun `en sak skal inneholde alle sine hendelser`(){
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1.superbruker(), navEnhet = navEnhet)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
@@ -170,7 +170,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå an å angre på en sak`(){
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1.superbruker(), navEnhet = navEnhet)
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -196,7 +196,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå ann å fullføre en sak`() {
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1.superbruker(), navEnhet = navEnhet)
+        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -268,5 +268,3 @@ class IASakTest {
     private fun nyIASak(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet = IASakTest.navEnhet): IASak =
         IASak.fraFørsteHendelse(nyFørsteHendelse(orgnummer, superbruker, navEnhet))
 }
-
-private fun NavAnsatt.NavAnsattMedSaksbehandlerRolle.superbruker() = this as Superbruker
