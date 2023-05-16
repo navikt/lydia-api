@@ -2,7 +2,7 @@ version: "3.0"
 
 services:
   authserver:
-    image: ghcr.io/navikt/mock-oauth2-server:0.5.5
+    image: ghcr.io/navikt/mock-oauth2-server:0.5.8
     environment:
       TZ: Europe/Oslo
       SERVER_PORT: 6969
