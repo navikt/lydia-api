@@ -99,7 +99,7 @@ dependencies {
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:0.5.8")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.30.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.31")
 
     constraints {
         implementation("net.minidev:json-smart:2.4.10") {
