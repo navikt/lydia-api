@@ -38,7 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.4.6")
+    implementation("ch.qos.logback:logback-classic:1.4.7")
     implementation("net.logstash.logback:logstash-logback-encoder:7.3")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
