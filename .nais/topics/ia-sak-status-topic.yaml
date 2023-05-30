@@ -19,5 +19,8 @@ spec:
       application: lydia-api
       access: readwrite   # read, write, readwrite
     - team: pia
+      application: fia-arbeidsgiver
+      access: read   # read, write, readwrite
+    - team: pia
       application: pia-devops
       access: read
