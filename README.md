@@ -7,6 +7,35 @@ Hvert kvartal publiserer NAV ny statistikk for sykefravær iht [publiseringkalen
 
 Lydia-api mottar de nye data via Kafka. Etter importen er ferdig må vi legge til et nytt script som oppdaterer tabellen `siste_publiseringsinfo`
 
+### Oppdater statistikk i dev-miljø
+For at ein skal kunne få treff på verksemder ved søk i Fia må dei ha sjukefråværsstatistikk for det som er siste gjeldande kvartal. I dev må vi oppdatere dette manuelt.
+
+Mål: Bytte ut årstal og kvartal for det eldste av kvartala i sykefravar_statistikk_virksomhet med det nyaste gjeldande kvartalet.
+Eksempel: I juni 2022 
+
+1. Kople deg til dev-gcp, namespace pia.
+2. Finn kvartalet som skal oppdaterast ved å hente ut all statistikk i sykefravar_statistikk_virksomhet:
+```sql
+select * from sykefravar_statistikk_virksomhet;
+```
+3. Tel kor mange rader som skal oppdaterast: 
+```sql
+select count(*) from sykefravar_statistikk_virksomhet 
+                where arstall = ['årstal for kvartalet du vil endre'] 
+                and kvartal = ['kvartal for kvartalet du vil endre'];
+```
+4. Gjer oppdateringa: 
+```sql
+update sykefravar_statistikk_virksomhet 
+    set arstall = 2023, kvartal = 1 
+    where arstall = ['årstal for nytt gjeldande kvartal'] 
+    and kvartal = ['kvartal for nytt gjeldande kvartal'];
+```
+5. Sjekk at outputten du får frå oppdateringa stemmer med talet du henta i punkt 3.
+6. Om du er småparanoid: gjer spørjing 3 ein gong til og sjå at svaret blir 0.
+7. No burde dev fungere igjen 🎉
+
+
 # Komme i gang med lydia-api
 
 Kjør ./run.sh -cif
