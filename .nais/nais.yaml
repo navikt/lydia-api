@@ -30,8 +30,8 @@ spec:
   accessPolicy:
     outbound:
       external:
-        - host: "https://data.brreg.no"
-        - host: "https://data.ssb.no"
+        - host: "data.brreg.no"
+        - host: "data.ssb.no"
     inbound:
       rules:
         - application: lydia-radgiver-frontend
