@@ -260,7 +260,7 @@ class KafkaContainerHelper(
     ) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
-                delay(timeMillis = 10L)
+                delay(timeMillis = 5L)
             } while (consumerSinOffset(consumerGroup = konsumentGruppeId, topic = recordMetadata.topic()) <= recordMetadata.offset())
         }
 
