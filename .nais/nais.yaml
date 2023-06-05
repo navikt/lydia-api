@@ -36,9 +36,9 @@ spec:
       rules:
         - application: lydia-radgiver-frontend
   ingresses:
-  {{#each ingresses as |url|}}
+    {{#each ingresses as |url|}}
     - {{url}}
-  {{/each}}
+    {{/each}}
   azure:
     application:
       enabled: true
