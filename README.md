@@ -116,8 +116,8 @@ Denne filen bruker samme testdata som integrasjonstestene våre, dvs kunstig dat
 I script filen `run.sh` kan du oppdatere lenken til filen du har generert og lastet opp (commit) på github
 
 1. Gå til repoet på GitHub (https://github.com/navikt/lydia-api).
-2. Finn dump-fila (Sannsynlegvis i mappa https://github.com/navikt/lydia-api/tree/main/scripts/db).
-3. Klikk på "Raw" og kopier lenka til sida du kjem til. Formatet skal vere "https://raw.githubusercontent.com/navikt/lydia-api/main/scripts/db/{data_source}_{timestamp}-dump.sql".
+2. Finn dump-fila, `/lydia-api/scripts/db/[filnavn_her].sql` (Sannsynleg lenke til mappa: https://github.com/navikt/lydia-api/tree/main/scripts/db).
+3. Klikk på "Raw" og kopier lenka til sida du kjem til. Formatet skal vere `https://raw.githubusercontent.com/navikt/lydia-api/main/scripts/db/{data_source}_{timestamp}-dump.sql`.
 4. Lim inn denne lenka i `run.sh`.
 5. Commit og push.
 6. Oppdater `run.sh` i lydia-rådgiver-frontend også med den same lenka.
