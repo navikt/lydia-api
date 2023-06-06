@@ -2,7 +2,7 @@ package no.nav.lydia.helper
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Gzip
-import com.google.common.net.HttpHeaders
+import io.ktor.http.*
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 
 class IntegrationsHelper {
@@ -30,7 +30,7 @@ class IntegrationsHelper {
                 WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
                     .willReturn(
                         WireMock.ok()
-                            .withHeader(HttpHeaders.CONTENT_TYPE, BrregDownloader.underEnhetApplicationType)
+                            .withHeader(HttpHeaders.ContentType, BrregDownloader.underEnhetApplicationType)
                             .withBody(Gzip.gzip(testData.brregMockData()))
                     )
             )

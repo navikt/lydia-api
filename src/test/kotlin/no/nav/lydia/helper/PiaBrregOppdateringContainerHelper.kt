@@ -2,7 +2,7 @@ package no.nav.lydia.helper
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.matching
-import com.google.common.net.HttpHeaders
+import io.ktor.http.*
 import kotlinx.datetime.Clock
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.sykefraversstatistikk.api.Periode
@@ -145,7 +145,7 @@ class PiaBrregOppdateringTestData {
                 WireMock.get(WireMock.urlPathEqualTo(brregOppdaterteUnderenheterMockPath))
                     .willReturn(
                         WireMock.ok()
-                            .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                            .withHeader(HttpHeaders.ContentType, "application/json")
                             .withBody(brregOppdatertUnderenhetJson())
                     )
             )
@@ -166,7 +166,7 @@ class PiaBrregOppdateringTestData {
                     )
                     .willReturn(
                         WireMock.ok()
-                            .withHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                            .withHeader(HttpHeaders.ContentType, "application/json")
                             .withBody(testVirksomheter.brregUnderenheterEmbeddedResponsJson())
                     )
             )
