@@ -108,15 +108,6 @@ dependencies {
     }
 }
 
-testing {
-    suites {
-        // Configure the built-in test suite
-        getting(JvmTestSuite::class) {
-            useKotlinTest()
-        }
-    }
-}
-
 application {
     // Define the main class for the application.
     mainClass.set("no.nav.lydia.AppKt")
