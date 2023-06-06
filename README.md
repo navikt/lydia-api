@@ -75,19 +75,20 @@ Det er denne man bruker som utvikler om man vil koble seg opp mot topicet lokalt
 6. Nå skal man klar for å koble seg opp mot topicet i miljøet man har valgt. Bruk de ulike kommandoene i `kafka-cli` for å gjøre det du har tenkt å gjøre. For å f.eks. konsumere meldinger på `ia-sak-v1`-topicet kan man kjøre kommandoen:
 `kafka-console-consumer --bootstrap-server $KAFKA_BROKERS --consumer.config $KAFKA_CONFIG/kafka.properties --topic "pia.ia-sak-v1"`
 
-## Oppdater testdata til lokalt kjøring etter endringer i db skjema
+## Oppdater testdata til lokal kjøring etter endringer i db skjema
 
-Når du kjører lydia-api lokalt bruker applikasjonen testdata fra et sql script i ``scripts/db/``
+Når du kjører lydia-api lokalt bruker applikasjonen testdata fra et sql script i ``scripts/db/``.
 
-Denne filen samme testdata som integrasjonstestene våre bruker, dvs kunstig data og fiktive organisasjonsnummere. Filen bør oppdateres manuelt etter hver endring i db struktur. 
+Denne filen bruker samme testdata som integrasjonstestene våre, dvs kunstig data og fiktive organisasjonsnummere. Filen bør oppdateres manuelt etter hver endring i db struktur, og i alle tilfeller etter publisering av ny sykefraværsstatistikk. (2023-06-06)
+
 
 ### Opprett en tilkobling til Postgresql db i testcontainer  
  1. Åpne integrasjsontest "Test for å hente datasource" i `SykefraversstatistikkApiTest` i IntelliJ
  2. Legg til en breakpoint etter utledding av `jdbcUrl`, f.eks på linjen med kode `jdbcUrl shouldStartWith "jdbc:postgresql"`
  3. Start testen med debug og kopier innhold av variabel `jdbcUrl` når testen stopper på breakpoint (_copy value_ med `Command + c`)
- 4. La testen stoppet på breakpoint da det blir mulig å koble til db i test-container. Du vil miste tilkobling hvis testen kjører ferdig. 
+ 4. La testen forbli stoppet på breakpoint da det blir mulig å koble til db i test-container. Du vil miste tilkobling hvis testen kjører ferdig. 
  5. I `Database` panelet i IntelliJ opprett en ny Data Source av type PostgreSQL (ved bruk av `+` knappen) 
- 6. Limm inn det du har kopiert i feltet `URL`. Da skal feltene `Host`, `Port` og `Database` fylles opp automatisk
+ 6. Lim inn det du har kopiert i feltet `URL`. Da skal feltene `Host`, `Port` og `Database` fylles opp automatisk
  7. Velg "User & Password" ved dropdown `Authentication`. Fyll ut med user `test` og password `test` 
  8. Gi Data Source navn "lydia_api_container_db_localhost" (ved `Name` på topp av modal vinduet)
  9. Sjekk at tilkobling til databasen fungerer ved å clicke på `Test connection` (på bunnen av samme vindu)
@@ -97,16 +98,26 @@ Denne filen samme testdata som integrasjonstestene våre bruker, dvs kunstig dat
 1. Fra database panel i IntelliJ, click på `>` for å vise frem database og skjema `public` til den Data Source som du har akkurat opprettet 👆
 2. Høyre click på skjemaet `public` 
 3. Velg `Export with 'pg_dump'` og sjekk/fyll ut følgende options: 
-   1. `Path til pgdump`: din path til programmet `pg_dump` (som regel: `/usr/local/bin/pg_dump`)
+   1. `Path til pgdump`: din path til programmet `pg_dump` (som regel: `/usr/local/bin/pg_dump`, om du får feilmeldinga "Path to executable not found" køyrer du `which pg_dump` i ein terminal og kopierer pathen du får derifrå.) 
    2. `Statements`: `insert`
    3. `Database`: `lydia-api-container-db`
    4. `Schemas`: `public`
    5. `Format`: `file`
    6. Enable følgende check-boxes: `Clean database` og `Add "If exists"`
-   7. `Out path`: path til `lydia-api/scripts/db/{data_source}-{timestamp}-dump.sql`
+   7. `Out path`: path til `lydia-api/scripts/db/{data_source}-{timestamp}-dump.sql` (Det kan hende du må bruke absolutt path her. Bruk mappe-ikonet til å navigere deg til db-mappa og legg på `{data_source}-{timestamp}-dump.sql` på slutten av stien.)
 4. Kjør med `Run`
 5. Den genererte filen skal nå være tilgjengelig i mappen `scripts/db/` 
+6. Gå til mappa med dump-filene, vel begge filene som ligg der no og samanlikn dei `cmd + d`. Om det er veldig store endringar tyder det på at vi kan ha gjort noko gale. Nokre nye tabellar er naturleg ved endringar på db-struktur. Alle datoar vil også vere nye sidan testane bruker now() til å fylle desse felta.
+7. No kan du stoppe testen som køyrer i bakgrunnen.
+8. Slett den gamle dump-fila.
+9. Commit den nye fila til GitHub. I ein liten periode no vil det ikkje vere mogleg å køyre opp Fia lokalt, så ikkje vent for lenge med å gjere neste steg (oppdater run.sh).
 
 ### Oppdater run.sh med ny sql fil
 I script filen `run.sh` kan du oppdatere lenken til filen du har generert og lastet opp (commit) på github
 
+1. Gå til repoet på GitHub (https://github.com/navikt/lydia-api)
+2. Finn dump-fila.
+3. Klikk på "Raw" og kopier lenka til sida du kjem til. Formatet skal vere "https://raw.githubusercontent.com/navikt/lydia-api/main/scripts/db/{data_source}_{timestamp}-dump.sql"
+4. Lim inn denne lenka i `run.sh`.
+5. Commit og push.
+6. Oppdater `run.sh` i lydia-rådgiver-frontend også med den same lenka.
