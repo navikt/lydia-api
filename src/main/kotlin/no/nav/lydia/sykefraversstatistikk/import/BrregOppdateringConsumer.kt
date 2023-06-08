@@ -96,7 +96,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("Consumer is shutting down...")
+                    logger.info("BrregOppdateringConsumer is shutting down...")
                 }
                 catch (e: Exception) {
                     logger.error("Exception is shutting down kafka listner for ${kafka.brregOppdateringTopic}", e)

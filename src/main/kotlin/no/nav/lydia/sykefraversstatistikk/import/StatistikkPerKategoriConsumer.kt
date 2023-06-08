@@ -70,7 +70,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("Consumer is shutting down...")
+                    logger.info("StatistikkPerKategoriConsumer is shutting down...")
                 } catch (e: Exception) {
                     logger.error("Exception is shutting down kafka listner i StatistikkPerKategoriConsumer", e)
                     throw e
