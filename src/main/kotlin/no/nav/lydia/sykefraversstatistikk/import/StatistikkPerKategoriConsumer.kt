@@ -46,14 +46,15 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
     fun run() {
         launch {
             kafkaConsumer.use { consumer ->
-                consumer.subscribe(
-                    listOf(
-                        kafka.statistikkLandTopic,
-                        kafka.statistikkVirksomhetTopic
-                    )
-                )
-                logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic} i StatistikkPerKategoriConsumer")
                 try {
+                    consumer.subscribe(
+                        listOf(
+                            kafka.statistikkLandTopic,
+                            kafka.statistikkVirksomhetTopic
+                        )
+                    )
+                    logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic} i StatistikkPerKategoriConsumer")
+
                     while (job.isActive) {
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))

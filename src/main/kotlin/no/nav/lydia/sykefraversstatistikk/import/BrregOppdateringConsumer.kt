@@ -50,9 +50,9 @@ object BrregOppdateringConsumer : CoroutineScope {
     fun run() {
         launch {
             kafkaConsumer.use { consumer ->
-                consumer.subscribe(listOf(kafka.brregOppdateringTopic))
-                logger.info("Kafka consumer subscribed to ${kafka.brregOppdateringTopic}")
                 try {
+                    consumer.subscribe(listOf(kafka.brregOppdateringTopic))
+                    logger.info("Kafka consumer subscribed to ${kafka.brregOppdateringTopic}")
                     while (job.isActive) {
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
@@ -97,8 +97,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                     }
                 } catch (e: WakeupException) {
                     logger.info("BrregOppdateringConsumer is shutting down...")
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     logger.error("Exception is shutting down kafka listner for ${kafka.brregOppdateringTopic}", e)
                     throw e
                 }
