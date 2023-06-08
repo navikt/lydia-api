@@ -9,6 +9,7 @@ import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
+import org.apache.kafka.common.errors.WakeupException
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -20,6 +21,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
     lateinit var job: Job
     lateinit var kafka: Kafka
     private lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
+    private lateinit var kafkaConsumer: KafkaConsumer<String, String>
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -33,16 +35,17 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
+        this.kafkaConsumer = KafkaConsumer(
+            StatistikkPerKategoriConsumer.kafka.consumerProperties(consumerGroupId = Kafka.statistikkPerKategoriGroupId),
+            StringDeserializer(),
+            StringDeserializer()
+        )
         logger.info("Created kafka consumer job i StatistikkPerKategoriConsumer")
     }
 
     fun run() {
         launch {
-            KafkaConsumer(
-                kafka.consumerProperties(consumerGroupId = Kafka.statistikkPerKategoriGroupId),
-                StringDeserializer(),
-                StringDeserializer()
-            ).use { consumer ->
+            kafkaConsumer.use { consumer ->
                 consumer.subscribe(
                     listOf(
                         kafka.statistikkLandTopic,
@@ -50,34 +53,36 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                     )
                 )
                 logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic} i StatistikkPerKategoriConsumer")
-
-                while (job.isActive) {
-                    try {
-                        val records = consumer.poll(Duration.ofSeconds(1))
-                        if (!records.isEmpty) {
-                            sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
-                                records.toSykefraversstatistikkPerKategoriImportDto()
-                            )
-                            logger.info("Lagret ${records.count()} meldinger om i StatistikkPerKategoriConsumer per kategori")
-                            consumer.commitSync()
+                try {
+                    while (job.isActive) {
+                        try {
+                            val records = consumer.poll(Duration.ofSeconds(1))
+                            if (!records.isEmpty) {
+                                sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
+                                    records.toSykefraversstatistikkPerKategoriImportDto()
+                                )
+                                logger.info("Lagret ${records.count()} meldinger om i StatistikkPerKategoriConsumer per kategori")
+                                consumer.commitSync()
+                            }
+                        } catch (e: RetriableException) {
+                            logger.warn("Had a retriable exception i StatistikkPerKategoriConsumer, retrying", e)
                         }
-                    } catch (e: RetriableException) {
-                        logger.warn("Had a retriable exception i StatistikkPerKategoriConsumer, retrying", e)
-                    } catch (e: Exception) {
-                        logger.error("Exception is shutting down kafka listner i StatistikkPerKategoriConsumer", e)
-                        job.cancel(CancellationException(e.message))
-                        throw e
+                        delay(kafka.consumerLoopDelay)
                     }
-                    delay(kafka.consumerLoopDelay)
+                } catch (e: WakeupException) {
+                    logger.info("Consumer is shutting down...")
+                } catch (e: Exception) {
+                    logger.error("Exception is shutting down kafka listner i StatistikkPerKategoriConsumer", e)
+                    throw e
                 }
-
             }
         }
     }
 
-    fun cancel() {
+    fun cancel() = runBlocking {
         logger.info("Stopping kafka consumer job i StatistikkPerKategoriConsumer")
-        job.cancel()
+        kafkaConsumer.wakeup()
+        job.cancelAndJoin()
         logger.info("Stopped kafka consumer job i StatistikkPerKategoriConsumer")
     }
 
