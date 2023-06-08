@@ -65,15 +65,16 @@ object StatistikkConsumer : CoroutineScope, Helsesjekk {
                             logger.info("Lagret ${records.count()} ${kafka.statistikkTopic} meldinger")
 
                             consumer.commitSync()
-                            delay(kafka.consumerLoopDelay)
                         } catch (e: RetriableException) {
                             logger.warn("Had a retriable exception for ${kafka.statistikkTopic} topic, retrying", e)
                         }
+                        delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
                     logger.info("Consumer is shutting down...")
                 } catch (e: Exception) {
                     logger.error("Exception is shutting down kafka listner for ${kafka.statistikkTopic}", e)
+                    throw e
                 }
             }
         }
