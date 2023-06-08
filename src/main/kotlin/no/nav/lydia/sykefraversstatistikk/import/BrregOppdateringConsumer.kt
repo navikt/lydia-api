@@ -1,11 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.import
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.datetime.Instant
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -17,6 +12,7 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
+import org.apache.kafka.common.errors.WakeupException
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -29,6 +25,7 @@ object BrregOppdateringConsumer : CoroutineScope {
     lateinit var kafka: Kafka
 
     lateinit var repository: VirksomhetRepository
+    private lateinit var kafkaConsumer: KafkaConsumer<String, String>
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -42,71 +39,77 @@ object BrregOppdateringConsumer : CoroutineScope {
         this.job = Job()
         this.kafka = kafka
         this.repository = repository
+        kafkaConsumer = KafkaConsumer(
+            BrregOppdateringConsumer.kafka.consumerProperties(consumerGroupId = Kafka.brregConsumerGroupId),
+            StringDeserializer(),
+            StringDeserializer()
+        )
         logger.info("Created kafka consumer job for ${kafka.brregOppdateringTopic}")
     }
 
     fun run() {
         launch {
-            KafkaConsumer(
-                kafka.consumerProperties(consumerGroupId = Kafka.brregConsumerGroupId),
-                StringDeserializer(),
-                StringDeserializer()
-            ).use { consumer ->
+            kafkaConsumer.use { consumer ->
                 consumer.subscribe(listOf(kafka.brregOppdateringTopic))
                 logger.info("Kafka consumer subscribed to ${kafka.brregOppdateringTopic}")
-
-                while (job.isActive) {
-                    try {
-                        val records = consumer.poll(Duration.ofSeconds(1))
-                        val antallMeldinger = records.count()
-                        if (antallMeldinger < 1) continue
-                        var antallIrrelevanteBedrifter = 0
-                        logger.info("Fant $antallMeldinger nye meldinger for ${kafka.brregOppdateringTopic}")
-                        records.forEach { record ->
-                            val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
-                            when (oppdateringVirksomhet.endringstype) {
-                                BrregVirksomhetEndringstype.Ukjent,
-                                BrregVirksomhetEndringstype.Endring,
-                                BrregVirksomhetEndringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
-                                    try {
-                                        val virksomhet = brregVirksomhet.tilVirksomhet(
-                                            status = oppdateringVirksomhet.endringstype.tilStatus(),
-                                            oppdateringsId = oppdateringVirksomhet.oppdateringsid
-                                        )
-                                        repository.insert(virksomhet)
-                                    } catch (e: UgyldigAdresseException) {
-                                        antallIrrelevanteBedrifter += 1
+                try {
+                    while (job.isActive) {
+                        try {
+                            val records = consumer.poll(Duration.ofSeconds(1))
+                            val antallMeldinger = records.count()
+                            if (antallMeldinger < 1) continue
+                            var antallIrrelevanteBedrifter = 0
+                            logger.info("Fant $antallMeldinger nye meldinger for ${kafka.brregOppdateringTopic}")
+                            records.forEach { record ->
+                                val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
+                                when (oppdateringVirksomhet.endringstype) {
+                                    BrregVirksomhetEndringstype.Ukjent,
+                                    BrregVirksomhetEndringstype.Endring,
+                                    BrregVirksomhetEndringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
+                                        try {
+                                            val virksomhet = brregVirksomhet.tilVirksomhet(
+                                                status = oppdateringVirksomhet.endringstype.tilStatus(),
+                                                oppdateringsId = oppdateringVirksomhet.oppdateringsid
+                                            )
+                                            repository.insert(virksomhet)
+                                        } catch (e: UgyldigAdresseException) {
+                                            antallIrrelevanteBedrifter += 1
+                                        }
                                     }
+
+                                    BrregVirksomhetEndringstype.Sletting,
+                                    BrregVirksomhetEndringstype.Fjernet -> repository.oppdaterStatus(
+                                        orgnr = oppdateringVirksomhet.orgnummer,
+                                        status = oppdateringVirksomhet.endringstype.tilStatus(),
+                                        oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid
+                                    )
                                 }
-                                BrregVirksomhetEndringstype.Sletting,
-                                BrregVirksomhetEndringstype.Fjernet -> repository.oppdaterStatus(
-                                    orgnr = oppdateringVirksomhet.orgnummer,
-                                    status = oppdateringVirksomhet.endringstype.tilStatus(),
-                                    oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid
-                                )
                             }
+                            logger.info("Lagret $antallMeldinger meldinger for ${kafka.brregOppdateringTopic}")
+                            if (antallIrrelevanteBedrifter > 0) {
+                                logger.info("Fant $antallIrrelevanteBedrifter irrelevante bedrifter.")
+                            }
+                            consumer.commitSync()
+                        } catch (e: RetriableException) {
+                            logger.warn("Had a retriable exception for ${kafka.brregOppdateringTopic}, retrying", e)
                         }
-                        logger.info("Lagret $antallMeldinger meldinger for ${kafka.brregOppdateringTopic}")
-                        if (antallIrrelevanteBedrifter > 0) {
-                            logger.info("Fant $antallIrrelevanteBedrifter irrelevante bedrifter.")
-                        }
-                        consumer.commitSync()
-                    } catch (e: RetriableException) {
-                        logger.warn("Had a retriable exception for ${kafka.brregOppdateringTopic}, retrying", e)
-                    } catch (e: Exception) {
-                        logger.error("Exception is shutting down kafka listner for ${kafka.brregOppdateringTopic}", e)
-                        job.cancel(CancellationException(e.message))
-                        throw e
+                        delay(kafka.consumerLoopDelay)
                     }
-                    delay(kafka.consumerLoopDelay)
+                } catch (e: WakeupException) {
+                    logger.info("Consumer is shutting down...")
+                }
+                catch (e: Exception) {
+                    logger.error("Exception is shutting down kafka listner for ${kafka.brregOppdateringTopic}", e)
+                    throw e
                 }
             }
         }
     }
 
-    fun cancel() {
+    fun cancel() = runBlocking {
         logger.info("Stopping kafka consumer job for ${kafka.brregOppdateringTopic}")
-        job.cancel()
+        kafkaConsumer.wakeup()
+        job.cancelAndJoin()
         logger.info("Stopped kafka consumer job for ${kafka.brregOppdateringTopic}")
     }
 
@@ -126,10 +129,11 @@ object BrregOppdateringConsumer : CoroutineScope {
         Sletting, // Enheten har blitt slettet fra Enhetsregisteret
         Fjernet; // Enheten har blitt fjernet fra Åpne Data. Eventuelle kopier skal også fjerne enheten.
 
-        fun tilStatus() = when(this) {
+        fun tilStatus() = when (this) {
             Ukjent,
             Endring,
-            Ny ->  VirksomhetStatus.AKTIV
+            Ny -> VirksomhetStatus.AKTIV
+
             Sletting -> VirksomhetStatus.SLETTET
             Fjernet -> VirksomhetStatus.FJERNET
         }
