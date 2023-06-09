@@ -231,6 +231,6 @@ class IASakService(
     ) =
         somEierAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) { sak ->
             if (sak.status == IAProsessStatus.VI_BISTÅR) block(sak)
-            else IASakError.`fikk ikke oppdatert sak`.left()
+            else IASakError.`fikk ikke oppdatert leveranse`.left()
         }
 }

@@ -277,6 +277,7 @@ object IASakError {
         "Prøvde å legge til hendelse på gammel sak", HttpStatusCode.Conflict
     )
     val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
+    val `fikk ikke oppdatert leveranse` = Feil("Fikk ikke oppdatert leveranse", HttpStatusCode.Conflict)
     val `fikk ikke slettet sak` = Feil("Fikk ikke slettet sak", HttpStatusCode.InternalServerError)
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
     val `ugyldig saksnummer` = Feil("Ugyldig saksnummer", HttpStatusCode.BadRequest)
