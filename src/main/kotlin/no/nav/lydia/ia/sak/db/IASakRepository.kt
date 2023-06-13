@@ -151,6 +151,17 @@ class IASakRepository(val dataSource: DataSource) {
             )
         }
 
+    fun oppdaterSistEndret(iaSak: IASak) {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    "UPDATE ia_sak SET endret = now() WHERE saksnummer = :saksnummer",
+                    mapOf("saksnummer" to iaSak.saksnummer)
+                ).asUpdate
+            )
+        }
+    }
+
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
             saksnummer: String,

@@ -25,6 +25,7 @@ import no.nav.lydia.appstatus.*
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.debug.debug
 import no.nav.lydia.ia.eksport.*
+import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
@@ -154,6 +155,8 @@ fun Application.lydiaRestApi(
         topic = naisEnvironment.kafka.iaSakLeveranseTopic,
         azureService = azureService
     )
+    val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
+
     install(ContentNegotiation) {
         json()
     }
@@ -273,10 +276,8 @@ fun Application.lydiaRestApi(
                     iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
                     årsakService = ÅrsakService(årsakRepository = årsakRepository)
                 ).apply {
-                    iaSakProdusent.also { leggTilIASakObserver(it) }
-                    iaSakStatistikkProdusent.also { leggTilIASakObserver(it) }
-                    iaSakStatusProdusent.also { leggTilIASakObserver(it) }
-                    iaSakLeveranseProdusent.also { leggTilIASakLeveranseObserver(it) }
+                    leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
+                    leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
                 },
                 adGrupper = naisEnvironment.security.adGrupper,
                 auditLog = auditLog,

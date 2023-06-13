@@ -11,10 +11,12 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
 import no.nav.lydia.helper.SakHelper.Companion.hentModuler
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
@@ -33,6 +35,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.tilgangskontroll.Rolle
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.Test
 
 class IASakLeveranseTest {
@@ -325,6 +328,28 @@ class IASakLeveranseTest {
         hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer).forExactlyOne {
             it.leveranser shouldContain levert
         }
+    }
+
+    @Test
+    fun `oppretting av leveranse skal oppdatere sak sin sist endret dato`() {
+        val antallDagerSiden = 10L
+        val sak = sakIViBistår().oppdaterHendelsesTidspunkter(antallDagerTilbake = antallDagerSiden)
+        sak.endretTidspunkt?.dayOfYear shouldBe LocalDateTime.now().minusDays(antallDagerSiden).dayOfYear
+
+        sak.opprettIASakLeveranse(modulId = 1)
+        val etterOpprettetLeveranseTidspunkt = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
+        etterOpprettetLeveranseTidspunkt?.dayOfYear shouldBe LocalDateTime.now().dayOfYear
+    }
+
+    @Test
+    fun `oppdatering av leveranse skal oppdatere sak sin sist endret dato`() {
+        val sak = sakIViBistår()
+        val leveranse = sak.opprettIASakLeveranse(modulId = 1)
+        sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
+
+        leveranse.oppdaterIASakLeveranse(sak.orgnr, LEVERT)
+        val etterOppdatertLeveranseTidspunkt = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
+        etterOppdatertLeveranseTidspunkt?.dayOfYear shouldBe LocalDateTime.now().dayOfYear
     }
 
     private fun sakIViBistår(

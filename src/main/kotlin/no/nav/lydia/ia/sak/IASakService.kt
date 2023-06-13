@@ -46,16 +46,20 @@ class IASakService(
         return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
     }
 
-    fun leggTilIASakObserver(observer: Observer<IASak>) {
-        iaSakObservers.add(observer)
+    fun leggTilIASakObservers(vararg observers: Observer<IASak>) {
+        observers.forEach { observer ->
+            iaSakObservers.add(observer)
+        }
     }
 
     private fun varsleIASakObservers(sak: IASak) {
         iaSakObservers.forEach { observer -> observer.receive(sak) }
     }
 
-    fun leggTilIASakLeveranseObserver(observer: Observer<IASakLeveranse>) {
-        iaSaksLeveranseObservers.add(observer)
+    fun leggTilIASakLeveranseObservers(vararg observers: Observer<IASakLeveranse>) {
+        observers.forEach { observer ->
+            iaSaksLeveranseObservers.add(observer)
+        }
     }
 
     private fun varsleIASakLeveranseObservers(leveranse: IASakLeveranse) {
