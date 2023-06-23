@@ -62,7 +62,6 @@ class KafkaContainerHelper(
     val kafkaContainer = KafkaContainer(
         DockerImageName.parse("confluentinc/cp-kafka:7.4.0")
     )
-        .withKraft()
         .withNetwork(network)
         .withNetworkAliases(kafkaNetworkAlias)
         .withLogConsumer(Slf4jLogConsumer(log).withPrefix(kafkaNetworkAlias).withSeparateOutputStreams())
