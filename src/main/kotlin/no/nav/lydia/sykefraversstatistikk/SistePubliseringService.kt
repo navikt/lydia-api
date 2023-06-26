@@ -56,8 +56,6 @@ class SistePubliseringService(
         val publiseringsinfo = sistePubliseringRepository.hentPubliseringsinfo()
         return publiseringsinfo.gjeldendePeriode.tilPeriode()
     }
-
-    fun hentAllPubliseringsinfo() = sistePubliseringRepository.hentAllPubliseringsinfo()
 }
 
 @Serializable

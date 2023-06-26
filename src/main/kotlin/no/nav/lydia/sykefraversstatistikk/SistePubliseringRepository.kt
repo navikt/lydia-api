@@ -23,19 +23,6 @@ class SistePubliseringRepository(val dataSource: DataSource) {
             ) ?: throw NoSuchElementException("Ingen publiseringsinfo funnet")
         }
 
-    fun hentAllPubliseringsinfo() =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT *
-                        FROM siste_publiseringsinfo
-                        ORDER BY gjeldende_arstall DESC, gjeldende_kvartal DESC
-                    """.trimMargin()
-                ).map(this::mapRowToPubliseringsinfo).asList
-            )
-        }
-
     private fun mapRowToPubliseringsinfo(row: Row): PubliseringsinfoDto {
         return row.tilPubliseringsinfo()
     }
