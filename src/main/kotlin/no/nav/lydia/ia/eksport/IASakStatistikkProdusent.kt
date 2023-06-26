@@ -33,18 +33,15 @@ class IASakStatistikkProdusent(
     private val sykefraværsstatistikkService: SykefraværsstatistikkService,
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val geografiService: GeografiService,
-    sistePubliseringService: SistePubliseringService,
+    private val sistePubliseringService: SistePubliseringService,
     private val topic: String,
 ) : Observer<IASak> {
-    private val allPubliseringsinfo = sistePubliseringService.hentAllPubliseringsinfo()
-    private val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-
-
     override fun receive(input: IASak) {
         sendTilKafka(input = input)
     }
 
     fun reEksporter(input: IASak) {
+        val allPubliseringsinfo = sistePubliseringService.hentAllPubliseringsinfo()
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)!!
         val periode = allPubliseringsinfo.filter { info ->
             hendelse.opprettetTidspunkt.toLocalDate().isAfter(info.sistePubliseringsdato.toJavaLocalDate()) &&
@@ -56,11 +53,13 @@ class IASakStatistikkProdusent(
         sendTilKafka(input, periode)
     }
 
-    private fun sendTilKafka(input: IASak, periode: Periode? = gjeldendePeriode) {
+    private fun sendTilKafka(input: IASak, periode: Periode? = null) {
+        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
         val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
         val virksomhetsstatistikkSiste4Kvartal =
-            if (periode == gjeldendePeriode)
+            if (periode == null || periode == gjeldendePeriode)
                 sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).getOrNull()
             else
                 null
