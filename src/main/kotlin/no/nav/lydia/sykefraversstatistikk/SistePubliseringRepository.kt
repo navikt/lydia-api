@@ -16,7 +16,7 @@ class SistePubliseringRepository(val dataSource: DataSource) {
                     """
                     SELECT *
                     FROM siste_publiseringsinfo
-                    ORDER BY gjeldende_arstall DESC, gjeldende_kvartal DESC
+                    ORDER BY opprettet DESC
                     LIMIT 1
                 """.trimMargin()
                 ).map(this::mapRowToPubliseringsinfo).asSingle
