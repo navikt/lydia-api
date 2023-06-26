@@ -51,7 +51,7 @@ class IASakStatistikkProdusent(
             hendelse.opprettetTidspunkt.toLocalDate().isBefore(info.nestePubliseringsdato.toJavaLocalDate())
         }.map {
             it.gjeldendePeriode.tilPeriode()
-        }.firstOrNull() ?: gjeldendePeriode
+        }.firstOrNull() ?: Periode.fraDato(hendelse.opprettetTidspunkt)
 
         sendTilKafka(input, periode)
     }
