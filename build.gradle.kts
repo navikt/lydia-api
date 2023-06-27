@@ -95,7 +95,7 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:0.5.8")
+    testImplementation("no.nav.security:mock-oauth2-server:0.5.9")
     implementation("com.nimbusds:nimbus-jose-jwt:9.31")
 
     constraints {
