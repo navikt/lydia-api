@@ -67,7 +67,7 @@ dependencies {
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
     // featuretoggling med unleash
-    implementation("io.getunleash:unleash-client-java:8.0.0")
+    implementation("io.getunleash:unleash-client-java:8.1.0")
 
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:0.0.5")
