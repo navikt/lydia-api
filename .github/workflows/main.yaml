@@ -7,7 +7,7 @@ env:
 jobs:
   "build":
     name: "build"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
       - uses: "gradle/wrapper-validation-action@v1"
@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: "Compile, run tests and build"
-        run: "./gradlew build --no-daemon"
+        run: "./gradlew build --no-daemon -i"
       - name: "Set up QEMU"
         uses: "docker/setup-qemu-action@v2"
         with:
