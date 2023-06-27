@@ -30,7 +30,7 @@ class IASakStatistikkEksporterer(
                 hendelser.mapIndexed { index, hendelse ->
                     IASak.fraHendelser(hendelser.subList(0, index + 1))
                 }.forEach { historiskIaSak ->
-                    iaSakStatistikkProdusent.receive(historiskIaSak)
+                    iaSakStatistikkProdusent.reEksporter(historiskIaSak)
                 }
             }
         } catch (e: Exception) {

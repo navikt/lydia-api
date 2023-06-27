@@ -6,7 +6,6 @@ import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
@@ -16,7 +15,6 @@ import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.tilgangskontroll.Rolle
@@ -73,13 +71,6 @@ open class IASakshendelse(
                 opprettetAvRolle = superbruker.rolle,
                 navEnhet = navEnhet,
             )
-    }
-
-    fun tilPeriode(gjeldendePeriode: Periode): Periode {
-        // TODO: Gjør denne enda mer presis.
-        if (Periode.fraDato(opprettetTidspunkt) > gjeldendePeriode)
-            return gjeldendePeriode
-        return Periode.fraDato(opprettetTidspunkt)
     }
 
     @Serializable

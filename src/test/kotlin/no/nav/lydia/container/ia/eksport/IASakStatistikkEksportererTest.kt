@@ -8,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -106,6 +105,8 @@ class IASakStatistikkEksportererTest {
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
                     it.hendelse shouldBe VIRKSOMHET_VURDERES
+                    // TODO: Det kan hende denne feiler pga ny utregning av periode i IASakStatistikkProdusent::reEksporter
+                    // -- quote CK: "også tar vi det problemet da"
                     Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()) shouldNotBe gjeldendePeriode
                     it.arstall shouldBe Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()).årstall
                     it.kvartal shouldBe Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()).kvartal

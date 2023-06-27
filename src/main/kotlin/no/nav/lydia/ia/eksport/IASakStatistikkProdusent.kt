@@ -2,6 +2,7 @@ package no.nav.lydia.ia.eksport
 
 import ia.felles.definisjoner.bransjer.Bransjer
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -15,6 +16,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
@@ -31,22 +33,40 @@ class IASakStatistikkProdusent(
     private val sykefraværsstatistikkService: SykefraværsstatistikkService,
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val geografiService: GeografiService,
-    private val sistePubliseringService: SistePubliseringService,
+    sistePubliseringService: SistePubliseringService,
     private val topic: String,
 ) : Observer<IASak> {
+    private val allPubliseringsinfo = sistePubliseringService.hentAllPubliseringsinfo()
+    private val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+
 
     override fun receive(input: IASak) {
+        sendTilKafka(input = input)
+    }
+
+    fun reEksporter(input: IASak) {
+        val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)!!
+        val periode = allPubliseringsinfo.filter { info ->
+            hendelse.opprettetTidspunkt.toLocalDate().isAfter(info.sistePubliseringsdato.toJavaLocalDate()) &&
+                    hendelse.opprettetTidspunkt.toLocalDate().isBefore(info.nestePubliseringsdato.toJavaLocalDate())
+        }.map {
+            it.gjeldendePeriode.tilPeriode()
+        }.firstOrNull() ?: Periode.fraDato(hendelse.opprettetTidspunkt)
+
+        sendTilKafka(input, periode)
+    }
+
+    private fun sendTilKafka(input: IASak, periode: Periode? = gjeldendePeriode) {
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
-        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        val periode = hendelse?.tilPeriode(gjeldendePeriode)
         val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
         val virksomhetsstatistikkSiste4Kvartal =
             if (periode == gjeldendePeriode)
-                sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).orNull()
+                sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).getOrNull()
             else
                 null
         val virksomhetsstatistikkSisteKvartal =
-            sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(input.orgnr, periode = periode).orNull()
+            sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(input.orgnr, periode = periode)
+                .getOrNull()
         val fylkesnummer = virksomhet?.let { geografiService.finnFylke(it.kommunenummer) }
         val kafkaMelding = input.tilKafkaMelding(
             hendelse,
