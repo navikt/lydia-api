@@ -1,7 +1,12 @@
 {
   "request" : {
-    "urlPathPattern" : "/v1.0/users?.*",
+    "urlPathPattern" : "/v1.0/users",
     "method" : "GET",
+    "queryParameters": {
+      "$search": {
+        "matches": ".*"
+      }
+    },
     "headers": {
       "Authorization": {
         "contains": "Bearer"
