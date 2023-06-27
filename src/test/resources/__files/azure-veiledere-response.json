@@ -1,5 +1,5 @@
 {
-  "@odata.nextLink": "http://host.testcontainers.internal:42421/v1.0/groups/12345/nesteside",
+  "@odata.nextLink": "AZURE_GRAPH_URL/groups/12345/nesteside",
   "value": [
     {
       "id": "1",

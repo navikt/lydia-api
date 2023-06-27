@@ -14,7 +14,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.AzureConfig
 import no.nav.lydia.Security
@@ -136,7 +135,7 @@ class AzureService(
                 .fold(
                     ifRight = {
                         alleRådgivere.addAll(it.value)
-                        url = it.nesteSide ?: ""
+                        url = it.nesteSide?.replace("AZURE_GRAPH_URL", azureConfig.graphDatabaseUrl) ?: ""
                     },
                     ifLeft = {
                         log.error(it.feilmelding)

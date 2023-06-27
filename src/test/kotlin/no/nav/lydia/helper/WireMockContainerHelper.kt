@@ -5,8 +5,9 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import org.testcontainers.Testcontainers
 
 class WireMockContainerHelper {
+    val azureMock: WireMockServer
     init {
-        WireMockServer(WireMockConfiguration.options().port(42421)).also {
+        azureMock = WireMockServer(WireMockConfiguration.options().dynamicPort()).also {
             if (!it.isRunning) {
                 it.start()
             }
@@ -17,6 +18,6 @@ class WireMockContainerHelper {
     }
 
     fun envVars() = mapOf(
-        "AZURE_GRAPH_URL" to "http://host.testcontainers.internal:42421/v1.0"
+        "AZURE_GRAPH_URL" to "http://host.testcontainers.internal:${azureMock.port()}/v1.0"
     )
 }
