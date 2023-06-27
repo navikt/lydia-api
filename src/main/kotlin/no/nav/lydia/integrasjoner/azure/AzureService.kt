@@ -67,6 +67,10 @@ class AzureService(
         val accessToken = tokenFetcher.clientCredentialsToken()
         val url = "${security.azureConfig.graphDatabaseUrl}/users/${objectId}?\$select=$azureAdProps"
         return hentFraAzure(url, accessToken)
+            // -- TODO Fjern dette
+            .onRight { r -> log.info(r) }
+            .onLeft { l -> log.info(l.feilmelding) }
+            // -- END TODO
             .map { json -> deserializer.decodeFromString<AzureAdBruker>(json) }
             .map { azureAdBruker ->
                 NavEnhet(
