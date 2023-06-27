@@ -120,7 +120,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
 
     private fun Sorteringsnøkkel.tilOrderBy(): String {
         return when (this) {
-            NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn"
+            NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn COLLATE \"nb_NO\""
             ANTALL_PERSONER -> "ORDER BY statistikk.antall_personer"
             SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk_siste4.prosent"
             TAPTE_DAGSVERK -> "ORDER BY statistikk_siste4.tapte_dagsverk"
