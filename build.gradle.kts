@@ -1,8 +1,8 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "1.8.21"
+    kotlin("jvm") version "1.8.22"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "1.8.21"
+    kotlin("plugin.serialization") version "1.8.22"
     // For å bygge
     id("com.github.johnrengelman.shadow") version "8.1.1"
 
