@@ -104,6 +104,31 @@ class VirksomhetApiTest {
     }
 
     @Test
+    fun `skal kunne søke etter på flere av ordene selv om det er ord imellom`() {
+        val virksomhet = nyVirksomhet(navn = "første noe i mellom siste")
+        VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
+
+        søkEtterVirksomheter(søkestreng = "første * siste") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 1
+            virksomheter.forAtLeastOne {
+                it.orgnr shouldBe virksomhet.orgnr
+            }
+        }
+        søkEtterVirksomheter(søkestreng = "første*siste") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 1
+            virksomheter.forAtLeastOne {
+                it.orgnr shouldBe virksomhet.orgnr
+            }
+        }
+        søkEtterVirksomheter(søkestreng = "første siste") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 0
+        }
+        søkEtterVirksomheter(søkestreng = "første*feil") { virksomheter ->
+            virksomheter shouldHaveAtLeastSize 0
+        }
+    }
+
+    @Test
     fun `virksomheter bør komme logisk sortert når man søker etter de`() {
         VirksomhetHelper.lastInnNyeVirksomheter(
             nyVirksomhet(navn = "Donald Duck Sinnemestring avd Andeby"),

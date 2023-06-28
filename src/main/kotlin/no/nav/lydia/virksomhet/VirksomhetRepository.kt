@@ -213,7 +213,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
     }
 
     fun finnVirksomheter(søkestreng: String): List<VirksomhetSøkeresultat> {
-        val søkEtterOrgnummer = søkestreng.matches("\\d{3,9}".toRegex())
+        val søkestrengSomStøtterStjerne = søkestreng.replace("*", "%")
+        val søkEtterOrgnummer = søkestrengSomStøtterStjerne.matches("\\d{3,9}".toRegex())
         return sessionOf(dataSource = dataSource).use { session ->
             val sql = """
                     SELECT 
@@ -229,8 +230,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     LIMIT 10
                     """.trimMargin()
             val params = mapOf(
-                "sokestreng" to søkestreng,
-                "ekspanderbarSokestreng" to "%$søkestreng%",
+                "sokestreng" to søkestrengSomStøtterStjerne,
+                "ekspanderbarSokestreng" to "%$søkestrengSomStøtterStjerne%",
             )
             session.run(
                 queryOf(
