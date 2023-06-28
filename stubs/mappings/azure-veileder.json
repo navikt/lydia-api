@@ -1,0 +1,23 @@
+{
+  "request" : {
+    "urlPathPattern" : "/v1.0/users/.*",
+    "method" : "GET",
+    "queryParameters": {
+      "$search": {
+        "absent": true
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "contains": "Bearer"
+      }
+    }
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName": "azure-veileder-response.json",
+    "headers" : {
+      "Content-Type" : "application/json"
+    }
+  }
+}
