@@ -612,7 +612,7 @@ class IASakApiTest {
             begrunnelser = listOf(MINDRE_VIRKSOMHET, FOR_LAVT_SYKEFRAVÆR)
         )
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer)
+        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(
@@ -640,6 +640,7 @@ class IASakApiTest {
             sakshistorikk.sakshendelser.forExactlyOne { sakSnapshot ->
                 sakSnapshot.begrunnelser shouldBe valgtÅrsak.begrunnelser.map { it.navn }
             }
+            sakshistorikk.sistEndret shouldBe sak.endretTidspunkt
         }
     }
 

@@ -34,7 +34,7 @@ class IASak private constructor(
     val opprettetTidspunkt: LocalDateTime,
     val opprettetAv: String,
     var eidAv: String?,
-    var endretTidspunkt: LocalDateTime?,
+    var endretTidspunkt: LocalDateTime?, // TODO sistEndret på IASak burde ikkje vere optional, den burde vere opprettetTidspunkt frå start.
     var endretAv: String?,
     var endretAvHendelseId: String,
     status: IAProsessStatus,
