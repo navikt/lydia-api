@@ -88,7 +88,7 @@ class IASakStatistikkEksportererTest {
             gjeldendePeriode.forrigePeriode().forrigePeriode(),
             gjeldendePeriode.forrigePeriode().forrigePeriode().forrigePeriode(),
         )).orgnr)
-        sak.oppdaterHendelsesTidspunkter(180)
+        sak.oppdaterHendelsesTidspunkter(190)
         sak.nyHendelse(TA_EIERSKAP_I_SAK)
 
         lydiaApiContainer.performGet(IA_SAK_STATISTIKK_EKSPORT_PATH).tilSingelRespons<Unit>()

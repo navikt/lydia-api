@@ -1,7 +1,6 @@
 package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
-import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -20,7 +19,6 @@ import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRe
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakRequest
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
@@ -78,7 +76,7 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelseRespons(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
                 type = NAV_IGANGSETTER_IKKE_TILTAK,
-                begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                begrunnelser = listOf(VIRKSOMHETEN_HAR_IKKE_RESPONDERT)
             ).toJson()).statuskode() shouldBe 400
     }
 
@@ -113,6 +111,7 @@ class IASakApiTest {
 
     @Test
     fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
+        // TODO: Trenger denne testen så mange hendelser?
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
         val kanIkkeSletteEtterHendelser = IASakshendelseType.values()
             .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
@@ -122,7 +121,7 @@ class IASakApiTest {
                 sak.nyHendelse(
                     it, payload = ValgtÅrsak(
                         type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                        begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
                     ).toJson()
                 )
             } else {
@@ -221,7 +220,7 @@ class IASakApiTest {
         sak = sak.nyHendelse(
             hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
             ).toJson()
         )
         sak.status shouldBe IKKE_AKTUELL
@@ -577,7 +576,7 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = orgnummer).also { sak ->
             val valgtÅrsak = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
+                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID, VIRKSOMHETEN_HAR_IKKE_RESPONDERT)
             )
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -609,7 +608,7 @@ class IASakApiTest {
     fun `skal få samarbeidshistorikken til en virksomhet`() {
         val valgtÅrsak = ValgtÅrsak(
             type = NAV_IGANGSETTER_IKKE_TILTAK,
-            begrunnelser = listOf(MINDRE_VIRKSOMHET, FOR_LAVT_SYKEFRAVÆR)
+            begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK, IKKE_DIALOG_MELLOM_PARTENE)
         )
         val orgnummer = nyttOrgnummer()
         val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
@@ -700,20 +699,16 @@ class IASakApiTest {
                             it.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
                             it.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
                             it.begrunnelser.somBegrunnelseType().shouldContainAll(
-                                MANGLER_PARTSGRUPPE,
-                                IKKE_TILFREDSSTILLENDE_SAMARBEID,
-                                FOR_LAVT_SYKEFRAVÆR,
-                                IKKE_TID,
-                                MINDRE_VIRKSOMHET
+                                IKKE_DIALOG_MELLOM_PARTENE,
+                                FOR_FÅ_TAPTE_DAGSVERK,
                             )
                         }
                         it.gyldigeÅrsaker.shouldForAtLeastOne {
                             it.type shouldBe VIRKSOMHETEN_TAKKET_NEI
                             it.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
                             it.begrunnelser.somBegrunnelseType().shouldContainAll(
-                                HAR_IKKE_KAPASITET,
-                                GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
-                                GJENNOMFØRER_TILTAK_MED_BHT
+                                VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                                VIRKSOMHETEN_HAR_IKKE_RESPONDERT,
                             )
                         }
                     }.shouldForAtLeastOne {
@@ -724,82 +719,8 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal få korrekt json for listen med mulige årsaker og begrunnelser`() {
-        val sakForVirksomhet = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-
-        val sakJson = nyHendelsePåSakRequest(
-            sak = sakForVirksomhet,
-            hendelsestype = TA_EIERSKAP_I_SAK,
-            payload = null,
-            token = mockOAuth2Server.saksbehandler1.token,
-        ).responseString().third.get()
-
-        sakJson.shouldEqualSpecifiedJson(
-            """
-              {
-                  "gyldigeNesteHendelser": [
-                    {
-                      "saksHendelsestype": "VIRKSOMHET_SKAL_KONTAKTES",
-                      "gyldigeÅrsaker": []
-                    },
-                    {
-                      "saksHendelsestype": "VIRKSOMHET_ER_IKKE_AKTUELL",
-                      "gyldigeÅrsaker": [
-                        {
-                          "type": "NAV_IGANGSETTER_IKKE_TILTAK",
-                          "navn": "${NAV_IGANGSETTER_IKKE_TILTAK.navn}",
-                          "begrunnelser": [
-                            {
-                              "type": "MANGLER_PARTSGRUPPE",
-                              "navn": "${MANGLER_PARTSGRUPPE.navn}"
-                            },
-                            {
-                              "type": "IKKE_TILFREDSSTILLENDE_SAMARBEID",
-                              "navn": "${IKKE_TILFREDSSTILLENDE_SAMARBEID.navn}"
-                            },
-                            {
-                              "type": "FOR_LAVT_SYKEFRAVÆR",
-                              "navn": "${FOR_LAVT_SYKEFRAVÆR.navn}"
-                            },
-                            {
-                              "type": "IKKE_TID",
-                              "navn": "${IKKE_TID.navn}"
-                            },
-                            {
-                              "type": "MINDRE_VIRKSOMHET",
-                              "navn": "${MINDRE_VIRKSOMHET.navn}"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "VIRKSOMHETEN_TAKKET_NEI",
-                          "navn": "${VIRKSOMHETEN_TAKKET_NEI.navn}",
-                          "begrunnelser": [
-                            {
-                              "type": "HAR_IKKE_KAPASITET",
-                              "navn": "${HAR_IKKE_KAPASITET.navn}"
-                            },
-                            {
-                              "type": "GJENNOMFØRER_TILTAK_PÅ_EGENHÅND",
-                              "navn": "${GJENNOMFØRER_TILTAK_PÅ_EGENHÅND.navn}"
-                            },
-                            {
-                              "type": "GJENNOMFØRER_TILTAK_MED_BHT",
-                              "navn": "${GJENNOMFØRER_TILTAK_MED_BHT.navn}"
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-              }
-            """.trimIndent()
-        )
-    }
-
-    @Test
-    fun `skal kunne se valgte begrunnelser for når en virksomhet ikke er aktuell`() {
-        val begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
+    fun `skal kunne se valgte begrunnelser i samarbeidshistorikken for når en virksomhet ikke er aktuell`() {
+        val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer).also { sak ->
             val sakIkkeAktuell = sak
@@ -902,7 +823,7 @@ class IASakApiTest {
             .nyHendelse(
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
                     type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(HAR_IKKE_KAPASITET)
+                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
                 ).toJson()
             )
             .nyHendelse(TILBAKE)
@@ -1040,7 +961,7 @@ class IASakApiTest {
     @Test
     fun `skal kunne sette en sak til ikke aktuell fra 'Vi bistår'`() {
         val orgnummer = nyttOrgnummer()
-        val begrunnelser = listOf(HAR_IKKE_KAPASITET)
+        val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
 
 
         val sakIStatusViBistår = opprettSakForVirksomhet(orgnummer = orgnummer)
@@ -1073,7 +994,7 @@ class IASakApiTest {
     @Test
     fun `skal kunne sette en sak til ikke aktuell fra 'Kartlegges'`() {
         val orgnummer = nyttOrgnummer()
-        val begrunnelser = listOf(HAR_IKKE_KAPASITET)
+        val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
 
 
         val sakIStatusKartlegges = opprettSakForVirksomhet(orgnummer = orgnummer)
@@ -1145,7 +1066,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `nye versjoner av tilstandsmaskinen skal ikke gi andre statuser for gammel evntrekke`() {
+    fun `nye versjoner av tilstandsmaskinen skal ikke gi andre statuser for gammel eventrekke`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -1158,7 +1079,7 @@ class IASakApiTest {
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                 payload = ValgtÅrsak(
                     type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(GJENNOMFØRER_TILTAK_MED_BHT, HAR_IKKE_KAPASITET)
+                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
                 ).toJson())
             .nyHendelse(TILBAKE)
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)

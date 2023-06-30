@@ -125,20 +125,16 @@ class IASakTest {
                     gyldigÅrsak.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
                     gyldigÅrsak.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
                     gyldigÅrsak.begrunnelser.somBegrunnelseType().shouldContainAll(
-                        MANGLER_PARTSGRUPPE,
-                        IKKE_TILFREDSSTILLENDE_SAMARBEID,
-                        FOR_LAVT_SYKEFRAVÆR,
-                        IKKE_TID,
-                        MINDRE_VIRKSOMHET
+                        IKKE_DIALOG_MELLOM_PARTENE,
+                        FOR_FÅ_TAPTE_DAGSVERK,
                     )
                 }
                 gyldigHendelse.gyldigeÅrsaker.shouldForAtLeastOne { gyldigÅrsak ->
                     gyldigÅrsak.type shouldBe VIRKSOMHETEN_TAKKET_NEI
                     gyldigÅrsak.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
                     gyldigÅrsak.begrunnelser.somBegrunnelseType().shouldContainAll(
-                        HAR_IKKE_KAPASITET,
-                        GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
-                        GJENNOMFØRER_TILTAK_MED_BHT
+                        VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                        VIRKSOMHETEN_HAR_IKKE_RESPONDERT
                     )
                 }
             }.shouldForAtLeastOne {
@@ -250,7 +246,7 @@ class IASakTest {
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
-                valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(IKKE_TID)),
+                valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK)),
                 navEnhet = navEnhet
             )
             else -> IASakshendelse(

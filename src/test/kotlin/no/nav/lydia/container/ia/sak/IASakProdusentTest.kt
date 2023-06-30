@@ -65,8 +65,7 @@ class IASakProdusentTest {
                     payload = ValgtÅrsak(
                         type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = listOf(
-                            BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT,
-                            BegrunnelseType.HAR_IKKE_KAPASITET
+                            BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
                         )
                     ).toJson()
                 )

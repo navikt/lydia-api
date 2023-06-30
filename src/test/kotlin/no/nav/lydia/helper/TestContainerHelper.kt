@@ -34,7 +34,7 @@ import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.HAR_IKKE_KAPASITET
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.brreg.BrregDownloader
@@ -417,7 +417,7 @@ class SakHelper {
             token = token,
             payload = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = listOf(HAR_IKKE_KAPASITET)).toJson()
+                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)).toJson()
         )
 
         fun IASakDto.oppdaterHendelsesTidspunkter(

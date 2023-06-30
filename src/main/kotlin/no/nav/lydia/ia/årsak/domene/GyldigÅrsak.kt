@@ -10,19 +10,15 @@ class GyldigÅrsak(val type: ÅrsakType, val navn: String = type.navn, val begru
             GyldigÅrsak(
                 type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
                 begrunnelser = listOf(
-                    BegrunnelseType.MANGLER_PARTSGRUPPE,
-                    BegrunnelseType.IKKE_TILFREDSSTILLENDE_SAMARBEID,
-                    BegrunnelseType.FOR_LAVT_SYKEFRAVÆR,
-                    BegrunnelseType.IKKE_TID,
-                    BegrunnelseType.MINDRE_VIRKSOMHET
+                    BegrunnelseType.IKKE_DIALOG_MELLOM_PARTENE,
+                    BegrunnelseType.FOR_FÅ_TAPTE_DAGSVERK,
                 ).somGyldigeBegrunnelser()
             ),
             GyldigÅrsak(
                 type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                 begrunnelser = listOf(
-                    BegrunnelseType.HAR_IKKE_KAPASITET,
-                    BegrunnelseType.GJENNOMFØRER_TILTAK_PÅ_EGENHÅND,
-                    BegrunnelseType.GJENNOMFØRER_TILTAK_MED_BHT
+                    BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                    BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_RESPONDERT,
                 ).somGyldigeBegrunnelser()
             )
         )
@@ -48,13 +44,20 @@ enum class ÅrsakType(val navn: String) {
 }
 
 enum class BegrunnelseType(val navn: String) {
+    IKKE_DIALOG_MELLOM_PARTENE(navn = "Det er ikke dokumentert dialog mellom partene på arbeidsplassen"),
+    FOR_FÅ_TAPTE_DAGSVERK(navn = "Virksomheten har for få tapte dagsverk"),
+
+    VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID(navn = "Virksomheten ønsker ikke forpliktende samarbeid med NAV om IA"),
+    VIRKSOMHETEN_HAR_IKKE_RESPONDERT(navn = "Virksomheten har ikke respondert på forespørsel om forpliktende samarbeid"),
+
+    // -- UTDATERT. Ikke bruk. Ikke slett heller, da knekker samarbeidshistorikken.
     MANGLER_PARTSGRUPPE(navn = "Virksomheten mangler partsgruppe"),
     IKKE_TILFREDSSTILLENDE_SAMARBEID(navn = "Virksomheten har ikke tilfredsstillende samarbeid med partsgruppen"),
     FOR_LAVT_SYKEFRAVÆR(navn = "Virksomheten er vurdert til å ha for lavt sykefravær"),
     MINDRE_VIRKSOMHET(navn = "Virksomheten har et høyt sykefravær, men er en mindre virksomhet (færre ansatte)"),
     IKKE_TID(navn = "NAV vurderer at virksomheten ikke ønsker å sette av tilstrekkelig tid til samarbeidet"),
-
     HAR_IKKE_KAPASITET(navn = "Virksomheten har ikke tid eller kapasitet nå til å samarbeide med NAV"),
     GJENNOMFØRER_TILTAK_PÅ_EGENHÅND(navn = "Virksomheten vil gjøre tiltak på egen hånd"),
-    GJENNOMFØRER_TILTAK_MED_BHT(navn = "Virksomheten vil gjennomføre tiltak sammen med BHT")
+    GJENNOMFØRER_TILTAK_MED_BHT(navn = "Virksomheten vil gjennomføre tiltak sammen med BHT");
+    // --
 }
