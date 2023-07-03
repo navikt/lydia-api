@@ -13,7 +13,6 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
-import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
@@ -48,7 +47,7 @@ fun Route.iaSakRådgiver(
                 either = iaSakEither,
                 orgnummer = orgnummer,
                 auditType = AuditType.create,
-                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.orNull()
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull()
             )
         }.map {
             call.respond(HttpStatusCode.Created, it)
@@ -101,9 +100,11 @@ fun Route.iaSakRådgiver(
     get("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
-                .groupBy { it.saksnummer }
-                .map { IASak.fraHendelser(it.value) }
+            val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
+            iaSakService.hentSakerForOrgnummer(orgnummer = orgnummer)
+                .map { sak ->
+                    sak.addHendelser(hendelser.filter { hendelse ->  hendelse.saksnummer == sak.saksnummer})
+                }
                 .sortedByDescending { it.opprettetTidspunkt }
                 .right()
         }. also { either ->

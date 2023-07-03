@@ -134,6 +134,11 @@ class IASak private constructor(
 
     fun erEtterFristenForLåsingAvSak() = !erFørFristenForLåsingAvSak()
 
+    fun addHendelser(hendelser: List<IASakshendelse>): IASak {
+        sakshendelser.addAll(hendelser)
+        return this
+    }
+
     private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
 
         abstract fun behandleHendelse(hendelse: IASakshendelse): Either<TilstandsmaskinFeil, ProsessTilstand>
