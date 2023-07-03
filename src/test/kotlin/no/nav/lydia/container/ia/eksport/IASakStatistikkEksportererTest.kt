@@ -5,9 +5,7 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -24,11 +22,11 @@ import no.nav.lydia.ia.eksport.IA_SAK_STATISTIKK_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
-import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.tilgangskontroll.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
 import org.junit.Before
+import java.time.LocalDate
 import kotlin.test.Test
 
 class IASakStatistikkEksportererTest {
@@ -82,13 +80,15 @@ class IASakStatistikkEksportererTest {
     @Test
     fun `sjekk at vi får riktig sykefraværsstatistikk basert på når hendelsen skjedde`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
+        val forrigePeriode = gjeldendePeriode.forrigePeriode()
         val sak = opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = listOf(
             gjeldendePeriode,
-            gjeldendePeriode.forrigePeriode(),
-            gjeldendePeriode.forrigePeriode().forrigePeriode(),
-            gjeldendePeriode.forrigePeriode().forrigePeriode().forrigePeriode(),
+            forrigePeriode,
+            forrigePeriode.forrigePeriode(),
         )).orgnr)
-        sak.oppdaterHendelsesTidspunkter(190)
+        val datoSentIGjeldenePeriode = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal*4)-1, 28)
+        val dagerSomSkalTrekkesFra = LocalDate.now().toEpochDay() - datoSentIGjeldenePeriode.toEpochDay()
+        sak.oppdaterHendelsesTidspunkter(dagerSomSkalTrekkesFra)
         sak.nyHendelse(TA_EIERSKAP_I_SAK)
 
         lydiaApiContainer.performGet(IA_SAK_STATISTIKK_EKSPORT_PATH).tilSingelRespons<Unit>()
@@ -105,11 +105,8 @@ class IASakStatistikkEksportererTest {
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
                     it.hendelse shouldBe VIRKSOMHET_VURDERES
-                    // TODO: Det kan hende denne feiler pga ny utregning av periode i IASakStatistikkProdusent::reEksporter
-                    // -- quote CK: "også tar vi det problemet da"
-                    Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()) shouldNotBe gjeldendePeriode
-                    it.arstall shouldBe Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()).årstall
-                    it.kvartal shouldBe Periode.fraDato(dato = it.endretTidspunkt.toJavaLocalDateTime()).kvartal
+                    it.arstall shouldBe forrigePeriode.årstall
+                    it.kvartal shouldBe forrigePeriode.kvartal
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe null
