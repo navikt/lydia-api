@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class IASakRepository(val dataSource: DataSource) {
@@ -151,12 +152,12 @@ class IASakRepository(val dataSource: DataSource) {
             )
         }
 
-    fun oppdaterSistEndret(iaSak: IASak) {
+    fun oppdaterSistEndret(iaSak: IASak, sistEndret: LocalDateTime = LocalDateTime.now()) {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
-                    "UPDATE ia_sak SET endret = now() WHERE saksnummer = :saksnummer",
-                    mapOf("saksnummer" to iaSak.saksnummer)
+                    "UPDATE ia_sak SET endret = :sistEndret WHERE saksnummer = :saksnummer",
+                    mapOf("sistEndret" to sistEndret, "saksnummer" to iaSak.saksnummer)
                 ).asUpdate
             )
         }

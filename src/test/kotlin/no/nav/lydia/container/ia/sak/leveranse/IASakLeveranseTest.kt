@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
@@ -21,11 +22,15 @@ import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
+import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
+import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.eksport.LEVERANSE_OPPDATERE_SIST_ENDRET
 import no.nav.lydia.ia.sak.api.IATjenesteDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -51,8 +56,8 @@ class IASakLeveranseTest {
         }
 
         hentIASakLeveranser(
-            orgnr = sakIViBistår.orgnr,
-            saksnummer = sakIViBistår.saksnummer
+                orgnr = sakIViBistår.orgnr,
+                saksnummer = sakIViBistår.saksnummer
         ).map { it.iaTjeneste.navn } shouldBe hentIATjenesterFraDatabase().sorted()
     }
 
@@ -60,17 +65,17 @@ class IASakLeveranseTest {
     fun `skal få ut fullførtdato for leveranser`() {
         val sakIViBistårStatus = sakIViBistår()
         val leveranse = sakIViBistårStatus.opprettIASakLeveranse(
-            frist = LocalDate.now().toKotlinLocalDate(),
-            modulId = 1
+                frist = LocalDate.now().toKotlinLocalDate(),
+                modulId = 1
         )
         leveranse.oppdaterIASakLeveranse(
-            orgnr = sakIViBistårStatus.orgnr,
-            status = LEVERT
+                orgnr = sakIViBistårStatus.orgnr,
+                status = LEVERT
         )
 
         hentIASakLeveranser(
-            orgnr = sakIViBistårStatus.orgnr,
-            saksnummer = sakIViBistårStatus.saksnummer
+                orgnr = sakIViBistårStatus.orgnr,
+                saksnummer = sakIViBistårStatus.saksnummer
         ).forExactlyOne {
             it.leveranser.forExactlyOne { leveranse ->
                 leveranse.fullført shouldNotBe null
@@ -84,34 +89,34 @@ class IASakLeveranseTest {
         val sakIViBistårStatus = sakIViBistår()
 
         sakIViBistårStatus.opprettIASakLeveranse(
-            frist = LocalDate.now().toKotlinLocalDate(),
-            modulId = 1
+                frist = LocalDate.now().toKotlinLocalDate(),
+                modulId = 1
         )
 
         opprettIASakLeveranse(
-            orgnr = sakIViBistårStatus.orgnr,
-            saksnummer = sakIViBistårStatus.saksnummer,
-            frist = LocalDate.now().toKotlinLocalDate(),
-            modulId = 1).response().statuskode() shouldBe HttpStatusCode.Conflict.value
+                orgnr = sakIViBistårStatus.orgnr,
+                saksnummer = sakIViBistårStatus.saksnummer,
+                frist = LocalDate.now().toKotlinLocalDate(),
+                modulId = 1).response().statuskode() shouldBe HttpStatusCode.Conflict.value
 
         hentIASakLeveranser(
-            orgnr = sakIViBistårStatus.orgnr,
-            saksnummer = sakIViBistårStatus.saksnummer) shouldHaveSize 1
+                orgnr = sakIViBistårStatus.orgnr,
+                saksnummer = sakIViBistårStatus.saksnummer) shouldHaveSize 1
     }
 
     @Test
     fun `skal ikke kunne legge til leveranser dersom en sak ikke er i status Vi Bistår`() {
         val sakIStatusKartlegges = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+                .nyHendelse(TA_EIERSKAP_I_SAK)
+                .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+                .nyHendelse(VIRKSOMHET_KARTLEGGES)
 
         sakIStatusKartlegges.status shouldBe IAProsessStatus.KARTLEGGES
         opprettIASakLeveranse(
-            orgnr = sakIStatusKartlegges.orgnr,
-            saksnummer = sakIStatusKartlegges.saksnummer,
-            frist = LocalDate.now().toKotlinLocalDate(),
-            modulId = 1
+                orgnr = sakIStatusKartlegges.orgnr,
+                saksnummer = sakIStatusKartlegges.saksnummer,
+                frist = LocalDate.now().toKotlinLocalDate(),
+                modulId = 1
         ).response().statuskode() shouldBe HttpStatusCode.Conflict.value
     }
 
@@ -122,9 +127,9 @@ class IASakLeveranseTest {
 
         sakIStatusViBistår.status shouldBe VI_BISTÅR
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
-            frist = frist,
-            modulId = 1,
-            token = oauth2ServerContainer.saksbehandler1.token
+                frist = frist,
+                modulId = 1,
+                token = oauth2ServerContainer.saksbehandler1.token
         )
 
         leveranse.modul.id shouldBe 1
@@ -149,17 +154,17 @@ class IASakLeveranseTest {
         val sakIStatusViBistår = sakIViBistår()
 
         sakIStatusViBistår.opprettIASakLeveranse(
-            frist = nå,
-            modulId = 1
+                frist = nå,
+                modulId = 1
         )
         sakIStatusViBistår.opprettIASakLeveranse(
-            frist = imorgen,
-            modulId = 2
+                frist = imorgen,
+                modulId = 2
         )
 
         val iaSakLeveranserPerTjeneste = hentIASakLeveranser(
-            orgnr = sakIStatusViBistår.orgnr,
-            saksnummer = sakIStatusViBistår.saksnummer)
+                orgnr = sakIStatusViBistår.orgnr,
+                saksnummer = sakIStatusViBistår.saksnummer)
 
         iaSakLeveranserPerTjeneste.forExactlyOne { iaSakLeveranseForTjeneste ->
             iaSakLeveranseForTjeneste.leveranser shouldHaveSize 2
@@ -178,9 +183,9 @@ class IASakLeveranseTest {
     fun `kun eier av sak skal kunne slette leveranse`() {
         val sakIStatusViBistår = sakIViBistår(eier = mockOAuth2Server.saksbehandler1.token)
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
-            frist = LocalDate.now().toKotlinLocalDate(),
-            modulId = 1,
-            token = mockOAuth2Server.saksbehandler1.token
+                frist = LocalDate.now().toKotlinLocalDate(),
+                modulId = 1,
+                token = mockOAuth2Server.saksbehandler1.token
         )
 
         hentIASakLeveranser(orgnr = sakIStatusViBistår.orgnr, saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 1
@@ -198,8 +203,8 @@ class IASakLeveranseTest {
     fun `skal ikke kunne slette leveranser på en sak som ikke er i Vi Bistår`() {
         val sakIViBistår = sakIViBistår()
         val iaSakLeveranse = sakIViBistår.opprettIASakLeveranse(
-            frist = LocalDate.now().toKotlinLocalDate(),
-            modulId = 1
+                frist = LocalDate.now().toKotlinLocalDate(),
+                modulId = 1
         )
         sakIViBistår.nyHendelse(TILBAKE)
         shouldFail {
@@ -215,7 +220,7 @@ class IASakLeveranseTest {
         val fullførtLeveranse = leveranseDto.oppdaterIASakLeveranse(orgnr = sakIViBistår.orgnr, status = LEVERT)
         fullførtLeveranse.status shouldBe LEVERT
 
-        hentIASakLeveranser(orgnr = sakIViBistår.orgnr, saksnummer = sakIViBistår.saksnummer).forExactlyOne {iaSakLeveranserForTjeneste ->
+        hentIASakLeveranser(orgnr = sakIViBistår.orgnr, saksnummer = sakIViBistår.saksnummer).forExactlyOne { iaSakLeveranserForTjeneste ->
             iaSakLeveranserForTjeneste.leveranser.forExactlyOne {
                 it.id shouldBe leveranseDto.id
                 it.status shouldBe LEVERT
@@ -319,7 +324,7 @@ class IASakLeveranseTest {
         leggTilIATjeneste(iaTjeneste = tjeneste)
         leggTilModul(modul = modul)
 
-        val sak  = sakIViBistår()
+        val sak = sakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(modulId = modul.id)
         deaktiverModul(modul = modul)
         val levert = leveranse.oppdaterIASakLeveranse(orgnr = sak.orgnr, status = LEVERT)
@@ -352,22 +357,60 @@ class IASakLeveranseTest {
         etterOppdatertLeveranseTidspunkt?.dayOfYear shouldBe LocalDateTime.now().dayOfYear
     }
 
+    @Test
+    fun `skal fikse saker der leveransetidspunktet er etter sist oppdatert`() {
+        val sak = sakIViBistår()
+        sak.opprettIASakLeveranse(modulId = 1)
+        sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
+        val endretTidspunktMedEnFeil = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
+        endretTidspunktMedEnFeil!!.dayOfYear shouldBeLessThan LocalDateTime.now().dayOfYear
+
+        lydiaApiContainer.performGet(LEVERANSE_OPPDATERE_SIST_ENDRET).tilSingelRespons<Unit>()
+
+        hentAktivSak(sak.orgnr).endretTidspunkt!!.dayOfYear shouldBe LocalDateTime.now().dayOfYear
+    }
+
+    @Test
+    fun `skal ikke fikse saker der leveransetidspunktet er før sist oppdatert`() {
+        val sak = sakIViBistår()
+        val leveranseDto = sak.opprettIASakLeveranse(modulId = 1)
+        leveranseDto.oppdaterIASakLeveranse(orgnr = sak.orgnr, status = LEVERT)
+        val sakEtterLeveranse = hentAktivSak(sak.orgnr)
+        sak.nyHendelse(FULLFØR_BISTAND)
+        hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt!! shouldBeGreaterThan sakEtterLeveranse.endretTidspunkt!!
+
+        lydiaApiContainer.performGet(LEVERANSE_OPPDATERE_SIST_ENDRET).tilSingelRespons<Unit>()
+
+        hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt!! shouldBeGreaterThan sakEtterLeveranse.endretTidspunkt!!
+    }
+
+    @Test
+    fun `skal ikke fikse saker der vi ikke har noen leveranser`() {
+        val sak = sakIViBistår()
+        val sakIViBistår = hentAktivSak(sak.orgnr)
+        sak.nyHendelse(FULLFØR_BISTAND)
+
+        lydiaApiContainer.performGet(LEVERANSE_OPPDATERE_SIST_ENDRET).tilSingelRespons<Unit>()
+
+        hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt!! shouldBeGreaterThan sakIViBistår.endretTidspunkt!!
+    }
+
     private fun sakIViBistår(
-        eier: String = mockOAuth2Server.saksbehandler1.token
+            eier: String = mockOAuth2Server.saksbehandler1.token
     ) = opprettSakForVirksomhet(nyttOrgnummer())
-        .nyHendelse(TA_EIERSKAP_I_SAK, token = eier)
-        .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-        .nyHendelse(VIRKSOMHET_KARTLEGGES)
-        .nyHendelse(VIRKSOMHET_SKAL_BISTÅS).also {
-            it.status shouldBe VI_BISTÅR
-        }
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = eier)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS).also {
+                it.status shouldBe VI_BISTÅR
+            }
 
     private fun hentIATjenesterFraDatabase() =
-        postgresContainer.hentAlleKolonner<String>("select navn from ia_tjeneste")
+            postgresContainer.hentAlleKolonner<String>("select navn from ia_tjeneste")
 
     private fun leggTilModul(modul: ModulDto) =
-        postgresContainer.performUpdate(
-            """
+            postgresContainer.performUpdate(
+                    """
                 insert into modul (id, ia_tjeneste, navn, deaktivert) values (
                     ${modul.id},
                     ${modul.iaTjeneste},
@@ -375,26 +418,26 @@ class IASakLeveranseTest {
                     ${modul.deaktivert}
                 )
             """.trimIndent()
-        )
+            )
 
     private fun leggTilIATjeneste(iaTjeneste: IATjenesteDto) =
-        postgresContainer.performUpdate(
-            """
+            postgresContainer.performUpdate(
+                    """
                 insert into ia_tjeneste (id, navn, deaktivert) values (
                     ${iaTjeneste.id},
                     '${iaTjeneste.navn}',
                     ${iaTjeneste.deaktivert}
                 )
             """.trimIndent()
-        )
+            )
 
     private fun deaktiverModul(modul: ModulDto) =
-        postgresContainer.performUpdate("""
+            postgresContainer.performUpdate("""
             update modul set deaktivert = true where id = ${modul.id}
         """.trimIndent())
 
     private fun deaktiverTjeneste(iaTjeneste: IATjenesteDto) =
-        postgresContainer.performUpdate("""
+            postgresContainer.performUpdate("""
             update ia_tjeneste set deaktivert = true where id = ${iaTjeneste.id}
         """.trimIndent())
 

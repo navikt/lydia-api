@@ -243,7 +243,13 @@ fun Application.lydiaRestApi(
             iaSakStatusExportør = IASakStatusEksportør(
                 iaSakRepository = IASakRepository(dataSource = dataSource),
                 iaSakStatusProdusent = iaSakStatusProdusent,
-            )
+            ),
+                iaSaksService = IASakService(
+                        iaSakRepository = iaSakRepository,
+                        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+                        iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
+                        årsakService = ÅrsakService(årsakRepository = årsakRepository)
+                )
         )
         virksomhetsImport(
             BrregDownloader(

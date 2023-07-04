@@ -5,17 +5,20 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.launch
+import no.nav.lydia.ia.sak.IASakService
 
 val IA_SAK_EKSPORT_PATH = "internal/iasakeksport"
 val IA_SAK_STATISTIKK_EKSPORT_PATH = "$IA_SAK_EKSPORT_PATH/statistikk"
 val IA_SAK_STATUS_EKSPORT_PATH = "$IA_SAK_EKSPORT_PATH/status"
 val IA_SAK_LEVERANSE_EKSPORT_PATH = "$IA_SAK_EKSPORT_PATH/leveranse"
+val LEVERANSE_OPPDATERE_SIST_ENDRET = "leveranse-oppdatere-sist-endret"
 
 fun Route.iaSakEksporterer(
-    iaSakEksporterer: IASakEksporterer,
-    iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
-    iaSakStatusExportør: IASakStatusEksportør,
-    iaSakLeveranseEksportør: IASakLeveranseEksportør,
+        iaSakEksporterer: IASakEksporterer,
+        iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
+        iaSakStatusExportør: IASakStatusEksportør,
+        iaSakLeveranseEksportør: IASakLeveranseEksportør,
+        iaSaksService: IASakService
 ) {
     get(IA_SAK_EKSPORT_PATH) {
         if (IASakEksporterer.KJØRER_SAKS_EKSPORT.get()) {
@@ -64,4 +67,11 @@ fun Route.iaSakEksporterer(
 
         call.respond(HttpStatusCode.OK)
     }
+
+    get(LEVERANSE_OPPDATERE_SIST_ENDRET) {
+        iaSaksService.oppdaterSistEndretPåSakUtifraLeveranse()
+
+        call.respond(HttpStatusCode.OK)
+    }
+
 }
