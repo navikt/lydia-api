@@ -97,6 +97,8 @@ class IASakApiTest {
         hentAktivSakRespons(sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
 
+    // TODO Testrydding: Manglar det ein test av at ein ikkje skal kunne slette sak med status Vurderes /med/ eigar?
+
     @Test
     fun `skal ikke kunne slette sak dersom man ikke er superbruker`() {
         shouldFail {
@@ -111,12 +113,11 @@ class IASakApiTest {
 
     @Test
     fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
-        // TODO: Trenger denne testen så mange hendelser?
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val kanIkkeSletteEtterHendelser = IASakshendelseType.values()
+        val hendelserDetIkkeSkalKunneSlettesEtter = IASakshendelseType.values()
             .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
 
-        kanIkkeSletteEtterHendelser.forEach {
+        hendelserDetIkkeSkalKunneSlettesEtter.forEach {
             sak = if (it == VIRKSOMHET_ER_IKKE_AKTUELL) {
                 sak.nyHendelse(
                     it, payload = ValgtÅrsak(
@@ -271,6 +272,7 @@ class IASakApiTest {
 
     @Test
     fun `skal logge doble eventer i midten`() {
+        // TODO Testrydding: lag betre namn på testen
         val orgnummer = nyttOrgnummer()
         val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -348,6 +350,9 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne opprette ny sak dersom de andre sakene regnes som ikke fullført`() {
+        // TODO Testrydding: Lag betre namn på testen, trur det manglar ein "ikkje" her.
+        //  Vi testar to ting: skal kun kunne fullføre sakar frå Vi Bistår, og ikkje kunne lage ny sak før status er fullført.
+        //  Denne testen burde bu saman med dei andre som testar oppretting av ny sak.
         val orgnummer = nyttOrgnummer()
         var sak = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -379,6 +384,7 @@ class IASakApiTest {
 
     @Test
     fun `tilgangskontroll - en virksomhet skal bare kunne vurderes for oppfølging av en superbruker`() {
+        // TODO Testrydding: Vurder å kalle det "settes til vurderes"  i staden for "kunne vurderes for oppfølging"
         val orgnr = nyttOrgnummer()
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
@@ -440,6 +446,7 @@ class IASakApiTest {
 
     @Test
     fun `tilgangskontroll - en sak UTEN eier skal kunne vises av alle med tilgangsrolle`() {
+        // TODO Testrydding: Gje testen eit betre namn (kva meiner vi med "tilgangsrolle"?)
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
             hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
@@ -477,6 +484,7 @@ class IASakApiTest {
 
     @Test
     fun `tilgangskontroll - en sak MED eier skal kunne vises av alle med tilgangsrolle`() {
+        // TODO Testrydding: Gje testen eit betre namn (kva meiner vi med "tilgangsrolle"?)
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
             nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
@@ -744,6 +752,8 @@ class IASakApiTest {
 
     @Test
     fun `skal ikke kunne legge til hendelser på en sak som er oppdatert av en annen hendelse`() {
+        // TODO Testrydding: kva tester denne testen? At ein ikkje kan setje ting til ikke-aktuell to gonger på rad?
+        // TODO Testrydding: Testane over og under denne handlar om begrunnelsar for ikke-aktuell, kanskje denne kan få bu ein annan stad?
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).also { sak ->
             val gammelSakshendelse = IASakshendelseDto(
                 orgnummer = sak.orgnr,
@@ -832,6 +842,7 @@ class IASakApiTest {
 
     @Test
     fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
+        // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"?  (+ capslock her på IKKE, i motsetning til resten av testane)
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -849,6 +860,7 @@ class IASakApiTest {
 
     @Test
     fun `skal IKKE kunne gå tilbake til forrige tilstand fra ikke aktuell etter fristen har gått`() {
+        // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"? (+ capslock her på IKKE, i motsetning til resten av testane)
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyIkkeAktuellHendelse()
@@ -863,6 +875,8 @@ class IASakApiTest {
 
     @Test
     fun `skal ikke få OPPRETT_SAK_FOR_VIRKSOMHET som gyldig neste hendelse`() {
+        // TODO Testrydding: Trur denne testen kom frå då vi fjerna OPPRETT_SAK frå nesteHendelser-lista til verksemder utan opne sakar.
+        // treng vi denne no, og i såfall: kan vi skildre litt meir i tittelen /når/ dette gjeld og kvifor vi har den?
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyIkkeAktuellHendelse()
@@ -882,6 +896,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
+        // TODO Testrydding: Har vi ei hjelpemetode for "gå til VI_BISTÅR" vi kan bruke her, så vi slepp lese masse hendingar?
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -894,6 +909,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne overta sak som står som fullført og deretter tilbake til vi bistår`() {
+        // TODO Testrydding: Har vi ei hjelpemetode for "gå til VI_BISTÅR" vi kan bruke her, så vi slepp lese masse hendingar?
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -915,6 +931,7 @@ class IASakApiTest {
 
     @Test
     fun `skal ikke kunne gå tilbake fra fullført status dersom virksomheten har en annen åpen sak`() {
+        // TODO Testrydding: Har vi ei hjelpemetode for "gå til VI_BISTÅR" vi kan bruke her, så vi slepp lese masse hendingar?
         val virksomhet = lastInnNyVirksomhet()
         val fullførtSak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -962,7 +979,6 @@ class IASakApiTest {
     fun `skal kunne sette en sak til ikke aktuell fra 'Vi bistår'`() {
         val orgnummer = nyttOrgnummer()
         val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-
 
         val sakIStatusViBistår = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -1025,6 +1041,7 @@ class IASakApiTest {
 
     @Test
     fun `skal vise bare èn riktig status gjennom livsløpet til en ny sak`() {
+        // TODO Testrydding: Kva meines med "èn riktig status gjennom livsløpet til en ny sak"?
         hentSykefravær(
             token = mockOAuth2Server.superbruker1.token,
             success = { mainResponse ->
@@ -1103,7 +1120,6 @@ class IASakApiTest {
                 "SUPERBRUKER",
                 "SAKSBEHANDLER"
             )
-
     }
 
 }
