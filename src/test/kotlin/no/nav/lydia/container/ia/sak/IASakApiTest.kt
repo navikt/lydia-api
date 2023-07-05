@@ -24,6 +24,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
+import no.nav.lydia.helper.SakHelper.Companion.sakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
@@ -96,8 +97,6 @@ class IASakApiTest {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).slettSak()
         hentAktivSakRespons(sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
-
-    // TODO Testrydding: Manglar det ein test av at ein ikkje skal kunne slette sak med status Vurderes /med/ eigar?
 
     @Test
     fun `skal ikke kunne slette sak dersom man ikke er superbruker`() {
@@ -274,11 +273,8 @@ class IASakApiTest {
     fun `skal logge doble eventer i midten`() {
         // TODO Testrydding: lag betre namn på testen
         val orgnummer = nyttOrgnummer()
-        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val sak = sakIViBistår(orgnummer = orgnummer)
+
         postgresContainer.performUpdate(
             """
                     INSERT INTO ia_sak_hendelse (
@@ -330,11 +326,7 @@ class IASakApiTest {
     @Test
     fun `skal takle dobbelt ta eierskap event`() {
         val orgnummer = nyttOrgnummer()
-        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val sak = sakIViBistår(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
         sak.status shouldBe VI_BISTÅR
@@ -843,11 +835,7 @@ class IASakApiTest {
     @Test
     fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
         // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"?  (+ capslock her på IKKE, i motsetning til resten av testane)
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val sak = sakIViBistår()
             .nyHendelse(FULLFØR_BISTAND)
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
@@ -896,12 +884,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
-        // TODO Testrydding: Har vi ei hjelpemetode for "gå til VI_BISTÅR" vi kan bruke her, så vi slepp lese masse hendingar?
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val sak = sakIViBistår()
             .nyHendelse(FULLFØR_BISTAND)
             .nyHendelse(TILBAKE)
         sak.status shouldBe VI_BISTÅR
@@ -909,12 +892,7 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne overta sak som står som fullført og deretter tilbake til vi bistår`() {
-        // TODO Testrydding: Har vi ei hjelpemetode for "gå til VI_BISTÅR" vi kan bruke her, så vi slepp lese masse hendingar?
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val sak = sakIViBistår()
             .nyHendelse(FULLFØR_BISTAND)
 
         val sakEtterOvertakelse = sak.nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
@@ -931,13 +909,8 @@ class IASakApiTest {
 
     @Test
     fun `skal ikke kunne gå tilbake fra fullført status dersom virksomheten har en annen åpen sak`() {
-        // TODO Testrydding: Har vi ei hjelpemetode for "gå til VI_BISTÅR" vi kan bruke her, så vi slepp lese masse hendingar?
         val virksomhet = lastInnNyVirksomhet()
-        val fullførtSak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val fullførtSak = sakIViBistår(orgnummer = virksomhet.orgnr)
             .nyHendelse(FULLFØR_BISTAND)
 
         opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
@@ -980,11 +953,7 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
 
-        val sakIStatusViBistår = opprettSakForVirksomhet(orgnummer = orgnummer)
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val sakIStatusViBistår = sakIViBistår(orgnummer)
             .also { sak -> sak.status shouldBe VI_BISTÅR }
 
         // Sjekk at 'Ikke aktuell' er en gyldig neste hendelse
@@ -1042,18 +1011,17 @@ class IASakApiTest {
     @Test
     fun `skal vise bare èn riktig status gjennom livsløpet til en ny sak`() {
         // TODO Testrydding: Kva meines med "èn riktig status gjennom livsløpet til en ny sak"?
+        val superbruker = mockOAuth2Server.superbruker1.token
+        val saksbehandler = mockOAuth2Server.saksbehandler1.token
+
         hentSykefravær(
-            token = mockOAuth2Server.superbruker1.token,
+            token = superbruker,
             success = { mainResponse ->
                 val org = mainResponse.data.filter { it.status == IKKE_AKTIV }.random()
-                val sak = opprettSakForVirksomhet(orgnummer = org.orgnr)
-                    .nyHendelse(TA_EIERSKAP_I_SAK)
-                    .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-                    .nyHendelse(VIRKSOMHET_KARTLEGGES)
-                    .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-                    .nyHendelse(FULLFØR_BISTAND)
+                val sak = sakIViBistår(orgnummer = org.orgnr, token = saksbehandler)
+                    .nyHendelse(FULLFØR_BISTAND, token = saksbehandler)
                 hentSykefravær( // Tester at vi får se FULLFØRT intil fristen går ut
-                    token = mockOAuth2Server.superbruker1.token,
+                    token = superbruker,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe FULLFØRT }
                     }
@@ -1061,7 +1029,7 @@ class IASakApiTest {
 
                 sak.oppdaterHendelsesTidspunkter(ANTALL_DAGER_FØR_SAK_LÅSES + 1)
                 hentSykefravær( // Tester at vi faller tilbake til IKKE_AKTIV når fristen har gått ut
-                    token = mockOAuth2Server.superbruker1.token,
+                    token = superbruker,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IKKE_AKTIV }
                     }
@@ -1073,7 +1041,7 @@ class IASakApiTest {
                     .nyHendelse(VIRKSOMHET_KARTLEGGES)
 
                 hentSykefravær( // Viser siste status når vi har fått en ny sak
-                    token = mockOAuth2Server.superbruker1.token,
+                    token = superbruker,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe KARTLEGGES }
                     }
