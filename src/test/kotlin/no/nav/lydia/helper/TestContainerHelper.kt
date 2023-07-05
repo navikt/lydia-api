@@ -255,14 +255,15 @@ class SakHelper {
             failure = { fail(it.message) }
         )
 
-        fun sakIViBistår(
+        fun nySakIViBistår(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = opprettSakForVirksomhet(orgnummer)
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS).also {
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+            .also {
                 it.status shouldBe IAProsessStatus.VI_BISTÅR
             }
 

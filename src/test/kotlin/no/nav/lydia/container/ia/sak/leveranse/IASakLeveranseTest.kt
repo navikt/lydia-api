@@ -21,6 +21,7 @@ import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
@@ -50,7 +51,7 @@ class IASakLeveranseTest {
     fun `skal få tjenester sortert etter navn`() {
         hentIATjenester().map { it.navn } shouldBe hentIATjenesterFraDatabase().sorted()
 
-        val sakIViBistår = sakIViBistår()
+        val sakIViBistår = nySakIViBistår()
         hentModuler().forEach {
             sakIViBistår.opprettIASakLeveranse(modulId = it.id)
         }
@@ -63,7 +64,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal få ut fullførtdato for leveranser`() {
-        val sakIViBistårStatus = sakIViBistår()
+        val sakIViBistårStatus = nySakIViBistår()
         val leveranse = sakIViBistårStatus.opprettIASakLeveranse(
                 frist = LocalDate.now().toKotlinLocalDate(),
                 modulId = 1
@@ -86,7 +87,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal ikke kunne legge til duplikate leveranser`() {
-        val sakIViBistårStatus = sakIViBistår()
+        val sakIViBistårStatus = nySakIViBistår()
 
         sakIViBistårStatus.opprettIASakLeveranse(
                 frist = LocalDate.now().toKotlinLocalDate(),
@@ -123,7 +124,7 @@ class IASakLeveranseTest {
     @Test
     fun `skal kunne legge til leveranser dersom en sak er i status Vi Bistår`() {
         val frist = LocalDate.now().toKotlinLocalDate()
-        val sakIStatusViBistår = sakIViBistår()
+        val sakIStatusViBistår = nySakIViBistår()
 
         sakIStatusViBistår.status shouldBe VI_BISTÅR
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
@@ -151,7 +152,7 @@ class IASakLeveranseTest {
         val nå = LocalDate.now().toKotlinLocalDate()
         val imorgen = LocalDate.now().plusDays(1).toKotlinLocalDate()
 
-        val sakIStatusViBistår = sakIViBistår()
+        val sakIStatusViBistår = nySakIViBistår()
 
         sakIStatusViBistår.opprettIASakLeveranse(
                 frist = nå,
@@ -181,7 +182,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `kun eier av sak skal kunne slette leveranse`() {
-        val sakIStatusViBistår = sakIViBistår(eier = mockOAuth2Server.saksbehandler1.token)
+        val sakIStatusViBistår = nySakIViBistår(token = mockOAuth2Server.saksbehandler1.token)
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
                 frist = LocalDate.now().toKotlinLocalDate(),
                 modulId = 1,
@@ -201,7 +202,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal ikke kunne slette leveranser på en sak som ikke er i Vi Bistår`() {
-        val sakIViBistår = sakIViBistår()
+        val sakIViBistår = nySakIViBistår()
         val iaSakLeveranse = sakIViBistår.opprettIASakLeveranse(
                 frist = LocalDate.now().toKotlinLocalDate(),
                 modulId = 1
@@ -214,7 +215,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal kunne fullføre en leveranse`() {
-        val sakIViBistår = sakIViBistår()
+        val sakIViBistår = nySakIViBistår()
 
         val leveranseDto = sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = 1)
         val fullførtLeveranse = leveranseDto.oppdaterIASakLeveranse(orgnr = sakIViBistår.orgnr, status = LEVERT)
@@ -230,7 +231,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal ikke kunne fullføre sak med leveranser som er under arbeid`() {
-        val sakIViBistår = sakIViBistår()
+        val sakIViBistår = nySakIViBistår()
         sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = 1)
         shouldFail {
             sakIViBistår.nyHendelse(FULLFØR_BISTAND)
@@ -239,7 +240,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal kunne fullføre sak uten leveranser`() {
-        val sakIViBistår = sakIViBistår()
+        val sakIViBistår = nySakIViBistår()
         sakIViBistår.nyHendelse(FULLFØR_BISTAND)
     }
 
@@ -286,7 +287,7 @@ class IASakLeveranseTest {
         leggTilIATjeneste(iaTjeneste = tjeneste)
         leggTilModul(modul = modul)
 
-        val sak = sakIViBistår()
+        val sak = nySakIViBistår()
         sak.opprettIASakLeveranse(modulId = modul.id)
 
         deaktiverModul(modul = modul)
@@ -308,7 +309,7 @@ class IASakLeveranseTest {
         leggTilIATjeneste(iaTjeneste = aktivTjeneste)
         leggTilModul(modul = deaktivertModul)
 
-        val sak = sakIViBistår()
+        val sak = nySakIViBistår()
         shouldFail {
             sak.opprettIASakLeveranse(modulId = aktivModulIDeaktivertTjeneste.id)
         }
@@ -324,7 +325,7 @@ class IASakLeveranseTest {
         leggTilIATjeneste(iaTjeneste = tjeneste)
         leggTilModul(modul = modul)
 
-        val sak = sakIViBistår()
+        val sak = nySakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(modulId = modul.id)
         deaktiverModul(modul = modul)
         val levert = leveranse.oppdaterIASakLeveranse(orgnr = sak.orgnr, status = LEVERT)
@@ -338,7 +339,7 @@ class IASakLeveranseTest {
     @Test
     fun `oppretting av leveranse skal oppdatere sak sin sist endret dato`() {
         val antallDagerSiden = 10L
-        val sak = sakIViBistår().oppdaterHendelsesTidspunkter(antallDagerTilbake = antallDagerSiden)
+        val sak = nySakIViBistår().oppdaterHendelsesTidspunkter(antallDagerTilbake = antallDagerSiden)
         sak.endretTidspunkt?.dayOfYear shouldBe LocalDateTime.now().minusDays(antallDagerSiden).dayOfYear
 
         sak.opprettIASakLeveranse(modulId = 1)
@@ -348,7 +349,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `oppdatering av leveranse skal oppdatere sak sin sist endret dato`() {
-        val sak = sakIViBistår()
+        val sak = nySakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(modulId = 1)
         sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
 
@@ -359,7 +360,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal fikse saker der leveransetidspunktet er etter sist oppdatert`() {
-        val sak = sakIViBistår()
+        val sak = nySakIViBistår()
         sak.opprettIASakLeveranse(modulId = 1)
         sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
         val endretTidspunktMedEnFeil = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
@@ -372,7 +373,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal ikke fikse saker der leveransetidspunktet er før sist oppdatert`() {
-        val sak = sakIViBistår()
+        val sak = nySakIViBistår()
         val leveranseDto = sak.opprettIASakLeveranse(modulId = 1)
         leveranseDto.oppdaterIASakLeveranse(orgnr = sak.orgnr, status = LEVERT)
         val sakEtterLeveranse = hentAktivSak(sak.orgnr)
@@ -386,7 +387,7 @@ class IASakLeveranseTest {
 
     @Test
     fun `skal ikke fikse saker der vi ikke har noen leveranser`() {
-        val sak = sakIViBistår()
+        val sak = nySakIViBistår()
         val sakIViBistår = hentAktivSak(sak.orgnr)
         sak.nyHendelse(FULLFØR_BISTAND)
 
@@ -394,16 +395,6 @@ class IASakLeveranseTest {
 
         hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt!! shouldBeGreaterThan sakIViBistår.endretTidspunkt!!
     }
-
-    private fun sakIViBistår(
-            eier: String = mockOAuth2Server.saksbehandler1.token
-    ) = opprettSakForVirksomhet(nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = eier)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS).also {
-                it.status shouldBe VI_BISTÅR
-            }
 
     private fun hentIATjenesterFraDatabase() =
             postgresContainer.hentAlleKolonner<String>("select navn from ia_tjeneste")

@@ -6,11 +6,11 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
@@ -18,7 +18,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
@@ -46,11 +45,7 @@ class IASakLeveranseEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASakLeveranse`() {
-        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+        val sak = nySakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
 
         runBlocking {
@@ -80,11 +75,7 @@ class IASakLeveranseEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASakLeveranse ved alle endringer`() {
-        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+        val sak = nySakIViBistår()
         val nyLeveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
         sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
 
@@ -131,11 +122,7 @@ class IASakLeveranseEksportererTest {
 
     @Test
     fun  `spille av leveranser burde gi samme resultat`() {
-        val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(hendelsestype = IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+        val sak = nySakIViBistår()
         val nyLeveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
 
         var melding: IASakLeveranseValue? = null
