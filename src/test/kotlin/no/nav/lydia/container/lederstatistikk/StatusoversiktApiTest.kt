@@ -2,10 +2,11 @@ package no.nav.lydia.container.lederstatistikk
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.StatusoversiktHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.StatusoversiktHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
@@ -51,11 +52,7 @@ class StatusoversiktApiTest {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(),
             sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING)
 
-        SakHelper.opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+        nySakIViBistår(orgnummer = virksomhet.orgnr)
             .nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
 
         val aktivSak = hentAktivSak(orgnummer = virksomhet.orgnr)

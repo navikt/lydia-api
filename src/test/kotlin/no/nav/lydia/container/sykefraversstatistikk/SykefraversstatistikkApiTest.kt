@@ -30,6 +30,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
@@ -69,9 +70,6 @@ import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.Periode
@@ -901,6 +899,7 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal kunne søke på IKKE_AKTIV status endret når frist har gått ut (og ikke få de opp på de utløpte statusene)`() {
         val testKommune = Kommune(navn = "YoYoYo", nummer = "6666")
+
         // -- lag en virksomhet med en IkkeAktuell sak som er gått ut på dato
         val virksomhet1 =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
@@ -908,29 +907,24 @@ class SykefraversstatistikkApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyIkkeAktuellHendelse()
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 10)
+
         // -- lag en virksomhet med en Slettet sak
         val virksomhet2 =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         opprettSakForVirksomhet(orgnummer = virksomhet2.orgnr)
             .slettSak() // Kan ikke sette tilbake tidspunktet på det vi sletter fra databasen
+
         // -- lag en virksomhet med en Fullført sak som er gått ut på dato
         val virksomhet3 =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-        opprettSakForVirksomhet(orgnummer = virksomhet3.orgnr)
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        nySakIViBistår(orgnummer = virksomhet3.orgnr)
             .nyHendelse(FULLFØR_BISTAND)
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 8)
+
         // -- lag en virksomhet med en ViBistår sak
         val virksomhet4 =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-        opprettSakForVirksomhet(orgnummer = virksomhet4.orgnr)
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        nySakIViBistår(orgnummer = virksomhet4.orgnr)
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 7)
 
         hentSykefravær(kommuner = testKommune.nummer).data

@@ -192,6 +192,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå ann å fullføre en sak`() {
+        // TODO Testrydding: Kva tester denne, eigentleg? Kan vi bruke sakIViBistår til å lage sak her, eller blir det feil?
         val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)

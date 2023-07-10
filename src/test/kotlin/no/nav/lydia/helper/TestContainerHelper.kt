@@ -9,6 +9,7 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.runBlocking
@@ -31,6 +32,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
@@ -252,6 +254,18 @@ class SakHelper {
             success = { respons -> respons },
             failure = { fail(it.message) }
         )
+
+        fun nySakIViBistår(
+            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = opprettSakForVirksomhet(orgnummer)
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+            .also {
+                it.status shouldBe IAProsessStatus.VI_BISTÅR
+            }
 
         fun nyHendelse(
             sakshendelse: IASakshendelseDto,
