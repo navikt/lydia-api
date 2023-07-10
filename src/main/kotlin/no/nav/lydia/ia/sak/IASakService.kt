@@ -41,9 +41,9 @@ class IASakService(
 
     private fun IASak.lagreOppdatering(sistEndretAvHendelseId: String?): Either<Feil, IASak> {
         if (this.status == IAProsessStatus.SLETTET) {
-            return slettSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
+            return slettSak(this, sistEndretAvHendelseId).onRight(::varsleIASakObservers)
         }
-        return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).tap(::varsleIASakObservers)
+        return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).onRight(::varsleIASakObservers)
     }
 
     fun leggTilIASakObservers(vararg observers: Observer<IASak>) {
@@ -77,16 +77,16 @@ class IASakService(
         val sistEndretAvHendelseId = sak.endretAvHendelseId
 
         return sak.nyHendelseBasertPåSak(
-                hendelsestype = VIRKSOMHET_VURDERES,
-                superbruker = superbruker,
-                navEnhet = navEnhet
+            hendelsestype = VIRKSOMHET_VURDERES,
+            superbruker = superbruker,
+            navEnhet = navEnhet
         ).lagre(null)
-                .let { vurderesHendelse -> superbruker.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
-                .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
-                .flatMap { oppdatertSak ->
-                    oppdatertSak.lagreOppdatering(sistEndretAvHendelseId)
-                }
-                .tap { Metrics.virksomheterPrioritert.inc() }
+            .let { vurderesHendelse -> superbruker.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
+            .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
+            .flatMap { oppdatertSak ->
+                oppdatertSak.lagreOppdatering(sistEndretAvHendelseId)
+            }
+            .onRight { Metrics.virksomheterPrioritert.inc() }
 
     }
 
@@ -156,7 +156,7 @@ class IASakService(
 
             somEierAvSakIViBistår(saksnummer = leveranse.saksnummer, saksbehandler = saksbehandler) {
                 iaSakLeveranseRepository.opprettIASakLeveranse(leveranse, saksbehandler)
-                        .tap(::varsleIASakLeveranseObservers)
+                    .onRight(::varsleIASakLeveranseObservers)
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved opprettelse av leveranse: ${e.message}", e)
@@ -173,7 +173,7 @@ class IASakService(
             val saksnummer = iaSakLeveranse?.saksnummer ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
             somEierAvSakIViBistår(saksnummer = saksnummer, saksbehandler = saksbehandler) {
                 iaSakLeveranseRepository.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId).right()
-                        .tap { varsleIASakLeveranseObservers(iaSakLeveranse.slettet()) }
+                    .onRight { varsleIASakLeveranseObservers(iaSakLeveranse.slettet()) }
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved letting av leveranse med id $iaSakLeveranseId: ${e.message}", e)
@@ -192,11 +192,11 @@ class IASakService(
                             ?: return IASakError.`ugyldig iaSakLeveranseId`.left()
             somEierAvSakIViBistår(saksnummer = saksnummer, saksbehandler = saksbehandler) {
                 iaSakLeveranseRepository.oppdaterIASakLeveranse(
-                        iaSakLeveranseId = iaSakLeveranseId,
-                        oppdateringsDto = oppdateringsDto,
-                        saksbehandler = saksbehandler
+                    iaSakLeveranseId = iaSakLeveranseId,
+                    oppdateringsDto = oppdateringsDto,
+                    saksbehandler = saksbehandler
                 )
-                        .tap(::varsleIASakLeveranseObservers)
+                    .onRight(::varsleIASakLeveranseObservers)
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved oppdatering av IASakLeveranse: ${e.message}", e)
