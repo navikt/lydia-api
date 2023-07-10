@@ -204,21 +204,6 @@ class IASakService(
         }
     }
 
-    fun oppdaterSistEndretPåSakUtifraLeveranse() {
-        log.info("Starter oppdaterSistEndretPåSakUtifraLeveranse..")
-
-        iaSakRepository.hentAlleSaker().forEach { sak ->
-            iaSakLeveranseRepository.hentIASakLeveranser(sak.saksnummer)
-                    .lastOrNull()
-                    ?.let { leveranse ->
-                        if (leveranse.sistEndret.isAfter(sak.endretTidspunkt)) {
-                            iaSakRepository.oppdaterSistEndret(sak, leveranse.sistEndret)
-                        }
-                    }
-        }
-        log.info("Ferdig med oppdaterSistEndretPåSakUtifraLeveranse")
-    }
-
     fun hentTjenester() = try {
         iaSakLeveranseRepository.hentIATjenster().right()
     } catch (e: Exception) {

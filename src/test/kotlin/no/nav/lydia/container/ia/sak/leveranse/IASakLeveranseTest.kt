@@ -6,7 +6,6 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThan
-import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
@@ -22,15 +21,11 @@ import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.eksport.LEVERANSE_OPPDATERE_SIST_ENDRET
 import no.nav.lydia.ia.sak.api.IATjenesteDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -355,44 +350,6 @@ class IASakLeveranseTest {
         leveranse.oppdaterIASakLeveranse(sak.orgnr, LEVERT)
         val etterOppdatertLeveranseTidspunkt = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
         etterOppdatertLeveranseTidspunkt?.dayOfYear shouldBe LocalDateTime.now().dayOfYear
-    }
-
-    @Test
-    fun `skal fikse saker der leveransetidspunktet er etter sist oppdatert`() {
-        val sak = sakIViBistår()
-        sak.opprettIASakLeveranse(modulId = 1)
-        sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
-        val endretTidspunktMedEnFeil = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
-        endretTidspunktMedEnFeil!!.dayOfYear shouldBeLessThan LocalDateTime.now().dayOfYear
-
-        lydiaApiContainer.performGet(LEVERANSE_OPPDATERE_SIST_ENDRET).tilSingelRespons<Unit>()
-
-        hentAktivSak(sak.orgnr).endretTidspunkt!!.dayOfYear shouldBe LocalDateTime.now().dayOfYear
-    }
-
-    @Test
-    fun `skal ikke fikse saker der leveransetidspunktet er før sist oppdatert`() {
-        val sak = sakIViBistår()
-        val leveranseDto = sak.opprettIASakLeveranse(modulId = 1)
-        leveranseDto.oppdaterIASakLeveranse(orgnr = sak.orgnr, status = LEVERT)
-        val sakEtterLeveranse = hentAktivSak(sak.orgnr)
-        sak.nyHendelse(FULLFØR_BISTAND)
-        hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt!! shouldBeGreaterThan sakEtterLeveranse.endretTidspunkt!!
-
-        lydiaApiContainer.performGet(LEVERANSE_OPPDATERE_SIST_ENDRET).tilSingelRespons<Unit>()
-
-        hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt!! shouldBeGreaterThan sakEtterLeveranse.endretTidspunkt!!
-    }
-
-    @Test
-    fun `skal ikke fikse saker der vi ikke har noen leveranser`() {
-        val sak = sakIViBistår()
-        val sakIViBistår = hentAktivSak(sak.orgnr)
-        sak.nyHendelse(FULLFØR_BISTAND)
-
-        lydiaApiContainer.performGet(LEVERANSE_OPPDATERE_SIST_ENDRET).tilSingelRespons<Unit>()
-
-        hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt!! shouldBeGreaterThan sakIViBistår.endretTidspunkt!!
     }
 
     private fun sakIViBistår(
