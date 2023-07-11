@@ -6,17 +6,27 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
+import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 
 class IASakStatusProdusent(
     private val produsent: KafkaProdusent,
     private val topic: String,
+    private val iaSakRepository: IASakRepository,
 ) : Observer<IASak> {
 
     override fun receive(input: IASak) {
         val kafkaMelding = input.tilKafkaMelding()
         produsent.sendMelding(topic, kafkaMelding.first, kafkaMelding.second)
+        if (input.status == IAProsessStatus.SLETTET) {
+            iaSakRepository.hentSaker(input.orgnr)
+                .lastOrNull { it.status != IAProsessStatus.SLETTET }
+                ?.let { aktivSak ->
+                    val aktivKafkaMelding = aktivSak.tilKafkaMelding()
+                    produsent.sendMelding(topic, aktivKafkaMelding.first, aktivKafkaMelding.second)
+                }
+        }
     }
 
     companion object {

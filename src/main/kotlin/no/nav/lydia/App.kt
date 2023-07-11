@@ -145,6 +145,7 @@ fun Application.lydiaRestApi(
     val iaSakStatusProdusent = IASakStatusProdusent(
         produsent = kafkaProdusent,
         topic = naisEnvironment.kafka.iaSakStatusTopic,
+        iaSakRepository = iaSakRepository,
     )
     val azureService = AzureService(
         tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
