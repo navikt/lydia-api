@@ -77,7 +77,7 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
-        private val azureMockServer = WireMockContainerHelper()
+        private val azureMockServer = AzureMockContainerHelper()
 
         val lydiaApiContainer: GenericContainer<*> =
             GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
@@ -102,6 +102,12 @@ class TestContainerHelper {
                                         "CONSUMER_LOOP_DELAY" to "1",
                                         "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json",
                                         "NAIS_CLUSTER_NAME" to "lokal",
+                                        "SALESFORCE_URL" to "http://host.testcontainers.internal:${azureMockServer.azureMock.port()}",
+                                        "SALESFORCE_CLIENT_ID" to "clientId",
+                                        "SALESFORCE_CLIENT_SECRET" to "clientsecret",
+                                        "SALESFORCE_USERNAME" to "username",
+                                        "SALESFORCE_PASSWORD" to "password",
+                                        "SALESFORCE_USERTOKEN" to "usertoken",
                                     )
                                 )
                         )
@@ -116,6 +122,8 @@ class TestContainerHelper {
 
         val brregOppdateringContainer =
             PiaBrregOppdateringContainerHelper(network = network, log = log, httpMock = httpMock)
+        val salesforceMockContainer =
+            SalesforceMockContainerHelper(network = network, log = log, httpMock = httpMock)
 
         private val dataSource = postgresContainer.nyDataSource()
         val næringsRepository = NæringsRepository(dataSource = dataSource)

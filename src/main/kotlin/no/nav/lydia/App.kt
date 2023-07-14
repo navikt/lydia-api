@@ -52,6 +52,7 @@ import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.navEnhet
+import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -118,7 +119,7 @@ fun Application.lydiaRestApi(
     naisEnvironment: NaisEnvironment,
     dataSource: DataSource,
 ) {
-    val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource))
+    val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource), salesforceClient = SalesforceClient(naisEnvironment))
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
@@ -285,7 +286,7 @@ fun Application.lydiaRestApi(
                 azureService = azureService,
             )
             virksomhet(
-                virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
+                virksomhetService = virksomhetService,
                 auditLog = auditLog,
                 adGrupper = naisEnvironment.security.adGrupper
             )

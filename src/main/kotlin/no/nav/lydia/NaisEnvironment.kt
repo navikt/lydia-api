@@ -144,7 +144,22 @@ class Kafka(
 
 class Integrasjoner(
     val brregUnderEnhetUrl: String = getEnvVar("BRREG_UNDERENHET_URL"),
-    val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL")
+    val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
+    val salesforce: Salesforce = Salesforce(),
+)
+
+class Salesforce(
+    private val url: String = getEnvVar("SALESFORCE_URL"),
+    private val tokenPath: String = "/services/oauth2/token",
+    private val queryPath: String = "/services/data/v20.0/query/",
+    val tokenUrl: String = url + tokenPath,
+    val queryUrl: String = url + queryPath,
+
+    val clientId: String = getEnvVar("SALESFORCE_CLIENT_ID"),
+    val clientSecret: String = getEnvVar("SALESFORCE_CLIENT_SECRET"),
+    val username: String = getEnvVar("SALESFORCE_USERNAME"),
+    val password: String = getEnvVar("SALESFORCE_PASSWORD"),
+    val usertoken: String = getEnvVar("SALESFORCE_USERTOKEN"),
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =

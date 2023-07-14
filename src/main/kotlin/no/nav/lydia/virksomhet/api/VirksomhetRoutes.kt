@@ -11,9 +11,11 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
+import no.nav.lydia.virksomhet.domene.Virksomhet
 
 const val VIRKSOMHET_PATH = "virksomhet"
 
@@ -25,7 +27,8 @@ fun Route.virksomhet(
     get("$VIRKSOMHET_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto().rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
+            virksomhetService.hentVirksomhetMedSalesforceUrl(orgnr = orgnummer)
+                ?.toDto().rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map {

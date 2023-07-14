@@ -205,7 +205,8 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         sektor = row.stringOrNull("sektor")?.tilSektor(),
                         oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
                         opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),
-                        sistEndretTidspunkt = row.instant("sistEndretTidspunkt").toKotlinInstant()
+                        sistEndretTidspunkt = row.instant("sistEndretTidspunkt").toKotlinInstant(),
+                        salesforceUrl = null,
                     )
                 }.asSingle
             )

@@ -24,7 +24,7 @@ import kotlin.test.Test
 
 /**
  * NOTE: Denne testen bruker testdata fra [no.nav.lydia.helper.PiaBrregOppdateringTestData]
- * NOTE: og de dataene blir behandlet av [no.nav.lydia.helper.PiaBrregOppdateringContainerHelper.brregOppdateringContainer]
+ * NOTE: og de dataene blir behandlet av [no.nav.lydia.helper.SalesforceMockContainerHelper.brregOppdateringContainer]
  * */
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token

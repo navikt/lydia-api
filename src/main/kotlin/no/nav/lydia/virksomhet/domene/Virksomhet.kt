@@ -21,7 +21,31 @@ data class Virksomhet(
     val oppdatertAvBrregOppdateringsId: Long?,
     val opprettetTidspunkt: Instant,
     val sistEndretTidspunkt: Instant,
-)
+    val salesforceUrl: String?,
+) {
+    fun withSalesforceUrl(url: String?): Virksomhet {
+        return Virksomhet(
+            this.id,
+            this.orgnr,
+            this.navn,
+            this.status,
+            this.oppstartsdato,
+            this.adresse,
+            this.postnummer,
+            this.poststed,
+            this.kommune,
+            this.kommunenummer,
+            this.land,
+            this.landkode,
+            this.næringsgrupper,
+            this.sektor,
+            this.oppdatertAvBrregOppdateringsId,
+            this.opprettetTidspunkt,
+            this.sistEndretTidspunkt,
+            url,
+        )
+    }
+}
 
 enum class VirksomhetStatus {
     AKTIV, FJERNET, SLETTET
