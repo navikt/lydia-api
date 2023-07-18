@@ -67,7 +67,7 @@ dependencies {
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
     // featuretoggling med unleash
-    implementation("io.getunleash:unleash-client-java:8.1.0")
+    implementation("io.getunleash:unleash-client-java:8.2.0")
 
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:0.0.5")
@@ -99,7 +99,7 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:9.31")
 
     constraints {
-        implementation("net.minidev:json-smart:2.4.11") {
+        implementation("net.minidev:json-smart:2.5.0") {
             because("From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.")
         }
     }
