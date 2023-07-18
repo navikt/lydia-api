@@ -47,7 +47,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.6.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:9.20.0")
+    implementation("org.flywaydb:flyway-core:9.20.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
