@@ -42,7 +42,7 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.11.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.11.2")
 
     // Database
     implementation("org.postgresql:postgresql:42.6.0")
