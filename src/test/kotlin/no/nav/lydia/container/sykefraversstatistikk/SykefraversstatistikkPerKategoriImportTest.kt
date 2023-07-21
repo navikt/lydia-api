@@ -1,7 +1,9 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
@@ -10,6 +12,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.LAND
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
+import java.math.BigDecimal
 import java.sql.Timestamp
 import kotlin.test.Test
 
@@ -101,6 +104,29 @@ class SykefraversstatistikkPerKategoriImportTest {
             """.trimIndent()
         )  shouldBe "LAND"
     }
+
+    @Test
+    fun `vi lagrer også sykefraværsstatistikk siste gjeldende kvartal for kategori LAND`() {
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(LAND, "NO"),
+            jsonValue(LAND, "NO"),
+            KafkaContainerHelper.statistikkLandTopic,
+            Kafka.statistikkPerKategoriGroupId)
+
+        postgresContainer.hentAlleKolonner<String>(
+            """
+                select land from sykefravar_statistikk_land
+            """.trimIndent()
+        ).forEach { it shouldBe "NO" }
+
+        postgresContainer.hentEnkelKolonne<Int>(
+            """
+                select antall_personer from sykefravar_statistikk_land
+                where land = 'NO' and arstall = 2022
+            """.trimIndent()
+        ).toInt()  shouldBe 4
+    }
+
 }
 
 private fun jsonKey(kategori: Kategori, kode: String) =

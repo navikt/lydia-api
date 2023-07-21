@@ -18,6 +18,7 @@ import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvar
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
+import no.nav.lydia.sykefraversstatistikk.import.Kategori.LAND
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
@@ -48,6 +49,10 @@ class SykefraværsstatistikkService(
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
             sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
                 .filter { it.kategori != VIRKSOMHET }
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
+            sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
+                .filter { it.kategori == LAND }
         )
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
     }
