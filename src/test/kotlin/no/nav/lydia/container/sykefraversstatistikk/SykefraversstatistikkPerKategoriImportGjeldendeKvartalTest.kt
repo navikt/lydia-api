@@ -6,6 +6,7 @@ import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
+import java.math.BigDecimal
 import kotlin.test.Test
 
 class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
@@ -14,6 +15,13 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
     @Test
     fun `vi lagrer sykefraværsstatistikk siste gjeldende kvartal for kategori LAND`() {
         val gjeldendeKvartal = Kvartal(2023, 1)
+        TestContainerHelper.postgresContainer.performUpdate("""
+            DELETE FROM sykefravar_statistikk_land 
+            WHERE 
+                land = 'NO' 
+                and arstall = ${gjeldendeKvartal.årstall}
+                and kvartal = ${gjeldendeKvartal.kvartal}
+        """.trimIndent())
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(
                 Kategori.LAND,
@@ -23,24 +31,26 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
             jsonValue(
                 Kategori.LAND,
                 "NO",
-                gjeldendeKvartal
+                gjeldendeKvartal,
+                false,
+                BigDecimal(125000.0),
+                BigDecimal(2500000.5),
+                BigDecimal(5.0),
+                3500000
             ),
             KafkaContainerHelper.statistikkLandTopic,
             Kafka.statistikkPerKategoriGroupId
         )
 
-        TestContainerHelper.postgresContainer.hentAlleKolonner<String>(
-            """
-                select land from sykefravar_statistikk_land
-            """.trimIndent()
-        ).forEach { it shouldBe "NO" }
-
         TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
             """
                 select antall_personer from sykefravar_statistikk_land
-                where land = 'NO' and arstall = ${gjeldendeKvartal.årstall}
+                where 
+                land = 'NO' 
+                and arstall = ${gjeldendeKvartal.årstall}
+                and kvartal = ${gjeldendeKvartal.kvartal}
             """.trimIndent()
-        ).toInt()  shouldBe 4
+        ).toInt()  shouldBe 3500000
     }
 
     private fun jsonKey(
@@ -60,19 +70,24 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
     private fun jsonValue(
         kategori: Kategori,
         kode: String,
-        kvartal: Kvartal = Kvartal(2023, 1)
-    ) = """
-      {
+        kvartal: Kvartal = Kvartal(2023, 1),
+        erMaskert: Boolean = true,
+        tapteDagsverk: BigDecimal? = null,
+        muligeDagsverk: BigDecimal? = null,
+        prosent: BigDecimal? = null,
+        antallPersoner: Int = 4
+    ): String {
+        return """{
         "kategori": "${kategori.name}",
         "kode": "$kode",
         "sistePubliserteKvartal": {
           "årstall": ${kvartal.årstall},
           "kvartal": ${kvartal.kvartal},
-          "prosent": null,
-          "tapteDagsverk": null,
-          "muligeDagsverk": null,
-          "antallPersoner": 4,
-          "erMaskert": true
+          "prosent": $prosent,
+          "tapteDagsverk": $tapteDagsverk,
+          "muligeDagsverk": $muligeDagsverk,
+          "antallPersoner": $antallPersoner,
+          "erMaskert": $erMaskert
         },
         "siste4Kvartal": {
           "prosent": 6.3,
@@ -99,5 +114,5 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
           ]
         }
       }
-""".trimIndent()
+""".trimIndent()}
 }
