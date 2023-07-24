@@ -187,10 +187,7 @@ class SykefraversstatistikkImportTest {
             kolonne = "naringsundergruppe",
             kode = DYRKING_AV_RIS.kode,
             periode = periode1971) shouldBe DYRKING_AV_RIS.kode
-        hentStatistikk(tabell = "sykefravar_statistikk_land",
-            kolonne = "land",
-            kode = LANDKODE_NO,
-            periode = periode1971) shouldBe LANDKODE_NO
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_land")
     }
 
     @Test
@@ -225,10 +222,7 @@ class SykefraversstatistikkImportTest {
             kolonne = "naringsundergruppe",
             kode = SKOGSKJØTSEL.kode,
             periode = periode1972) shouldBe SKOGSKJØTSEL.kode
-        hentStatistikk(tabell = "sykefravar_statistikk_land",
-            kolonne = "land",
-            kode = LANDKODE_NO,
-            periode = periode1972) shouldBe LANDKODE_NO
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_land")
     }
 
     @Test
@@ -247,10 +241,8 @@ class SykefraversstatistikkImportTest {
             kolonne = "naringsundergruppe",
             kode = DYRKING_AV_KORN.kode,
             periode = periode) shouldBe DYRKING_AV_KORN.kode
-        hentStatistikk(tabell = "sykefravar_statistikk_land",
-            kolonne = "land",
-            kode = LANDKODE_NO,
-            periode = periode) shouldBe LANDKODE_NO
+        // Import av sykefraværsstatistikk i gjeldende kvartal for kategori LAND er flyttet til import av Statistikk per kategori
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_land")
     }
 
     @Test
@@ -274,6 +266,10 @@ class SykefraversstatistikkImportTest {
     }
 
 
+    private fun sjekkIngenDataErFunnetITabell(
+        tabell: String,
+    ) =
+        postgres.hentAlleKolonner<Int>("select count(*) from $tabell").first() shouldBe 0
     private fun hentStatistikk(
         tabell: String,
         kolonne: String,

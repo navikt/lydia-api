@@ -182,8 +182,6 @@ private fun TransactionalSession.insertBehandletImportStatistikk(behandletImport
         .toSet())
     insertBehandletNæringsundergruppeStatistikk(behandletNæringsundergruppeSykefraværsstatistikk = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }
         .toSet())
-    insertBehandletLandStatistikk(behandletLandSykefraværsstatistikk = behandletImportStatistikkListe.map { it.landSykefravær }
-        .toSet())
 }
 
 
