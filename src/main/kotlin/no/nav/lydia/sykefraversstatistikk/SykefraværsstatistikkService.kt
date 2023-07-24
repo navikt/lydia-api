@@ -42,6 +42,19 @@ class SykefraværsstatistikkService(
         sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>,
     ) {
         val start = System.currentTimeMillis()
+        lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe)
+        lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe)
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
+    }
+
+    private fun lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
+            sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
+                .filter { it.kategori == LAND }
+        )
+    }
+
+    private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
             sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
                 .filter { it.kategori == VIRKSOMHET }
@@ -50,11 +63,6 @@ class SykefraværsstatistikkService(
             sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
                 .filter { it.kategori != VIRKSOMHET }
         )
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
-            sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
-                .filter { it.kategori == LAND }
-        )
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
     }
 
     fun søkEtterVirksomheter(
