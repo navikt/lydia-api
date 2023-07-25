@@ -18,8 +18,7 @@ import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvar
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.Kategori.LAND
-import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
+import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import org.slf4j.LoggerFactory
@@ -51,6 +50,10 @@ class SykefraværsstatistikkService(
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
             sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
                 .filter { it.kategori == LAND }
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForSektor(
+            sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
+                .filter { it.kategori == SEKTOR }
         )
     }
 

@@ -53,6 +53,48 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
         ).toInt()  shouldBe 3500000
     }
 
+    @Test
+    fun `vi lagrer sykefraværsstatistikk siste gjeldende kvartal for kategori SEKTOR`() {
+        val gjeldendeKvartal = Kvartal(2023, 1)
+        TestContainerHelper.postgresContainer.performUpdate("""
+            DELETE FROM sykefravar_statistikk_sektor 
+            WHERE 
+                sektor_kode = '3' 
+                and arstall = ${gjeldendeKvartal.årstall}
+                and kvartal = ${gjeldendeKvartal.kvartal}
+        """.trimIndent())
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(
+                Kategori.SEKTOR,
+                "3",
+                gjeldendeKvartal
+            ),
+            jsonValue(
+                Kategori.SEKTOR,
+                "3",
+                gjeldendeKvartal,
+                false,
+                BigDecimal(125000.0),
+                BigDecimal(2500000.5),
+                BigDecimal(5.0),
+                3500000
+            ),
+            KafkaContainerHelper.statistikkLandTopic,
+            Kafka.statistikkPerKategoriGroupId
+        )
+
+        TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
+            """
+                select antall_personer from sykefravar_statistikk_sektor
+                where 
+                sektor_kode = '3' 
+                and arstall = ${gjeldendeKvartal.årstall}
+                and kvartal = ${gjeldendeKvartal.kvartal}
+            """.trimIndent()
+        ).toInt()  shouldBe 3500000
+    }
+
+
     private fun jsonKey(
         kategori: Kategori,
         kode: String,
