@@ -75,6 +75,8 @@ spec:
       value: arbeidsgiver.sykefravarsstatistikk-v1
     - name: STATISTIKK_LAND_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-land-v1
+    - name: STATISTIKK_SEKTOR_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-sektor-v1
     - name: STATISTIKK_VIRKSOMHET_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-virksomhet-v1
     - name: BRREG_UNDERENHET_URL

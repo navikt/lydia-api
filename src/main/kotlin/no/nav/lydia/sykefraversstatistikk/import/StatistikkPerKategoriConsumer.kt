@@ -50,6 +50,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                     consumer.subscribe(
                         listOf(
                             kafka.statistikkLandTopic,
+                            kafka.statistikkSektorTopic,
                             kafka.statistikkVirksomhetTopic
                         )
                     )
