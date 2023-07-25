@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
 enum class Kategori {
-    VIRKSOMHET, LAND
+    VIRKSOMHET, LAND, SEKTOR
 }
 
 data class SykefraversstatistikkPerKategoriImportDto(

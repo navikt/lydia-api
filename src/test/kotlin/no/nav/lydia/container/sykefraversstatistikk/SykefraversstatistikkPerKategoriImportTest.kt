@@ -9,6 +9,7 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.LAND
+import no.nav.lydia.sykefraversstatistikk.import.Kategori.SEKTOR
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
 import java.sql.Timestamp
 import kotlin.test.Test
@@ -81,7 +82,7 @@ class SykefraversstatistikkPerKategoriImportTest {
     }
 
     @Test
-    fun `vi lagrer sykefraværsstatistikk siste 4 kvartaler per kategori (andre kategorier enn VIRKSOMHET)`() {
+    fun `vi lagrer sykefraværsstatistikk siste 4 kvartaler per kategori (LAND)`() {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(LAND, "NO"),
             jsonValue(LAND, "NO"),
@@ -101,7 +102,31 @@ class SykefraversstatistikkPerKategoriImportTest {
             """.trimIndent()
         )  shouldBe "LAND"
     }
+
+    @Test
+    fun `vi lagrer sykefraværsstatistikk siste 4 kvartaler per kategori (SEKTOR)`() {
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(SEKTOR, "NO"),
+            jsonValue(SEKTOR, "3"),
+            KafkaContainerHelper.statistikkSektorTopic,
+            Kafka.statistikkPerKategoriGroupId)
+
+        postgresContainer.hentEnkelKolonne<String>(
+            """
+                select kode from sykefravar_statistikk_kategori_siste_4_kvartal
+                where kode = '3' and kategori = 'SEKTOR'
+            """.trimIndent()
+        )  shouldBe "3"
+        postgresContainer.hentEnkelKolonne<String>(
+            """
+                select kategori from sykefravar_statistikk_kategori_siste_4_kvartal
+                where kode = '3' and kategori = 'SEKTOR'
+            """.trimIndent()
+        )  shouldBe "SEKTOR"
+    }
 }
+
+
 
 private fun jsonKey(kategori: Kategori, kode: String) =
     """
