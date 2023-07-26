@@ -48,6 +48,7 @@ class KafkaContainerHelper(
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
         const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
         const val statistikkSektorTopic = "arbeidsgiver.sykefravarsstatistikk-sektor-v1"
+        const val statistikkNæringTopic = "arbeidsgiver.sykefravarsstatistikk-naring-v1"
         const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
@@ -98,6 +99,7 @@ class KafkaContainerHelper(
             statistikkTopic = statistikkTopic,
             statistikkLandTopic = statistikkLandTopic,
             statistikkSektorTopic = statistikkSektorTopic,
+            statistikkNæringTopic = statistikkNæringTopic,
             statistikkVirksomhetTopic = statistikkVirksomhetTopic,
             brregOppdateringTopic = brregOppdateringTopic,
             consumerLoopDelay = 1,
@@ -117,6 +119,7 @@ class KafkaContainerHelper(
         "STATISTIKK_TOPIC" to statistikkTopic,
         "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
         "STATISTIKK_SEKTOR_TOPIC" to statistikkSektorTopic,
+        "STATISTIKK_NARING_TOPIC" to statistikkNæringTopic,
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,

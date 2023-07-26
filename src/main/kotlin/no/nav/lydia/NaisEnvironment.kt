@@ -82,6 +82,7 @@ class Kafka(
     val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
     val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
     val statistikkSektorTopic: String = getEnvVar("STATISTIKK_SEKTOR_TOPIC"),
+    val statistikkNæringTopic: String = getEnvVar("STATISTIKK_NARING_TOPIC"),
     val statistikkVirksomhetTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_TOPIC"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
