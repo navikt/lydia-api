@@ -175,10 +175,7 @@ class SykefraversstatistikkImportTest {
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
 
         sjekkIngenDataErFunnetITabell("sykefravar_statistikk_sektor")
-        hentStatistikk(tabell = "sykefravar_statistikk_naring",
-            kolonne = "naring",
-            kode = NÆRING_JORDBRUK,
-            periode = periode1971) shouldBe NÆRING_JORDBRUK
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_naring")
         hentStatistikk(tabell = "sykefravar_statistikk_naringsundergruppe",
             kolonne = "naringsundergruppe",
             kode = DYRKING_AV_RIS.kode,
@@ -203,10 +200,7 @@ class SykefraversstatistikkImportTest {
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
 
         sjekkIngenDataErFunnetITabell("sykefravar_statistikk_sektor")
-        hentStatistikk(tabell = "sykefravar_statistikk_naring",
-            kolonne = "naring",
-            kode = NÆRING_SKOGBRUK,
-            periode = periode1972) shouldBe NÆRING_SKOGBRUK
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_naring")
         hentStatistikk(tabell = "sykefravar_statistikk_naringsundergruppe",
             kolonne = "naringsundergruppe",
             kode = AVVIRKNING.kode,
@@ -225,10 +219,7 @@ class SykefraversstatistikkImportTest {
         kafkaContainer.sendKafkameldingSomString()
 
         sjekkIngenDataErFunnetITabell("sykefravar_statistikk_sektor")
-        hentStatistikk(tabell = "sykefravar_statistikk_naring",
-            kolonne = "naring",
-            kode = NÆRING_JORDBRUK,
-            periode = periode) shouldBe NÆRING_JORDBRUK
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_naring")
         hentStatistikk(tabell = "sykefravar_statistikk_naringsundergruppe",
             kolonne = "naringsundergruppe",
             kode = DYRKING_AV_KORN.kode,
