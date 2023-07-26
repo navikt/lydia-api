@@ -7,10 +7,9 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
-import no.nav.lydia.sykefraversstatistikk.import.Kategori.LAND
-import no.nav.lydia.sykefraversstatistikk.import.Kategori.SEKTOR
-import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
+import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
 import java.sql.Timestamp
 import kotlin.test.Test
 
@@ -123,6 +122,28 @@ class SykefraversstatistikkPerKategoriImportTest {
                 where kode = '3' and kategori = 'SEKTOR'
             """.trimIndent()
         )  shouldBe "SEKTOR"
+    }
+
+    @Test
+    fun `vi lagrer sykefraværsstatistikk siste 4 kvartaler per kategori (NÆRING)`() {
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(NÆRING, NÆRING_JORDBRUK),
+            jsonValue(NÆRING, NÆRING_JORDBRUK),
+            KafkaContainerHelper.statistikkSektorTopic,
+            Kafka.statistikkPerKategoriGroupId)
+
+        postgresContainer.hentEnkelKolonne<String>(
+            """
+                select kode from sykefravar_statistikk_kategori_siste_4_kvartal
+                where kode = '$NÆRING_JORDBRUK' and kategori = '${NÆRING.name}'
+            """.trimIndent()
+        )  shouldBe NÆRING_JORDBRUK
+        postgresContainer.hentEnkelKolonne<String>(
+            """
+                select kategori from sykefravar_statistikk_kategori_siste_4_kvartal
+                where kode = '$NÆRING_JORDBRUK' and kategori = '${NÆRING.name}'
+            """.trimIndent()
+        )  shouldBe NÆRING.name
     }
 }
 
