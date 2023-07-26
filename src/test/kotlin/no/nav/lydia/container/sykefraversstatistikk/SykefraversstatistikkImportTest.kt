@@ -261,7 +261,7 @@ class SykefraversstatistikkImportTest {
     private fun sjekkIngenDataErFunnetITabell(
         tabell: String,
     ) =
-        postgres.hentAlleKolonner<Int>("select count(*) from $tabell").first() shouldBe 0
+        postgres.hentAlleRaderTilEnkelKolonne<Int>("select count(*) from $tabell").first() shouldBe 0
     private fun hentStatistikk(
         tabell: String,
         kolonne: String,

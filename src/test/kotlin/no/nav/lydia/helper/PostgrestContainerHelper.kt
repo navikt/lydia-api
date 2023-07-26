@@ -42,7 +42,7 @@ class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Log
             }
         }
 
-    fun <T> hentAlleKolonner(sql: String): List<T> {
+    fun <T> hentAlleRaderTilEnkelKolonne(sql: String): List<T> {
         dataSource.connection.use { connection ->
             val statement = connection.createStatement()
             statement.execute(sql)
