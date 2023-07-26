@@ -189,8 +189,6 @@ private fun TransactionalSession.insertBehandletImportStatistikk(behandletImport
     insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe = behandletImportStatistikkListe.map { it.virksomhetSykefravær })
     insertMetadataForVirksomhet(behandletImportStatistikk = behandletImportStatistikkListe)
 
-    insertBehandletSektorStatistikk(behandletSektorSykefraværsstatistikk = behandletImportStatistikkListe.map { it.sektorSykefravær }
-        .toSet())
     insertBehandletNæringsStatistikk(behandletNæringSykefraværsstatistikk = behandletImportStatistikkListe.map { it.næringSykefravær }
         .toSet())
     insertBehandletNæringsundergruppeStatistikk(behandletNæringsundergruppeSykefraværsstatistikk = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }
