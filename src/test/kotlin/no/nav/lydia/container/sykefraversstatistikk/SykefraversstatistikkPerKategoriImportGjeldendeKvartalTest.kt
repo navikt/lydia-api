@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
@@ -95,6 +96,46 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
         ).toInt()  shouldBe 3500000
     }
 
+    @Test
+    fun `vi lagrer sykefraværsstatistikk siste gjeldende kvartal for kategori NÆRING`() {
+        val gjeldendeKvartal = Kvartal(2023, 1)
+        TestContainerHelper.postgresContainer.performUpdate("""
+            DELETE FROM sykefravar_statistikk_naring 
+            WHERE 
+                naring = '$NÆRING_SKOGBRUK' 
+                and arstall = ${gjeldendeKvartal.årstall}
+                and kvartal = ${gjeldendeKvartal.kvartal}
+        """.trimIndent())
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(
+                Kategori.NÆRING,
+                NÆRING_SKOGBRUK,
+                gjeldendeKvartal
+            ),
+            jsonValue(
+                Kategori.NÆRING,
+                NÆRING_SKOGBRUK,
+                gjeldendeKvartal,
+                false,
+                BigDecimal(125000.0),
+                BigDecimal(2500000.5),
+                BigDecimal(5.0),
+                3500000
+            ),
+            KafkaContainerHelper.statistikkLandTopic,
+            Kafka.statistikkPerKategoriGroupId
+        )
+
+        TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
+            """
+                select antall_personer from sykefravar_statistikk_naring
+                where 
+                naring = '$NÆRING_SKOGBRUK' 
+                and arstall = ${gjeldendeKvartal.årstall}
+                and kvartal = ${gjeldendeKvartal.kvartal}
+            """.trimIndent()
+        ).toInt()  shouldBe 3500000
+    }
 
     private fun jsonKey(
         kategori: Kategori,

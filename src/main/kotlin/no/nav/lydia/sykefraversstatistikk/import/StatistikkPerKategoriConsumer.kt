@@ -51,6 +51,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                         listOf(
                             kafka.statistikkLandTopic,
                             kafka.statistikkSektorTopic,
+                            kafka.statistikkNæringTopic,
                             kafka.statistikkVirksomhetTopic
                         )
                     )

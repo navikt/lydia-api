@@ -3,8 +3,14 @@ package no.nav.lydia.sykefraversstatistikk.import
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
+// OBS: Statistisk sentralbyrå (SSB) og Brønnøysundregistret bruker SN2007 standard for næringskoder
+// (dvs kode som 'viser virksomhets hovedaktivitet').
+// ref: https://www.brreg.no/bedrift/naeringskoder/
+// Vi importerer statistikk på to forskjellige nivåer av SN2007 næringsgruppering:
+//  - Næring: det andre nivået i SN2007 identifisert ved en tosifret tallkode
+//  - Næringskode: femte nivå identifisert ved en femsifret tallkode (kalt også - feilaktig - 'bransje')
 enum class Kategori {
-    VIRKSOMHET, LAND, SEKTOR
+    VIRKSOMHET, LAND, SEKTOR, NÆRING
 }
 
 data class SykefraversstatistikkPerKategoriImportDto(
@@ -47,6 +53,21 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
+        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletNæringSykefraværsstatistikk() =
+            BehandletNæringSykefraværsstatistikk(
+                statistikk = NæringSykefravær(
+                    årstall = this.sistePubliserteKvartal.årstall,
+                    kvartal = this.sistePubliserteKvartal.kvartal,
+                    prosent = this.sistePubliserteKvartal.prosent ?: 0.0,
+                    muligeDagsverk = this.sistePubliserteKvartal.muligeDagsverk ?: 0.0,
+                    antallPersoner = this.sistePubliserteKvartal.antallPersoner?.toDouble() ?: 0.0,
+                    tapteDagsverk = this.sistePubliserteKvartal.tapteDagsverk ?: 0.0,
+                    maskert = this.sistePubliserteKvartal.erMaskert,
+                    kategori = this.kategori.name,
+                    kode = this.kode,
+                )
+            )
+
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletLandSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletLandSykefraværsstatistikk()
@@ -55,6 +76,11 @@ data class SykefraversstatistikkPerKategoriImportDto(
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletSektorSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletSektorSykefraværsstatistikk()
+            }
+
+        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletNæringSykefraværsstatistikk() =
+            this.map {
+                it.tilBehandletNæringSykefraværsstatistikk()
             }
     }
 }

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import kotliquery.*
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
 import javax.sql.DataSource
 
@@ -40,6 +41,18 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.transaction { tx ->
                 tx.insertBehandletSektorStatistikk(
                     behandletSektorSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletSektorSykefraværsstatistikk()
+                )
+            }
+        }
+    }
+
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
+        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+    ) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.insertBehandletNæringsStatistikk(
+                    behandletNæringSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletNæringSykefraværsstatistikk()
                 )
             }
         }
