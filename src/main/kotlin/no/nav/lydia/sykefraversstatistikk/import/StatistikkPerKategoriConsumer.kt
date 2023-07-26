@@ -54,7 +54,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                             kafka.statistikkVirksomhetTopic
                         )
                     )
-                    logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic} and ${kafka.statistikkVirksomhetTopic} i StatistikkPerKategoriConsumer")
+                    logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic}, ${kafka.statistikkSektorTopic} and ${kafka.statistikkVirksomhetTopic} in StatistikkPerKategoriConsumer")
 
                     while (job.isActive) {
                         try {
@@ -67,7 +67,7 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
-                            logger.warn("Had a retriable exception i StatistikkPerKategoriConsumer, retrying", e)
+                            logger.warn("Had a retriable exception in StatistikkPerKategoriConsumer, retrying", e)
                         }
                         delay(kafka.consumerLoopDelay)
                     }
