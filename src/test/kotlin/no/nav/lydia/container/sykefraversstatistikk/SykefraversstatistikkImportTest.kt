@@ -175,10 +175,7 @@ class SykefraversstatistikkImportTest {
 
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
 
-        hentStatistikk(tabell = "sykefravar_statistikk_sektor",
-            kolonne = "sektor_kode",
-            kode = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
-            periode = periode1971) shouldBe SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_sektor")
         hentStatistikk(tabell = "sykefravar_statistikk_naring",
             kolonne = "naring",
             kode = NÆRING_JORDBRUK,
@@ -206,10 +203,7 @@ class SykefraversstatistikkImportTest {
 
         kafkaContainer.sendSykefraversstatistikkKafkaMelding(importDto = melding)
 
-        hentStatistikk(tabell = "sykefravar_statistikk_sektor",
-            kolonne = "sektor_kode",
-            kode = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
-            periode = periode1972) shouldBe SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_sektor")
         hentStatistikk(tabell = "sykefravar_statistikk_naring",
             kolonne = "naring",
             kode = NÆRING_SKOGBRUK,
@@ -228,11 +222,10 @@ class SykefraversstatistikkImportTest {
     @Test
     fun `sjekk at importmodel er riktig`() {
         val periode = Periode(kvartal = 1, årstall = 2019)
+
         kafkaContainer.sendKafkameldingSomString()
-        hentStatistikk(tabell = "sykefravar_statistikk_sektor",
-            kolonne = "sektor_kode",
-            kode = SEKTOR_STATLIG_FORVALTNING,
-            periode = periode) shouldBe SEKTOR_STATLIG_FORVALTNING
+
+        sjekkIngenDataErFunnetITabell("sykefravar_statistikk_sektor")
         hentStatistikk(tabell = "sykefravar_statistikk_naring",
             kolonne = "naring",
             kode = NÆRING_JORDBRUK,

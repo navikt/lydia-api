@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import java.math.BigDecimal
@@ -59,19 +60,19 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
         TestContainerHelper.postgresContainer.performUpdate("""
             DELETE FROM sykefravar_statistikk_sektor 
             WHERE 
-                sektor_kode = '3' 
+                sektor_kode = '$SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET' 
                 and arstall = ${gjeldendeKvartal.årstall}
                 and kvartal = ${gjeldendeKvartal.kvartal}
         """.trimIndent())
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(
                 Kategori.SEKTOR,
-                "3",
+                SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
                 gjeldendeKvartal
             ),
             jsonValue(
                 Kategori.SEKTOR,
-                "3",
+                SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
                 gjeldendeKvartal,
                 false,
                 BigDecimal(125000.0),
@@ -87,7 +88,7 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
             """
                 select antall_personer from sykefravar_statistikk_sektor
                 where 
-                sektor_kode = '3' 
+                sektor_kode = '$SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET' 
                 and arstall = ${gjeldendeKvartal.årstall}
                 and kvartal = ${gjeldendeKvartal.kvartal}
             """.trimIndent()
