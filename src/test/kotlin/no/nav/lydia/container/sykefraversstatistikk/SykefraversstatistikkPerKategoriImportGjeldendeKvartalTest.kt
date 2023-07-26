@@ -8,73 +8,79 @@ import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
+import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
 import java.math.BigDecimal
+import kotlin.test.BeforeTest
 import kotlin.test.Test
+
 
 class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
+    private val KVARTAL_2023_1 = Kvartal(2023, 1)
+    private val tabellnavn = mapOf(
+        Kategori.LAND to "sykefravar_statistikk_land",
+        Kategori.SEKTOR to "sykefravar_statistikk_sektor",
+        Kategori.NÆRING to "sykefravar_statistikk_naring"
+    )
+    private val kodenavn = mapOf(
+        Kategori.LAND to "land",
+        Kategori.SEKTOR to "sektor_kode",
+        Kategori.NÆRING to "naring"
+    )
 
+
+    @BeforeTest
+    fun cleanUp() {
+        tabellnavn.forEach {
+            TestContainerHelper.postgresContainer.performUpdate("""
+            delete from ${it.value} 
+            where arstall = ${KVARTAL_2023_1.årstall}
+              and kvartal = ${KVARTAL_2023_1.kvartal}
+        """.trimIndent())
+        }
+    }
     @Test
     fun `vi lagrer sykefraværsstatistikk siste gjeldende kvartal for kategori LAND`() {
-        val gjeldendeKvartal = Kvartal(2023, 1)
-        TestContainerHelper.postgresContainer.performUpdate("""
-            DELETE FROM sykefravar_statistikk_land 
-            WHERE 
-                land = 'NO' 
-                and arstall = ${gjeldendeKvartal.årstall}
-                and kvartal = ${gjeldendeKvartal.kvartal}
-        """.trimIndent())
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(
-                Kategori.LAND,
-                "NO",
-                gjeldendeKvartal
+                kategori = Kategori.LAND,
+                kode = "NO",
+                kvartal = KVARTAL_2023_1
             ),
             jsonValue(
-                Kategori.LAND,
-                "NO",
-                gjeldendeKvartal,
-                false,
-                BigDecimal(125000.0),
-                BigDecimal(2500000.5),
-                BigDecimal(5.0),
-                3500000
+                kategori = Kategori.LAND,
+                kode = "NO",
+                kvartal = KVARTAL_2023_1,
+                erMaskert = false,
+                tapteDagsverk = BigDecimal(125000.0),
+                muligeDagsverk = BigDecimal(2500000.5),
+                prosent = BigDecimal(5.0),
+                antallPersoner = 3500000
             ),
             KafkaContainerHelper.statistikkLandTopic,
             Kafka.statistikkPerKategoriGroupId
         )
 
-        TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-            """
-                select antall_personer from sykefravar_statistikk_land
-                where 
-                land = 'NO' 
-                and arstall = ${gjeldendeKvartal.årstall}
-                and kvartal = ${gjeldendeKvartal.kvartal}
-            """.trimIndent()
-        ).toInt()  shouldBe 3500000
+        val result = hentStatistikkGjeldendeKvartal(Kategori.LAND, "NO", KVARTAL_2023_1)
+        result.sistePubliserteKvartal.antallPersoner shouldBe 3500000
+        result.sistePubliserteKvartal.prosent shouldBe 5.0
+        result.sistePubliserteKvartal.muligeDagsverk shouldBe 2500000.5
+        result.sistePubliserteKvartal.tapteDagsverk shouldBe 125000.0
+        result.sistePubliserteKvartal.erMaskert shouldBe false
     }
 
     @Test
     fun `vi lagrer sykefraværsstatistikk siste gjeldende kvartal for kategori SEKTOR`() {
-        val gjeldendeKvartal = Kvartal(2023, 1)
-        TestContainerHelper.postgresContainer.performUpdate("""
-            DELETE FROM sykefravar_statistikk_sektor 
-            WHERE 
-                sektor_kode = '$SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET' 
-                and arstall = ${gjeldendeKvartal.årstall}
-                and kvartal = ${gjeldendeKvartal.kvartal}
-        """.trimIndent())
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(
                 Kategori.SEKTOR,
                 SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
-                gjeldendeKvartal
+                KVARTAL_2023_1
             ),
             jsonValue(
                 Kategori.SEKTOR,
                 SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
-                gjeldendeKvartal,
+                KVARTAL_2023_1,
                 false,
                 BigDecimal(125000.0),
                 BigDecimal(2500000.5),
@@ -85,37 +91,26 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
             Kafka.statistikkPerKategoriGroupId
         )
 
-        TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-            """
-                select antall_personer from sykefravar_statistikk_sektor
-                where 
-                sektor_kode = '$SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET' 
-                and arstall = ${gjeldendeKvartal.årstall}
-                and kvartal = ${gjeldendeKvartal.kvartal}
-            """.trimIndent()
-        ).toInt()  shouldBe 3500000
+        val result = hentStatistikkGjeldendeKvartal(Kategori.SEKTOR, SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET, KVARTAL_2023_1)
+        result.sistePubliserteKvartal.antallPersoner shouldBe 3500000
+        result.sistePubliserteKvartal.prosent shouldBe 5.0
+        result.sistePubliserteKvartal.muligeDagsverk shouldBe 2500000.5
+        result.sistePubliserteKvartal.tapteDagsverk shouldBe 125000.0
+        result.sistePubliserteKvartal.erMaskert shouldBe false
     }
 
     @Test
     fun `vi lagrer sykefraværsstatistikk siste gjeldende kvartal for kategori NÆRING`() {
-        val gjeldendeKvartal = Kvartal(2023, 1)
-        TestContainerHelper.postgresContainer.performUpdate("""
-            DELETE FROM sykefravar_statistikk_naring 
-            WHERE 
-                naring = '$NÆRING_SKOGBRUK' 
-                and arstall = ${gjeldendeKvartal.årstall}
-                and kvartal = ${gjeldendeKvartal.kvartal}
-        """.trimIndent())
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(
                 Kategori.NÆRING,
                 NÆRING_SKOGBRUK,
-                gjeldendeKvartal
+                KVARTAL_2023_1
             ),
             jsonValue(
                 Kategori.NÆRING,
                 NÆRING_SKOGBRUK,
-                gjeldendeKvartal,
+                KVARTAL_2023_1,
                 false,
                 BigDecimal(125000.0),
                 BigDecimal(2500000.5),
@@ -126,15 +121,12 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
             Kafka.statistikkPerKategoriGroupId
         )
 
-        TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-            """
-                select antall_personer from sykefravar_statistikk_naring
-                where 
-                naring = '$NÆRING_SKOGBRUK' 
-                and arstall = ${gjeldendeKvartal.årstall}
-                and kvartal = ${gjeldendeKvartal.kvartal}
-            """.trimIndent()
-        ).toInt()  shouldBe 3500000
+        val result = hentStatistikkGjeldendeKvartal(Kategori.NÆRING, NÆRING_SKOGBRUK, KVARTAL_2023_1)
+        result.sistePubliserteKvartal.antallPersoner shouldBe 3500000
+        result.sistePubliserteKvartal.prosent shouldBe 5.0
+        result.sistePubliserteKvartal.muligeDagsverk shouldBe 2500000.5
+        result.sistePubliserteKvartal.tapteDagsverk shouldBe 125000.0
+        result.sistePubliserteKvartal.erMaskert shouldBe false
     }
 
     private fun jsonKey(
@@ -199,4 +191,42 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
         }
       }
 """.trimIndent()}
+
+    private fun hentStatistikkGjeldendeKvartal(
+        kategori: Kategori,
+        verdi: String,
+        kvartal: Kvartal
+    ): StatistikkGjeldendeKvartal {
+        val query = """
+            select * from ${tabellnavn[kategori]} 
+             where ${kodenavn[kategori]} = '$verdi'
+             and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
+        """.trimMargin()
+        TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+            val statement = connection.createStatement()
+            statement.execute(query)
+            val rs = statement.resultSet
+            rs.next()
+            rs.row shouldBe 1
+            return StatistikkGjeldendeKvartal(
+                kategori = kategori,
+                kode = rs.getString(kodenavn[kategori]),
+                sistePubliserteKvartal = SistePubliserteKvartal(
+                    årstall = rs.getInt("arstall"),
+                    kvartal = rs.getInt("kvartal"),
+                    prosent = rs.getDouble("prosent"),
+                    tapteDagsverk = rs.getDouble("tapte_dagsverk"),
+                    muligeDagsverk = rs.getDouble("mulige_dagsverk"),
+                    antallPersoner = rs.getInt("antall_personer"),
+                    erMaskert = rs.getBoolean("maskert")
+                )
+            )
+        }
+    }
+
+    data class StatistikkGjeldendeKvartal(
+        val kategori: Kategori,
+        val kode: String,
+        val sistePubliserteKvartal: SistePubliserteKvartal,
+    )
 }

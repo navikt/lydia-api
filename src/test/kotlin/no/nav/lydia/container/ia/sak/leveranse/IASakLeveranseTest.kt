@@ -354,7 +354,7 @@ class IASakLeveranseTest {
     }
 
     private fun hentIATjenesterFraDatabase() =
-            postgresContainer.hentAlleKolonner<String>("select navn from ia_tjeneste")
+            postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
 
     private fun leggTilModul(modul: ModulDto) =
             postgresContainer.performUpdate(
