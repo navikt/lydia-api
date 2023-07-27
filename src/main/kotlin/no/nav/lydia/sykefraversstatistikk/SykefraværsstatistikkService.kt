@@ -17,11 +17,8 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
-import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.Kategori
+import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
-import no.nav.lydia.sykefraversstatistikk.import.Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
 
@@ -36,6 +33,12 @@ class SykefraværsstatistikkService(
         val start = System.currentTimeMillis()
         sykefraversstatistikkRepository.insert(behandletImportStatistikkListe = sykefraværsstatistikkListe)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre statistikk for ${sykefraværsstatistikkListe.size} virksomheter")
+    }
+
+    fun lagreStatistikkMetadataVirksomhet(behandletImportMetadataVirksomhetListe: List<BehandletImportMetadataVirksomhet>) {
+        sykefraversstatistikkRepository.insertMetadataForVirksomhet(
+            behandletImportMetadataVirksomhetListe
+        )
     }
 
     fun lagreSykefraværsstatistikkPerKategori(
