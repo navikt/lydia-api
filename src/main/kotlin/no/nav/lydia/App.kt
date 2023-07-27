@@ -52,6 +52,7 @@ import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.navEnhet
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -87,6 +88,11 @@ fun startLydiaBackend() {
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     StatistikkPerKategoriConsumer.apply {
+        create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
+        run()
+    }.also { HelseMonitor.leggTilHelsesjekk(it) }
+
+    StatistikkMetadataVirksomhetConsumer.apply {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }

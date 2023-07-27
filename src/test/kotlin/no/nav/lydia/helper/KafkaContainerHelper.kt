@@ -46,6 +46,7 @@ class KafkaContainerHelper(
 ) {
     companion object {
         const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
+        const val statistikkMetadataVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1"
         const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
         const val statistikkSektorTopic = "arbeidsgiver.sykefravarsstatistikk-sektor-v1"
         const val statistikkNæringTopic = "arbeidsgiver.sykefravarsstatistikk-naring-v1"
@@ -80,9 +81,11 @@ class KafkaContainerHelper(
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
-            createTopic(statistikkTopic,
+            createTopic(
+                statistikkTopic,
                 iaSakTopic,
                 brregOppdateringTopic,
+                statistikkMetadataVirksomhetTopic,
                 statistikkLandTopic,
                 statistikkSektorTopic,
                 statistikkVirksomhetTopic)
@@ -97,6 +100,7 @@ class KafkaContainerHelper(
             iaSakStatusTopic = iaSakStatusTopic,
             iaSakLeveranseTopic = iaSakLeveranseTopic,
             statistikkTopic = statistikkTopic,
+            statistikkMetadataVirksomhetTopic = statistikkMetadataVirksomhetTopic,
             statistikkLandTopic = statistikkLandTopic,
             statistikkSektorTopic = statistikkSektorTopic,
             statistikkNæringTopic = statistikkNæringTopic,
@@ -118,6 +122,7 @@ class KafkaContainerHelper(
         "KAFKA_CREDSTORE_PASSWORD" to "",
         "STATISTIKK_TOPIC" to statistikkTopic,
         "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
+        "STATISTIKK_METADATA_VIRKSOMHET_TOPIC" to statistikkMetadataVirksomhetTopic,
         "STATISTIKK_SEKTOR_TOPIC" to statistikkSektorTopic,
         "STATISTIKK_NARING_TOPIC" to statistikkNæringTopic,
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,

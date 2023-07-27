@@ -80,6 +80,7 @@ class Kafka(
     val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
     val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
+    val statistikkMetadataVirksomhetTopic: String = getEnvVar("STATISTIKK_METADATA_VIRKSOMHET_TOPIC"),
     val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
     val statistikkSektorTopic: String = getEnvVar("STATISTIKK_SEKTOR_TOPIC"),
     val statistikkNæringTopic: String = getEnvVar("STATISTIKK_NARING_TOPIC"),
@@ -89,6 +90,7 @@ class Kafka(
     companion object {
         const val statistikkConsumerGroupId = "lydia-api-kafka-group-id"
         const val statistikkPerKategoriGroupId = "lydia-api-statistikk-per-kategori-consumer"
+        const val statistikkMetadataVirksomhetGroupId = "lydia-api-statistikk-metadata-virksomhet-consumer"
         const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
         const val clientId: String = "lydia-api"
     }

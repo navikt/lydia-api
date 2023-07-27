@@ -73,6 +73,8 @@ spec:
       value: pia.brreg-oppdatering
     - name: STATISTIKK_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-v1
+    - name: STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1
     - name: STATISTIKK_LAND_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-land-v1
     - name: STATISTIKK_SEKTOR_TOPIC
