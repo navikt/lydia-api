@@ -20,6 +20,7 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
         TestContainerHelper.postgresContainer.performUpdate(
             """
             delete from virksomhet_statistikk_metadata
+            where orgnr in ('888888888', '999999999')
         """.trimIndent()
         )
     }
@@ -33,13 +34,9 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
             Kafka.statistikkMetadataVirksomhetGroupId
         )
 
-        TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-            sql =
-            """
-                select sektor from virksomhet_statistikk_metadata
-                where orgnr = '999999999'
-            """.trimIndent()
-        ) shouldBe Sektor.KOMMUNAL.kode
+        val results = hentMetadataVirksomhet("888888888", "999999999")
+        val virksomhetMetadata = results.first()
+        virksomhetMetadata.sektor shouldBe Sektor.KOMMUNAL.kode
     }
 
     @Test
@@ -57,7 +54,7 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
             Kafka.statistikkMetadataVirksomhetGroupId
         )
 
-        val results = hentMetadataVirksomhet()
+        val results = hentMetadataVirksomhet("888888888", "999999999")
         results.size shouldBe 1
         val virksomhetMetadata = results.first()
         virksomhetMetadata.sektor shouldBe Sektor.STATLIG.kode
@@ -80,7 +77,7 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
             Kafka.statistikkMetadataVirksomhetGroupId
         )
 
-        val results = hentMetadataVirksomhet()
+        val results = hentMetadataVirksomhet("999999999")
         results.size shouldBe 1
         val virksomhetMetadata = results.first()
         virksomhetMetadata.sektor shouldBe Sektor.PRIVAT.kode
@@ -119,9 +116,11 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
 """.trimIndent()
     }
 
-    private fun hentMetadataVirksomhet(): List<VirksomhetMetadata> {
+    private fun hentMetadataVirksomhet(vararg orgnr: String): List<VirksomhetMetadata> {
+        val orgnrListe = orgnr.joinToString(transform =  { nummer: String -> "'$nummer'" }, separator = ",")
         val query = """
             select * from virksomhet_statistikk_metadata
+            where orgnr in ($orgnrListe)
         """.trimMargin()
         TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
             val statement = connection.createStatement()
