@@ -19,7 +19,7 @@ data class BehandletImportMetadataVirksomhet (
                 orgnr = this.orgnr,
                 kvartal = Kvartal(this.årstall, this.kvartal),
                 naring = this.naring,
-                bransje = this.bransje,
+                bransje = this.bransje?: "",
                 sektor = this.sektor.fraSykefraværsstistikkSektortilSektor() ?:
                 throw IllegalStateException("Sektor '${this.sektor}' funnet i import av metadata virksomhet. " +
                         "Denne skal ikke importeres. Sektor skal være en av " +

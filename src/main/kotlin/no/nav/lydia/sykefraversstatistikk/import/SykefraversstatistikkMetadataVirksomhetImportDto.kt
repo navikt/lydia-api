@@ -12,7 +12,7 @@ data class SykefraversstatistikkMetadataVirksomhetImportDto(
     @SerializedName("naring")
     val naring: String,
     @SerializedName("bransje")
-    val bransje: String,
+    val bransje: String?,
     @SerializedName("sektor")
     val sektor: String,
 )
