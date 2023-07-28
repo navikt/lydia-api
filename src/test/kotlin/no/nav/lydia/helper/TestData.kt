@@ -7,6 +7,8 @@ import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
+import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.virksomhet.domene.tilSektor
 import kotlin.random.Random
 
 const val MAX_SYKEFRAVÆRSPROSENT = 20
@@ -50,6 +52,8 @@ class TestData(
     private val kafkaMeldinger = mutableSetOf<SykefraversstatistikkImportDto>()
     private val sykefraværsstatistikkPerKategoriKafkaMeldinger =
         mutableSetOf<SykefraversstatistikkPerKategoriImportDto>()
+    private val sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger =
+        mutableSetOf<SykefraversstatistikkMetadataVirksomhetImportDto>()
     private val næringer = mutableSetOf<String>()
     private val brregVirksomheter = mutableSetOf<String>()
 
@@ -136,6 +140,16 @@ class TestData(
                     tapteDagsverk = tapteDagsverk,
                 )
             )
+            sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger.add(
+                SykefraversstatistikkMetadataVirksomhetImportDto(
+                    orgnr = virksomhet.orgnr,
+                    årstall = periode.årstall,
+                    kvartal = periode.kvartal,
+                    sektor = sektor.tilSektor()?.name ?: Sektor.STATLIG.name,
+                    bransje = "BARNEHAGER",
+                    naring = "88"
+                )
+            )
         }
         virksomhet.næringsundergrupper
             .map(Næringsgruppe::tilTosifret)
@@ -154,6 +168,9 @@ class TestData(
 
     fun sykefraværsstatistikkPerKategoriMeldinger() =
         sykefraværsstatistikkPerKategoriKafkaMeldinger
+
+    fun sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger() =
+        sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger
 
     fun brregMockData() =
         brregVirksomheter.joinToString(prefix = "[", postfix = "]", separator = ",")

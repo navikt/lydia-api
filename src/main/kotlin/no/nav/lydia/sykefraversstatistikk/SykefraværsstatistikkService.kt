@@ -63,9 +63,6 @@ class SykefraværsstatistikkService(
     }
 
     private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
-        sykefraværsstatistikkKategoriImportDtoListe.forEach {
-            println("[DEBUG] Got following statistics ${it.kode}/${it.kategori}")
-        }
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
             sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
                 .filter { it.kategori == VIRKSOMHET }

@@ -12,10 +12,7 @@ import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
-import no.nav.lydia.sykefraversstatistikk.import.Key
-import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkPerKategori
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
+import no.nav.lydia.sykefraversstatistikk.import.*
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -178,6 +175,20 @@ class KafkaContainerHelper(
         }
     }
 
+    fun sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
+        importDtoer: List<SykefraversstatistikkMetadataVirksomhetImportDto>,
+    ) {
+        runBlocking {
+            val sendteMeldinger = importDtoer.map { melding ->
+                kafkaProducer.send(melding.tilProducerRecord()).get()
+            }
+            ventTilKonsumert(
+                konsumentGruppeId = Kafka.statistikkMetadataVirksomhetGroupId,
+                recordMetadata = sendteMeldinger.last()
+            )
+        }
+    }
+
     fun sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
         importDtoer: List<SykefraversstatistikkPerKategoriImportDto>,
     ) {
@@ -265,6 +276,19 @@ class KafkaContainerHelper(
                     kvartal = sistePubliserteKvartal.kvartal
                 ),
             ), gson.toJson(this)
+        )
+
+    private fun SykefraversstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
+        ProducerRecord(
+            statistikkMetadataVirksomhetTopic,
+            gson.toJson(
+                KeySykefraversstatistikkMetadataVirksomhet(
+                    orgnr = orgnr,
+                    arstall = årstall,
+                    kvartal = kvartal
+                ),
+            ),
+            gson.toJson(this)
         )
 
     private suspend fun ventTilKonsumert(
