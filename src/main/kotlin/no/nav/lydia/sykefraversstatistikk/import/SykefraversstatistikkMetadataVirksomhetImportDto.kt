@@ -16,3 +16,9 @@ data class SykefraversstatistikkMetadataVirksomhetImportDto(
     @SerializedName("sektor")
     val sektor: String,
 )
+
+data class KeySykefraversstatistikkMetadataVirksomhet(
+    val orgnr: String,
+    val arstall: Int,
+    val kvartal: Int,
+)

@@ -1,6 +1,5 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
-import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -102,16 +101,6 @@ class SykefraversstatistikkImportTest {
         andreLagredeStatistikkSiste4Kvartal.muligeDagsverk shouldBe førsteLagredeStatistikkSiste4Kvartal.muligeDagsverk
         andreLagredeStatistikkSiste4Kvartal.tapteDagsverk shouldBe førsteLagredeStatistikkSiste4Kvartal.tapteDagsverk
         andreLagredeStatistikkSisteKvartal.antallPersoner shouldBe førsteLagredeStatistikkSisteKvartal.antallPersoner
-    }
-
-    @Test
-    fun `vi lagrer metadata ved import`() {
-        kafkaContainer.sendSykefraversstatistikkKafkaMelding(SykefraværsstatistikkTestData.testVirksomhetForrigeKvartal.sykefraværsstatistikkImportDto)
-
-        val antallMetadata =
-            postgres.hentEnkelKolonne<Int>("SELECT count(*) FROM virksomhet_statistikk_metadata WHERE orgnr = '${TESTVIRKSOMHET_FOR_IMPORT.orgnr}'")
-
-        antallMetadata shouldBeGreaterThanOrEqual 1
     }
 
     @Test

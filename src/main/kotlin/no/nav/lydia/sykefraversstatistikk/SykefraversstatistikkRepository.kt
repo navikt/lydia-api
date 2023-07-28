@@ -194,34 +194,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
-    private fun TransactionalSession.insertMetadataForVirksomhet(behandletImportStatistikk: List<BehandletImportStatistikk>) =
-        behandletImportStatistikk.forEach { sykefraværsStatistikk ->
-            run(
-                queryOf(
-                    """
-                            INSERT INTO virksomhet_statistikk_metadata(
-                                orgnr,
-                                kategori,
-                                sektor
-                            )
-                            VALUES(
-                                :orgnr,
-                                :kategori,
-                                :sektor
-                            )
-                            ON CONFLICT (orgnr) DO UPDATE SET
-                                kategori = :kategori,
-                                sektor = :sektor
-                        """.trimIndent(),
-                    mapOf(
-                        "orgnr" to sykefraværsStatistikk.virksomhetSykefravær.orgnr,
-                        "kategori" to sykefraværsStatistikk.virksomhetSykefravær.kategori,
-                        "sektor" to sykefraværsStatistikk.sektorSykefravær.sektor
-                    )
-                ).asUpdate
-            )
-        }
-
     private fun BehandletKvartalsvisSykefraværsstatistikk.tilStatistikkSpesifikkVerdi() = when (this) {
         is BehandletLandSykefraværsstatistikk -> this.land
         is BehandletNæringSykefraværsstatistikk -> this.næring
@@ -232,7 +204,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
     private fun TransactionalSession.insertBehandletImportStatistikk(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
         insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe = behandletImportStatistikkListe.map { it.virksomhetSykefravær })
-        insertMetadataForVirksomhet(behandletImportStatistikk = behandletImportStatistikkListe)
 
         insertBehandletNæringsundergruppeStatistikk(behandletNæringsundergruppeSykefraværsstatistikk = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }
             .toSet())

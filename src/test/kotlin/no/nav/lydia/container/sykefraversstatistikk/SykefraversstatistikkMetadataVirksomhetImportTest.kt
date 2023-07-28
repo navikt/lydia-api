@@ -117,10 +117,14 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
     }
 
     private fun hentMetadataVirksomhet(vararg orgnr: String): List<VirksomhetMetadata> {
+        var filter = ""
+        if (orgnr.size > 0) {
         val orgnrListe = orgnr.joinToString(transform =  { nummer: String -> "'$nummer'" }, separator = ",")
+            filter = "where orgnr in ($orgnrListe)"
+        }
         val query = """
             select * from virksomhet_statistikk_metadata
-            where orgnr in ($orgnrListe)
+            $filter
         """.trimMargin()
         TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
             val statement = connection.createStatement()
