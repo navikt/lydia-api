@@ -63,7 +63,25 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
     }
 
     @Test
-    fun `sykefraværsstatistikk metadata for virksomhet oppdaterer`() {
+    fun `bransje til en virksomhet kan være null`() {
+        val value = jsonValue(orgnr = "999999999", sektor = "STATLIG", bransje = null)
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey("999999999"),
+            value,
+            KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
+            Kafka.statistikkMetadataVirksomhetGroupId
+        )
+
+        val results = hentMetadataVirksomhet("999999999")
+        results.size shouldBe 1
+        val virksomhetMetadata = results.first()
+        virksomhetMetadata.sektor shouldBe Sektor.STATLIG.kode
+        virksomhetMetadata.kategori shouldBe Kategori.VIRKSOMHET.name
+        virksomhetMetadata.orgnr shouldBe "999999999"
+    }
+
+    @Test
+    fun `sykefraværsstatistikk metadata for virksomhet vil oppdateres dersom to meldinger på samme orgnr er mottatt`() {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "STATLIG"),
@@ -102,7 +120,7 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
         orgnr: String,
         kvartal: Kvartal = KVARTAL_2022_4,
         næring: String = "88",
-        bransje: String = "BARNEHAGER",
+        bransje: String? = "BARNEHAGER",
         sektor: String = Sektor.PRIVAT.name,
     ): String {
         return """{
