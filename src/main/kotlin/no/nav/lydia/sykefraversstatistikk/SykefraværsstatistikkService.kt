@@ -36,9 +36,14 @@ class SykefraværsstatistikkService(
     }
 
     fun lagreStatistikkMetadataVirksomhet(behandletImportMetadataVirksomhetListe: List<BehandletImportMetadataVirksomhet>) {
+        if (behandletImportMetadataVirksomhetListe.isNotEmpty()) {
+            log.info("Lagrer ${behandletImportMetadataVirksomhetListe.size} rad(er) med metadata virksomhet")
+        }
+        val start = System.currentTimeMillis()
         sykefraversstatistikkRepository.insertMetadataForVirksomhet(
             behandletImportMetadataVirksomhetListe
         )
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${behandletImportMetadataVirksomhetListe.size} virksomhet metadata")
     }
 
     fun lagreSykefraværsstatistikkPerKategori(
@@ -146,14 +151,6 @@ class SykefraværsstatistikkService(
 
         return sykefraværForVirksomhetSisteKvartal?.right()
             ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
-    }
-
-    fun hentGjeldendePeriodeSiste4Kvartal(): Either<Feil, KvartalerFraTil> {
-        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        return KvartalerFraTil(
-            fra = gjeldendePeriode.forrigePeriode().forrigePeriode().forrigePeriode().tilKvartal(),
-            til = gjeldendePeriode.tilKvartal()
-        ).right()
     }
 }
 
