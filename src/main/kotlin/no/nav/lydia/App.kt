@@ -73,9 +73,7 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
-    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
     val sykefraværsstatistikkService = SykefraværsstatistikkService(
-        sistePubliseringService = sistePubliseringService,
         sykefraversstatistikkRepository = SykefraversstatistikkRepository(
             dataSource = dataSource
         ),
@@ -130,7 +128,6 @@ fun Application.lydiaRestApi(
     val iaSakRepository = IASakRepository(dataSource = dataSource)
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
-            sistePubliseringService = SistePubliseringService(sistePubliseringRepository = SistePubliseringRepository(dataSource = dataSource)),
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
             virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
         )

@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
 
 class SykefraværsstatistikkService(
-    val sistePubliseringService: SistePubliseringService,
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
 ) {
