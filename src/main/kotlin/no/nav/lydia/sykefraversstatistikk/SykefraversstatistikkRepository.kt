@@ -7,6 +7,7 @@ import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
@@ -53,6 +54,18 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.transaction { tx ->
                 tx.insertBehandletNæringsStatistikk(
                     behandletNæringSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletNæringSykefraværsstatistikk()
+                )
+            }
+        }
+    }
+
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
+        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+    ) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.insertVirksomhetsstatistikk(
+                    behandletVirksomhetStatistikkListe = sykefraværsstatistikk.tilBehandletVirksomhetSykefraværsstatistikk()
                 )
             }
         }
@@ -203,8 +216,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     private fun TransactionalSession.insertBehandletImportStatistikk(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
-        insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe = behandletImportStatistikkListe.map { it.virksomhetSykefravær })
-
         insertBehandletNæringsundergruppeStatistikk(behandletNæringsundergruppeSykefraværsstatistikk = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }
             .toSet())
     }

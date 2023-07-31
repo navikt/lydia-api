@@ -20,12 +20,14 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
     private val tabellnavn = mapOf(
         Kategori.LAND to "sykefravar_statistikk_land",
         Kategori.SEKTOR to "sykefravar_statistikk_sektor",
-        Kategori.NÆRING to "sykefravar_statistikk_naring"
+        Kategori.NÆRING to "sykefravar_statistikk_naring",
+        Kategori.VIRKSOMHET to "sykefravar_statistikk_virksomhet"
     )
     private val kodenavn = mapOf(
         Kategori.LAND to "land",
         Kategori.SEKTOR to "sektor_kode",
-        Kategori.NÆRING to "naring"
+        Kategori.NÆRING to "naring",
+        Kategori.VIRKSOMHET to "orgnr"
     )
 
 
@@ -129,6 +131,67 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
         result.sistePubliserteKvartal.erMaskert shouldBe false
     }
 
+    @Test
+    fun `vi lagrer sykefraværsstatistikk gjeldende kvartal for kategori VIRKSOMHET`() {
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(
+                Kategori.VIRKSOMHET,
+                "999999999",
+                KVARTAL_2023_1
+            ),
+            jsonValue(
+                Kategori.VIRKSOMHET,
+                "999999999",
+                KVARTAL_2023_1,
+                false,
+                BigDecimal(125000.0),
+                BigDecimal(2500000.5),
+                BigDecimal(5.0),
+                3500000
+            ),
+            KafkaContainerHelper.statistikkVirksomhetTopic,
+            Kafka.statistikkPerKategoriGroupId
+        )
+
+        val result = hentStatistikkGjeldendeKvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1)
+        result.sistePubliserteKvartal.antallPersoner shouldBe 3500000
+        result.sistePubliserteKvartal.prosent shouldBe 5.0
+        result.sistePubliserteKvartal.muligeDagsverk shouldBe 2500000.5
+        result.sistePubliserteKvartal.tapteDagsverk shouldBe 125000.0
+        result.sistePubliserteKvartal.erMaskert shouldBe false
+    }
+
+    @Test
+    fun `vi maskerer sykefraværssprosent i gjeldende kvartal for kategori VIRKSOMHET dersom antall ansatte er under 5`() {
+        kafkaContainer.sendOgVentTilKonsumert(
+            jsonKey(
+                Kategori.VIRKSOMHET,
+                "999999999",
+                KVARTAL_2023_1
+            ),
+            jsonValue(
+                kategori = Kategori.VIRKSOMHET,
+                kode = "999999999",
+                kvartal = KVARTAL_2023_1,
+                erMaskert = false,
+                tapteDagsverk = BigDecimal(125.0),
+                muligeDagsverk = BigDecimal(2500.5),
+                prosent = BigDecimal(5.0),
+                antallPersoner = 4
+            ),
+            KafkaContainerHelper.statistikkVirksomhetTopic,
+            Kafka.statistikkPerKategoriGroupId
+        )
+
+        val result = hentStatistikkGjeldendeKvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1)
+        result.sistePubliserteKvartal.antallPersoner shouldBe 4
+        result.sistePubliserteKvartal.prosent shouldBe 0.0
+        result.sistePubliserteKvartal.muligeDagsverk shouldBe 0.0
+        result.sistePubliserteKvartal.tapteDagsverk shouldBe 0.0
+        result.sistePubliserteKvartal.erMaskert shouldBe true
+    }
+
+
     private fun jsonKey(
         kategori: Kategori,
         kode: String,
@@ -197,6 +260,7 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
         verdi: String,
         kvartal: Kvartal
     ): StatistikkGjeldendeKvartal {
+        val erKategoriTabell = kategori != Kategori.VIRKSOMHET
         val query = """
             select * from ${tabellnavn[kategori]} 
              where ${kodenavn[kategori]} = '$verdi'
@@ -214,7 +278,7 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
                 sistePubliserteKvartal = SistePubliserteKvartal(
                     årstall = rs.getInt("arstall"),
                     kvartal = rs.getInt("kvartal"),
-                    prosent = rs.getDouble("prosent"),
+                    prosent = if (erKategoriTabell) rs.getDouble("prosent") else rs.getDouble("sykefraversprosent"),
                     tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                     muligeDagsverk = rs.getDouble("mulige_dagsverk"),
                     antallPersoner = rs.getInt("antall_personer"),
