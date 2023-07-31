@@ -65,6 +65,9 @@ class SykefraværsstatistikkService(
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, NÆRING)
         )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, VIRKSOMHET)
+        )
     }
 
     private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
