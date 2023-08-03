@@ -49,7 +49,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
-import no.nav.lydia.helper.TestData.Companion.SEKTOR_KOMMUNAL_FORVALTNING
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
@@ -97,8 +96,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere sykefraværsstatistikk på sektor`() {
-        lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(), sektor = SEKTOR_KOMMUNAL_FORVALTNING)
-        val sykefraværstatistikkKommunalSektor = hentSykefravær(sektor = SEKTOR_KOMMUNAL_FORVALTNING).data
+        lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(), sektor = Sektor.KOMMUNAL.kode)
+        val sykefraværstatistikkKommunalSektor = hentSykefravær(sektor = Sektor.KOMMUNAL.kode).data
         sykefraværstatistikkKommunalSektor.size shouldBeGreaterThan 0
         sykefraværstatistikkKommunalSektor.forAll { sykefraværstatistikk ->
             hentVirksomhetsinformasjon(
@@ -107,7 +106,7 @@ class SykefraversstatistikkApiTest {
             ).sektor shouldBe Sektor.KOMMUNAL.beskrivelse
         }
 
-        hentTotaltAntallTreffISykefravær(sektor = SEKTOR_KOMMUNAL_FORVALTNING) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
+        hentTotaltAntallTreffISykefravær(sektor = Sektor.KOMMUNAL.kode) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
     }
 
     @Test
@@ -300,7 +299,11 @@ class SykefraversstatistikkApiTest {
                 navn = saksbehandler1.navn
             )
         )
-        filterverdier.sektorer.map { it.kode } shouldBe Sektor.values().map { it.kode }
+        filterverdier.sektorer.map { it.kode } shouldBe Sektor.values()
+            // -- TODO: fjern når vi har fått data i DB
+            .filter { it != Sektor.FYLKESKOMMUNAL_FORVALTNING }
+            // -- END TODO
+            .map { it.kode }
     }
 
     @Test
@@ -955,6 +958,12 @@ class SykefraversstatistikkApiTest {
         hentSykefraværRespons(årstall = "årstall").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteFra = "ansatteFra").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteTil = "ansatteTil").statuskode() shouldBe 400
+    }
+
+    @Test
+    fun `skal kunne filtrere på FYLKESKOMMUNAL_FORVALTNING sektor`() {
+        lastInnNyVirksomhet(nyVirksomhet(), sektor = Sektor.FYLKESKOMMUNAL_FORVALTNING.kode)
+        hentSykefravær(sektor = Sektor.FYLKESKOMMUNAL_FORVALTNING.kode).data shouldHaveAtLeastSize 1
     }
 }
 

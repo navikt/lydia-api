@@ -30,7 +30,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
-import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.ia.sak.api.*
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
@@ -52,6 +51,7 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
+import no.nav.lydia.virksomhet.domene.Sektor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.Testcontainers
@@ -804,7 +804,7 @@ class VirksomhetHelper {
 
         fun lastInnNyVirksomhet(
             nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet(),
-            sektor: String = SEKTOR_STATLIG_FORVALTNING,
+            sektor: String = Sektor.STATLIG.kode,
             perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode())
         ): TestVirksomhet {
             lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet, sektor = sektor, perioder = perioder))

@@ -19,9 +19,6 @@ class TestData(
 ) {
     companion object {
         const val LANDKODE_NO = "NO"
-        const val SEKTOR_STATLIG_FORVALTNING = "1"
-        const val SEKTOR_KOMMUNAL_FORVALTNING = "2"
-        const val SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET = "3"
         const val NÆRING_JORDBRUK = "01"
         const val NÆRING_SKOGBRUK = "02"
 
@@ -38,7 +35,7 @@ class TestData(
         val gjeldendePeriode = Periode(årstall = 2023, kvartal = 1)
         fun fraVirksomhet(
             virksomhet: TestVirksomhet,
-            sektor: String = SEKTOR_STATLIG_FORVALTNING,
+            sektor: String = Sektor.STATLIG.kode,
             perioder: List<Periode> = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
         ) =
             TestData().lagData(
@@ -117,7 +114,7 @@ class TestData(
         sykefraværsProsent: Double? = null,
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
-        sektor: String = SEKTOR_STATLIG_FORVALTNING,
+        sektor: String = Sektor.STATLIG.kode,
     ): TestData {
         perioder.forEach { periode ->
             kafkaMeldinger.add(

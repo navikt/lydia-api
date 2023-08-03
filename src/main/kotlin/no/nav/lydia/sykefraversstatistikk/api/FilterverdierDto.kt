@@ -16,7 +16,11 @@ data class FilterverdierDto(
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
     val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser(),
     val filtrerbareEiere: List<EierDTO> = emptyList(),
-    val sektorer: List<SektorDto> = Sektor.values().map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },
+    val sektorer: List<SektorDto> = Sektor.values()
+        // -- TODO: fjern når vi har fått data i DB
+        .filter { it != Sektor.FYLKESKOMMUNAL_FORVALTNING }
+        // -- END TODO
+        .map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },
 )
 
 @Serializable

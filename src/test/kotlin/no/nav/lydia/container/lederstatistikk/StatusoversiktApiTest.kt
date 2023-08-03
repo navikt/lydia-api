@@ -2,17 +2,16 @@ package no.nav.lydia.container.lederstatistikk
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatusoversiktHelper
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
 
 class StatusoversiktApiTest {
@@ -24,7 +23,7 @@ class StatusoversiktApiTest {
 
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
-                sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING,
+                sektor = Sektor.KOMMUNAL.kode,
                 token = mockOAuth2Server.superbruker1.token
             ).third.get().data
 
@@ -50,7 +49,7 @@ class StatusoversiktApiTest {
     @Test
     fun `skal kunne filtrere på sektor`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(),
-            sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING)
+            sektor = Sektor.KOMMUNAL.kode)
 
         nySakIViBistår(orgnummer = virksomhet.orgnr)
             .nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
@@ -60,7 +59,7 @@ class StatusoversiktApiTest {
 
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
-                sektor = TestData.SEKTOR_KOMMUNAL_FORVALTNING,
+                sektor = Sektor.KOMMUNAL.kode,
                 token = mockOAuth2Server.superbruker1.token
             ).third.get().data
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0

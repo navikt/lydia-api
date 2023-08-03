@@ -3,7 +3,7 @@ package no.nav.lydia.sykefraversstatistikk.import
 import no.nav.lydia.virksomhet.domene.Sektor
 import java.lang.IllegalStateException
 
-private val SEKTOR_FRA_SYKEFRAVÆRSSTATISTIKK_TIL_IMPORT = listOf("STATLIG", "KOMMUNAL", "PRIVAT")
+private val SEKTOR_FRA_SYKEFRAVÆRSSTATISTIKK_TIL_IMPORT = Sektor.values().map { it.name }.toList()
 
 data class BehandletImportMetadataVirksomhet (
     val orgnr: String,
@@ -39,6 +39,7 @@ fun String.fraSykefraværsstistikkSektortilSektor(): Sektor? {
         "STATLIG" -> Sektor.STATLIG
         "KOMMUNAL" -> Sektor.KOMMUNAL
         "PRIVAT" -> Sektor.PRIVAT
+        "FYLKESKOMMUNAL_FORVALTNING" -> Sektor.FYLKESKOMMUNAL_FORVALTNING
         else -> null
     }
 }

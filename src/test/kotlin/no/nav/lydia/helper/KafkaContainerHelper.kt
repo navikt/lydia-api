@@ -11,8 +11,8 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
 import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
-import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
 import no.nav.lydia.sykefraversstatistikk.import.*
+import no.nav.lydia.virksomhet.domene.Sektor
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -333,7 +333,7 @@ class KafkaContainerHelper(
         næringskode: String = NÆRING_JORDBRUK,
         næringsundergruppe: String = DYRKING_AV_KORN.kode,
         landKode: String = LANDKODE_NO,
-        sektorkode: String = SEKTOR_STATLIG_FORVALTNING,
+        sektorkode: String = Sektor.STATLIG.kode,
     ) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(

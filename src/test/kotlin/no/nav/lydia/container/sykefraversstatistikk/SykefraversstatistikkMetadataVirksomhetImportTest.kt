@@ -2,8 +2,7 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
-import no.nav.lydia.helper.KafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -49,7 +48,7 @@ class SykefraversstatistikkMetadataVirksomhetImportTest {
         )
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("888888888"),
-            jsonValue(orgnr = "888888888", sektor = "FYLKESKOMMUNAL_FORVALTNING"),
+            jsonValue(orgnr = "888888888", sektor = "EN_HELT_UKJENT_SEKTOR"),
             KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
             Kafka.statistikkMetadataVirksomhetGroupId
         )

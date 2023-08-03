@@ -14,8 +14,6 @@ class BehandletImportMetadataVirksomhetTest {
     fun `Metadata virksomhet uten gyldig sektor skal ikke kunne mappes direkte til BehandletImportMetadataVirksomhet`() {
         assertSektorIkkeStøttesTilImport("")
         assertSektorIkkeStøttesTilImport("UKJENT")
-        // T.O. det er forelløpig ingen bedrift med FYLKESKOMMUNAL_FORVALTNING i import data
-        assertSektorIkkeStøttesTilImport("FYLKESKOMMUNAL_FORVALTNING")
     }
 
     @Test
@@ -26,14 +24,6 @@ class BehandletImportMetadataVirksomhetTest {
                 årstall = 2023,
                 kvartal = 2,
                 orgnr = "999999999",
-                naring = "41",
-                bransje = "BYGG"
-            ),
-            SykefraversstatistikkMetadataVirksomhetImportDto(
-                sektor = "FYLKESKOMMUNAL_FORVALTNING",
-                årstall = 2023,
-                kvartal = 2,
-                orgnr = "888888888",
                 naring = "41",
                 bransje = "BYGG"
             ),

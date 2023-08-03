@@ -19,7 +19,6 @@ import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
-import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.helper.TestData.Companion.SKOGSKJØTSEL
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_IMPORT
@@ -29,6 +28,7 @@ import no.nav.lydia.helper.lagSykefraværsstatistikkImportDto
 import no.nav.lydia.helper.sektorStatistikk
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
+import no.nav.lydia.virksomhet.domene.Sektor
 import org.apache.kafka.clients.producer.ProducerRecord
 import kotlin.test.Test
 
@@ -155,7 +155,7 @@ class SykefraversstatistikkImportTest {
             orgnr = virksomhet.orgnr,
             periode = periode1971,
             antallPersoner = 100.0,
-            sektor = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
+            sektor = Sektor.PRIVAT.kode,
             næring = NÆRING_JORDBRUK,
             næringsundergrupper = listOf(DYRKING_AV_RIS.kode),
             landKode = LANDKODE_NO
@@ -180,7 +180,7 @@ class SykefraversstatistikkImportTest {
             orgnr = virksomhet.orgnr,
             periode = periode1972,
             antallPersoner = 100.0,
-            sektor = SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
+            sektor = Sektor.PRIVAT.kode,
             næring = NÆRING_SKOGBRUK,
             næringsundergrupper = listOf(AVVIRKNING.kode, SKOGSKJØTSEL.kode),
             landKode = LANDKODE_NO

@@ -5,10 +5,10 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
-import no.nav.lydia.helper.TestData.Companion.SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.virksomhet.domene.Sektor
 import java.math.BigDecimal
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -76,12 +76,12 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey(
                 Kategori.SEKTOR,
-                SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
+                Sektor.PRIVAT.kode,
                 KVARTAL_2023_1
             ),
             jsonValue(
                 Kategori.SEKTOR,
-                SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET,
+                Sektor.PRIVAT.kode,
                 KVARTAL_2023_1,
                 false,
                 BigDecimal(125000.0),
@@ -93,7 +93,7 @@ class SykefraversstatistikkPerKategoriImportGjeldendeKvartalTest {
             Kafka.statistikkPerKategoriGroupId
         )
 
-        val result = hentStatistikkGjeldendeKvartal(Kategori.SEKTOR, SEKTOR_PRIVAT_NÆRINGSVIRKSOMHET, KVARTAL_2023_1)
+        val result = hentStatistikkGjeldendeKvartal(Kategori.SEKTOR, Sektor.PRIVAT.kode, KVARTAL_2023_1)
         result.sistePubliserteKvartal.antallPersoner shouldBe 3500000
         result.sistePubliserteKvartal.prosent shouldBe 5.0
         result.sistePubliserteKvartal.muligeDagsverk shouldBe 2500000.5
