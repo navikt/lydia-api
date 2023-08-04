@@ -121,3 +121,7 @@ tasks{
         dependsOn(shadowJar)
     }
 }
+
+kotlin {
+    jvmToolchain(17)
+}
