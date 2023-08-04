@@ -55,7 +55,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-            builder.from("ghcr.io/navikt/mock-oauth2-server:0.5.8")
+            builder.from("ghcr.io/navikt/mock-oauth2-server:1.0.0")
                 .env(
                     mapOf(
                         "TZ" to TimeZone.getDefault().id,
