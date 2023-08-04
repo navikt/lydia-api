@@ -96,8 +96,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere sykefraværsstatistikk på sektor`() {
-        lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(), sektor = Sektor.KOMMUNAL.kode)
-        val sykefraværstatistikkKommunalSektor = hentSykefravær(sektor = Sektor.KOMMUNAL.kode).data
+        lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(), sektor = Sektor.KOMMUNAL)
+        val sykefraværstatistikkKommunalSektor = hentSykefravær(sektor = listOf(Sektor.KOMMUNAL)).data
         sykefraværstatistikkKommunalSektor.size shouldBeGreaterThan 0
         sykefraværstatistikkKommunalSektor.forAll { sykefraværstatistikk ->
             hentVirksomhetsinformasjon(
@@ -106,7 +106,7 @@ class SykefraversstatistikkApiTest {
             ).sektor shouldBe Sektor.KOMMUNAL.beskrivelse
         }
 
-        hentTotaltAntallTreffISykefravær(sektor = Sektor.KOMMUNAL.kode) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
+        hentTotaltAntallTreffISykefravær(sektor = listOf(Sektor.KOMMUNAL)) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
     }
 
     @Test
@@ -962,8 +962,8 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på FYLKESKOMMUNAL_FORVALTNING sektor`() {
-        lastInnNyVirksomhet(nyVirksomhet(), sektor = Sektor.FYLKESKOMMUNAL_FORVALTNING.kode)
-        hentSykefravær(sektor = Sektor.FYLKESKOMMUNAL_FORVALTNING.kode).data shouldHaveAtLeastSize 1
+        lastInnNyVirksomhet(nyVirksomhet(), sektor = Sektor.FYLKESKOMMUNAL_FORVALTNING)
+        hentSykefravær(sektor = listOf(Sektor.FYLKESKOMMUNAL_FORVALTNING)).data shouldHaveAtLeastSize 1
     }
 }
 

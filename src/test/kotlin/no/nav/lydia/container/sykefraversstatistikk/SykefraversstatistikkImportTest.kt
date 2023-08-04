@@ -127,7 +127,7 @@ class SykefraversstatistikkImportTest {
             sykefraværsProsent = 3.0,
             antallPersoner = 1337.0,
             tapteDagsverk = 16.0,
-            sektor = "3"
+            sektor = Sektor.PRIVAT
         )
         val opppdatertStatistikk4SisteKvartal = lagSykefraversstatistikkPerKategoriImportDto(
             kategori = Kategori.VIRKSOMHET,
@@ -155,7 +155,7 @@ class SykefraversstatistikkImportTest {
             orgnr = virksomhet.orgnr,
             periode = periode1971,
             antallPersoner = 100.0,
-            sektor = Sektor.PRIVAT.kode,
+            sektor = Sektor.PRIVAT,
             næring = NÆRING_JORDBRUK,
             næringsundergrupper = listOf(DYRKING_AV_RIS.kode),
             landKode = LANDKODE_NO
@@ -180,7 +180,7 @@ class SykefraversstatistikkImportTest {
             orgnr = virksomhet.orgnr,
             periode = periode1972,
             antallPersoner = 100.0,
-            sektor = Sektor.PRIVAT.kode,
+            sektor = Sektor.PRIVAT,
             næring = NÆRING_SKOGBRUK,
             næringsundergrupper = listOf(AVVIRKNING.kode, SKOGSKJØTSEL.kode),
             landKode = LANDKODE_NO

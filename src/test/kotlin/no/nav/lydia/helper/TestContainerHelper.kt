@@ -575,7 +575,7 @@ class StatistikkHelper {
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
-            sektor: String = "",
+            sektor: List<Sektor> = listOf(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             hentSykefraværRespons(
@@ -614,7 +614,7 @@ class StatistikkHelper {
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
-            sektor: String = "",
+            sektor: List<Sektor> = listOf(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             lydiaApiContainer.performGet(
@@ -634,7 +634,7 @@ class StatistikkHelper {
                         "&${Søkeparametere.SIDE}=$side" +
                         "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
                         "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
-                        "&${Søkeparametere.SEKTOR}=$sektor"
+                        "&${Søkeparametere.SEKTOR}=${sektor.map { it.kode }.joinToString(separator = ",")}"
             )
                 .authentication().bearer(token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>()
@@ -710,7 +710,7 @@ class StatistikkHelper {
             side: String = "",
             bransjeProgram: String = "",
             eiere: String = "",
-            sektor: String = "",
+            sektor: List<Sektor> = listOf(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ): Int {
             return lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF" +
@@ -729,7 +729,7 @@ class StatistikkHelper {
                     "&${Søkeparametere.SIDE}=$side" +
                     "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
                     "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
-                    "&${Søkeparametere.SEKTOR}=$sektor"
+                    "&${Søkeparametere.SEKTOR}=${sektor.map { it.kode }.joinToString(separator = ",")}"
             )
                 .authentication().bearer(token)
                 .tilSingelRespons<Int>()
@@ -804,7 +804,7 @@ class VirksomhetHelper {
 
         fun lastInnNyVirksomhet(
             nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet(),
-            sektor: String = Sektor.STATLIG.kode,
+            sektor: Sektor = Sektor.STATLIG,
             perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode())
         ): TestVirksomhet {
             lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet, sektor = sektor, perioder = perioder))

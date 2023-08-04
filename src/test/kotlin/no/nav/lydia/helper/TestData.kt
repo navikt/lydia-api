@@ -8,7 +8,6 @@ import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
-import no.nav.lydia.virksomhet.domene.tilSektor
 import kotlin.random.Random
 
 const val MAX_SYKEFRAVÆRSPROSENT = 20
@@ -35,7 +34,7 @@ class TestData(
         val gjeldendePeriode = Periode(årstall = 2023, kvartal = 1)
         fun fraVirksomhet(
             virksomhet: TestVirksomhet,
-            sektor: String = Sektor.STATLIG.kode,
+            sektor: Sektor = Sektor.STATLIG,
             perioder: List<Periode> = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
         ) =
             TestData().lagData(
@@ -103,7 +102,7 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
                 perioder = listOf(gjeldendePeriode),
-                sektor = (0..3).random().toString()
+                sektor = Sektor.values()[(0..3).random()]
             )
         }
     }
@@ -114,7 +113,7 @@ class TestData(
         sykefraværsProsent: Double? = null,
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
-        sektor: String = Sektor.STATLIG.kode,
+        sektor: Sektor = Sektor.STATLIG,
     ): TestData {
         perioder.forEach { periode ->
             kafkaMeldinger.add(
@@ -142,7 +141,7 @@ class TestData(
                     orgnr = virksomhet.orgnr,
                     årstall = periode.årstall,
                     kvartal = periode.kvartal,
-                    sektor = sektor.tilSektor()?.name ?: Sektor.STATLIG.name,
+                    sektor = sektor.name,
                     bransje = "BARNEHAGER",
                     naring = "88"
                 )
@@ -230,7 +229,7 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: S
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
             periode = TestData.gjeldendePeriode.forrigePeriode(),
             antallPersoner = 6.0,
-            sektor = "1"
+            sektor = Sektor.STATLIG
         )
     ),
     testVirksomhetGjeldeneKvartal(
@@ -238,7 +237,7 @@ enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: S
             orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
             periode = TestData.gjeldendePeriode,
             antallPersoner = 6.0,
-            sektor = "1"
+            sektor = Sektor.STATLIG
         )
     ),
 }
@@ -261,7 +260,7 @@ fun lagSykefraværsstatistikkImportDto(
     sykefraværsProsent: Double = 2.0,
     antallPersoner: Double = 6.0,
     tapteDagsverk: Double = 20.0,
-    sektor: String,
+    sektor: Sektor,
     landKode: String = LANDKODE_NO,
     næring: String = NÆRING_JORDBRUK,
     næringsundergrupper: List<String> = listOf(DYRKING_AV_KORN.kode),
@@ -282,7 +281,7 @@ fun lagSykefraværsstatistikkImportDto(
         sektorSykefravær = SektorSykefravær(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
-            kode = sektor,
+            kode = sektor.kode,
             prosent = 1.5,
             tapteDagsverk = 1340.0,
             muligeDagsverk = 8000.0,
