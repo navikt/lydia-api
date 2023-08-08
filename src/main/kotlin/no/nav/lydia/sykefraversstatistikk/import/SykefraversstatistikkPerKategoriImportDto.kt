@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 //  - Næring: det andre nivået i SN2007 identifisert ved en tosifret tallkode
 //  - Næringskode: femte nivå identifisert ved en femsifret tallkode (kalt også - feilaktig - 'bransje')
 enum class Kategori {
-    VIRKSOMHET, LAND, SEKTOR, NÆRING
+    VIRKSOMHET, LAND, SEKTOR, NÆRING, NÆRINGSKODE
 }
 
 data class SykefraversstatistikkPerKategoriImportDto(
@@ -68,6 +68,21 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
+        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletNæringsundergruppeSykefraværsstatistikk() =
+            BehandletNæringsundergruppeSykefraværsstatistikk(
+                statistikk = NæringsundergruppeSykefravær(
+                    årstall = this.sistePubliserteKvartal.årstall,
+                    kvartal = this.sistePubliserteKvartal.kvartal,
+                    prosent = this.sistePubliserteKvartal.prosent ?: 0.0,
+                    muligeDagsverk = this.sistePubliserteKvartal.muligeDagsverk ?: 0.0,
+                    antallPersoner = this.sistePubliserteKvartal.antallPersoner?.toDouble() ?: 0.0,
+                    tapteDagsverk = this.sistePubliserteKvartal.tapteDagsverk ?: 0.0,
+                    maskert = this.sistePubliserteKvartal.erMaskert,
+                    kategori = this.kategori.name,
+                    kode = this.kode,
+                )
+            )
+
         private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikk() =
             BehandletVirksomhetSykefraværsstatistikk(
                 statistikk = SykefraværsstatistikkForVirksomhet(
@@ -96,6 +111,11 @@ data class SykefraversstatistikkPerKategoriImportDto(
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletNæringSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletNæringSykefraværsstatistikk()
+            }
+
+        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletNæringsundergruppeSykefraværsstatistikk() =
+            this.map {
+                it.tilBehandletNæringsundergruppeSykefraværsstatistikk()
             }
 
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletVirksomhetSykefraværsstatistikk() =

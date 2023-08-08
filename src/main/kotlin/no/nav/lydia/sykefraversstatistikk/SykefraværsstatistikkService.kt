@@ -28,12 +28,6 @@ class SykefraværsstatistikkService(
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
-    fun lagre(sykefraværsstatistikkListe: List<BehandletImportStatistikk>) {
-        val start = System.currentTimeMillis()
-        sykefraversstatistikkRepository.insert(behandletImportStatistikkListe = sykefraværsstatistikkListe)
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre statistikk for ${sykefraværsstatistikkListe.size} virksomheter")
-    }
-
     fun lagreStatistikkMetadataVirksomhet(behandletImportMetadataVirksomhetListe: List<BehandletImportMetadataVirksomhet>) {
         if (behandletImportMetadataVirksomhetListe.isNotEmpty()) {
             log.info("Lagrer ${behandletImportMetadataVirksomhetListe.size} rad(er) med metadata virksomhet")
@@ -63,6 +57,9 @@ class SykefraværsstatistikkService(
         )
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, NÆRING)
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, NÆRINGSKODE)
         )
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, VIRKSOMHET)

@@ -1,9 +1,6 @@
 package no.nav.lydia.helper
 
 import com.google.gson.Gson
-import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
-import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
-import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -20,6 +17,7 @@ class TestData(
         const val LANDKODE_NO = "NO"
         const val NÆRING_JORDBRUK = "01"
         const val NÆRING_SKOGBRUK = "02"
+        const val NÆRINGSKODE_BARNEHAGER = "88911"
 
         val DYRKING_AV_KORN = Næringsgruppe(kode = "$NÆRING_JORDBRUK.110", navn = "Dyrking av korn, unntatt ris")
         val DYRKING_AV_RIS = Næringsgruppe(kode = "$NÆRING_JORDBRUK.120", navn = "Dyrking av ris")
@@ -45,7 +43,6 @@ class TestData(
 
     }
 
-    private val kafkaMeldinger = mutableSetOf<SykefraversstatistikkImportDto>()
     private val sykefraværsstatistikkPerKategoriKafkaMeldinger =
         mutableSetOf<SykefraversstatistikkPerKategoriImportDto>()
     private val sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger =
@@ -102,7 +99,7 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
                 perioder = listOf(gjeldendePeriode),
-                sektor = Sektor.values()[(0..3).random()]
+                sektor = Sektor.entries[(0..3).random()]
             )
         }
     }
@@ -116,16 +113,6 @@ class TestData(
         sektor: Sektor = Sektor.STATLIG,
     ): TestData {
         perioder.forEach { periode ->
-            kafkaMeldinger.add(
-                lagSykefraværsstatistikkImportDto(
-                    orgnr = virksomhet.orgnr,
-                    periode = periode,
-                    sykefraværsProsent = sykefraværsProsent ?: (1..MAX_SYKEFRAVÆRSPROSENT).random().toDouble(),
-                    antallPersoner = antallPersoner,
-                    tapteDagsverk = tapteDagsverk,
-                    sektor = sektor
-                )
-            )
             sykefraværsstatistikkPerKategoriKafkaMeldinger.add(
                 lagSykefraversstatistikkPerKategoriImportDto(
                     kategori = Kategori.VIRKSOMHET,
@@ -159,9 +146,6 @@ class TestData(
         return this
     }
 
-    fun sykefraværsStatistikkMeldinger() =
-        kafkaMeldinger
-
     fun sykefraværsstatistikkPerKategoriMeldinger() =
         sykefraværsstatistikkPerKategoriKafkaMeldinger
 
@@ -170,7 +154,6 @@ class TestData(
 
     fun brregMockData() =
         brregVirksomheter.joinToString(prefix = "[", postfix = "]", separator = ",")
-
 
     fun ssbNæringMockData() =
         næringer.joinToString(
@@ -202,46 +185,6 @@ class TestData(
         )
 }
 
-enum class SykefraværsstatistikkPerKategoriTestData(
-    val sykefraversstatistikkPerKategoriImportDto: SykefraversstatistikkPerKategoriImportDto,
-) {
-    testVirksomhetForrigeKvartal(
-        sykefraversstatistikkPerKategoriImportDto = lagSykefraversstatistikkPerKategoriImportDto(
-            kategori = Kategori.VIRKSOMHET,
-            kode = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = TestData.gjeldendePeriode.forrigePeriode(),
-            antallPersoner = 6,
-        )
-    ),
-    testVirksomhetGjeldeneKvartal(
-        sykefraversstatistikkPerKategoriImportDto = lagSykefraversstatistikkPerKategoriImportDto(
-            kategori = Kategori.VIRKSOMHET,
-            kode = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = TestData.gjeldendePeriode,
-            antallPersoner = 6,
-        )
-    )
-}
-
-enum class SykefraværsstatistikkTestData(val sykefraværsstatistikkImportDto: SykefraversstatistikkImportDto) {
-    testVirksomhetForrigeKvartal(
-        sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
-            orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = TestData.gjeldendePeriode.forrigePeriode(),
-            antallPersoner = 6.0,
-            sektor = Sektor.STATLIG
-        )
-    ),
-    testVirksomhetGjeldeneKvartal(
-        sykefraværsstatistikkImportDto = lagSykefraværsstatistikkImportDto(
-            orgnr = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT.orgnr,
-            periode = TestData.gjeldendePeriode,
-            antallPersoner = 6.0,
-            sektor = Sektor.STATLIG
-        )
-    ),
-}
-
 fun lagSsbNæringInnslag(kode: String, navn: String) =
     """
         {
@@ -253,78 +196,6 @@ fun lagSsbNæringInnslag(kode: String, navn: String) =
           "notes": "Notater for $kode"
         }
     """.trimIndent()
-
-fun lagSykefraværsstatistikkImportDto(
-    orgnr: String,
-    periode: Periode,
-    sykefraværsProsent: Double = 2.0,
-    antallPersoner: Double = 6.0,
-    tapteDagsverk: Double = 20.0,
-    sektor: Sektor,
-    landKode: String = LANDKODE_NO,
-    næring: String = NÆRING_JORDBRUK,
-    næringsundergrupper: List<String> = listOf(DYRKING_AV_KORN.kode),
-    maskert: Boolean = false,
-) =
-    SykefraversstatistikkImportDto(
-        virksomhetSykefravær = SykefraværsstatistikkForVirksomhet(
-            årstall = periode.årstall,
-            kvartal = periode.kvartal,
-            orgnr = orgnr,
-            prosent = sykefraværsProsent,
-            antallPersoner = antallPersoner,
-            tapteDagsverk = tapteDagsverk,
-            muligeDagsverk = 500.0,
-            maskert = maskert,
-            kategori = "VIRKSOMHET"
-        ),
-        sektorSykefravær = SektorSykefravær(
-            årstall = periode.årstall,
-            kvartal = periode.kvartal,
-            kode = sektor.kode,
-            prosent = 1.5,
-            tapteDagsverk = 1340.0,
-            muligeDagsverk = 8000.0,
-            antallPersoner = 33000.0,
-            maskert = maskert,
-            kategori = "SEKTOR"
-        ),
-        landSykefravær = LandSykefravær(
-            årstall = periode.årstall,
-            kvartal = periode.kvartal,
-            prosent = 2.0,
-            kode = landKode,
-            tapteDagsverk = 10000000.0,
-            muligeDagsverk = 500000000.0,
-            antallPersoner = 2500000.0,
-            maskert = maskert,
-            kategori = "LAND"
-        ),
-        næringSykefravær = NæringSykefravær(
-            årstall = periode.årstall,
-            kvartal = periode.kvartal,
-            kode = næring,
-            tapteDagsverk = 100.0,
-            muligeDagsverk = 5000.0,
-            antallPersoner = 150.0,
-            prosent = 2.0,
-            maskert = maskert,
-            kategori = "NÆRING2SIFFER"
-        ),
-        næring5SifferSykefravær = næringsundergrupper.map { næringsundergruppe ->
-            NæringsundergruppeSykefravær(
-                årstall = periode.årstall,
-                kvartal = periode.kvartal,
-                kode = næringsundergruppe,
-                tapteDagsverk = 40.0,
-                muligeDagsverk = 4000.0,
-                antallPersoner = 1250.0,
-                prosent = 1.0,
-                maskert = maskert,
-                kategori = "NÆRING5SIFFER"
-            )
-        }
-    )
 
 fun lagSykefraversstatistikkPerKategoriImportDto(
     kategori: Kategori,
@@ -403,36 +274,4 @@ fun TestVirksomhet.brregUnderenhetJson() =
     }
             "links" : [ ]
         }
-    """.trimIndent()
-
-val sektorStatistikk = """
-    {
-        "kategori": "SEKTOR",
-        "kode": "0",
-        "sistePubliserteKvartal": {
-            "årstall": 2022,
-            "kvartal": 4,
-            "prosent": 2.3,
-            "tapteDagsverk": 1740.5,
-            "muligeDagsverk": 76139.3,
-            "antallPersoner": 1723,
-            "erMaskert": false
-        },
-        "siste4Kvartal": {
-            "prosent": 2.7,
-            "tapteDagsverk": 8020.0,
-            "muligeDagsverk": 300991.3,
-            "erMaskert": false,
-            "kvartaler": [
-                {
-                    "årstall": 2022,
-                    "kvartal": 3
-                },
-                {
-                    "årstall": 2022,
-                    "kvartal": 4
-                }
-            ]
-        }
-    }
     """.trimIndent()

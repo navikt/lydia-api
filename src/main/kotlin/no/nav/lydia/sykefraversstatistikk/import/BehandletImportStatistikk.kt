@@ -1,12 +1,6 @@
 package no.nav.lydia.sykefraversstatistikk.import
 
-import no.nav.lydia.sykefraversstatistikk.import.BehandletLandSykefraværsstatistikk.Companion.tilBehandletStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletNæringSykefraværsstatistikk.Companion.tilBehandletStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletNæringsundergruppeSykefraværsstatistikk.Companion.tilBehandletStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletSektorSykefraværsstatistikk.Companion.tilBehandletStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BehandletVirksomhetSykefraværsstatistikk.Companion.tilBehandletStatistikk
-
-sealed class BehandletKvartalsvisSykefraværsstatistikk constructor(
+sealed class BehandletKvartalsvisSykefraværsstatistikk(
     open val statistikk: KvartalsvisSykefraværsstatistikk
 ) {
     val kvartal
@@ -34,79 +28,38 @@ sealed class BehandletKvartalsvisSykefraværsstatistikk constructor(
     }
 }
 
-class BehandletLandSykefraværsstatistikk constructor(
+class BehandletLandSykefraværsstatistikk(
     override val statistikk: LandSykefravær
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val land
         get() = statistikk.kode
-
-    companion object {
-        fun LandSykefravær.tilBehandletStatistikk() = BehandletLandSykefraværsstatistikk(this)
-    }
 }
 
-class BehandletNæringSykefraværsstatistikk constructor(
+class BehandletNæringSykefraværsstatistikk(
     override val statistikk: NæringSykefravær
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val næring
         get() = statistikk.kode
-
-    companion object {
-        fun NæringSykefravær.tilBehandletStatistikk() = BehandletNæringSykefraværsstatistikk(this)
-    }
 }
 
-class BehandletNæringsundergruppeSykefraværsstatistikk constructor(
+class BehandletNæringsundergruppeSykefraværsstatistikk(
     override val statistikk: NæringsundergruppeSykefravær
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val næringsundergruppe
         get() = statistikk.kode
-
-    companion object {
-        fun NæringsundergruppeSykefravær.tilBehandletStatistikk() = BehandletNæringsundergruppeSykefraværsstatistikk(this)
-    }
 }
 
-class BehandletSektorSykefraværsstatistikk constructor(
+class BehandletSektorSykefraværsstatistikk(
     override val statistikk: SektorSykefravær
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val sektor
         get() = statistikk.kode
-
-    companion object {
-        fun SektorSykefravær.tilBehandletStatistikk() = BehandletSektorSykefraværsstatistikk(this)
-    }
 }
 
-class BehandletVirksomhetSykefraværsstatistikk constructor(
+class BehandletVirksomhetSykefraværsstatistikk(
     override val statistikk: SykefraværsstatistikkForVirksomhet
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val orgnr
         get() = statistikk.orgnr
-
-    companion object {
-        fun SykefraværsstatistikkForVirksomhet.tilBehandletStatistikk() = BehandletVirksomhetSykefraværsstatistikk(this)
-    }
 }
 
-data class BehandletImportStatistikk constructor(
-    val næringSykefravær: BehandletNæringSykefraværsstatistikk,
-    val næring5SifferSykefravær: List<BehandletNæringsundergruppeSykefraværsstatistikk>,
-    val virksomhetSykefravær: BehandletVirksomhetSykefraværsstatistikk,
-    val landSykefravær: BehandletLandSykefraværsstatistikk,
-    val sektorSykefravær: BehandletSektorSykefraværsstatistikk
-) {
-    companion object {
-        fun SykefraversstatistikkImportDto.tilBehandletStatistikk() =
-            BehandletImportStatistikk(
-                næringSykefravær = this.næringSykefravær.tilBehandletStatistikk(),
-                næring5SifferSykefravær = this.næring5SifferSykefravær.map { it.tilBehandletStatistikk() },
-                virksomhetSykefravær = this.virksomhetSykefravær.tilBehandletStatistikk(),
-                landSykefravær = this.landSykefravær.tilBehandletStatistikk(),
-                sektorSykefravær = this.sektorSykefravær.tilBehandletStatistikk(),
-            )
-
-        fun List<SykefraversstatistikkImportDto>.tilBehandletStatistikk() =
-            this.map { it.tilBehandletStatistikk() }
-    }
-}

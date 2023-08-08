@@ -6,6 +6,7 @@ import kotliquery.*
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringsundergruppeSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
 import javax.sql.DataSource
@@ -13,15 +14,6 @@ import javax.sql.DataSource
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
 
-    fun insert(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
-        using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.insertBehandletImportStatistikk(
-                    behandletImportStatistikkListe = behandletImportStatistikkListe
-                )
-            }
-        }
-    }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
         sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
@@ -54,6 +46,18 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.transaction { tx ->
                 tx.insertBehandletNæringsStatistikk(
                     behandletNæringSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletNæringSykefraværsstatistikk()
+                )
+            }
+        }
+    }
+
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(
+        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+    ) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.insertBehandletNæringsundergruppeStatistikk(
+                    behandletNæringsundergruppeSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletNæringsundergruppeSykefraværsstatistikk()
                 )
             }
         }
@@ -214,12 +218,6 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         is BehandletSektorSykefraværsstatistikk -> this.sektor
         is BehandletVirksomhetSykefraværsstatistikk -> this.orgnr
     }
-
-    private fun TransactionalSession.insertBehandletImportStatistikk(behandletImportStatistikkListe: List<BehandletImportStatistikk>) {
-        insertBehandletNæringsundergruppeStatistikk(behandletNæringsundergruppeSykefraværsstatistikk = behandletImportStatistikkListe.flatMap { it.næring5SifferSykefravær }
-            .toSet())
-    }
-
 
     private fun TransactionalSession.insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe: List<BehandletVirksomhetSykefraværsstatistikk>) =
         behandletVirksomhetStatistikkListe.forEach { sykefraværsStatistikk ->
