@@ -1,4 +1,4 @@
-package no.nav.lydia.container.sykefraversstatistikk
+package no.nav.lydia.container.sykefraversstatistikk.importering
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka

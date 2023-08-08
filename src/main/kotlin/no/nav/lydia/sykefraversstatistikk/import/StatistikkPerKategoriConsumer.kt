@@ -6,6 +6,7 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -52,10 +53,13 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                             kafka.statistikkLandTopic,
                             kafka.statistikkSektorTopic,
                             kafka.statistikkNæringTopic,
+                            kafka.statistikkNæringskodeTopic,
                             kafka.statistikkVirksomhetTopic
                         )
                     )
-                    logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic}, ${kafka.statistikkSektorTopic} and ${kafka.statistikkVirksomhetTopic} in StatistikkPerKategoriConsumer")
+                    logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic}, ${kafka.statistikkSektorTopic} " +
+                            "${kafka.statistikkNæringTopic}, ${kafka.statistikkNæringskodeTopic} " +
+                            "and ${kafka.statistikkVirksomhetTopic} in StatistikkPerKategoriConsumer")
 
                     while (job.isActive) {
                         try {
@@ -91,11 +95,23 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
 
     private fun ConsumerRecords<String, String>.toSykefraversstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {
         val gson = GsonBuilder().create()
-        return this.map {
+        return this.filter { erMeldingenGyldig(it) }.map {
             gson.fromJson(
                 it.value(),
                 SykefraversstatistikkPerKategoriImportDto::class.java
             )
+        }
+    }
+
+    private fun erMeldingenGyldig(consumerRecord: ConsumerRecord<String, String>): Boolean {
+        val gson = GsonBuilder().create()
+        val key = gson.fromJson(consumerRecord.key(), KeySykefraversstatistikkPerKategori::class.java)
+
+        return if (Kategori.values().map { it.name }.contains( key.kategori) && key.kode.isNotEmpty()) {
+            true
+        } else {
+            logger.warn("Feil formatert Kafka melding i topic ${consumerRecord.topic()} for key ${consumerRecord.key().trim()}")
+            false
         }
     }
 

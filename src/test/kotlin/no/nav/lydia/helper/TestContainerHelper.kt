@@ -837,10 +837,6 @@ class VirksomhetHelper {
                 virksomhetRepository = TestContainerHelper.virksomhetRepository
             ).lastNed()
 
-            TestContainerHelper.kafkaContainerHelper.sendIBulkOgVentTilKonsumert(
-                testData.sykefraværsStatistikkMeldinger().toList()
-            )
-
             TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 testData.sykefraværsstatistikkPerKategoriMeldinger().toList()
             )

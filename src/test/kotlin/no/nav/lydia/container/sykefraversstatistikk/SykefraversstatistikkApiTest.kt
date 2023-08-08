@@ -299,7 +299,7 @@ class SykefraversstatistikkApiTest {
                 navn = saksbehandler1.navn
             )
         )
-        filterverdier.sektorer.map { it.kode } shouldBe Sektor.values()
+        filterverdier.sektorer.map { it.kode } shouldBe Sektor.entries
             // -- TODO: fjern når vi har fått data i DB
             .filter { it != Sektor.FYLKESKOMMUNAL_FORVALTNING }
             // -- END TODO

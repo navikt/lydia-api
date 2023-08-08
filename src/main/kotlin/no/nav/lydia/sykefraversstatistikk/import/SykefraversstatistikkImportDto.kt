@@ -74,17 +74,3 @@ data class SykefraværsstatistikkForVirksomhet(
     override val kategori: String,
     val orgnr: String,
 ) : KvartalsvisSykefraværsstatistikk()
-
-data class SykefraversstatistikkImportDto(
-    val næringSykefravær: NæringSykefravær,
-    val næring5SifferSykefravær: List<NæringsundergruppeSykefravær>,
-    val virksomhetSykefravær: SykefraværsstatistikkForVirksomhet,
-    val landSykefravær: LandSykefravær,
-    val sektorSykefravær: SektorSykefravær,
-)
-
-data class Key(
-    val kvartal: Int,
-    val årstall: Int,
-    val orgnr: String?, // Key er egentlig ugyldig når orgnr er null
-)

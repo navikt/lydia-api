@@ -66,7 +66,7 @@ jobs:
         cluster: [ dev ]
     name: "Deploy app to ${{ matrix.cluster }}"
     needs: "build"
-    if: github.ref == 'refs/heads/import-statistikk-virksomhet-gjeldendekvartal'
+    if: github.ref == 'refs/heads/import-statistikk-naringskoder'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"

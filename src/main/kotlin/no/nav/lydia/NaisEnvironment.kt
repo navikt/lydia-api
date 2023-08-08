@@ -79,11 +79,11 @@ class Kafka(
     val iaSakStatusTopic: String = getEnvVar("IA_SAK_STATUS_TOPIC"),
     val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
-    val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
     val statistikkMetadataVirksomhetTopic: String = getEnvVar("STATISTIKK_METADATA_VIRKSOMHET_TOPIC"),
     val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
     val statistikkSektorTopic: String = getEnvVar("STATISTIKK_SEKTOR_TOPIC"),
     val statistikkNæringTopic: String = getEnvVar("STATISTIKK_NARING_TOPIC"),
+    val statistikkNæringskodeTopic: String = getEnvVar("STATISTIKK_NARINGSKODE_TOPIC"),
     val statistikkVirksomhetTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_TOPIC"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
