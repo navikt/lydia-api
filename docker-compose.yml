@@ -107,6 +107,7 @@ services:
       KAFKA_TRUSTSTORE_PATH: ""
       KAFKA_KEYSTORE_PATH: ""
       KAFKA_CREDSTORE_PASSWORD: ""
+      STATISTIKK_METADATA_VIRKSOMHET_TOPIC: arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1
       STATISTIKK_LAND_TOPIC: arbeidsgiver.sykefravarsstatistikk-land-v1
       STATISTIKK_SEKTOR_TOPIC: arbeidsgiver.sykefravarsstatistikk-sektor-v1
       STATISTIKK_NARING_TOPIC: arbeidsgiver.sykefravarsstatistikk-naring-v1
