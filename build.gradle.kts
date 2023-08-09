@@ -3,8 +3,8 @@ plugins {
     kotlin("jvm") version "1.9.0"
     // Skru json-serialisering
     kotlin("plugin.serialization") version "1.9.0"
-    // For å bygge
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    // For å bygge fatjar
+    id("io.ktor.plugin") version "2.3.3"
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -20,11 +20,10 @@ dependencies {
     val ktorVersion = "2.3.3"
     val fuelVersion = "2.3.1"
 
+    implementation(kotlin("stdlib"))
+
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-
-    // Use the Kotlin JDK 8 standard library.
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     // ktor
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -110,15 +109,9 @@ application {
     mainClass.set("no.nav.lydia.AppKt")
 }
 
-tasks{
-    shadowJar {
-        manifest {
-            attributes(Pair("Main-Class", "no.nav.lydia.AppKt"))
-        }
-    }
-
-    withType<Test>{
-        dependsOn(shadowJar)
+ktor {
+    fatJar {
+        archiveFileName.set("lydia-api-all.jar")
     }
 }
 
