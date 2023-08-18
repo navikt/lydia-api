@@ -16,9 +16,11 @@ import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetUtenA
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.genererEndretNavn
 import no.nav.lydia.virksomhet.api.VirksomhetDto
+import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
@@ -28,6 +30,39 @@ import kotlin.test.Test
  * */
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
+
+    @Test
+    fun `vi lagrer næringsundergrupper til en bedrift`() {
+        val nyVirksomhet = nyVirksomhet(
+                næringer = listOf(
+                        Næringsgruppe(
+                                "Barnehager", "88.911"
+                        ),
+                        Næringsgruppe(
+                        "Dyrking av ettårige vekster ellers", "01.190"
+                        )
+                )
+        )
+        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
+        TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(nyVirksomhet)
+
+
+        val orgnr = nyVirksomhet.orgnr
+
+        val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
+                """select id from virksomhet
+                    where orgnr='$orgnr'
+                    """.trimIndent()
+        )
+
+        val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
+                """select naeringskode1 from virksomhet_naringsundergrupper
+                    where virksomhet= $virksomhetId
+                    """.trimIndent()
+        )
+
+        næringskode1 shouldBe "88.911"
+    }
 
     @Test
     fun `kan oppdatere endrede virksomheter`() {

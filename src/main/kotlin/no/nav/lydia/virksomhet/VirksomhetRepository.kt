@@ -248,6 +248,35 @@ class VirksomhetRepository(val dataSource: DataSource) {
         }
     }
 
+    fun simpleInsert(virksomhet: VirksomhetLagringDao) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                val insertSql = """
+                    WITH virksomhetId as (
+                        select id from virksomhet where orgnr = :orgnr
+                    )
+                    INSERT INTO virksomhet_naringsundergrupper(
+                        virksomhet,
+                        naeringsgruppe1,
+                        naeringsgruppe2,
+                        naeringsgruppe3
+                    )
+                    VALUES (virksomhetId, :naeringsgruppe1, :naeringsgruppe2, :naeringsgruppe3)                   
+                    ON CONFLICT DO NOTHING
+                """.trimIndent()
+                tx.run(
+                        queryOf(
+                                insertSql,
+                                mapOf(
+                                        "naeringsgruppe1" to virksomhet.næringsgrupper["naeringsgruppe1"],
+                                        "naeringsgruppe2" to virksomhet.næringsgrupper["naeringsgruppe2"],
+                                        "naeringsgruppe3" to virksomhet.næringsgrupper["naeringsgruppe3"],
+                                )
+                        ).asUpdate
+                )
+            }
+        }
+    }
 }
 
 @Serializable
