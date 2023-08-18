@@ -67,7 +67,7 @@ jobs:
     permissions: {}
     name: "Deploy app to dev"
     needs: "build"
-    if: github.ref == 'refs/heads/import-statistikk-naringskoder'
+    if: github.ref == 'refs/heads/lagre-naringsgrupper-i-ny-tabell'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
