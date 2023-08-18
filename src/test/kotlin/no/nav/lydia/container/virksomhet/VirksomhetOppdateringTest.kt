@@ -19,6 +19,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.genererEndretNavn
+import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -34,6 +35,15 @@ class VirksomhetOppdateringTest {
     @Test
     fun `vi lagrer næringsundergrupper til en bedrift`() {
         val nyVirksomhet = nyVirksomhet(
+                beliggenhet = Beliggenhetsadresse(
+                    land = "NORGE",
+                    landkode = "NO",
+                    postnummer = "0100",
+                    poststed = "OSLO",
+                    adresse = listOf("Tertitten 1"),
+                    kommune = "OSLO",
+                    kommunenummer = "0300",
+                ),
                 næringer = listOf(
                         Næringsgruppe(
                                 "Barnehager", "88.911"
@@ -43,15 +53,13 @@ class VirksomhetOppdateringTest {
                         )
                 )
         )
+
         VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
         TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(nyVirksomhet)
 
-
-        val orgnr = nyVirksomhet.orgnr
-
         val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-                """select id from virksomhet
-                    where orgnr='$orgnr'
+            """select id from virksomhet
+                    where orgnr='${nyVirksomhet.orgnr}'
                     """.trimIndent()
         )
 
@@ -62,6 +70,14 @@ class VirksomhetOppdateringTest {
         )
 
         næringskode1 shouldBe "88.911"
+
+        val næringskode2 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
+                """select naeringskode2 from virksomhet_naringsundergrupper
+                    where virksomhet= $virksomhetId
+                    """.trimIndent()
+        )
+
+        næringskode2 shouldBe "01.190"
     }
 
     @Test

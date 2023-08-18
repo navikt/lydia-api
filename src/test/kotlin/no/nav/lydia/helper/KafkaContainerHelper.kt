@@ -198,7 +198,6 @@ class KafkaContainerHelper(
     }
 
     fun sendBrregOppdatering(testVirksomhet: TestVirksomhet) {
-
         runBlocking {
             val sendtMelding =
                     kafkaProducer.send(
