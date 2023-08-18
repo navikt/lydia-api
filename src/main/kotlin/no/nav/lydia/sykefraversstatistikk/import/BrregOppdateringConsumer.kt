@@ -2,7 +2,7 @@ package no.nav.lydia.sykefraversstatistikk.import
 
 import kotlinx.coroutines.*
 import kotlinx.datetime.Instant
-import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.exceptions.UgyldigAdresseException
@@ -72,6 +72,8 @@ object BrregOppdateringConsumer : CoroutineScope {
                                                 oppdateringsId = oppdateringVirksomhet.oppdateringsid
                                             )
                                             repository.insert(virksomhet)
+                                            println("[DEBUG] nå kjører vi SimpleInsert !!! ")
+                                            repository.simpleInsert(virksomhet)
                                         } catch (e: UgyldigAdresseException) {
                                             antallIrrelevanteBedrifter += 1
                                         }
@@ -112,7 +114,7 @@ object BrregOppdateringConsumer : CoroutineScope {
         logger.info("Stopped kafka consumer job for ${kafka.brregOppdateringTopic}")
     }
 
-    @kotlinx.serialization.Serializable
+    @Serializable
     data class OppdateringVirksomhet(
         val orgnummer: String,
         val oppdateringsid: Long,
