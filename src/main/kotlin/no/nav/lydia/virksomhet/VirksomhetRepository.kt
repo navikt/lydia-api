@@ -257,20 +257,26 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     )
                     INSERT INTO virksomhet_naringsundergrupper(
                         virksomhet,
-                        naeringsgruppe1,
-                        naeringsgruppe2,
-                        naeringsgruppe3
+                        naeringskode1,
+                        naeringskode2,
+                        naeringskode3
                     )
-                    VALUES (virksomhetId, :naeringsgruppe1, :naeringsgruppe2, :naeringsgruppe3)                   
+                    VALUES (
+                        (select id from virksomhetId),
+                        :naeringskode1,
+                        :naeringskode2,
+                        :naeringskode3
+                    )                   
                     ON CONFLICT DO NOTHING
                 """.trimIndent()
                 tx.run(
                         queryOf(
                                 insertSql,
                                 mapOf(
-                                        "naeringsgruppe1" to virksomhet.næringsgrupper["naeringsgruppe1"],
-                                        "naeringsgruppe2" to virksomhet.næringsgrupper["naeringsgruppe2"],
-                                        "naeringsgruppe3" to virksomhet.næringsgrupper["naeringsgruppe3"],
+                                        "orgnr" to virksomhet.orgnr,
+                                        "naeringskode1" to virksomhet.næringsgrupper["naeringskode1"],
+                                        "naeringskode2" to virksomhet.næringsgrupper["naeringskode2"],
+                                        "naeringskode3" to virksomhet.næringsgrupper["naeringskode3"],
                                 )
                         ).asUpdate
                 )

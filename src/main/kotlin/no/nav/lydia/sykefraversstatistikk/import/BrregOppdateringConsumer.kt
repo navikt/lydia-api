@@ -72,7 +72,6 @@ object BrregOppdateringConsumer : CoroutineScope {
                                                 oppdateringsId = oppdateringVirksomhet.oppdateringsid
                                             )
                                             repository.insert(virksomhet)
-                                            println("[DEBUG] nå kjører vi SimpleInsert !!! ")
                                             repository.simpleInsert(virksomhet)
                                         } catch (e: UgyldigAdresseException) {
                                             antallIrrelevanteBedrifter += 1
