@@ -5,6 +5,7 @@ import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
@@ -23,6 +24,7 @@ import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
+import java.sql.Timestamp
 import kotlin.test.Test
 
 /**
@@ -78,6 +80,13 @@ class VirksomhetOppdateringTest {
         )
 
         næringskode2 shouldBe "01.190"
+
+        val oppdateringsdato = TestContainerHelper.postgresContainer.hentEnkelKolonne<Timestamp>(
+                """select oppdateringsdato from virksomhet_naringsundergrupper
+                    where virksomhet = $virksomhetId
+                """.trimIndent()
+        )
+        oppdateringsdato shouldNotBe null
     }
 
     @Test
