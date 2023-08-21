@@ -7,6 +7,8 @@ on:
       - ".nais/topics/**" # Deploy topics ved endringer i topics-mappen
       - ".github/workflows/topics.yaml" # Deploy topics ved endringer i topics.yaml
 
+permissions: {}
+
 jobs:
   deploy:
     strategy:
