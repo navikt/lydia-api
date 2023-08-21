@@ -267,7 +267,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         :naeringskode2,
                         :naeringskode3
                     )                   
-                    ON CONFLICT DO (virksomhet) UPDATE SET 
+                    ON CONFLICT (virksomhet) DO UPDATE SET 
                         naeringskode1 = :naeringskode1,
                         naeringskode2 = :naeringskode2,
                         naeringskode3 = :naeringskode3,
