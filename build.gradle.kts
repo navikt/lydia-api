@@ -109,9 +109,15 @@ application {
     mainClass.set("no.nav.lydia.AppKt")
 }
 
-ktor {
-    fatJar {
-        archiveFileName.set("lydia-api-all.jar")
+tasks {
+    shadowJar {
+        manifest {
+            attributes(Pair("Main-Class", "no.nav.lydia.AppKt"))
+        }
+    }
+
+    withType<Test>{
+        dependsOn(shadowJar)
     }
 }
 
