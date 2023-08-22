@@ -121,3 +121,26 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 4. Lim inn denne lenka i `run.sh`.
 5. Commit og push.
 6. Oppdater `run.sh` i lydia-rådgiver-frontend også med den same lenka.
+
+
+## Ymse feilsøking
+### "Test framework quit unexpectedly" ved køyring av testar
+Dato: 2023-08-22  
+Utviklar med problemet: Ingrid  
+Med på feilsøking: Thomas, Christian og Per-Christian  
+
+Problemet: 
+Får ikkje til å køyre testane lokalt på ei maskin. Får feilmelding "Test framework quit unexpectedly". Unit-testar køyrer fint, men problem med container-testar.
+
+<details>
+<summary> Feilsøking:</summary>
+1. Ta ned docker-containarar (`dc down` til `docker ps` blir tom)
+2. `./gradlew clean`
+3. `./gradlew build`
+4. Stoppe colima: `colima stop`
+5. Å køyre testar på andre maskiner, det er berre Ingrid si som ikkje får det til.
+6. Starte colima, og gjere "sudo"-kommandoen `sudo rm -rf /var/run/docker.sock && sudo ln -s /Users/$(whoami)/.colima/docker.sock /var/run/docker.sock`
+7. Melding om at ingen testar vart køyrd fordi koden var utan endringar, men heller ingen feilmelding, så 🎉🎉🎉
+</details>
+
+Konklusjon/løysing: Skru ting av og på att, det løyser stundom alt.
