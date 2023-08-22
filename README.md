@@ -119,7 +119,7 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 2. Finn dump-fila, `/lydia-api/scripts/db/[filnavn_her].sql` (Sannsynleg lenke til mappa: https://github.com/navikt/lydia-api/tree/main/scripts/db).
 3. Klikk på "Raw" og kopier lenka til sida du kjem til. Formatet skal vere `https://raw.githubusercontent.com/navikt/lydia-api/main/scripts/db/{data_source}_{timestamp}-dump.sql`.
 4. Lim inn denne lenka i `run.sh`.
-5. Commit og push.
+5. Commit og push. (Du treng ikkje vente på at GitHub Actions skal bli ferdig med build og deploy.)
 6. Oppdater `run.sh` i lydia-rådgiver-frontend også med den same lenka.
 
 
