@@ -74,6 +74,7 @@ class SykefraversstatistikkImportTestUtils {
         private val tabellnavn = mapOf(
                 Kategori.LAND to "sykefravar_statistikk_land",
                 Kategori.SEKTOR to "sykefravar_statistikk_sektor",
+                Kategori.BRANSJE to "sykefravar_statistikk_bransje",
                 Kategori.NÆRING to "sykefravar_statistikk_naring",
                 Kategori.NÆRINGSKODE to "sykefravar_statistikk_naringsundergruppe",
                 Kategori.VIRKSOMHET to "sykefravar_statistikk_virksomhet"
@@ -81,6 +82,7 @@ class SykefraversstatistikkImportTestUtils {
         private val kodenavn = mapOf(
                 Kategori.LAND to "land",
                 Kategori.SEKTOR to "sektor_kode",
+                Kategori.BRANSJE to "bransje",
                 Kategori.NÆRING to "naring",
                 Kategori.NÆRINGSKODE to "naringsundergruppe",
                 Kategori.VIRKSOMHET to "orgnr"

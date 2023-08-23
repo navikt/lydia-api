@@ -83,6 +83,7 @@ class Kafka(
     val statistikkMetadataVirksomhetTopic: String = getEnvVar("STATISTIKK_METADATA_VIRKSOMHET_TOPIC"),
     val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
     val statistikkSektorTopic: String = getEnvVar("STATISTIKK_SEKTOR_TOPIC"),
+    val statistikkBransjeTopic: String = getEnvVar("STATISTIKK_BRANSJE_TOPIC"),
     val statistikkNæringTopic: String = getEnvVar("STATISTIKK_NARING_TOPIC"),
     val statistikkNæringskodeTopic: String = getEnvVar("STATISTIKK_NARINGSKODE_TOPIC"),
     val statistikkVirksomhetTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_TOPIC"),

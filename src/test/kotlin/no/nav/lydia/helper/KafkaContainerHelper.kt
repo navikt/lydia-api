@@ -51,6 +51,7 @@ class KafkaContainerHelper(
         const val statistikkMetadataVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1"
         const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
         const val statistikkSektorTopic = "arbeidsgiver.sykefravarsstatistikk-sektor-v1"
+        const val statistikkBransjeTopic = "arbeidsgiver.sykefravarsstatistikk-bransje-v1"
         const val statistikkNæringTopic = "arbeidsgiver.sykefravarsstatistikk-naring-v1"
         const val statistikkNæringskodeTopic = "arbeidsgiver.sykefravarsstatistikk-naringskode-v1"
         const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
@@ -93,6 +94,7 @@ class KafkaContainerHelper(
                 statistikkMetadataVirksomhetTopic,
                 statistikkLandTopic,
                 statistikkSektorTopic,
+             //   statistikkBransjeTopic,
                 statistikkVirksomhetTopic
             )
             kafkaProducer = producer()
@@ -108,6 +110,7 @@ class KafkaContainerHelper(
             statistikkMetadataVirksomhetTopic = statistikkMetadataVirksomhetTopic,
             statistikkLandTopic = statistikkLandTopic,
             statistikkSektorTopic = statistikkSektorTopic,
+            statistikkBransjeTopic = statistikkBransjeTopic,
             statistikkNæringTopic = statistikkNæringTopic,
             statistikkNæringskodeTopic = statistikkNæringskodeTopic,
             statistikkVirksomhetTopic = statistikkVirksomhetTopic,
@@ -130,6 +133,7 @@ class KafkaContainerHelper(
         "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
         "STATISTIKK_METADATA_VIRKSOMHET_TOPIC" to statistikkMetadataVirksomhetTopic,
         "STATISTIKK_SEKTOR_TOPIC" to statistikkSektorTopic,
+        "STATISTIKK_BRANSJE_TOPIC" to statistikkBransjeTopic,
         "STATISTIKK_NARING_TOPIC" to statistikkNæringTopic,
         "STATISTIKK_NARINGSKODE_TOPIC" to statistikkNæringskodeTopic,
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,

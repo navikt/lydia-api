@@ -79,6 +79,8 @@ spec:
       value: arbeidsgiver.sykefravarsstatistikk-land-v1
     - name: STATISTIKK_SEKTOR_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-sektor-v1
+    - name: STATISTIKK_BRANSJE_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-bransje-v1
     - name: STATISTIKK_NARING_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-naring-v1
     - name: STATISTIKK_NARINGSKODE_TOPIC

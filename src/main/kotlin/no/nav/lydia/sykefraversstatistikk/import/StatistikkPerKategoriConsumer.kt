@@ -52,13 +52,14 @@ object StatistikkPerKategoriConsumer : CoroutineScope, Helsesjekk {
                         listOf(
                             kafka.statistikkLandTopic,
                             kafka.statistikkSektorTopic,
+                            kafka.statistikkBransjeTopic,
                             kafka.statistikkNæringTopic,
                             kafka.statistikkNæringskodeTopic,
                             kafka.statistikkVirksomhetTopic
                         )
                     )
                     logger.info("Kafka consumer subscribed to ${kafka.statistikkLandTopic}, ${kafka.statistikkSektorTopic} " +
-                            "${kafka.statistikkNæringTopic}, ${kafka.statistikkNæringskodeTopic} " +
+                            "${kafka.statistikkBransjeTopic}, ${kafka.statistikkNæringTopic}, ${kafka.statistikkNæringskodeTopic} " +
                             "and ${kafka.statistikkVirksomhetTopic} in StatistikkPerKategoriConsumer")
 
                     while (job.isActive) {
