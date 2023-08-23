@@ -248,7 +248,7 @@ class VirksomhetRepository(val dataSource: DataSource) {
         }
     }
 
-    fun simpleInsert(virksomhet: VirksomhetLagringDao) {
+    fun insertNæringsundergrupper(virksomhet: VirksomhetLagringDao) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 val insertSql = """

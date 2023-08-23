@@ -71,6 +71,8 @@ spec:
       value: pia.ia-sak-leveranse-v1
     - name: BRREG_OPPDATERING_TOPIC
       value: pia.brreg-oppdatering
+    - name: BRREG_ALLE_VIRKSOMHETER_TOPIC
+      value: pia.brreg-alle-virksomheter
     - name: STATISTIKK_METADATA_VIRKSOMHET_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1
     - name: STATISTIKK_LAND_TOPIC

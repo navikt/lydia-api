@@ -51,6 +51,7 @@ import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.navEnhet
+import no.nav.lydia.sykefraversstatistikk.import.BrregAlleVirksomheterConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -80,6 +81,7 @@ fun startLydiaBackend() {
     )
 
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
+    brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     StatistikkPerKategoriConsumer.apply {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
@@ -106,6 +108,16 @@ fun startLydiaBackend() {
 
 private fun brregConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
     BrregOppdateringConsumer.apply {
+        create(
+            kafka = naisEnv.kafka,
+            repository = VirksomhetRepository(dataSource)
+        )
+        run()
+    }
+}
+
+private fun brregAlleVirksomheterConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
+    BrregAlleVirksomheterConsumer.apply {
         create(
             kafka = naisEnv.kafka,
             repository = VirksomhetRepository(dataSource)

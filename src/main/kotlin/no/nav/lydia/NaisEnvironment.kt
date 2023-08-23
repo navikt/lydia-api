@@ -21,7 +21,7 @@ class NaisEnvironment(
         }
 
         fun hentMiljø(cluster: String) =
-            Environment.values().find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø ${cluster}")
+            Environment.entries.find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø ${cluster}")
 
         const val APP_NAVN = "lydia-api"
     }
@@ -79,6 +79,7 @@ class Kafka(
     val iaSakStatusTopic: String = getEnvVar("IA_SAK_STATUS_TOPIC"),
     val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
+    val brregAlleVirksomheterTopic: String = getEnvVar("BRREG_ALLE_VIRKSOMHETER_TOPIC"),
     val statistikkMetadataVirksomhetTopic: String = getEnvVar("STATISTIKK_METADATA_VIRKSOMHET_TOPIC"),
     val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
     val statistikkSektorTopic: String = getEnvVar("STATISTIKK_SEKTOR_TOPIC"),
