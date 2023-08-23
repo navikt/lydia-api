@@ -81,7 +81,7 @@ fun startLydiaBackend() {
     )
 
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
-//    brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
+    brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     StatistikkPerKategoriConsumer.apply {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
