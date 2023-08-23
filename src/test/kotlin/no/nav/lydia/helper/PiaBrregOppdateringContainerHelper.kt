@@ -60,7 +60,7 @@ class PiaBrregOppdateringContainerHelper(
     fun start() =
         brregOppdateringContainer
             .waitingFor(
-                LogMessageWaitStrategy().withRegEx(".*App info kafka.producer for pia-brreg unregistered.*\\n")
+                LogMessageWaitStrategy().withRegEx(".*App info kafka.producer for pia-brreg.*\\n")
             )
             .start()
 }
