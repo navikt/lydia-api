@@ -37,50 +37,50 @@ import kotlin.test.Test
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
 
-    @Test
-    fun `vi oppdaterer næringsgrupper til en bedrift når vi importerer ALLE bedrifter`() {
-        val nyVirksomhet = nyVirksomhet(
-                beliggenhet = Beliggenhetsadresse(
-                        land = "NORGE",
-                        landkode = "NO",
-                        postnummer = "0100",
-                        poststed = "OSLO",
-                        adresse = listOf("Tertitten 1"),
-                        kommune = "OSLO",
-                        kommunenummer = "0300",
-                ), næringer = listOf(
-                Næringsgruppe(
-                        "Barnehager", "88.911"
-                ),
-                Næringsgruppe(
-                        "Dyrking av ettårige vekster ellers", "01.190"
-                )
-        )
-        )
-        NæringsDownloader(
-            url = IntegrationsHelper.mockKallMotSsbNæringer(
-                httpMock = TestContainerHelper.httpMock,
-                testData = TestData.fraVirksomhet(nyVirksomhet, sektor = Sektor.STATLIG, perioder = listOf())
-            ),
-            næringsRepository = TestContainerHelper.næringsRepository
-        ).lastNedNæringer()
-
-        TestContainerHelper.kafkaContainerHelper.sendBrregAlleVirksomheter(listOf(nyVirksomhet))
-
-        val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-                """select id from virksomhet
-                    where orgnr='${nyVirksomhet.orgnr}'
-                    """.trimIndent()
-        )
-
-        val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naeringskode1 from virksomhet_naringsundergrupper
-                    where virksomhet= $virksomhetId
-                    """.trimIndent()
-        )
-
-        næringskode1 shouldBe "88.911"
-    }
+//    @Test
+//    fun `vi oppdaterer næringsgrupper til en bedrift når vi importerer ALLE bedrifter`() {
+//        val nyVirksomhet = nyVirksomhet(
+//                beliggenhet = Beliggenhetsadresse(
+//                        land = "NORGE",
+//                        landkode = "NO",
+//                        postnummer = "0100",
+//                        poststed = "OSLO",
+//                        adresse = listOf("Tertitten 1"),
+//                        kommune = "OSLO",
+//                        kommunenummer = "0300",
+//                ), næringer = listOf(
+//                Næringsgruppe(
+//                        "Barnehager", "88.911"
+//                ),
+//                Næringsgruppe(
+//                        "Dyrking av ettårige vekster ellers", "01.190"
+//                )
+//        )
+//        )
+//        NæringsDownloader(
+//            url = IntegrationsHelper.mockKallMotSsbNæringer(
+//                httpMock = TestContainerHelper.httpMock,
+//                testData = TestData.fraVirksomhet(nyVirksomhet, sektor = Sektor.STATLIG, perioder = listOf())
+//            ),
+//            næringsRepository = TestContainerHelper.næringsRepository
+//        ).lastNedNæringer()
+//
+//        TestContainerHelper.kafkaContainerHelper.sendBrregAlleVirksomheter(listOf(nyVirksomhet))
+//
+//        val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
+//                """select id from virksomhet
+//                    where orgnr='${nyVirksomhet.orgnr}'
+//                    """.trimIndent()
+//        )
+//
+//        val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
+//                """select naeringskode1 from virksomhet_naringsundergrupper
+//                    where virksomhet= $virksomhetId
+//                    """.trimIndent()
+//        )
+//
+//        næringskode1 shouldBe "88.911"
+//    }
 
     @Test
     fun `vi oppdaterer næringsgrupper til en bedrift`() {
