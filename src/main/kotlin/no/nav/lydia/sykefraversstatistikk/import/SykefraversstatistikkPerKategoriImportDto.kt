@@ -2,6 +2,8 @@ package no.nav.lydia.sykefraversstatistikk.import
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
 
 // OBS: Statistisk sentralbyrå (SSB) og Brønnøysundregistret bruker SN2007 standard for næringskoder
 // (dvs kode som 'viser virksomhets hovedaktivitet').
@@ -10,7 +12,7 @@ import kotlinx.serialization.Serializable
 //  - Næring: det andre nivået i SN2007 identifisert ved en tosifret tallkode
 //  - Næringskode: femte nivå identifisert ved en femsifret tallkode (kalt også - feilaktig - 'bransje')
 enum class Kategori {
-    VIRKSOMHET, LAND, SEKTOR, NÆRING, NÆRINGSKODE
+    VIRKSOMHET, LAND, SEKTOR, BRANSJE, NÆRING, NÆRINGSKODE
 }
 
 data class SykefraversstatistikkPerKategoriImportDto(
@@ -41,6 +43,21 @@ data class SykefraversstatistikkPerKategoriImportDto(
         private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletSektorSykefraværsstatistikk() =
             BehandletSektorSykefraværsstatistikk(
                 statistikk = SektorSykefravær(
+                    årstall = this.sistePubliserteKvartal.årstall,
+                    kvartal = this.sistePubliserteKvartal.kvartal,
+                    prosent = this.sistePubliserteKvartal.prosent ?: 0.0,
+                    muligeDagsverk = this.sistePubliserteKvartal.muligeDagsverk ?: 0.0,
+                    antallPersoner = this.sistePubliserteKvartal.antallPersoner?.toDouble() ?: 0.0,
+                    tapteDagsverk = this.sistePubliserteKvartal.tapteDagsverk ?: 0.0,
+                    maskert = this.sistePubliserteKvartal.erMaskert,
+                    kategori = this.kategori.name,
+                    kode = this.kode,
+                )
+            )
+
+        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletBransjeSykefraværsstatistikk() =
+            BehandletBransjeSykefraværsstatistikk(
+                statistikk = BransjeSykefravær(
                     årstall = this.sistePubliserteKvartal.årstall,
                     kvartal = this.sistePubliserteKvartal.kvartal,
                     prosent = this.sistePubliserteKvartal.prosent ?: 0.0,
@@ -106,6 +123,11 @@ data class SykefraversstatistikkPerKategoriImportDto(
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletSektorSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletSektorSykefraværsstatistikk()
+            }
+
+        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletBransjeSykefraværsstatistikk() =
+            this.map {
+                it.tilBehandletBransjeSykefraværsstatistikk()
             }
 
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletNæringSykefraværsstatistikk() =

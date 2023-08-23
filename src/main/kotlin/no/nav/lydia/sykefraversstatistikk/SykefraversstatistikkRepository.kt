@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotliquery.*
 import no.nav.lydia.sykefraversstatistikk.import.*
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletBransjeSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringsundergruppeSykefraværsstatistikk
@@ -34,6 +35,18 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             session.transaction { tx ->
                 tx.insertBehandletSektorStatistikk(
                     behandletSektorSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletSektorSykefraværsstatistikk()
+                )
+            }
+        }
+    }
+
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(
+        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+    ) {
+        using(sessionOf(dataSource)) {session ->
+            session.transaction { tx ->
+                tx.insertBehandletBransjeStatistikk(
+                    behandletBransjeSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletBransjeSykefraværsstatistikk()
                 )
             }
         }
@@ -213,6 +226,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
     private fun BehandletKvartalsvisSykefraværsstatistikk.tilStatistikkSpesifikkVerdi() = when (this) {
         is BehandletLandSykefraværsstatistikk -> this.land
+        is BehandletBransjeSykefraværsstatistikk -> this.bransje
         is BehandletNæringSykefraværsstatistikk -> this.næring
         is BehandletNæringsundergruppeSykefraværsstatistikk -> this.næringsundergruppe
         is BehandletSektorSykefraværsstatistikk -> this.sektor
@@ -271,6 +285,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             tabellNavn = "sykefravar_statistikk_sektor",
             kolonneNavn = "sektor_kode",
             behandletStatistikkListe = behandletSektorSykefraværsstatistikk
+        )
+
+    private fun TransactionalSession.insertBehandletBransjeStatistikk(behandletBransjeSykefraværsstatistikk: Collection<BehandletBransjeSykefraværsstatistikk>) =
+        insertBehandletSykefraværsstatistikk(
+            tabellNavn = "sykefravar_statistikk_bransje",
+            kolonneNavn = "bransje",
+            behandletStatistikkListe = behandletBransjeSykefraværsstatistikk
         )
 
     private fun TransactionalSession.insertBehandletNæringsStatistikk(behandletNæringSykefraværsstatistikk: Collection<BehandletNæringSykefraværsstatistikk>) =
