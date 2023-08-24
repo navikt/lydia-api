@@ -67,7 +67,7 @@ jobs:
     permissions: {}
     name: "Deploy app to dev"
     needs: "build"
-    if: github.ref == 'refs/heads/lagre-naringsgrupper-i-ny-tabell'
+    if: github.ref == 'refs/heads/instansier-en-kafka-statistikk-per-kategori-consumer-for-hver-topic'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
