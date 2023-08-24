@@ -58,7 +58,7 @@ class SykefraversstatistikkVirksomhetImportTest {
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
 
         kafkaMelding shouldBeEqual
