@@ -83,10 +83,20 @@ fun startLydiaBackend() {
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
-    StatistikkPerKategoriConsumer.apply {
-        create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
-        run()
-    }.also { HelseMonitor.leggTilHelsesjekk(it) }
+
+    mapOf(
+        naisEnv.kafka.statistikkLandTopic to Kafka.statistikkLandGroupId,
+        naisEnv.kafka.statistikkSektorTopic to Kafka.statistikkSektorGroupId,
+        naisEnv.kafka.statistikkBransjeTopic to Kafka.statistikkBransjeGroupId,
+        naisEnv.kafka.statistikkNæringTopic to Kafka.statistikkNæringGroupId,
+        naisEnv.kafka.statistikkNæringskodeTopic to Kafka.statistikkNæringskodeGroupId,
+        naisEnv.kafka.statistikkVirksomhetTopic to Kafka.statistikkVirksomhetGroupId,
+    ).forEach { entry ->
+        StatistikkPerKategoriConsumer(topic = entry.key, groupId = entry.value).apply {
+            create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
+            run()
+        }.also { HelseMonitor.leggTilHelsesjekk(it) }
+    }
 
     StatistikkMetadataVirksomhetConsumer.apply {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)

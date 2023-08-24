@@ -60,7 +60,7 @@ class SykefraversstatistikkSektorImportTest {
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 KafkaContainerHelper.statistikkSektorTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkSektorGroupId
         )
 
         kafkaMelding shouldBeEqual

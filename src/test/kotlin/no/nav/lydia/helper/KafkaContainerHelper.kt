@@ -200,7 +200,7 @@ class KafkaContainerHelper(
                 kafkaProducer.send(melding.tilProducerRecord()).get()
             }
             ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkPerKategoriGroupId,
+                konsumentGruppeId = Kafka.statistikkVirksomhetGroupId,
                 recordMetadata = sendteMeldinger.last()
             )
         }

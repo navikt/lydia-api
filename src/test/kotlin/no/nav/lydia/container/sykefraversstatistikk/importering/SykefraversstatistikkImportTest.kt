@@ -54,7 +54,7 @@ class SykefraversstatistikkImportTest {
                 }""".trimIndent(),
                 eksport_Q4_2022_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
 
         lydiaApiContainer shouldNotContainLog "NullPointerException.*".toRegex()
@@ -83,7 +83,7 @@ class SykefraversstatistikkImportTest {
                 statistikkSomBurdeVæreMaskert.toJsonKey(),
                 statistikkSomBurdeVæreMaskert.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
 
         val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
@@ -107,13 +107,13 @@ class SykefraversstatistikkImportTest {
                 eksport_Q4_2022_For_Virksomhet.toJsonKey(),
                 eksport_Q4_2022_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
         kafkaContainer.sendOgVentTilKonsumert(
                 eksport_Q1_2023_For_Virksomhet.toJsonKey(),
                 eksport_Q1_2023_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
 
 
@@ -156,13 +156,13 @@ class SykefraversstatistikkImportTest {
                 eksport_Q1_2023_For_Virksomhet.toJsonKey(),
                 eksport_Q1_2023_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
         kafkaContainer.sendOgVentTilKonsumert(
                 nyEksport.toJsonKey(),
                 nyEksport.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
 
         val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
@@ -181,7 +181,7 @@ class SykefraversstatistikkImportTest {
                 eksport_Q1_2023_For_Virksomhet.toJsonKey(),
                 eksport_Q1_2023_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
 
         val sykefraværSiste4Kvartal = hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
@@ -208,7 +208,7 @@ class SykefraversstatistikkImportTest {
                 eksport_Q1_2023_For_Virksomhet.toJsonKey(),
                 eksport_Q1_2023_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
         val førsteLagredeStatistikkSiste4Kvartal =
                 hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
@@ -218,7 +218,7 @@ class SykefraversstatistikkImportTest {
                 eksport_Q1_2023_For_Virksomhet.toJsonKey(),
                 eksport_Q1_2023_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkVirksomhetGroupId
         )
         val andreLagredeStatistikkSiste4Kvartal =
                 hentSykefraværForVirksomhetSiste4Kvartaler("999999999")

@@ -62,7 +62,7 @@ class SykefraversstatistikkLandImportTest {
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 KafkaContainerHelper.statistikkLandTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkLandGroupId
         )
 
         kafkaMelding shouldBeEqual

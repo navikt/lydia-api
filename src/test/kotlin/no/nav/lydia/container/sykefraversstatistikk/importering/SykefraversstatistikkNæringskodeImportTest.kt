@@ -60,7 +60,7 @@ class SykefraversstatistikkNæringskodeImportTest {
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 KafkaContainerHelper.statistikkNæringskodeTopic,
-                Kafka.statistikkPerKategoriGroupId
+                Kafka.statistikkNæringskodeGroupId
         )
 
         kafkaMelding shouldBeEqual
