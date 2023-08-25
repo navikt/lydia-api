@@ -60,7 +60,7 @@ class SykefraversstatistikkBransjeImportTest {
             nøkkel = kafkaMelding.toJsonKey(),
             melding = kafkaMelding.toJsonValue(),
             topic = KafkaContainerHelper.statistikkBransjeTopic,
-            konsumentGruppeId = Kafka.statistikkPerKategoriGroupId
+            konsumentGruppeId = Kafka.statistikkBransjeGroupId
         )
 
         kafkaMelding shouldBeEqual
