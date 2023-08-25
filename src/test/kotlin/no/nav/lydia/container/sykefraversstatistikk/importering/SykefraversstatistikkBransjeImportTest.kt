@@ -47,6 +47,33 @@ class SykefraversstatistikkBransjeImportTest {
     }
 
     @Test
+    fun `kan lagre bransje med langt bransjenavn`() {
+        val kafkaMelding = JsonMelding(
+            kategori = BRANSJE,
+            kode = TestData.BRANSJE_NÆRINGSMIDDELINDUSTRI,
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = sistePubliserteKvartal,
+            siste4Kvartal = siste4Kvartal
+        )
+
+        kafkaContainer.sendOgVentTilKonsumert(
+            nøkkel = kafkaMelding.toJsonKey(),
+            melding = kafkaMelding.toJsonValue(),
+            topic = KafkaContainerHelper.statistikkBransjeTopic,
+            konsumentGruppeId = Kafka.statistikkBransjeGroupId
+        )
+
+        kafkaMelding shouldBeEqual
+                hentStatistikkGjeldendeKvartal(
+                    BRANSJE,
+                    TestData.BRANSJE_NÆRINGSMIDDELINDUSTRI,
+                    KVARTAL_2023_1
+                ).sistePubliserteKvartal
+        kafkaMelding shouldBeEqual
+                hentStatistikkSiste4Kvartal(BRANSJE, TestData.BRANSJE_NÆRINGSMIDDELINDUSTRI).siste4Kvartal
+    }
+
+    @Test
     fun `vi lagrer sykefraværsstatistikk for kategori BRANSJE (både siste kvartal OG siste 4 kvartaler)`() {
         val kafkaMelding = JsonMelding(
             kategori = BRANSJE,

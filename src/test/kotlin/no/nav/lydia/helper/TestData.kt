@@ -16,6 +16,7 @@ class TestData(
     companion object {
         const val LANDKODE_NO = "NO"
         const val BRANSJE_BARNEHAGE = "Barnehager"
+        const val BRANSJE_NÆRINGSMIDDELINDUSTRI = "Næringsmiddelindustri"
         const val NÆRING_JORDBRUK = "01"
         const val NÆRING_SKOGBRUK = "02"
         const val NÆRINGSKODE_BARNEHAGER = "88911"
