@@ -2,12 +2,12 @@ package no.nav.lydia.container.virksomhet
 
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
@@ -45,7 +45,8 @@ class VirksomhetApiTest {
         virksomhet.adresse shouldContainInOrder OSLO_FLERE_ADRESSER.beliggenhet?.adresse!!
         virksomhet.postnummer shouldBe OSLO_FLERE_ADRESSER.beliggenhet.postnummer
         virksomhet.poststed shouldBe OSLO_FLERE_ADRESSER.beliggenhet.poststed
-        virksomhet.neringsgrupper shouldHaveSize 2
+        virksomhet.neringsgrupper shouldHaveSize 1
+        virksomhet.næringsundergruppe2 shouldNotBe null
         virksomhet.sektor shouldBe "Statlig forvaltning"
     }
 
@@ -76,11 +77,9 @@ class VirksomhetApiTest {
         )
 
         virksomhet.orgnr shouldBe orgnummer
-        virksomhet.neringsgrupper.map { it.navn } shouldContainAll listOf(
-                "Testgruppe en",
-                "Test - gruppe to",
-                "Test-gruppe tre"
-        )
+        virksomhet.næringsundergruppe1.navn shouldBe "Testgruppe en"
+        virksomhet.næringsundergruppe2?.navn shouldBe "Test - gruppe to"
+        virksomhet.næringsundergruppe3?.navn shouldBe "Test-gruppe tre"
     }
 
     @Test

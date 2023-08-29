@@ -1,9 +1,6 @@
 package no.nav.lydia.helper
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.common.Gzip
-import io.ktor.http.*
-import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 
 class IntegrationsHelper {
 
@@ -20,21 +17,6 @@ class IntegrationsHelper {
                     )
             )
             return næringMockUrl
-        }
-
-        fun mockKallMotBrregUnderenheterForNedlasting(httpMock: HttpMock, testData: TestData): String {
-            val lastNedPath = "/brregmock/enhetsregisteret/api/underenheter/lastned"
-            val brregMockUrl = httpMock.url(lastNedPath)
-
-            httpMock.wireMockServer.stubFor(
-                WireMock.get(WireMock.urlPathEqualTo(lastNedPath))
-                    .willReturn(
-                        WireMock.ok()
-                            .withHeader(HttpHeaders.ContentType, BrregDownloader.underEnhetApplicationType)
-                            .withBody(Gzip.gzip(testData.brregMockData()))
-                    )
-            )
-            return brregMockUrl
         }
     }
 }

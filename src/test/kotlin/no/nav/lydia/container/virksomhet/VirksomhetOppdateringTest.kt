@@ -1,6 +1,6 @@
 package no.nav.lydia.container.virksomhet
 
-import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
@@ -266,7 +266,10 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     virksomhetDto.adresse shouldBe this.beliggenhet!!.adresse!!
     virksomhetDto.postnummer shouldBe this.beliggenhet.postnummer!!
     virksomhetDto.poststed shouldBe this.beliggenhet.poststed!!
-    virksomhetDto.neringsgrupper shouldContainAll this.næringsundergrupper
+    virksomhetDto.neringsgrupper shouldContain this.næringsundergruppe1
+    virksomhetDto.næringsundergruppe1 shouldBe this.næringsundergruppe1
+    virksomhetDto.næringsundergruppe2 shouldBe this.næringsundergruppe2
+    virksomhetDto.næringsundergruppe3 shouldBe this.næringsundergruppe3
     virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe genererOppdateringsid(this)
     virksomhetDto.opprettetTidspunkt shouldBeLessThan Clock.System.now()
     return virksomhetDto

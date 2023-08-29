@@ -19,7 +19,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
     fun insert(virksomhet: VirksomhetLagringDao) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                @Language("PostgreSQL")
                 val virksomhetInsertSql = """
                     WITH virksomhetId as (
                         INSERT INTO virksomhet(
@@ -121,7 +120,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
 
     fun oppdaterStatus(orgnr: String, status: VirksomhetStatus, oppdatertAvBrregOppdateringsId: Long?) {
         sessionOf(dataSource).use { session ->
-            @Language("PostgreSQL")
             val sql = """
                         UPDATE virksomhet SET
                         status = :status,
@@ -144,7 +142,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
     }
 
     fun hentVirksomhet(orgnr: String): Virksomhet? {
-        @Language("PostgreSQL")
         val sql = """
                     SELECT 
                         virksomhet.id,
@@ -160,19 +157,22 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.land,
                         virksomhet.landkode,
                         virksomhet_statistikk_metadata.sektor,
-                        string_agg(naring.kode || '∞' || naring.navn, '€') AS naringer,
+                        virksomhet_naringsundergrupper.naeringskode1,
+                        virksomhet_naringsundergrupper.naeringskode2,
+                        virksomhet_naringsundergrupper.naeringskode3,
+                        naring1.navn as naringsundergruppenavn1,
+                        naring2.navn as naringsundergruppenavn2,
+                        naring3.navn as naringsundergruppenavn3,
                         virksomhet.oppdatertAvBrregOppdateringsId,
                         virksomhet.opprettetTidspunkt,
                         virksomhet.sistEndretTidspunkt
                     FROM virksomhet 
-                    JOIN virksomhet_naring ON (virksomhet.id = virksomhet_naring.virksomhet)
-                    JOIN naring ON (virksomhet_naring.narings_kode = naring.kode)
+                    JOIN virksomhet_naringsundergrupper ON (virksomhet.id = virksomhet_naringsundergrupper.virksomhet)
+                    JOIN naring as naring1 ON (virksomhet_naringsundergrupper.naeringskode1 = naring1.kode)
+                    LEFT JOIN naring as naring2 ON (virksomhet_naringsundergrupper.naeringskode2 = naring2.kode)
+                    LEFT JOIN naring as naring3 ON (virksomhet_naringsundergrupper.naeringskode3 = naring3.kode)
                     LEFT JOIN virksomhet_statistikk_metadata USING (orgnr)
                     WHERE virksomhet.orgnr = :orgnr
-                    GROUP BY
-                        virksomhet.id,
-                        virksomhet.orgnr,
-                        virksomhet_statistikk_metadata.sektor
                 """.trimIndent()
         val params = mapOf("orgnr" to orgnr)
         return sessionOf(dataSource).use { session ->
@@ -194,14 +194,28 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         kommunenummer = row.string("kommunenummer"),
                         land = row.string("land"),
                         landkode = row.string("landkode"),
-                        næringsgrupper = row.string("naringer")
-                            .split("€")
-                            .map { naring ->
-                                Næringsgruppe(
-                                    kode = naring.split("∞")[0],
-                                    navn = naring.split("∞")[1]
-                                )
-                            },
+                        næringsgrupper = listOf(
+                            Næringsgruppe(
+                                kode = row.string("naeringskode1"),
+                                navn = row.string("naringsundergruppenavn1")
+                            )
+                        ),
+                        næringsundergruppe1 = Næringsgruppe(
+                            kode = row.string("naeringskode1"),
+                            navn = row.string("naringsundergruppenavn1")
+                        ),
+                        næringsundergruppe2 = row.stringOrNull("naeringskode2")?.let { næringsundergruppe2 ->
+                            Næringsgruppe(
+                                kode = næringsundergruppe2,
+                                navn = row.string("naringsundergruppenavn2")
+                            )
+                        },
+                        næringsundergruppe3 = row.stringOrNull("naeringskode3")?.let { næringsundergruppe3 ->
+                            Næringsgruppe(
+                                kode = næringsundergruppe3,
+                                navn = row.string("naringsundergruppenavn3")
+                            )
+                        },
                         sektor = row.stringOrNull("sektor")?.tilSektor(),
                         oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
                         opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),

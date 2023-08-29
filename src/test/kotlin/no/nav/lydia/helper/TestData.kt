@@ -50,7 +50,7 @@ class TestData(
     private val sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger =
         mutableSetOf<SykefraversstatistikkMetadataVirksomhetImportDto>()
     private val næringer = mutableSetOf<String>()
-    private val brregVirksomheter = mutableSetOf<String>()
+    val brregVirksomheter = mutableSetOf<TestVirksomhet>()
 
     init {
         if (inkluderStandardVirksomheter) {
@@ -143,7 +143,7 @@ class TestData(
         virksomhet.næringsundergrupper.forEach { næring ->
             næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
         }
-        brregVirksomheter.add(virksomhet.brregUnderenhetJson())
+        brregVirksomheter.add(virksomhet)
 
         return this
     }
@@ -153,9 +153,6 @@ class TestData(
 
     fun sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger() =
         sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger
-
-    fun brregMockData() =
-        brregVirksomheter.joinToString(prefix = "[", postfix = "]", separator = ",")
 
     fun ssbNæringMockData() =
         næringer.joinToString(

@@ -38,7 +38,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
-import no.nav.lydia.integrasjoner.brreg.BrregDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
@@ -47,7 +46,6 @@ import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
-import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
@@ -119,7 +117,6 @@ class TestContainerHelper {
 
         private val dataSource = postgresContainer.nyDataSource()
         val næringsRepository = NæringsRepository(dataSource = dataSource)
-        val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
 
         init {
             Testcontainers.exposeHostPorts(httpMock.wireMockServer.port())
@@ -829,13 +826,9 @@ class VirksomhetHelper {
                 næringsRepository = TestContainerHelper.næringsRepository
             ).lastNedNæringer()
 
-            BrregDownloader(
-                url = IntegrationsHelper.mockKallMotBrregUnderenheterForNedlasting(
-                    httpMock = httpMock,
-                    testData = testData
-                ),
-                virksomhetRepository = TestContainerHelper.virksomhetRepository
-            ).lastNed()
+            testData.brregVirksomheter.forEach {
+                TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(it)
+            }
 
             TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 testData.sykefraværsstatistikkPerKategoriMeldinger().toList()
