@@ -17,6 +17,9 @@ data class VirksomhetDto(
     val postnummer: String,
     val poststed: String,
     val neringsgrupper: List<Næringsgruppe>,
+    val næringsundergruppe1: Næringsgruppe,
+    val næringsundergruppe2: Næringsgruppe?,
+    val næringsundergruppe3: Næringsgruppe?,
     val sektor: String,
     val oppdatertAvBrregOppdateringsId: Long? = null,
     val opprettetTidspunkt: Instant,
@@ -35,6 +38,9 @@ fun Virksomhet.toDto() = VirksomhetDto(
     sektor = sektor?.beskrivelse ?: "Ukjent",
     oppdatertAvBrregOppdateringsId = this.oppdatertAvBrregOppdateringsId,
     opprettetTidspunkt = this.opprettetTidspunkt,
-    sistEndretTidspunkt = this.sistEndretTidspunkt
+    sistEndretTidspunkt = this.sistEndretTidspunkt,
+    næringsundergruppe1 = this.næringsundergruppe1,
+    næringsundergruppe2 = this.næringsundergruppe2,
+    næringsundergruppe3 = this.næringsundergruppe3,
 )
 
