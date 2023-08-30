@@ -194,12 +194,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         kommunenummer = row.string("kommunenummer"),
                         land = row.string("land"),
                         landkode = row.string("landkode"),
-                        næringsgrupper = listOf(
-                            Næringsgruppe(
-                                kode = row.string("naeringskode1"),
-                                navn = row.string("naringsundergruppenavn1")
-                            )
-                        ),
                         næringsundergruppe1 = Næringsgruppe(
                             kode = row.string("naeringskode1"),
                             navn = row.string("naringsundergruppenavn1")

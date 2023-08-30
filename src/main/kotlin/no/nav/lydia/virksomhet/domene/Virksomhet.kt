@@ -16,7 +16,6 @@ data class Virksomhet(
     val kommunenummer: String,
     val land: String,
     val landkode: String,
-    val næringsgrupper: List<Næringsgruppe>,
     val næringsundergruppe1: Næringsgruppe,
     val næringsundergruppe2: Næringsgruppe?,
     val næringsundergruppe3: Næringsgruppe?,

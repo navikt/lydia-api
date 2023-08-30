@@ -112,8 +112,8 @@ class IASakStatistikkProdusent(
                 sykefraversprosentSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.sykefraversprosent,
                 kvartaler = virksomhetsstatistikkSiste4Kvartal?.kvartaler ?: emptyList(),
                 sektor = virksomhet?.sektor,
-                neringer = virksomhet?.næringsgrupper ?: emptyList(),
-                bransjeprogram = finnBransje(virksomhet?.næringsgrupper),
+                neringer = virksomhet?.hentNæringsgrupper() ?: emptyList(),
+                bransjeprogram = finnBransje(virksomhet?.hentNæringsgrupper()),
                 postnummer = virksomhet?.postnummer,
                 kommunenummer = virksomhet?.kommunenummer,
                 fylkesnummer = fylkesnummer,
@@ -123,6 +123,11 @@ class IASakStatistikkProdusent(
             return key to Json.encodeToString(value)
 
         }
+        fun Virksomhet?.hentNæringsgrupper() = listOf(
+                this?.næringsundergruppe1,
+                this?.næringsundergruppe2,
+                this?.næringsundergruppe3
+        ).filterNotNull()
     }
 
     @Serializable

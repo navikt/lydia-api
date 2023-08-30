@@ -1,26 +1,20 @@
 package no.nav.lydia.container.virksomhet
 
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 import kotlinx.datetime.Clock
-import no.nav.lydia.helper.IntegrationsHelper
+import no.nav.lydia.helper.*
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.nyeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetSomSkalFåNæringskodeOppdatert
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetUtenAdresse
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestData
-import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.helper.genererEndretNavn
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.api.VirksomhetDto
@@ -266,7 +260,6 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     virksomhetDto.adresse shouldBe this.beliggenhet!!.adresse!!
     virksomhetDto.postnummer shouldBe this.beliggenhet.postnummer!!
     virksomhetDto.poststed shouldBe this.beliggenhet.poststed!!
-    virksomhetDto.neringsgrupper shouldContain this.næringsundergruppe1
     virksomhetDto.næringsundergruppe1 shouldBe this.næringsundergruppe1
     virksomhetDto.næringsundergruppe2 shouldBe this.næringsundergruppe2
     virksomhetDto.næringsundergruppe3 shouldBe this.næringsundergruppe3

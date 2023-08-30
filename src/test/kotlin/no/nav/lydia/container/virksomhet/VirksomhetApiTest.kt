@@ -4,7 +4,6 @@ import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -45,7 +44,6 @@ class VirksomhetApiTest {
         virksomhet.adresse shouldContainInOrder OSLO_FLERE_ADRESSER.beliggenhet?.adresse!!
         virksomhet.postnummer shouldBe OSLO_FLERE_ADRESSER.beliggenhet.postnummer
         virksomhet.poststed shouldBe OSLO_FLERE_ADRESSER.beliggenhet.poststed
-        virksomhet.neringsgrupper shouldHaveSize 1
         virksomhet.næringsundergruppe2 shouldNotBe null
         virksomhet.sektor shouldBe "Statlig forvaltning"
     }
