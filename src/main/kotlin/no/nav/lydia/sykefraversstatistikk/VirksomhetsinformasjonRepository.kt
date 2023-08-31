@@ -120,7 +120,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
 
         val sql = """
             SELECT
-                COUNT(DISTINCT virksomhet.orgnr) AS total
+                COUNT(statistikk_siste4.orgnr) AS total
             FROM 
                 sykefravar_statistikk_virksomhet AS statistikk
                 JOIN virksomhet USING (orgnr)
