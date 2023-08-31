@@ -83,20 +83,6 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
                 
                 AND virksomhet.status = '${VirksomhetStatus.AKTIV.name}'
-            GROUP BY 
-                virksomhet.orgnr,
-                virksomhet.navn,
-                statistikk.arstall,
-                statistikk.kvartal,
-                statistikk.antall_personer,
-                statistikk_siste4.tapte_dagsverk,
-                statistikk_siste4.mulige_dagsverk,
-                statistikk_siste4.prosent,
-                statistikk_siste4.maskert,
-                statistikk_siste4.sist_endret,
-                ia_sak.status,
-                ia_sak.eid_av,
-                ia_sak.endret
             ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
             LIMIT ${søkeparametere.virksomheterPerSide()}
             OFFSET ${søkeparametere.offset()}
