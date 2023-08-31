@@ -62,7 +62,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                 )
                 ${
-                    if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) "
+                    if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) "
                     else ""
                 }
                 
@@ -107,7 +107,6 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             mapOf(
                 "kvartal" to søkeparametere.periode.kvartal,
                 "arstall" to søkeparametere.periode.årstall,
-
                 "naringer" to session.createArrayOf("text", næringsgrupperMedBransjer),
                 "kommuner" to session.createArrayOf("text", søkeparametere.kommunenummer),
                 "sektorer" to session.createArrayOf("text", sektorer),
@@ -149,7 +148,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                 )
                 ${
-                    if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) "
+                    if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) "
                     else ""
                 }
                 

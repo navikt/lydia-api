@@ -130,14 +130,20 @@ data class Søkeparametere(
             else
                 """
                 AND (
-                    substr(vn.narings_kode, 1, 2) in (select unnest(:naringer))
+                   substr(vn.naringsundergruppe1, 1, 2) in (select unnest(:naringer)) 
+                   OR substr(vn.naringsundergruppe2, 1, 2) in (select unnest(:naringer)) 
+                   OR substr(vn.naringsundergruppe3, 1, 2) in (select unnest(:naringer))
                     ${
                     if (søkeparametere.bransjeprogram.isNotEmpty()) {
                         val koder = søkeparametere.bransjeprogram.flatMap { it.næringskoder }.groupBy {
                             it.length
                         }
                         val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
-                        femsifrede?.let { "OR (vn.narings_kode in (select (unnest(:naringer))))" } ?: ""
+                        femsifrede?.let { 
+                            "OR (vn.naringsundergruppe1 in (select (unnest(:naringer))))" + 
+                            "OR (vn.naringsundergruppe2 in (select (unnest(:naringer))))" +
+                            "OR (vn.naringsundergruppe3 in (select (unnest(:naringer))))" 
+                        } ?: ""
                     } else ""
                 }
                     )
