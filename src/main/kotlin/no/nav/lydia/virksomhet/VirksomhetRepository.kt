@@ -157,9 +157,9 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.land,
                         virksomhet.landkode,
                         virksomhet_statistikk_metadata.sektor,
-                        virksomhet_naringsundergrupper.naeringskode1,
-                        virksomhet_naringsundergrupper.naeringskode2,
-                        virksomhet_naringsundergrupper.naeringskode3,
+                        virksomhet_naringsundergrupper.naringsundergruppe1,
+                        virksomhet_naringsundergrupper.naringsundergruppe2,
+                        virksomhet_naringsundergrupper.naringsundergruppe3,
                         naring1.navn as naringsundergruppenavn1,
                         naring2.navn as naringsundergruppenavn2,
                         naring3.navn as naringsundergruppenavn3,
@@ -168,9 +168,9 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         virksomhet.sistEndretTidspunkt
                     FROM virksomhet 
                     JOIN virksomhet_naringsundergrupper ON (virksomhet.id = virksomhet_naringsundergrupper.virksomhet)
-                    JOIN naring as naring1 ON (virksomhet_naringsundergrupper.naeringskode1 = naring1.kode)
-                    LEFT JOIN naring as naring2 ON (virksomhet_naringsundergrupper.naeringskode2 = naring2.kode)
-                    LEFT JOIN naring as naring3 ON (virksomhet_naringsundergrupper.naeringskode3 = naring3.kode)
+                    JOIN naring as naring1 ON (virksomhet_naringsundergrupper.naringsundergruppe1 = naring1.kode)
+                    LEFT JOIN naring as naring2 ON (virksomhet_naringsundergrupper.naringsundergruppe2 = naring2.kode)
+                    LEFT JOIN naring as naring3 ON (virksomhet_naringsundergrupper.naringsundergruppe3 = naring3.kode)
                     LEFT JOIN virksomhet_statistikk_metadata USING (orgnr)
                     WHERE virksomhet.orgnr = :orgnr
                 """.trimIndent()
@@ -195,16 +195,16 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         land = row.string("land"),
                         landkode = row.string("landkode"),
                         næringsundergruppe1 = Næringsgruppe(
-                            kode = row.string("naeringskode1"),
+                            kode = row.string("naringsundergruppe1"),
                             navn = row.string("naringsundergruppenavn1")
                         ),
-                        næringsundergruppe2 = row.stringOrNull("naeringskode2")?.let { næringsundergruppe2 ->
+                        næringsundergruppe2 = row.stringOrNull("naringsundergruppe2")?.let { næringsundergruppe2 ->
                             Næringsgruppe(
                                 kode = næringsundergruppe2,
                                 navn = row.string("naringsundergruppenavn2")
                             )
                         },
-                        næringsundergruppe3 = row.stringOrNull("naeringskode3")?.let { næringsundergruppe3 ->
+                        næringsundergruppe3 = row.stringOrNull("naringsundergruppe3")?.let { næringsundergruppe3 ->
                             Næringsgruppe(
                                 kode = næringsundergruppe3,
                                 navn = row.string("naringsundergruppenavn3")
@@ -265,20 +265,20 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     )
                     INSERT INTO virksomhet_naringsundergrupper(
                         virksomhet,
-                        naeringskode1,
-                        naeringskode2,
-                        naeringskode3
+                        naringsundergruppe1,
+                        naringsundergruppe2,
+                        naringsundergruppe3
                     )
                     VALUES (
                         (select id from virksomhetId),
-                        :naeringskode1,
-                        :naeringskode2,
-                        :naeringskode3
+                        :naringsundergruppe1,
+                        :naringsundergruppe2,
+                        :naringsundergruppe3
                     )                   
                     ON CONFLICT (virksomhet) DO UPDATE SET 
-                        naeringskode1 = :naeringskode1,
-                        naeringskode2 = :naeringskode2,
-                        naeringskode3 = :naeringskode3,
+                        naringsundergruppe1 = :naringsundergruppe1,
+                        naringsundergruppe2 = :naringsundergruppe2,
+                        naringsundergruppe3 = :naringsundergruppe3,
                         oppdateringsdato = now()
                 """.trimIndent()
                 tx.run(
@@ -286,9 +286,9 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 insertSql,
                                 mapOf(
                                         "orgnr" to virksomhet.orgnr,
-                                        "naeringskode1" to virksomhet.næringsgrupper["naeringskode1"],
-                                        "naeringskode2" to virksomhet.næringsgrupper["naeringskode2"],
-                                        "naeringskode3" to virksomhet.næringsgrupper["naeringskode3"],
+                                        "naringsundergruppe1" to virksomhet.næringsgrupper["naeringskode1"],
+                                        "naringsundergruppe2" to virksomhet.næringsgrupper["naeringskode2"],
+                                        "naringsundergruppe3" to virksomhet.næringsgrupper["naeringskode3"],
                                 )
                         ).asUpdate
                 )

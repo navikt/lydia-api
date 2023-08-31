@@ -68,7 +68,7 @@ class VirksomhetOppdateringTest {
         )
 
         val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naeringskode1 from virksomhet_naringsundergrupper
+                """select naringsundergruppe1 from virksomhet_naringsundergrupper
                     where virksomhet= $virksomhetId
                     """.trimIndent()
         )
@@ -118,7 +118,7 @@ class VirksomhetOppdateringTest {
         )
 
         val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naeringskode1 from virksomhet_naringsundergrupper
+                """select naringsundergruppe1 from virksomhet_naringsundergrupper
                     where virksomhet= $virksomhetId
                     """.trimIndent()
         )
@@ -158,7 +158,7 @@ class VirksomhetOppdateringTest {
         )
 
         val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naeringskode1 from virksomhet_naringsundergrupper
+                """select naringsundergruppe1 from virksomhet_naringsundergrupper
                     where virksomhet= $virksomhetId
                     """.trimIndent()
         )
@@ -166,7 +166,7 @@ class VirksomhetOppdateringTest {
         næringskode1 shouldBe "88.911"
 
         val næringskode2 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naeringskode2 from virksomhet_naringsundergrupper
+                """select naringsundergruppe2 from virksomhet_naringsundergrupper
                     where virksomhet= $virksomhetId
                     """.trimIndent()
         )
