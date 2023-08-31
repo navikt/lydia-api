@@ -30,7 +30,6 @@ spec:
   accessPolicy:
     outbound:
       external:
-        - host: "data.brreg.no"
         - host: "data.ssb.no"
     inbound:
       rules:
@@ -87,8 +86,6 @@ spec:
       value: arbeidsgiver.sykefravarsstatistikk-naringskode-v1
     - name: STATISTIKK_VIRKSOMHET_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-virksomhet-v1
-    - name: BRREG_UNDERENHET_URL
-      value: "https://data.brreg.no/enhetsregisteret/api/underenheter/lastned"
     - name: CONSUMER_LOOP_DELAY
       value: "1000"
     - name: SSB_NARINGS_URL

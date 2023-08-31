@@ -153,7 +153,6 @@ class Kafka(
 }
 
 class Integrasjoner(
-    val brregUnderEnhetUrl: String = getEnvVar("BRREG_UNDERENHET_URL"),
     val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL")
 )
 

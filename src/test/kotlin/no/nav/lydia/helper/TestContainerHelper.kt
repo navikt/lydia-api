@@ -96,7 +96,6 @@ class TestContainerHelper {
                             kafkaContainerHelper.envVars()
                                 .plus(
                                     mapOf(
-                                        "BRREG_UNDERENHET_URL" to "/brregmock/enhetsregisteret/api/underenheter/lastned",
                                         "CONSUMER_LOOP_DELAY" to "1",
                                         "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json",
                                         "NAIS_CLUSTER_NAME" to "lokal",
