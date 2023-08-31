@@ -11,6 +11,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
 
@@ -65,6 +66,40 @@ class StatusoversiktApiTest {
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
         statusoversiktKommunalSektor.first { statusoversikt ->
             statusoversikt.status == IAProsessStatus.FULLFØRT
+        }.antall shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun `skal kunne filtrere på næring eller bransje`() {
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(
+                næringer = listOf(Næringsgruppe("Boligbyggelag", "41.101"))
+            )
+        )
+        nySakIViBistår(orgnummer = virksomhet.orgnr)
+            .nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
+        val aktivSak = hentAktivSak(orgnummer = virksomhet.orgnr)
+        aktivSak.status shouldBe IAProsessStatus.FULLFØRT
+
+        VirksomhetHelper.lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(
+                næringer = listOf(Næringsgruppe("Barnehager", "88.911"))
+            )
+        )
+
+        val statusoversiktResults =
+            StatusoversiktHelper.hentStatusoversikt(
+                næringsgrupper = "41",
+                bransjeProgram = "BARNEHAGER",
+                token = mockOAuth2Server.superbruker1.token
+            ).third.get().data
+
+        statusoversiktResults.size shouldBeGreaterThan 1
+        statusoversiktResults.first { statusoversikt ->
+            statusoversikt.status == IAProsessStatus.FULLFØRT
+        }.antall shouldBeGreaterThan 0
+        statusoversiktResults.first { statusoversikt ->
+            statusoversikt.status == IAProsessStatus.IKKE_AKTIV
         }.antall shouldBeGreaterThan 0
     }
 }

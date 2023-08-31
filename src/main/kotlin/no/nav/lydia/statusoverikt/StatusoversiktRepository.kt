@@ -34,7 +34,7 @@ class StatusoversiktRepository(val dataSource: DataSource) {
         }
                 LEFT JOIN ia_sak ON ( ia_sak.orgnr = statistikk.orgnr )
                 ${
-            if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naring AS vn on (virksomhet.id = vn.virksomhet) "
+            if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) "
             else ""
         }
                 
