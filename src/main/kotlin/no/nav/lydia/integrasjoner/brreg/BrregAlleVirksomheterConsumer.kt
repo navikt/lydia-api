@@ -1,11 +1,15 @@
-package no.nav.lydia.sykefraversstatistikk.import
+package no.nav.lydia.integrasjoner.brreg
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.exceptions.UgyldigAdresseException
-import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
-import no.nav.lydia.integrasjoner.brreg.tilVirksomhet
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -37,9 +41,9 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
         val consumerGroupNavn = Kafka.brregConsumerGroupId
 
         logger.info("Creating kafka consumer job for $topicNavn i group $consumerGroupNavn")
-        this.job = Job()
-        this.kafka = kafka
-        this.virksomhetRepository = repository
+        job = Job()
+        BrregAlleVirksomheterConsumer.kafka = kafka
+        virksomhetRepository = repository
         kafkaConsumer = KafkaConsumer(
             BrregAlleVirksomheterConsumer.kafka.consumerProperties(consumerGroupId = Kafka.brregConsumerGroupId),
             StringDeserializer(),

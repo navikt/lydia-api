@@ -1,13 +1,17 @@
-package no.nav.lydia.sykefraversstatistikk.import
+package no.nav.lydia.integrasjoner.brreg
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.exceptions.UgyldigAdresseException
-import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
-import no.nav.lydia.integrasjoner.brreg.tilVirksomhet
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -36,9 +40,9 @@ object BrregOppdateringConsumer : CoroutineScope {
 
     fun create(kafka: Kafka, repository: VirksomhetRepository) {
         logger.info("Creating kafka consumer job for ${kafka.brregOppdateringTopic}")
-        this.job = Job()
-        this.kafka = kafka
-        this.repository = repository
+        job = Job()
+        BrregOppdateringConsumer.kafka = kafka
+        BrregOppdateringConsumer.repository = repository
         kafkaConsumer = KafkaConsumer(
             BrregOppdateringConsumer.kafka.consumerProperties(consumerGroupId = Kafka.brregConsumerGroupId),
             StringDeserializer(),

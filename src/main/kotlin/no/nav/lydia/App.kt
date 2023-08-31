@@ -21,10 +21,24 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
-import no.nav.lydia.appstatus.*
+import no.nav.lydia.appstatus.DatabaseHelsesjekk
+import no.nav.lydia.appstatus.HelseMonitor
+import no.nav.lydia.appstatus.Metrics
+import no.nav.lydia.appstatus.featureToggle
+import no.nav.lydia.appstatus.healthChecks
+import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.debug.debug
-import no.nav.lydia.ia.eksport.*
+import no.nav.lydia.ia.eksport.IASakEksporterer
+import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
+import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
+import no.nav.lydia.ia.eksport.IASakProdusent
+import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
+import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
+import no.nav.lydia.ia.eksport.IASakStatusEksportør
+import no.nav.lydia.ia.eksport.IASakStatusProdusent
+import no.nav.lydia.ia.eksport.KafkaProdusent
+import no.nav.lydia.ia.eksport.iaSakEksporterer
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -34,25 +48,27 @@ import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
+import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
-import no.nav.lydia.integrasjoner.brreg.BrregDownloader
-import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
+import no.nav.lydia.integrasjoner.azure.navEnhet
+import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
+import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.statusoverikt.StatusoversiktRepository
 import no.nav.lydia.statusoverikt.StatusoversiktService
 import no.nav.lydia.statusoverikt.api.statusoversikt
-import no.nav.lydia.sykefraversstatistikk.*
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringRepository
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
+import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraversstatistikk.VirksomhetsinformasjonRepository
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
-import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
-import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.integrasjoner.azure.navEnhet
-import no.nav.lydia.sykefraversstatistikk.import.BrregAlleVirksomheterConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkMetadataVirksomhetConsumer
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
@@ -266,12 +282,6 @@ fun Application.lydiaRestApi(
                 iaSakRepository = IASakRepository(dataSource = dataSource),
                 iaSakStatusProdusent = iaSakStatusProdusent,
             ),
-        )
-        virksomhetsImport(
-            BrregDownloader(
-                url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
-                virksomhetRepository = virksomhetRepository
-            )
         )
         næringsImport(
             næringsDownloader = NæringsDownloader(
