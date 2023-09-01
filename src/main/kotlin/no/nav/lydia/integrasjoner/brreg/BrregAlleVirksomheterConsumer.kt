@@ -74,7 +74,7 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
                                         status = VirksomhetStatus.AKTIV,
                                         oppdateringsId = null
                                     )
-                                    virksomhetRepository.insert(virksomhet)
+                                    virksomhetRepository.insertVirksomhet(virksomhet)
                                     virksomhetRepository.insertNæringsundergrupper(virksomhet)
                                 } catch (e: UgyldigAdresseException) {
                                     antallIrrelevanteBedrifter += 1

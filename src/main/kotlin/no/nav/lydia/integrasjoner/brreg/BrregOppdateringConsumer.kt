@@ -75,7 +75,7 @@ object BrregOppdateringConsumer : CoroutineScope {
                                                 status = oppdateringVirksomhet.endringstype.tilStatus(),
                                                 oppdateringsId = oppdateringVirksomhet.oppdateringsid
                                             )
-                                            repository.insert(virksomhet)
+                                            repository.insertVirksomhet(virksomhet)
                                             repository.insertNæringsundergrupper(virksomhet)
                                         } catch (e: UgyldigAdresseException) {
                                             antallIrrelevanteBedrifter += 1

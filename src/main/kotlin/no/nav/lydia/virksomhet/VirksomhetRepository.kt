@@ -12,15 +12,13 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Virksomhet
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import no.nav.lydia.virksomhet.domene.tilSektor
-import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
 class VirksomhetRepository(val dataSource: DataSource) {
-    fun insert(virksomhet: VirksomhetLagringDao) {
+    fun insertVirksomhet(virksomhet: VirksomhetLagringDao) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 val virksomhetInsertSql = """
-                    WITH virksomhetId as (
                         INSERT INTO virksomhet(
                                 orgnr,
                                 navn,
@@ -62,9 +60,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     oppstartsdato = :oppstartsdato,                                
                                     oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
                                     sistEndretTidspunkt = now()
-                                RETURNING id
-                    )
-                    SELECT 1
                 """.trimMargin()
                 val params = mutableMapOf(
                     "orgnr" to virksomhet.orgnr,
@@ -291,6 +286,4 @@ data class VirksomhetLagringDao(
     val landkode: String,
     val næringsgrupper: Map<String, String>,
     val oppdatertAvBrregOppdateringsId: Long?,
-) {
-    fun hentNæringsgruppekoder() = næringsgrupper.toMap()
-}
+)
