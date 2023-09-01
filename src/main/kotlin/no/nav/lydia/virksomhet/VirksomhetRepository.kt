@@ -63,9 +63,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                     oppdatertAvBrregOppdateringsId = :oppdatertAvBrregOppdateringsId,
                                     sistEndretTidspunkt = now()
                                 RETURNING id
-                    ), deletions AS (
-                        DELETE from virksomhet_naring where virksomhet = (select id from virksomhetId)
-                        RETURNING 2
                     )
                     SELECT 1
                 """.trimMargin()
@@ -93,26 +90,6 @@ class VirksomhetRepository(val dataSource: DataSource) {
                     ).asExecute
                 )
 
-                @Language("PostgreSQL")
-                val insertSql = """
-                    WITH virksomhetId as (
-                        select id from virksomhet where orgnr = :orgnr
-                    )
-                    INSERT INTO virksomhet_naring(
-                        virksomhet,
-                        narings_kode 
-                    )
-                    VALUES ${virksomhet.hentNæringsgruppekoder().keys.joinToString(transform = { "((select id from virksomhetId), :${it}) " })}
-                    ON CONFLICT DO NOTHING
-                """.trimIndent()
-                tx.run(
-                    queryOf(
-                        insertSql,
-                        mutableMapOf(
-                            "orgnr" to virksomhet.orgnr
-                        ).apply { this.putAll(virksomhet.hentNæringsgruppekoder()) },
-                    ).asUpdate
-                )
             }
         }
     }

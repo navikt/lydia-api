@@ -23,7 +23,7 @@ class VirksomhetApiTest {
     fun `sanity sjekk, test at vi har fått lastet inn virksomheter og næringer`() {
         val id = postgres.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${TestVirksomhet.BERGEN.orgnr}'")
         val næringsKode =
-            postgres.hentEnkelKolonne<String>("select narings_kode from virksomhet_naring where virksomhet = '$id'")
+            postgres.hentEnkelKolonne<String>("select naringsundergruppe1 from virksomhet_naringsundergrupper where virksomhet = '$id'")
         næringsKode shouldBe TestData.BEDRIFTSRÅDGIVNING.kode
         val antallUtenPostnummer =
             postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${TestVirksomhet.UTENLANDSK.orgnr}'")

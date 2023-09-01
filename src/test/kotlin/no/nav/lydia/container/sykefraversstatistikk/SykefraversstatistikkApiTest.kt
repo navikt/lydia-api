@@ -469,10 +469,14 @@ class SykefraversstatistikkApiTest {
             response.data.forAll {
                 postgresContainer.hentEnkelKolonne<Int>(
                     """
-                        SELECT count(*) FROM virksomhet AS v JOIN virksomhet_naring AS vn ON (v.id = vn.virksomhet)
-                        WHERE v.orgnr = '${it.orgnr}' AND vn.narings_kode = '${SCENEKUNST.kode}'
+                        SELECT count(*) FROM virksomhet AS v JOIN virksomhet_naringsundergrupper AS vn ON (v.id = vn.virksomhet)
+                        WHERE v.orgnr = '${it.orgnr}' AND (
+                        vn.naringsundergruppe1 = '${SCENEKUNST.kode}' 
+                        OR vn.naringsundergruppe2 = '${SCENEKUNST.kode}' 
+                        OR vn.naringsundergruppe3 = '${SCENEKUNST.kode}'
+                        )
                     """.trimIndent()
-                ) shouldBeGreaterThanOrEqual 1
+                ) shouldBe 1
             }
         }, næringsgrupper = SCENEKUNST.kode)
     }
