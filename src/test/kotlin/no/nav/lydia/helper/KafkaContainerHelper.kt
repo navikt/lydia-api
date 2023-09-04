@@ -94,8 +94,9 @@ class KafkaContainerHelper(
                 statistikkMetadataVirksomhetTopic,
                 statistikkLandTopic,
                 statistikkSektorTopic,
-             //   statistikkBransjeTopic,
-                statistikkVirksomhetTopic
+                statistikkBransjeTopic,
+                statistikkVirksomhetTopic,
+                iaSakStatusTopic,
             )
             kafkaProducer = producer()
         }
