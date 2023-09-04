@@ -107,8 +107,8 @@ fun startLydiaBackend() {
         naisEnv.kafka.statistikkNæringTopic to Kafka.statistikkNæringGroupId,
         naisEnv.kafka.statistikkNæringskodeTopic to Kafka.statistikkNæringskodeGroupId,
         naisEnv.kafka.statistikkVirksomhetTopic to Kafka.statistikkVirksomhetGroupId,
-    ).forEach { entry ->
-        StatistikkPerKategoriConsumer(topic = entry.key, groupId = entry.value).apply {
+    ).forEach { (topic, groupId) ->
+        StatistikkPerKategoriConsumer(topic = topic, groupId = groupId).apply {
             create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
             run()
         }.also { HelseMonitor.leggTilHelsesjekk(it) }
