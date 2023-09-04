@@ -25,6 +25,7 @@ data class Søkeparametere(
     val sorteringsretning: Sorteringsretning,
     val sykefraværsprosentFra: Sykefraværsprosent?,
     val sykefraværsprosentTil: Sykefraværsprosent?,
+    val snittFilter: SnittFilter?,
     val ansatteFra: Int?,
     val ansatteTil: Int?,
     val status: IAProsessStatus?,
@@ -60,6 +61,7 @@ data class Søkeparametere(
         const val SORTERINGSRETNING = "sorteringsretning"
         const val SYKEFRAVÆRSPROSENT_FRA = "sykefraversprosentFra"
         const val SYKEFRAVÆRSPROSENT_TIL = "sykefraversprosentTil"
+        const val SNITT_FILTER = "snittfilter"
         const val ANSATTE_FRA = "ansatteFra"
         const val ANSATTE_TIL = "ansatteTil"
         const val IA_STATUS = "iaStatus"
@@ -79,6 +81,7 @@ data class Søkeparametere(
                 Søkeparametere(
                     sykefraværsprosentFra = sykefraværsProsentFra,
                     sykefraværsprosentTil = sykefraværsProsentTil,
+                    snittFilter = queryParameters[SNITT_FILTER].tomSomNull()?.let { SnittFilter.valueOf(it) },
                     periode = periode,
                     side = side,
                     ansatteFra = ansatteFra,
@@ -122,6 +125,14 @@ data class Søkeparametere(
         fun filtrerPåKommuner(søkeparametere: Søkeparametere) =
             if (søkeparametere.kommunenummer.isEmpty()) ""
             else " AND virksomhet.kommunenummer in (select unnest(:kommuner)) "
+
+        fun filtrerPåSnitt(søkeparametere: Søkeparametere) =
+            if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER)
+                """
+                    AND statistikk_siste4.prosent > naring_siste4.prosent
+                """.trimIndent()
+            else
+                ""
 
         fun filtrerPåBransjeOgNæring(søkeparametere: Søkeparametere): String {
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()

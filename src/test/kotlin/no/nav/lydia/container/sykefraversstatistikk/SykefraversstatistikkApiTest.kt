@@ -12,7 +12,9 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.collections.shouldNotContainAnyOf
+import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.doubles.shouldBeLessThanOrEqual
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -23,6 +25,9 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
+import no.nav.lydia.Kafka
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils
+import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
@@ -48,6 +53,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
+import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
+import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
@@ -73,11 +80,15 @@ import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.api.SnittFilter
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto
 import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktResponsDto
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
+import no.nav.lydia.sykefraversstatistikk.import.Kategori
+import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
+import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
@@ -92,6 +103,62 @@ class SykefraversstatistikkApiTest {
     fun `Test for å hente datasource`() {
         val jdbcUrl = postgresContainer.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
+    }
+
+    @Test
+    fun `skal kunne filtrere på sykefraværsprosent over næring`() {
+        val NÆRING_JORDBRUK_PROSENT = 6.0
+
+        settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Dyrking av ris", "01.120"),
+                4.0
+        )
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Planteformering", "01.300"),
+                15.0
+        )
+
+        val results = hentSykefravær(
+                snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
+                næringsgrupper = NÆRING_JORDBRUK
+        ).data
+
+        results.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
+    }
+
+    @Test
+    fun `skal kunne filtrere på sykefraværsprosent over næring (flere næringer)`() {
+        val NÆRING_JORDBRUK_PROSENT = 6.0
+        val NÆRING_SKOGBRUK_PROSENT = 8.5
+
+        settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
+        val virksomhetUnderSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Dyrking av ris", "01.120"),
+                4.0
+        )
+        val virksomhetOverSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Planteformering", "01.300"),
+                15.0
+        )
+        settSykefraværsprosentNæring(NÆRING_SKOGBRUK, NÆRING_SKOGBRUK_PROSENT)
+        val virksomhetUnderSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
+                8.4
+        )
+        val virksomhetOverSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Avvirkning", "02.200"),
+                8.6
+        )
+
+        val results = hentSykefravær(
+                snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
+                næringsgrupper = listOf( NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
+        ).data
+
+        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_SKOGBRUK_PROSENT }
+        results.map { it.orgnr} shouldNotContain listOf(virksomhetUnderSnittJordbruk, virksomhetUnderSnittSkogbruk)
     }
 
     @Test
@@ -968,6 +1035,64 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne filtrere på FYLKESKOMMUNAL_FORVALTNING sektor`() {
         lastInnNyVirksomhet(nyVirksomhet(), sektor = Sektor.FYLKESKOMMUNAL_FORVALTNING)
         hentSykefravær(sektor = listOf(Sektor.FYLKESKOMMUNAL_FORVALTNING)).data shouldHaveAtLeastSize 1
+    }
+
+    companion object {
+        private val sistePubliserteKvartal: SistePubliserteKvartal =
+                SistePubliserteKvartal(
+                        årstall = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1.årstall,
+                        kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1.kvartal,
+                        tapteDagsverk = 504339.8,
+                        muligeDagsverk = 10104849.1,
+                        prosent = 6.0,
+                        erMaskert = false,
+                        antallPersoner = 3000001
+                )
+        private val siste4Kvartal: Siste4Kvartal =
+                Siste4Kvartal(
+                        tapteDagsverk = 31505774.2,
+                        muligeDagsverk = 578099000.3,
+                        prosent = 5.4,
+                        erMaskert = false,
+                        kvartaler = listOf(SykefraversstatistikkImportTestUtils.KVARTAL_2023_1)
+                )
+
+        fun lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(næringsundergruppe: Næringsgruppe, prosent: Double): String {
+            val virksomhet = lastInnNyVirksomhet(
+                    nyVirksomhet = nyVirksomhet(næringer = listOf(næringsundergruppe))
+            )
+            val kafkaMeldingVirksomhetUnderNæringssnitt = SykefraversstatistikkImportTestUtils.JsonMelding(
+                    kategori = Kategori.VIRKSOMHET,
+                    kode = virksomhet.orgnr,
+                    kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1,
+                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = 4.0),
+                    siste4Kvartal = siste4Kvartal.copy(prosent = prosent)
+            )
+
+            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+                    kafkaMeldingVirksomhetUnderNæringssnitt.toJsonKey(),
+                    kafkaMeldingVirksomhetUnderNæringssnitt.toJsonValue(),
+                    KafkaContainerHelper.statistikkVirksomhetTopic,
+                    Kafka.statistikkVirksomhetGroupId
+            )
+            return virksomhet.orgnr
+        }
+        fun settSykefraværsprosentNæring(næring: String, prosent: Double) {
+            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+                    kategori = Kategori.NÆRING,
+                    kode = næring,
+                    kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1,
+                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = 2.0),
+                    siste4Kvartal = siste4Kvartal.copy(prosent = prosent)
+            )
+
+            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+                    kafkaMelding.toJsonKey(),
+                    kafkaMelding.toJsonValue(),
+                    KafkaContainerHelper.statistikkNæringTopic,
+                    Kafka.statistikkNæringGroupId
+            )
+        }
     }
 }
 

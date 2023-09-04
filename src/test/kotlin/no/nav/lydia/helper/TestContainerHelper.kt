@@ -556,23 +556,24 @@ class StatistikkHelper {
                 })
 
         fun hentSykefravær(
-            kvartal: String = "",
-            årstall: String = "",
-            kommuner: String = "",
-            fylker: String = "",
-            næringsgrupper: String = "",
-            sorteringsnokkel: String = "",
-            sorteringsretning: String = "",
-            sykefraværsprosentFra: String = "",
-            sykefraværsprosentTil: String = "",
-            ansatteFra: String = "",
-            ansatteTil: String = "",
-            iaStatus: String = "",
-            side: String = "",
-            bransjeProgram: String = "",
-            eiere: String = "",
-            sektor: List<Sektor> = listOf(),
-            token: String = oauth2ServerContainer.saksbehandler1.token,
+                kvartal: String = "",
+                årstall: String = "",
+                kommuner: String = "",
+                fylker: String = "",
+                næringsgrupper: String = "",
+                sorteringsnokkel: String = "",
+                sorteringsretning: String = "",
+                sykefraværsprosentFra: String = "",
+                sykefraværsprosentTil: String = "",
+                snittFilter: String = "",
+                ansatteFra: String = "",
+                ansatteTil: String = "",
+                iaStatus: String = "",
+                side: String = "",
+                bransjeProgram: String = "",
+                eiere: String = "",
+                sektor: List<Sektor> = listOf(),
+                token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             hentSykefraværRespons(
                 kvartal = kvartal,
@@ -584,6 +585,7 @@ class StatistikkHelper {
                 sorteringsretning = sorteringsretning,
                 sykefraværsprosentFra = sykefraværsprosentFra,
                 sykefraværsprosentTil = sykefraværsprosentTil,
+                snittFilter = snittFilter,
                 ansatteFra = ansatteFra,
                 ansatteTil = ansatteTil,
                 iaStatus = iaStatus,
@@ -604,6 +606,7 @@ class StatistikkHelper {
             sorteringsretning: String = "",
             sykefraværsprosentFra: String = "",
             sykefraværsprosentTil: String = "",
+            snittFilter: String = "",
             ansatteFra: String = "",
             ansatteTil: String = "",
             iaStatus: String = "",
@@ -624,6 +627,7 @@ class StatistikkHelper {
                         "&${Søkeparametere.SORTERINGSRETNING}=$sorteringsretning" +
                         "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
                         "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
+                        "&${Søkeparametere.SNITT_FILTER}=$snittFilter" +
                         "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
                         "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
                         "&${Søkeparametere.IA_STATUS}=$iaStatus" +

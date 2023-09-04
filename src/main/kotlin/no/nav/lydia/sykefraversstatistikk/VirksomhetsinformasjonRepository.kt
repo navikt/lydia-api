@@ -10,9 +10,11 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraversstatistikk.api.SnittFilter
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSnitt
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåBransjeOgNæring
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
@@ -53,6 +55,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 sykefravar_statistikk_virksomhet AS statistikk
                 JOIN virksomhet USING (orgnr)
                 JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
+                JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) 
                 ${
                     if (sektorer.isNotEmpty()) " LEFT JOIN virksomhet_statistikk_metadata USING (orgnr) "
                     else ""
@@ -62,7 +65,8 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                 )
                 ${
-                    if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) "
+                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER) 
+                        " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') "
                     else ""
                 }
                 
@@ -78,6 +82,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 
                 ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk_siste4.prosent >= $it " } ?: ""}
                 ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk_siste4.prosent <= $it " } ?: ""}
+                ${filtrerPåSnitt(søkeparametere = søkeparametere)}
                 
                 ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
                 ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
@@ -133,8 +138,10 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     (ia_sak.orgnr = statistikk.orgnr) AND
                     ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                 )
+                JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet)
                 ${
-                    if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) "
+                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER) 
+                        " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') " 
                     else ""
                 }
                 
@@ -150,7 +157,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 
                 ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk_siste4.prosent >= $it " } ?: ""}
                 ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk_siste4.prosent <= $it " } ?: ""}
-                
+                ${filtrerPåSnitt(søkeparametere = søkeparametere)}
                 ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
                 ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
                 
