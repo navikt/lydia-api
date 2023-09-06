@@ -127,13 +127,20 @@ data class Søkeparametere(
             else " AND virksomhet.kommunenummer in (select unnest(:kommuner)) "
 
         fun filtrerPåSnitt(søkeparametere: Søkeparametere) =
-            if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER)
-                """
-                    AND statistikk_siste4.prosent > naring_siste4.prosent
-                """.trimIndent()
-            else
-                ""
-
+                søkeparametere.snittFilter?.let { snittFilter ->
+                    when (snittFilter) {
+                        SnittFilter.BRANSJE_NÆRING_OVER ->
+                        """
+                            AND statistikk_siste4.prosent > naring_siste4.prosent
+                        """.trimIndent()
+                        SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK ->
+                            """
+                            AND statistikk_siste4.prosent <= naring_siste4.prosent
+                        """.trimIndent()
+                        else ->
+                            ""
+                    }
+                } ?: ""
         fun filtrerPåBransjeOgNæring(søkeparametere: Søkeparametere): String {
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
             return if (næringsgrupperMedBransjer.isEmpty())

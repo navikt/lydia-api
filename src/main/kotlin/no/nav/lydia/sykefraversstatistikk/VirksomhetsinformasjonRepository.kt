@@ -65,9 +65,11 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                 )
                 ${
-                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER) 
-                        " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') "
-                    else ""
+                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER
+                            || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {
+                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4" +
+                                      " on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') "
+                            } else ""
                 }
                 
             WHERE 
@@ -140,9 +142,11 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 )
                 JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet)
                 ${
-                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER) 
-                        " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') " 
-                    else ""
+                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER 
+                            || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {
+                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4" +
+                                      " on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') "
+                            } else ""
                 }
                 
             WHERE 

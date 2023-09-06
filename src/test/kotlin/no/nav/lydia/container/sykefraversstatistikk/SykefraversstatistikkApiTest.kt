@@ -106,9 +106,63 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skal kunne filtrere på sykefraværsprosent UNDER eller lik næring`() {
+        val NÆRING_JORDBRUK_PROSENT = 6.0
+        settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Dyrking av ris", "01.120"),
+                4.0
+        )
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Planteformering", "01.300"),
+                15.0
+        )
+
+        val results = hentSykefravær(
+                snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
+                næringsgrupper = NÆRING_JORDBRUK
+        ).data
+
+        results.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
+    }
+
+    @Test
+    fun `skal kunne filtrere på sykefraværsprosent UNDER eller lik næring (flere næringer)`() {
+        val NÆRING_JORDBRUK_PROSENT = 6.0
+        val NÆRING_SKOGBRUK_PROSENT = 8.5
+
+        settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
+        val virksomhetLikSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Dyrking av ris", "01.120"),
+                6.0
+        )
+        val virksomhetOverSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Planteformering", "01.300"),
+                15.0
+        )
+        settSykefraværsprosentNæring(NÆRING_SKOGBRUK, NÆRING_SKOGBRUK_PROSENT)
+        val virksomhetUnderSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
+                8.4
+        )
+        val virksomhetOverSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Avvirkning", "02.200"),
+                8.6
+        )
+
+        val results = hentSykefravær(
+                snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
+                næringsgrupper = listOf( NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
+        ).data
+
+        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_SKOGBRUK_PROSENT }
+        results.map { it.orgnr} shouldNotContain listOf(virksomhetLikSnittJordbruk, virksomhetUnderSnittSkogbruk)
+    }
+
+    @Test
     fun `skal kunne filtrere på sykefraværsprosent over næring`() {
         val NÆRING_JORDBRUK_PROSENT = 6.0
-
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
                 Næringsgruppe("Dyrking av ris", "01.120"),
