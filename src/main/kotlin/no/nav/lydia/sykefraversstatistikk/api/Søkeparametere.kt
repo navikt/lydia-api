@@ -131,11 +131,19 @@ data class Søkeparametere(
                     when (snittFilter) {
                         SnittFilter.BRANSJE_NÆRING_OVER ->
                         """
-                            AND statistikk_siste4.prosent > naring_siste4.prosent
+                            AND (
+                              (bransje_siste4.prosent is null AND statistikk_siste4.prosent > naring_siste4.prosent) 
+                                OR 
+                              (bransje_siste4.prosent is not null AND statistikk_siste4.prosent > bransje_siste4.prosent)
+                            ) 
                         """.trimIndent()
                         SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK ->
                             """
-                            AND statistikk_siste4.prosent <= naring_siste4.prosent
+                            AND (
+                              (bransje_siste4.prosent is null AND statistikk_siste4.prosent <= naring_siste4.prosent) 
+                                OR 
+                              (bransje_siste4.prosent is null AND statistikk_siste4.prosent <= bransje_siste4.prosent)
+                            )
                         """.trimIndent()
                         else ->
                             ""

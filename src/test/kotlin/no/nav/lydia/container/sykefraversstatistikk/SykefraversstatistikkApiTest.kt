@@ -54,6 +54,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
+import no.nav.lydia.helper.TestData.Companion.NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
@@ -103,6 +104,60 @@ class SykefraversstatistikkApiTest {
     fun `Test for å hente datasource`() {
         val jdbcUrl = postgresContainer.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
+    }
+
+    @Test
+    fun `skal kunne filtrere på sykefraværsprosent UNDER eller lik BRANSJE`() {
+        val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 8.0
+        val BRANSJE_SYKEHJEM_PROSENT = 6.0
+        settSykefraværsprosentNæring(NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON, NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT)
+        settSykefraværsprosentBransje(Bransjer.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
+                5.0
+        )
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Somatiske sykehjem", "87.102"),
+                6.0
+        )
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Somatiske sykehjem", "87.102"),
+                7.0
+        )
+
+        val results = hentSykefravær(
+                snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
+                bransjeProgram = Bransjer.SYKEHJEM.name
+        ).data
+
+        results.forAll { it.sykefraversprosent shouldBeLessThanOrEqual BRANSJE_SYKEHJEM_PROSENT }
+    }
+
+    @Test
+    fun `skal kunne filtrere på sykefraværsprosent OVER BRANSJE`() {
+        val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 4.0
+        val BRANSJE_SYKEHJEM_PROSENT = 6.0
+        settSykefraværsprosentNæring(NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON, NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT)
+        settSykefraværsprosentBransje(Bransjer.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
+                5.0
+        )
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Somatiske sykehjem", "87.102"),
+                6.0
+        )
+        lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+                Næringsgruppe("Somatiske sykehjem", "87.102"),
+                7.0
+        )
+
+        val results = hentSykefravær(
+                snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
+                bransjeProgram = Bransjer.SYKEHJEM.name
+        ).data
+
+        results.forAll { it.sykefraversprosent shouldBeGreaterThan BRANSJE_SYKEHJEM_PROSENT }
     }
 
     @Test
@@ -1145,6 +1200,23 @@ class SykefraversstatistikkApiTest {
                     kafkaMelding.toJsonValue(),
                     KafkaContainerHelper.statistikkNæringTopic,
                     Kafka.statistikkNæringGroupId
+            )
+        }
+
+        fun settSykefraværsprosentBransje(bransje: Bransjer, prosent: Double) {
+            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+                    kategori = Kategori.BRANSJE,
+                    kode = bransje.name.uppercase(),
+                    kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1,
+                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = 2.0),
+                    siste4Kvartal = siste4Kvartal.copy(prosent = prosent)
+            )
+
+            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+                    kafkaMelding.toJsonKey(),
+                    kafkaMelding.toJsonValue(),
+                    KafkaContainerHelper.statistikkBransjeTopic,
+                    Kafka.statistikkBransjeGroupId
             )
         }
     }

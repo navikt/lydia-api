@@ -67,7 +67,7 @@ jobs:
     permissions: {}
     name: "Deploy app to dev"
     needs: "build"
-    if: github.ref == 'refs/heads/oppdatere-siste-publisert-kvartal'
+    if: github.ref == 'refs/heads/samenligning-med-bransje'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
