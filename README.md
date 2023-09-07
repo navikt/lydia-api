@@ -35,6 +35,16 @@ update sykefravar_statistikk_virksomhet
 6. Om du er småparanoid: gjer spørjing 3 ein gong til og sjå at svaret blir 0.
 7. No burde dev fungere igjen 🎉
 
+### Oppdater tester
+I `TestData.kt` oppdater `gjeldendePeriode` med siste publisert kvartal
+```
+  val gjeldendePeriode = Periode(årstall = 2023, kvartal = 2)
+```
+
+### Oppdater siste_publiseringsinfo
+Kopier denne f.eks `V45__oppdatere_siste_publiseringsinfo.sql` og lag en ny fil med riktig datoer.
+Push endringen i produksjon etter import er ferdig. 
+
 
 # Komme i gang med lydia-api
 

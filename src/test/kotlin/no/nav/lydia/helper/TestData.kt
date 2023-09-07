@@ -31,7 +31,7 @@ class TestData(
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
 
-        val gjeldendePeriode = Periode(årstall = 2023, kvartal = 1)
+        val gjeldendePeriode = Periode(årstall = 2023, kvartal = 2)
         fun fraVirksomhet(
             virksomhet: TestVirksomhet,
             sektor: Sektor = Sektor.STATLIG,
