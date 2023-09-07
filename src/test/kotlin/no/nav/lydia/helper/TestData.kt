@@ -19,6 +19,7 @@ class TestData(
         const val BRANSJE_NÆRINGSMIDDELINDUSTRI = "Næringsmiddelindustri"
         const val NÆRING_JORDBRUK = "01"
         const val NÆRING_SKOGBRUK = "02"
+        const val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON = "87"
         const val NÆRINGSKODE_BARNEHAGER = "88911"
 
         val DYRKING_AV_KORN = Næringsgruppe(kode = "$NÆRING_JORDBRUK.110", navn = "Dyrking av korn, unntatt ris")

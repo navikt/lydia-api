@@ -67,8 +67,9 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 ${
                     if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER
                             || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {
-                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4" +
-                                      " on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') "
+                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND naring_siste4.kategori = 'NÆRING')" +
+                                      " LEFT JOIN naringsundergrupper_per_bransje AS bransjeprogram on (vn.naringsundergruppe1 = bransjeprogram.naringsundergruppe)" +
+                                      " LEFT JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS bransje_siste4 on (bransjeprogram.bransje = bransje_siste4.kode AND bransje_siste4.kategori = 'BRANSJE') "
                             } else ""
                 }
                 
@@ -144,8 +145,9 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 ${
                     if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER 
                             || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {
-                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4" +
-                                      " on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND kategori = 'NÆRING') "
+                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND naring_siste4.kategori = 'NÆRING')" +
+                                      " LEFT JOIN naringsundergrupper_per_bransje AS bransjeprogram on (vn.naringsundergruppe1 = bransjeprogram.naringsundergruppe)" +
+                                      " LEFT JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS bransje_siste4 on (bransjeprogram.bransje = bransje_siste4.kode AND bransje_siste4.kategori = 'BRANSJE') "                        
                             } else ""
                 }
                 
