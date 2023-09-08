@@ -64,14 +64,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     (ia_sak.orgnr = statistikk.orgnr) AND
                     ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                 )
-                ${
-                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER
-                            || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {
-                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND naring_siste4.kategori = 'NÆRING')" +
-                                      " LEFT JOIN naringsundergrupper_per_bransje AS bransjeprogram on (vn.naringsundergruppe1 = bransjeprogram.naringsundergruppe)" +
-                                      " LEFT JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS bransje_siste4 on (bransjeprogram.bransje = bransje_siste4.kode AND bransje_siste4.kategori = 'BRANSJE') "
-                            } else ""
-                }
+                ${joinTilNæringEllerBransje(søkeparametere)}
                 
             WHERE 
                 statistikk.arstall = :arstall
@@ -110,18 +103,6 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         session.run(query)
     }
 
-
-    private fun Sorteringsnøkkel.tilOrderBy(): String {
-        return when (this) {
-            NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn"
-            ANTALL_PERSONER -> "ORDER BY statistikk.antall_personer"
-            SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk_siste4.prosent"
-            TAPTE_DAGSVERK -> "ORDER BY statistikk_siste4.tapte_dagsverk"
-            MULIGE_DAGSVERK -> "ORDER BY statistikk_siste4.mulige_dagsverk"
-            SIST_ENDRET -> "ORDER BY ia_sak.endret"
-        }
-    }
-
     fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
         val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
         val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
@@ -142,14 +123,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                 )
                 JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet)
-                ${
-                    if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER 
-                            || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {
-                              " JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND naring_siste4.kategori = 'NÆRING')" +
-                                      " LEFT JOIN naringsundergrupper_per_bransje AS bransjeprogram on (vn.naringsundergruppe1 = bransjeprogram.naringsundergruppe)" +
-                                      " LEFT JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS bransje_siste4 on (bransjeprogram.bransje = bransje_siste4.kode AND bransje_siste4.kategori = 'BRANSJE') "                        
-                            } else ""
-                }
+                ${joinTilNæringEllerBransje(søkeparametere)}
                 
             WHERE 
                 statistikk.arstall = :arstall
@@ -282,5 +256,24 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             antallKvartaler = row.int("antall_kvartaler"),
             kvartaler = gson.fromJson(row.string("kvartaler"), kvartalListeType),
         )
+    }
+
+    private fun joinTilNæringEllerBransje(søkeparametere: Søkeparametere) =
+            if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER
+                    || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {"""
+              LEFT JOIN naringsundergrupper_per_bransje AS bransjeprogram on (vn.naringsundergruppe1 = bransjeprogram.naringsundergruppe)
+              LEFT JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS bransje_siste4 on (bransjeprogram.bransje = bransje_siste4.kode AND bransje_siste4.kategori = 'BRANSJE')
+              JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND naring_siste4.kategori = 'NÆRING')
+            """.trimIndent()
+            } else ""
+    private fun Sorteringsnøkkel.tilOrderBy(): String {
+        return when (this) {
+            NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn"
+            ANTALL_PERSONER -> "ORDER BY statistikk.antall_personer"
+            SYKEFRAVÆRSPROSENT -> "ORDER BY statistikk_siste4.prosent"
+            TAPTE_DAGSVERK -> "ORDER BY statistikk_siste4.tapte_dagsverk"
+            MULIGE_DAGSVERK -> "ORDER BY statistikk_siste4.mulige_dagsverk"
+            SIST_ENDRET -> "ORDER BY ia_sak.endret"
+        }
     }
 }
