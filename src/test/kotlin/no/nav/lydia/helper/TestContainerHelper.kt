@@ -21,8 +21,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Kafka
-import no.nav.lydia.appstatus.FEATURE_TOGGLE_DISABLE_PATH
-import no.nav.lydia.appstatus.FEATURE_TOGGLE_ENABLE_PATH
 import no.nav.lydia.helper.TestContainerHelper.Companion.httpMock
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
@@ -744,35 +742,6 @@ class StatistikkHelper {
                 .tilSingelRespons<FilterverdierDto>()
                 .third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
-    }
-}
-
-@Suppress("unused")
-class FeatureToggleHelper {
-    companion object {
-        private fun skruPåToggle(toggleKey: String) =
-            lydiaApiContainer.performGet("$FEATURE_TOGGLE_ENABLE_PATH/$toggleKey")
-                .response()
-                .third.fold(
-                    success = { response -> response },
-                    failure = { fail(it.message) }
-                )
-
-        private fun skruAvToggle(toggleKey: String) =
-            lydiaApiContainer.performGet("$FEATURE_TOGGLE_DISABLE_PATH/$toggleKey")
-                .response()
-                .third.fold(
-                    success = { response -> response },
-                    failure = { fail(it.message) }
-                )
-
-        fun medFeatureToggleEnablet(toggleKey: String, block: () -> Unit) {
-            skruPåToggle(toggleKey = toggleKey).also {
-                block()
-            }.also {
-                skruAvToggle(toggleKey = toggleKey)
-            }
-        }
     }
 }
 

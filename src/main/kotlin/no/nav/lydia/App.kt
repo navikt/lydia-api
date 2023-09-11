@@ -20,11 +20,9 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.appstatus.featureToggle
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
@@ -260,9 +258,6 @@ fun Application.lydiaRestApi(
     routing {
         healthChecks(HelseMonitor)
         metrics()
-
-        if (naisEnvironment.miljø == LOKAL)
-            featureToggle()
 
         iaSakEksporterer(
             iaSakEksporterer = IASakEksporterer(
