@@ -1,5 +1,6 @@
 package no.nav.lydia.virksomhet.domene
 
+import ia.felles.definisjoner.bransjer.Bransjer
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
@@ -19,6 +20,7 @@ data class Virksomhet(
     val næringsundergruppe1: Næringsgruppe,
     val næringsundergruppe2: Næringsgruppe?,
     val næringsundergruppe3: Næringsgruppe?,
+    val bransje: Bransjer? = næringsundergruppe1.tilBransje(),
     val sektor: Sektor?,
     val oppdatertAvBrregOppdateringsId: Long?,
     val opprettetTidspunkt: Instant,

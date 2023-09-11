@@ -762,7 +762,9 @@ class VirksomhetHelper {
                 .authentication().bearer(token)
                 .tilSingelRespons<VirksomhetDto>()
 
-        fun hentVirksomhetsinformasjon(orgnummer: String, token: String) =
+        fun hentVirksomhetsinformasjon(
+            orgnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token) =
             hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
                 .third.fold(
                     success = { response -> response },

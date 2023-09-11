@@ -1,5 +1,6 @@
 package no.nav.lydia.container.virksomhet
 
+import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainInOrder
@@ -8,8 +9,12 @@ import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.lydia.helper.*
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
+import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
+import no.nav.lydia.helper.TestData.Companion.NÆRINGSMIDLER_IKKE_NEVNT
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -35,7 +40,7 @@ class VirksomhetApiTest {
 
     @Test
     fun `skal kunne hente ut opplysninger om en virksomhet`() {
-        val virksomhet = VirksomhetHelper.hentVirksomhetsinformasjon(
+        val virksomhet = hentVirksomhetsinformasjon(
                 OSLO_FLERE_ADRESSER.orgnr,
                 token = mockOAuthContainer.saksbehandler1.token
         )
@@ -69,7 +74,7 @@ class VirksomhetApiTest {
                 )
         ).orgnr
 
-        val virksomhet = VirksomhetHelper.hentVirksomhetsinformasjon(
+        val virksomhet = hentVirksomhetsinformasjon(
                 orgnummer = orgnummer,
                 token = mockOAuthContainer.saksbehandler1.token
         )
@@ -173,23 +178,41 @@ class VirksomhetApiTest {
         val virksomhet = nyVirksomhet(navn = "Hei og hå")
         VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
 
-        VirksomhetHelper.hentVirksomhetsinformasjon(
+        hentVirksomhetsinformasjon(
                 virksomhet.orgnr,
                 token = mockOAuthContainer.saksbehandler1.token
         ).also { it.status shouldBe VirksomhetStatus.AKTIV }
 
         PiaBrregOppdateringTestData.slettedeVirksomheter.forAll { slettetVirksomhet ->
-            VirksomhetHelper.hentVirksomhetsinformasjon(
+            hentVirksomhetsinformasjon(
                     slettetVirksomhet.orgnr,
                     token = mockOAuthContainer.saksbehandler1.token
             ).also { it.status shouldBe VirksomhetStatus.SLETTET }
         }
 
         PiaBrregOppdateringTestData.fjernedeVirksomheter.forAll { fjernetVirksomhet ->
-            VirksomhetHelper.hentVirksomhetsinformasjon(
+            hentVirksomhetsinformasjon(
                     fjernetVirksomhet.orgnr,
                     token = mockOAuthContainer.saksbehandler1.token
             ).also { it.status shouldBe VirksomhetStatus.FJERNET }
         }
+    }
+
+    @Test
+    fun `skal få bransje på virksomheter som tilhører et bransjeprogram`() {
+        val virksomhetBarnehage = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(BARNEHAGER)))
+        val virksomhetBarnehageDto = hentVirksomhetsinformasjon(orgnummer = virksomhetBarnehage.orgnr)
+        virksomhetBarnehageDto.bransje shouldBe Bransjer.BARNEHAGER
+
+        val virksomhetNæringsmiddel = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(NÆRINGSMIDLER_IKKE_NEVNT)))
+        val virksomhetNæringsmiddelDto = hentVirksomhetsinformasjon(orgnummer = virksomhetNæringsmiddel.orgnr)
+        virksomhetNæringsmiddelDto.bransje shouldBe Bransjer.NÆRINGSMIDDELINDUSTRI
+    }
+
+    @Test
+    fun `skal IKKE få bransje på virksomheter som IKKE tilhører et bransjeprogram`() {
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
+        val virksomhetDto = hentVirksomhetsinformasjon(orgnummer = virksomhet.orgnr)
+        virksomhetDto.bransje shouldBe null
     }
 }

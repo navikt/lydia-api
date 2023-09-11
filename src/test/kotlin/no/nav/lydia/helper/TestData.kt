@@ -22,6 +22,8 @@ class TestData(
         const val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON = "87"
         const val NÆRINGSKODE_BARNEHAGER = "88911"
 
+        val NÆRINGSMIDLER_IKKE_NEVNT = Næringsgruppe(kode = "10.890", navn = "Produksjon av næringsmidler ikke nevnt annet sted")
+        val BARNEHAGER = Næringsgruppe(kode = "88.911", navn = "Barnehager")
         val DYRKING_AV_KORN = Næringsgruppe(kode = "$NÆRING_JORDBRUK.110", navn = "Dyrking av korn, unntatt ris")
         val DYRKING_AV_RIS = Næringsgruppe(kode = "$NÆRING_JORDBRUK.120", navn = "Dyrking av ris")
 

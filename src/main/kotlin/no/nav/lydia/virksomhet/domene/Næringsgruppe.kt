@@ -1,5 +1,6 @@
 package no.nav.lydia.virksomhet.domene
 
+import ia.felles.definisjoner.bransjer.Bransjer
 import kotlinx.serialization.Serializable
 
 /**  Vi bør følge SSB sin standard, og bruke f.eks "næring" om 2-sifrede koder og "næringsundergruppe" om 5-sifrede koder.
@@ -13,4 +14,10 @@ data class Næringsgruppe(val navn: String, val kode: String) {
     }
 
     fun tilTosifret() = kode.slice(0 until 2)
+
+    fun tilBransje() = Bransjer.entries.firstOrNull { bransje ->
+        // -- fjern punktum, da vi har en mismatch mellom bransjeprogram (som ikke har punktum) og brreg
+        bransje.næringskoder.contains(this.kode.replace(".", "")) ||
+        bransje.næringskoder.contains(this.kode.take(2))
+    }
 }
