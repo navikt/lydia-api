@@ -1,8 +1,8 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "1.9.10"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "1.9.0"
+    kotlin("plugin.serialization") version "1.9.10"
     // For å bygge fatjar
     id("io.ktor.plugin") version "2.3.4"
 
