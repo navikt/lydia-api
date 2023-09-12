@@ -102,7 +102,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                     frist,
                     opprettet_av,
                     sist_endret_av,
-                    sist_endret_av_rolle
+                    sist_endret_av_rolle,
+                    opprettet_tidspunkt
                 ) 
                 values (
                     :saksnummer,
@@ -110,7 +111,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                     :frist,
                     :opprettetAv,
                     :opprettetAv,
-                    :opprettetAvRolle
+                    :opprettetAvRolle,
+                    now()
                 )
             """.trimIndent()
 

@@ -16,11 +16,11 @@ import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
 import no.nav.lydia.helper.SakHelper.Companion.hentModuler
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
@@ -33,8 +33,13 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.tilgangskontroll.Rolle
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.Test
@@ -351,6 +356,22 @@ class IASakLeveranseTest {
         leveranse.oppdaterIASakLeveranse(sak.orgnr, LEVERT)
         val etterOppdatertLeveranseTidspunkt = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
         etterOppdatertLeveranseTidspunkt?.dayOfYear shouldBe LocalDateTime.now().dayOfYear
+    }
+
+    @Test
+    fun `skal lagre opprettet-tidspunkt for leveranser`() {
+        val sak = nySakIViBistår()
+        val leveranse = sak.opprettIASakLeveranse(modulId = 1)
+        val førFullført = postgresContainer.hentEnkelKolonne<Timestamp?>("""
+            select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
+        """.trimIndent())?.toLocalDateTime()
+        førFullført shouldNotBe null
+
+        leveranse.oppdaterIASakLeveranse(sak.orgnr, LEVERT)
+        val etterFullført = postgresContainer.hentEnkelKolonne<Timestamp?>("""
+            select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
+        """.trimIndent())?.toLocalDateTime()
+        etterFullført shouldBe førFullført
     }
 
     private fun hentIATjenesterFraDatabase() =
