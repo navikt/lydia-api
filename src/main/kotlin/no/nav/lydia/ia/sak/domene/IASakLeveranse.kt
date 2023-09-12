@@ -15,7 +15,8 @@ data class IASakLeveranse(
     val sistEndret: LocalDateTime,
     val sistEndretAv: String,
     val sistEndretAvRolle: Rolle?,
-    val fullført: LocalDateTime?
+    val fullført: LocalDateTime?,
+    val opprettetTidspunkt: LocalDateTime?, // gamle leveranser har ikke opprettet_tidspunkt
 ) {
     fun slettet(): IASakLeveranse = this.copy(
         status = IASakLeveranseStatus.SLETTET,

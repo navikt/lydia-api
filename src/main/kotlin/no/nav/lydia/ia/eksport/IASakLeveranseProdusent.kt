@@ -45,6 +45,7 @@ class IASakLeveranseProdusent(
             fullført = this.fullført?.toKotlinLocalDateTime(),
             enhetsnummer = enhetsnummer,
             enhetsnavn = enhetsnavn,
+            opprettetTidspunkt = this.opprettetTidspunkt?.toKotlinLocalDateTime()
         )
         return key to Json.encodeToString(value)
 
@@ -64,5 +65,6 @@ class IASakLeveranseProdusent(
         val fullført: LocalDateTime?,
         val enhetsnummer: String,
         val enhetsnavn: String,
+        val opprettetTidspunkt: LocalDateTime?
     )
 }

@@ -31,6 +31,7 @@ private val hentIASakLeveranserSql = """
                         iasak_leveranse.sist_endret_av,
                         iasak_leveranse.sist_endret_av_rolle,
                         iasak_leveranse.fullfort,
+                        iasak_leveranse.opprettet_tidspunkt,
                         modul.id as modulId,
                         modul.navn as modulNavn,
                         modul.deaktivert as modulDeaktivert,
@@ -207,7 +208,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             sistEndret = rad.localDateTime("sist_endret"),
             sistEndretAv = rad.string("sist_endret_av"),
             sistEndretAvRolle = rad.stringOrNull("sist_endret_av_rolle")?.let { Rolle.valueOf(it) },
-            fullført = rad.localDateTimeOrNull("fullfort")
+            fullført = rad.localDateTimeOrNull("fullfort"),
+            opprettetTidspunkt = rad.localDateTimeOrNull("opprettet_tidspunkt")
         )
 
     private fun mapTilIATjeneste(rad: Row) = IATjeneste(
