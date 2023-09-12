@@ -130,6 +130,7 @@ class SykefraversstatistikkApiTest {
                 bransjeProgram = Bransjer.SYKEHJEM.name
         ).data
 
+        results.size shouldBeGreaterThanOrEqual 2
         results.forAll { it.sykefraversprosent shouldBeLessThanOrEqual BRANSJE_SYKEHJEM_PROSENT }
     }
 
@@ -157,6 +158,7 @@ class SykefraversstatistikkApiTest {
                 bransjeProgram = Bransjer.SYKEHJEM.name
         ).data
 
+        results.size shouldBeGreaterThanOrEqual 1
         results.forAll { it.sykefraversprosent shouldBeGreaterThan BRANSJE_SYKEHJEM_PROSENT }
     }
 
@@ -178,6 +180,7 @@ class SykefraversstatistikkApiTest {
                 næringsgrupper = NÆRING_JORDBRUK
         ).data
 
+        results.size shouldBeGreaterThanOrEqual 1
         results.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
     }
 
@@ -210,6 +213,7 @@ class SykefraversstatistikkApiTest {
                 næringsgrupper = listOf( NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
         ).data
 
+        results.size shouldBeGreaterThanOrEqual 2
         results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
         results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_SKOGBRUK_PROSENT }
         results.map { it.orgnr} shouldNotContain listOf(virksomhetLikSnittJordbruk, virksomhetUnderSnittSkogbruk)
@@ -233,6 +237,7 @@ class SykefraversstatistikkApiTest {
                 næringsgrupper = NÆRING_JORDBRUK
         ).data
 
+        results.size shouldBeGreaterThanOrEqual 1
         results.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
     }
 
@@ -265,6 +270,7 @@ class SykefraversstatistikkApiTest {
                 næringsgrupper = listOf( NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
         ).data
 
+        results.size shouldBeGreaterThanOrEqual 2
         results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
         results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_SKOGBRUK_PROSENT }
         results.map { it.orgnr} shouldNotContain listOf(virksomhetUnderSnittJordbruk, virksomhetUnderSnittSkogbruk)
@@ -1170,7 +1176,7 @@ class SykefraversstatistikkApiTest {
             val virksomhet = lastInnNyVirksomhet(
                     nyVirksomhet = nyVirksomhet(næringer = listOf(næringsundergruppe))
             )
-            val kafkaMeldingVirksomhetUnderNæringssnitt = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val jsonMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.VIRKSOMHET,
                     kode = virksomhet.orgnr,
                     kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1,
@@ -1179,8 +1185,8 @@ class SykefraversstatistikkApiTest {
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-                    kafkaMeldingVirksomhetUnderNæringssnitt.toJsonKey(),
-                    kafkaMeldingVirksomhetUnderNæringssnitt.toJsonValue(),
+                    jsonMelding.toJsonKey(),
+                    jsonMelding.toJsonValue(),
                     KafkaContainerHelper.statistikkVirksomhetTopic,
                     Kafka.statistikkVirksomhetGroupId
             )
