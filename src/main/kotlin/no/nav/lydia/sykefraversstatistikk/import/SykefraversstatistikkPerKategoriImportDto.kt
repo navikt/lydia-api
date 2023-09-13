@@ -2,8 +2,6 @@ package no.nav.lydia.sykefraversstatistikk.import
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
 
 // OBS: Statistisk sentralbyrå (SSB) og Brønnøysundregistret bruker SN2007 standard for næringskoder
 // (dvs kode som 'viser virksomhets hovedaktivitet').
@@ -147,6 +145,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
     }
 }
 
+@Serializable
 data class Siste4Kvartal(
     @SerializedName("prosent")
     val prosent: Double?,
@@ -168,6 +167,7 @@ data class Kvartal(
     val kvartal: Int,
 )
 
+@Serializable
 data class SistePubliserteKvartal(
     @SerializedName("årstall")
     val årstall: Int,

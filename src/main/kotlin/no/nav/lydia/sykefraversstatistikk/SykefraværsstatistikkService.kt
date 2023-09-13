@@ -14,6 +14,7 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
@@ -25,6 +26,7 @@ import java.time.LocalDate.now
 class SykefraværsstatistikkService(
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
+    val sistePubliseringService: SistePubliseringService
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -153,6 +155,13 @@ class SykefraværsstatistikkService(
 
         return sykefraværForVirksomhetSisteKvartal?.right()
             ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+    }
+
+    fun hentNæringsstatistikk(næringskode: String): Either<Feil, NæringSykefraværsstatistikk> {
+        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+        val hentNæringSykefraværsstatistikk = sykefraversstatistikkRepository.hentNæringSykefraværsstatistikk(næringskode, gjeldendePeriode)
+        return hentNæringSykefraværsstatistikk?.right()
+                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 }
 
