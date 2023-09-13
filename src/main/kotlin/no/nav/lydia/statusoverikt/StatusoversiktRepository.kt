@@ -10,6 +10,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerP
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.joinTilNæringEllerBransje
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
@@ -29,15 +30,13 @@ class StatusoversiktRepository(val dataSource: DataSource) {
                 JOIN virksomhet USING (orgnr)
                 JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
                 ${
-            if (sektorer.isNotEmpty()) " LEFT JOIN virksomhet_statistikk_metadata USING (orgnr) "
-            else ""
-        }
+                    if (sektorer.isNotEmpty()) " LEFT JOIN virksomhet_statistikk_metadata USING (orgnr) "
+                    else ""
+                }
                 LEFT JOIN ia_sak ON ( ia_sak.orgnr = statistikk.orgnr )
-                ${
-            if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) "
-            else ""
-        }
-                
+                JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet)
+                ${joinTilNæringEllerBransje(søkeparametere)}
+
             WHERE 
                 statistikk.arstall = :arstall
                 AND statistikk.kvartal = :kvartal
@@ -46,6 +45,7 @@ class StatusoversiktRepository(val dataSource: DataSource) {
                 ${filtrerPåKommuner(søkeparametere = søkeparametere)}
                 ${filtrerPåSektor(søkeparametere = søkeparametere)}
                 ${filtrerPåEiere(søkeparametere = søkeparametere)}
+                ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
                 
                 ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk_siste4.prosent >= $it " } ?: ""}
                 ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk_siste4.prosent <= $it " } ?: ""}

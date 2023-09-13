@@ -462,6 +462,7 @@ class StatusoversiktHelper {
             ansatteFra: String = "",
             ansatteTil: String = "",
             bransjeProgram: String = "",
+            snittFilter: String = "",
             eiere: String = "",
             sektor: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -474,6 +475,7 @@ class StatusoversiktHelper {
             ansatteFra = ansatteFra,
             ansatteTil = ansatteTil,
             bransjeProgram = bransjeProgram,
+            snittFilter = snittFilter,
             eiere = eiere,
             sektor = sektor,
             token = token
@@ -488,6 +490,7 @@ class StatusoversiktHelper {
             ansatteFra: String = "",
             ansatteTil: String = "",
             bransjeProgram: String = "",
+            snittFilter: String = "",
             eiere: String = "",
             sektor: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -502,6 +505,7 @@ class StatusoversiktHelper {
                         "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
                         "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
                         "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
+                        "&${Søkeparametere.SNITT_FILTER}=$snittFilter" +
                         "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
                         "&${Søkeparametere.SEKTOR}=$sektor"
             )

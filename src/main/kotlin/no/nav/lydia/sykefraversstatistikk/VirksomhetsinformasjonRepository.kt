@@ -10,7 +10,6 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.api.SnittFilter
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraversstatistikk.api.Sorteringsnøkkel.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
@@ -20,6 +19,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerP
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåStatus
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.joinTilNæringEllerBransje
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
@@ -258,14 +258,6 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         )
     }
 
-    private fun joinTilNæringEllerBransje(søkeparametere: Søkeparametere) =
-            if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER
-                    || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {"""
-              LEFT JOIN naringsundergrupper_per_bransje AS bransjeprogram on (vn.naringsundergruppe1 = bransjeprogram.naringsundergruppe)
-              LEFT JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS bransje_siste4 on (bransjeprogram.bransje = bransje_siste4.kode AND bransje_siste4.kategori = 'BRANSJE')
-              JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4 on (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode AND naring_siste4.kategori = 'NÆRING')
-            """.trimIndent()
-            } else ""
     private fun Sorteringsnøkkel.tilOrderBy(): String {
         return when (this) {
             NAVN_PÅ_VIRKSOMHET -> "ORDER BY virksomhet.navn"
