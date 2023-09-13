@@ -132,6 +132,9 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 5. Commit og push. (Du treng ikkje vente på at GitHub Actions skal bli ferdig med build og deploy.)
 6. Oppdater `run.sh` i lydia-rådgiver-frontend også med den same lenka.
 
+## Kode generert av GitHub Copilot
+
+Dette repoet tar i bruk GitHub Copilot for kodeforslag.
 
 ## Ymse feilsøking
 ### "Test framework quit unexpectedly" ved køyring av testar
