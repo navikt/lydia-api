@@ -87,11 +87,18 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
+    val sistePubliseringService = SistePubliseringService(
+            sistePubliseringRepository = SistePubliseringRepository(
+                    dataSource = dataSource
+            )
+    )
     val sykefraværsstatistikkService = SykefraværsstatistikkService(
         sykefraversstatistikkRepository = SykefraversstatistikkRepository(
             dataSource = dataSource
         ),
-        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
+        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(
+                dataSource = dataSource,
+        ), sistePubliseringService = sistePubliseringService
     )
 
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
@@ -161,7 +168,8 @@ fun Application.lydiaRestApi(
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
+            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
+                sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
         )
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)

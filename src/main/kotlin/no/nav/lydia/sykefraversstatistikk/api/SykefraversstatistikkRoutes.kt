@@ -95,6 +95,17 @@ fun Route.sykefraversstatistikk(
         }
     }
 
+    get("$SYKEFRAVERSSTATISTIKK_PATH/naring/{næring}") {
+        val næringskode = call.parameters["næring"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig næring`)
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            sykefraværsstatistikkService.hentNæringsstatistikk(næringskode)
+        }.map { sykefraværsstatistikk ->
+            call.respond(sykefraværsstatistikk)
+        }.mapLeft { feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
     get ("$SYKEFRAVERSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sistePubliseringService.hentPubliseringsinfo()
@@ -134,4 +145,5 @@ suspend fun hentEiere(azureService: AzureService) =
 
 object SykefraværsstatistikkError {
     val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
+    val `ugyldig næring` = Feil("Ugyldig næring", HttpStatusCode.BadRequest)
 }

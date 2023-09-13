@@ -2,7 +2,10 @@ package no.nav.lydia.sykefraversstatistikk
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import kotliquery.*
+import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletBransjeSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
@@ -15,6 +18,61 @@ import javax.sql.DataSource
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
 
+    fun hentNæringSykefraværsstatistikk(
+            næringskode: String,
+            gjeldendePeriode: Periode
+    ): NæringSykefraværsstatistikk? =
+            using(sessionOf(dataSource)) { session ->
+                val query = queryOf(
+                        statement = """
+                    SELECT
+                        siste_kvartal.naring as siste_kvartal_naring,
+                        siste_kvartal.arstall as siste_kvartal_arstall,
+                        siste_kvartal.kvartal as siste_kvartal_kvartal,
+                        siste_kvartal.antall_personer as siste_kvartal_antall_personer,
+                        siste_kvartal.tapte_dagsverk as siste_kvartal_tapte_dagsverk,
+                        siste_kvartal.mulige_dagsverk as siste_kvartal_mulige_dagsverk,
+                        siste_kvartal.prosent as siste_kvartal_prosent,
+                        siste_kvartal.maskert as siste_kvartal_maskert,
+                        siste4.prosent as siste4_prosent,
+                        siste4.tapte_dagsverk as siste4_tapte_dagsverk,
+                        siste4.mulige_dagsverk as siste4_mulige_dagsverk,
+                        siste4.maskert as siste4_maskert,
+                        siste4.kvartaler as siste4_kvartaler
+                  FROM sykefravar_statistikk_naring AS siste_kvartal
+                  JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS siste4 
+                  ON (siste4.kategori = 'NÆRING' AND kode = siste_kvartal.naring )
+                  WHERE siste_kvartal.naring = :naring
+                   AND siste_kvartal.arstall = ${gjeldendePeriode.årstall}
+                   AND siste_kvartal.kvartal = ${gjeldendePeriode.kvartal}
+                """.trimIndent(),
+                        paramMap = mapOf(
+                                "naring" to næringskode
+                        )
+                ).map { mapRowToNæringSykefraværsstatistikk(it) }.asSingle
+                session.run(query)
+            }
+
+    private val kvartalListeType = object : TypeToken<List<Kvartal>>() {}.type
+    private fun mapRowToNæringSykefraværsstatistikk(row: Row) = NæringSykefraværsstatistikk(
+            næring = row.string("siste_kvartal_naring"),
+            sistegjeldendekvartal = SistePubliserteKvartal(
+                    årstall = row.int("siste_kvartal_arstall"),
+                    kvartal = row.int("siste_kvartal_kvartal"),
+                    prosent = row.double("siste_kvartal_prosent"),
+                    tapteDagsverk = row.double("siste_kvartal_tapte_dagsverk"),
+                    muligeDagsverk = row.double("siste_kvartal_mulige_dagsverk"),
+                    antallPersoner = row.int("siste_kvartal_antall_personer"),
+                    erMaskert = row.boolean("siste_kvartal_maskert")
+            ),
+            siste4Kvartal = Siste4Kvartal(
+                    prosent = row.double("siste4_prosent"),
+                    tapteDagsverk = row.double("siste4_tapte_dagsverk"),
+                    muligeDagsverk = row.double("siste4_mulige_dagsverk"),
+                    erMaskert = row.boolean("siste4_maskert"),
+                    kvartaler = gson.fromJson(row.string("siste4_kvartaler"), kvartalListeType),
+            )
+    )
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
         sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>

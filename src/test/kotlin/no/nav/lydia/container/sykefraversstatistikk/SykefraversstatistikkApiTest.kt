@@ -56,6 +56,7 @@ import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
+import no.nav.lydia.helper.TestData.Companion.gjeldendePeriode
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
 import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
@@ -383,7 +384,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal få riktig publiseringsinfo`() {
-        val tilPeriode = TestData.gjeldendePeriode
+        val tilPeriode = gjeldendePeriode
         val fraPeriode = tilPeriode.forrigePeriode().forrigePeriode().forrigePeriode()
         val hentetPubliseringsinfo = hentPubliseringsinfo()
 
@@ -661,7 +662,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne hente virksomheter for et bestemt år og kvartal`() {
-        val forrigePeriode = TestData.gjeldendePeriode.forrigePeriode()
+        val forrigePeriode = gjeldendePeriode.forrigePeriode()
         hentSykefravær(
             success = { response ->
                 response.data shouldHaveAtLeastSize 1
@@ -1141,7 +1142,7 @@ class SykefraversstatistikkApiTest {
             val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.NÆRING,
                     kode = næring,
-                    kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1,
+                    kvartal = gjeldendePeriode.tilKvartal(),
                     sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = 2.0),
                     siste4Kvartal = siste4Kvartal.copy(prosent = prosent)
             )
