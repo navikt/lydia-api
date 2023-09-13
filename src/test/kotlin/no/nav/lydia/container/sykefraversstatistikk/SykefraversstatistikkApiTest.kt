@@ -33,9 +33,9 @@ import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksom
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
@@ -43,7 +43,6 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4KvartalerRespons
-import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
 import no.nav.lydia.helper.TestContainerHelper
@@ -66,7 +65,6 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
-import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnTestdata
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
@@ -79,7 +77,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
-import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.SnittFilter
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
@@ -289,58 +286,6 @@ class SykefraversstatistikkApiTest {
         }
 
         hentTotaltAntallTreffISykefravær(sektor = listOf(Sektor.KOMMUNAL)) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
-    }
-
-    @Test
-    fun `skal kunne hente sykefraværsstatistikk fra siste tilgjengelige kvartal`() {
-        val gjeldendePeriode = TestData.gjeldendePeriode
-        val virksomhet = nyVirksomhet()
-        lastInnTestdata(
-            TestData().lagData(
-                virksomhet = virksomhet,
-                perioder = listOf(
-                    gjeldendePeriode,
-                    gjeldendePeriode.forrigePeriode(),
-                    Periode(kvartal = 4, årstall = 2019)
-                ),
-            )
-        )
-        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
-            """select sykefraversprosent from sykefravar_statistikk_virksomhet 
-                where orgnr='${virksomhet.orgnr}' 
-                and kvartal=${gjeldendePeriode.kvartal}
-                and arstall=${gjeldendePeriode.årstall}
-                """.trimMargin()
-        )
-
-        val result =
-            hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
-        result.arstall shouldBe gjeldendePeriode.årstall
-        result.kvartal shouldBe gjeldendePeriode.kvartal
-        result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
-    }
-
-    @Test
-    fun `skal kunne hente sykefraværsstatistikk riktig når vi mangler siste periode`() {
-        val gjeldendePeriode = TestData.gjeldendePeriode
-        val virksomhet = nyVirksomhet()
-        lastInnTestdata(
-            TestData().lagData(
-                virksomhet = virksomhet,
-                perioder = listOf(gjeldendePeriode.forrigePeriode()), // uten siste periode
-            )
-        )
-        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainer.hentEnkelKolonne<Double>(
-            """select sykefraversprosent from sykefravar_statistikk_virksomhet 
-                where orgnr='${virksomhet.orgnr}' 
-                and kvartal=${gjeldendePeriode.forrigePeriode().kvartal}
-                and arstall=${gjeldendePeriode.forrigePeriode().årstall}
-                """.trimMargin()
-        )
-
-        val result =
-            hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
-        result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
     @Test
