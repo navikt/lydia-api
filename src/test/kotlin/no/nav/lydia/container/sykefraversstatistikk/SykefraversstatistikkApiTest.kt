@@ -1146,13 +1146,17 @@ class SykefraversstatistikkApiTest {
                     Kafka.statistikkVirksomhetGroupId
             )
         }
-        fun settSykefraværsprosentNæring(næring: String, prosent: Double) {
+        fun settSykefraværsprosentNæring(
+                næring: String,
+                prosentSiste4Kvartal: Double,
+                prosentSistePubliserteKvartal: Double = 2.0
+        ) {
             val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.NÆRING,
                     kode = næring,
                     kvartal = gjeldendePeriode.tilKvartal(),
-                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = 2.0),
-                    siste4Kvartal = siste4Kvartal.copy(prosent = prosent)
+                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
@@ -1163,13 +1167,17 @@ class SykefraversstatistikkApiTest {
             )
         }
 
-        fun settSykefraværsprosentBransje(bransje: Bransjer, prosent: Double) {
+        fun settSykefraværsprosentBransje(
+                bransje: Bransjer,
+                prosentSiste4Kvartal: Double,
+                prosentSistePubliserteKvartal: Double = 2.0
+        ) {
             val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.BRANSJE,
                     kode = bransje.name.uppercase(),
-                    kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1,
-                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = 2.0),
-                    siste4Kvartal = siste4Kvartal.copy(prosent = prosent)
+                    kvartal = gjeldendePeriode.tilKvartal(),
+                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(

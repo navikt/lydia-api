@@ -14,6 +14,7 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.domene.BransjeSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
@@ -161,6 +162,13 @@ class SykefraværsstatistikkService(
         val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
         val hentNæringSykefraværsstatistikk = sykefraversstatistikkRepository.hentNæringSykefraværsstatistikk(næringskode, gjeldendePeriode)
         return hentNæringSykefraværsstatistikk?.right()
+                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+    }
+
+    fun hentBransjestatistikk(bransje: String): Either<Feil, BransjeSykefraværsstatistikk> {
+        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+        val hentBransjeSykefraværsstatistikk = sykefraversstatistikkRepository.hentBransjeSykefraværsstatistikk(bransje, gjeldendePeriode)
+        return hentBransjeSykefraværsstatistikk?.right()
                 ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 }

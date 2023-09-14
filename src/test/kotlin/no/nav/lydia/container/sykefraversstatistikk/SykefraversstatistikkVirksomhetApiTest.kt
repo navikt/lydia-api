@@ -1,6 +1,7 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import ia.felles.definisjoner.bransjer.Bransjer.TRANSPORT
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
@@ -12,6 +13,7 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.domene.BransjeSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
 import kotlin.test.Test
 import kotlin.test.fail
@@ -20,15 +22,12 @@ class SykefraversstatistikkVirksomhetApiTest {
 
     @Test
     fun `skal hente sykefraværsstatistikk for næring`(){
-        // lager statistikk til en næring .....
         SykefraversstatistikkApiTest.settSykefraværsprosentNæring(NÆRING_JORDBRUK, 4.5)
 
-        // kalle nytt endepunkt
         val result = TestContainerHelper.lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
                 .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<NæringSykefraværsstatistikk>()
 
-        // sjekk at vi får de statistikkene som forventet
         result.second.statusCode shouldBe 200
         val næringstatistikk: NæringSykefraværsstatistikk = result.third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
@@ -36,9 +35,28 @@ class SykefraversstatistikkVirksomhetApiTest {
         næringstatistikk.siste4Kvartal.prosent shouldBe 4.5
         næringstatistikk.siste4Kvartal.kvartaler.size shouldBe 1
         næringstatistikk.siste4Kvartal.erMaskert shouldBe false
-        næringstatistikk.siste4Kvartal.prosent shouldBe 4.5
-        næringstatistikk.sistegjeldendekvartal.erMaskert shouldBe false
-        næringstatistikk.sistegjeldendekvartal.prosent shouldBe 2.0
+        næringstatistikk.sisteGjeldendeKvartal.erMaskert shouldBe false
+        næringstatistikk.sisteGjeldendeKvartal.prosent shouldBe 2.0
+    }
+
+    @Test
+    fun `skal hente sykefraværsstatistikk for bransje`(){
+        SykefraversstatistikkApiTest.settSykefraværsprosentBransje(TRANSPORT, 9.9, 8.7)
+
+        val url = "$SYKEFRAVERSSTATISTIKK_PATH/bransje/${TRANSPORT.name}"
+        val result = TestContainerHelper.lydiaApiContainer.performGet(url)
+                .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
+                .tilSingelRespons<BransjeSykefraværsstatistikk>()
+
+        result.second.statusCode shouldBe 200
+        val bransjestatistikk: BransjeSykefraværsstatistikk = result.third
+                .fold(success = { response -> response }, failure = { fail(it.message) })
+        bransjestatistikk.bransje shouldBe TRANSPORT.name
+        bransjestatistikk.siste4Kvartal.prosent shouldBe 9.9
+        bransjestatistikk.siste4Kvartal.kvartaler.size shouldBe 1
+        bransjestatistikk.siste4Kvartal.erMaskert shouldBe false
+        bransjestatistikk.sisteGjeldendeKvartal.prosent shouldBe 8.7
+        bransjestatistikk.sisteGjeldendeKvartal.erMaskert shouldBe false
     }
 
     @Test
