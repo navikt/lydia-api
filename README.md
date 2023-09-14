@@ -132,6 +132,23 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 5. Commit og push. (Du treng ikkje vente på at GitHub Actions skal bli ferdig med build og deploy.)
 6. Oppdater `run.sh` i lydia-rådgiver-frontend også med den same lenka.
 
+## Koble til postgresql lokalt via docker-compose oppsett
+
+0. Kjør `./run.sh` i roten av repoet for å starte appen med alle avhengigheter
+
+### Med psql (terminal)
+
+0. Installer psql lokalt (https://www.timescale.com/blog/how-to-install-psql-on-mac-ubuntu-debian-windows/)
+1. Verifiser at du har psql installert ved å kjøre `psql --version` i terminalen
+2. Koble til postgresql lokalt ved å kjøre `PGPASSWORD=test psql -h localhost -p 5432 -U postgres` i terminalen
+
+### Med IntelliJ
+
+1. Åpne IntelliJ og gå til Database panelet
+2. Trykk på `+` og velg `Data Source` og `PostgreSQL`
+3. Fyll ut feltene `Host`, `Port`, `Database`, `User` og `Password` med henholdsvis `localhost`, `5432`, `postgres`, `postgres` og `test`'
+4. Trykk på `Test connection` for å verifisere at tilkoblingen fungerer
+
 ## Kode generert av GitHub Copilot
 
 Dette repoet tar i bruk GitHub Copilot for kodeforslag.
