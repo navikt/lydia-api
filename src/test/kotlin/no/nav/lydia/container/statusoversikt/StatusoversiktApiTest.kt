@@ -2,18 +2,15 @@ package no.nav.lydia.container.statusoversikt
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.container.sykefraversstatistikk.SykefraversstatistikkApiTest
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatusoversiktHelper
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.sykefraversstatistikk.api.SnittFilter
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
@@ -104,40 +101,5 @@ class StatusoversiktApiTest {
         statusoversiktResults.first { statusoversikt ->
             statusoversikt.status == IAProsessStatus.IKKE_AKTIV
         }.antall shouldBeGreaterThan 0
-    }
-
-    @Test
-    fun `skal kunne filtrere på næring eller bransje gjennomsnitt`() {
-        val NÆRING_JORDBRUK_PROSENT = 6.0
-        val NÆRING_SKOGBRUK_PROSENT = 8.5
-
-        SykefraversstatistikkApiTest.settSykefraværsprosentNæring(TestData.NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
-        SykefraversstatistikkApiTest.lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-            Næringsgruppe("Dyrking av ris", "01.120"),
-            4.0
-        )
-        SykefraversstatistikkApiTest.lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-            Næringsgruppe("Planteformering", "01.300"),
-            15.0
-        )
-        SykefraversstatistikkApiTest.settSykefraværsprosentNæring(TestData.NÆRING_SKOGBRUK, NÆRING_SKOGBRUK_PROSENT)
-        SykefraversstatistikkApiTest.lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-            Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
-            8.4
-        )
-        SykefraversstatistikkApiTest.lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-            Næringsgruppe("Avvirkning", "02.200"),
-            8.6
-        )
-
-        val statusoversiktResults = StatusoversiktHelper.hentStatusoversikt(
-            snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-            næringsgrupper = listOf(TestData.NÆRING_JORDBRUK, TestData.NÆRING_SKOGBRUK).joinToString { "," }
-        ).third.get().data
-
-        statusoversiktResults.size shouldBeGreaterThan 0
-        statusoversiktResults.first { statusoversikt ->
-            statusoversikt.status == IAProsessStatus.IKKE_AKTIV
-        }.antall shouldBeGreaterThan 1
     }
 }

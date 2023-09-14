@@ -75,11 +75,10 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 ${filtrerPåStatus(søkeparametere = søkeparametere)}
                 ${filtrerPåSektor(søkeparametere = søkeparametere)}
                 ${filtrerPåEiere(søkeparametere = søkeparametere)}
+                ${filtrerPåSnitt(søkeparametere = søkeparametere)}
                 
                 ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk_siste4.prosent >= $it " } ?: ""}
                 ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk_siste4.prosent <= $it " } ?: ""}
-                ${filtrerPåSnitt(søkeparametere = søkeparametere)}
-                
                 ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
                 ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
                 
