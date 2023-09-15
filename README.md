@@ -146,7 +146,12 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 
 1. Åpne IntelliJ og gå til Database panelet
 2. Trykk på `+` og velg `Data Source` og `PostgreSQL`
-3. Fyll ut feltene `Host`, `Port`, `Database`, `User` og `Password` med henholdsvis `localhost`, `5432`, `postgres`, `postgres` og `test`'
+3. Fyll ut feltene slik:
+`Host`: `localhost`  
+`Port`: `5432`  
+`User`: `postgres`  
+`Password`: `test`  
+`Database`: `postgres`  
 4. Trykk på `Test connection` for å verifisere at tilkoblingen fungerer
 
 ## Kode generert av GitHub Copilot
