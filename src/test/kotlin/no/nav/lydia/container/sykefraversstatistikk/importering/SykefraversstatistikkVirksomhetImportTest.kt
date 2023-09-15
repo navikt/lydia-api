@@ -6,7 +6,8 @@ import no.nav.lydia.container.sykefraversstatistikk.importering.Sykefraversstati
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
-import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.shouldBeEqual
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
@@ -61,13 +62,13 @@ class SykefraversstatistikkVirksomhetImportTest {
                 Kafka.statistikkVirksomhetGroupId
         )
 
-        kafkaMelding shouldBeEqual
+        kafkaMelding sistePubliserteKvartalShouldBeEqual
                 hentStatistikkGjeldendeKvartal(
                         VIRKSOMHET,
                         "999999999",
                         KVARTAL_2023_1
                 ).sistePubliserteKvartal
-        kafkaMelding shouldBeEqual
+        kafkaMelding siste4KvartalShouldBeEqual
                 hentStatistikkSiste4Kvartal(VIRKSOMHET, "999999999").siste4Kvartal
     }
 }

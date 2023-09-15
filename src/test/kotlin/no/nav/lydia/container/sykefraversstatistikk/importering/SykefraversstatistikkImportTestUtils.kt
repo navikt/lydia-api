@@ -3,6 +3,7 @@ package no.nav.lydia.container.sykefraversstatistikk.importering
 import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
@@ -88,16 +89,10 @@ class SykefraversstatistikkImportTestUtils {
                 Kategori.VIRKSOMHET to "orgnr"
         )
 
-        fun cleanUpStatistikkDB(kvartal: Kvartal = KVARTAL_2023_1) =
-                tabellnavn.forEach {
-                    cleanUpStatistikkTable(kategori = it.key, kvartal = kvartal)
-                    cleanUpStatistikkSiste4KvartalTable(kategori = it.key)
-                }
-
         fun cleanUpStatistikkTable(
                 kategori: Kategori,
                 verdi: String? = null,
-                kvartal: Kvartal = KVARTAL_2023_1,
+                kvartal: Kvartal = TestData.gjeldendePeriode.tilKvartal(),
         ) {
             val optionalClauseOnKode = if (verdi == null) "" else "and ${kodenavn[kategori]} = '$verdi'"
 
@@ -169,7 +164,7 @@ class SykefraversstatistikkImportTestUtils {
                     else -> this shouldBe expected
                 }
 
-        infix fun JsonMelding.shouldBeEqual(sistePubliserteKvartal: SistePubliserteKvartal) {
+        infix fun JsonMelding.sistePubliserteKvartalShouldBeEqual(sistePubliserteKvartal: SistePubliserteKvartal) {
             sistePubliserteKvartal.antallPersoner shouldBe this.value.sistePubliserteKvartal.antallPersoner
             sistePubliserteKvartal.prosent shouldBeOrEqualZeroIfNull this.value.sistePubliserteKvartal.prosent
             sistePubliserteKvartal.muligeDagsverk shouldBeOrEqualZeroIfNull this.value.sistePubliserteKvartal.muligeDagsverk
@@ -177,7 +172,7 @@ class SykefraversstatistikkImportTestUtils {
             sistePubliserteKvartal.erMaskert shouldBe this.value.sistePubliserteKvartal.erMaskert
         }
 
-        infix fun JsonMelding.shouldBeEqual(siste4Kvartal: Siste4Kvartal) {
+        infix fun JsonMelding.siste4KvartalShouldBeEqual(siste4Kvartal: Siste4Kvartal) {
             siste4Kvartal.prosent shouldBeOrEqualZeroIfNull this.value.siste4Kvartal.prosent
             siste4Kvartal.muligeDagsverk shouldBeOrEqualZeroIfNull this.value.siste4Kvartal.muligeDagsverk
             siste4Kvartal.tapteDagsverk shouldBeOrEqualZeroIfNull this.value.siste4Kvartal.tapteDagsverk

@@ -9,7 +9,8 @@ import no.nav.lydia.container.sykefraversstatistikk.importering.Sykefraversstati
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2023_1
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
-import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.shouldBeEqual
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.JsonMelding
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
@@ -128,9 +129,9 @@ class SykefraversstatistikkImportTest {
                 KVARTAL_2022_4
         ).sistePubliserteKvartal
         val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999").siste4Kvartal
-        eksport_Q1_2023_For_Virksomhet shouldBeEqual statistikk_Q1_2023
-        eksport_Q4_2022_For_Virksomhet shouldBeEqual statistikk_Q4_2022
-        eksport_Q1_2023_For_Virksomhet shouldBeEqual statistikkSiste4Kvartal
+        eksport_Q1_2023_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_Q1_2023
+        eksport_Q4_2022_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_Q4_2022
+        eksport_Q1_2023_For_Virksomhet siste4KvartalShouldBeEqual statistikkSiste4Kvartal
     }
 
     @Test
@@ -171,8 +172,8 @@ class SykefraversstatistikkImportTest {
                 KVARTAL_2023_1
         ).sistePubliserteKvartal
         val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999").siste4Kvartal
-        nyEksport shouldBeEqual statistikk_Q1_2023
-        nyEksport shouldBeEqual statistikkSiste4Kvartal
+        nyEksport sistePubliserteKvartalShouldBeEqual statistikk_Q1_2023
+        nyEksport siste4KvartalShouldBeEqual statistikkSiste4Kvartal
     }
 
     @Test
