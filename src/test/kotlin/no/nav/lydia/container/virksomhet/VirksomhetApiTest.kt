@@ -215,4 +215,13 @@ class VirksomhetApiTest {
         val virksomhetDto = hentVirksomhetsinformasjon(orgnummer = virksomhet.orgnr)
         virksomhetDto.bransje shouldBe null
     }
+
+    @Test
+    fun `skal få hovednæring for virksomheter`() {
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
+        val virksomhetDto = hentVirksomhetsinformasjon(orgnummer = virksomhet.orgnr)
+
+        // hovednæring lastes inn i TestData (søk etter tilTosifret)
+        virksomhetDto.næring shouldBe Næringsgruppe(kode = "01", navn = "Kortnavn for 01")
+    }
 }

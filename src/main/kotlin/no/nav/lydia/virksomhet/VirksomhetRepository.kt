@@ -135,12 +135,15 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         naring1.navn as naringsundergruppenavn1,
                         naring2.navn as naringsundergruppenavn2,
                         naring3.navn as naringsundergruppenavn3,
+                        hovednaring.kode as hovednaringKode,
+                        hovednaring.kort_navn as hovednaringNavn,
                         virksomhet.oppdatertAvBrregOppdateringsId,
                         virksomhet.opprettetTidspunkt,
                         virksomhet.sistEndretTidspunkt
                     FROM virksomhet 
                     JOIN virksomhet_naringsundergrupper ON (virksomhet.id = virksomhet_naringsundergrupper.virksomhet)
                     JOIN naring as naring1 ON (virksomhet_naringsundergrupper.naringsundergruppe1 = naring1.kode)
+                    JOIN naring as hovednaring ON (substring(virksomhet_naringsundergrupper.naringsundergruppe1, 1, 2) = hovednaring.kode)
                     LEFT JOIN naring as naring2 ON (virksomhet_naringsundergrupper.naringsundergruppe2 = naring2.kode)
                     LEFT JOIN naring as naring3 ON (virksomhet_naringsundergrupper.naringsundergruppe3 = naring3.kode)
                     LEFT JOIN virksomhet_statistikk_metadata USING (orgnr)
@@ -182,6 +185,10 @@ class VirksomhetRepository(val dataSource: DataSource) {
                                 navn = row.string("naringsundergruppenavn3")
                             )
                         },
+                        næring = Næringsgruppe(
+                            kode = row.string("hovednaringKode"),
+                            navn = row.string("hovednaringNavn")
+                        ),
                         sektor = row.stringOrNull("sektor")?.tilSektor(),
                         oppdatertAvBrregOppdateringsId = row.longOrNull("oppdatertAvBrregOppdateringsId"),
                         opprettetTidspunkt = row.instant("opprettetTidspunkt").toKotlinInstant(),

@@ -20,6 +20,7 @@ data class Virksomhet(
     val næringsundergruppe1: Næringsgruppe,
     val næringsundergruppe2: Næringsgruppe?,
     val næringsundergruppe3: Næringsgruppe?,
+    val næring: Næringsgruppe,
     val bransje: Bransjer? = næringsundergruppe1.tilBransje(),
     val sektor: Sektor?,
     val oppdatertAvBrregOppdateringsId: Long?,
