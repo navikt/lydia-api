@@ -416,7 +416,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         :prosent,
                         :maskert
                     )
-                    ON CONFLICT DO NOTHING
+                    ON CONFLICT ($kolonneNavn, arstall, kvartal) DO UPDATE SET
+                        antall_personer = :antall_personer,
+                        tapte_dagsverk = :tapte_dagsverk,
+                        mulige_dagsverk = :mulige_dagsverk,
+                        prosent = :prosent,
+                        maskert = :maskert,
+                        endret = now()
                 """.trimIndent(),
                     mapOf(
                         "arstall" to sykefraværsstatistikk.årstall,

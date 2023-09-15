@@ -60,6 +60,64 @@ class SykefraversstatistikkKategoriImportTest {
         }
     }
 
+    @Test
+    fun `vi oppdaterer sykefraværsstatistikk for kategorier`() {
+        KATEGORIER.forAll { kategori ->
+            val kode = kodeForKategori(kategori)
+            val førsteKafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+                kategori = kategori,
+                kode = kode,
+                kvartal = TestData.gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal,
+                siste4Kvartal = siste4Kvartal
+            )
+
+            val oppdatertKafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+                kategori = kategori,
+                kode = kode,
+                kvartal = TestData.gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal.copy(
+                    prosent = 15.0,
+                    antallPersoner = 4000001,
+                    tapteDagsverk = 604339.8,
+                    muligeDagsverk = 20104849.1
+                ),
+                siste4Kvartal = siste4Kvartal.copy(
+                    prosent = 15.0,
+                    tapteDagsverk = 41505774.2,
+                    muligeDagsverk = 678099000.3
+                )
+            )
+
+            kafkaContainerHelper.sendOgVentTilKonsumert(
+                førsteKafkaMelding.toJsonKey(),
+                førsteKafkaMelding.toJsonValue(),
+                topicForKategori(kategori),
+                groupIdForKategori(kategori)
+            )
+
+            kafkaContainerHelper.sendOgVentTilKonsumert(
+                oppdatertKafkaMelding.toJsonKey(),
+                oppdatertKafkaMelding.toJsonValue(),
+                topicForKategori(kategori),
+                groupIdForKategori(kategori)
+            )
+
+            oppdatertKafkaMelding sistePubliserteKvartalShouldBeEqual
+                    SykefraversstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
+                        kategori,
+                        kode,
+                        TestData.gjeldendePeriode.tilKvartal()
+                    ).sistePubliserteKvartal
+            oppdatertKafkaMelding siste4KvartalShouldBeEqual
+                    SykefraversstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
+                        kategori,
+                        kode
+                    ).siste4Kvartal
+
+        }
+    }
+
     private fun kodeForKategori(kategori: Kategori) = when(kategori) {
         Kategori.NÆRING -> TestData.NÆRING_JORDBRUK
         Kategori.NÆRINGSKODE -> TestData.NÆRINGSKODE_BARNEHAGER
