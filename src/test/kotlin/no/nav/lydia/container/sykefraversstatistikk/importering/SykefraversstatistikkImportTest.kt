@@ -92,7 +92,7 @@ class SykefraversstatistikkImportTest {
                 "999999999",
                 KVARTAL_2023_1
         ).sistePubliserteKvartal
-        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999").siste4Kvartal
+        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
 
         statistikk_Q1_2023.erMaskert shouldBe true
         statistikk_Q1_2023.antallPersoner shouldBe 4
@@ -128,7 +128,7 @@ class SykefraversstatistikkImportTest {
                 "999999999",
                 KVARTAL_2022_4
         ).sistePubliserteKvartal
-        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999").siste4Kvartal
+        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
         eksport_Q1_2023_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_Q1_2023
         eksport_Q4_2022_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_Q4_2022
         eksport_Q1_2023_For_Virksomhet siste4KvartalShouldBeEqual statistikkSiste4Kvartal
@@ -171,7 +171,7 @@ class SykefraversstatistikkImportTest {
                 "999999999",
                 KVARTAL_2023_1
         ).sistePubliserteKvartal
-        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999").siste4Kvartal
+        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
         nyEksport sistePubliserteKvartalShouldBeEqual statistikk_Q1_2023
         nyEksport siste4KvartalShouldBeEqual statistikkSiste4Kvartal
     }

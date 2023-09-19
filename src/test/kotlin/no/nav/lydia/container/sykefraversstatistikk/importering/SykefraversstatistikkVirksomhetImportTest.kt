@@ -69,6 +69,6 @@ class SykefraversstatistikkVirksomhetImportTest {
                         KVARTAL_2023_1
                 ).sistePubliserteKvartal
         kafkaMelding siste4KvartalShouldBeEqual
-                hentStatistikkSiste4Kvartal(VIRKSOMHET, "999999999").siste4Kvartal
+                hentStatistikkSiste4Kvartal(VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
     }
 }

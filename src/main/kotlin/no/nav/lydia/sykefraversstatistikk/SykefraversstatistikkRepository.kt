@@ -43,10 +43,15 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         siste4.kvartaler as siste4_kvartaler
                   FROM sykefravar_statistikk_bransje AS siste_kvartal
                   JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS siste4 
-                  ON (siste4.kategori = 'BRANSJE' AND kode = siste_kvartal.bransje )
+                    ON (
+                        siste4.kategori = 'BRANSJE' 
+                        AND kode = siste_kvartal.bransje
+                        AND siste4.publisert_kvartal = siste_kvartal.kvartal
+                        AND siste4.publisert_arstall = siste_kvartal.arstall
+                    )
                   WHERE siste_kvartal.bransje = :bransje
-                   AND siste_kvartal.arstall = ${gjeldendePeriode.årstall}
-                   AND siste_kvartal.kvartal = ${gjeldendePeriode.kvartal}
+                        AND siste_kvartal.kvartal = ${gjeldendePeriode.kvartal}
+                        AND siste_kvartal.arstall = ${gjeldendePeriode.årstall}
                 """.trimIndent(),
                         paramMap = mapOf(
                                 "bransje" to bransje
@@ -74,10 +79,15 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         siste4.kvartaler as siste4_kvartaler
                   FROM sykefravar_statistikk_naring AS siste_kvartal
                   JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS siste4 
-                  ON (siste4.kategori = 'NÆRING' AND kode = siste_kvartal.naring )
+                      ON (
+                            siste4.kategori = 'NÆRING' 
+                            AND kode = siste_kvartal.naring
+                            AND siste4.publisert_kvartal = siste_kvartal.kvartal
+                            AND siste4.publisert_arstall = siste_kvartal.arstall
+                      )
                   WHERE siste_kvartal.naring = :naring
-                   AND siste_kvartal.arstall = ${gjeldendePeriode.årstall}
-                   AND siste_kvartal.kvartal = ${gjeldendePeriode.kvartal}
+                        AND siste_kvartal.kvartal = ${gjeldendePeriode.kvartal}
+                        AND siste_kvartal.arstall = ${gjeldendePeriode.årstall}
                 """.trimIndent(),
                         paramMap = mapOf(
                                 "naring" to næringskode
@@ -174,7 +184,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                                 prosent,
                                 maskert,
                                 antall_kvartaler,
-                                kvartaler
+                                kvartaler,
+                                publisert_kvartal,
+                                publisert_arstall
                             )
                             VALUES(
                                 :kategori,
@@ -184,9 +196,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                                 :prosent,
                                 :maskert,
                                 :antall_kvartaler,
-                                :kvartaler::jsonb
+                                :kvartaler::jsonb,
+                                :publisert_kvartal,
+                                :publisert_arstall
                             )
-                            ON CONFLICT ON CONSTRAINT kategori_og_kode DO UPDATE SET
+                            ON CONFLICT (kategori, kode, publisert_kvartal, publisert_arstall) DO UPDATE SET
                                 tapte_dagsverk = :tapte_dagsverk,
                                 mulige_dagsverk = :mulige_dagsverk,
                                 prosent = :prosent,
@@ -204,6 +218,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                             "maskert" to it.siste4Kvartal.erMaskert,
                             "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
                             "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                            "publisert_kvartal" to it.sistePubliserteKvartal.kvartal,
+                            "publisert_arstall" to it.sistePubliserteKvartal.årstall,
                         )
                     ).asUpdate
                 )
@@ -226,7 +242,9 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                                 prosent,
                                 maskert,
                                 antall_kvartaler,
-                                kvartaler
+                                kvartaler,
+                                publisert_kvartal,
+                                publisert_arstall
                             )
                             VALUES(
                                 :orgnr,
@@ -235,9 +253,11 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                                 :prosent,
                                 :maskert,
                                 :antall_kvartaler,
-                                :kvartaler::jsonb
+                                :kvartaler::jsonb,
+                                :publisert_kvartal,
+                                :publisert_arstall
                             )
-                            ON CONFLICT (orgnr) DO UPDATE SET
+                            ON CONFLICT (orgnr, publisert_kvartal, publisert_arstall) DO UPDATE SET
                                 tapte_dagsverk = :tapte_dagsverk,
                                 mulige_dagsverk = :mulige_dagsverk,
                                 prosent = :prosent,
@@ -254,6 +274,8 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                             "maskert" to it.siste4Kvartal.erMaskert,
                             "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
                             "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                            "publisert_kvartal" to it.sistePubliserteKvartal.kvartal,
+                            "publisert_arstall" to it.sistePubliserteKvartal.årstall,
                         )
                     ).asUpdate
                 )

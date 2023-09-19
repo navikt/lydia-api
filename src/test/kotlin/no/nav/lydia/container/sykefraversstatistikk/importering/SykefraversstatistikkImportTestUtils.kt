@@ -213,7 +213,7 @@ class SykefraversstatistikkImportTestUtils {
             }
         }
 
-        fun hentStatistikkSiste4Kvartal(kategori: Kategori, verdi: String): StatistikkSiste4Kvartal {
+        fun hentStatistikkSiste4Kvartal(kategori: Kategori, verdi: String, kvartal: Kvartal): StatistikkSiste4Kvartal {
             val erKategoriTabell = kategori != Kategori.VIRKSOMHET
             val tabellnavn = if (erKategoriTabell) "sykefravar_statistikk_kategori_siste_4_kvartal" else "sykefravar_statistikk_virksomhet_siste_4_kvartal"
             val kodeKolonneLabel = if (erKategoriTabell) "kode" else "orgnr"
@@ -221,6 +221,8 @@ class SykefraversstatistikkImportTestUtils {
             select * from $tabellnavn 
              where 
                $kodeKolonneLabel = '$verdi'
+               AND publisert_kvartal = ${kvartal.kvartal}
+               AND publisert_arstall = ${kvartal.årstall}
         """.trimMargin()
             TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()

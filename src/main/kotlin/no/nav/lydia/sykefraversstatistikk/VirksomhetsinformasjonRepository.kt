@@ -54,10 +54,14 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             FROM 
                 sykefravar_statistikk_virksomhet AS statistikk
                 JOIN virksomhet USING (orgnr)
-                JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
+                JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4
+                    ON (statistikk.orgnr = statistikk_siste4.orgnr
+                        AND statistikk.kvartal = statistikk_siste4.publisert_kvartal 
+                        AND statistikk.arstall = statistikk_siste4.publisert_arstall)
                 JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) 
                 ${
-                    if (sektorer.isNotEmpty()) " LEFT JOIN virksomhet_statistikk_metadata USING (orgnr) "
+                    if (sektorer.isNotEmpty()) "LEFT JOIN virksomhet_statistikk_metadata " +
+                            "ON (virksomhet.orgnr = virksomhet_statistikk_metadata.orgnr) "
                     else ""
                 }
                 LEFT JOIN ia_sak ON (
@@ -112,9 +116,13 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             FROM 
                 sykefravar_statistikk_virksomhet AS statistikk
                 JOIN virksomhet USING (orgnr)
-                JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
+                JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4
+                    ON (statistikk.orgnr = statistikk_siste4.orgnr
+                        AND statistikk.kvartal = statistikk_siste4.publisert_kvartal 
+                        AND statistikk.arstall = statistikk_siste4.publisert_arstall)
                 ${
-                    if (sektorer.isNotEmpty()) " LEFT JOIN virksomhet_statistikk_metadata USING (orgnr) "
+                    if (sektorer.isNotEmpty()) "LEFT JOIN virksomhet_statistikk_metadata " +
+                            "ON (virksomhet.orgnr = virksomhet_statistikk_metadata.orgnr) "
                     else ""
                 }
                 LEFT JOIN ia_sak ON (

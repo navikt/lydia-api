@@ -1134,7 +1134,7 @@ class SykefraversstatistikkApiTest {
             val jsonMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.VIRKSOMHET,
                     kode = orgnr,
-                    kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1,
+                    kvartal = gjeldendePeriode.tilKvartal(),
                     sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSisteKvartal),
                     siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
             )

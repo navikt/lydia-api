@@ -55,7 +55,8 @@ class SykefraversstatistikkKategoriImportTest {
             kafkaMelding siste4KvartalShouldBeEqual
                     SykefraversstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
                         kategori,
-                        kode
+                        kode,
+                        TestData.gjeldendePeriode.tilKvartal()
                     ).siste4Kvartal
         }
     }
@@ -112,7 +113,8 @@ class SykefraversstatistikkKategoriImportTest {
             oppdatertKafkaMelding siste4KvartalShouldBeEqual
                     SykefraversstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
                         kategori,
-                        kode
+                        kode,
+                        TestData.gjeldendePeriode.tilKvartal()
                     ).siste4Kvartal
 
         }
