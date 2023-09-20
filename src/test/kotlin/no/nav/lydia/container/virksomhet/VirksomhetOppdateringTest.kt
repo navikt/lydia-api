@@ -7,19 +7,21 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.Clock
-import no.nav.lydia.helper.*
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.nyeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetSomSkalFåNæringskodeOppdatert
 import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetUtenAdresse
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.genererEndretNavn
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
-import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
-import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import java.sql.Timestamp
 import kotlin.test.Test
@@ -51,13 +53,6 @@ class VirksomhetOppdateringTest {
                 )
         )
         )
-        NæringsDownloader(
-            url = IntegrationsHelper.mockKallMotSsbNæringer(
-                httpMock = TestContainerHelper.httpMock,
-                testData = TestData.fraVirksomhet(nyVirksomhet, sektor = Sektor.STATLIG, perioder = listOf())
-            ),
-            næringsRepository = TestContainerHelper.næringsRepository
-        ).lastNedNæringer()
 
         TestContainerHelper.kafkaContainerHelper.sendBrregAlleVirksomheter(listOf(nyVirksomhet))
 

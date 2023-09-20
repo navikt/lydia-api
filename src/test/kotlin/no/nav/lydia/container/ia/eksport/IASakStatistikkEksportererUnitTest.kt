@@ -2,13 +2,14 @@ package no.nav.lydia.container.ia.eksport
 
 import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.ia.eksport.finnBransje
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
 
 class IASakStatistikkEksportererUnitTest {
     val næringsgruppeIkkeIBransjeprogram = Næringsgruppe("Denne næringen finnes ikke i et bransjeprogram", "99999")
-    val næringsgruppeBygg = Næringsgruppe("Bygg og sånt", "${Bransjer.BYGG.næringskoder.first()}.123")
+    val næringsgruppeBygg = BOLIGBYGGELAG
     @Test
     fun `skal finne riktig bransje fra næringskoder i bygg (2 siffet kode)`() {
         finnBransje(listOf(næringsgruppeBygg)) shouldBe Bransjer.BYGG

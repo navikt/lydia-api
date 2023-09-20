@@ -52,6 +52,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
+import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
@@ -770,7 +771,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne søke på bransjeprogram`() {
-        val virksomhet = nyVirksomhet(næringer = listOf(Næringsgruppe("Boligbyggelag", "41.101")))
+        val virksomhet = nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
         lastInnNyVirksomhet(nyVirksomhet = virksomhet)
         hentSykefravær(
             bransjeProgram = "${Bransjer.BYGG}",
@@ -783,7 +784,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal kunne søke på både næringsgrupper og bransjeprogram samtidig`() {
-        val virksomhet = nyVirksomhet(næringer = listOf(Næringsgruppe("Boligbyggelag", "41.101")))
+        val virksomhet = nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
         val virksomhet2 = nyVirksomhet(næringer = listOf(Næringsgruppe("Bygging av havne- og damanlegg", "42.910")))
         val virksomhet3 = nyVirksomhet(næringer = listOf(Næringsgruppe("Sykehus et eller annet", "86.101")))
 
@@ -1101,8 +1102,8 @@ class SykefraversstatistikkApiTest {
     companion object {
         private val sistePubliserteKvartal: SistePubliserteKvartal =
                 SistePubliserteKvartal(
-                        årstall = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1.årstall,
-                        kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1.kvartal,
+                        årstall = gjeldendePeriode.årstall,
+                        kvartal = gjeldendePeriode.kvartal,
                         tapteDagsverk = 504339.8,
                         muligeDagsverk = 10104849.1,
                         prosent = 6.0,
@@ -1115,7 +1116,7 @@ class SykefraversstatistikkApiTest {
                         muligeDagsverk = 578099000.3,
                         prosent = 5.4,
                         erMaskert = false,
-                        kvartaler = listOf(SykefraversstatistikkImportTestUtils.KVARTAL_2023_1)
+                        kvartaler = listOf(gjeldendePeriode.tilKvartal())
                 )
 
         fun lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(næringsundergruppe: Næringsgruppe, prosent: Double): String {

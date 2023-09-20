@@ -24,7 +24,9 @@ class TestData(
 
         val NÆRINGSMIDLER_IKKE_NEVNT = Næringsgruppe(kode = "10.890", navn = "Produksjon av næringsmidler ikke nevnt annet sted")
         val BARNEHAGER = Næringsgruppe(kode = "88.911", navn = "Barnehager")
-        val DYRKING_AV_KORN = Næringsgruppe(kode = "$NÆRING_JORDBRUK.110", navn = "Dyrking av korn, unntatt ris")
+        val NÆRING_MED_BINDESTREK = Næringsgruppe(kode = "91.012", navn = "Drift av fag- og forskningsbiblioteker")
+        val BOLIGBYGGELAG = Næringsgruppe(kode = "41.101", navn = "Boligbyggelag")
+        val DYRKING_AV_KORN = Næringsgruppe(kode = "$NÆRING_JORDBRUK.110", navn = "Dyrking av korn (unntatt ris), belgvekster og oljeholdige vekster")
         val DYRKING_AV_RIS = Næringsgruppe(kode = "$NÆRING_JORDBRUK.120", navn = "Dyrking av ris")
 
         val SKOGSKJØTSEL = Næringsgruppe(kode = "$NÆRING_SKOGBRUK.100", navn = "Skogskjøtsel")
@@ -48,11 +50,10 @@ class TestData(
 
     }
 
-    private val sykefraværsstatistikkPerKategoriKafkaMeldinger =
+    private val sykefraværsstatistikkVirksomhetKafkaMeldinger =
         mutableSetOf<SykefraversstatistikkPerKategoriImportDto>()
     private val sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger =
         mutableSetOf<SykefraversstatistikkMetadataVirksomhetImportDto>()
-    private val næringer = mutableSetOf<String>()
     val brregVirksomheter = mutableSetOf<TestVirksomhet>()
 
     init {
@@ -118,7 +119,7 @@ class TestData(
         sektor: Sektor = Sektor.STATLIG,
     ): TestData {
         perioder.forEach { periode ->
-            sykefraværsstatistikkPerKategoriKafkaMeldinger.add(
+            sykefraværsstatistikkVirksomhetKafkaMeldinger.add(
                 lagSykefraversstatistikkPerKategoriImportDto(
                     kategori = Kategori.VIRKSOMHET,
                     kode = virksomhet.orgnr,
@@ -134,70 +135,23 @@ class TestData(
                     årstall = periode.årstall,
                     kvartal = periode.kvartal,
                     sektor = sektor.name,
-                    bransje = "BARNEHAGER",
-                    naring = "88"
+                    bransje = virksomhet.næringsundergruppe1.tilBransje()?.name,
+                    naring = virksomhet.næringsundergruppe1.tilTosifret()
                 )
             )
-        }
-        virksomhet.næringsundergrupper
-            .map(Næringsgruppe::tilTosifret)
-            .toSet()
-            .forEach { næringer.add(lagSsbNæringInnslag(kode = it, navn = "Næring")) }
-        virksomhet.næringsundergrupper.forEach { næring ->
-            næringer.add(lagSsbNæringInnslag(kode = næring.kode, navn = næring.navn))
         }
         brregVirksomheter.add(virksomhet)
 
         return this
     }
 
-    fun sykefraværsstatistikkPerKategoriMeldinger() =
-        sykefraværsstatistikkPerKategoriKafkaMeldinger
+    fun sykefraværsstatistikkVirksomhetMeldinger() =
+        sykefraværsstatistikkVirksomhetKafkaMeldinger
 
     fun sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger() =
         sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger
 
-    fun ssbNæringMockData() =
-        næringer.joinToString(
-            prefix =
-            """
-                {
-                  "name": "Næringsgruppering 2007 (SN 2007)",
-                  "validFrom": "2009-01-01",
-                  "lastModified": "2020-04-07T12:46:55.000+0000",
-                  "published": [],
-                  "introduction": "",
-                  "contactPerson": {},
-                  "owningSection": "Regnskapsstatistikk og VoF",
-                  "legalBase": "Rådsforordning (EF) nr. 1893/2006",
-                  "publications": "http://www.ssb.no/a/publikasjoner/pdf/nos_d383/nos_d383.pdf",
-                  "derivedFrom": "NACE Rev.2",
-                  "correspondenceTables": [],
-                  "classificationVariants": [],
-                  "changelogs": [],
-                  "levels": [],
-                  "classificationItems": [
-            """.trimIndent(),
-            postfix =
-            """
-                  ]
-                }
-            """.trimIndent(),
-            separator = ","
-        )
 }
-
-fun lagSsbNæringInnslag(kode: String, navn: String) =
-    """
-        {
-          "code": "$kode",
-          "parentCode": "A",
-          "level": "2",
-          "name": "$navn",
-          "shortName": "Kortnavn for $kode",
-          "notes": "Notater for $kode"
-        }
-    """.trimIndent()
 
 fun lagSykefraversstatistikkPerKategoriImportDto(
     kategori: Kategori,
@@ -206,6 +160,7 @@ fun lagSykefraversstatistikkPerKategoriImportDto(
     sykefraværsProsent: Double = 2.0,
     antallPersoner: Int = 6,
     tapteDagsverk: Double = 20.0,
+    muligeDagsverk: Double = 125.0,
     maskert: Boolean = false,
 ) =
     SykefraversstatistikkPerKategoriImportDto(
@@ -214,16 +169,16 @@ fun lagSykefraversstatistikkPerKategoriImportDto(
         sistePubliserteKvartal = SistePubliserteKvartal(
             årstall = periode.årstall,
             kvartal = periode.kvartal,
-            prosent = 1.5,
+            prosent = sykefraværsProsent,
             antallPersoner = antallPersoner,
-            tapteDagsverk = 12.8,
-            muligeDagsverk = 125.0,
+            tapteDagsverk = tapteDagsverk,
+            muligeDagsverk = muligeDagsverk,
             erMaskert = maskert
         ),
         siste4Kvartal = Siste4Kvartal(
             prosent = sykefraværsProsent,
-            tapteDagsverk = tapteDagsverk,
-            muligeDagsverk = 500.0,
+            tapteDagsverk = tapteDagsverk * 4,
+            muligeDagsverk = muligeDagsverk * 4,
             erMaskert = maskert,
             kvartaler = listOf(TestData.gjeldendePeriode.tilKvartal(), TestData.gjeldendePeriode.forrigePeriode().tilKvartal())
         )

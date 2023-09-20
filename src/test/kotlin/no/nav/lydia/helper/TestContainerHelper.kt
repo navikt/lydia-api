@@ -21,7 +21,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Kafka
-import no.nav.lydia.helper.TestContainerHelper.Companion.httpMock
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
@@ -44,6 +43,7 @@ import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
+import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
@@ -117,8 +117,32 @@ class TestContainerHelper {
 
         init {
             Testcontainers.exposeHostPorts(httpMock.wireMockServer.port())
+
+            // -- Last inn alle næringer
+            NæringsDownloader(url = "", næringsRepository = næringsRepository).lastInnNæringerFraFil()
+
+            // -- generer statistikk for næringer
+            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+                importDtoer = næringsRepository.hentNæringer().map {
+                    lagSykefraversstatistikkPerKategoriImportDto(
+                        kategori = Kategori.NÆRING,
+                        kode = it.kode,
+                        periode = TestData.gjeldendePeriode,
+                        sykefraværsProsent = 5.0,
+                        antallPersoner = 1000,
+                        muligeDagsverk = 250_000.0,
+                        tapteDagsverk = 12_500.0,
+                    )
+                },
+                topic = KafkaContainerHelper.statistikkNæringTopic,
+                groupId = Kafka.statistikkNæringGroupId
+            )
+
+            // -- laster inn standard virksomheter (med statistikk)
             VirksomhetHelper.lastInnStandardTestdata()
+
             VirksomhetHelper.lastInnTestdata(PiaBrregOppdateringTestData.lagTestDataForPiaBrregOppdatering(httpMock = httpMock))
+
             brregOppdateringContainer.start()
             runBlocking {
                 log.info("Venter på at alle meldinger fra brregOppdatering er konsumert")
@@ -796,20 +820,14 @@ class VirksomhetHelper {
         }
 
         fun lastInnTestdata(testData: TestData) {
-            NæringsDownloader(
-                url = IntegrationsHelper.mockKallMotSsbNæringer(
-                    httpMock = httpMock,
-                    testData = testData
-                ),
-                næringsRepository = TestContainerHelper.næringsRepository
-            ).lastNedNæringer()
-
             testData.brregVirksomheter.forEach {
                 TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(it)
             }
 
             TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                testData.sykefraværsstatistikkPerKategoriMeldinger().toList()
+                importDtoer = testData.sykefraværsstatistikkVirksomhetMeldinger().toList(),
+                topic = KafkaContainerHelper.statistikkVirksomhetTopic,
+                groupId = Kafka.statistikkVirksomhetGroupId
             )
 
             TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(

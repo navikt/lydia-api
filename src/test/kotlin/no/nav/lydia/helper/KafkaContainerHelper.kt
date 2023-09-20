@@ -195,13 +195,28 @@ class KafkaContainerHelper(
 
     fun sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
         importDtoer: List<SykefraversstatistikkPerKategoriImportDto>,
+        topic: String,
+        groupId: String,
     ) {
         runBlocking {
+            if (importDtoer.isEmpty()) return@runBlocking
+
             val sendteMeldinger = importDtoer.map { melding ->
-                kafkaProducer.send(melding.tilProducerRecord()).get()
+                kafkaProducer.send(ProducerRecord(
+                    topic,
+                    gson.toJson(
+                        KeySykefraversstatistikkPerKategori(
+                            kategori = melding.kategori.name,
+                            kode = melding.kode,
+                            årstall = melding.sistePubliserteKvartal.årstall,
+                            kvartal = melding.sistePubliserteKvartal.kvartal
+                        ),
+                    ),
+                    gson.toJson(melding)
+                )).get()
             }
             ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkVirksomhetGroupId,
+                konsumentGruppeId = groupId,
                 recordMetadata = sendteMeldinger.last()
             )
         }
@@ -344,20 +359,6 @@ class KafkaContainerHelper(
             Json.encodeToString(virksomhet)
         )
     }
-
-    private fun SykefraversstatistikkPerKategoriImportDto.tilProducerRecord() =
-        ProducerRecord(
-            statistikkVirksomhetTopic,
-            gson.toJson(
-                KeySykefraversstatistikkPerKategori(
-                    kategori = kategori.name,
-                    kode = kode,
-                    årstall = sistePubliserteKvartal.årstall,
-                    kvartal = sistePubliserteKvartal.kvartal
-                ),
-            ),
-            gson.toJson(this)
-        )
 
     private fun SykefraversstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
         ProducerRecord(

@@ -12,6 +12,7 @@ import no.nav.lydia.helper.*
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.NÆRINGSMIDLER_IKKE_NEVNT
+import no.nav.lydia.helper.TestData.Companion.NÆRING_MED_BINDESTREK
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
@@ -58,18 +59,8 @@ class VirksomhetApiTest {
         val orgnummer = VirksomhetHelper.lastInnNyVirksomhet(
                 nyVirksomhet = nyVirksomhet(
                         næringer = listOf(
-                                Næringsgruppe(
-                                        navn = "Testgruppe en",
-                                        kode = "99.001"
-                                ),
-                                Næringsgruppe(
-                                        navn = "Test - gruppe to",
-                                        kode = "99.002"
-                                ),
-                                Næringsgruppe(
-                                        navn = "Test-gruppe tre",
-                                        kode = "99.003"
-                                )
+                                BARNEHAGER,
+                                NÆRING_MED_BINDESTREK
                         )
                 )
         ).orgnr
@@ -80,9 +71,8 @@ class VirksomhetApiTest {
         )
 
         virksomhet.orgnr shouldBe orgnummer
-        virksomhet.næringsundergruppe1.navn shouldBe "Testgruppe en"
-        virksomhet.næringsundergruppe2?.navn shouldBe "Test - gruppe to"
-        virksomhet.næringsundergruppe3?.navn shouldBe "Test-gruppe tre"
+        virksomhet.næringsundergruppe1.navn shouldBe BARNEHAGER.navn
+        virksomhet.næringsundergruppe2?.navn shouldBe NÆRING_MED_BINDESTREK.navn
     }
 
     @Test
@@ -221,7 +211,6 @@ class VirksomhetApiTest {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
         val virksomhetDto = hentVirksomhetsinformasjon(orgnummer = virksomhet.orgnr)
 
-        // hovednæring lastes inn i TestData (søk etter tilTosifret)
-        virksomhetDto.næring shouldBe Næringsgruppe(kode = "01", navn = "Kortnavn for 01")
+        virksomhetDto.næring shouldBe Næringsgruppe(kode = "01", navn = "Jordbruk, tilhør. tjenester, jakt")
     }
 }

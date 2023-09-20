@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ia.eksport
 
-import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -16,6 +15,7 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.tilSingelRespons
@@ -26,7 +26,6 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
@@ -47,9 +46,8 @@ class IASakStatusEksportørTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASakStatus`() {
-        val næringskode = "${Bransjer.BYGG.næringskoder.first()}.123"
         val virksomhet =
-            TestVirksomhet.nyVirksomhet(næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygg og ting")))
+            TestVirksomhet.nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
         lastInnNyVirksomhet(virksomhet)
 
         val sak =

@@ -7,11 +7,12 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatusoversiktHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
+import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
 
@@ -73,7 +74,7 @@ class StatusoversiktApiTest {
     fun `skal kunne filtrere på næring eller bransje`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(Næringsgruppe("Boligbyggelag", "41.101"))
+                næringer = listOf(BOLIGBYGGELAG)
             )
         )
         nySakIViBistår(orgnummer = virksomhet.orgnr)
@@ -83,7 +84,7 @@ class StatusoversiktApiTest {
 
         VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(Næringsgruppe("Barnehager", "88.911"))
+                næringer = listOf(BARNEHAGER)
             )
         )
 
