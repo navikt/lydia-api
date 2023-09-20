@@ -21,6 +21,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Kafka
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
@@ -804,9 +805,15 @@ class VirksomhetHelper {
         fun lastInnNyVirksomhet(
             nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet(),
             sektor: Sektor = Sektor.STATLIG,
-            perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode())
+            perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode()),
+            sykefraværsProsent: Double? = null
         ): TestVirksomhet {
-            lastInnTestdata(TestData.fraVirksomhet(nyVirksomhet, sektor = sektor, perioder = perioder))
+            lastInnTestdata(TestData.fraVirksomhet(
+                virksomhet = nyVirksomhet,
+                sektor = sektor,
+                perioder = perioder,
+                sykefraværsProsent = sykefraværsProsent
+            ))
             return nyVirksomhet
         }
 
@@ -820,17 +827,15 @@ class VirksomhetHelper {
         }
 
         fun lastInnTestdata(testData: TestData) {
-            testData.brregVirksomheter.forEach {
-                TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(it)
-            }
+            kafkaContainerHelper.lastInnVirksomheterOgVentTilKonsumert(testData.brregVirksomheter.toList())
 
-            TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 importDtoer = testData.sykefraværsstatistikkVirksomhetMeldinger().toList(),
                 topic = KafkaContainerHelper.statistikkVirksomhetTopic,
                 groupId = Kafka.statistikkVirksomhetGroupId
             )
 
-            TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
+            kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
                 testData.sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger().toList()
             )
         }

@@ -41,11 +41,13 @@ class TestData(
             virksomhet: TestVirksomhet,
             sektor: Sektor = Sektor.STATLIG,
             perioder: List<Periode> = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
+            sykefraværsProsent: Double? = null,
         ) =
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = perioder,
-                sektor = sektor
+                sektor = sektor,
+                sykefraværsProsent = sykefraværsProsent
             )
 
     }

@@ -1121,32 +1121,12 @@ class SykefraversstatistikkApiTest {
 
         fun lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(næringsundergruppe: Næringsgruppe, prosent: Double): String {
             val virksomhet = lastInnNyVirksomhet(
-                    nyVirksomhet = nyVirksomhet(næringer = listOf(næringsundergruppe))
-            )
-            settSykefraværsprosentVirksomhet(
-                    orgnr = virksomhet.orgnr,
-                    prosentSisteKvartal = 4.0,
-                    prosentSiste4Kvartal = prosent
+                nyVirksomhet = nyVirksomhet(næringer = listOf(næringsundergruppe)),
+                sykefraværsProsent = prosent
             )
             return virksomhet.orgnr
         }
 
-        fun settSykefraværsprosentVirksomhet(orgnr: String, prosentSisteKvartal: Double, prosentSiste4Kvartal: Double) {
-            val jsonMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
-                    kategori = Kategori.VIRKSOMHET,
-                    kode = orgnr,
-                    kvartal = gjeldendePeriode.tilKvartal(),
-                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSisteKvartal),
-                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
-            )
-
-            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-                    jsonMelding.toJsonKey(),
-                    jsonMelding.toJsonValue(),
-                    KafkaContainerHelper.statistikkVirksomhetTopic,
-                    Kafka.statistikkVirksomhetGroupId
-            )
-        }
         fun settSykefraværsprosentNæring(
                 næring: String,
                 prosentSiste4Kvartal: Double,

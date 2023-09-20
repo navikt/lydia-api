@@ -240,6 +240,19 @@ class KafkaContainerHelper(
         }
     }
 
+    fun lastInnVirksomheterOgVentTilKonsumert(virksomheter: List<TestVirksomhet>) = runBlocking {
+        if (virksomheter.isEmpty()) return@runBlocking
+
+        val sendteMeldinger = virksomheter.map {
+            kafkaProducer.send(it.tilProducerRecord()).get()
+        }
+
+        ventTilKonsumert(
+            konsumentGruppeId = Kafka.brregConsumerGroupId,
+            recordMetadata = sendteMeldinger.last()
+        )
+    }
+
     fun sendBrregOppdatering(testVirksomhet: TestVirksomhet) {
         runBlocking {
             val sendtMelding =
