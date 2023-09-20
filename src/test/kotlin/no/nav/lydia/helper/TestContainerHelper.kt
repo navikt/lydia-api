@@ -9,6 +9,7 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
+import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -137,6 +138,22 @@ class TestContainerHelper {
                 },
                 topic = KafkaContainerHelper.statistikkNæringTopic,
                 groupId = Kafka.statistikkNæringGroupId
+            )
+
+            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+                    importDtoer = Bransjer.entries.map {
+                        lagSykefraversstatistikkPerKategoriImportDto(
+                                kategori = Kategori.BRANSJE,
+                                kode = it.name,
+                                periode = TestData.gjeldendePeriode,
+                                sykefraværsProsent = 10.0,
+                                antallPersoner = 1000,
+                                muligeDagsverk = 250_000.0,
+                                tapteDagsverk = 25_000.0,
+                        )
+                    },
+                    topic = KafkaContainerHelper.statistikkBransjeTopic,
+                    groupId = Kafka.statistikkBransjeGroupId
             )
 
             // -- laster inn standard virksomheter (med statistikk)
