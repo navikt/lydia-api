@@ -103,6 +103,8 @@ class VirksomhetHelper {
             kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
                 testData.sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger().toList()
             )
+
+            TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
         }
 
         private fun sendOppdateringForVirksomhet(
@@ -112,6 +114,7 @@ class VirksomhetHelper {
             kafkaContainerHelper.sendBrregOppdatering(
                 virksomhet.tilOppdateringVirksomhet(endringstype)
             )
+            TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
         }
 
         fun TestVirksomhet.genererEndretNavn() = this.navn.reversed()

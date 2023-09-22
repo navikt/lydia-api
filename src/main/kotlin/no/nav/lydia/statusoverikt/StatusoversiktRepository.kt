@@ -10,7 +10,6 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerP
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
-import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import javax.sql.DataSource
 
 class StatusoversiktRepository(val dataSource: DataSource) {
@@ -25,34 +24,19 @@ class StatusoversiktRepository(val dataSource: DataSource) {
             SELECT
                 count(*) as antall, ia_sak.status
             FROM 
-                sykefravar_statistikk_virksomhet AS statistikk
-                JOIN virksomhet USING (orgnr)
-                JOIN sykefravar_statistikk_virksomhet_siste_4_kvartal AS statistikk_siste4 USING (orgnr)
-                ${
-                    if (næringsgrupperMedBransjer.isNotEmpty()) " JOIN virksomhet_naringsundergrupper AS vn on (virksomhet.id = vn.virksomhet) " 
-                    else ""
-                }
-                ${
-                    if (sektorer.isNotEmpty()) " LEFT JOIN virksomhet_statistikk_metadata USING (orgnr) "
-                    else ""
-                }
+                virksomhetsstatistikk_for_prioritering AS statistikk
                 LEFT JOIN ia_sak ON ( ia_sak.orgnr = statistikk.orgnr )
-
             WHERE 
-                statistikk.arstall = :arstall
-                AND statistikk.kvartal = :kvartal
-                
+                true = true
                 ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
                 ${filtrerPåKommuner(søkeparametere = søkeparametere)}
                 ${filtrerPåSektor(søkeparametere = søkeparametere)}
                 ${filtrerPåEiere(søkeparametere = søkeparametere)}
                 
-                ${søkeparametere.sykefraværsprosentFra?.let { " AND statistikk_siste4.prosent >= $it " } ?: ""}
-                ${søkeparametere.sykefraværsprosentTil?.let { " AND statistikk_siste4.prosent <= $it " } ?: ""}
-                ${søkeparametere.ansatteFra?.let { " AND statistikk.antall_personer >= $it " } ?: ""}
-                ${søkeparametere.ansatteTil?.let { " AND statistikk.antall_personer <= $it " } ?: ""}
-                
-                AND virksomhet.status = '${VirksomhetStatus.AKTIV.name}'
+                ${søkeparametere.sykefraværsprosentFra?.let { " AND prosent >= $it " } ?: ""}
+                ${søkeparametere.sykefraværsprosentTil?.let { " AND prosent <= $it " } ?: ""}
+                ${søkeparametere.ansatteFra?.let { " AND antall_personer_siste_kvartal >= $it " } ?: ""}
+                ${søkeparametere.ansatteTil?.let { " AND antall_personer_siste_kvartal <= $it " } ?: ""}
             GROUP BY 
                 ia_sak.status
         """.trimIndent()
@@ -60,8 +44,6 @@ class StatusoversiktRepository(val dataSource: DataSource) {
         val query = queryOf(
             statement = sql,
             mapOf(
-                "kvartal" to søkeparametere.periode.kvartal,
-                "arstall" to søkeparametere.periode.årstall,
                 "naringer" to session.createArrayOf("text", næringsgrupperMedBransjer),
                 "kommuner" to session.createArrayOf("text", søkeparametere.kommunenummer),
                 "sektorer" to session.createArrayOf("text", sektorer),

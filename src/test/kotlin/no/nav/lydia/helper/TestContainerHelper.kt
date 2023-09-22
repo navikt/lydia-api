@@ -556,8 +556,6 @@ class StatistikkHelper {
     companion object {
         fun hentSykefravær(
             success: (VirksomhetsoversiktResponsDto) -> Unit,
-            kvartal: String = "",
-            årstall: String = "",
             kommuner: String = "",
             fylker: String = "",
             næringsgrupper: String = "",
@@ -574,8 +572,6 @@ class StatistikkHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             hentSykefraværRespons(
-                kvartal = kvartal,
-                årstall = årstall,
                 kommuner = kommuner,
                 fylker = fylker,
                 næringsgrupper = næringsgrupper,
@@ -596,8 +592,6 @@ class StatistikkHelper {
                 })
 
         fun hentSykefravær(
-                kvartal: String = "",
-                årstall: String = "",
                 kommuner: String = "",
                 fylker: String = "",
                 næringsgrupper: String = "",
@@ -616,8 +610,6 @@ class StatistikkHelper {
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             hentSykefraværRespons(
-                kvartal = kvartal,
-                årstall = årstall,
                 kommuner = kommuner,
                 fylker = fylker,
                 næringsgrupper = næringsgrupper,
@@ -637,8 +629,6 @@ class StatistikkHelper {
             ).third.get()
 
         fun hentSykefraværRespons(
-            kvartal: String = "",
-            årstall: String = "",
             kommuner: String = "",
             fylker: String = "",
             næringsgrupper: String = "",
@@ -658,9 +648,7 @@ class StatistikkHelper {
         ) =
             lydiaApiContainer.performGet(
                 SYKEFRAVERSSTATISTIKK_PATH +
-                        "?${Søkeparametere.KVARTAL}=$kvartal" +
-                        "&${Søkeparametere.ÅRSTALL}=$årstall" +
-                        "&${Søkeparametere.KOMMUNER}=$kommuner" +
+                        "?${Søkeparametere.KOMMUNER}=$kommuner" +
                         "&${Søkeparametere.FYLKER}=$fylker" +
                         "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
                         "&${Søkeparametere.SORTERINGSNØKKEL}=$sorteringsnokkel" +
@@ -735,8 +723,6 @@ class StatistikkHelper {
         }
 
         fun hentTotaltAntallTreffISykefravær(
-            kvartal: String = "",
-            årstall: String = "",
             kommuner: String = "",
             fylker: String = "",
             næringsgrupper: String = "",
@@ -754,9 +740,7 @@ class StatistikkHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ): Int {
             return lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF" +
-                    "?${Søkeparametere.KVARTAL}=$kvartal" +
-                    "&${Søkeparametere.ÅRSTALL}=$årstall" +
-                    "&${Søkeparametere.KOMMUNER}=$kommuner" +
+                    "?${Søkeparametere.KOMMUNER}=$kommuner" +
                     "&${Søkeparametere.FYLKER}=$fylker" +
                     "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
                     "&${Søkeparametere.SORTERINGSNØKKEL}=$sorteringsnokkel" +
