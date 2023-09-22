@@ -28,9 +28,6 @@ import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils
 import no.nav.lydia.helper.KafkaContainerHelper
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -68,6 +65,7 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
@@ -1001,13 +999,18 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal filtrere bort slettede og fjernede virksomheter`() {
-        val virksomheterMedSykefravær = hentSykefraværForAlleVirksomheter().map { it.orgnr }
-        val endredeVirksomheter = endredeVirksomheter.map { it.orgnr }
-        val slettedeOgFjernedeVirksomheter =
-            listOf(slettedeVirksomheter, fjernedeVirksomheter).flatten().map { it.orgnr }
+        val nyVirksomhet = lastInnNyVirksomhet(nyVirksomhet())
+        val slettetVirksomhet = lastInnNyVirksomhet(nyVirksomhet())
+        VirksomhetHelper.sendSlettingForVirksomhet(virksomhet = slettetVirksomhet)
+        val fjernetVirksomhet = lastInnNyVirksomhet(nyVirksomhet())
+        VirksomhetHelper.sendFjerningForVirksomhet(virksomhet = fjernetVirksomhet)
 
-        virksomheterMedSykefravær shouldContainAll endredeVirksomheter
-        virksomheterMedSykefravær shouldNotContainAnyOf slettedeOgFjernedeVirksomheter
+        val virksomheterMedSykefravær = hentSykefraværForAlleVirksomheter().map { it.orgnr }
+        val slettetOgFjernetVirksomheter =
+            listOf(slettetVirksomhet, fjernetVirksomhet).map { it.orgnr }
+
+        virksomheterMedSykefravær shouldContain nyVirksomhet.orgnr
+        virksomheterMedSykefravær shouldNotContainAnyOf slettetOgFjernetVirksomheter
     }
 
     @Test

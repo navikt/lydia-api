@@ -1,7 +1,6 @@
 package no.nav.lydia.container.virksomhet
 
 import ia.felles.definisjoner.bransjer.Bransjer
-import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -169,23 +168,18 @@ class VirksomhetApiTest {
         VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
 
         hentVirksomhetsinformasjon(
-                virksomhet.orgnr,
-                token = mockOAuthContainer.saksbehandler1.token
-        ).also { it.status shouldBe VirksomhetStatus.AKTIV }
+            orgnummer = virksomhet.orgnr
+        ).status shouldBe VirksomhetStatus.AKTIV
 
-        PiaBrregOppdateringTestData.slettedeVirksomheter.forAll { slettetVirksomhet ->
-            hentVirksomhetsinformasjon(
-                    slettetVirksomhet.orgnr,
-                    token = mockOAuthContainer.saksbehandler1.token
-            ).also { it.status shouldBe VirksomhetStatus.SLETTET }
-        }
+        VirksomhetHelper.sendSlettingForVirksomhet(virksomhet)
+        hentVirksomhetsinformasjon(
+            orgnummer = virksomhet.orgnr
+        ).status shouldBe VirksomhetStatus.SLETTET
 
-        PiaBrregOppdateringTestData.fjernedeVirksomheter.forAll { fjernetVirksomhet ->
-            hentVirksomhetsinformasjon(
-                    fjernetVirksomhet.orgnr,
-                    token = mockOAuthContainer.saksbehandler1.token
-            ).also { it.status shouldBe VirksomhetStatus.FJERNET }
-        }
+        VirksomhetHelper.sendFjerningForVirksomhet(virksomhet)
+        hentVirksomhetsinformasjon(
+            orgnummer = virksomhet.orgnr
+        ).status shouldBe VirksomhetStatus.FJERNET
     }
 
     @Test

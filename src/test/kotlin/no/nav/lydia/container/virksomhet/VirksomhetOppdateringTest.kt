@@ -7,18 +7,15 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.Clock
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.endredeVirksomheter
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.fjernedeVirksomheter
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.nyeVirksomheter
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.slettedeVirksomheter
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetSomSkalFåNæringskodeOppdatert
-import no.nav.lydia.helper.PiaBrregOppdateringTestData.Companion.virksomhetUtenAdresse
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.helper.genererEndretNavn
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.genererEndretNavn
+import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -26,35 +23,30 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import java.sql.Timestamp
 import kotlin.test.Test
 
-/**
- * NOTE: Denne testen bruker testdata fra [no.nav.lydia.helper.PiaBrregOppdateringTestData]
- * NOTE: og de dataene blir behandlet av [no.nav.lydia.helper.PiaBrregOppdateringContainerHelper.brregOppdateringContainer]
- * */
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
 
     @Test
     fun `vi oppdaterer næringsgrupper til en bedrift når vi importerer ALLE bedrifter`() {
         val nyVirksomhet = nyVirksomhet(
-                beliggenhet = Beliggenhetsadresse(
-                        land = "NORGE",
-                        landkode = "NO",
-                        postnummer = "0100",
-                        poststed = "OSLO",
-                        adresse = listOf("Tertitten 1"),
-                        kommune = "OSLO",
-                        kommunenummer = "0300",
-                ), næringer = listOf(
+            beliggenhet = Beliggenhetsadresse(
+                    land = "NORGE",
+                    landkode = "NO",
+                    postnummer = "0100",
+                    poststed = "OSLO",
+                    adresse = listOf("Tertitten 1"),
+                    kommune = "OSLO",
+                    kommunenummer = "0300",
+            ), næringer = listOf(
                 Næringsgruppe(
                         "Barnehager", "88.911"
                 ),
                 Næringsgruppe(
                         "Dyrking av ettårige vekster ellers", "01.190"
                 )
+            )
         )
-        )
-
-        TestContainerHelper.kafkaContainerHelper.sendBrregAlleVirksomheter(listOf(nyVirksomhet))
+        lastInnNyVirksomhet(nyVirksomhet)
 
         val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
                 """select id from virksomhet
@@ -91,20 +83,18 @@ class VirksomhetOppdateringTest {
                         )
                 )
         )
-        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
-        TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(nyVirksomhet)
+        lastInnNyVirksomhet(nyVirksomhet)
 
         val oppdatertVirksomhet = nyVirksomhet.copy(næringsundergrupper = listOf(
             Næringsgruppe(
-                    "Dyrking av ettårige vekster ellers",
-                    "01.190"
+                navn = "Dyrking av ettårige vekster ellers",
+                kode = "01.190"
             ), Næringsgruppe(
-            "Barnehager",
-            "88.911"
+                navn = "Barnehager",
+                kode = "88.911"
             )
         ))
-
-        TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(oppdatertVirksomhet)
+        sendEndringForVirksomhet(oppdatertVirksomhet)
 
         val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
                 """select id from virksomhet
@@ -124,27 +114,27 @@ class VirksomhetOppdateringTest {
     @Test
     fun `vi lagrer næringsundergrupper til en bedrift`() {
         val nyVirksomhet = nyVirksomhet(
-                beliggenhet = Beliggenhetsadresse(
-                    land = "NORGE",
-                    landkode = "NO",
-                    postnummer = "0100",
-                    poststed = "OSLO",
-                    adresse = listOf("Tertitten 1"),
-                    kommune = "OSLO",
-                    kommunenummer = "0300",
+            beliggenhet = Beliggenhetsadresse(
+                land = "NORGE",
+                landkode = "NO",
+                postnummer = "0100",
+                poststed = "OSLO",
+                adresse = listOf("Tertitten 1"),
+                kommune = "OSLO",
+                kommunenummer = "0300",
+            ),
+            næringer = listOf(
+                Næringsgruppe(
+                    navn = "Barnehager",
+                    kode = "88.911"
                 ),
-                næringer = listOf(
-                        Næringsgruppe(
-                                "Barnehager", "88.911"
-                        ),
-                        Næringsgruppe(
-                        "Dyrking av ettårige vekster ellers", "01.190"
-                        )
+                Næringsgruppe(
+                    navn = "Dyrking av ettårige vekster ellers",
+                    kode = "01.190"
                 )
+            )
         )
-
-        VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet)
-        TestContainerHelper.kafkaContainerHelper.sendBrregOppdatering(nyVirksomhet)
+        lastInnNyVirksomhet(nyVirksomhet)
 
         val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
             """select id from virksomhet
@@ -178,30 +168,34 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `kan oppdatere endrede virksomheter`() {
-        endredeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaRiktigTilstandEtterOppdatering(
-                status = VirksomhetStatus.AKTIV,
-                navn = testVirksomhet.genererEndretNavn()
-            )
-        }
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet())
+        sendEndringForVirksomhet(
+            virksomhet = virksomhet.copy(navn = virksomhet.genererEndretNavn())
+        )
+        virksomhet.skalHaRiktigTilstandEtterOppdatering(
+            status = VirksomhetStatus.AKTIV,
+            navn = virksomhet.genererEndretNavn()
+        )
     }
 
     @Test
     fun `kan oppdatere fjernede virksomheter`() {
-        fjernedeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.FJERNET)
-        }
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet())
+        sendFjerningForVirksomhet(virksomhet)
+        virksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.FJERNET)
     }
 
     @Test
     fun `kan oppdatere slettede virksomheter`() {
-        slettedeVirksomheter.forEach { testVirksomhet ->
-            testVirksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.SLETTET)
-        }
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet())
+        sendFjerningForVirksomhet(virksomhet)
+        virksomhet.skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.FJERNET)
     }
 
     @Test
     fun `gjør ingenting med virksomheter som ikke er relevante`() {
+        val virksomhetUtenAdresse = nyVirksomhet(beliggenhet = Beliggenhetsadresse())
+        sendEndringForVirksomhet(virksomhet = virksomhetUtenAdresse)
         VirksomhetHelper.hentVirksomhetsinformasjonRespons(
             orgnummer = virksomhetUtenAdresse.orgnr,
             token = token
@@ -210,21 +204,21 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `Skal inserte en virksomhet med endringstype ny`() {
-        nyeVirksomheter.forEach { virksomhet ->
-            virksomhet.skalHaRiktigTilstandEtterNy()
-        }
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet())
+        virksomhet.skalHaRiktigTilstandEtterNy()
     }
 
     @Test
     fun `sjekk på næringskoder`() {
-        virksomhetSomSkalFåNæringskodeOppdatert.copy(
-            navn = virksomhetSomSkalFåNæringskodeOppdatert.genererEndretNavn(),
-            næringsundergrupper = listOf(
-                TestData.DYRKING_AV_RIS,
-                TestData.DYRKING_AV_KORN,
-                TestData.BEDRIFTSRÅDGIVNING
-            )
-        ).skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
+        val virksomhet = lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(TestData.BEDRIFTSRÅDGIVNING)))
+        val virksomhetSomSkalFåNæringskodeOppdatert = virksomhet.copy(næringsundergrupper = listOf(
+            TestData.DYRKING_AV_RIS,
+            TestData.DYRKING_AV_KORN,
+            TestData.BEDRIFTSRÅDGIVNING
+        ))
+        sendEndringForVirksomhet(virksomhet = virksomhetSomSkalFåNæringskodeOppdatert)
+        virksomhetSomSkalFåNæringskodeOppdatert
+            .skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
     }
 }
 

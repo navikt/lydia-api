@@ -13,7 +13,6 @@ import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
@@ -22,14 +21,27 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Kafka
-import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.api.IASakLeveranseDto
+import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
+import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
+import no.nav.lydia.ia.sak.api.IASakLeveranserPerTjenesteDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.IATjenesteDto
+import no.nav.lydia.ia.sak.api.IA_MODULER_PATH
+import no.nav.lydia.ia.sak.api.IA_SAK_LEVERANSE_PATH
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.IA_TJENESTER_PATH
+import no.nav.lydia.ia.sak.api.ModulDto
+import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
+import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
+import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -42,24 +54,28 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoverikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
-import no.nav.lydia.sykefraversstatistikk.api.*
+import no.nav.lydia.sykefraversstatistikk.api.ANTALL_TREFF
+import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
+import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
+import no.nav.lydia.sykefraversstatistikk.api.PUBLISERINGSINFO
+import no.nav.lydia.sykefraversstatistikk.api.SISTE_4_KVARTALER
+import no.nav.lydia.sykefraversstatistikk.api.SISTE_TILGJENGELIGE_KVARTAL
+import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktResponsDto
+import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsstatistikkSiste4KvartalDto
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
-import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
-import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
-import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Sektor
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.testcontainers.Testcontainers
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.net.URLEncoder.encode
-import java.nio.charset.Charset.defaultCharset
 import kotlin.io.path.Path
 import kotlin.test.fail
 
@@ -107,19 +123,10 @@ class TestContainerHelper {
                     start()
                 }
 
-        val httpMock = HttpMock().also { httpMock ->
-            httpMock.start()
-        }
-
-        val brregOppdateringContainer =
-            PiaBrregOppdateringContainerHelper(network = network, log = log, httpMock = httpMock)
-
         private val dataSource = postgresContainer.nyDataSource()
         val næringsRepository = NæringsRepository(dataSource = dataSource)
 
         init {
-            Testcontainers.exposeHostPorts(httpMock.wireMockServer.port())
-
             // -- Last inn alle næringer
             NæringsDownloader(url = "", næringsRepository = næringsRepository).lastInnNæringerFraFil()
 
@@ -158,17 +165,6 @@ class TestContainerHelper {
 
             // -- laster inn standard virksomheter (med statistikk)
             VirksomhetHelper.lastInnStandardTestdata()
-
-            VirksomhetHelper.lastInnTestdata(PiaBrregOppdateringTestData.lagTestDataForPiaBrregOppdatering(httpMock = httpMock))
-
-            brregOppdateringContainer.start()
-            runBlocking {
-                log.info("Venter på at alle meldinger fra brregOppdatering er konsumert")
-                kafkaContainerHelper.ventTilAlleMeldingerErKonsumert(
-                    konsumentGruppe = Kafka.brregConsumerGroupId,
-                )
-                log.info("Alle meldinger fra brregOppdatering er konsumert")
-            }
         }
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
@@ -788,74 +784,6 @@ class StatistikkHelper {
                 .tilSingelRespons<FilterverdierDto>()
                 .third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
-    }
-}
-
-class VirksomhetHelper {
-    companion object {
-        fun søkEtterVirksomheter(
-            søkestreng: String,
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-            success: (List<VirksomhetSøkeresultat>) -> Unit,
-        ) =
-            lydiaApiContainer.performGet(url = "$VIRKSOMHET_PATH/finn?q=${encode(søkestreng, defaultCharset())}")
-                .authentication().bearer(token)
-                .tilListeRespons<VirksomhetSøkeresultat>()
-                .third.fold(success = success, failure = { fail(it.message) })
-
-        fun hentVirksomhetsinformasjonRespons(orgnummer: String, token: String) =
-            lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
-                .authentication().bearer(token)
-                .tilSingelRespons<VirksomhetDto>()
-
-        fun hentVirksomhetsinformasjon(
-            orgnummer: String,
-            token: String = oauth2ServerContainer.saksbehandler1.token) =
-            hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
-                .third.fold(
-                    success = { response -> response },
-                    failure = { fail(it.message) }
-                )
-
-        fun nyttOrgnummer() = lastInnNyVirksomhet().orgnr
-
-        fun lastInnNyVirksomhet(
-            nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet(),
-            sektor: Sektor = Sektor.STATLIG,
-            perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode()),
-            sykefraværsProsent: Double? = null
-        ): TestVirksomhet {
-            lastInnTestdata(TestData.fraVirksomhet(
-                virksomhet = nyVirksomhet,
-                sektor = sektor,
-                perioder = perioder,
-                sykefraværsProsent = sykefraværsProsent
-            ))
-            return nyVirksomhet
-        }
-
-        fun lastInnNyeVirksomheter(vararg virksomheter: TestVirksomhet): List<TestVirksomhet> {
-            return virksomheter.toList()
-                .onEach(this::lastInnNyVirksomhet)
-        }
-
-        fun lastInnStandardTestdata() {
-            lastInnTestdata(TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 500))
-        }
-
-        fun lastInnTestdata(testData: TestData) {
-            kafkaContainerHelper.lastInnVirksomheterOgVentTilKonsumert(testData.brregVirksomheter.toList())
-
-            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                importDtoer = testData.sykefraværsstatistikkVirksomhetMeldinger().toList(),
-                topic = KafkaContainerHelper.statistikkVirksomhetTopic,
-                groupId = Kafka.statistikkVirksomhetGroupId
-            )
-
-            kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
-                testData.sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger().toList()
-            )
-        }
     }
 }
 

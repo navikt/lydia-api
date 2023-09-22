@@ -7,14 +7,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.time.withTimeoutOrNull
-import kotlinx.datetime.Clock.System.now
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
-import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Ny
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
-import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
-import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
 import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkMetadataVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkPerKategori
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
@@ -23,7 +19,6 @@ import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
 import org.apache.kafka.clients.admin.NewTopic
-import org.apache.kafka.clients.admin.OffsetSpec
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -222,25 +217,7 @@ class KafkaContainerHelper(
         }
     }
 
-    fun sendBrregAlleVirksomheter(
-        testVirksomheter: List<TestVirksomhet>,
-    ) {
-        runBlocking {
-            testVirksomheter.forEach {
-                val sendtMelding =
-                    kafkaProducer.send(
-                        it.tilBrregVirksomhetDtoProducerRecord()
-                    ).get()
-
-                ventTilKonsumert(
-                    konsumentGruppeId = Kafka.brregConsumerGroupId,
-                    recordMetadata = sendtMelding
-                )
-            }
-        }
-    }
-
-    fun lastInnVirksomheterOgVentTilKonsumert(virksomheter: List<TestVirksomhet>) = runBlocking {
+    fun sendBrregOppdateringer(virksomheter: List<OppdateringVirksomhet>) = runBlocking {
         if (virksomheter.isEmpty()) return@runBlocking
 
         val sendteMeldinger = virksomheter.map {
@@ -253,13 +230,9 @@ class KafkaContainerHelper(
         )
     }
 
-    fun sendBrregOppdatering(testVirksomhet: TestVirksomhet) {
+    fun sendBrregOppdatering(virksomhet: OppdateringVirksomhet) {
         runBlocking {
-            val sendtMelding =
-                kafkaProducer.send(
-                    testVirksomhet.tilProducerRecord()
-                ).get()
-
+            val sendtMelding = kafkaProducer.send(virksomhet.tilProducerRecord()).get()
             ventTilKonsumert(
                 konsumentGruppeId = Kafka.brregConsumerGroupId,
                 recordMetadata = sendtMelding
@@ -267,111 +240,13 @@ class KafkaContainerHelper(
         }
     }
 
-    suspend fun ventTilAlleMeldingerErKonsumert(
-        konsumentGruppe: String,
-        timeout: Duration = Duration.ofSeconds(10)
-    ) {
-        withTimeout(timeout) {
-            var topicOffset: Pair<String, Long>?
-            do {
-                delay(timeMillis = 10L)
-                val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
-                    .partitionsToOffsetAndMetadata().get()
-
-                topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
-                    OffsetSpec.latest()
-                }).all().get().map { Pair(it.key.topic(), it.value.offset()) }.firstOrNull()
-            } while (topicOffset == null)
-
-            do {
-                delay(timeMillis = 10L)
-            } while (topicOffset.second - consumerSinOffset(
-                    consumerGroup = konsumentGruppe,
-                    topic = topicOffset.first
-                ) != 0L
-            )
-        }
-    }
-
-    private fun TestVirksomhet.tilProducerRecord(): ProducerRecord<String, String> {
-        val oppdateringVirksomhet = OppdateringVirksomhet(
-            orgnummer = this.orgnr,
-            oppdateringsid = 100001L,
-            endringstype = Ny,
-            metadata = BrregVirksomhetDto(
-                organisasjonsnummer = this.orgnr,
-                oppstartsdato = "2023-01-01",
-                navn = this.navn,
-                beliggenhetsadresse = this.beliggenhet,
-                naeringskode1 = NæringsundergruppeBrreg(
-                    kode = this.næringsundergruppe1.kode,
-                    beskrivelse = this.næringsundergruppe1.navn
-                ),
-                naeringskode2 =
-                if (this.næringsundergruppe2 != null) {
-                    NæringsundergruppeBrreg(
-                        kode = this.næringsundergruppe2.kode,
-                        beskrivelse = this.næringsundergruppe2.navn
-                    )
-                } else {
-                    null
-                },
-                naeringskode3 =
-                if (this.næringsundergruppe3 != null) {
-                    NæringsundergruppeBrreg(
-                        kode = this.næringsundergruppe3.kode,
-                        beskrivelse = this.næringsundergruppe3.navn
-                    )
-                } else {
-                    null
-                },
-            ),
-            endringstidspunkt = now()
-        )
-        return ProducerRecord(
+    private fun OppdateringVirksomhet.tilProducerRecord() = ProducerRecord(
             brregOppdateringTopic,
-            this.orgnr,
+            this.orgnummer,
             Json.encodeToString(
-                oppdateringVirksomhet
+                this
             )
         )
-    }
-
-    private fun TestVirksomhet.tilBrregVirksomhetDtoProducerRecord(): ProducerRecord<String, String> {
-        val virksomhet = BrregVirksomhetDto(
-            organisasjonsnummer = this.orgnr,
-            oppstartsdato = "2023-01-01",
-            navn = this.navn,
-            beliggenhetsadresse = this.beliggenhet,
-            naeringskode1 = NæringsundergruppeBrreg(
-                kode = this.næringsundergruppe1.kode,
-                beskrivelse = this.næringsundergruppe1.navn
-            ),
-            naeringskode2 =
-            if (this.næringsundergruppe2 != null) {
-                NæringsundergruppeBrreg(
-                    kode = this.næringsundergruppe2.kode,
-                    beskrivelse = this.næringsundergruppe2.navn
-                )
-            } else {
-                null
-            },
-            naeringskode3 =
-            if (this.næringsundergruppe3 != null) {
-                NæringsundergruppeBrreg(
-                    kode = this.næringsundergruppe3.kode,
-                    beskrivelse = this.næringsundergruppe3.navn
-                )
-            } else {
-                null
-            },
-        )
-        return ProducerRecord(
-            brregAlleVirksomheterTopic,
-            this.orgnr,
-            Json.encodeToString(virksomhet)
-        )
-    }
 
     private fun SykefraversstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
         ProducerRecord(
