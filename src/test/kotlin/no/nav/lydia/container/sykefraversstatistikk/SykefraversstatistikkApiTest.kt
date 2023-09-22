@@ -660,23 +660,6 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `skal kunne hente virksomheter for et bestemt år og kvartal`() {
-        val forrigePeriode = gjeldendePeriode.forrigePeriode()
-        hentSykefravær(
-            success = { response ->
-                response.data shouldHaveAtLeastSize 1
-                response.data.forAll {
-                    it.kvartal shouldBe forrigePeriode.kvartal
-                    it.arstall shouldBe forrigePeriode.årstall
-                }
-            },
-            kvartal = forrigePeriode.kvartal.toString(),
-            årstall = forrigePeriode.årstall.toString(),
-            token = mockOAuth2Server.saksbehandler1.token
-        )
-    }
-
-    @Test
     fun `skal kunne hente alle virksomheter`() {
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
@@ -1089,9 +1072,6 @@ class SykefraversstatistikkApiTest {
         hentSykefraværRespons(sykefraværsprosentFra = "NaN").statuskode() shouldBe 400
         hentSykefraværRespons(sykefraværsprosentFra = "aaa").statuskode() shouldBe 400
         hentSykefraværRespons(side = "side").statuskode() shouldBe 400
-        hentSykefraværRespons(kvartal = "5").statuskode() shouldBe 400
-        hentSykefraværRespons(kvartal = "kvartal").statuskode() shouldBe 400
-        hentSykefraværRespons(årstall = "årstall").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteFra = "ansatteFra").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteTil = "ansatteTil").statuskode() shouldBe 400
     }

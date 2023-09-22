@@ -7,7 +7,6 @@ import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
@@ -223,17 +222,16 @@ class AuditLogTest {
 
     @Test
     fun `auditlogger søk med få parametere`() {
-        val gjeldendePeriode = TestData.gjeldendePeriode
         val saksbehandler = mockOAuth2Server.saksbehandler1
         StatistikkHelper.hentSykefravær()
         .also {
             lydiaApiContainer shouldContainLog auditLog(
-                path = "/sykefraversstatistikk?kvartal=&arstall=&kommuner=&fylker=&neringsgrup",
+                path = "/sykefraversstatistikk?kommuner=&fylker=&neringsgrupper=&sorteringsnok",
                 method = "GET",
                 navIdent = saksbehandler.navIdent,
                 auditType = AuditType.access,
                 tillat = Tillat.Ja,
-                melding = "Søk med parametere: kvartal=${gjeldendePeriode.kvartal} arstall=${gjeldendePeriode.årstall} sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
+                melding = "Søk med parametere: sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
             )
         }
     }
@@ -242,8 +240,6 @@ class AuditLogTest {
     fun `auditlogger søk med masse parametere`() {
         val saksbehandler = mockOAuth2Server.saksbehandler1
         StatistikkHelper.hentSykefravær(
-            kvartal = "3",
-            årstall = "2022",
             kommuner = "1750",
             fylker = "17",
             næringsgrupper = "bil",
@@ -260,12 +256,12 @@ class AuditLogTest {
         )
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
-                    path = "/sykefraversstatistikk?kvartal=3&arstall=2022&kommuner=1750&fylker=17&",
+                    path = "/sykefraversstatistikk?kommuner=1750&fylker=17&neringsgrupper=bil&sort",
                     method = "GET",
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
-                    melding = "Søk med parametere: sykefraversprosentFra=5.0 sykefraversprosentTil=30.0 kvartal=3 arstall=2022 ansatteFra=10 ansatteTil=50 kommuner=[1750] neringsgrupper=[bil] iaStatus=50 sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2"
+                    melding = "Søk med parametere: sykefraversprosentFra=5.0 sykefraversprosentTil=30.0 ansatteFra=10 ansatteTil=50 kommuner=[1750] neringsgrupper=[bil] iaStatus=50 sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2"
                 )
             }
     }
