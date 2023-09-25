@@ -50,6 +50,22 @@ class TestData(
                 sykefraværsProsent = sykefraværsProsent
             )
 
+        fun Periode.lagPerioder(antall: Int): List<Periode> {
+            return rekursivtLagPerioder(antall, mutableListOf(), this)
+        }
+
+        private fun rekursivtLagPerioder(
+                perioderIgjen: Int,
+                perioder: MutableList<Periode>,
+                periode: Periode
+        ): List<Periode> {
+            return if (perioderIgjen == 0) {
+                perioder
+            } else {
+                perioder.add(periode)
+                rekursivtLagPerioder(perioderIgjen - 1, perioder, periode.forrigePeriode())
+            }
+        }
     }
 
     private val sykefraværsstatistikkVirksomhetKafkaMeldinger =
@@ -67,7 +83,7 @@ class TestData(
             )
             lagData(
                 virksomhet = TestVirksomhet.BERGEN,
-                perioder = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
+                perioder = gjeldendePeriode.lagPerioder(20),
                 sykefraværsProsent = 7.0
             )
 
@@ -78,18 +94,18 @@ class TestData(
             lagData(virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_IMPORT, emptyList())
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER,
-                listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
+                perioder = gjeldendePeriode.lagPerioder(2),
                 sykefraværsProsent = 6.0
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG,
-                listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
+                perioder = gjeldendePeriode.lagPerioder(2),
                 antallPersoner = 42.0,
                 sykefraværsProsent = 6.0
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_OPPDATERING,
-                listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
+                perioder = gjeldendePeriode.lagPerioder(2),
                 antallPersoner = 42.0,
                 sykefraværsProsent = 6.0
             )
