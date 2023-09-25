@@ -72,6 +72,7 @@ class KafkaContainerHelper(
         .withLogConsumer(Slf4jLogConsumer(log).withPrefix(kafkaNetworkAlias).withSeparateOutputStreams())
         .withEnv(
             mapOf(
+                "KAFKA_LOG4J_LOGGERS" to "org.apache.kafka.image.loader.MetadataLoader=WARN",
                 "KAFKA_AUTO_LEADER_REBALANCE_ENABLE" to "false",
                 "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS" to "1",
                 "TZ" to TimeZone.getDefault().id
