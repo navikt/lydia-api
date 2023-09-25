@@ -14,15 +14,12 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
-import no.nav.lydia.sykefraversstatistikk.domene.BransjeSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
-import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
-import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
+import no.nav.lydia.sykefraversstatistikk.domene.*
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
+import kotlin.system.measureTimeMillis
 
 class SykefraværsstatistikkService(
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
@@ -156,6 +153,20 @@ class SykefraværsstatistikkService(
 
         return sykefraværForVirksomhetSisteKvartal?.right()
             ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+    }
+
+    fun hentVirksomhetsstatistikkSiden2019(orgnummer: String) : Either<Feil, VirksomhetsstatistikkSiden2019> {
+        var virksomhetsstatistikk : VirksomhetsstatistikkSiden2019
+        val tidsbruk = measureTimeMillis {
+            virksomhetsstatistikk = VirksomhetsstatistikkSiden2019 (
+                    orgnr= orgnummer,
+                    kvartalliste = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartalSiden2019(orgnr = orgnummer),
+                    årsliste = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerÅrSiden2019(orgnr = orgnummer)
+            )
+        }
+        log.info("Brukte ${tidsbruk} ms på å hente statistikk for en virksomhet")
+        return virksomhetsstatistikk?.right()
+                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
     fun hentNæringsstatistikk(næringskode: String): Either<Feil, NæringSykefraværsstatistikk> {
