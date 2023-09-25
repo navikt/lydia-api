@@ -28,6 +28,7 @@ const val ANTALL_TREFF = "antallTreff"
 const val SISTE_4_KVARTALER = "siste4kvartaler"
 const val PUBLISERINGSINFO = "publiseringsinfo"
 const val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
+const val STATISTIKKDATA = "statistikkdata"
 
 fun Route.sykefraversstatistikk(
     sistePubliseringService: SistePubliseringService,
@@ -86,6 +87,21 @@ fun Route.sykefraversstatistikk(
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(orgnummer)
+        }.also {
+            auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
+        }.map { sykefraværsstatistikk ->
+            call.respond(sykefraværsstatistikk)
+        }.mapLeft { feil ->
+            call.respond(status = feil.httpStatusCode, message = feil.feilmelding)
+        }
+    }
+
+    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$STATISTIKKDATA") {
+        val orgnummer =
+                call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            sykefraværsstatistikkService.hentVirksomhetsstatistikkSiden2019(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikk ->
