@@ -24,8 +24,8 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerP
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSnitt
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåStatus
+import no.nav.lydia.sykefraversstatistikk.domene.Statistikkdata
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
-import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
@@ -183,7 +183,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-    fun hentVirksomhetsstatistikkPerKvartalSiden2019(orgnr: String) =
+    fun hentVirksomhetsstatistikkPerKvartal(orgnr: String) =
             using(sessionOf(dataSource)) { session ->
                 val query = queryOf(
                         statement = """
@@ -200,13 +200,11 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         paramMap = mapOf(
                                 "orgnr" to orgnr
                         )
-                ).map { mapRowToVirksomhetsstatistikk(it) }.asList
+                ).map { mapRowToStatistikkdata(it) }.asList
                 session.run(query)
-
             }
 
-    private fun mapRowToVirksomhetsstatistikk(row: Row) = Virksomhetsstatistikk(
-            orgnr = row.string("orgnr"),
+    private fun mapRowToStatistikkdata(row: Row) = Statistikkdata(
             årstall = row.int("arstall"),
             kvartal = row.int("kvartal"),
             sykefraværsprosent = row.double("sykefraversprosent"),

@@ -155,12 +155,16 @@ class SykefraværsstatistikkService(
             ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
-    fun hentVirksomhetsstatistikkSiden2019(orgnummer: String) : Either<Feil, VirksomhetsstatistikkSiden2019> {
-        var virksomhetsstatistikk : VirksomhetsstatistikkSiden2019
+    fun hentHistoriskStatistikk(orgnummer: String) : Either<Feil, HistoriskStatistikk> {
+        var virksomhetsstatistikk : HistoriskStatistikk
         val tidsbruk = measureTimeMillis {
-            virksomhetsstatistikk = VirksomhetsstatistikkSiden2019 (
-                    orgnr= orgnummer,
-                    kvartalliste = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartalSiden2019(orgnr = orgnummer),
+            virksomhetsstatistikk = HistoriskStatistikk (
+                    virksomhetsstatistikk =
+                        KategoriStatistikk(
+                            kategori = VIRKSOMHET,
+                            kode = orgnummer,
+                            statistikk = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartal(orgnr = orgnummer)
+                        ),
             )
         }
         log.info("Brukte ${tidsbruk} ms på å hente statistikk for en virksomhet")
