@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 data class VirksomhetsstatistikkSiden2019(
         val orgnr: String,
         val kvartalliste : List<Virksomhetsstatistikk>,
-        val årsliste : List<Virksomhetsstatistikk>,
 )
 
 @Serializable

@@ -205,28 +205,6 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
 
             }
 
-    fun hentVirksomhetsstatistikkPerÅrSiden2019(orgnr: String) =
-            using(sessionOf(dataSource)) { session ->
-                val query = queryOf(
-                        statement = """
-                    SELECT
-                        orgnr,
-                        arstall,
-                        kvartal,
-                        sykefraversprosent,
-                        maskert
-                  FROM sykefravar_statistikk_virksomhet_siste_4_kvartal
-                  WHERE (orgnr = :orgnr)
-                  ORDER BY arstall DESC, kvartal DESC
-                """.trimIndent(),
-                        paramMap = mapOf(
-                                "orgnr" to orgnr
-                        )
-                ).map { mapRowToVirksomhetsstatistikk(it) }.asList
-                session.run(query)
-
-            }
-
     private fun mapRowToVirksomhetsstatistikk(row: Row) = Virksomhetsstatistikk(
             orgnr = row.string("orgnr"),
             årstall = row.int("arstall"),
