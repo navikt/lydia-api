@@ -161,12 +161,10 @@ class SykefraværsstatistikkService(
             virksomhetsstatistikk = VirksomhetsstatistikkSiden2019 (
                     orgnr= orgnummer,
                     kvartalliste = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartalSiden2019(orgnr = orgnummer),
-                    årsliste = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerÅrSiden2019(orgnr = orgnummer)
             )
         }
         log.info("Brukte ${tidsbruk} ms på å hente statistikk for en virksomhet")
-        return virksomhetsstatistikk?.right()
-                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+        return virksomhetsstatistikk.right()
     }
 
     fun hentNæringsstatistikk(næringskode: String): Either<Feil, NæringSykefraværsstatistikk> {

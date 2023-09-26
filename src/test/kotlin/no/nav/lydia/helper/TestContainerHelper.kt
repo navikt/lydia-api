@@ -54,18 +54,9 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoverikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
-import no.nav.lydia.sykefraversstatistikk.api.ANTALL_TREFF
-import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
-import no.nav.lydia.sykefraversstatistikk.api.FilterverdierDto
-import no.nav.lydia.sykefraversstatistikk.api.PUBLISERINGSINFO
-import no.nav.lydia.sykefraversstatistikk.api.SISTE_4_KVARTALER
-import no.nav.lydia.sykefraversstatistikk.api.SISTE_TILGJENGELIGE_KVARTAL
-import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
-import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktDto
-import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsoversiktResponsDto
-import no.nav.lydia.sykefraversstatistikk.api.VirksomhetsstatistikkSiste4KvartalDto
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiden2019
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -666,6 +657,18 @@ class StatistikkHelper {
             )
                 .authentication().bearer(token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>()
+
+        fun hentStatikkHistorikk(orgnr: String) = hentStatistikkHistorikkRespons(orgnr).third.get()
+        private fun hentStatistikkHistorikkRespons(
+                orgnr: String,
+                token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) =
+                lydiaApiContainer.performGet(
+                        "$SYKEFRAVERSSTATISTIKK_PATH/$orgnr/$STATISTIKKDATA"
+                )
+                        .authentication().bearer(token)
+                        .tilSingelRespons<VirksomhetsstatistikkSiden2019>()
+
 
         fun hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer: String,
