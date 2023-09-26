@@ -101,7 +101,7 @@ fun Route.sykefraversstatistikk(
                 call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            sykefraværsstatistikkService.hentVirksomhetsstatistikkSiden2019(orgnummer)
+            sykefraværsstatistikkService.hentHistoriskStatistikk(orgnummer)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map { sykefraværsstatistikk ->

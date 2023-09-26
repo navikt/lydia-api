@@ -56,7 +56,7 @@ import no.nav.lydia.statusoverikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
 import no.nav.lydia.sykefraversstatistikk.api.*
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
-import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiden2019
+import no.nav.lydia.sykefraversstatistikk.domene.HistoriskStatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -667,7 +667,7 @@ class StatistikkHelper {
                         "$SYKEFRAVERSSTATISTIKK_PATH/$orgnr/$STATISTIKKDATA"
                 )
                         .authentication().bearer(token)
-                        .tilSingelRespons<VirksomhetsstatistikkSiden2019>()
+                        .tilSingelRespons<HistoriskStatistikk>()
 
 
         fun hentSykefraværForVirksomhetSiste4KvartalerRespons(

@@ -650,13 +650,13 @@ class SykefraversstatistikkApiTest {
 
         val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
 
-        resultat.kvartalliste shouldHaveSize 12
+        resultat.virksomhetsstatistikk.statistikk shouldHaveSize 12
 
-        resultat.kvartalliste.map {
+        resultat.virksomhetsstatistikk.statistikk.map {
             Periode(kvartal = it.kvartal, årstall = it.årstall)
         }   shouldContainAll perioder
 
-        resultat.kvartalliste.forAll { it.sykefraværsprosent shouldBe 78.9 }
+        resultat.virksomhetsstatistikk.statistikk.forAll { it.sykefraværsprosent shouldBe 78.9 }
     }
 
     @Test
