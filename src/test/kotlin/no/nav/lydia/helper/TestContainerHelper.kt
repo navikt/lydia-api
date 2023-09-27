@@ -664,7 +664,7 @@ class StatistikkHelper {
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
                 lydiaApiContainer.performGet(
-                        "$SYKEFRAVERSSTATISTIKK_PATH/$orgnr/$STATISTIKKDATA"
+                        "$SYKEFRAVERSSTATISTIKK_PATH/$orgnr/$HISTORISK_STATISTIKK"
                 )
                         .authentication().bearer(token)
                         .tilSingelRespons<HistoriskStatistikk>()

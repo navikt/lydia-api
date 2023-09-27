@@ -28,7 +28,7 @@ const val ANTALL_TREFF = "antallTreff"
 const val SISTE_4_KVARTALER = "siste4kvartaler"
 const val PUBLISERINGSINFO = "publiseringsinfo"
 const val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
-const val STATISTIKKDATA = "statistikkdata"
+const val HISTORISK_STATISTIKK = "historiskstatistikk"
 
 fun Route.sykefraversstatistikk(
     sistePubliseringService: SistePubliseringService,
@@ -96,7 +96,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$STATISTIKKDATA") {
+    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$HISTORISK_STATISTIKK") {
         val orgnummer =
                 call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
