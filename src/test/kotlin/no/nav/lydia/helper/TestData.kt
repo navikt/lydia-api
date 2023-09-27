@@ -83,7 +83,7 @@ class TestData(
             )
             lagData(
                 virksomhet = TestVirksomhet.BERGEN,
-                perioder = gjeldendePeriode.lagPerioder(20),
+                perioder = gjeldendePeriode.lagPerioder(2),
                 sykefraværsProsent = 7.0
             )
 
@@ -112,6 +112,11 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK,
                 listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
+            )
+            lagData(
+                virksomhet = TestVirksomhet.VIRKSOMHET_MED_HISTORISK_STATISTIKK,
+                gjeldendePeriode.lagPerioder(20),
+                tapteDagsverk = 1_000_000.0
             )
 
         }
