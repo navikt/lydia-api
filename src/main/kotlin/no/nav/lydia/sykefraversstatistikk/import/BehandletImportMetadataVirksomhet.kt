@@ -39,7 +39,6 @@ fun String.fraSykefraværsstistikkSektortilSektor(): Sektor? {
         "STATLIG" -> Sektor.STATLIG
         "KOMMUNAL" -> Sektor.KOMMUNAL
         "PRIVAT" -> Sektor.PRIVAT
-        "FYLKESKOMMUNAL_FORVALTNING" -> Sektor.FYLKESKOMMUNAL_FORVALTNING
         else -> null
     }
 }

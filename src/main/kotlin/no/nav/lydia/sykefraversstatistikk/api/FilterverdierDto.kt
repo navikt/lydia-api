@@ -17,9 +17,6 @@ data class FilterverdierDto(
     val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser(),
     val filtrerbareEiere: List<EierDTO> = emptyList(),
     val sektorer: List<SektorDto> = Sektor.entries
-        // -- TODO: fjern når vi har fått data i DB
-        .filter { it != Sektor.FYLKESKOMMUNAL_FORVALTNING }
-        // -- END TODO
         .map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },
 )
 

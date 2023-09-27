@@ -123,7 +123,7 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
                 perioder = listOf(gjeldendePeriode),
-                sektor = Sektor.entries[(0..3).random()]
+                sektor = Sektor.entries[(0..2).random()]
             )
         }
     }

@@ -411,9 +411,6 @@ class SykefraversstatistikkApiTest {
             )
         )
         filterverdier.sektorer.map { it.kode } shouldBe Sektor.entries
-            // -- TODO: fjern når vi har fått data i DB
-            .filter { it != Sektor.FYLKESKOMMUNAL_FORVALTNING }
-            // -- END TODO
             .map { it.kode }
     }
 
@@ -1067,12 +1064,6 @@ class SykefraversstatistikkApiTest {
         hentSykefraværRespons(side = "side").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteFra = "ansatteFra").statuskode() shouldBe 400
         hentSykefraværRespons(ansatteTil = "ansatteTil").statuskode() shouldBe 400
-    }
-
-    @Test
-    fun `skal kunne filtrere på FYLKESKOMMUNAL_FORVALTNING sektor`() {
-        lastInnNyVirksomhet(nyVirksomhet(), sektor = Sektor.FYLKESKOMMUNAL_FORVALTNING)
-        hentSykefravær(sektor = listOf(Sektor.FYLKESKOMMUNAL_FORVALTNING)).data shouldHaveAtLeastSize 1
     }
 
     companion object {
