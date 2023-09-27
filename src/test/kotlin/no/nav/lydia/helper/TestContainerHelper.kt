@@ -27,6 +27,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
+import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
@@ -72,6 +73,8 @@ import kotlin.test.fail
 
 class TestContainerHelper {
     companion object {
+        const val ANTALL_NÆRINGS_PERIODER = 10
+
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
         private val network = Network.newNetwork()
@@ -123,16 +126,18 @@ class TestContainerHelper {
 
             // -- generer statistikk for næringer
             kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                importDtoer = næringsRepository.hentNæringer().map {
-                    lagSykefraversstatistikkPerKategoriImportDto(
-                        kategori = Kategori.NÆRING,
-                        kode = it.kode,
-                        periode = TestData.gjeldendePeriode,
-                        sykefraværsProsent = 5.0,
-                        antallPersoner = 1000,
-                        muligeDagsverk = 250_000.0,
-                        tapteDagsverk = 12_500.0,
-                    )
+                importDtoer = næringsRepository.hentNæringer().flatMap{ næring ->
+                    TestData.gjeldendePeriode.lagPerioder(ANTALL_NÆRINGS_PERIODER).map { periode ->
+                        lagSykefraversstatistikkPerKategoriImportDto(
+                            kategori = Kategori.NÆRING,
+                            kode = næring.kode,
+                            periode = periode,
+                            sykefraværsProsent = 5.0,
+                            antallPersoner = 1000,
+                            muligeDagsverk = 250_000.0,
+                            tapteDagsverk = 12_500.0,
+                        )
+                    }
                 },
                 topic = KafkaContainerHelper.statistikkNæringTopic,
                 groupId = Kafka.statistikkNæringGroupId

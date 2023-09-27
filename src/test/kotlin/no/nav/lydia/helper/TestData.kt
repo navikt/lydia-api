@@ -1,6 +1,5 @@
 package no.nav.lydia.helper
 
-import com.google.gson.Gson
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -206,52 +205,3 @@ fun lagSykefraversstatistikkPerKategoriImportDto(
             kvartaler = listOf(TestData.gjeldendePeriode.tilKvartal(), TestData.gjeldendePeriode.forrigePeriode().tilKvartal())
         )
     )
-
-
-fun TestVirksomhet.brregUnderenhetJson() =
-    """
-        {
-            "organisasjonsnummer" : "$orgnr",
-            "navn" : "$navn",
-            "organisasjonsform" : {
-              "kode" : "BEDR",
-              "beskrivelse" : "Bedrift",
-              "links" : [ ]
-            },
-            "registreringsdatoEnhetsregisteret" : "2010-08-25",
-            "registrertIMvaregisteret" : false,
-            "naeringskode1" : {
-              "beskrivelse" : "${næringsundergruppe1.navn}",
-              "kode" : "${næringsundergruppe1.kode}"
-            },            
-            ${
-        næringsundergruppe2?.let {
-            """
-                    "naeringskode2" : {
-                      "beskrivelse" : "${it.navn}",
-                      "kode" : "${it.kode}"
-                    },                     
-                """.trimIndent()
-        } ?: ""
-    }
-            ${
-        næringsundergruppe3?.let {
-            """
-                    "naeringskode3" : {
-                      "beskrivelse" : "${it.navn}",
-                      "kode" : "${it.kode}"
-                    },                     
-                """.trimIndent()
-        } ?: ""
-    }
-            "antallAnsatte" : 1,
-            "overordnetEnhet" : "999888777",
-            "oppstartsdato" : "2010-07-01",
-            ${
-        beliggenhet?.let {
-            "\"beliggenhetsadresse\":" + Gson().toJson(it) + ","
-        } ?: ""
-    }
-            "links" : [ ]
-        }
-    """.trimIndent()

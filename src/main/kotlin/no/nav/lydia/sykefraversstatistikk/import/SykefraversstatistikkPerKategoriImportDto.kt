@@ -10,7 +10,25 @@ import kotlinx.serialization.Serializable
 //  - Næring: det andre nivået i SN2007 identifisert ved en tosifret tallkode
 //  - Næringskode: femte nivå identifisert ved en femsifret tallkode (kalt også - feilaktig - 'bransje')
 enum class Kategori {
-    VIRKSOMHET, LAND, SEKTOR, BRANSJE, NÆRING, NÆRINGSKODE
+    VIRKSOMHET, LAND, SEKTOR, BRANSJE, NÆRING, NÆRINGSKODE;
+
+    fun tabellnavn() = when (this) {
+        LAND -> "sykefravar_statistikk_land"
+        SEKTOR -> "sykefravar_statistikk_sektor"
+        BRANSJE -> "sykefravar_statistikk_bransje"
+        NÆRING -> "sykefravar_statistikk_naring"
+        NÆRINGSKODE -> "sykefravar_statistikk_naringsundergruppe"
+        VIRKSOMHET -> "sykefravar_statistikk_virksomhet"
+    }
+
+    fun kodenavn() = when (this) {
+        LAND -> "land"
+        SEKTOR -> "sektor_kode"
+        BRANSJE -> "bransje"
+        NÆRING -> "naring"
+        NÆRINGSKODE -> "naringsundergruppe"
+        VIRKSOMHET -> "orgnr"
+    }
 }
 
 data class SykefraversstatistikkPerKategoriImportDto(

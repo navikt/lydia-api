@@ -72,32 +72,17 @@ class SykefraversstatistikkImportTestUtils {
         val KVARTAL_2022_3 = Kvartal(2022, 3)
         val KVARTAL_2022_2 = Kvartal(2022, 2)
         val KVARTAL_2022_1 = Kvartal(2022, 1)
-        private val tabellnavn = mapOf(
-                Kategori.LAND to "sykefravar_statistikk_land",
-                Kategori.SEKTOR to "sykefravar_statistikk_sektor",
-                Kategori.BRANSJE to "sykefravar_statistikk_bransje",
-                Kategori.NÆRING to "sykefravar_statistikk_naring",
-                Kategori.NÆRINGSKODE to "sykefravar_statistikk_naringsundergruppe",
-                Kategori.VIRKSOMHET to "sykefravar_statistikk_virksomhet"
-        )
-        private val kodenavn = mapOf(
-                Kategori.LAND to "land",
-                Kategori.SEKTOR to "sektor_kode",
-                Kategori.BRANSJE to "bransje",
-                Kategori.NÆRING to "naring",
-                Kategori.NÆRINGSKODE to "naringsundergruppe",
-                Kategori.VIRKSOMHET to "orgnr"
-        )
+
 
         fun cleanUpStatistikkTable(
                 kategori: Kategori,
                 verdi: String? = null,
                 kvartal: Kvartal = TestData.gjeldendePeriode.tilKvartal(),
         ) {
-            val optionalClauseOnKode = if (verdi == null) "" else "and ${kodenavn[kategori]} = '$verdi'"
+            val optionalClauseOnKode = if (verdi == null) "" else "and ${kategori.kodenavn()} = '$verdi'"
 
             TestContainerHelper.postgresContainer.performUpdate("""
-            delete from ${tabellnavn.get(kategori)} 
+            delete from ${kategori.tabellnavn()} 
             where arstall = ${kvartal.årstall}
               and kvartal = ${kvartal.kvartal}
               $optionalClauseOnKode
@@ -187,8 +172,8 @@ class SykefraversstatistikkImportTestUtils {
         ): StatistikkGjeldendeKvartal {
             val erKategoriTabell = kategori != Kategori.VIRKSOMHET
             val query = """
-            select * from ${tabellnavn[kategori]} 
-             where ${kodenavn[kategori]} = '$verdi'
+            select * from ${kategori.tabellnavn()} 
+             where ${kategori.kodenavn()} = '$verdi'
              and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
         """.trimMargin()
             TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
@@ -199,7 +184,7 @@ class SykefraversstatistikkImportTestUtils {
                 rs.row shouldBe 1
                 return StatistikkGjeldendeKvartal(
                         kategori = kategori,
-                        kode = rs.getString(kodenavn[kategori]),
+                        kode = rs.getString(kategori.kodenavn()),
                         sistePubliserteKvartal = SistePubliserteKvartal(
                                 årstall = rs.getInt("arstall"),
                                 kvartal = rs.getInt("kvartal"),

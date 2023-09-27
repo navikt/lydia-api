@@ -28,6 +28,7 @@ import no.nav.lydia.sykefraversstatistikk.domene.Statistikkdata
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
+import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import javax.sql.DataSource
 
@@ -183,6 +184,31 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
+
+    fun hentNæringstatistikkPerKvartal(næring: String) =
+        hentKategoristatistikkPerKvartal(Kategori.NÆRING, næring)
+
+    private fun hentKategoristatistikkPerKvartal(kategori: Kategori, kode: String) =
+        using(sessionOf(dataSource)) { session ->
+            val query = queryOf(
+                statement = """
+                    SELECT
+                        ${kategori.kodenavn()},
+                        arstall,
+                        kvartal,
+                        prosent,
+                        maskert
+                  FROM ${kategori.tabellnavn()}
+                  WHERE ${kategori.kodenavn()} = :kode
+                  ORDER BY arstall DESC, kvartal DESC
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "kode" to kode
+                )
+            ).map { mapKategoriRowToStatistikkdata(it) }.asList
+            session.run(query)
+        }
+
     fun hentVirksomhetsstatistikkPerKvartal(orgnr: String) =
             using(sessionOf(dataSource)) { session ->
                 val query = queryOf(
@@ -200,11 +226,18 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         paramMap = mapOf(
                                 "orgnr" to orgnr
                         )
-                ).map { mapRowToStatistikkdata(it) }.asList
+                ).map { mapVirksomhetRowToStatistikkdata(it) }.asList
                 session.run(query)
             }
 
-    private fun mapRowToStatistikkdata(row: Row) = Statistikkdata(
+    private fun mapKategoriRowToStatistikkdata(row: Row) = Statistikkdata(
+        årstall = row.int("arstall"),
+        kvartal = row.int("kvartal"),
+        sykefraværsprosent = row.double("prosent"),
+        maskert = row.boolean("maskert"),
+    )
+
+    private fun mapVirksomhetRowToStatistikkdata(row: Row) = Statistikkdata(
             årstall = row.int("arstall"),
             kvartal = row.int("kvartal"),
             sykefraværsprosent = row.double("sykefraversprosent"),

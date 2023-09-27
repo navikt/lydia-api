@@ -5,7 +5,8 @@ import no.nav.lydia.sykefraversstatistikk.import.Kategori
 
 @Serializable
 data class HistoriskStatistikk(
-        val virksomhetsstatistikk: KategoriStatistikk,
+    val virksomhetsstatistikk: KategoriStatistikk,
+    val næringsstatistikk: KategoriStatistikk,
 )
 
 @Serializable

@@ -99,7 +99,9 @@ fun startLydiaBackend() {
         ),
         virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(
                 dataSource = dataSource,
-        ), sistePubliseringService = sistePubliseringService
+        ),
+        sistePubliseringService = sistePubliseringService,
+        virksomhetRepository = VirksomhetRepository(dataSource = dataSource),
     )
 
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
@@ -166,15 +168,16 @@ fun Application.lydiaRestApi(
     naisEnvironment: NaisEnvironment,
     dataSource: DataSource,
 ) {
-    val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource))
-    val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+    val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
+    val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
             virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
-                sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
+            sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
+            virksomhetRepository = virksomhetRepository,
         )
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)

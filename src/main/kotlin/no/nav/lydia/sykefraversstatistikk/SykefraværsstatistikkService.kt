@@ -17,6 +17,7 @@ import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraversstatistikk.domene.*
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
+import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
 import kotlin.system.measureTimeMillis
@@ -24,7 +25,8 @@ import kotlin.system.measureTimeMillis
 class SykefraværsstatistikkService(
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
-    val sistePubliseringService: SistePubliseringService
+    val sistePubliseringService: SistePubliseringService,
+    val virksomhetRepository: VirksomhetRepository,
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
@@ -158,6 +160,8 @@ class SykefraværsstatistikkService(
     fun hentHistoriskStatistikk(orgnummer: String) : Either<Feil, HistoriskStatistikk> {
         var virksomhetsstatistikk : HistoriskStatistikk
         val tidsbruk = measureTimeMillis {
+            val næring = virksomhetRepository.hentVirksomhet(orgnr = orgnummer)?.næringsundergruppe1?.tilTosifret()
+                ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
             virksomhetsstatistikk = HistoriskStatistikk (
                     virksomhetsstatistikk =
                         KategoriStatistikk(
@@ -165,9 +169,14 @@ class SykefraværsstatistikkService(
                             kode = orgnummer,
                             statistikk = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartal(orgnr = orgnummer)
                         ),
+                    næringsstatistikk = KategoriStatistikk(
+                        kategori = NÆRING,
+                        kode = næring,
+                        statistikk = virksomhetsinformasjonRepository.hentNæringstatistikkPerKvartal(næring = næring)
+                    )
             )
         }
-        log.info("Brukte ${tidsbruk} ms på å hente statistikk for en virksomhet")
+        log.info("Brukte $tidsbruk ms på å hente statistikk for en virksomhet")
         return virksomhetsstatistikk.right()
     }
 
