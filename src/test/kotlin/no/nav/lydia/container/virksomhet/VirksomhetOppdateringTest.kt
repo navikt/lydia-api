@@ -4,7 +4,6 @@ import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
 import kotlinx.datetime.Clock
 import no.nav.lydia.helper.TestContainerHelper
@@ -14,67 +13,22 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.genererEndretNavn
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
-import java.sql.Timestamp
 import kotlin.test.Test
 
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
 
     @Test
-    fun `vi oppdaterer næringsgrupper til en bedrift når vi importerer ALLE bedrifter`() {
-        val nyVirksomhet = nyVirksomhet(
-            beliggenhet = Beliggenhetsadresse(
-                    land = "NORGE",
-                    landkode = "NO",
-                    postnummer = "0100",
-                    poststed = "OSLO",
-                    adresse = listOf("Tertitten 1"),
-                    kommune = "OSLO",
-                    kommunenummer = "0300",
-            ), næringer = listOf(
-                Næringsgruppe(
-                        "Barnehager", "88.911"
-                ),
-                Næringsgruppe(
-                        "Dyrking av ettårige vekster ellers", "01.190"
-                )
-            )
-        )
-        lastInnNyVirksomhet(nyVirksomhet)
-
-        val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-                """select id from virksomhet
-                    where orgnr='${nyVirksomhet.orgnr}'
-                    """.trimIndent()
-        )
-
-        val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naringsundergruppe1 from virksomhet_naringsundergrupper
-                    where virksomhet= $virksomhetId
-                    """.trimIndent()
-        )
-
-        næringskode1 shouldBe "88.911"
-    }
-
-    @Test
     fun `vi oppdaterer næringsgrupper til en bedrift`() {
         val nyVirksomhet = nyVirksomhet(
-                beliggenhet = Beliggenhetsadresse(
-                        land = "NORGE",
-                        landkode = "NO",
-                        postnummer = "0100",
-                        poststed = "OSLO",
-                        adresse = listOf("Tertitten 1"),
-                        kommune = "OSLO",
-                        kommunenummer = "0300",
-                ), næringer = listOf(
+               næringer = listOf(
                         Næringsgruppe(
                                 "Barnehager", "88.911"
                         ),
@@ -96,33 +50,12 @@ class VirksomhetOppdateringTest {
         ))
         sendEndringForVirksomhet(oppdatertVirksomhet)
 
-        val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-                """select id from virksomhet
-                    where orgnr='${nyVirksomhet.orgnr}'
-                    """.trimIndent()
-        )
-
-        val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naringsundergruppe1 from virksomhet_naringsundergrupper
-                    where virksomhet= $virksomhetId
-                    """.trimIndent()
-        )
-
-        næringskode1 shouldBe "01.190"
+        oppdatertVirksomhet.skalHaRiktigTilstandEtterOppdatering()
     }
 
     @Test
     fun `vi lagrer næringsundergrupper til en bedrift`() {
-        val nyVirksomhet = nyVirksomhet(
-            beliggenhet = Beliggenhetsadresse(
-                land = "NORGE",
-                landkode = "NO",
-                postnummer = "0100",
-                poststed = "OSLO",
-                adresse = listOf("Tertitten 1"),
-                kommune = "OSLO",
-                kommunenummer = "0300",
-            ),
+        lastInnNyVirksomhet(nyVirksomhet(
             næringer = listOf(
                 Næringsgruppe(
                     navn = "Barnehager",
@@ -133,37 +66,7 @@ class VirksomhetOppdateringTest {
                     kode = "01.190"
                 )
             )
-        )
-        lastInnNyVirksomhet(nyVirksomhet)
-
-        val virksomhetId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>(
-            """select id from virksomhet
-                    where orgnr='${nyVirksomhet.orgnr}'
-                    """.trimIndent()
-        )
-
-        val næringskode1 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naringsundergruppe1 from virksomhet_naringsundergrupper
-                    where virksomhet= $virksomhetId
-                    """.trimIndent()
-        )
-
-        næringskode1 shouldBe "88.911"
-
-        val næringskode2 = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
-                """select naringsundergruppe2 from virksomhet_naringsundergrupper
-                    where virksomhet= $virksomhetId
-                    """.trimIndent()
-        )
-
-        næringskode2 shouldBe "01.190"
-
-        val oppdateringsdato = TestContainerHelper.postgresContainer.hentEnkelKolonne<Timestamp>(
-                """select oppdateringsdato from virksomhet_naringsundergrupper
-                    where virksomhet = $virksomhetId
-                """.trimIndent()
-        )
-        oppdateringsdato shouldNotBe null
+        )).skalHaRiktigTilstand()
     }
 
     @Test
@@ -226,7 +129,7 @@ private fun genererOppdateringsid(testVirksomhet: TestVirksomhet) =
     testVirksomhet.orgnr.toLong() + 1L
 
 private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(
-    status: VirksomhetStatus,
+    status: VirksomhetStatus = VirksomhetStatus.AKTIV,
     navn: String = this.navn
 ): VirksomhetDto {
     val virksomhetDto = skalHaRiktigTilstand(status, navn)
@@ -235,12 +138,12 @@ private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(
 }
 
 private fun TestVirksomhet.skalHaRiktigTilstand(
-    status: VirksomhetStatus,
+    status: VirksomhetStatus = VirksomhetStatus.AKTIV,
     navn: String = this.navn,
     token: String = TestContainerHelper.oauth2ServerContainer.superbruker1.token
 ): VirksomhetDto {
     val virksomhetDto =
-        VirksomhetHelper.hentVirksomhetsinformasjon(orgnummer = this.orgnr, token)
+        hentVirksomhetsinformasjon(orgnummer = this.orgnr, token)
 
     virksomhetDto.orgnr shouldBe this.orgnr
     virksomhetDto.navn shouldBe navn
