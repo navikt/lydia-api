@@ -661,20 +661,37 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal hente statistikk for alle kvartaler for en virksomhet`() {
+        val næring = TestData.BARNEHAGER
+
+        SykefraversstatistikkImportTestUtils.cleanUpStatistikkTable(
+            kategori = Kategori.NÆRING,
+            verdi = næring.tilTosifret(),
+            kvartal = gjeldendePeriode.tilKvartal()
+        )
+        settSykefraværsprosentNæring(
+            næring = næring.tilTosifret(),
+            prosentSiste4Kvartal = 5.0,
+            prosentSistePubliserteKvartal = 75.0,
+        )
+
         val perioder = gjeldendePeriode.lagPerioder(12)
-        val nyVirksomhet = lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(), perioder = perioder, sykefraværsProsent = 78.9)
+        val nyVirksomhet = lastInnNyVirksomhet(
+            nyVirksomhet = nyVirksomhet(næringer = listOf(næring)),
+            perioder = perioder,
+            sykefraværsProsent = 78.9,
+        )
 
         val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
 
         resultat.virksomhetsstatistikk.statistikk shouldHaveSize perioder.size
-//        resultat.næringsstatistikk.statistikk shouldHaveSize ANTALL_NÆRINGS_PERIODER
+        resultat.næringsstatistikk.statistikk shouldHaveAtLeastSize 1
 
         resultat.virksomhetsstatistikk.statistikk.map {
             Periode(kvartal = it.kvartal, årstall = it.årstall)
         }   shouldContainAll perioder
 
         resultat.virksomhetsstatistikk.statistikk.forAll { it.sykefraværsprosent shouldBe 78.9 }
-//        resultat.næringsstatistikk.statistikk.forAll { it.sykefraværsprosent shouldBe 5.0 }
+        resultat.næringsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 75.0 }
     }
 
     @Test
