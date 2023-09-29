@@ -13,7 +13,6 @@ class TestData(
     antallTilfeldigeVirksomheter: Int = 0,
 ) {
     companion object {
-        const val LANDKODE_NO = "NO"
         const val BRANSJE_BARNEHAGE = "Barnehager"
         const val BRANSJE_NÆRINGSMIDDELINDUSTRI = "Næringsmiddelindustri"
         const val NÆRING_JORDBRUK = "01"

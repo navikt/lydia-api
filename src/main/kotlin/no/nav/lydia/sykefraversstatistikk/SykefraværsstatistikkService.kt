@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
 import kotlin.system.measureTimeMillis
 
+const val LANDKODE_NO = "NO"
+
 class SykefraværsstatistikkService(
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
@@ -185,6 +187,11 @@ class SykefraværsstatistikkService(
                             kategori = SEKTOR,
                             kode = sektor?.kode ?: "",
                             statistikk = sektor?.let { virksomhetsinformasjonRepository.hentSektorstatistikkPerKvartal(sektor = it) } ?: emptyList()
+                    ),
+                    landsstatistikk = KategoriStatistikk(
+                            kategori = LAND,
+                            kode = LANDKODE_NO,
+                            statistikk = virksomhetsinformasjonRepository.hentLandsstatistikkPerKvartal()
                     )
             )
         }

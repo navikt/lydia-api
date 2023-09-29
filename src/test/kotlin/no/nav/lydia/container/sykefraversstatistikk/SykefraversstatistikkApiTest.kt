@@ -78,6 +78,7 @@ import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
+import no.nav.lydia.sykefraversstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
 import no.nav.lydia.sykefraversstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraversstatistikk.api.Periode
@@ -685,6 +686,10 @@ class SykefraversstatistikkApiTest {
                 prosentSiste4Kvartal = 5.0,
                 prosentSistePubliserteKvartal = 79.9,
         )
+        settSykefraværsprosentLand(
+                prosentSiste4Kvartal = 5.0,
+                prosentSistePubliserteKvartal = 99.9,
+        )
 
         val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
 
@@ -692,6 +697,7 @@ class SykefraversstatistikkApiTest {
         resultat.næringsstatistikk.statistikk shouldHaveAtLeastSize 1
         resultat.bransjestatistikk.statistikk shouldHaveAtLeastSize 1
         resultat.sektorstatistikk.statistikk shouldHaveAtLeastSize 1
+        resultat.landsstatistikk.statistikk shouldHaveAtLeastSize 1
 
         resultat.virksomhetsstatistikk.statistikk.map {
             Periode(kvartal = it.kvartal, årstall = it.årstall)
@@ -701,6 +707,7 @@ class SykefraversstatistikkApiTest {
         resultat.næringsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 75.0 }
         resultat.bransjestatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 77.7 }
         resultat.sektorstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 79.9 }
+        resultat.landsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 99.9 }
     }
 
     @Test
@@ -1218,6 +1225,26 @@ class SykefraversstatistikkApiTest {
                     kafkaMelding.toJsonValue(),
                     KafkaContainerHelper.statistikkSektorTopic,
                     Kafka.statistikkSektorGroupId
+            )
+        }
+
+        fun settSykefraværsprosentLand(
+                prosentSiste4Kvartal: Double,
+                prosentSistePubliserteKvartal: Double = 2.0
+        ) {
+            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+                    kategori = Kategori.LAND,
+                    kode = LANDKODE_NO,
+                    kvartal = gjeldendePeriode.tilKvartal(),
+                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+            )
+
+            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+                    kafkaMelding.toJsonKey(),
+                    kafkaMelding.toJsonValue(),
+                    KafkaContainerHelper.statistikkLandTopic,
+                    Kafka.statistikkLandGroupId
             )
         }
     }

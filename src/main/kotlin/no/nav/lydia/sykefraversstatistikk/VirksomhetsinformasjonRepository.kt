@@ -196,6 +196,9 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
     fun hentSektorstatistikkPerKvartal(sektor: Sektor) =
         hentKategoristatistikkPerKvartal(Kategori.SEKTOR, sektor.kode)
 
+    fun hentLandsstatistikkPerKvartal() =
+        hentKategoristatistikkPerKvartal(Kategori.LAND, LANDKODE_NO)
+
     private fun hentKategoristatistikkPerKvartal(kategori: Kategori, kode: String) =
         using(sessionOf(dataSource)) { session ->
             val query = queryOf(
