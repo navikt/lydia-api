@@ -662,23 +662,22 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `skal hente statistikk for alle kvartaler for en virksomhet`() {
         val næring = TestData.BARNEHAGER
+        val perioder = gjeldendePeriode.lagPerioder(12)
 
-        SykefraversstatistikkImportTestUtils.cleanUpStatistikkTable(
-            kategori = Kategori.NÆRING,
-            verdi = næring.tilTosifret(),
-            kvartal = gjeldendePeriode.tilKvartal()
+        val nyVirksomhet = lastInnNyVirksomhet(
+                nyVirksomhet = nyVirksomhet(næringer = listOf(næring)),
+                perioder = perioder,
+                sykefraværsProsent = 78.9,
         )
         settSykefraværsprosentNæring(
             næring = næring.tilTosifret(),
             prosentSiste4Kvartal = 5.0,
             prosentSistePubliserteKvartal = 75.0,
         )
-
-        val perioder = gjeldendePeriode.lagPerioder(12)
-        val nyVirksomhet = lastInnNyVirksomhet(
-            nyVirksomhet = nyVirksomhet(næringer = listOf(næring)),
-            perioder = perioder,
-            sykefraværsProsent = 78.9,
+        settSykefraværsprosentBransje(
+                bransje = Bransjer.BARNEHAGER,
+                prosentSiste4Kvartal = 5.0,
+                prosentSistePubliserteKvartal = 77.7,
         )
 
         val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
@@ -693,6 +692,7 @@ class SykefraversstatistikkApiTest {
 
         resultat.virksomhetsstatistikk.statistikk.forAll { it.sykefraværsprosent shouldBe 78.9 }
         resultat.næringsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 75.0 }
+        resultat.bransjestatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 77.7 }
     }
 
     @Test
