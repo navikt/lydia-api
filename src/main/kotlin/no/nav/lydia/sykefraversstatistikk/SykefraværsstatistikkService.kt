@@ -162,6 +162,8 @@ class SykefraværsstatistikkService(
             val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnummer) ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
             val næring = virksomhet.næringsundergruppe1.tilTosifret()
             val bransje = virksomhet.bransje
+            val sektor = virksomhet.sektor
+
             virksomhetsstatistikk = HistoriskStatistikk (
                     virksomhetsstatistikk =
                         KategoriStatistikk(
@@ -178,6 +180,11 @@ class SykefraværsstatistikkService(
                         kategori = BRANSJE,
                         kode = bransje?.navn ?: "",
                         statistikk = bransje?.let { virksomhetsinformasjonRepository.hentBransjestatistikkPerKvartal(bransje = it) } ?: emptyList()
+                    ),
+                    sektorstatistikk = KategoriStatistikk(
+                            kategori = SEKTOR,
+                            kode = sektor?.kode ?: "",
+                            statistikk = sektor?.let { virksomhetsinformasjonRepository.hentSektorstatistikkPerKvartal(sektor = it) } ?: emptyList()
                     )
             )
         }

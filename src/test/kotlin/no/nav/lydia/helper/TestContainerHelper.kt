@@ -75,6 +75,7 @@ class TestContainerHelper {
     companion object {
         const val ANTALL_NÆRINGS_PERIODER = 10
         const val ANTALL_BRANSJE_PERIODER = 11
+        const val ANTALL_SEKTOR_PERIODER = 9
 
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -143,7 +144,7 @@ class TestContainerHelper {
                 topic = KafkaContainerHelper.statistikkNæringTopic,
                 groupId = Kafka.statistikkNæringGroupId
             )
-            // -- generer statistikk for næringer
+            // -- generer statistikk for bransjer
             kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 importDtoer = Bransjer.entries.flatMap{ bransje ->
                     TestData.gjeldendePeriode.lagPerioder(ANTALL_BRANSJE_PERIODER).map { periode ->
@@ -154,25 +155,27 @@ class TestContainerHelper {
                             sykefraværsProsent = 6.0,
                             antallPersoner = 100000,
                             muligeDagsverk = 250_000.0,
-                            tapteDagsverk = 12_500.0,
+                            tapteDagsverk = 15_000.0,
                         )
                     }
                 },
                 topic = KafkaContainerHelper.statistikkBransjeTopic,
                 groupId = Kafka.statistikkBransjeGroupId
             )
-
+            // -- generer statistikk for sektorer
             kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                    importDtoer = Bransjer.entries.map {
-                        lagSykefraversstatistikkPerKategoriImportDto(
-                                kategori = Kategori.BRANSJE,
-                                kode = it.name,
-                                periode = TestData.gjeldendePeriode,
-                                sykefraværsProsent = 10.0,
-                                antallPersoner = 1000,
-                                muligeDagsverk = 250_000.0,
-                                tapteDagsverk = 25_000.0,
-                        )
+                    importDtoer = Sektor.entries.flatMap{ sektor ->
+                        TestData.gjeldendePeriode.lagPerioder(ANTALL_SEKTOR_PERIODER).map { periode ->
+                            lagSykefraversstatistikkPerKategoriImportDto(
+                                    kategori = Kategori.SEKTOR,
+                                    kode = sektor.kode,
+                                    periode = periode,
+                                    sykefraværsProsent = 4.9,
+                                    antallPersoner = 100000,
+                                    muligeDagsverk = 250_000.0,
+                                    tapteDagsverk = 12_250.0,
+                            )
+                        }
                     },
                     topic = KafkaContainerHelper.statistikkBransjeTopic,
                     groupId = Kafka.statistikkBransjeGroupId

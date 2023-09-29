@@ -679,12 +679,18 @@ class SykefraversstatistikkApiTest {
                 prosentSiste4Kvartal = 5.0,
                 prosentSistePubliserteKvartal = 77.7,
         )
+        settSykefraværsprosentSektor(
+                sektor = Sektor.STATLIG,
+                prosentSiste4Kvartal = 5.0,
+                prosentSistePubliserteKvartal = 79.9,
+        )
 
         val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
 
         resultat.virksomhetsstatistikk.statistikk shouldHaveSize perioder.size
         resultat.næringsstatistikk.statistikk shouldHaveAtLeastSize 1
         resultat.bransjestatistikk.statistikk shouldHaveAtLeastSize 1
+        resultat.sektorstatistikk.statistikk shouldHaveAtLeastSize 1
 
         resultat.virksomhetsstatistikk.statistikk.map {
             Periode(kvartal = it.kvartal, årstall = it.årstall)
@@ -693,6 +699,7 @@ class SykefraversstatistikkApiTest {
         resultat.virksomhetsstatistikk.statistikk.forAll { it.sykefraværsprosent shouldBe 78.9 }
         resultat.næringsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 75.0 }
         resultat.bransjestatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 77.7 }
+        resultat.sektorstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 79.9 }
     }
 
     @Test
@@ -1172,6 +1179,27 @@ class SykefraversstatistikkApiTest {
                     kafkaMelding.toJsonValue(),
                     KafkaContainerHelper.statistikkBransjeTopic,
                     Kafka.statistikkBransjeGroupId
+            )
+        }
+
+        fun settSykefraværsprosentSektor(
+                sektor: Sektor,
+                prosentSiste4Kvartal: Double,
+                prosentSistePubliserteKvartal: Double = 2.0
+        ) {
+            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+                    kategori = Kategori.SEKTOR,
+                    kode = sektor.kode,
+                    kvartal = gjeldendePeriode.tilKvartal(),
+                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+            )
+
+            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+                    kafkaMelding.toJsonKey(),
+                    kafkaMelding.toJsonValue(),
+                    KafkaContainerHelper.statistikkSektorTopic,
+                    Kafka.statistikkSektorGroupId
             )
         }
     }

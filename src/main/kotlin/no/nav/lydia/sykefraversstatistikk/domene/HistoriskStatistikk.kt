@@ -8,6 +8,7 @@ data class HistoriskStatistikk(
     val virksomhetsstatistikk: KategoriStatistikk,
     val næringsstatistikk: KategoriStatistikk,
     val bransjestatistikk: KategoriStatistikk,
+    val sektorstatistikk: KategoriStatistikk,
 )
 
 @Serializable

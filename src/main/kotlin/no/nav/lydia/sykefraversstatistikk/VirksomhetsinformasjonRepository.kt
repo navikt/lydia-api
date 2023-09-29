@@ -31,6 +31,7 @@ import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvar
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
+import no.nav.lydia.virksomhet.domene.Sektor
 import javax.sql.DataSource
 
 class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
@@ -191,6 +192,9 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
 
     fun hentBransjestatistikkPerKvartal(bransje: Bransjer) =
         hentKategoristatistikkPerKvartal(Kategori.BRANSJE, bransje.name)
+
+    fun hentSektorstatistikkPerKvartal(sektor: Sektor) =
+        hentKategoristatistikkPerKvartal(Kategori.SEKTOR, sektor.kode)
 
     private fun hentKategoristatistikkPerKvartal(kategori: Kategori, kode: String) =
         using(sessionOf(dataSource)) { session ->
