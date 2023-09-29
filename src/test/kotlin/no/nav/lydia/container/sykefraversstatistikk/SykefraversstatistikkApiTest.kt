@@ -685,6 +685,7 @@ class SykefraversstatistikkApiTest {
 
         resultat.virksomhetsstatistikk.statistikk shouldHaveSize perioder.size
         resultat.næringsstatistikk.statistikk shouldHaveAtLeastSize 1
+        resultat.bransjestatistikk.statistikk shouldHaveAtLeastSize 1
 
         resultat.virksomhetsstatistikk.statistikk.map {
             Periode(kvartal = it.kvartal, årstall = it.årstall)

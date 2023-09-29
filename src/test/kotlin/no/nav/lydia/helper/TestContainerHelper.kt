@@ -74,6 +74,7 @@ import kotlin.test.fail
 class TestContainerHelper {
     companion object {
         const val ANTALL_NÆRINGS_PERIODER = 10
+        const val ANTALL_BRANSJE_PERIODER = 11
 
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -141,6 +142,24 @@ class TestContainerHelper {
                 },
                 topic = KafkaContainerHelper.statistikkNæringTopic,
                 groupId = Kafka.statistikkNæringGroupId
+            )
+            // -- generer statistikk for næringer
+            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+                importDtoer = Bransjer.entries.flatMap{ bransje ->
+                    TestData.gjeldendePeriode.lagPerioder(ANTALL_BRANSJE_PERIODER).map { periode ->
+                        lagSykefraversstatistikkPerKategoriImportDto(
+                            kategori = Kategori.BRANSJE,
+                            kode = bransje.name,
+                            periode = periode,
+                            sykefraværsProsent = 6.0,
+                            antallPersoner = 100000,
+                            muligeDagsverk = 250_000.0,
+                            tapteDagsverk = 12_500.0,
+                        )
+                    }
+                },
+                topic = KafkaContainerHelper.statistikkBransjeTopic,
+                groupId = Kafka.statistikkBransjeGroupId
             )
 
             kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(

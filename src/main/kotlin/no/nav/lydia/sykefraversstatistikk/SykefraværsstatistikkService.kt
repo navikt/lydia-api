@@ -3,7 +3,6 @@ package no.nav.lydia.sykefraversstatistikk
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import arrow.core.rightIfNotNull
 import io.ktor.http.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -132,7 +131,7 @@ class SykefraværsstatistikkService(
 
     fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere) =
         virksomhetsinformasjonRepository.hentTotaltAntallVirksomheter(søkeparametere)
-            .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
+            ?.right() ?: SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
 
     fun hentSykefraværForVirksomhetSiste4Kvartal(orgnr: String): Either<Feil, VirksomhetsstatistikkSiste4Kvartal> {
         val start = System.currentTimeMillis()
@@ -160,8 +159,9 @@ class SykefraværsstatistikkService(
     fun hentHistoriskStatistikk(orgnummer: String) : Either<Feil, HistoriskStatistikk> {
         var virksomhetsstatistikk : HistoriskStatistikk
         val tidsbruk = measureTimeMillis {
-            val næring = virksomhetRepository.hentVirksomhet(orgnr = orgnummer)?.næringsundergruppe1?.tilTosifret()
-                ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
+            val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnummer) ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
+            val næring = virksomhet.næringsundergruppe1.tilTosifret()
+            val bransje = virksomhet.bransje
             virksomhetsstatistikk = HistoriskStatistikk (
                     virksomhetsstatistikk =
                         KategoriStatistikk(
@@ -173,6 +173,11 @@ class SykefraværsstatistikkService(
                         kategori = NÆRING,
                         kode = næring,
                         statistikk = virksomhetsinformasjonRepository.hentNæringstatistikkPerKvartal(næring = næring)
+                    ),
+                    bransjestatistikk = KategoriStatistikk(
+                        kategori = BRANSJE,
+                        kode = bransje?.navn ?: "",
+                        statistikk = bransje?.let { virksomhetsinformasjonRepository.hentBransjestatistikkPerKvartal(bransje = it) } ?: emptyList()
                     )
             )
         }
