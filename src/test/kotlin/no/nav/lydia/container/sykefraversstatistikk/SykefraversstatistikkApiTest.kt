@@ -55,6 +55,7 @@ import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
+import no.nav.lydia.helper.TestData.Companion.SKOGSKJØTSEL
 import no.nav.lydia.helper.TestData.Companion.gjeldendePeriode
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
@@ -700,6 +701,23 @@ class SykefraversstatistikkApiTest {
         resultat.næringsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 75.0 }
         resultat.bransjestatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 77.7 }
         resultat.sektorstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 79.9 }
+    }
+
+    @Test
+    fun `skal ikke krasje dersom virksomheten ikke har bransje` () {
+        val nyVirksomhet = lastInnNyVirksomhet(
+                nyVirksomhet = nyVirksomhet(næringer = listOf(SKOGSKJØTSEL)),
+                perioder = gjeldendePeriode.lagPerioder(12),
+                sykefraværsProsent = 68.9,
+        )
+
+        val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
+
+        resultat.bransjestatistikk.statistikk shouldHaveSize 0
+        resultat.bransjestatistikk.kode shouldBe ""
+        resultat.virksomhetsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 68.9 }
+        resultat.næringsstatistikk.statistikk shouldHaveAtLeastSize 1
+        resultat.virksomhetsstatistikk.statistikk shouldHaveAtLeastSize 1
     }
 
     @Test
