@@ -135,10 +135,10 @@ class SykefraværsstatistikkService(
         virksomhetsinformasjonRepository.hentTotaltAntallVirksomheter(søkeparametere)
             ?.right() ?: SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
 
-    fun hentSykefraværForVirksomhetSiste4Kvartal(orgnr: String): Either<Feil, VirksomhetsstatistikkSiste4Kvartal> {
+    fun hentSykefraværForVirksomhetSiste4Kvartal(orgnr: String, periode: Periode? = null): Either<Feil, VirksomhetsstatistikkSiste4Kvartal> {
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhetSiste4Kvartal =
-            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSiste4Kvartal(orgnr = orgnr)
+            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSiste4Kvartal(orgnr = orgnr, periode = periode)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhetSiste4Kvartal?.right()
