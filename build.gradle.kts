@@ -4,7 +4,7 @@ plugins {
     // Skru json-serialisering
     kotlin("plugin.serialization") version "1.9.10"
     // For å bygge fatjar
-    id("io.ktor.plugin") version "2.3.4"
+    id("io.ktor.plugin") version "2.3.5"
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.4"
+    val ktorVersion = "2.3.5"
     val fuelVersion = "2.3.1"
 
     implementation(kotlin("stdlib"))
