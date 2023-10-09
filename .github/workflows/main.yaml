@@ -22,6 +22,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: "Setup Gradle to generate and submit dependency graphs"
+        uses: "gradle/gradle-build-action@v2"
+        with:
+          dependency-graph: generate-and-submit
       - name: "Compile, run tests and build"
         run: "./gradlew build --no-daemon"
       - name: "Set up QEMU"
