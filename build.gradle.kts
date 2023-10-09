@@ -66,7 +66,7 @@ dependencies {
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
     // Felles definisjoner for IA-domenet
-    implementation("com.github.navikt:ia-felles:0.0.5")
+    implementation("com.github.navikt:ia-felles:0.0.6")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
