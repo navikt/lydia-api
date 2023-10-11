@@ -8,6 +8,7 @@ jobs:
   "build":
     permissions:
       packages: write
+      contents: write
     name: "build"
     runs-on: "ubuntu-latest"
     steps:
@@ -22,6 +23,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: "Setup Gradle to generate and submit dependency graphs"
+        uses: "gradle/gradle-build-action@v2.9.0"
+        with:
+          dependency-graph: "generate-and-submit"
       - name: "Compile, run tests and build"
         run: "./gradlew build"
       - name: "Set up QEMU"
