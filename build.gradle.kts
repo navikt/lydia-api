@@ -41,12 +41,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.11.3")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.11.5")
 
     // Database
     implementation("org.postgresql:postgresql:42.6.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:9.22.0")
+    implementation("org.flywaydb:flyway-core:9.22.2")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -54,7 +54,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.5.1")
+    implementation("org.apache.kafka:kafka-clients:3.6.0")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -79,7 +79,7 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.19.0"
+    val testcontainersVersion = "1.19.1"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
@@ -92,7 +92,7 @@ dependencies {
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:2.0.0")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.31")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.36")
 
     constraints {
         implementation("net.minidev:json-smart:2.5.0") {
