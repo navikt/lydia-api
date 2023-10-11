@@ -4,8 +4,7 @@ plugins {
     // Skru json-serialisering
     kotlin("plugin.serialization") version "1.9.10"
     // For å bygge fatjar
-    id("io.ktor.plugin") version "2.3.5"
-
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
     application
 }
@@ -100,12 +99,6 @@ dependencies {
                 require("2.5.0")
             }
             because("From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.")
-        }
-        implementation("com.fasterxml.jackson.core:jackson-databind") {
-            version {
-               require("2.15.0")
-            }
-            because("Flere tilfeller av sårbarheter i jackson-databind pre 2.15.0")
         }
     }
 }
