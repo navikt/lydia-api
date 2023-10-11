@@ -1,5 +1,6 @@
 name: Submit dependency graph
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
