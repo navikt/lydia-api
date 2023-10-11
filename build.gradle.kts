@@ -95,8 +95,17 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:9.36")
 
     constraints {
-        implementation("net.minidev:json-smart:2.5.0") {
+        implementation("net.minidev:json-smart") {
+            version {
+                require("2.5.0")
+            }
             because("From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.")
+        }
+        implementation("com.fasterxml.jackson.core:jackson-databind") {
+            version {
+               require("2.15.0")
+            }
+            because("Flere tilfeller av sårbarheter i jackson-databind pre 2.15.0")
         }
     }
 }
