@@ -36,7 +36,7 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentFilterverdier
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
-import no.nav.lydia.helper.StatistikkHelper.Companion.hentStatikkHistorikk
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentStatistikkHistorikk
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
@@ -49,8 +49,11 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
+import no.nav.lydia.helper.TestData.Companion.BRANSJE_BARNEHAGE
+import no.nav.lydia.helper.TestData.Companion.NÆRING_BARNEHAGE
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestData.Companion.NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON
 import no.nav.lydia.helper.TestData.Companion.NÆRING_SKOGBRUK
@@ -691,7 +694,7 @@ class SykefraversstatistikkApiTest {
                 prosentSistePubliserteKvartal = 99.9,
         )
 
-        val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
+        val resultat = hentStatistikkHistorikk(orgnr = nyVirksomhet.orgnr)
 
         resultat.virksomhetsstatistikk.statistikk shouldHaveSize perioder.size
         resultat.næringsstatistikk.statistikk shouldHaveAtLeastSize 1
@@ -718,13 +721,33 @@ class SykefraversstatistikkApiTest {
                 sykefraværsProsent = 68.9,
         )
 
-        val resultat = hentStatikkHistorikk(orgnr = nyVirksomhet.orgnr)
+        val resultat = hentStatistikkHistorikk(orgnr = nyVirksomhet.orgnr)
 
         resultat.bransjestatistikk.statistikk shouldHaveSize 0
         resultat.bransjestatistikk.kode shouldBe ""
         resultat.virksomhetsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 68.9 }
         resultat.næringsstatistikk.statistikk shouldHaveAtLeastSize 1
         resultat.virksomhetsstatistikk.statistikk shouldHaveAtLeastSize 1
+    }
+
+    @Test
+    fun `skal få med beskrivelse av datatypene når vi henter historisk statistikk`() {
+        val næring = BARNEHAGER
+        val navn = "Virksomhetsnavn for test av historiskstatistikk-beskrivelse"
+        val virksomhet = lastInnNyVirksomhet(
+            nyVirksomhet = nyVirksomhet(
+                næringer = listOf(næring),
+                navn = navn),
+            sektor = Sektor.PRIVAT,
+            )
+
+        val resultat = hentStatistikkHistorikk(orgnr = virksomhet.orgnr)
+
+        resultat.virksomhetsstatistikk.beskrivelse shouldBe navn
+        resultat.næringsstatistikk.beskrivelse shouldBe NÆRING_BARNEHAGE.navn
+        resultat.bransjestatistikk.beskrivelse shouldBe BRANSJE_BARNEHAGE
+        resultat.sektorstatistikk.beskrivelse shouldBe Sektor.PRIVAT.beskrivelse
+        resultat.landsstatistikk.beskrivelse shouldBe "Norge"
     }
 
     @Test

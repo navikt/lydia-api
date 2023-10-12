@@ -703,7 +703,7 @@ class StatistikkHelper {
                         .authentication().bearer(token)
                         .tilSingelRespons<VirksomhetsoversiktResponsDto>()
 
-        fun hentStatikkHistorikk(orgnr: String) = hentStatistikkHistorikkRespons(orgnr).third.get()
+        fun hentStatistikkHistorikk(orgnr: String) = hentStatistikkHistorikkRespons(orgnr).third.get()
         private fun hentStatistikkHistorikkRespons(
                 orgnr: String,
                 token: String = oauth2ServerContainer.saksbehandler1.token,

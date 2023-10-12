@@ -16,6 +16,7 @@ data class HistoriskStatistikk(
 data class KategoriStatistikk (
     val kategori: Kategori,
     val kode: String,
+    val beskrivelse: String,
     val statistikk: List<Statistikkdata>,
 )
 

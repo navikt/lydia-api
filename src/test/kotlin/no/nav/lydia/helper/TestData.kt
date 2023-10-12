@@ -19,6 +19,7 @@ class TestData(
         const val NÆRING_SKOGBRUK = "02"
         const val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON = "87"
         const val NÆRINGSKODE_BARNEHAGER = "88911"
+        val NÆRING_BARNEHAGE = Næringsgruppe(kode = "88", navn = "Omsorg uten botilbud, barnehager mv.")
 
         val NÆRINGSMIDLER_IKKE_NEVNT = Næringsgruppe(kode = "10.890", navn = "Produksjon av næringsmidler ikke nevnt annet sted")
         val BARNEHAGER = Næringsgruppe(kode = "88.911", navn = "Barnehager")

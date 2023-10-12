@@ -13,9 +13,18 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
-import no.nav.lydia.sykefraversstatistikk.domene.*
-import no.nav.lydia.sykefraversstatistikk.import.*
+import no.nav.lydia.sykefraversstatistikk.domene.BransjeSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.domene.HistoriskStatistikk
+import no.nav.lydia.sykefraversstatistikk.domene.KategoriStatistikk
+import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
+import no.nav.lydia.sykefraversstatistikk.import.BehandletImportMetadataVirksomhet
+import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
+import no.nav.lydia.sykefraversstatistikk.import.Kvartal
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
@@ -162,7 +171,7 @@ class SykefraværsstatistikkService(
         var virksomhetsstatistikk : HistoriskStatistikk
         val tidsbruk = measureTimeMillis {
             val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnummer) ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
-            val næring = virksomhet.næringsundergruppe1.tilTosifret()
+            val næring = virksomhet.næring
             val bransje = virksomhet.bransje
             val sektor = virksomhet.sektor
 
@@ -171,27 +180,32 @@ class SykefraværsstatistikkService(
                         KategoriStatistikk(
                             kategori = VIRKSOMHET,
                             kode = orgnummer,
+                            beskrivelse = virksomhet.navn,
                             statistikk = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartal(orgnr = orgnummer)
                         ),
                     næringsstatistikk = KategoriStatistikk(
                         kategori = NÆRING,
-                        kode = næring,
-                        statistikk = virksomhetsinformasjonRepository.hentNæringstatistikkPerKvartal(næring = næring)
+                        kode = næring.kode,
+                        beskrivelse = næring.navn,
+                        statistikk = virksomhetsinformasjonRepository.hentNæringstatistikkPerKvartal(næring = næring.kode)
                     ),
                     bransjestatistikk = KategoriStatistikk(
                         kategori = BRANSJE,
                         kode = bransje?.navn ?: "",
+                        beskrivelse = bransje?.navn ?: "",
                         statistikk = bransje?.let { virksomhetsinformasjonRepository.hentBransjestatistikkPerKvartal(bransje = it) } ?: emptyList()
                     ),
                     sektorstatistikk = KategoriStatistikk(
-                            kategori = SEKTOR,
-                            kode = sektor?.kode ?: "",
-                            statistikk = sektor?.let { virksomhetsinformasjonRepository.hentSektorstatistikkPerKvartal(sektor = it) } ?: emptyList()
+                        kategori = SEKTOR,
+                        kode = sektor?.kode ?: "",
+                        beskrivelse = sektor?.beskrivelse ?: "",
+                        statistikk = sektor?.let { virksomhetsinformasjonRepository.hentSektorstatistikkPerKvartal(sektor = it) } ?: emptyList()
                     ),
                     landsstatistikk = KategoriStatistikk(
-                            kategori = LAND,
-                            kode = LANDKODE_NO,
-                            statistikk = virksomhetsinformasjonRepository.hentLandsstatistikkPerKvartal()
+                        kategori = LAND,
+                        kode = LANDKODE_NO,
+                        beskrivelse = "Norge",
+                        statistikk = virksomhetsinformasjonRepository.hentLandsstatistikkPerKvartal()
                     )
             )
         }
