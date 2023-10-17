@@ -129,9 +129,6 @@ class TestContainerHelper {
         private val dataSource = postgresContainer.nyDataSource()
         val næringsRepository = NæringsRepository(dataSource = dataSource)
 
-        val salesforceMockContainer =
-            SalesforceMockContainerHelper(network = network, log = log, httpMock = httpMock)
-
         init {
             // -- generer testdata for land
             kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(

@@ -11,7 +11,7 @@ class SalesforceMockContainerHelper(
 ) {
 
     init {
-        httpMock.wireMockServer.
+//        httpMock.wireMockServer.
     }
 
     fun start() =
