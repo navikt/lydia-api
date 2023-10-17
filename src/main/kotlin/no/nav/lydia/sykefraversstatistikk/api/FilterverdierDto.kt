@@ -16,9 +16,14 @@ data class FilterverdierDto(
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
     val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser(),
     val filtrerbareEiere: List<EierDTO> = emptyList(),
-    val sektorer: List<SektorDto> = Sektor.values().map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },
+    val sektorer: List<SektorDto> = Sektor.entries
+        .map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },
 )
 
+enum class SnittFilter {
+    BRANSJE_NÆRING_OVER,
+    BRANSJE_NÆRING_UNDER_ELLER_LIK,
+}
 @Serializable
 data class FylkeOgKommuner (val fylke: Fylke, val kommuner: List<Kommune>)
 

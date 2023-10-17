@@ -1,0 +1,1 @@
+alter table iasak_leveranse add column opprettet_tidspunkt timestamp;

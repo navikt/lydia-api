@@ -6,6 +6,10 @@ env:
 
 jobs:
   "build":
+    permissions:
+      packages: write
+      contents: write
+      id-token: write
     name: "build"
     runs-on: "ubuntu-latest"
     steps:
@@ -20,8 +24,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: "Setup Gradle to generate and submit dependency graphs"
+        uses: "gradle/gradle-build-action@v2.9.0"
+        with:
+          dependency-graph: "generate-and-submit"
       - name: "Compile, run tests and build"
-        run: "./gradlew build --no-daemon"
+        run: "./gradlew build"
       - name: "Set up QEMU"
         uses: "docker/setup-qemu-action@v2"
         with:
@@ -41,8 +49,19 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           push: true
           tags: ghcr.io/${{ github.repository }}:latest,${{ env.IMAGE }}
+      - name: "Pusher image til GCR"
+        uses: "nais/docker-build-push@v0"
+        id: docker-push
+        with:
+          team: pia
+          pull: true
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+    outputs:
+      image: ${{ steps.docker-push.outputs.image }}
 
   deploy:
+    permissions: {}
     strategy:
       matrix:
         cluster: [dev, prod]
@@ -61,19 +80,56 @@ jobs:
           "VARS": ".nais/${{ matrix.cluster }}.yaml"
 
   deploy-dev-branch:
-    strategy:
-      matrix:
-        cluster: [ dev ]
-    name: "Deploy app to ${{ matrix.cluster }}"
+    permissions: {}
+    name: "Deploy app to dev"
     needs: "build"
-    if: github.ref == 'refs/heads/chainguard-test'
+    if: github.ref == 'refs/heads/matview'
     runs-on: "ubuntu-latest"
     steps:
       - uses: "actions/checkout@v3"
-      - name: "Deploy application to ${{ matrix.cluster }}"
+      - name: "Deploy application to dev"
         uses: "nais/deploy/actions/deploy@v1"
         env:
           "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          "CLUSTER": "${{ matrix.cluster }}-gcp"
+          "CLUSTER": "dev-gcp"
           "RESOURCE": ".nais/nais.yaml"
-          "VARS": ".nais/${{ matrix.cluster }}.yaml"
+          "VARS": ".nais/dev.yaml"
+
+  trivy-scan:
+    name: Scanner docker image med Trivy
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write # to write sarif
+      security-events: write # push sarif to github security
+      id-token: write # for nais/login
+      actions: read # for private repositories
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nais/login@v0
+        with:
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
+          team: pia
+      - name: Pull docker image
+        run: docker pull ${{ needs.build.outputs.image }}
+      - name: Run Trivy vulnerability scanner on docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs.image }}
+          ignore-unfixed: false # Vi vil se alle sårbarheter, også de som ikke er fikset
+          vuln-type: 'os,library'
+          limit-severities-for-sarif: true
+          severity: 'MEDIUM,HIGH,CRITICAL' # Prøver å filtrere bort lave og uklassifiserte sårbarheter
+          format: 'sarif'
+          output: 'trivy-results.sarif' # Filen som genereres av trivy brukes i de neste stegene
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      - name: Laster opp Trivy sin rårapport som artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-results
+          path: 'trivy-results.sarif'

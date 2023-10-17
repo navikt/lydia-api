@@ -6,9 +6,9 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.KafkaContainerHelper
-import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
@@ -18,6 +18,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
@@ -27,6 +28,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.Rolle
 import org.junit.After
 import org.junit.Before
+import java.sql.Timestamp
 import kotlin.test.Test
 
 class IASakLeveranseEksportererTest {
@@ -68,6 +70,9 @@ class IASakLeveranseEksportererTest {
                     it.fullført shouldBe leveranse.fullført
                     it.enhetsnavn shouldBe "IT-avdelingen"
                     it.enhetsnummer shouldBe "2900"
+                    it.opprettetTidspunkt shouldBe postgresContainer.hentEnkelKolonne<Timestamp?>("""
+                        select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
+                    """.trimIndent())?.toLocalDateTime()?.toKotlinLocalDateTime()
                 }
             }
         }

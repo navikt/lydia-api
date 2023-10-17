@@ -30,7 +30,6 @@ spec:
   accessPolicy:
     outbound:
       external:
-        - host: "data.brreg.no"
         - host: "data.ssb.no"
     inbound:
       rules:
@@ -71,14 +70,22 @@ spec:
       value: pia.ia-sak-leveranse-v1
     - name: BRREG_OPPDATERING_TOPIC
       value: pia.brreg-oppdatering
-    - name: STATISTIKK_TOPIC
-      value: arbeidsgiver.sykefravarsstatistikk-v1
+    - name: BRREG_ALLE_VIRKSOMHETER_TOPIC
+      value: pia.brreg-alle-virksomheter
+    - name: STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1
     - name: STATISTIKK_LAND_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-land-v1
+    - name: STATISTIKK_SEKTOR_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-sektor-v1
+    - name: STATISTIKK_BRANSJE_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-bransje-v1
+    - name: STATISTIKK_NARING_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-naring-v1
+    - name: STATISTIKK_NARINGSKODE_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-naringskode-v1
     - name: STATISTIKK_VIRKSOMHET_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-virksomhet-v1
-    - name: BRREG_UNDERENHET_URL
-      value: "https://data.brreg.no/enhetsregisteret/api/underenheter/lastned"
     - name: CONSUMER_LOOP_DELAY
       value: "1000"
     - name: SSB_NARINGS_URL

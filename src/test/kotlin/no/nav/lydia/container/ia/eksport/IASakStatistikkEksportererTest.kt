@@ -45,8 +45,10 @@ class IASakStatistikkEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASakStatistikk`() {
-        val næringskode = "${Bransjer.BYGG.næringskoder.first()}.123"
-        val virksomhet = TestVirksomhet.nyVirksomhet(næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygg og ting")))
+        val næringskode = "${Bransjer.ANLEGG.næringskoder.first()}.120"
+        val virksomhet = TestVirksomhet.nyVirksomhet(
+            næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner"))
+        )
         lastInnNyVirksomhet(virksomhet)
 
         val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = oauth2ServerContainer.superbruker1.token)
@@ -68,7 +70,7 @@ class IASakStatistikkEksportererTest {
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
-                    it.bransjeprogram shouldBe Bransjer.BYGG
+                    it.bransjeprogram shouldBe Bransjer.ANLEGG
                     it.endretAvRolle shouldBe Rolle.SAKSBEHANDLER
                     it.enhetsnummer shouldBe "2900"
                     it.enhetsnavn shouldBe "IT-avdelingen"

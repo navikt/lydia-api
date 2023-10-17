@@ -1,5 +1,6 @@
 package no.nav.lydia.helper
 
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
@@ -27,6 +28,7 @@ data class TestVirksomhet(
         val KOMMUNE_BERGEN = Kommune(navn = "BERGEN", nummer = "4601")
         val INDRE_ØSTFOLD = Kommune(navn = "Indre Østfold", nummer = "3014")
         val LUNNER = Kommune(navn = "Lunner", nummer = "3054")
+        val SANDNES = Kommune(navn = "Sandnes", nummer = "1108")
 
         val OSLO = TestVirksomhet(
             orgnr = "987654321",
@@ -37,6 +39,16 @@ data class TestVirksomhet(
                 adresse = listOf("Osloveien 1")
             )
         )
+        val VIRKSOMHET_MED_HISTORISK_STATISTIKK = TestVirksomhet(
+            orgnr = "314159265",
+            navn = "Virksomhet med historisk statistikk",
+            næringsundergrupper = listOf(BARNEHAGER, SCENEKUNST),
+            beliggenhet = beliggenhet(
+                kommune = SANDNES,
+                adresse = listOf("Langgata 1")
+            )
+        )
+
         val OSLO_FLERE_ADRESSER = TestVirksomhet(
             orgnr = "555555555",
             navn = "Virksomhet Oslo Flere Adresser",

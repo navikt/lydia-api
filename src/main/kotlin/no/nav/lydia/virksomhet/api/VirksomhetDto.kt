@@ -1,5 +1,6 @@
 package no.nav.lydia.virksomhet.api
 
+import ia.felles.definisjoner.bransjer.Bransjer
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -16,11 +17,15 @@ data class VirksomhetDto(
     val adresse: List<String>,
     val postnummer: String,
     val poststed: String,
-    val neringsgrupper: List<Næringsgruppe>,
-    val sektor: String,
     val oppdatertAvBrregOppdateringsId: Long? = null,
     val opprettetTidspunkt: Instant,
-    val sistEndretTidspunkt: Instant
+    val sistEndretTidspunkt: Instant,
+    val sektor: String,
+    val næringsundergruppe1: Næringsgruppe,
+    val næringsundergruppe2: Næringsgruppe?,
+    val næringsundergruppe3: Næringsgruppe?,
+    val næring: Næringsgruppe,
+    val bransje: Bransjer?
 )
 
 fun Virksomhet.toDto() = VirksomhetDto(
@@ -31,10 +36,14 @@ fun Virksomhet.toDto() = VirksomhetDto(
     oppstartsdato = oppstartsdato,
     postnummer = this.postnummer,
     poststed = this.poststed,
-    neringsgrupper = this.næringsgrupper,
-    sektor = sektor?.beskrivelse ?: "Ukjent",
     oppdatertAvBrregOppdateringsId = this.oppdatertAvBrregOppdateringsId,
     opprettetTidspunkt = this.opprettetTidspunkt,
-    sistEndretTidspunkt = this.sistEndretTidspunkt
+    sistEndretTidspunkt = this.sistEndretTidspunkt,
+    sektor = sektor?.beskrivelse ?: "Ukjent",
+    næringsundergruppe1 = this.næringsundergruppe1,
+    næringsundergruppe2 = this.næringsundergruppe2,
+    næringsundergruppe3 = this.næringsundergruppe3,
+    næring = this.næring,
+    bransje = this.bransje,
 )
 

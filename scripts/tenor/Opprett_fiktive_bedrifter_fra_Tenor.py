@@ -27,9 +27,9 @@ def insert_into_virksomhet(
            f"'AKTIV', '{oppstartsdato}');"
 
 
-def insert_into_virksomhet_naring(orgnr, naringskode):
-    return f"INSERT INTO public.virksomhet_naring " \
-           f" (virksomhet, narings_kode) " \
+def insert_into_virksomhet_naringsundegrupper(orgnr, naringskode):
+    return f"INSERT INTO public.virksomhet_naringsundergrupper " \
+           f" (virksomhet, naringsundergruppe1) " \
            f"select id, '{naringskode}' as kode from virksomhet where orgnr='{orgnr}'; "
 
 
@@ -77,7 +77,7 @@ with open(import_file, 'r') as tenorTestDataFil, \
         )
         output_file_inserts_sql.write('\n')
         output_file_inserts_sql.write(
-            insert_into_virksomhet_naring(
+            insert_into_virksomhet_naringsundergrupper(
                 item.get('orgnr'),
                 item.get('naringskode')
             )

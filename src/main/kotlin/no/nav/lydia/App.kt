@@ -20,11 +20,23 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import no.nav.lydia.NaisEnvironment.Companion.Environment.LOKAL
-import no.nav.lydia.appstatus.*
+import no.nav.lydia.appstatus.DatabaseHelsesjekk
+import no.nav.lydia.appstatus.HelseMonitor
+import no.nav.lydia.appstatus.Metrics
+import no.nav.lydia.appstatus.healthChecks
+import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.debug.debug
-import no.nav.lydia.ia.eksport.*
+import no.nav.lydia.ia.eksport.IASakEksporterer
+import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
+import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
+import no.nav.lydia.ia.eksport.IASakProdusent
+import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
+import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
+import no.nav.lydia.ia.eksport.IASakStatusEksportør
+import no.nav.lydia.ia.eksport.IASakStatusProdusent
+import no.nav.lydia.ia.eksport.KafkaProdusent
+import no.nav.lydia.ia.eksport.iaSakEksporterer
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -34,24 +46,28 @@ import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
+import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
-import no.nav.lydia.integrasjoner.brreg.BrregDownloader
-import no.nav.lydia.integrasjoner.brreg.virksomhetsImport
+import no.nav.lydia.integrasjoner.azure.navEnhet
+import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
+import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.statusoverikt.StatusoversiktRepository
 import no.nav.lydia.statusoverikt.StatusoversiktService
 import no.nav.lydia.statusoverikt.api.statusoversikt
-import no.nav.lydia.sykefraversstatistikk.*
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringRepository
+import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
+import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraversstatistikk.SykefraværsstatistikkService
+import no.nav.lydia.sykefraversstatistikk.VirksomhetsinformasjonRepository
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.BrregOppdateringConsumer
-import no.nav.lydia.sykefraversstatistikk.import.StatistikkConsumer
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
-import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.integrasjoner.azure.navEnhet
+import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -73,24 +89,48 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
-    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
+    val sistePubliseringService = SistePubliseringService(
+            sistePubliseringRepository = SistePubliseringRepository(
+                    dataSource = dataSource
+            )
+    )
     val sykefraværsstatistikkService = SykefraværsstatistikkService(
-        sistePubliseringService = sistePubliseringService,
         sykefraversstatistikkRepository = SykefraversstatistikkRepository(
             dataSource = dataSource
         ),
-        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
+        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(
+                dataSource = dataSource,
+        ),
+        sistePubliseringService = sistePubliseringService,
+        virksomhetRepository = VirksomhetRepository(dataSource = dataSource),
     )
-    statistikkConsumer(
-        kafka = naisEnv.kafka,
-        sykefraværsstatistikkService = sykefraværsstatistikkService
-    ).also { HelseMonitor.leggTilHelsesjekk(it) }
-    brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
-    StatistikkPerKategoriConsumer.apply {
+    brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
+    brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
+
+
+    mapOf(
+        naisEnv.kafka.statistikkLandTopic to Kafka.statistikkLandGroupId,
+        naisEnv.kafka.statistikkSektorTopic to Kafka.statistikkSektorGroupId,
+        naisEnv.kafka.statistikkBransjeTopic to Kafka.statistikkBransjeGroupId,
+        naisEnv.kafka.statistikkNæringTopic to Kafka.statistikkNæringGroupId,
+        naisEnv.kafka.statistikkNæringskodeTopic to Kafka.statistikkNæringskodeGroupId,
+        naisEnv.kafka.statistikkVirksomhetTopic to Kafka.statistikkVirksomhetGroupId,
+    ).forEach { (topic, groupId) ->
+        StatistikkPerKategoriConsumer(topic = topic, groupId = groupId).apply {
+            create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
+            run()
+        }.also { HelseMonitor.leggTilHelsesjekk(it) }
+    }
+
+    StatistikkMetadataVirksomhetConsumer.apply {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
+
+    StatistikkViewOppdaterer.apply {
+        run(dataSource = dataSource)
+    }
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
@@ -115,19 +155,30 @@ private fun brregConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
     }
 }
 
+private fun brregAlleVirksomheterConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
+    BrregAlleVirksomheterConsumer.apply {
+        create(
+            kafka = naisEnv.kafka,
+            repository = VirksomhetRepository(dataSource)
+        )
+        run()
+    }
+}
+
 fun Application.lydiaRestApi(
     naisEnvironment: NaisEnvironment,
     dataSource: DataSource,
 ) {
-    val virksomhetService = VirksomhetService(virksomhetRepository = VirksomhetRepository(dataSource = dataSource), salesforceClient = SalesforceClient(naisEnvironment))
-    val næringsRepository = NæringsRepository(dataSource = dataSource)
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+    val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
+    val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository, salesforceClient = SalesforceClient(naisEnvironment))
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
-            sistePubliseringService = SistePubliseringService(sistePubliseringRepository = SistePubliseringRepository(dataSource = dataSource)),
             sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource)
+            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
+            sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
+            virksomhetRepository = virksomhetRepository,
         )
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnvironment.miljø)
@@ -225,9 +276,6 @@ fun Application.lydiaRestApi(
         healthChecks(HelseMonitor)
         metrics()
 
-        if (naisEnvironment.miljø == LOKAL)
-            featureToggle()
-
         iaSakEksporterer(
             iaSakEksporterer = IASakEksporterer(
                 iaSakRepository = iaSakRepository,
@@ -246,12 +294,6 @@ fun Application.lydiaRestApi(
                 iaSakRepository = IASakRepository(dataSource = dataSource),
                 iaSakStatusProdusent = iaSakStatusProdusent,
             ),
-        )
-        virksomhetsImport(
-            BrregDownloader(
-                url = naisEnvironment.integrasjoner.brregUnderEnhetUrl,
-                virksomhetRepository = virksomhetRepository
-            )
         )
         næringsImport(
             næringsDownloader = NæringsDownloader(
@@ -303,10 +345,3 @@ fun Application.lydiaRestApi(
         }
     }
 }
-
-fun statistikkConsumer(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) =
-    StatistikkConsumer.apply {
-        create(kafka = kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
-        run()
-    }
-

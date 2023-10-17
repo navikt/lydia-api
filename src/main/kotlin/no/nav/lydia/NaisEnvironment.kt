@@ -21,7 +21,7 @@ class NaisEnvironment(
         }
 
         fun hentMiljø(cluster: String) =
-            Environment.values().find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø ${cluster}")
+            Environment.entries.find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø ${cluster}")
 
         const val APP_NAVN = "lydia-api"
     }
@@ -79,14 +79,24 @@ class Kafka(
     val iaSakStatusTopic: String = getEnvVar("IA_SAK_STATUS_TOPIC"),
     val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
-    val statistikkTopic: String = getEnvVar("STATISTIKK_TOPIC"),
+    val brregAlleVirksomheterTopic: String = getEnvVar("BRREG_ALLE_VIRKSOMHETER_TOPIC"),
+    val statistikkMetadataVirksomhetTopic: String = getEnvVar("STATISTIKK_METADATA_VIRKSOMHET_TOPIC"),
     val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
+    val statistikkSektorTopic: String = getEnvVar("STATISTIKK_SEKTOR_TOPIC"),
+    val statistikkBransjeTopic: String = getEnvVar("STATISTIKK_BRANSJE_TOPIC"),
+    val statistikkNæringTopic: String = getEnvVar("STATISTIKK_NARING_TOPIC"),
+    val statistikkNæringskodeTopic: String = getEnvVar("STATISTIKK_NARINGSKODE_TOPIC"),
     val statistikkVirksomhetTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_TOPIC"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
     companion object {
-        const val statistikkConsumerGroupId = "lydia-api-kafka-group-id"
-        const val statistikkPerKategoriGroupId = "lydia-api-statistikk-per-kategori-consumer"
+        const val statistikkLandGroupId = "lydia-api-statistikk-land-consumer"
+        const val statistikkSektorGroupId = "lydia-api-statistikk-sektor-consumer"
+        const val statistikkBransjeGroupId = "lydia-api-statistikk-bransje-consumer"
+        const val statistikkNæringGroupId = "lydia-api-statistikk-naring-consumer"
+        const val statistikkNæringskodeGroupId = "lydia-api-statistikk-naringskode-consumer"
+        const val statistikkVirksomhetGroupId = "lydia-api-statistikk-virksomhet-consumer"
+        const val statistikkMetadataVirksomhetGroupId = "lydia-api-statistikk-metadata-virksomhet-consumer"
         const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
         const val clientId: String = "lydia-api"
     }
@@ -119,7 +129,7 @@ class Kafka(
             SslConfigs.SSL_KEY_PASSWORD_CONFIG to credstorePassword
         )
 
-    fun consumerProperties(consumerGroupId: String = statistikkConsumerGroupId) =
+    fun consumerProperties(consumerGroupId: String) =
         baseConsumerProperties(consumerGroupId).apply {
             // TODO: Finn smidigere måte å få tester til å kjøre
             if (truststoreLocation.isBlank()) {
@@ -143,7 +153,6 @@ class Kafka(
 }
 
 class Integrasjoner(
-    val brregUnderEnhetUrl: String = getEnvVar("BRREG_UNDERENHET_URL"),
     val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
     val salesforce: Salesforce = Salesforce(),
 )

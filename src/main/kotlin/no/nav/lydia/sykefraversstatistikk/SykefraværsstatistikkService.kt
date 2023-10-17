@@ -3,7 +3,6 @@ package no.nav.lydia.sykefraversstatistikk
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import arrow.core.rightIfNotNull
 import io.ktor.http.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -14,42 +13,89 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
-import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
+import no.nav.lydia.sykefraversstatistikk.domene.BransjeSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.domene.HistoriskStatistikk
+import no.nav.lydia.sykefraversstatistikk.domene.KategoriStatistikk
+import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
+import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
-import no.nav.lydia.sykefraversstatistikk.import.BehandletImportStatistikk
-import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
+import no.nav.lydia.sykefraversstatistikk.import.BehandletImportMetadataVirksomhet
+import no.nav.lydia.sykefraversstatistikk.import.Kategori
+import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
 import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
+import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
+import kotlin.system.measureTimeMillis
+
+const val LANDKODE_NO = "NO"
 
 class SykefraværsstatistikkService(
-    val sistePubliseringService: SistePubliseringService,
     val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
     val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
+    val sistePubliseringService: SistePubliseringService,
+    val virksomhetRepository: VirksomhetRepository,
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
-    fun lagre(sykefraværsstatistikkListe: List<BehandletImportStatistikk>) {
+    fun lagreStatistikkMetadataVirksomhet(behandletImportMetadataVirksomhetListe: List<BehandletImportMetadataVirksomhet>) {
+        if (behandletImportMetadataVirksomhetListe.isNotEmpty()) {
+            log.info("Lagrer ${behandletImportMetadataVirksomhetListe.size} rad(er) med metadata virksomhet")
+        }
         val start = System.currentTimeMillis()
-        sykefraversstatistikkRepository.insert(behandletImportStatistikkListe = sykefraværsstatistikkListe)
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre statistikk for ${sykefraværsstatistikkListe.size} virksomheter")
+        sykefraversstatistikkRepository.insertMetadataForVirksomhet(
+            behandletImportMetadataVirksomhetListe
+        )
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${behandletImportMetadataVirksomhetListe.size} virksomhet metadata")
     }
 
     fun lagreSykefraværsstatistikkPerKategori(
         sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>,
     ) {
         val start = System.currentTimeMillis()
+        lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe)
+        lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe)
+        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
+    }
+
+    private fun lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, LAND)
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForSektor(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, SEKTOR)
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, BRANSJE)
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, NÆRING)
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, NÆRINGSKODE)
+        )
+        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
+            sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, VIRKSOMHET)
+        )
+    }
+
+    private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
             sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
                 .filter { it.kategori == VIRKSOMHET }
         )
+
+        val sykefraværsstatistikkForAndreKategorier = sykefraværsstatistikkKategoriImportDtoListe
+            .filter { it.kategori != VIRKSOMHET }
+
+        if (sykefraværsstatistikkForAndreKategorier.isNotEmpty()) {
+            log.info("Lagrer ${sykefraværsstatistikkForAndreKategorier.size} rad(er) med statistikk for andre kategorier i siste 4 kvartal")
+        }
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
-            sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
-                .filter { it.kategori != VIRKSOMHET }
+            sykefraværsstatistikk = sykefraværsstatistikkForAndreKategorier
         )
-        log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
     }
 
     fun søkEtterVirksomheter(
@@ -70,6 +116,18 @@ class SykefraværsstatistikkService(
         }
     }
 
+    private fun filterPåKategoriOgLogInfo(
+        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>, kategori: Kategori
+    ): List<SykefraversstatistikkPerKategoriImportDto> {
+        val statistikkForKategori = sykefraværsstatistikkKategoriImportDtoListe
+            .filter { it.kategori == kategori }
+
+        if (statistikkForKategori.isNotEmpty()) {
+            log.info("Lagrer ${statistikkForKategori.size} rad(er) med statistikk for kategori ${kategori.name} i gjeldende kvartal")
+        }
+        return statistikkForKategori
+    }
+
     private fun LocalDate?.erForeldet() = when (this) {
         null -> false
         else -> {
@@ -84,31 +142,89 @@ class SykefraværsstatistikkService(
 
     fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere) =
         virksomhetsinformasjonRepository.hentTotaltAntallVirksomheter(søkeparametere)
-            .rightIfNotNull { SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk` }
+            ?.right() ?: SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
 
-    fun hentSykefraværForVirksomhetSiste4Kvartal(orgnr: String): Either<Feil, VirksomhetsstatistikkSiste4Kvartal> {
+    fun hentSykefraværForVirksomhetSiste4Kvartal(orgnr: String, periode: Periode? = null): Either<Feil, VirksomhetsstatistikkSiste4Kvartal> {
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhetSiste4Kvartal =
-            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSiste4Kvartal(orgnr = orgnr)
+            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSiste4Kvartal(orgnr = orgnr, periode = periode)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
-        return sykefraværForVirksomhetSiste4Kvartal?.right() ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+        return sykefraværForVirksomhetSiste4Kvartal?.right()
+            ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
-    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String, periode: Periode? = null): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
+    fun hentVirksomhetsstatistikkSisteKvartal(
+        orgnr: String,
+        periode: Periode? = null
+    ): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
         val start = System.currentTimeMillis()
-        val sykefraværForVirksomhetSisteKvartal = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr, periode = periode)
+        val sykefraværForVirksomhetSisteKvartal =
+            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr, periode = periode)
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
-        return sykefraværForVirksomhetSisteKvartal?.right() ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+        return sykefraværForVirksomhetSisteKvartal?.right()
+            ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
-    fun hentGjeldendePeriodeSiste4Kvartal(): Either<Feil, KvartalerFraTil> {
+    fun hentHistoriskStatistikk(orgnummer: String) : Either<Feil, HistoriskStatistikk> {
+        var virksomhetsstatistikk : HistoriskStatistikk
+        val tidsbruk = measureTimeMillis {
+            val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnummer) ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
+            val næring = virksomhet.næring
+            val bransje = virksomhet.bransje
+            val sektor = virksomhet.sektor
+
+            virksomhetsstatistikk = HistoriskStatistikk (
+                    virksomhetsstatistikk =
+                        KategoriStatistikk(
+                            kategori = VIRKSOMHET,
+                            kode = orgnummer,
+                            beskrivelse = virksomhet.navn,
+                            statistikk = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartal(orgnr = orgnummer)
+                        ),
+                    næringsstatistikk = KategoriStatistikk(
+                        kategori = NÆRING,
+                        kode = næring.kode,
+                        beskrivelse = næring.navn,
+                        statistikk = virksomhetsinformasjonRepository.hentNæringstatistikkPerKvartal(næring = næring.kode)
+                    ),
+                    bransjestatistikk = KategoriStatistikk(
+                        kategori = BRANSJE,
+                        kode = bransje?.navn ?: "",
+                        beskrivelse = bransje?.navn ?: "",
+                        statistikk = bransje?.let { virksomhetsinformasjonRepository.hentBransjestatistikkPerKvartal(bransje = it) } ?: emptyList()
+                    ),
+                    sektorstatistikk = KategoriStatistikk(
+                        kategori = SEKTOR,
+                        kode = sektor?.kode ?: "",
+                        beskrivelse = sektor?.beskrivelse ?: "",
+                        statistikk = sektor?.let { virksomhetsinformasjonRepository.hentSektorstatistikkPerKvartal(sektor = it) } ?: emptyList()
+                    ),
+                    landsstatistikk = KategoriStatistikk(
+                        kategori = LAND,
+                        kode = LANDKODE_NO,
+                        beskrivelse = "Norge",
+                        statistikk = virksomhetsinformasjonRepository.hentLandsstatistikkPerKvartal()
+                    )
+            )
+        }
+        log.info("Brukte $tidsbruk ms på å hente statistikk for en virksomhet")
+        return virksomhetsstatistikk.right()
+    }
+
+    fun hentNæringsstatistikk(næringskode: String): Either<Feil, NæringSykefraværsstatistikk> {
         val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        return KvartalerFraTil(
-            fra = gjeldendePeriode.forrigePeriode().forrigePeriode().forrigePeriode().tilKvartal(),
-            til = gjeldendePeriode.tilKvartal()
-        ).right()
+        val hentNæringSykefraværsstatistikk = sykefraversstatistikkRepository.hentNæringSykefraværsstatistikk(næringskode, gjeldendePeriode)
+        return hentNæringSykefraværsstatistikk?.right()
+                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+    }
+
+    fun hentBransjestatistikk(bransje: String): Either<Feil, BransjeSykefraværsstatistikk> {
+        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
+        val hentBransjeSykefraværsstatistikk = sykefraversstatistikkRepository.hentBransjeSykefraværsstatistikk(bransje, gjeldendePeriode)
+        return hentBransjeSykefraværsstatistikk?.right()
+                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 }
 

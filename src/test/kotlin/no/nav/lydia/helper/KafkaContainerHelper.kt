@@ -7,20 +7,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.time.withTimeoutOrNull
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
-import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_KORN
-import no.nav.lydia.helper.TestData.Companion.LANDKODE_NO
-import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
-import no.nav.lydia.helper.TestData.Companion.SEKTOR_STATLIG_FORVALTNING
-import no.nav.lydia.sykefraversstatistikk.import.Key
+import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
+import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkMetadataVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkPerKategori
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkImportDto
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
 import org.apache.kafka.clients.admin.NewTopic
-import org.apache.kafka.clients.admin.OffsetSpec
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -45,13 +43,19 @@ class KafkaContainerHelper(
     log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java),
 ) {
     companion object {
-        const val statistikkTopic = "arbeidsgiver.sykefravarsstatistikk-v1"
+        const val statistikkMetadataVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1"
         const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
+        const val statistikkSektorTopic = "arbeidsgiver.sykefravarsstatistikk-sektor-v1"
+        const val statistikkBransjeTopic = "arbeidsgiver.sykefravarsstatistikk-bransje-v1"
+        const val statistikkNæringTopic = "arbeidsgiver.sykefravarsstatistikk-naring-v1"
+        const val statistikkNæringskodeTopic = "arbeidsgiver.sykefravarsstatistikk-naringskode-v1"
         const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
         const val iaSakStatusTopic = "pia.ia-sak-status-v1"
         const val iaSakLeveranseTopic = "pia.ia-sak-leveranse-v1"
+        const val brregOppdateringTopic = "pia.brreg-oppdatering"
+        const val brregAlleVirksomheterTopic = "pia.brreg-alle-virksomheter"
     }
 
     private val gson = GsonBuilder().create()
@@ -68,6 +72,7 @@ class KafkaContainerHelper(
         .withLogConsumer(Slf4jLogConsumer(log).withPrefix(kafkaNetworkAlias).withSeparateOutputStreams())
         .withEnv(
             mapOf(
+                "KAFKA_LOG4J_LOGGERS" to "org.apache.kafka.image.loader.MetadataLoader=WARN",
                 "KAFKA_AUTO_LEADER_REBALANCE_ENABLE" to "false",
                 "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS" to "1",
                 "TZ" to TimeZone.getDefault().id
@@ -78,11 +83,17 @@ class KafkaContainerHelper(
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
-            createTopic(statistikkTopic,
+            createTopic(
                 iaSakTopic,
                 brregOppdateringTopic,
+                brregAlleVirksomheterTopic,
+                statistikkMetadataVirksomhetTopic,
                 statistikkLandTopic,
-                statistikkVirksomhetTopic)
+                statistikkSektorTopic,
+                statistikkBransjeTopic,
+                statistikkVirksomhetTopic,
+                iaSakStatusTopic,
+            )
             kafkaProducer = producer()
         }
 
@@ -93,10 +104,15 @@ class KafkaContainerHelper(
             iaSakStatistikkTopic = iaSakStatistikkTopic,
             iaSakStatusTopic = iaSakStatusTopic,
             iaSakLeveranseTopic = iaSakLeveranseTopic,
-            statistikkTopic = statistikkTopic,
+            statistikkMetadataVirksomhetTopic = statistikkMetadataVirksomhetTopic,
             statistikkLandTopic = statistikkLandTopic,
+            statistikkSektorTopic = statistikkSektorTopic,
+            statistikkBransjeTopic = statistikkBransjeTopic,
+            statistikkNæringTopic = statistikkNæringTopic,
+            statistikkNæringskodeTopic = statistikkNæringskodeTopic,
             statistikkVirksomhetTopic = statistikkVirksomhetTopic,
             brregOppdateringTopic = brregOppdateringTopic,
+            brregAlleVirksomheterTopic = brregAlleVirksomheterTopic,
             consumerLoopDelay = 1,
             credstorePassword = "",
             keystoreLocation = "",
@@ -111,14 +127,19 @@ class KafkaContainerHelper(
         "KAFKA_TRUSTSTORE_PATH" to "",
         "KAFKA_KEYSTORE_PATH" to "",
         "KAFKA_CREDSTORE_PASSWORD" to "",
-        "STATISTIKK_TOPIC" to statistikkTopic,
         "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
+        "STATISTIKK_METADATA_VIRKSOMHET_TOPIC" to statistikkMetadataVirksomhetTopic,
+        "STATISTIKK_SEKTOR_TOPIC" to statistikkSektorTopic,
+        "STATISTIKK_BRANSJE_TOPIC" to statistikkBransjeTopic,
+        "STATISTIKK_NARING_TOPIC" to statistikkNæringTopic,
+        "STATISTIKK_NARINGSKODE_TOPIC" to statistikkNæringskodeTopic,
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
         "IA_SAK_STATUS_TOPIC" to iaSakStatusTopic,
         "IA_SAK_LEVERANSE_TOPIC" to iaSakLeveranseTopic,
-        "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic
+        "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic,
+        "BRREG_ALLE_VIRKSOMHETER_TOPIC" to brregAlleVirksomheterTopic
     )
 
     private fun createTopic(vararg topics: String) {
@@ -154,13 +175,15 @@ class KafkaContainerHelper(
         }
     }
 
-    fun sendIBulkOgVentTilKonsumert(importDtoer: List<SykefraversstatistikkImportDto>) {
+    fun sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
+        importDtoer: List<SykefraversstatistikkMetadataVirksomhetImportDto>,
+    ) {
         runBlocking {
             val sendteMeldinger = importDtoer.map { melding ->
                 kafkaProducer.send(melding.tilProducerRecord()).get()
             }
             ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkConsumerGroupId,
+                konsumentGruppeId = Kafka.statistikkMetadataVirksomhetGroupId,
                 recordMetadata = sendteMeldinger.last()
             )
         }
@@ -168,91 +191,75 @@ class KafkaContainerHelper(
 
     fun sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
         importDtoer: List<SykefraversstatistikkPerKategoriImportDto>,
+        topic: String,
+        groupId: String,
     ) {
         runBlocking {
+            if (importDtoer.isEmpty()) return@runBlocking
+
             val sendteMeldinger = importDtoer.map { melding ->
-                kafkaProducer.send(melding.tilProducerRecord()).get()
+                kafkaProducer.send(ProducerRecord(
+                    topic,
+                    gson.toJson(
+                        KeySykefraversstatistikkPerKategori(
+                            kategori = melding.kategori.name,
+                            kode = melding.kode,
+                            årstall = melding.sistePubliserteKvartal.årstall,
+                            kvartal = melding.sistePubliserteKvartal.kvartal
+                        ),
+                    ),
+                    gson.toJson(melding)
+                )).get()
             }
             ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkPerKategoriGroupId,
+                konsumentGruppeId = groupId,
                 recordMetadata = sendteMeldinger.last()
             )
         }
     }
 
-    fun sendProducerRecordKafkaMelding(producerRecord: ProducerRecord<String, String>) {
+    fun sendBrregOppdateringer(virksomheter: List<OppdateringVirksomhet>) = runBlocking {
+        if (virksomheter.isEmpty()) return@runBlocking
+
+        val sendteMeldinger = virksomheter.map {
+            kafkaProducer.send(it.tilProducerRecord()).get()
+        }
+
+        ventTilKonsumert(
+            konsumentGruppeId = Kafka.brregConsumerGroupId,
+            recordMetadata = sendteMeldinger.last()
+        )
+    }
+
+    fun sendBrregOppdatering(virksomhet: OppdateringVirksomhet) {
         runBlocking {
-            val sendtMelding = kafkaProducer.send(producerRecord).get()
+            val sendtMelding = kafkaProducer.send(virksomhet.tilProducerRecord()).get()
             ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkConsumerGroupId,
+                konsumentGruppeId = Kafka.brregConsumerGroupId,
                 recordMetadata = sendtMelding
             )
         }
     }
 
-    fun sendSykefraversstatistikkKafkaMelding(importDto: SykefraversstatistikkImportDto) {
-        runBlocking {
-            val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
-            ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkConsumerGroupId,
-                recordMetadata = sendtMelding
+    private fun OppdateringVirksomhet.tilProducerRecord() = ProducerRecord(
+            brregOppdateringTopic,
+            this.orgnummer,
+            Json.encodeToString(
+                this
             )
-        }
-    }
-
-    fun sendSykefraversstatistikkPerKategoriKafkaMelding(importDto: SykefraversstatistikkPerKategoriImportDto) {
-        runBlocking {
-            val sendtMelding = kafkaProducer.send(importDto.tilProducerRecord()).get()
-            ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkPerKategoriGroupId,
-                recordMetadata = sendtMelding
-            )
-        }
-    }
-
-    suspend fun ventTilAlleMeldingerErKonsumert(
-        konsumentGruppe: String,
-        timeout: Duration = Duration.ofSeconds(10)
-    ) {
-        withTimeout(timeout) {
-            var topicOffset: Pair<String, Long>?
-            do {
-                delay(timeMillis = 10L)
-                val offsetMetadata = adminClient.listConsumerGroupOffsets(konsumentGruppe)
-                    .partitionsToOffsetAndMetadata().get()
-
-                topicOffset = adminClient.listOffsets(offsetMetadata.mapValues {
-                    OffsetSpec.latest()
-                }).all().get().map { Pair(it.key.topic(), it.value.offset()) }.firstOrNull()
-            } while (topicOffset == null)
-
-            do {
-                delay(timeMillis = 10L)
-            } while (topicOffset.second - consumerSinOffset(consumerGroup = konsumentGruppe, topic = topicOffset.first) != 0L)
-        }
-    }
-
-    private fun SykefraversstatistikkImportDto.tilProducerRecord() =
-        ProducerRecord(
-            statistikkTopic, gson.toJson(
-                Key(
-                    orgnr = virksomhetSykefravær.orgnr,
-                    årstall = virksomhetSykefravær.årstall,
-                    kvartal = virksomhetSykefravær.kvartal
-                ),
-            ), gson.toJson(this)
         )
 
-    private fun SykefraversstatistikkPerKategoriImportDto.tilProducerRecord() =
+    private fun SykefraversstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
         ProducerRecord(
-            statistikkVirksomhetTopic, gson.toJson(
-                KeySykefraversstatistikkPerKategori(
-                    kategori = kategori.name,
-                    kode = kode,
-                    årstall = sistePubliserteKvartal.årstall,
-                    kvartal = sistePubliserteKvartal.kvartal
+            statistikkMetadataVirksomhetTopic,
+            gson.toJson(
+                KeySykefraversstatistikkMetadataVirksomhet(
+                    orgnr = orgnr,
+                    arstall = årstall,
+                    kvartal = kvartal
                 ),
-            ), gson.toJson(this)
+            ),
+            gson.toJson(this)
         )
 
     private suspend fun ventTilKonsumert(
@@ -262,7 +269,11 @@ class KafkaContainerHelper(
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
                 delay(timeMillis = 5L)
-            } while (consumerSinOffset(consumerGroup = konsumentGruppeId, topic = recordMetadata.topic()) <= recordMetadata.offset())
+            } while (consumerSinOffset(
+                    consumerGroup = konsumentGruppeId,
+                    topic = recordMetadata.topic()
+                ) <= recordMetadata.offset()
+            )
         }
 
     suspend fun ventOgKonsumerKafkaMeldinger(
@@ -289,92 +300,7 @@ class KafkaContainerHelper(
     private fun consumerSinOffset(consumerGroup: String, topic: String): Long {
         val offsetMetadata = adminClient.listConsumerGroupOffsets(consumerGroup)
             .partitionsToOffsetAndMetadata().get()
-        return offsetMetadata[offsetMetadata.keys.firstOrNull{ it.topic().contains(topic) }]?.offset() ?: -1
-    }
-
-    fun sendKafkameldingSomString(
-        orgnr: String = "900000111",
-        næringskode: String = NÆRING_JORDBRUK,
-        næringsundergruppe: String = DYRKING_AV_KORN.kode,
-        landKode: String = LANDKODE_NO,
-        sektorkode: String = SEKTOR_STATLIG_FORVALTNING,
-    ) {
-        runBlocking {
-            val sendtMelding = kafkaProducer.send(
-                ProducerRecord(
-                    statistikkTopic,
-                    """
-            {
-                "kvartal": 1,
-                "årstall": 2019,
-                "orgnr": "$orgnr"
-            }
-            """.trimIndent(),
-                    """
-             {
-                "næringSykefravær": {
-                  "kvartal": 1,
-                  "prosent": 5.0,
-                  "muligeDagsverk": 100.0,
-                  "årstall": 2019,
-                  "kode": "$næringskode",
-                  "antallPersoner": 10.0,
-                  "kategori": "NÆRING2SIFFER",
-                  "tapteDagsverk": 5.0,
-                  "maskert": false
-                },
-                "næring5SifferSykefravær": [
-                  {
-                    "kvartal": 1,
-                    "prosent": 5.0,
-                    "muligeDagsverk": 100.0,
-                    "årstall": 2019,
-                    "kode": "$næringsundergruppe",
-                    "antallPersoner": 10.0,
-                    "kategori": "NÆRING5SIFFER",
-                    "tapteDagsverk": 5.0,
-                    "maskert": false
-                  }
-                ],
-                "virksomhetSykefravær": {
-                  "kvartal": 1,
-                  "prosent": 5.0,
-                  "muligeDagsverk": 100.0,
-                  "årstall": 2019,
-                  "antallPersoner": 10.0,
-                  "orgnr": "$orgnr",
-                  "tapteDagsverk": 5.0,
-                  "maskert": false,
-                  "kategori": "VIRKSOMHET"
-                },
-                "landSykefravær": {
-                  "kvartal": 1,
-                  "prosent": 5.0,
-                  "muligeDagsverk": 100.0,
-                  "årstall": 2019,
-                  "kode": "$landKode",
-                  "antallPersoner": 10.0,
-                  "kategori": "LAND",
-                  "tapteDagsverk": 5.0,
-                  "maskert": false
-                },
-                "sektorSykefravær": {
-                  "kvartal": 1,
-                  "prosent": 5.0,
-                  "muligeDagsverk": 100.0,
-                  "årstall": 2019,
-                  "kode": "$sektorkode",
-                  "antallPersoner": 10.0,
-                  "kategori": "SEKTOR",
-                  "tapteDagsverk": 5.0,
-                  "maskert": false
-                }
-              }   
-            """.trimIndent()
-                )
-            ).get()
-            ventTilKonsumert(konsumentGruppeId = Kafka.statistikkConsumerGroupId, recordMetadata = sendtMelding)
-        }
+        return offsetMetadata[offsetMetadata.keys.firstOrNull { it.topic().contains(topic) }]?.offset() ?: -1
     }
 
 }

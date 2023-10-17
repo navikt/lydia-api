@@ -35,6 +35,16 @@ update sykefravar_statistikk_virksomhet
 6. Om du er småparanoid: gjer spørjing 3 ein gong til og sjå at svaret blir 0.
 7. No burde dev fungere igjen 🎉
 
+### Oppdater tester
+I `TestData.kt` oppdater `gjeldendePeriode` med siste publisert kvartal
+```
+  val gjeldendePeriode = Periode(årstall = 2023, kvartal = 2)
+```
+
+### Oppdater siste_publiseringsinfo
+Kopier denne f.eks `V45__oppdatere_siste_publiseringsinfo.sql` og lag en ny fil med riktig datoer.
+Push endringen i produksjon etter import er ferdig. 
+
 
 # Komme i gang med lydia-api
 
@@ -119,5 +129,53 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 2. Finn dump-fila, `/lydia-api/scripts/db/[filnavn_her].sql` (Sannsynleg lenke til mappa: https://github.com/navikt/lydia-api/tree/main/scripts/db).
 3. Klikk på "Raw" og kopier lenka til sida du kjem til. Formatet skal vere `https://raw.githubusercontent.com/navikt/lydia-api/main/scripts/db/{data_source}_{timestamp}-dump.sql`.
 4. Lim inn denne lenka i `run.sh`.
-5. Commit og push.
+5. Commit og push. (Du treng ikkje vente på at GitHub Actions skal bli ferdig med build og deploy.)
 6. Oppdater `run.sh` i lydia-rådgiver-frontend også med den same lenka.
+
+## Koble til postgresql lokalt via docker-compose oppsett
+
+0. Kjør `./run.sh` i roten av repoet for å starte appen med alle avhengigheter
+
+### Med psql (terminal)
+
+0. Installer psql lokalt (https://www.timescale.com/blog/how-to-install-psql-on-mac-ubuntu-debian-windows/)
+1. Verifiser at du har psql installert ved å kjøre `psql --version` i terminalen
+2. Koble til postgresql lokalt ved å kjøre `PGPASSWORD=test psql -h localhost -p 5432 -U postgres` i terminalen
+
+### Med IntelliJ
+
+1. Åpne IntelliJ og gå til Database panelet
+2. Trykk på `+` og velg `Data Source` og `PostgreSQL`
+3. Fyll ut feltene slik:
+`Host`: `localhost`  
+`Port`: `5432`  
+`User`: `postgres`  
+`Password`: `test`  
+`Database`: `postgres`  
+4. Trykk på `Test connection` for å verifisere at tilkoblingen fungerer
+
+## Kode generert av GitHub Copilot
+
+Dette repoet tar i bruk GitHub Copilot for kodeforslag.
+
+## Ymse feilsøking
+### "Test framework quit unexpectedly" ved køyring av testar
+Dato: 2023-08-22  
+Utviklar med problemet: Ingrid  
+Med på feilsøking: Thomas, Christian og Per-Christian  
+
+Problemet: 
+Får ikkje til å køyre testane lokalt på ei maskin. Får feilmelding "Test framework quit unexpectedly". Unit-testar køyrer fint, men problem med container-testar.
+
+<details>
+<summary> Feilsøking:</summary>
+1. Ta ned docker-containarar (`dc down` til `docker ps` blir tom)
+2. `./gradlew clean`
+3. `./gradlew build`
+4. Stoppe colima: `colima stop`
+5. Å køyre testar på andre maskiner, det er berre Ingrid si som ikkje får det til.
+6. Starte colima, og gjere "sudo"-kommandoen `sudo rm -rf /var/run/docker.sock && sudo ln -s /Users/$(whoami)/.colima/docker.sock /var/run/docker.sock`
+7. Melding om at ingen testar vart køyrd fordi koden var utan endringar, men heller ingen feilmelding, så 🎉🎉🎉
+</details>
+
+Konklusjon/løysing: Skru ting av og på att, det løyser stundom alt.

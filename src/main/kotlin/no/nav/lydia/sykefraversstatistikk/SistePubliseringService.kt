@@ -20,27 +20,6 @@ class SistePubliseringService(
         val logger = LoggerFactory.getLogger(this::class.java)
     }
 
-    //private val deserializer = Json { ignoreUnknownKeys = true }
-
-    /*
-    fun hentPubliseringsinfo(): Either<Feil, PeriodeDto> {
-        return "https://arbeidsgiver.nav.no/sykefravarsstatistikk/api/publiseringsdato".httpGet().useHttpCache(true)
-            .header(HttpHeaders.Accept to "application/json", HttpHeaders.ContentType to "application/json")
-            .response()
-            .third
-            .fold(success = {
-                it.toString(Charsets.UTF_8).right()
-                deserializer.decodeFromString<Publiseringsinfo>(it.toString(Charsets.UTF_8)).gjeldendePeriode.right()
-            }, failure = {
-                throw IOException(
-                    "Feilet under henting av publiseringsdato: ${it.message} ${
-                        it.errorData.toString(
-                            Charsets.UTF_8
-                        )
-                    }"
-                )
-            })
-    }*/
 
     fun hentPubliseringsinfo(): Either<Feil, Publiseringsinfo> {
         val publiseringsinfo = try {

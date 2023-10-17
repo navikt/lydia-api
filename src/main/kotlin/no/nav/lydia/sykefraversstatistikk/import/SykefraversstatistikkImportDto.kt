@@ -15,6 +15,18 @@ sealed class AggregertSykefraværsstatistikk : KvartalsvisSykefraværsstatistikk
     abstract val kode: String
 }
 
+data class BransjeSykefravær(
+    override val kvartal: Int,
+    override val årstall: Int,
+    override val prosent: Double,
+    override val muligeDagsverk: Double,
+    override val antallPersoner: Double,
+    override val tapteDagsverk: Double,
+    override val maskert: Boolean,
+    override val kategori: String,
+    override val kode: String,
+): AggregertSykefraværsstatistikk()
+
 data class NæringSykefravær(
     override val kvartal: Int,
     override val årstall: Int,
@@ -74,17 +86,3 @@ data class SykefraværsstatistikkForVirksomhet(
     override val kategori: String,
     val orgnr: String,
 ) : KvartalsvisSykefraværsstatistikk()
-
-data class SykefraversstatistikkImportDto(
-    val næringSykefravær: NæringSykefravær,
-    val næring5SifferSykefravær: List<NæringsundergruppeSykefravær>,
-    val virksomhetSykefravær: SykefraværsstatistikkForVirksomhet,
-    val landSykefravær: LandSykefravær,
-    val sektorSykefravær: SektorSykefravær,
-)
-
-data class Key(
-    val kvartal: Int,
-    val årstall: Int,
-    val orgnr: String?, // Key er egentlig ugyldig når orgnr er null
-)

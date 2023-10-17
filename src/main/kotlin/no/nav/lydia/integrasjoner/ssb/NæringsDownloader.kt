@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.stream.JsonReader
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.InputStreamReader
 
 class NæringsDownloader(
@@ -13,6 +14,23 @@ class NæringsDownloader(
 ) {
 
     private val log = LoggerFactory.getLogger(this.javaClass)
+
+    fun lastInnNæringerFraFil() {
+        // denne er lastet ned fra ssb sitt api (url ligger i nais.yaml)
+        File("src/test/resources/næringer.json").inputStream().use { stream ->
+            val gson = GsonBuilder().serializeNulls().create()
+            JsonReader(InputStreamReader(stream)).use { reader ->
+                reader.beginObject()
+                while (reader.hasNext() && !reader.nextName().equals("classificationItems"))
+                    reader.skipValue()
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    val næringsDto = gson.fromJson<NæringsDto>(reader, NæringsDto::class.java)
+                    næringsRepository.settInn(næringsDto)
+                }
+            }
+        }
+    }
 
     fun lastNedNæringer() {
         val start = System.currentTimeMillis()

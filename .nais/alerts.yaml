@@ -1,0 +1,30 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lydia-api-alerts
+  namespace: pia
+  labels:
+    team: pia
+spec:
+  groups:
+    - name: lydia-api-alerts
+      rules:
+        - alert: lydia-api er nede
+          expr: kube_deployment_status_replicas_available{namespace="pia", deployment="lydia-api"} == 0
+          for: 3m
+          annotations:
+            summary: Fia backend (lydia-api) er nede
+            action: "`kubectl describe pod {{ $labels.pod }} -n {{ $labels.namespace }}` for events, og `kubectl logs {{ $labels.pod }} -n {{ $labels.namespace }}` for logger"
+          labels:
+            namespace: pia
+            severity: critical
+        - alert: Høy feilrate i logger
+          expr: (100 * sum by (app, namespace) (rate(log_messages_error{app="lydia-api", namespace="pia"}[3m])) / sum by (app, namespace) (rate(log_messages_total{app="lydia-api", namespace="pia"}[3m]))) > 10
+          for: 3m
+          annotations:
+            consequence: "*lydia-api* har logget høy andel feil."
+            action: "Sjekk loggene til app `lydia-api` for å se hvorfor det er så mye feil."
+          labels:
+            namespace: pia
+            severity: warning

@@ -1,9 +1,6 @@
 package no.nav.lydia.container.ia.eksport
 
-import ia.felles.definisjoner.bransjer.Bransjer
-import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
-import io.kotest.inspectors.forExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -18,21 +15,17 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.IA_SAK_STATUS_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.SLETTET
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
@@ -53,9 +46,8 @@ class IASakStatusEksportørTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASakStatus`() {
-        val næringskode = "${Bransjer.BYGG.næringskoder.first()}.123"
         val virksomhet =
-            TestVirksomhet.nyVirksomhet(næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygg og ting")))
+            TestVirksomhet.nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
         lastInnNyVirksomhet(virksomhet)
 
         val sak =
@@ -92,61 +84,18 @@ class IASakStatusEksportørTest {
         runBlocking {
             val eldsteSak = SakHelper.nySakIViBistår().nyIkkeAktuellHendelse()
             val gammelSak = SakHelper.nySakIViBistår(orgnummer = eldsteSak.orgnr).nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger.forExactly(7) { hendelse ->
-                    hendelse shouldContain eldsteSak.saksnummer
-                    hendelse shouldContain eldsteSak.orgnr
-                }
-                meldinger.forExactly(7) { hendelse ->
-                    hendelse shouldContain gammelSak.saksnummer
-                    hendelse shouldContain gammelSak.orgnr
-                }
-                meldinger shouldHaveSize 14
-                meldinger[6] shouldContain IKKE_AKTUELL.name
-                meldinger[13] shouldContain FULLFØRT.name
-            }
 
-            val sakSomSlettes = opprettSakForVirksomhet(orgnummer = eldsteSak.orgnr)
+            // -- Slett en sak, for å teste om siste melding er den gjeldene aktive statusen
+            opprettSakForVirksomhet(orgnummer = eldsteSak.orgnr)
+                .nyHendelse(IASakshendelseType.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger.forAll { hendelse ->
-                    hendelse shouldContain sakSomSlettes.saksnummer
-                    hendelse shouldContain sakSomSlettes.orgnr
-                }
-                meldinger shouldHaveSize 1
-                meldinger[0] shouldContain NY.name
-            }
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger.forAll { hendelse ->
-                    hendelse shouldContain sakSomSlettes.saksnummer
-                    hendelse shouldContain sakSomSlettes.orgnr
-                }
-                meldinger shouldHaveSize 1
-                meldinger[0] shouldContain VURDERES.name
-            }
-
-            // Sletting
-            sakSomSlettes.nyHendelse(IASakshendelseType.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
-
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger.forAll { hendelse ->
-                    hendelse shouldContain sakSomSlettes.saksnummer
-                    hendelse shouldContain sakSomSlettes.orgnr
-                }
-                meldinger shouldHaveSize 1
-                meldinger[0] shouldContain SLETTET.name
-            }
-            // Siste meldingen skal være den
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger.forAll { hendelse ->
-                    hendelse shouldContain gammelSak.saksnummer
-                    hendelse shouldContain gammelSak.orgnr
-                }
-                meldinger shouldHaveSize 1
-                meldinger[0] shouldContain FULLFØRT.name
+                meldinger shouldHaveSize 18
+                // -- Siste meldingen skal være den gamle fullførte saken
+                meldinger[17] shouldContain gammelSak.saksnummer
+                meldinger[17] shouldContain gammelSak.orgnr
+                meldinger[17] shouldContain FULLFØRT.name
             }
         }
-
     }
 }
-

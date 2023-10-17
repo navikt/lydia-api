@@ -20,11 +20,11 @@ import java.time.LocalDateTime
 data class Søkeparametere(
     val kommunenummer: Set<String>,
     val næringsgruppeKoder: Set<String>,
-    val periode: Periode,
     val sorteringsnøkkel: Sorteringsnøkkel,
     val sorteringsretning: Sorteringsretning,
     val sykefraværsprosentFra: Sykefraværsprosent?,
     val sykefraværsprosentTil: Sykefraværsprosent?,
+    val snittFilter: SnittFilter?,
     val ansatteFra: Int?,
     val ansatteTil: Int?,
     val status: IAProsessStatus?,
@@ -36,7 +36,6 @@ data class Søkeparametere(
     fun toLogString() = "Søk med parametere:" +
             (sykefraværsprosentFra?.let { " $SYKEFRAVÆRSPROSENT_FRA=$sykefraværsprosentFra" } ?: "") +
             (sykefraværsprosentTil?.let { " $SYKEFRAVÆRSPROSENT_TIL=$sykefraværsprosentTil" } ?: "") +
-            " $KVARTAL=${periode.kvartal} $ÅRSTALL=${periode.årstall}" +
             (ansatteFra?.let { " $ANSATTE_FRA=$ansatteFra" } ?: "") +
             (ansatteTil?.let { " $ANSATTE_TIL=$ansatteTil" } ?: "") +
             (if (kommunenummer.isNotEmpty()) " $KOMMUNER=$kommunenummer" else "") +
@@ -51,8 +50,6 @@ data class Søkeparametere(
     companion object {
         const val VIRKSOMHETER_PER_SIDE = 100
 
-        const val KVARTAL = "kvartal"
-        const val ÅRSTALL = "arstall"
         const val KOMMUNER = "kommuner"
         const val FYLKER = "fylker"
         const val NÆRINGSGRUPPER = "neringsgrupper"
@@ -60,6 +57,7 @@ data class Søkeparametere(
         const val SORTERINGSRETNING = "sorteringsretning"
         const val SYKEFRAVÆRSPROSENT_FRA = "sykefraversprosentFra"
         const val SYKEFRAVÆRSPROSENT_TIL = "sykefraversprosentTil"
+        const val SNITT_FILTER = "snittfilter"
         const val ANSATTE_FRA = "ansatteFra"
         const val ANSATTE_TIL = "ansatteTil"
         const val IA_STATUS = "iaStatus"
@@ -71,15 +69,14 @@ data class Søkeparametere(
         fun ApplicationRequest.søkeparametere(gjeldendePeriode: Periode, geografiService: GeografiService, navAnsatt: NavAnsatt) =
             queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().zip(
                 queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent(),
-                Periode.tilValidertPeriode(kvartal = queryParameters[KVARTAL], årstall = queryParameters[ÅRSTALL], gjeldendePeriode),
                 queryParameters[SIDE].tomSomNull()?.tilValidertHeltall() ?: Valid(1),
                 queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall() ?: Valid(null),
                 queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall() ?: Valid(null)
-            ) { sykefraværsProsentFra, sykefraværsProsentTil, periode, side, ansatteFra, ansatteTil ->
+            ) { sykefraværsProsentFra, sykefraværsProsentTil, side, ansatteFra, ansatteTil ->
                 Søkeparametere(
                     sykefraværsprosentFra = sykefraværsProsentFra,
                     sykefraværsprosentTil = sykefraværsProsentTil,
-                    periode = periode,
+                    snittFilter = queryParameters[SNITT_FILTER].tomSomNull()?.let { SnittFilter.valueOf(it) },
                     side = side,
                     ansatteFra = ansatteFra,
                     ansatteTil = ansatteTil,
@@ -98,7 +95,7 @@ data class Søkeparametere(
 
         fun filtrerPåSektor(søkeparametere: Søkeparametere) =
             if(søkeparametere.sektor.isEmpty()) ""
-            else " AND virksomhet_statistikk_metadata.sektor in (select unnest(:sektorer)) "
+            else " AND sektor in (select unnest(:sektorer)) "
 
         fun filtrerPåEiere(søkeparametere: Søkeparametere) =
             if (søkeparametere.navIdenter.isEmpty()) ""
@@ -121,7 +118,41 @@ data class Søkeparametere(
 
         fun filtrerPåKommuner(søkeparametere: Søkeparametere) =
             if (søkeparametere.kommunenummer.isEmpty()) ""
-            else " AND virksomhet.kommunenummer in (select unnest(:kommuner)) "
+            else " AND kommunenummer in (select unnest(:kommuner)) "
+
+        fun filtrerPåSnitt(søkeparametere: Søkeparametere) =
+                søkeparametere.snittFilter?.let { snittFilter ->
+                        """
+                            AND (
+                              (statistikk.bransje_prosent is null AND statistikk.prosent ${snittFilterTilSammenligningstegn(snittFilter)} statistikk.naring_prosent) 
+                                OR 
+                              (statistikk.bransje_prosent is not null AND statistikk.prosent ${snittFilterTilSammenligningstegn(snittFilter)} statistikk.bransje_prosent)
+                            ) 
+                        """.trimIndent()
+                } ?: ""
+
+        private fun snittFilterTilSammenligningstegn(snittFilter: SnittFilter) =
+            when (snittFilter) {
+                SnittFilter.BRANSJE_NÆRING_OVER -> ">"
+                SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK -> "<="
+            }
+
+        fun joinTilNæringEllerBransje(søkeparametere: Søkeparametere) =
+            if (søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_OVER
+                || søkeparametere.snittFilter == SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK) {"""
+              LEFT JOIN naringsundergrupper_per_bransje AS bransjeprogram on (vn.naringsundergruppe1 = bransjeprogram.naringsundergruppe)
+              LEFT JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS bransje_siste4
+                ON (bransjeprogram.bransje = bransje_siste4.kode
+                    AND bransje_siste4.kategori = 'BRANSJE'
+                    AND bransje_siste4.publisert_kvartal = statistikk.kvartal
+                    AND bransje_siste4.publisert_arstall = statistikk.arstall)
+              JOIN sykefravar_statistikk_kategori_siste_4_kvartal AS naring_siste4
+                ON (substr(vn.naringsundergruppe1, 1, 2) = naring_siste4.kode
+                    AND naring_siste4.kategori = 'NÆRING'
+                    AND naring_siste4.publisert_kvartal = statistikk.kvartal
+                    AND naring_siste4.publisert_arstall = statistikk.arstall)
+            """.trimIndent()
+            } else ""
 
         fun filtrerPåBransjeOgNæring(søkeparametere: Søkeparametere): String {
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
@@ -130,14 +161,20 @@ data class Søkeparametere(
             else
                 """
                 AND (
-                    substr(vn.narings_kode, 1, 2) in (select unnest(:naringer))
+                   substr(naringsundergruppe1, 1, 2) in (select unnest(:naringer)) 
+                   OR substr(naringsundergruppe2, 1, 2) in (select unnest(:naringer)) 
+                   OR substr(naringsundergruppe3, 1, 2) in (select unnest(:naringer))
                     ${
                     if (søkeparametere.bransjeprogram.isNotEmpty()) {
                         val koder = søkeparametere.bransjeprogram.flatMap { it.næringskoder }.groupBy {
                             it.length
                         }
                         val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
-                        femsifrede?.let { "OR (vn.narings_kode in (select (unnest(:naringer))))" } ?: ""
+                        femsifrede?.let { 
+                            "OR (naringsundergruppe1 in (select (unnest(:naringer))))" + 
+                            "OR (naringsundergruppe2 in (select (unnest(:naringer))))" +
+                            "OR (naringsundergruppe3 in (select (unnest(:naringer))))" 
+                        } ?: ""
                     } else ""
                 }
                     )

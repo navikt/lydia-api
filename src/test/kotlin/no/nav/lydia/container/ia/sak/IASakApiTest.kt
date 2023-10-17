@@ -61,7 +61,7 @@ class IASakApiTest {
     fun `skal lagre navenhet på hendelser`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
-        postgresContainer.hentAlleKolonner<String>(
+        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
             """
                 select nav_enhet_nummer from ia_sak_hendelse
                   where saksnummer = '${sak.saksnummer}'
@@ -1075,7 +1075,7 @@ class IASakApiTest {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = oauth2ServerContainer.superbruker1.token)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
-        postgresContainer.hentAlleKolonner<String>(
+        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
             "select opprettet_av_rolle from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by opprettet") shouldBe listOf(
                 "SUPERBRUKER",
                 "SUPERBRUKER",
