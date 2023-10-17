@@ -17,9 +17,6 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.*
 
-/**
- * https://github.com/navikt/ereg-sf/blob/master/src/main/kotlin/no/nav/ereg/SalesforceDSL.kt
- */
 class SalesforceClient(private val naisEnvironment: NaisEnvironment) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
     private var tokenTimeout = 3600000 // One hour
@@ -27,7 +24,7 @@ class SalesforceClient(private val naisEnvironment: NaisEnvironment) {
 
     fun hentUrlTilSalesforce(virksomhet: Virksomhet): String? {
         return try {
-            querySalesforce("SELECT name,Id,INT_OrganizationNumber__c FROM Account WHERE INT_OrganizationNumber__c = ${virksomhet.orgnr}").getOrNull()
+            querySalesforce("SELECT Id FROM Account WHERE INT_OrganizationNumber__c = ${virksomhet.orgnr}").getOrNull()
         } catch (e: IOException) {
             log.warn(e.message, e)
             return null
