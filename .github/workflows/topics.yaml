@@ -1,11 +1,11 @@
-name: "Deploy lydia-api topics"
+name: Deploy lydia-api topics
 on:
   push:
     branches:
       - main
     paths:
-      - ".nais/topics/**" # Deploy topics ved endringer i topics-mappen
-      - ".github/workflows/topics.yaml" # Deploy topics ved endringer i topics.yaml
+      - .nais/topics/** # Deploy topics ved endringer i topics-mappen
+      - .github/workflows/topics.yaml # Deploy topics ved endringer i topics.yaml
 
 permissions: {}
 
@@ -14,15 +14,15 @@ jobs:
     strategy:
       matrix:
         cluster: [dev, prod]
-    name: "Deploy app to ${{ matrix.cluster }}"
+    name: Deploy app to ${{ matrix.cluster }}
     if: github.ref == 'refs/heads/main'
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
-      - uses: "actions/checkout@v3"
-      - name: "Deploy topics to ${{ matrix.cluster }}"
-        uses: "nais/deploy/actions/deploy@master"
+      - uses: actions/checkout@v3
+      - name: Deploy topics to ${{ matrix.cluster }}
+        uses: nais/deploy/actions/deploy@master
         env:
-          APIKEY: "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          CLUSTER: "${{ matrix.cluster }}-gcp"
-          RESOURCE: ".nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-status-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml"
-          VARS: ".nais/${{ matrix.cluster }}.yaml"
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: ${{ matrix.cluster }}-gcp
+          RESOURCE: .nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-status-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml
+          VARS: .nais/${{ matrix.cluster }}.yaml

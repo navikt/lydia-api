@@ -1,40 +1,40 @@
-name: "Build and deploy lydia-api"
+name: Build and deploy lydia-api
 on: [ push ]
 
 jobs:
-  "build":
+  build:
     permissions:
       packages: write
       contents: write
       id-token: write
-    name: "build"
-    runs-on: "ubuntu-latest"
+    name: build
+    runs-on: ubuntu-latest
     steps:
-      - uses: "actions/checkout@v3"
-      - uses: "gradle/wrapper-validation-action@v1"
-      - uses: "actions/cache@v3"
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - uses: actions/cache@v3
         with:
-          "path": "~/.gradle/caches"
-          "key": "${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}"
-          "restore-keys": "${{ runner.os }}-gradle-"
-      - uses: "actions/setup-java@v3"
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: ${{ runner.os }}-gradle-
+      - uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: "Setup Gradle to generate and submit dependency graphs"
-        uses: "gradle/gradle-build-action@v2.9.0"
+          distribution: temurin
+          java-version: 17
+      - name: Setup Gradle to generate and submit dependency graphs
+        uses: gradle/gradle-build-action@v2.9.0
         with:
-          dependency-graph: "generate-and-submit"
-      - name: "Compile, run tests and build"
-        run: "./gradlew build"
-      - name: "Set up QEMU"
-        uses: "docker/setup-qemu-action@v2"
+          dependency-graph: generate-and-submit
+      - name: Compile, run tests and build
+        run: ./gradlew build
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
         with:
-          platforms: "linux/amd64,linux/arm64"
-      - name: "Set up Docker Buildx"
-        uses: "docker/setup-buildx-action@v2"
-      - name: "Build and push docker image"
-        uses: "nais/docker-build-push@v0"
+          platforms: linux/amd64,linux/arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push docker image
+        uses: nais/docker-build-push@v0
         id: docker-push
         with:
           team: pia
@@ -49,37 +49,37 @@ jobs:
     strategy:
       matrix:
         cluster: [dev, prod]
-    name: "Deploy app to ${{ matrix.cluster }}"
-    needs: "build"
+    name: Deploy app to ${{ matrix.cluster }}
+    needs: build
     if: github.ref == 'refs/heads/main'
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
-      - uses: "actions/checkout@v3"
-      - name: "Deploy application to ${{ matrix.cluster }}"
-        uses: "nais/deploy/actions/deploy@v1"
+      - uses: actions/checkout@v3
+      - name: Deploy application to ${{ matrix.cluster }}
+        uses: nais/deploy/actions/deploy@v1
         env:
           IMAGE: ${{ needs.build.outputs.image }}
-          "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          "CLUSTER": "${{ matrix.cluster }}-gcp"
-          "RESOURCE": ".nais/nais.yaml"
-          "VARS": ".nais/${{ matrix.cluster }}.yaml"
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: ${{ matrix.cluster }}-gcp
+          RESOURCE: .nais/nais.yaml
+          VARS: .nais/${{ matrix.cluster }}.yaml
 
   deploy-dev-branch:
     permissions: {}
-    name: "Deploy app to dev"
-    needs: "build"
+    name: Deploy app to dev
+    needs: build
     if: github.ref == 'refs/heads/matview'
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
-      - uses: "actions/checkout@v3"
-      - name: "Deploy application to dev"
-        uses: "nais/deploy/actions/deploy@v1"
+      - uses: actions/checkout@v3
+      - name: Deploy application to dev
+        uses: nais/deploy/actions/deploy@v1
         env:
           IMAGE: ${{ needs.build.outputs.image }}
-          "APIKEY": "${{ secrets.NAIS_DEPLOY_APIKEY }}"
-          "CLUSTER": "dev-gcp"
-          "RESOURCE": ".nais/nais.yaml"
-          "VARS": ".nais/dev.yaml"
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/nais.yaml
+          VARS: .nais/dev.yaml
 
   trivy-scan:
     name: Scanner docker image med Trivy
@@ -104,18 +104,18 @@ jobs:
         with:
           image-ref: ${{ needs.build.outputs.image }}
           ignore-unfixed: false # Vi vil se alle sårbarheter, også de som ikke er fikset
-          vuln-type: 'os,library'
+          vuln-type: os,library
           limit-severities-for-sarif: true
-          severity: 'MEDIUM,HIGH,CRITICAL' # Prøver å filtrere bort lave og uklassifiserte sårbarheter
-          format: 'sarif'
-          output: 'trivy-results.sarif' # Filen som genereres av trivy brukes i de neste stegene
+          severity: MEDIUM,HIGH,CRITICAL # Prøver å filtrere bort lave og uklassifiserte sårbarheter
+          format: sarif
+          output: trivy-results.sarif # Filen som genereres av trivy brukes i de neste stegene
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
       - name: Laster opp Trivy sin rårapport som artifact
         uses: actions/upload-artifact@v3
         with:
           name: trivy-results
-          path: 'trivy-results.sarif'
+          path: trivy-results.sarif
