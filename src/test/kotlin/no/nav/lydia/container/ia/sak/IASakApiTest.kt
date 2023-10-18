@@ -140,20 +140,24 @@ class IASakApiTest {
     fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
         val hendelserDetIkkeSkalKunneSlettesEtter = IASakshendelseType.values()
-            .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
+                .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
 
         hendelserDetIkkeSkalKunneSlettesEtter.forEach {
-            sak = if (it == VIRKSOMHET_ER_IKKE_AKTUELL) {
-                sak.nyHendelse(
-                    it, payload = ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
+            sak = when (it) {
+                VIRKSOMHET_ER_IKKE_AKTUELL ->
+                    sak.nyHendelse(
+                            it, payload = ValgtÅrsak(
+                            type = VIRKSOMHETEN_TAKKET_NEI,
+                            begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
                     ).toJson()
-                )
-            } else {
-                sak.nyHendelse(it)
-            }
+                    )
 
+                FULLFØR_BISTAND ->
+                    sak.leggTilLeveranseOgFullførSak()
+
+                else ->
+                    sak.nyHendelse(it)
+            }
             shouldFail {
                 sak.slettSak()
             }
