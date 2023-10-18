@@ -46,6 +46,7 @@ import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -519,6 +520,12 @@ class SakHelper {
                         where saksnummer='${this.saksnummer}';
                 """.trimIndent())
             return requireNotNull(hentSaker(this.orgnr, token = token).find { it.saksnummer == this.saksnummer })
+        }
+
+        fun IASakDto.leggTilLeveranseOgFullførSak(modulId: Int = 1): IASakDto {
+            val leveranse = this.opprettIASakLeveranse(modulId = modulId)
+            leveranse.oppdaterIASakLeveranse(this.orgnr, IASakLeveranseStatus.LEVERT)
+            return nyHendelse(FULLFØR_BISTAND)
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
