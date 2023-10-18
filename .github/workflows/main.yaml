@@ -83,6 +83,7 @@ jobs:
 
   trivy-scan:
     name: Scanner docker image med Trivy
+    if: github.ref == 'refs/heads/main'
     needs: build
     permissions:
       contents: read # to write sarif
