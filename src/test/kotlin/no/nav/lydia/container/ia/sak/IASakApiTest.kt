@@ -5,7 +5,13 @@ import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
-import io.kotest.matchers.collections.*
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.*
@@ -16,15 +22,16 @@ import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
+import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
-import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
@@ -40,10 +47,29 @@ import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_FÅ_TAPTE_DAGSVERK
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_DIALOG_MELLOM_PARTENE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_RESPONDERT
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
@@ -353,8 +379,7 @@ class IASakApiTest {
 
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
             .statuskode() shouldBe 501
-
-        sak = sak.nyHendelse(FULLFØR_BISTAND)
+        sak = sak.leggTilLeveranseOgFullførSak()
         sak.status shouldBe FULLFØRT
 
         val sak2Respons =
@@ -828,9 +853,8 @@ class IASakApiTest {
     @Test
     fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
         // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"?  (+ capslock her på IKKE, i motsetning til resten av testane)
-        val sak = nySakIViBistår()
-            .nyHendelse(FULLFØR_BISTAND)
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
+        sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
         shouldFail {
             sak.nyHendelse(TILBAKE)
@@ -877,17 +901,15 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
-        val sak = nySakIViBistår()
-            .nyHendelse(FULLFØR_BISTAND)
-            .nyHendelse(TILBAKE)
-        sak.status shouldBe VI_BISTÅR
+        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
+        sak.status shouldBe FULLFØRT
+        val oppdatertSak = sak.nyHendelse(TILBAKE)
+        oppdatertSak.status shouldBe VI_BISTÅR
     }
 
     @Test
     fun `skal kunne overta sak som står som fullført og deretter tilbake til vi bistår`() {
-        val sak = nySakIViBistår()
-            .nyHendelse(FULLFØR_BISTAND)
-
+        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
         val sakEtterOvertakelse = sak.nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
 
         sakEtterOvertakelse.status shouldBe FULLFØRT
@@ -903,11 +925,9 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne gå tilbake fra fullført status dersom virksomheten har en annen åpen sak`() {
         val virksomhet = lastInnNyVirksomhet()
-        val fullførtSak = nySakIViBistår(orgnummer = virksomhet.orgnr)
-            .nyHendelse(FULLFØR_BISTAND)
+        val fullførtSak = nySakIViBistår(orgnummer = virksomhet.orgnr).leggTilLeveranseOgFullførSak()
 
-        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
-
+        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr) // Dette skal kunne skje etter 10 dager eller en POST kommer fra frontend
         shouldFail {
             fullførtSak.nyHendelse(TILBAKE)
         }
@@ -926,6 +946,25 @@ class IASakApiTest {
     }
 
     @Test
+    fun `skal IKKE kunne fullføre en sak fra 'Vi Bistår' status dersom INGEN leveranse er levert`() {
+        val enSakUtenLeveranser = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .also { sak ->
+                shouldFail {
+                    sak.nyHendelse(FULLFØR_BISTAND)
+                }
+            }
+            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            .also { sak ->
+                shouldFail {
+                    sak.nyHendelse(FULLFØR_BISTAND)
+                }
+            }
+    }
+
+    @Test
     fun `skal kunne fullføre en sak fra 'Vi Bistår' status`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
@@ -937,7 +976,7 @@ class IASakApiTest {
                 }
             }
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-            .nyHendelse(FULLFØR_BISTAND)
+            .leggTilLeveranseOgFullførSak()
             .also { sak -> sak.status shouldBe FULLFØRT }
     }
 
@@ -1063,7 +1102,7 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .nyHendelse(TILBAKE)
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-            .nyHendelse(FULLFØR_BISTAND)
+            .leggTilLeveranseOgFullførSak()
 
         hentAktivSak(orgnummer = sak.orgnr).also { enSak ->
             enSak.status shouldBe FULLFØRT

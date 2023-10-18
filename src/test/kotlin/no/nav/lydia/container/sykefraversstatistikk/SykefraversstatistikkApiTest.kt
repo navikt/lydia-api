@@ -28,6 +28,7 @@ import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils
 import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -79,7 +80,6 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.sykefraversstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
@@ -666,7 +666,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `skal hente statistikk for alle kvartaler for en virksomhet`() {
-        val næring = TestData.BARNEHAGER
+        val næring = BARNEHAGER
         val perioder = gjeldendePeriode.lagPerioder(12)
 
         val nyVirksomhet = lastInnNyVirksomhet(
@@ -1124,7 +1124,7 @@ class SykefraversstatistikkApiTest {
         val virksomhet3 =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         nySakIViBistår(orgnummer = virksomhet3.orgnr)
-            .nyHendelse(FULLFØR_BISTAND)
+            .leggTilLeveranseOgFullførSak()
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 8)
 
         // -- lag en virksomhet med en ViBistår sak
