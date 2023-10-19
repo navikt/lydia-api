@@ -8,9 +8,12 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
@@ -233,9 +236,13 @@ class IASakLeveranseTest {
     fun `skal ikke kunne fullføre sak med leveranser som er under arbeid`() {
         val sakIViBistår = nySakIViBistår()
         sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = 1)
-        shouldFail {
-            sakIViBistår.nyHendelse(FULLFØR_BISTAND)
-        }
+        val response = SakHelper.nyHendelsePåSakMedRespons(
+            sak = sakIViBistår,
+            hendelsestype = FULLFØR_BISTAND,
+            token = mockOAuth2Server.saksbehandler1.token
+        )
+        response.statuskode() shouldBe BadRequest.value
+        response.second.body().asString("text/plain") shouldMatch "Kan ikke fullf.*re med gjenst.*ende leveranser"
     }
 
     @Test
