@@ -14,6 +14,7 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
@@ -965,9 +966,14 @@ class IASakApiTest {
             }
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .also { sak ->
-                shouldFail {
-                    sak.nyHendelse(FULLFØR_BISTAND)
-                }
+                val response = nyHendelsePåSakMedRespons(
+                    sak = sak,
+                    hendelsestype = FULLFØR_BISTAND,
+                    token = mockOAuth2Server.saksbehandler1.token
+                )
+                response.statuskode() shouldBe HttpStatusCode.BadRequest.value
+                response.second.body()
+                    .asString("text/plain") shouldMatch "Kan ikke fullf.*re uten leveranser"
             }
     }
 
