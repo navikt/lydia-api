@@ -857,8 +857,9 @@ class IASakApiTest {
     @Test
     fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
         // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"?  (+ capslock her på IKKE, i motsetning til resten av testane)
-        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
-        sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+        val sak = nySakIViBistår()
+            .leggTilLeveranseOgFullførSak()
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
         shouldFail {
             sak.nyHendelse(TILBAKE)
@@ -905,10 +906,10 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
-        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
-        sak.status shouldBe FULLFØRT
-        val oppdatertSak = sak.nyHendelse(TILBAKE)
-        oppdatertSak.status shouldBe VI_BISTÅR
+        val sak = nySakIViBistår()
+            .leggTilLeveranseOgFullførSak()
+            .nyHendelse(TILBAKE)
+        sak.status shouldBe VI_BISTÅR
     }
 
     @Test
@@ -929,9 +930,11 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne gå tilbake fra fullført status dersom virksomheten har en annen åpen sak`() {
         val virksomhet = lastInnNyVirksomhet()
-        val fullførtSak = nySakIViBistår(orgnummer = virksomhet.orgnr).leggTilLeveranseOgFullførSak()
+        val fullførtSak = nySakIViBistår(orgnummer = virksomhet.orgnr)
+            .leggTilLeveranseOgFullførSak()
 
-        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr) // Dette skal kunne skje etter 10 dager eller en POST kommer fra frontend
+        // Dette skal kunne skje etter 10 dager på frontend (men sjekkes ikke backend)
+        opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
         shouldFail {
             fullførtSak.nyHendelse(TILBAKE)
         }

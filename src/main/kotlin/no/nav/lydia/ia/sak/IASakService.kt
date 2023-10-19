@@ -100,7 +100,6 @@ class IASakService(
         val aktiveLeveranserPåEnSak = alleLeveranserPåEnSak.filter { it.status == IASakLeveranseStatus.UNDER_ARBEID }
 
         if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND && aktiveLeveranserPåEnSak.isNotEmpty())
-            // TODO sjekk at FULLFØR hendelse kommer etter 18. oktober 2023 (den dagen vi infører den nye regelen)
             return IASakError.`kan ikke fullføre med gjenstående leveranser`.left()
 
         if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND && alleLeveranserPåEnSak.isEmpty())
