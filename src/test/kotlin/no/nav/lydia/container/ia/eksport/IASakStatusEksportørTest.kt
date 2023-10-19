@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
@@ -83,7 +84,7 @@ class IASakStatusEksportørTest {
     fun `sletting av feilåpnet sak produserer en slett melding på topic og spiller ut aktiv sak sin status`() {
         runBlocking {
             val eldsteSak = SakHelper.nySakIViBistår().nyIkkeAktuellHendelse()
-            val gammelSak = SakHelper.nySakIViBistår(orgnummer = eldsteSak.orgnr).nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
+            val gammelSak = SakHelper.nySakIViBistår(orgnummer = eldsteSak.orgnr).leggTilLeveranseOgFullførSak()
 
             // -- Slett en sak, for å teste om siste melding er den gjeldene aktive statusen
             opprettSakForVirksomhet(orgnummer = eldsteSak.orgnr)

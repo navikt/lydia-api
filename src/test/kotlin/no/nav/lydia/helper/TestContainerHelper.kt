@@ -522,10 +522,10 @@ class SakHelper {
             return requireNotNull(hentSaker(this.orgnr, token = token).find { it.saksnummer == this.saksnummer })
         }
 
-        fun IASakDto.leggTilLeveranseOgFullførSak(modulId: Int = 1): IASakDto {
+        fun IASakDto.leggTilLeveranseOgFullførSak(modulId: Int = 1, token: String = oauth2ServerContainer.saksbehandler1.token): IASakDto {
             val leveranse = this.opprettIASakLeveranse(modulId = modulId)
             leveranse.oppdaterIASakLeveranse(this.orgnr, IASakLeveranseStatus.LEVERT)
-            return nyHendelse(FULLFØR_BISTAND)
+            return nyHendelse(FULLFØR_BISTAND, token)
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
