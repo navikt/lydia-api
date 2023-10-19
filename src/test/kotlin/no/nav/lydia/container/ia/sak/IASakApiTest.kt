@@ -951,7 +951,7 @@ class IASakApiTest {
 
     @Test
     fun `skal IKKE kunne fullføre en sak fra 'Vi Bistår' status dersom INGEN leveranse er levert`() {
-        val enSakUtenLeveranser = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
@@ -1055,7 +1055,7 @@ class IASakApiTest {
             success = { mainResponse ->
                 val org = mainResponse.data.filter { it.status == IKKE_AKTIV }.random()
                 val sak = nySakIViBistår(orgnummer = org.orgnr, token = saksbehandler)
-                    .nyHendelse(FULLFØR_BISTAND, token = saksbehandler)
+                    .leggTilLeveranseOgFullførSak(token = saksbehandler)
                 hentSykefravær( // Tester at vi får se FULLFØRT intil fristen går ut
                     token = superbruker,
                     success = { response ->
