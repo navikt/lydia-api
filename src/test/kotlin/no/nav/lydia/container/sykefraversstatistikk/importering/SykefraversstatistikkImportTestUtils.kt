@@ -4,10 +4,7 @@ import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraversstatistikk.import.Kategori
-import no.nav.lydia.sykefraversstatistikk.import.Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.sykefraversstatistikk.import.*
 
 
 class SykefraversstatistikkImportTestUtils {
@@ -52,6 +49,34 @@ class SykefraversstatistikkImportTestUtils {
         fun toJsonValue() = value.toJson()
     }
 
+    data class JsonMeldingGradering(
+            val key: JsonKeyGradering,
+            val value: JsonValueGradering
+    ) {
+        constructor(
+                kategori: String,
+                kode: String,
+                kvartal: Kvartal = Kvartal(2023, 1),
+                sistePubliserteKvartal: GraderingSistePubliserteKvartal,
+                siste4Kvartal: GraderingSiste4Kvartal,
+        ) : this(
+                JsonKeyGradering(
+                        kategori = kategori,
+                        kode = kode,
+                        kvartal = kvartal
+                ),
+                JsonValueGradering(
+                        kategori = kategori,
+                        kode = kode,
+                        kvartal = kvartal,
+                        sistePubliserteKvartal = sistePubliserteKvartal,
+                        siste4Kvartal = siste4Kvartal
+                )
+        )
+        fun toJsonKey() = key.toJson()
+        fun toJsonValue() = value.toJson()
+    }
+
     data class JsonKey(
             val kategori: Kategori,
             val kode: String,
@@ -64,6 +89,18 @@ class SykefraversstatistikkImportTestUtils {
             val kvartal: Kvartal,
             val sistePubliserteKvartal: SistePubliserteKvartal,
             val siste4Kvartal: Siste4Kvartal,
+    )
+    data class JsonKeyGradering(
+            val kategori: String,
+            val kode: String,
+            val kvartal: Kvartal
+    )
+    data class JsonValueGradering(
+            val kategori: String,
+            val kode: String,
+            val kvartal: Kvartal,
+            val sistePubliserteKvartal: GraderingSistePubliserteKvartal,
+            val siste4Kvartal: GraderingSiste4Kvartal,
     )
 
     companion object {
@@ -117,6 +154,34 @@ class SykefraversstatistikkImportTestUtils {
                         separator = ","
                 ).trimIndent()
 
+        fun JsonKeyGradering.toJson(): String = """
+                {
+                  "kategori": "$kategori",
+                  "kode": "$kode",
+                  "kvartal": ${kvartal.kvartal},
+                  "årstall": ${kvartal.årstall}
+                }""".trimIndent()
+        fun JsonValueGradering.toJson(): String = """
+                {
+                  "kategori": "$kategori",
+                  "kode": "${kode}",
+                  "sistePubliserteKvartal": {
+                    "årstall": ${kvartal.årstall},
+                    "kvartal": ${kvartal.kvartal},
+                    "prosent": ${sistePubliserteKvartal.prosent?.toPlainString()},
+                    "tapteDagsverkGradert": ${sistePubliserteKvartal.tapteDagsverkGradert?.toPlainString()},
+                    "tapteDagsverk": ${sistePubliserteKvartal.tapteDagsverk?.toPlainString()},
+                    "antallPersoner": ${sistePubliserteKvartal.antallPersoner},
+                    "erMaskert": ${sistePubliserteKvartal.erMaskert}
+                  },
+                  "siste4Kvartal": {
+                    "prosent": ${siste4Kvartal.prosent?.toPlainString()},
+                    "tapteDagsverkGradert": ${siste4Kvartal.tapteDagsverkGradert?.toPlainString()},
+                    "tapteDagsverk": ${siste4Kvartal.tapteDagsverk?.toPlainString()},
+                    "erMaskert": ${siste4Kvartal.erMaskert},
+                    "kvartaler": [${siste4Kvartal.kvartaler.toJson()}]
+                  }
+                }""".trimIndent()
         fun JsonValue.toJson(): String = """
                 {
                   "kategori": "${kategori.name}",
