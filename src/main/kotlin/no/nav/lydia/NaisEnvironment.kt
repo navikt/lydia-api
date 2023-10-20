@@ -87,6 +87,7 @@ class Kafka(
     val statistikkNæringTopic: String = getEnvVar("STATISTIKK_NARING_TOPIC"),
     val statistikkNæringskodeTopic: String = getEnvVar("STATISTIKK_NARINGSKODE_TOPIC"),
     val statistikkVirksomhetTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_TOPIC"),
+    val statistikkVirksomhetGraderingTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_GRADERING_TOPIC"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
     companion object {
@@ -96,6 +97,7 @@ class Kafka(
         const val statistikkNæringGroupId = "lydia-api-statistikk-naring-consumer"
         const val statistikkNæringskodeGroupId = "lydia-api-statistikk-naringskode-consumer"
         const val statistikkVirksomhetGroupId = "lydia-api-statistikk-virksomhet-consumer"
+        const val statistikkVirksomhetGraderingGroupId = "lydia-api-statistikk-virksomhet-gradering-consumer"
         const val statistikkMetadataVirksomhetGroupId = "lydia-api-statistikk-metadata-virksomhet-consumer"
         const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
         const val clientId: String = "lydia-api"
