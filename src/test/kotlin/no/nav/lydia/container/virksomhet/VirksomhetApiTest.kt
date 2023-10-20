@@ -14,8 +14,10 @@ import no.nav.lydia.helper.TestData.Companion.NÆRINGSMIDLER_IKKE_NEVNT
 import no.nav.lydia.helper.TestData.Companion.NÆRING_MED_BINDESTREK
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceUrl
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
+import no.nav.lydia.integrasjoner.salesforce.SalesforceUrlResponse
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
@@ -206,5 +208,13 @@ class VirksomhetApiTest {
         val virksomhetDto = hentVirksomhetsinformasjon(orgnummer = virksomhet.orgnr)
 
         virksomhetDto.næring shouldBe Næringsgruppe(kode = "01", navn = "Jordbruk, tilhør. tjenester, jakt")
+    }
+
+    @Test
+    fun `skal få riktig salesforce lenke`() {
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
+        val salesforceUrl = hentSalesforceUrl(orgnummer = virksomhet.orgnr)
+
+        salesforceUrl shouldBe SalesforceUrlResponse(virksomhet.orgnr, "https://test.salesforce.com/0015g00000J5XZQAA3")
     }
 }

@@ -152,8 +152,17 @@ class Kafka(
 
 }
 
+class Salesforce (
+    val tokenUrl: String = getEnvVar("SALESFORCE_TOKEN_URL"),
+    val clientId: String = getEnvVar("SALESFORCE_CLIENT_ID"),
+    val clientSecret: String = getEnvVar("SALESFORCE_CLIENT_SECRET"),
+    val username: String = getEnvVar("SALESFORCE_USERNAME"),
+    val password: String = getEnvVar("SALESFORCE_PASSWORD"),
+)
+
 class Integrasjoner(
-    val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL")
+    val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
+    val salesforce: Salesforce = Salesforce(),
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =

@@ -6,18 +6,27 @@ import org.testcontainers.Testcontainers
 
 class WireMockContainerHelper {
     val azureMock: WireMockServer
+    val salesforceMock: WireMockServer
     init {
-        azureMock = WireMockServer(WireMockConfiguration.options().dynamicPort()).also {
-            if (!it.isRunning) {
-                it.start()
-            }
+        azureMock = lagMockServer("azure")
+        salesforceMock = lagMockServer("salesforce")
+    }
 
-            println("Starter Wiremock på port ${it.port()}")
-            Testcontainers.exposeHostPorts(it.port())
+    private fun lagMockServer(service: String) = WireMockServer(WireMockConfiguration.options().dynamicPort()).also {
+        if (!it.isRunning) {
+            it.start()
         }
+
+        println("Starter Wiremock for $service på port ${it.port()}")
+        Testcontainers.exposeHostPorts(it.port())
     }
 
     fun envVars() = mapOf(
-        "AZURE_GRAPH_URL" to "http://host.testcontainers.internal:${azureMock.port()}/v1.0"
+        "AZURE_GRAPH_URL" to "http://host.testcontainers.internal:${azureMock.port()}/v1.0",
+        "SALESFORCE_TOKEN_URL" to "http://host.testcontainers.internal:${salesforceMock.port()}",
+        "SALESFORCE_CLIENT_ID" to "clientId",
+        "SALESFORCE_CLIENT_SECRET" to "clientSecret",
+        "SALESFORCE_USERNAME" to "username",
+        "SALESFORCE_PASSWORD" to "password",
     )
 }

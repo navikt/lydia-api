@@ -51,6 +51,7 @@ import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.azure.navEnhet
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
+import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.integrasjoner.ssb.næringsImport
@@ -328,8 +329,9 @@ fun Application.lydiaRestApi(
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
+                salesforceClient = SalesforceClient(salesforce = naisEnvironment.integrasjoner.salesforce),
                 auditLog = auditLog,
-                adGrupper = naisEnvironment.security.adGrupper
+                adGrupper = naisEnvironment.security.adGrupper,
             )
             statusoversikt(
                 sistePubliseringService = sistePubliseringService,

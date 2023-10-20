@@ -59,6 +59,8 @@ spec:
         - name: "lydia-api-db"
   kafka:
     pool: {{kafkaPool}}
+  envFrom:
+    - secret: fia-salesforce
   env:
     - name: IA_SAK_TOPIC
       value: pia.ia-sak-v1

@@ -12,8 +12,10 @@ import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhet
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
+import no.nav.lydia.integrasjoner.salesforce.SalesforceUrlResponse
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
+import no.nav.lydia.virksomhet.api.SALESFORCE_LENKE_PATH
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -56,6 +58,20 @@ class VirksomhetHelper {
             orgnummer: String,
             token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token) =
             hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
+                .third.fold(
+                    success = { response -> response },
+                    failure = { fail(it.message) }
+                )
+
+        fun hentSalesforceUrlRespons(orgnummer: String, token: String) =
+            TestContainerHelper.lydiaApiContainer.performGet("$SALESFORCE_LENKE_PATH/$orgnummer")
+                .authentication().bearer(token)
+                .tilSingelRespons<SalesforceUrlResponse>()
+
+        fun hentSalesforceUrl(
+            orgnummer: String,
+            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token) =
+            hentSalesforceUrlRespons(orgnummer = orgnummer, token = token)
                 .third.fold(
                     success = { response -> response },
                     failure = { fail(it.message) }
