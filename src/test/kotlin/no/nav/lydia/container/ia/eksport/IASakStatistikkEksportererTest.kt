@@ -133,7 +133,6 @@ class IASakStatistikkEksportererTest {
     fun `det skal være mulig å eksportere fullførte saker uten leveranser selv om det ikke er mulig å fullføre en sak uten leveranser fra FIA`() {
         val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
         postgresContainer.performUpdate("DELETE from iasak_leveranse where saksnummer='${sak.saksnummer}'")
-        sak.oppdaterHendelsesTidspunkter(43)
 
         lydiaApiContainer.performGet(IA_SAK_STATISTIKK_EKSPORT_PATH).tilSingelRespons<Unit>()
 
