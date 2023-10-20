@@ -7,17 +7,20 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.lydia.helper.*
+import io.kotest.matchers.string.shouldMatch
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.NÆRINGSMIDLER_IKKE_NEVNT
 import no.nav.lydia.helper.TestData.Companion.NÆRING_MED_BINDESTREK
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceUrl
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
-import no.nav.lydia.integrasjoner.salesforce.SalesforceUrlResponse
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
@@ -215,6 +218,7 @@ class VirksomhetApiTest {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
         val salesforceUrl = hentSalesforceUrl(orgnummer = virksomhet.orgnr)
 
-        salesforceUrl shouldBe SalesforceUrlResponse(virksomhet.orgnr, "https://test.salesforce.com/0015g00000J5XZQAA3")
+        salesforceUrl.orgnr shouldBe virksomhet.orgnr
+        salesforceUrl.url shouldMatch "http://host.testcontainers.internal:\\d+/0015t0000121xU6AAI"
     }
 }

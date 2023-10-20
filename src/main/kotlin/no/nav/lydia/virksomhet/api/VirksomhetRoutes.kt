@@ -54,10 +54,10 @@ fun Route.virksomhet(
     get("$SALESFORCE_LENKE_PATH/{orgnummer}") {
         val nå = Clock.System.now()
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
-        call.application.log.info("Hentet salesforce lenke for virksomhet $orgnummer på ${Clock.System.now() - nå} ms")
 
         salesforceClient.hentSalesforceUrl(orgnr = orgnummer).map { salesforceUrlResponse ->
-            salesforceUrlResponse
+            call.application.log.info("Hentet salesforce lenke for virksomhet $orgnummer på ${Clock.System.now() - nå} ms")
+            call.respond(salesforceUrlResponse)
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }

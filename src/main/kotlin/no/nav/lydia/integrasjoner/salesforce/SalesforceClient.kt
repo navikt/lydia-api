@@ -1,16 +1,21 @@
 package no.nav.lydia.integrasjoner.salesforce
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.url
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Salesforce
@@ -29,10 +34,14 @@ class SalesforceClient(private val salesforce: Salesforce) {
         }
     }
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
     suspend fun hentSalesforceUrl(orgnr: String): Either<Feil, SalesforceUrlResponse> {
         logger.info("Henter salesforce-url for orgnr: $orgnr")
 
-        return hentGyldigToken().map { gyldigToken ->
+        return hentGyldigToken().flatMap { gyldigToken ->
             logger.info(gyldigToken.toString())
             val response = httpClient.get {
                 url("${gyldigToken.instanceUrl}$QUERY_PATH")
@@ -45,16 +54,19 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 logger.error(response.toString())
                 logger.error("Feil ved henting av salesforce account id: ${response.status}")
                 logger.error("Feil ved henting av salesforce account id: ${response.bodyAsText()}")
-                return SalesforceFeil.`feil ved uthenting av av data fra salesforce`.left()
+                SalesforceFeil.`feil ved uthenting av av data fra salesforce`.left()
             }
 
-            val queryResponse = response.body<SalesforceQueryResponse>()
+            val queryResponseAsText = response.bodyAsText()
+            logger.info(queryResponseAsText)
+            val queryResponse = json.decodeFromString<SalesforceQueryResponse>(queryResponseAsText)
+            logger.info(queryResponse.toString())
             if (queryResponse.records.isEmpty()) {
                 logger.error("Fant ikke account id for orgnr: $orgnr")
-                return SalesforceFeil.`fant ikke salesforce account for orgnummer`.left()
+                SalesforceFeil.`fant ikke salesforce account for orgnummer`.left()
             }
 
-            return SalesforceUrlResponse(
+            SalesforceUrlResponse(
                 orgnr = orgnr,
                 url = "${gyldigToken.instanceUrl}/${queryResponse.records.first().Id}"
             ).right()

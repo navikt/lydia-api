@@ -4,7 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import org.testcontainers.Testcontainers
 
-class WireMockContainerHelper {
+class WiremockContainerHelper {
     val azureMock: WireMockServer
     val salesforceMock: WireMockServer
     init {
