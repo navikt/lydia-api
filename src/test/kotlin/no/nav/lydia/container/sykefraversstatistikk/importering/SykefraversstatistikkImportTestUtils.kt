@@ -21,6 +21,12 @@ class SykefraversstatistikkImportTestUtils {
             val siste4Kvartal: Siste4Kvartal,
     )
 
+    data class StatistikkGraderingGjeldendeKvartal(
+            val kategori: String,
+            val orgnr: String,
+            val graderingSistePubliserteKvartal: GraderingSistePubliserteKvartal,
+    )
+
     data class JsonMelding(
             val key: JsonKey,
             val value: JsonValue
@@ -256,6 +262,36 @@ class SykefraversstatistikkImportTestUtils {
                                 prosent = if (erKategoriTabell) rs.getDouble("prosent") else rs.getDouble("sykefraversprosent"),
                                 tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                                 muligeDagsverk = rs.getDouble("mulige_dagsverk"),
+                                antallPersoner = rs.getInt("antall_personer"),
+                                erMaskert = rs.getBoolean("maskert")
+                        )
+                )
+            }
+        }
+
+        fun hentStatistikkVirksomhetGraderingGjeldendeKvartal(
+                orgnr: String,
+                kvartal: Kvartal
+        ): StatistikkGraderingGjeldendeKvartal {
+            val query = """
+            select * from sykefravar_statistikk_virksomhet_gradering 
+             where orgnr = '$orgnr' and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
+        """.trimMargin()
+            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+                val statement = connection.createStatement()
+                statement.execute(query)
+                val rs = statement.resultSet
+                rs.next()
+                rs.row shouldBe 1
+                return StatistikkGraderingGjeldendeKvartal(
+                        kategori = "VIRKSOMHET_GRADERT",
+                        orgnr = rs.getString("orgnr"),
+                        graderingSistePubliserteKvartal = GraderingSistePubliserteKvartal(
+                                årstall = rs.getInt("arstall"),
+                                kvartal = rs.getInt("kvartal"),
+                                prosent = rs.getDouble("prosent"),
+                                tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
+                                tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                                 antallPersoner = rs.getInt("antall_personer"),
                                 erMaskert = rs.getBoolean("maskert")
                         )

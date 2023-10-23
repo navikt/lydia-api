@@ -58,9 +58,9 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
-//                                sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
-//                                    records.toSykefraversstatistikkPerKategoriImportDto()
-//                                )
+                                sykefraværsstatistikkService.lagreStatistikkVirksomhetGraderingGjeldendeKvartal(
+                                   records.tilGradertSykemeldingImportDto()
+                                )
                                 logger.info("Lagret ${records.count()} meldinger i StatistikkVirksomhetGraderingConsumer (topic '$topic') ")
                                 consumer.commitSync()
                             }
@@ -86,12 +86,12 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
         logger.info("Stopped kafka consumer job i StatistikkVirksomhetGraderingConsumer (topic '$topic')")
     }
 
-    private fun ConsumerRecords<String, String>.toSykefraversstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {
+    private fun ConsumerRecords<String, String>.tilGradertSykemeldingImportDto(): List<GradertSykemeldingImportDto> {
         val gson = GsonBuilder().create()
         return this.filter { erMeldingenGyldig(it) }.map {
             gson.fromJson(
                 it.value(),
-                SykefraversstatistikkPerKategoriImportDto::class.java
+                    GradertSykemeldingImportDto::class.java
             )
         }
     }
@@ -100,7 +100,7 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
         val gson = GsonBuilder().create()
         val key = gson.fromJson(consumerRecord.key(), KeySykefraversstatistikkPerKategori::class.java)
 
-        return if (Kategori.entries.map { it.name }.contains( key.kategori) && key.kode.isNotEmpty()) {
+        return if (key.kategori == "VIRKSOMHET_GRADERT" && key.kode.isNotEmpty()) {
             true
         } else {
             logger.warn("Feil formatert Kafka melding i topic ${consumerRecord.topic()} for key ${consumerRecord.key().trim()}")

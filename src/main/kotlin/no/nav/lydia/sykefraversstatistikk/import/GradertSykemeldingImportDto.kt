@@ -1,7 +1,7 @@
 package no.nav.lydia.sykefraversstatistikk.import
 
 data class GradertSykemeldingImportDto(
-        val kategori: Kategori,
+        val kategori: String,
         val kode: String,
         val sistePubliserteKvartal: GraderingSistePubliserteKvartal,
         val siste4Kvartal: GraderingSiste4Kvartal,

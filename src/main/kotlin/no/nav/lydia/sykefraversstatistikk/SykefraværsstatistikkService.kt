@@ -20,11 +20,8 @@ import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.domene.VirksomhetsstatistikkSisteKvartal
-import no.nav.lydia.sykefraversstatistikk.import.BehandletImportMetadataVirksomhet
-import no.nav.lydia.sykefraversstatistikk.import.Kategori
+import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.*
-import no.nav.lydia.sykefraversstatistikk.import.Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
@@ -79,6 +76,11 @@ class SykefraværsstatistikkService(
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, VIRKSOMHET)
         )
+    }
+
+    fun lagreStatistikkVirksomhetGraderingGjeldendeKvartal(gradertSykemeldingImportDtoListe: List<GradertSykemeldingImportDto>) {
+        sykefraversstatistikkRepository.insertStatistikkVirksomhetGraderingGjeldendeKvartal(
+            sykefraværsstatistikk = gradertSykemeldingImportDtoListe)
     }
 
     private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
