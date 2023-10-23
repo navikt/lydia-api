@@ -114,6 +114,7 @@ services:
       STATISTIKK_NARING_TOPIC: arbeidsgiver.sykefravarsstatistikk-naring-v1
       STATISTIKK_NARINGSKODE_TOPIC: arbeidsgiver.sykefravarsstatistikk-naringskode-v1
       STATISTIKK_VIRKSOMHET_TOPIC: arbeidsgiver.sykefravarsstatistikk-virksomhet-v1
+      STATISTIKK_VIRKSOMHET_GRADERING_TOPIC: arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1
       IA_SAK_TOPIC: pia.ia-sak-v1
       IA_SAK_STATISTIKK_TOPIC: pia.ia-sak-statistikk-v1
       IA_SAK_STATUS_TOPIC: pia.ia-sak-status-v1
