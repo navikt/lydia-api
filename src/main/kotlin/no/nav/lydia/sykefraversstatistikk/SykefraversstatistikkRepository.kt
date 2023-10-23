@@ -168,6 +168,58 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
+    fun insertStatistikkVirksomhetGraderingGjeldendeKvartal(
+        sykefraværsstatistikk: List<GradertSykemeldingImportDto>
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            sykefraværsstatistikk.forEach {
+                tx.run(
+                        queryOf(
+                                """
+                            INSERT INTO sykefravar_statistikk_virksomhet_gradering (
+                                orgnr,
+                                arstall,
+                                kvartal,
+                                antall_personer,
+                                tapte_dagsverk_gradert,
+                                tapte_dagsverk,
+                                prosent,
+                                maskert
+                            )
+                            VALUES(
+                                :orgnr,
+                                :arstall,
+                                :kvartal,
+                                :antall_personer,
+                                :tapte_dagsverk_gradert,
+                                :tapte_dagsverk,
+                                :prosent,
+                                :maskert
+                            )
+                            ON CONFLICT (orgnr, arstall, kvartal) DO UPDATE SET
+                                antall_personer = :antall_personer,
+                                tapte_dagsverk_gradert = :tapte_dagsverk_gradert,
+                                tapte_dagsverk = :tapte_dagsverk,
+                                prosent = :prosent,
+                                maskert = :maskert,
+                                endret = now()
+                        """.trimIndent(),
+                                mapOf(
+                                        "orgnr" to it.kode,
+                                        "arstall" to it.sistePubliserteKvartal.årstall,
+                                        "kvartal" to it.sistePubliserteKvartal.kvartal,
+                                        "antall_personer" to it.sistePubliserteKvartal.antallPersoner,
+                                        "tapte_dagsverk_gradert" to it.sistePubliserteKvartal.tapteDagsverkGradert,
+                                        "tapte_dagsverk" to it.sistePubliserteKvartal.tapteDagsverk,
+                                        "prosent" to it.sistePubliserteKvartal.prosent,
+                                        "maskert" to it.sistePubliserteKvartal.erMaskert
+                                )
+                        ).asUpdate
+                )
+            }
+        }
+    }
+
     fun insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
         sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>,
     ) = using(sessionOf(dataSource)) { session ->

@@ -13,6 +13,8 @@ create table sykefravar_statistikk_virksomhet_gradering
     endret                  timestamp default null
 );
 
+alter table sykefravar_statistikk_virksomhet_gradering add constraint virksomhet_gradering_orgnr_arstall_kvartal unique (orgnr, arstall, kvartal);
+
 create index idx_sykefravar_statistikk_virksomhet_gradering_orgnr on sykefravar_statistikk_virksomhet_gradering(orgnr);
 create index idx_sykefravar_statistikk_virksomhet_gradering_arstall on sykefravar_statistikk_virksomhet_gradering(arstall);
 create index idx_sykefravar_statistikk_virksomhet_gradering_kvartal on sykefravar_statistikk_virksomhet_gradering(kvartal);
@@ -32,6 +34,8 @@ create table sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal
     opprettet               timestamp default current_timestamp,
     endret                  timestamp default null
 );
+
+alter table sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal add constraint virksomhet_gradering_4k_orgnr_arstall_kvartal unique (orgnr, publisert_arstall, publisert_kvartal);
 
 create index idx_sykefravar_statistikk_virksomhet_gradering_siste_4k_orgnr on sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal(orgnr);
 create index idx_sykefravar_statistikk_virksomhet_gradering_siste_4k_arstall on sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal(publisert_arstall);

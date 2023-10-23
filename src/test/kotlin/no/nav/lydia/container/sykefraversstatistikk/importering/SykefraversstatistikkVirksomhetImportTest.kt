@@ -1,11 +1,13 @@
 package no.nav.lydia.container.sykefraversstatistikk.importering
 
+import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2023_1
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkVirksomhetGraderingGjeldendeKvartal
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.helper.KafkaContainerHelper
@@ -112,12 +114,15 @@ class SykefraversstatistikkVirksomhetImportTest {
         )
 
         lydiaApiContainer shouldContainLog "Lagret 1 meldinger i StatistikkVirksomhetGraderingConsumer \\(topic 'arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1'\\)".toRegex()
-        //TODO: til videre utvikling:
-        //opprette tabell
-        //lese fra denne tabellen, den skal ikke finnes
 
-        // lese det som ble lagret i db
-        // sammenligne det som sendes vs leses
-
+        val resultat = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
+        resultat.orgnr shouldBe "999999999"
+        resultat.graderingSistePubliserteKvartal.prosent shouldBe graderingSistePubliserteKvartal.prosent
+        resultat.graderingSistePubliserteKvartal.tapteDagsverkGradert shouldBe graderingSistePubliserteKvartal.tapteDagsverkGradert
+        resultat.graderingSistePubliserteKvartal.tapteDagsverk shouldBe graderingSistePubliserteKvartal.tapteDagsverk
+        resultat.graderingSistePubliserteKvartal.årstall shouldBe graderingSistePubliserteKvartal.årstall
+        resultat.graderingSistePubliserteKvartal.kvartal shouldBe graderingSistePubliserteKvartal.kvartal
+        resultat.graderingSistePubliserteKvartal.antallPersoner shouldBe graderingSistePubliserteKvartal.antallPersoner
+        resultat.graderingSistePubliserteKvartal.erMaskert shouldBe graderingSistePubliserteKvartal.erMaskert
     }
 }
