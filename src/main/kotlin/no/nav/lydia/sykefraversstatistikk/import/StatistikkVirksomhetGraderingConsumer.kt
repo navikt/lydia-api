@@ -23,9 +23,9 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
     lateinit var kafka: Kafka
     private lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
+    private lateinit var topic: String
+    var groupId = Kafka.statistikkVirksomhetGraderingGroupId
 
-    var groupId = "lydia-api-statistikk-virksomhet-gradering-consumer"
-    var topic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1"
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
 
@@ -38,6 +38,7 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
+        this.topic = kafka.statistikkVirksomhetGraderingTopic
         this.kafkaConsumer = KafkaConsumer(
             this.kafka.consumerProperties(consumerGroupId = groupId),
             StringDeserializer(),

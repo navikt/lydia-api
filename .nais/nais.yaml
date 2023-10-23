@@ -86,6 +86,8 @@ spec:
       value: arbeidsgiver.sykefravarsstatistikk-naringskode-v1
     - name: STATISTIKK_VIRKSOMHET_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-virksomhet-v1
+    - name: STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+      value: arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1
     - name: CONSUMER_LOOP_DELAY
       value: "1000"
     - name: SSB_NARINGS_URL
