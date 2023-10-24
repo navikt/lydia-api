@@ -7,15 +7,15 @@ import arrow.core.right
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
-import io.ktor.client.request.post
 import io.ktor.client.request.url
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
+import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -84,17 +84,16 @@ class SalesforceClient(private val salesforce: Salesforce) {
 
     private suspend fun getToken(): Either<Feil, SalesforceAccessToken> {
         val tokenUrl = "${salesforce.tokenHost}/services/oauth2/token"
-        val response = httpClient.post {
-            url(tokenUrl)
-            header("Content-Type", "application/x-www-form-urlencoded")
-            formData {
+        val response = httpClient.submitForm (
+            url = tokenUrl,
+            formParameters = parameters {
                 append("grant_type", "password")
                 append("client_id", salesforce.clientId)
                 append("client_secret", salesforce.clientSecret)
                 append("username", salesforce.username)
                 append("password", salesforce.password)
             }
-        }
+        )
 
         if (!response.status.isSuccess()) {
             logger.error("Feil ved henting av token mot url $tokenUrl: status: ${response.status} responsebody: ${response.bodyAsText()}")
