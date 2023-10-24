@@ -2,6 +2,7 @@ package no.nav.lydia.container.sykefraversstatistikk.importering
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_4
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2023_1
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
@@ -152,5 +153,67 @@ class SykefraversstatistikkVirksomhetImportTest {
         resultat.publisertKvartal shouldBe graderingSistePubliserteKvartal.kvartal
         resultat.graderingSiste4Kvartal.kvartaler shouldBe graderingSiste4Kvartal.kvartaler
         resultat.graderingSiste4Kvartal.erMaskert shouldBe graderingSiste4Kvartal.erMaskert
+    }
+
+    @Test
+    fun `vi oppdaterer statistikk for gradert sykemelding i både siste kvartal og siste 4 kvartal`() {
+        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+            kategori = "VIRKSOMHET_GRADERT",
+            kode = "999999999",
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = graderingSistePubliserteKvartal,
+            siste4Kvartal = graderingSiste4Kvartal
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+            kafkaMelding.toJsonKey(),
+            kafkaMelding.toJsonValue(),
+            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+            Kafka.statistikkVirksomhetGraderingGroupId
+        )
+        val oppdatertStatistikkMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+            kategori = "VIRKSOMHET_GRADERT",
+            kode = "999999999",
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = graderingSistePubliserteKvartal.copy(
+                tapteDagsverk = 56.0,
+                tapteDagsverkGradert = 5.6,
+                prosent = 10.0,
+                antallPersoner = 200,
+                erMaskert = false
+            ),
+            siste4Kvartal = graderingSiste4Kvartal.copy(
+                tapteDagsverkGradert = 17.2,
+                tapteDagsverk = 86.0,
+                kvartaler = listOf(KVARTAL_2023_1, KVARTAL_2022_4),
+                prosent = 20.0,
+                erMaskert = false
+            )
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+            oppdatertStatistikkMelding.toJsonKey(),
+            oppdatertStatistikkMelding.toJsonValue(),
+            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+            Kafka.statistikkVirksomhetGraderingGroupId
+        )
+
+        val resultatSistePubliserteKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
+        resultatSistePubliserteKvartal.orgnr shouldBe "999999999"
+        resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.årstall shouldBe graderingSistePubliserteKvartal.årstall
+        resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.kvartal shouldBe graderingSistePubliserteKvartal.kvartal
+        resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.erMaskert shouldBe false
+        resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.prosent shouldBe 10.0
+        resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.tapteDagsverkGradert shouldBe 5.6
+        resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.tapteDagsverk shouldBe 56.0
+        resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.antallPersoner shouldBe 200
+
+        val resultatSiste4Kvartal = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
+        resultatSiste4Kvartal.orgnr shouldBe  "999999999"
+        resultatSiste4Kvartal.publisertÅrstall shouldBe graderingSistePubliserteKvartal.årstall
+        resultatSiste4Kvartal.publisertKvartal shouldBe graderingSistePubliserteKvartal.kvartal
+        resultatSiste4Kvartal.graderingSiste4Kvartal.erMaskert shouldBe false
+        resultatSiste4Kvartal.graderingSiste4Kvartal.prosent shouldBe 20
+        resultatSiste4Kvartal.graderingSiste4Kvartal.tapteDagsverkGradert shouldBe 17.2
+        resultatSiste4Kvartal.graderingSiste4Kvartal.tapteDagsverk shouldBe 86.0
+        resultatSiste4Kvartal.graderingSiste4Kvartal.kvartaler shouldBe listOf(KVARTAL_2023_1, KVARTAL_2022_4)
     }
 }
