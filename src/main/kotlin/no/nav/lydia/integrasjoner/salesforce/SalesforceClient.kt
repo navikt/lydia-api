@@ -7,6 +7,7 @@ import arrow.core.right
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -86,17 +87,17 @@ class SalesforceClient(private val salesforce: Salesforce) {
         val response = httpClient.post {
             url(tokenUrl)
             header("Content-Type", "application/x-www-form-urlencoded")
-            parameter("grant_type", "password")
-            parameter("client_id", salesforce.clientId)
-            parameter("client_secret", salesforce.clientSecret)
-            parameter("username", salesforce.username)
-            parameter("password", salesforce.password)
+            formData {
+                append("grant_type", "password")
+                append("client_id", salesforce.clientId)
+                append("client_secret", salesforce.clientSecret)
+                append("username", salesforce.username)
+                append("password", salesforce.password)
+            }
         }
 
         if (!response.status.isSuccess()) {
-            logger.error(response.toString())
-            logger.error("Feil ved henting av token mot url $tokenUrl: ${response.status}")
-            logger.error("Feil ved henting av token: ${response.bodyAsText()}")
+            logger.error("Feil ved henting av token mot url $tokenUrl: status: ${response.status} responsebody: ${response.bodyAsText()}")
             return SalesforceFeil.`feil ved uthenting av token`.left()
         }
 
