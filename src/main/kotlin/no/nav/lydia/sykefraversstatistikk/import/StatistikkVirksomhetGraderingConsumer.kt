@@ -58,7 +58,7 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
-                                sykefraværsstatistikkService.lagreStatistikkVirksomhetGraderingGjeldendeKvartal(
+                                sykefraværsstatistikkService.lagreStatistikkVirksomhetGradering(
                                    records.tilGradertSykemeldingImportDto()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger i StatistikkVirksomhetGraderingConsumer (topic '$topic') ")

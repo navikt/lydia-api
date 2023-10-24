@@ -78,9 +78,13 @@ class SykefraværsstatistikkService(
         )
     }
 
-    fun lagreStatistikkVirksomhetGraderingGjeldendeKvartal(gradertSykemeldingImportDtoListe: List<GradertSykemeldingImportDto>) {
+    fun lagreStatistikkVirksomhetGradering(gradertSykemeldingImportDtoListe: List<GradertSykemeldingImportDto>) {
         sykefraversstatistikkRepository.insertStatistikkVirksomhetGraderingGjeldendeKvartal(
-            sykefraværsstatistikk = gradertSykemeldingImportDtoListe)
+            sykefraværsstatistikk = gradertSykemeldingImportDtoListe
+        )
+        sykefraversstatistikkRepository.insertStatistikkVirksomhetGraderingSiste4Kvartal(
+            sykefraværsstatistikk = gradertSykemeldingImportDtoListe
+        )
     }
 
     private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {

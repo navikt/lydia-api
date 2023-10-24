@@ -27,6 +27,14 @@ class SykefraversstatistikkImportTestUtils {
             val graderingSistePubliserteKvartal: GraderingSistePubliserteKvartal,
     )
 
+    data class StatistikkGraderingSiste4Kvartal(
+        val kategori: String,
+        val orgnr: String,
+        val graderingSiste4Kvartal: GraderingSiste4Kvartal,
+        val publisertÅrstall: Int,
+        val publisertKvartal: Int
+    )
+
     data class JsonMelding(
             val key: JsonKey,
             val value: JsonValue
@@ -295,6 +303,36 @@ class SykefraversstatistikkImportTestUtils {
                                 antallPersoner = rs.getInt("antall_personer"),
                                 erMaskert = rs.getBoolean("maskert")
                         )
+                )
+            }
+        }
+
+        fun hentStatistikkVirksomhetGraderingSiste4Kvartal(
+            orgnr: String,
+            kvartal: Kvartal
+        ): StatistikkGraderingSiste4Kvartal {
+            val query = """
+            select * from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal 
+             where orgnr = '$orgnr' and publisert_arstall = ${kvartal.årstall} and publisert_kvartal = ${kvartal.kvartal}
+        """.trimMargin()
+            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+                val statement = connection.createStatement()
+                statement.execute(query)
+                val rs = statement.resultSet
+                rs.next()
+                rs.row shouldBe 1
+                return StatistikkGraderingSiste4Kvartal(
+                    kategori = "VIRKSOMHET_GRADERT",
+                    orgnr = rs.getString("orgnr"),
+                    graderingSiste4Kvartal = GraderingSiste4Kvartal(
+                        prosent = rs.getDouble("prosent"),
+                        tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
+                        tapteDagsverk = rs.getDouble("tapte_dagsverk"),
+                        kvartaler = rs.getString("kvartaler").tilKvartaler(),
+                        erMaskert = rs.getBoolean("maskert")
+                    ),
+                    publisertÅrstall = rs.getInt("publisert_arstall"),
+                    publisertKvartal = rs.getInt("publisert_kvartal"),
                 )
             }
         }
