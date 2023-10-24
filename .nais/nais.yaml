@@ -100,3 +100,5 @@ spec:
       value: {{fiaLesetilgangGroup}}
     - name: TEAM_PIA_GROUP_ID
       value: {{teamPiaGroup}}
+    - name: SALESFORCE_TOKEN_HOST
+      value: {{salesforceTokenHost}}

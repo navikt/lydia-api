@@ -82,7 +82,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
         }
 
     private suspend fun getToken(): Either<Feil, SalesforceAccessToken> {
-        val tokenUrl = "${salesforce.tokenUrl}/services/oauth2/token"
+        val tokenUrl = "${salesforce.tokenHost}/services/oauth2/token"
         val response = httpClient.post {
             url(tokenUrl)
             header("Content-Type", "application/x-www-form-urlencoded")

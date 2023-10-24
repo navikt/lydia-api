@@ -22,8 +22,6 @@ class NaisEnvironment(
 
         fun hentMiljø(cluster: String) =
             Environment.entries.find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø ${cluster}")
-
-        const val APP_NAVN = "lydia-api"
     }
 
     val miljø = hentMiljø(cluster)
@@ -153,7 +151,7 @@ class Kafka(
 }
 
 class Salesforce (
-    val tokenUrl: String = getEnvVar("SALESFORCE_TOKEN_URL"),
+    val tokenHost: String = getEnvVar("SALESFORCE_TOKEN_HOST"),
     val clientId: String = getEnvVar("SALESFORCE_CLIENT_ID"),
     val clientSecret: String = getEnvVar("SALESFORCE_CLIENT_SECRET"),
     val username: String = getEnvVar("SALESFORCE_USERNAME"),
