@@ -23,7 +23,7 @@ class WiremockContainerHelper {
 
     fun envVars() = mapOf(
         "AZURE_GRAPH_URL" to "http://host.testcontainers.internal:${azureMock.port()}/v1.0",
-        "SALESFORCE_TOKEN_URL" to "http://host.testcontainers.internal:${salesforceMock.port()}",
+        "SALESFORCE_TOKEN_HOST" to "http://host.testcontainers.internal:${salesforceMock.port()}",
         "SALESFORCE_CLIENT_ID" to "clientId",
         "SALESFORCE_CLIENT_SECRET" to "clientSecret",
         "SALESFORCE_USERNAME" to "username",
