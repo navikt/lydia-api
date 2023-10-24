@@ -84,7 +84,6 @@ class SalesforceClient(private val salesforce: Salesforce) {
 
     private suspend fun getToken(): Either<Feil, SalesforceAccessToken> {
         val tokenUrl = "${salesforce.tokenHost}/services/oauth2/token"
-        logger.info("cid: ${salesforce.clientId} u: ${salesforce.username} p: ${salesforce.password}")
         val response = httpClient.submitForm (
             url = tokenUrl,
             formParameters = parameters {
