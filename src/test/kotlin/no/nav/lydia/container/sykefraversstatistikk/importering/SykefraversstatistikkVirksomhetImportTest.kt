@@ -1,5 +1,6 @@
 package no.nav.lydia.container.sykefraversstatistikk.importering
 
+import io.kotest.assertions.shouldFail
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_4
@@ -16,6 +17,7 @@ import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.sykefraversstatistikk.import.GraderingSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.GraderingSistePubliserteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
@@ -70,6 +72,39 @@ class SykefraversstatistikkVirksomhetImportTest {
     fun cleanUp() {
         cleanUpStatistikkTable(VIRKSOMHET, "999999999")
         cleanUpStatistikkSiste4KvartalTable(VIRKSOMHET, "999999999")
+    }
+
+    @Test
+    fun `vi lagrer IKKE statistikk når alt er NULL`() {
+        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+            kategori = "VIRKSOMHET_GRADERT",
+            kode = "999999997",
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = graderingSistePubliserteKvartal.copy(
+                tapteDagsverkGradert = null,
+                tapteDagsverk = null,
+                prosent = null
+            ),
+            siste4Kvartal = graderingSiste4Kvartal.copy(
+                tapteDagsverkGradert = null,
+                tapteDagsverk = null,
+                prosent = null
+            )
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+            kafkaMelding.toJsonKey(),
+            kafkaMelding.toJsonValue(),
+            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+            Kafka.statistikkVirksomhetGraderingGroupId
+        )
+
+        lydiaApiContainer shouldNotContainLog "PSQLException: ERROR: null value in column".toRegex()
+        shouldFail {
+            hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
+        }
+        shouldFail {
+            hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
+        }
     }
 
     @Test
