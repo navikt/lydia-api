@@ -73,6 +73,37 @@ class SykefraversstatistikkVirksomhetImportTest {
     }
 
     @Test
+    fun `vi lagrer statistikk når prosent er NULL`() {
+        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+            kategori = "VIRKSOMHET_GRADERT",
+            kode = "999999998",
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = graderingSistePubliserteKvartal.copy(
+                tapteDagsverkGradert = 0.0,
+                tapteDagsverk = 0.0,
+                prosent = null
+            ),
+            siste4Kvartal = graderingSiste4Kvartal.copy(
+                tapteDagsverkGradert = 0.0,
+                tapteDagsverk = 0.0,
+                prosent = null
+            )
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+            kafkaMelding.toJsonKey(),
+            kafkaMelding.toJsonValue(),
+            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+            Kafka.statistikkVirksomhetGraderingGroupId
+        )
+
+        val graderingGjeldendeKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999998", kvartal = KVARTAL_2023_1)
+        val graderingSiste4Kvartal = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999998", kvartal = KVARTAL_2023_1)
+
+        graderingGjeldendeKvartal.graderingSistePubliserteKvartal.prosent shouldBe null
+        graderingSiste4Kvartal.graderingSiste4Kvartal.prosent shouldBe null
+    }
+
+    @Test
     fun `vi lagrer sykefraværsstatistikk for kategori VIRKSOMHET (både siste kvartal OG siste 4 kvartaler)`() {
         val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
             kategori = VIRKSOMHET,
