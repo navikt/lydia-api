@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.sykefraversstatistikk.import.*
+import java.sql.ResultSet
 
 
 class SykefraversstatistikkImportTestUtils {
@@ -297,7 +298,7 @@ class SykefraversstatistikkImportTestUtils {
                         graderingSistePubliserteKvartal = GraderingSistePubliserteKvartal(
                                 årstall = rs.getInt("arstall"),
                                 kvartal = rs.getInt("kvartal"),
-                                prosent = rs.getDouble("prosent"),
+                                prosent = rs.getDoubleSomKanVæreNull("prosent"),
                                 tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
                                 tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                                 antallPersoner = rs.getInt("antall_personer"),
@@ -325,7 +326,7 @@ class SykefraversstatistikkImportTestUtils {
                     kategori = "VIRKSOMHET_GRADERT",
                     orgnr = rs.getString("orgnr"),
                     graderingSiste4Kvartal = GraderingSiste4Kvartal(
-                        prosent = rs.getDouble("prosent"),
+                        prosent = rs.getDoubleSomKanVæreNull("prosent"),
                         tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
                         tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                         kvartaler = rs.getString("kvartaler").tilKvartaler(),
@@ -365,6 +366,15 @@ class SykefraversstatistikkImportTestUtils {
                                 kvartaler = rs.getString("kvartaler").tilKvartaler()
                         )
                 )
+            }
+        }
+
+        private fun ResultSet.getDoubleSomKanVæreNull(kolonneNavn: String): Double? {
+            val resultat = this.getDouble(kolonneNavn)
+            return if (this.wasNull()) {
+                null
+            } else {
+                resultat
             }
         }
 
