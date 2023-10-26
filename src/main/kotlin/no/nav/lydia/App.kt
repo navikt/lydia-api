@@ -68,6 +68,7 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraversstatistikk.api.sykefraversstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraversstatistikk.import.StatistikkPerKategoriConsumer
+import no.nav.lydia.sykefraversstatistikk.import.StatistikkVirksomhetGraderingConsumer
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -122,6 +123,11 @@ fun startLydiaBackend() {
             run()
         }.also { HelseMonitor.leggTilHelsesjekk(it) }
     }
+
+    StatistikkVirksomhetGraderingConsumer.apply {
+        create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService )
+        run()
+    }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
     StatistikkMetadataVirksomhetConsumer.apply {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)

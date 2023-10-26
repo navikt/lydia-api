@@ -50,6 +50,7 @@ class KafkaContainerHelper(
         const val statistikkNæringTopic = "arbeidsgiver.sykefravarsstatistikk-naring-v1"
         const val statistikkNæringskodeTopic = "arbeidsgiver.sykefravarsstatistikk-naringskode-v1"
         const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
+        const val statistikkVirksomhetGraderingTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1"
         const val iaSakTopic = "pia.ia-sak-v1"
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
         const val iaSakStatusTopic = "pia.ia-sak-status-v1"
@@ -92,6 +93,7 @@ class KafkaContainerHelper(
                 statistikkSektorTopic,
                 statistikkBransjeTopic,
                 statistikkVirksomhetTopic,
+                statistikkVirksomhetGraderingTopic,
                 iaSakStatusTopic,
             )
             kafkaProducer = producer()
@@ -111,6 +113,7 @@ class KafkaContainerHelper(
             statistikkNæringTopic = statistikkNæringTopic,
             statistikkNæringskodeTopic = statistikkNæringskodeTopic,
             statistikkVirksomhetTopic = statistikkVirksomhetTopic,
+            statistikkVirksomhetGraderingTopic = statistikkVirksomhetGraderingTopic,
             brregOppdateringTopic = brregOppdateringTopic,
             brregAlleVirksomheterTopic = brregAlleVirksomheterTopic,
             consumerLoopDelay = 1,
@@ -134,6 +137,7 @@ class KafkaContainerHelper(
         "STATISTIKK_NARING_TOPIC" to statistikkNæringTopic,
         "STATISTIKK_NARINGSKODE_TOPIC" to statistikkNæringskodeTopic,
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
+        "STATISTIKK_VIRKSOMHET_GRADERING_TOPIC" to statistikkVirksomhetGraderingTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
         "IA_SAK_STATUS_TOPIC" to iaSakStatusTopic,

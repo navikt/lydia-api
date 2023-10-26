@@ -4,10 +4,8 @@ import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraversstatistikk.import.Kategori
-import no.nav.lydia.sykefraversstatistikk.import.Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.sykefraversstatistikk.import.*
+import java.sql.ResultSet
 
 
 class SykefraversstatistikkImportTestUtils {
@@ -22,6 +20,20 @@ class SykefraversstatistikkImportTestUtils {
             val kategori: Kategori,
             val kode: String,
             val siste4Kvartal: Siste4Kvartal,
+    )
+
+    data class StatistikkGraderingGjeldendeKvartal(
+            val kategori: String,
+            val orgnr: String,
+            val graderingSistePubliserteKvartal: GraderingSistePubliserteKvartal,
+    )
+
+    data class StatistikkGraderingSiste4Kvartal(
+        val kategori: String,
+        val orgnr: String,
+        val graderingSiste4Kvartal: GraderingSiste4Kvartal,
+        val publisertÅrstall: Int,
+        val publisertKvartal: Int
     )
 
     data class JsonMelding(
@@ -52,6 +64,34 @@ class SykefraversstatistikkImportTestUtils {
         fun toJsonValue() = value.toJson()
     }
 
+    data class JsonMeldingGradering(
+            val key: JsonKeyGradering,
+            val value: JsonValueGradering
+    ) {
+        constructor(
+                kategori: String,
+                kode: String,
+                kvartal: Kvartal = Kvartal(2023, 1),
+                sistePubliserteKvartal: GraderingSistePubliserteKvartal,
+                siste4Kvartal: GraderingSiste4Kvartal,
+        ) : this(
+                JsonKeyGradering(
+                        kategori = kategori,
+                        kode = kode,
+                        kvartal = kvartal
+                ),
+                JsonValueGradering(
+                        kategori = kategori,
+                        kode = kode,
+                        kvartal = kvartal,
+                        sistePubliserteKvartal = sistePubliserteKvartal,
+                        siste4Kvartal = siste4Kvartal
+                )
+        )
+        fun toJsonKey() = key.toJson()
+        fun toJsonValue() = value.toJson()
+    }
+
     data class JsonKey(
             val kategori: Kategori,
             val kode: String,
@@ -64,6 +104,18 @@ class SykefraversstatistikkImportTestUtils {
             val kvartal: Kvartal,
             val sistePubliserteKvartal: SistePubliserteKvartal,
             val siste4Kvartal: Siste4Kvartal,
+    )
+    data class JsonKeyGradering(
+            val kategori: String,
+            val kode: String,
+            val kvartal: Kvartal
+    )
+    data class JsonValueGradering(
+            val kategori: String,
+            val kode: String,
+            val kvartal: Kvartal,
+            val sistePubliserteKvartal: GraderingSistePubliserteKvartal,
+            val siste4Kvartal: GraderingSiste4Kvartal,
     )
 
     companion object {
@@ -117,6 +169,34 @@ class SykefraversstatistikkImportTestUtils {
                         separator = ","
                 ).trimIndent()
 
+        fun JsonKeyGradering.toJson(): String = """
+                {
+                  "kategori": "$kategori",
+                  "kode": "$kode",
+                  "kvartal": ${kvartal.kvartal},
+                  "årstall": ${kvartal.årstall}
+                }""".trimIndent()
+        fun JsonValueGradering.toJson(): String = """
+                {
+                  "kategori": "$kategori",
+                  "kode": "${kode}",
+                  "sistePubliserteKvartal": {
+                    "årstall": ${kvartal.årstall},
+                    "kvartal": ${kvartal.kvartal},
+                    "prosent": ${sistePubliserteKvartal.prosent?.toPlainString()},
+                    "tapteDagsverkGradert": ${sistePubliserteKvartal.tapteDagsverkGradert?.toPlainString()},
+                    "tapteDagsverk": ${sistePubliserteKvartal.tapteDagsverk?.toPlainString()},
+                    "antallPersoner": ${sistePubliserteKvartal.antallPersoner},
+                    "erMaskert": ${sistePubliserteKvartal.erMaskert}
+                  },
+                  "siste4Kvartal": {
+                    "prosent": ${siste4Kvartal.prosent?.toPlainString()},
+                    "tapteDagsverkGradert": ${siste4Kvartal.tapteDagsverkGradert?.toPlainString()},
+                    "tapteDagsverk": ${siste4Kvartal.tapteDagsverk?.toPlainString()},
+                    "erMaskert": ${siste4Kvartal.erMaskert},
+                    "kvartaler": [${siste4Kvartal.kvartaler.toJson()}]
+                  }
+                }""".trimIndent()
         fun JsonValue.toJson(): String = """
                 {
                   "kategori": "${kategori.name}",
@@ -198,6 +278,66 @@ class SykefraversstatistikkImportTestUtils {
             }
         }
 
+        fun hentStatistikkVirksomhetGraderingGjeldendeKvartal(
+                orgnr: String,
+                kvartal: Kvartal
+        ): StatistikkGraderingGjeldendeKvartal {
+            val query = """
+            select * from sykefravar_statistikk_virksomhet_gradering 
+             where orgnr = '$orgnr' and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
+        """.trimMargin()
+            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+                val statement = connection.createStatement()
+                statement.execute(query)
+                val rs = statement.resultSet
+                rs.next()
+                rs.row shouldBe 1
+                return StatistikkGraderingGjeldendeKvartal(
+                        kategori = "VIRKSOMHET_GRADERT",
+                        orgnr = rs.getString("orgnr"),
+                        graderingSistePubliserteKvartal = GraderingSistePubliserteKvartal(
+                                årstall = rs.getInt("arstall"),
+                                kvartal = rs.getInt("kvartal"),
+                                prosent = rs.getDoubleSomKanVæreNull("prosent"),
+                                tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
+                                tapteDagsverk = rs.getDouble("tapte_dagsverk"),
+                                antallPersoner = rs.getInt("antall_personer"),
+                                erMaskert = rs.getBoolean("maskert")
+                        )
+                )
+            }
+        }
+
+        fun hentStatistikkVirksomhetGraderingSiste4Kvartal(
+            orgnr: String,
+            kvartal: Kvartal
+        ): StatistikkGraderingSiste4Kvartal {
+            val query = """
+            select * from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal 
+             where orgnr = '$orgnr' and publisert_arstall = ${kvartal.årstall} and publisert_kvartal = ${kvartal.kvartal}
+        """.trimMargin()
+            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+                val statement = connection.createStatement()
+                statement.execute(query)
+                val rs = statement.resultSet
+                rs.next()
+                rs.row shouldBe 1
+                return StatistikkGraderingSiste4Kvartal(
+                    kategori = "VIRKSOMHET_GRADERT",
+                    orgnr = rs.getString("orgnr"),
+                    graderingSiste4Kvartal = GraderingSiste4Kvartal(
+                        prosent = rs.getDoubleSomKanVæreNull("prosent"),
+                        tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
+                        tapteDagsverk = rs.getDouble("tapte_dagsverk"),
+                        kvartaler = rs.getString("kvartaler").tilKvartaler(),
+                        erMaskert = rs.getBoolean("maskert")
+                    ),
+                    publisertÅrstall = rs.getInt("publisert_arstall"),
+                    publisertKvartal = rs.getInt("publisert_kvartal"),
+                )
+            }
+        }
+
         fun hentStatistikkSiste4Kvartal(kategori: Kategori, verdi: String, kvartal: Kvartal): StatistikkSiste4Kvartal {
             val erKategoriTabell = kategori != Kategori.VIRKSOMHET
             val tabellnavn = if (erKategoriTabell) "sykefravar_statistikk_kategori_siste_4_kvartal" else "sykefravar_statistikk_virksomhet_siste_4_kvartal"
@@ -226,6 +366,15 @@ class SykefraversstatistikkImportTestUtils {
                                 kvartaler = rs.getString("kvartaler").tilKvartaler()
                         )
                 )
+            }
+        }
+
+        private fun ResultSet.getDoubleSomKanVæreNull(kolonneNavn: String): Double? {
+            val resultat = this.getDouble(kolonneNavn)
+            return if (this.wasNull()) {
+                null
+            } else {
+                resultat
             }
         }
 

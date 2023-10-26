@@ -168,6 +168,115 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
+    fun insertStatistikkVirksomhetGraderingSiste4Kvartal(
+        sykefraværsstatistikk: List<GradertSykemeldingImportDto>
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            sykefraværsstatistikk.forEach {
+                tx.run(
+                    queryOf(
+                        """
+                            INSERT INTO sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal (
+                                orgnr,
+                                publisert_arstall,
+                                publisert_kvartal,
+                                tapte_dagsverk_gradert,
+                                tapte_dagsverk,
+                                prosent,
+                                maskert, 
+                                antall_kvartaler, 
+                                kvartaler
+                            )
+                            VALUES(
+                                :orgnr,
+                                :publisert_arstall,
+                                :publisert_kvartal,
+                                :tapte_dagsverk_gradert,
+                                :tapte_dagsverk,
+                                :prosent,
+                                :maskert, 
+                                :antall_kvartaler, 
+                                :kvartaler::jsonb
+                            )
+                            ON CONFLICT (orgnr, publisert_arstall, publisert_kvartal) DO UPDATE SET
+                                tapte_dagsverk_gradert = :tapte_dagsverk_gradert,
+                                tapte_dagsverk = :tapte_dagsverk,
+                                prosent = :prosent,
+                                maskert = :maskert,
+                                antall_kvartaler = :antall_kvartaler,
+                                kvartaler = :kvartaler::jsonb,
+                                endret = now()
+                        """.trimIndent(),
+                        mapOf(
+                            "orgnr" to it.kode,
+                            "publisert_arstall" to it.sistePubliserteKvartal.årstall,
+                            "publisert_kvartal" to it.sistePubliserteKvartal.kvartal,
+                            "tapte_dagsverk_gradert" to it.siste4Kvartal.tapteDagsverkGradert,
+                            "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
+                            "prosent" to it.siste4Kvartal.prosent,
+                            "maskert" to it.siste4Kvartal.erMaskert,
+                            "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
+                            "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                        )
+                    ).asUpdate
+                )
+            }
+        }
+    }
+
+
+    fun insertStatistikkVirksomhetGraderingGjeldendeKvartal(
+        sykefraværsstatistikk: List<GradertSykemeldingImportDto>
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            sykefraværsstatistikk.forEach {
+                tx.run(
+                        queryOf(
+                                """
+                            INSERT INTO sykefravar_statistikk_virksomhet_gradering (
+                                orgnr,
+                                arstall,
+                                kvartal,
+                                antall_personer,
+                                tapte_dagsverk_gradert,
+                                tapte_dagsverk,
+                                prosent,
+                                maskert
+                            )
+                            VALUES(
+                                :orgnr,
+                                :arstall,
+                                :kvartal,
+                                :antall_personer,
+                                :tapte_dagsverk_gradert,
+                                :tapte_dagsverk,
+                                :prosent,
+                                :maskert
+                            )
+                            ON CONFLICT (orgnr, arstall, kvartal) DO UPDATE SET
+                                antall_personer = :antall_personer,
+                                tapte_dagsverk_gradert = :tapte_dagsverk_gradert,
+                                tapte_dagsverk = :tapte_dagsverk,
+                                prosent = :prosent,
+                                maskert = :maskert,
+                                endret = now()
+                        """.trimIndent(),
+                                mapOf(
+                                        "orgnr" to it.kode,
+                                        "arstall" to it.sistePubliserteKvartal.årstall,
+                                        "kvartal" to it.sistePubliserteKvartal.kvartal,
+                                        "antall_personer" to it.sistePubliserteKvartal.antallPersoner,
+                                        "tapte_dagsverk_gradert" to it.sistePubliserteKvartal.tapteDagsverkGradert,
+                                        "tapte_dagsverk" to it.sistePubliserteKvartal.tapteDagsverk,
+                                        "prosent" to it.sistePubliserteKvartal.prosent,
+                                        "maskert" to it.sistePubliserteKvartal.erMaskert
+                                )
+                        ).asUpdate
+                )
+            }
+        }
+    }
+
     fun insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
         sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>,
     ) = using(sessionOf(dataSource)) { session ->
