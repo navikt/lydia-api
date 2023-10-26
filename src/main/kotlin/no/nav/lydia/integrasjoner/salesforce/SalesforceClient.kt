@@ -52,19 +52,18 @@ class SalesforceClient(private val salesforce: Salesforce) {
             }
 
             if (!response.status.isSuccess()) {
-                logger.error("Feil ved henting av salesforce account id: ${response.status}")
-                logger.error("Feil ved henting av salesforce account id: ${response.bodyAsText()}")
-                SalesforceFeil.`feil ved uthenting av av data fra salesforce`.left()
+                logger.error("Feil ved henting av salesforce account id: ${response.status}, ${response.bodyAsText()}")
+                return SalesforceFeil.`feil ved uthenting av av data fra salesforce`.left()
             }
 
             val queryResponseAsText = response.bodyAsText()
             val queryResponse = json.decodeFromString<SalesforceQueryResponse>(queryResponseAsText)
             if (queryResponse.records.isEmpty()) {
                 logger.error("Fant ikke account id for orgnr: $orgnr")
-                SalesforceFeil.`fant ikke salesforce account for orgnummer`.left()
+                return SalesforceFeil.`fant ikke salesforce account for orgnummer`.left()
             }
 
-            SalesforceUrlResponse(
+            return SalesforceUrlResponse(
                 orgnr = orgnr,
                 url = "${gyldigToken.instanceUrl}/${queryResponse.records.first().Id}"
             ).right()
