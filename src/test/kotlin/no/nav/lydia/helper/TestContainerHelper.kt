@@ -100,7 +100,7 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
-        private val azureMockServer = WireMockContainerHelper()
+        val wiremockServer = WiremockContainerHelper()
 
         val lydiaApiContainer: GenericContainer<*> =
                 GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
@@ -116,7 +116,7 @@ class TestContainerHelper {
                         .withEnv(
                                 postgresContainer.envVars()
                                         .plus(oauth2ServerContainer.envVars())
-                                        .plus(azureMockServer.envVars())
+                                        .plus(wiremockServer.envVars())
                                         .plus(
                                                 kafkaContainerHelper.envVars()
                                                         .plus(

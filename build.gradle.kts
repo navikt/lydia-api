@@ -37,6 +37,10 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-client-encoding:$ktorVersion")
+
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")

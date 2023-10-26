@@ -4,23 +4,28 @@ import arrow.core.right
 import arrow.core.rightIfNotNull
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
+import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import kotlinx.datetime.Clock
+import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
 
 const val VIRKSOMHET_PATH = "virksomhet"
+const val SALESFORCE_LENKE_PATH = "${VIRKSOMHET_PATH}/salesforce"
 
 fun Route.virksomhet(
     virksomhetService: VirksomhetService,
+    salesforceClient: SalesforceClient,
     auditLog: AuditLog,
-    adGrupper: ADGrupper
+    adGrupper: ADGrupper,
 ) {
     get("$VIRKSOMHET_PATH/{orgnummer}") {
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
@@ -41,6 +46,18 @@ fun Route.virksomhet(
             virksomhetService.finnVirksomheter(søkestreng = søkestreng).right()
         }.map {
             call.respond(it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
+    get("$SALESFORCE_LENKE_PATH/{orgnummer}") {
+        val nå = Clock.System.now()
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+
+        salesforceClient.hentSalesforceUrl(orgnr = orgnummer).map { salesforceUrlResponse ->
+            call.application.log.info("Hentet salesforce lenke for virksomhet $orgnummer på ${Clock.System.now() - nå} ms")
+            call.respond(salesforceUrlResponse)
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }

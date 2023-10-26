@@ -11,3 +11,4 @@ limitsCpu: 4000m
 limitsMemory: 4Gi
 requestsCpu: 500m
 requestsMemory: 4Gi
+salesforceTokenHost: https://login.salesforce.com

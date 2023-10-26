@@ -31,6 +31,7 @@ spec:
     outbound:
       external:
         - host: "data.ssb.no"
+        - host: "salesforce.com"
     inbound:
       rules:
         - application: lydia-radgiver-frontend
@@ -59,6 +60,8 @@ spec:
         - name: "lydia-api-db"
   kafka:
     pool: {{kafkaPool}}
+  envFrom:
+    - secret: fia-salesforce
   env:
     - name: IA_SAK_TOPIC
       value: pia.ia-sak-v1
@@ -100,3 +103,5 @@ spec:
       value: {{fiaLesetilgangGroup}}
     - name: TEAM_PIA_GROUP_ID
       value: {{teamPiaGroup}}
+    - name: SALESFORCE_TOKEN_HOST
+      value: {{salesforceTokenHost}}

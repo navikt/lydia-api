@@ -7,13 +7,18 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.lydia.helper.*
+import io.kotest.matchers.string.shouldMatch
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.NÆRINGSMIDLER_IKKE_NEVNT
 import no.nav.lydia.helper.TestData.Companion.NÆRING_MED_BINDESTREK
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceUrl
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -206,5 +211,14 @@ class VirksomhetApiTest {
         val virksomhetDto = hentVirksomhetsinformasjon(orgnummer = virksomhet.orgnr)
 
         virksomhetDto.næring shouldBe Næringsgruppe(kode = "01", navn = "Jordbruk, tilhør. tjenester, jakt")
+    }
+
+    @Test
+    fun `skal få riktig salesforce lenke`() {
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
+        val salesforceUrl = hentSalesforceUrl(orgnummer = virksomhet.orgnr)
+
+        salesforceUrl.orgnr shouldBe virksomhet.orgnr
+        salesforceUrl.url shouldMatch "http://host.testcontainers.internal:\\d+/0015t0000121xU6AAI"
     }
 }

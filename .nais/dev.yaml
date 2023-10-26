@@ -11,3 +11,4 @@ limitsCpu: 2000m
 limitsMemory: 1Gi
 requestsCpu: 200m
 requestsMemory: 1Gi
+salesforceTokenHost: https://test.salesforce.com
