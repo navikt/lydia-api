@@ -36,6 +36,7 @@ import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.util.*
+import no.nav.lydia.sykefraversstatistikk.import.GradertSykemeldingImportDto
 
 
 class KafkaContainerHelper(
@@ -207,6 +208,35 @@ class KafkaContainerHelper(
                     gson.toJson(
                         KeySykefraversstatistikkPerKategori(
                             kategori = melding.kategori.name,
+                            kode = melding.kode,
+                            årstall = melding.sistePubliserteKvartal.årstall,
+                            kvartal = melding.sistePubliserteKvartal.kvartal
+                        ),
+                    ),
+                    gson.toJson(melding)
+                )).get()
+            }
+            ventTilKonsumert(
+                konsumentGruppeId = groupId,
+                recordMetadata = sendteMeldinger.last()
+            )
+        }
+    }
+
+    fun sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
+            importDtoer: List<GradertSykemeldingImportDto>,
+            topic: String,
+            groupId: String,
+    ) {
+        runBlocking {
+            if (importDtoer.isEmpty()) return@runBlocking
+
+            val sendteMeldinger = importDtoer.map { melding ->
+                kafkaProducer.send(ProducerRecord(
+                    topic,
+                    gson.toJson(
+                        KeySykefraversstatistikkPerKategori(
+                            kategori = melding.kategori,
                             kode = melding.kode,
                             årstall = melding.sistePubliserteKvartal.årstall,
                             kvartal = melding.sistePubliserteKvartal.kvartal

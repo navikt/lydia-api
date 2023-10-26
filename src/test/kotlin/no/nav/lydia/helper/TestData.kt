@@ -4,9 +4,11 @@ import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
+import java.math.RoundingMode
 import kotlin.random.Random
 
 const val MAX_SYKEFRAVÆRSPROSENT = 20
+const val MAX_GRADERINGSPROSENT = 80
 
 class TestData(
     inkluderStandardVirksomheter: Boolean = false,
@@ -69,6 +71,8 @@ class TestData(
 
     private val sykefraværsstatistikkVirksomhetKafkaMeldinger =
         mutableSetOf<SykefraversstatistikkPerKategoriImportDto>()
+    private val graderingStatistikkVirksomhetKafkaMeldinger =
+            mutableSetOf<GradertSykemeldingImportDto>()
     private val sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger =
         mutableSetOf<SykefraversstatistikkMetadataVirksomhetImportDto>()
     val brregVirksomheter = mutableSetOf<TestVirksomhet>()
@@ -141,6 +145,8 @@ class TestData(
         sektor: Sektor = Sektor.STATLIG,
     ): TestData {
         perioder.forEach { periode ->
+            val graderingsProsent = sykefraværsProsent ?: (1..MAX_GRADERINGSPROSENT).random().toDouble()
+            val tapteDagsverkGradert = (tapteDagsverk * graderingsProsent/100).toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
             sykefraværsstatistikkVirksomhetKafkaMeldinger.add(
                 lagSykefraversstatistikkPerKategoriImportDto(
                     kategori = Kategori.VIRKSOMHET,
@@ -150,6 +156,28 @@ class TestData(
                     antallPersoner = antallPersoner.toInt(),
                     tapteDagsverk = tapteDagsverk,
                 )
+            )
+            graderingStatistikkVirksomhetKafkaMeldinger.add(
+                    GradertSykemeldingImportDto(
+                            kategori = "VIRKSOMHET_GRADERT",
+                            kode = virksomhet.orgnr,
+                            sistePubliserteKvartal = GraderingSistePubliserteKvartal(
+                                    årstall = periode.årstall,
+                                    kvartal = periode.kvartal,
+                                    prosent = graderingsProsent,
+                                    tapteDagsverkGradert = tapteDagsverkGradert,
+                                    tapteDagsverk = tapteDagsverk,
+                                    antallPersoner = antallPersoner.toInt(),
+                                    erMaskert = false
+                            ),
+                            siste4Kvartal = GraderingSiste4Kvartal(
+                                    prosent = graderingsProsent,
+                                    tapteDagsverkGradert = tapteDagsverkGradert,
+                                    tapteDagsverk = tapteDagsverk,
+                                    erMaskert = false,
+                                    kvartaler = listOf(gjeldendePeriode.tilKvartal(), gjeldendePeriode.forrigePeriode().tilKvartal())
+                            )
+                    )
             )
             sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger.add(
                 SykefraversstatistikkMetadataVirksomhetImportDto(
@@ -169,6 +197,9 @@ class TestData(
 
     fun sykefraværsstatistikkVirksomhetMeldinger() =
         sykefraværsstatistikkVirksomhetKafkaMeldinger
+
+    fun graderingStatistikkVirksomhetKafkaMeldinger() =
+        graderingStatistikkVirksomhetKafkaMeldinger
 
     fun sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger() =
         sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger

@@ -116,6 +116,12 @@ class VirksomhetHelper {
                 groupId = Kafka.statistikkVirksomhetGroupId
             )
 
+            kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
+                    importDtoer = testData.graderingStatistikkVirksomhetKafkaMeldinger().toList(),
+                    topic = KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+                    groupId = Kafka.statistikkVirksomhetGraderingGroupId
+            )
+
             kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
                 testData.sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger().toList()
             )
