@@ -40,10 +40,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
     }
 
     suspend fun hentSalesforceUrl(orgnr: String): Either<Feil, SalesforceUrlResponse> {
-        logger.info("Henter salesforce-url for orgnr: $orgnr")
-
         return hentGyldigToken().flatMap { gyldigToken ->
-            logger.info(gyldigToken.toString())
             val response = httpClient.get {
                 url("${gyldigToken.instanceUrl}$QUERY_PATH")
                 header("Accept", "application/json")
@@ -59,7 +56,6 @@ class SalesforceClient(private val salesforce: Salesforce) {
             val queryResponseAsText = response.bodyAsText()
             val queryResponse = json.decodeFromString<SalesforceQueryResponse>(queryResponseAsText)
             if (queryResponse.records.isEmpty()) {
-                logger.error("Fant ikke account id for orgnr: $orgnr")
                 return SalesforceFeil.`fant ikke salesforce account for orgnummer`.left()
             }
 
@@ -91,7 +87,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
         )
 
         if (!response.status.isSuccess()) {
-            logger.error("Feil ved henting av token mot url $tokenUrl: status: ${response.status} responsebody: ${response.bodyAsText()}")
+            logger.error("Feil ved henting av token. Status: ${response.status}, responsebody: ${response.bodyAsText()}")
             return SalesforceFeil.`feil ved uthenting av token`.left()
         }
 
@@ -102,7 +98,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
         Either.catch {
             Json.decodeFromString<SalesforceAccessToken>(tokenJson)
         }.mapLeft {
-            logger.error("Klarte ikke deserialisere token: $tokenJson", it)
+            logger.error("Klarte ikke deserialisere salesforce-token", it)
             SalesforceFeil.`feil ved parsing av token`
         }
 
