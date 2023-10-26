@@ -94,17 +94,10 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
                 GradertSykemeldingImportDto::class.java
             )
         }.filter {
-            if (
-                it.siste4Kvartal.tapteDagsverk != null
-                && it.siste4Kvartal.tapteDagsverkGradert != null
-                && it.sistePubliserteKvartal.tapteDagsverk != null
-                && it.sistePubliserteKvartal.tapteDagsverkGradert != null
-            ) {
-                true
-            } else {
-                logger.warn("Hopper over ugyldig virksomhet gradering statistikk for orgnr: '${it.kode}'")
-                false
-            }
+            (it.siste4Kvartal.tapteDagsverk != null
+                    && it.siste4Kvartal.tapteDagsverkGradert != null
+                    && it.sistePubliserteKvartal.tapteDagsverk != null
+                    && it.sistePubliserteKvartal.tapteDagsverkGradert != null)
         }
     }
 
