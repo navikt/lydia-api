@@ -48,20 +48,17 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 url("${gyldigToken.instanceUrl}$QUERY_PATH")
                 header("Accept", "application/json")
                 header("Authorization", "Bearer ${gyldigToken.accessToken}")
-                parameter("q", "SELECT Id FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'")
+                parameter("q", "SELECT Id, INT_OrganizationNumber__c FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'")
             }
 
             if (!response.status.isSuccess()) {
-                logger.error(response.toString())
                 logger.error("Feil ved henting av salesforce account id: ${response.status}")
                 logger.error("Feil ved henting av salesforce account id: ${response.bodyAsText()}")
                 SalesforceFeil.`feil ved uthenting av av data fra salesforce`.left()
             }
 
             val queryResponseAsText = response.bodyAsText()
-            logger.info(queryResponseAsText)
             val queryResponse = json.decodeFromString<SalesforceQueryResponse>(queryResponseAsText)
-            logger.info(queryResponse.toString())
             if (queryResponse.records.isEmpty()) {
                 logger.error("Fant ikke account id for orgnr: $orgnr")
                 SalesforceFeil.`fant ikke salesforce account for orgnummer`.left()
