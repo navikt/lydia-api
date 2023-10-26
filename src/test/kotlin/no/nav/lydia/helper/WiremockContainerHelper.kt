@@ -28,5 +28,6 @@ class WiremockContainerHelper {
         "SALESFORCE_CLIENT_SECRET" to "clientSecret",
         "SALESFORCE_USERNAME" to "username",
         "SALESFORCE_PASSWORD" to "password",
+        "SALESFORCE_SECURITY_TOKEN" to "securityToken"
     )
 }

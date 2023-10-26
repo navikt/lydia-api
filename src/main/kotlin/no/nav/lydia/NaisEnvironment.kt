@@ -156,6 +156,7 @@ class Salesforce (
     val clientSecret: String = getEnvVar("SALESFORCE_CLIENT_SECRET"),
     val username: String = getEnvVar("SALESFORCE_USERNAME"),
     val password: String = getEnvVar("SALESFORCE_PASSWORD"),
+    val securityToken: String = getEnvVar("SALESFORCE_SECURITY_TOKEN"),
 )
 
 class Integrasjoner(

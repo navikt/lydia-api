@@ -28,7 +28,7 @@ private const val TOKEN_TIMEOUT_MS = 50 * 60 * 1000 // 50 min i ms
 
 class SalesforceClient(private val salesforce: Salesforce) {
     private val logger = getLogger(SalesforceClient::class.java)
-    private var token: SalesforceAccessToken? = null
+    private var cachedToken: SalesforceAccessToken? = null
     private val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             json()
@@ -72,14 +72,13 @@ class SalesforceClient(private val salesforce: Salesforce) {
     }
 
     private suspend fun hentGyldigToken() =
-        if (måOppdatereToken(token)) {
-            logger.info("Oppdaterer token")
-            getToken().onRight { token = it }
+        if (måOppdatereToken(cachedToken)) {
+            hentNyttTokenFraSalesforce().onRight { cachedToken = it }
         } else {
-            token!!.right()
+            cachedToken!!.right()
         }
 
-    private suspend fun getToken(): Either<Feil, SalesforceAccessToken> {
+    private suspend fun hentNyttTokenFraSalesforce(): Either<Feil, SalesforceAccessToken> {
         val tokenUrl = "${salesforce.tokenHost}/services/oauth2/token"
         val response = httpClient.submitForm (
             url = tokenUrl,
@@ -88,7 +87,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 append("client_id", salesforce.clientId)
                 append("client_secret", salesforce.clientSecret)
                 append("username", salesforce.username)
-                append("password", salesforce.password)
+                append("password", salesforce.password + salesforce.securityToken)
             }
         )
 
