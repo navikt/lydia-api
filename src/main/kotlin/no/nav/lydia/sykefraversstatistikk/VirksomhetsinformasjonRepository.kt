@@ -167,15 +167,17 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 statement = """
                     SELECT
                         orgnr,
-                        arstall,
-                        kvartal,
-                        antall_personer,
-                        tapte_dagsverk,
-                        mulige_dagsverk,
-                        sykefraversprosent,
-                        maskert
-                  FROM sykefravar_statistikk_virksomhet
-                  WHERE (orgnr = :orgnr)
+                        sykefravar_statistikk_virksomhet.arstall,
+                        sykefravar_statistikk_virksomhet.kvartal,
+                        sykefravar_statistikk_virksomhet.antall_personer,
+                        sykefravar_statistikk_virksomhet_gradering.tapte_dagsverk_gradert,
+                        sykefravar_statistikk_virksomhet.tapte_dagsverk,
+                        sykefravar_statistikk_virksomhet.mulige_dagsverk,
+                        sykefravar_statistikk_virksomhet.sykefraversprosent,
+                        sykefravar_statistikk_virksomhet_gradering.prosent as graderingsprosent,
+                        sykefravar_statistikk_virksomhet.maskert
+                  FROM sykefravar_statistikk_virksomhet LEFT JOIN sykefravar_statistikk_virksomhet_gradering USING (orgnr)
+                  WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
                   ${
                       periode?.let { """
                           AND kvartal = ${it.kvartal}
@@ -266,9 +268,11 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         arstall = row.int("arstall"),
         kvartal = row.int("kvartal"),
         antallPersoner = row.double("antall_personer"),
+        tapteDagsverkGradert = row.double("tapte_dagsverk_gradert"),
         tapteDagsverk = row.double("tapte_dagsverk"),
         muligeDagsverk = row.double("mulige_dagsverk"),
         sykefraversprosent = row.double("sykefraversprosent"),
+        graderingsprosent = row.double("graderingsprosent"),
         maskert = row.boolean("maskert"),
     )
 

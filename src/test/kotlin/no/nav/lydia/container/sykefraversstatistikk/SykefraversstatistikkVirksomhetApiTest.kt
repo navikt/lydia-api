@@ -89,6 +89,31 @@ class SykefraversstatistikkVirksomhetApiTest {
     }
 
     @Test
+    fun `skal kunne hente statistikk for gradert sykemelding fra siste gjeldende kvartal`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
+        val virksomhet = TestVirksomhet.nyVirksomhet()
+        VirksomhetHelper.lastInnTestdata(
+                TestData().lagData(
+                        virksomhet = virksomhet,
+                        tapteDagsverk = 1000.0,
+                        graderingsprosent = 25.9,
+                        perioder = listOf(
+                                gjeldendePeriode,
+                                gjeldendePeriode.forrigePeriode(),
+                                Periode(kvartal = 4, årstall = 2019)
+                        ),
+                )
+        )
+        val result =
+                StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
+        result.arstall shouldBe gjeldendePeriode.årstall
+        result.kvartal shouldBe gjeldendePeriode.kvartal
+        result.graderingsprosent shouldBe 25.9
+        result.tapteDagsverkGradert shouldBe 259.0
+    }
+
+
+    @Test
     fun `skal kunne hente sykefraværsstatistikk riktig når vi mangler siste periode`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = TestVirksomhet.nyVirksomhet()

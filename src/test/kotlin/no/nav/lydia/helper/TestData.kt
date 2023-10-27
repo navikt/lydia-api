@@ -140,12 +140,13 @@ class TestData(
         virksomhet: TestVirksomhet,
         perioder: List<Periode>,
         sykefraværsProsent: Double? = null,
+        graderingsprosent: Double? = null,
         antallPersoner: Double = Random.nextDouble(5.0, 1000.0),
         tapteDagsverk: Double = Random.nextDouble(5.0, 10000.0),
         sektor: Sektor = Sektor.STATLIG,
     ): TestData {
         perioder.forEach { periode ->
-            val graderingsProsent = sykefraværsProsent ?: (1..MAX_GRADERINGSPROSENT).random().toDouble()
+            val graderingsProsent = graderingsprosent ?: (1..MAX_GRADERINGSPROSENT).random().toDouble()
             val tapteDagsverkGradert = (tapteDagsverk * graderingsProsent/100).toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
             sykefraværsstatistikkVirksomhetKafkaMeldinger.add(
                 lagSykefraversstatistikkPerKategoriImportDto(
