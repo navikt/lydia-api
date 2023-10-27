@@ -152,8 +152,8 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                   WHERE (sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr = :orgnr)
                   ${periode?.let {
                         """
-                            AND publisert_kvartal = ${it.kvartal}
-                            AND publisert_arstall = ${it.årstall}
+                            AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = ${it.kvartal}
+                            AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = ${it.årstall}
                         """.trimIndent()
                     } ?: ""}
                 """.trimIndent(), paramMap = mapOf(
@@ -184,8 +184,8 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                   WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
                   ${
                       periode?.let { """
-                          AND kvartal = ${it.kvartal}
-                          AND arstall = ${it.årstall}
+                          AND sykefravar_statistikk_virksomhet.kvartal = ${it.kvartal}
+                          AND sykefravar_statistikk_virksomhet.arstall = ${it.årstall}
                       """.trimIndent() } ?: ""
                   }
                   ORDER BY arstall DESC, kvartal DESC
@@ -272,11 +272,11 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         arstall = row.int("arstall"),
         kvartal = row.int("kvartal"),
         antallPersoner = row.double("antall_personer"),
-        tapteDagsverkGradert = row.double("tapte_dagsverk_gradert"),
+        tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert") ?: 0.0,
         tapteDagsverk = row.double("tapte_dagsverk"),
         muligeDagsverk = row.double("mulige_dagsverk"),
         sykefraversprosent = row.double("sykefraversprosent"),
-        graderingsprosent = row.double("graderingsprosent"),
+        graderingsprosent = row.doubleOrNull("graderingsprosent") ?: 0.0,
         maskert = row.boolean("maskert"),
     )
 
