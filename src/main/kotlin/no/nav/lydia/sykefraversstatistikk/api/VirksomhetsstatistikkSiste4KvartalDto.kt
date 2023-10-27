@@ -9,8 +9,10 @@ import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 data class VirksomhetsstatistikkSiste4KvartalDto(
     val orgnr: String,
     val sykefraversprosent: Double,
+    val graderingsprosent: Double,
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
+    val tapteDagsverkGradert: Double,
     val antallKvartaler: Int?,
     val kvartaler: List<KvartalDto>,
 ) {
@@ -20,8 +22,10 @@ data class VirksomhetsstatistikkSiste4KvartalDto(
             VirksomhetsstatistikkSiste4KvartalDto(
                 orgnr = this.orgnr,
                 sykefraversprosent = this.sykefraversprosent,
+                graderingsprosent = this.graderingsprosent,
                 muligeDagsverk = this.muligeDagsverk,
                 tapteDagsverk = this.tapteDagsverk,
+                tapteDagsverkGradert = this.tapteDagsverkGradert,
                 antallKvartaler = this.antallKvartaler,
                 kvartaler = this.kvartaler.toDto(),
             )

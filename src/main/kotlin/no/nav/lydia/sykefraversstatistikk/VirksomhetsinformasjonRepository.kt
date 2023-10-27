@@ -138,15 +138,18 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 statement = """
                     SELECT
                         orgnr,
-                        tapte_dagsverk,
-                        mulige_dagsverk,
-                        prosent,
-                        maskert,
-                        antall_kvartaler,
-                        sist_endret,
-                        kvartaler
+                        sykefravar_statistikk_virksomhet_siste_4_kvartal.tapte_dagsverk,
+                        sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.tapte_dagsverk_gradert,
+                        sykefravar_statistikk_virksomhet_siste_4_kvartal.mulige_dagsverk,
+                        sykefravar_statistikk_virksomhet_siste_4_kvartal.prosent,
+                        sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.prosent as graderingsprosent,
+                        sykefravar_statistikk_virksomhet_siste_4_kvartal.maskert,
+                        sykefravar_statistikk_virksomhet_siste_4_kvartal.antall_kvartaler,
+                        sykefravar_statistikk_virksomhet_siste_4_kvartal.sist_endret,
+                        sykefravar_statistikk_virksomhet_siste_4_kvartal.kvartaler
                   FROM sykefravar_statistikk_virksomhet_siste_4_kvartal
-                  WHERE (orgnr = :orgnr)
+                  LEFT JOIN sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal USING (orgnr)
+                  WHERE (sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr = :orgnr)
                   ${periode?.let {
                         """
                             AND publisert_kvartal = ${it.kvartal}
@@ -176,7 +179,8 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         sykefravar_statistikk_virksomhet.sykefraversprosent,
                         sykefravar_statistikk_virksomhet_gradering.prosent as graderingsprosent,
                         sykefravar_statistikk_virksomhet.maskert
-                  FROM sykefravar_statistikk_virksomhet LEFT JOIN sykefravar_statistikk_virksomhet_gradering USING (orgnr)
+                  FROM sykefravar_statistikk_virksomhet 
+                  LEFT JOIN sykefravar_statistikk_virksomhet_gradering USING (orgnr)
                   WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
                   ${
                       periode?.let { """
@@ -300,8 +304,10 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         return VirksomhetsstatistikkSiste4Kvartal(
             orgnr = row.string("orgnr"),
             tapteDagsverk = row.doubleOrNull("tapte_dagsverk") ?: 0.0,
+            tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert") ?: 0.0,
             muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
             sykefraversprosent = row.doubleOrNull("prosent") ?: 0.0,
+            graderingsprosent = row.doubleOrNull("graderingsprosent") ?: 0.0,
             maskert = row.boolean("maskert"),
             opprettet = row.localDateTime("sist_endret"),
             antallKvartaler = row.int("antall_kvartaler"),

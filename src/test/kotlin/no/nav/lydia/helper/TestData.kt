@@ -87,7 +87,9 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.BERGEN,
                 perioder = gjeldendePeriode.lagPerioder(2),
-                sykefraværsProsent = 7.0
+                sykefraværsProsent = 7.0,
+                graderingsprosent = 20.0,
+                tapteDagsverk = 1000.0
             )
 
             lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(gjeldendePeriode))

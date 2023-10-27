@@ -89,7 +89,7 @@ class SykefraversstatistikkVirksomhetApiTest {
     }
 
     @Test
-    fun `skal kunne hente statistikk for gradert sykemelding fra siste gjeldende kvartal`() {
+    fun `skal kunne hente statistikk for gradert sykemelding fra siste tilgjengelige kvartal`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = TestVirksomhet.nyVirksomhet()
         VirksomhetHelper.lastInnTestdata(

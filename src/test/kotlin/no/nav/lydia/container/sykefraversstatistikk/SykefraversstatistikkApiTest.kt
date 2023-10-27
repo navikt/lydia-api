@@ -319,6 +319,21 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
+    fun `skal kunne hente statistikk for gradert sykmelding for de siste 4 kvartaler`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
+        val orgnr = BERGEN.orgnr
+        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr).also {
+            it.orgnr shouldBe orgnr
+            it.antallKvartaler shouldBe 2
+            it.kvartaler.size shouldBe 2
+            it.kvartaler[0].kvartal shouldBe gjeldendePeriode.kvartal
+            it.kvartaler[0].årstall shouldBe gjeldendePeriode.årstall
+            it.graderingsprosent shouldBe 20.0
+            it.tapteDagsverkGradert shouldBe 200.0
+        }
+    }
+
+    @Test
     fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel`() {
         val sorteringsnøkkel = "tapte_dagsverk"
 
