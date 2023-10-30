@@ -126,6 +126,32 @@ class SykefraversstatistikkImportTestUtils {
         val KVARTAL_2022_1 = Kvartal(2022, 1)
 
 
+        fun cleanUpGraderingStatistikkTable(
+            verdi: String? = null,
+            kvartal: Kvartal = TestData.gjeldendePeriode.tilKvartal(),
+        ) {
+            val optionalClauseOnKode = if (verdi == null) "" else "and orgnr = '$verdi'"
+            TestContainerHelper.postgresContainer.performUpdate("""
+            delete from sykefravar_statistikk_virksomhet_gradering
+            where arstall = ${kvartal.årstall}
+              and kvartal = ${kvartal.kvartal}
+              $optionalClauseOnKode
+        """.trimIndent())
+        }
+
+        fun cleanUpGraderingStatistikkSiste4KvartalTable(
+            orgnr: String? = null,
+            kvartal: Kvartal = TestData.gjeldendePeriode.tilKvartal(),
+        ) {
+            val optionalClauseOnKode = if (orgnr == null) "" else "and orgnr = '$orgnr'"
+            TestContainerHelper.postgresContainer.performUpdate("""
+            delete from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal
+            where publisert_arstall = ${kvartal.årstall}
+              and publisert_kvartal = ${kvartal.kvartal}
+              $optionalClauseOnKode
+        """.trimIndent())
+        }
+
         fun cleanUpStatistikkTable(
                 kategori: Kategori,
                 verdi: String? = null,

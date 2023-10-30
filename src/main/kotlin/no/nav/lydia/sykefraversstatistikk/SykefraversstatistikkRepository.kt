@@ -169,10 +169,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertStatistikkVirksomhetGraderingSiste4Kvartal(
-        sykefraværsstatistikk: List<GradertSykemeldingImportDto>
+        gradertSykemeldingImportDtoList: List<GradertSykemeldingImportDto>
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
-            sykefraværsstatistikk.forEach {
+            gradertSykemeldingImportDtoList.forEach {
                 tx.run(
                     queryOf(
                         """
@@ -226,10 +226,10 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
 
 
     fun insertStatistikkVirksomhetGraderingGjeldendeKvartal(
-        sykefraværsstatistikk: List<GradertSykemeldingImportDto>
+        gradertSykemeldingImportDtoList: List<GradertSykemeldingImportDto>
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
-            sykefraværsstatistikk.forEach {
+            gradertSykemeldingImportDtoList.tilBehandletImportGradertSykmelding().forEach {
                 tx.run(
                         queryOf(
                                 """
@@ -263,13 +263,13 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         """.trimIndent(),
                                 mapOf(
                                         "orgnr" to it.kode,
-                                        "arstall" to it.sistePubliserteKvartal.årstall,
-                                        "kvartal" to it.sistePubliserteKvartal.kvartal,
-                                        "antall_personer" to it.sistePubliserteKvartal.antallPersoner,
-                                        "tapte_dagsverk_gradert" to it.sistePubliserteKvartal.tapteDagsverkGradert,
-                                        "tapte_dagsverk" to it.sistePubliserteKvartal.tapteDagsverk,
-                                        "prosent" to it.sistePubliserteKvartal.prosent,
-                                        "maskert" to it.sistePubliserteKvartal.erMaskert
+                                        "arstall" to it.årstall,
+                                        "kvartal" to it.kvartal,
+                                        "antall_personer" to it.antallPersoner,
+                                        "tapte_dagsverk_gradert" to it.tapteDagsverkGradert,
+                                        "tapte_dagsverk" to it.tapteDagsverk,
+                                        "prosent" to it.prosent,
+                                        "maskert" to it.erMaskert
                                 )
                         ).asUpdate
                 )

@@ -5,6 +5,8 @@ import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_4
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2023_1
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpGraderingStatistikkSiste4KvartalTable
+import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpGraderingStatistikkTable
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
@@ -70,8 +72,40 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @BeforeTest
     fun cleanUp() {
+        cleanUpGraderingStatistikkTable(kvartal = KVARTAL_2023_1)
+        cleanUpGraderingStatistikkSiste4KvartalTable(kvartal = KVARTAL_2023_1)
         cleanUpStatistikkTable(VIRKSOMHET, "999999999")
         cleanUpStatistikkSiste4KvartalTable(VIRKSOMHET, "999999999")
+    }
+
+    @Test
+    fun `vi tar hensyn til maskering på gradering siste publiserte kvartal`() {
+        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+            kategori = "VIRKSOMHET_GRADERT",
+            kode = "999999997",
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = graderingSistePubliserteKvartal.copy(
+                tapteDagsverkGradert = 10.0,
+                tapteDagsverk = 100.0,
+                prosent = 10.0,
+                antallPersoner = 4,
+                erMaskert = true
+            ),
+            siste4Kvartal = graderingSiste4Kvartal
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+            kafkaMelding.toJsonKey(),
+            kafkaMelding.toJsonValue(),
+            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+            Kafka.statistikkVirksomhetGraderingGroupId
+        )
+
+        val gjeldendeKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
+
+        gjeldendeKvartal.graderingSistePubliserteKvartal.erMaskert shouldBe true
+        gjeldendeKvartal.graderingSistePubliserteKvartal.prosent shouldBe 0.0
+        gjeldendeKvartal.graderingSistePubliserteKvartal.tapteDagsverk shouldBe 0.0
+        gjeldendeKvartal.graderingSistePubliserteKvartal.tapteDagsverkGradert shouldBe 0.0
     }
 
     @Test

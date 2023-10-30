@@ -80,10 +80,10 @@ class SykefraværsstatistikkService(
 
     fun lagreStatistikkVirksomhetGradering(gradertSykemeldingImportDtoListe: List<GradertSykemeldingImportDto>) {
         sykefraversstatistikkRepository.insertStatistikkVirksomhetGraderingGjeldendeKvartal(
-            sykefraværsstatistikk = gradertSykemeldingImportDtoListe
+            gradertSykemeldingImportDtoList = gradertSykemeldingImportDtoListe
         )
         sykefraversstatistikkRepository.insertStatistikkVirksomhetGraderingSiste4Kvartal(
-            sykefraværsstatistikk = gradertSykemeldingImportDtoListe
+            gradertSykemeldingImportDtoList = gradertSykemeldingImportDtoListe
         )
     }
 
