@@ -35,10 +35,6 @@ spec:
     inbound:
       rules:
         - application: lydia-radgiver-frontend
-  ingresses:
-    {{#each ingresses as |url|}}
-    - {{url}}
-    {{/each}}
   azure:
     application:
       enabled: true
