@@ -5,10 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -19,7 +17,6 @@ import no.nav.lydia.AzureConfig
 import no.nav.lydia.Security
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.sykefraversstatistikk.api.EierDTO
-import no.nav.lydia.tilgangskontroll.innloggetNavIdent
 import org.slf4j.LoggerFactory
 
 @Serializable
@@ -168,15 +165,4 @@ class AzureService(
                     httpStatusCode = HttpStatusCode.InternalServerError
                 ).left()
             })
-}
-
-fun Route.navEnhet(azureService: AzureService) {
-    get("nav-enhet") {
-        val navIdent = call.innloggetNavIdent() ?: return@get call.respond(HttpStatusCode.BadRequest, "mangler nav-ident")
-        azureService.hentNavenhetFraNavIdent(navIdent).map {
-            call.respond(it)
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
 }

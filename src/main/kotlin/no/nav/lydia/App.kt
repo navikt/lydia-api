@@ -48,7 +48,6 @@ import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
-import no.nav.lydia.integrasjoner.azure.navEnhet
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
@@ -348,7 +347,6 @@ fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 naisEnvironment = naisEnvironment
             )
-            navEnhet(azureService = azureService)
         }
     }
 }
