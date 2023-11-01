@@ -272,11 +272,11 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         arstall = row.int("arstall"),
         kvartal = row.int("kvartal"),
         antallPersoner = row.double("antall_personer"),
-        tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert") ?: 0.0,
+        tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert"),
         tapteDagsverk = row.double("tapte_dagsverk"),
         muligeDagsverk = row.double("mulige_dagsverk"),
         sykefraversprosent = row.double("sykefraversprosent"),
-        graderingsprosent = row.doubleOrNull("graderingsprosent") ?: 0.0,
+        graderingsprosent = row.doubleOrNull("graderingsprosent"),
         maskert = row.boolean("maskert"),
     )
 
@@ -304,10 +304,10 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         return VirksomhetsstatistikkSiste4Kvartal(
             orgnr = row.string("orgnr"),
             tapteDagsverk = row.doubleOrNull("tapte_dagsverk") ?: 0.0,
-            tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert") ?: 0.0,
+            tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert"),
             muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
             sykefraversprosent = row.doubleOrNull("prosent") ?: 0.0,
-            graderingsprosent = row.doubleOrNull("graderingsprosent") ?: 0.0,
+            graderingsprosent = row.doubleOrNull("graderingsprosent"),
             maskert = row.boolean("maskert"),
             opprettet = row.localDateTime("sist_endret"),
             antallKvartaler = row.int("antall_kvartaler"),

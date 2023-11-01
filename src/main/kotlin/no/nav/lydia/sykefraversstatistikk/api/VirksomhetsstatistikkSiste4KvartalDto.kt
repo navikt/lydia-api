@@ -9,10 +9,10 @@ import no.nav.lydia.sykefraversstatistikk.import.Kvartal
 data class VirksomhetsstatistikkSiste4KvartalDto(
     val orgnr: String,
     val sykefraversprosent: Double,
-    val graderingsprosent: Double,
+    val graderingsprosent: Double?,
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
-    val tapteDagsverkGradert: Double,
+    val tapteDagsverkGradert: Double?,
     val antallKvartaler: Int?,
     val kvartaler: List<KvartalDto>,
 ) {

@@ -25,6 +25,8 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
+import kotlin.test.Test
+import kotlin.test.fail
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils
 import no.nav.lydia.helper.KafkaContainerHelper
@@ -42,6 +44,7 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4KvartalerRespons
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
 import no.nav.lydia.helper.TestContainerHelper
@@ -74,6 +77,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.lagSykefraversstatistikkPerKategoriImportDto
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
@@ -95,10 +99,9 @@ import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
-import kotlin.test.Test
-import kotlin.test.fail
 
 class SykefraversstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
@@ -330,6 +333,48 @@ class SykefraversstatistikkApiTest {
             it.kvartaler[0].årstall shouldBe gjeldendePeriode.årstall
             it.graderingsprosent shouldBe 20.0
             it.tapteDagsverkGradert shouldBe 200.0
+        }
+    }
+
+    @Test
+    fun `skal få null når statistikk til virksomheten mangler gradering`() {
+        val virksomhet = nyVirksomhet()
+        val statistikk = lagSykefraversstatistikkPerKategoriImportDto(
+                kategori = Kategori.VIRKSOMHET,
+                kode = virksomhet.orgnr,
+                periode = gjeldendePeriode,
+                sykefraværsProsent = 5.3,
+                antallPersoner = 100,
+                tapteDagsverk = 35.0,
+        )
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+                importDtoer = listOf(statistikk),
+                topic = KafkaContainerHelper.statistikkVirksomhetTopic,
+                groupId = Kafka.statistikkVirksomhetGroupId
+        )
+
+        TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
+                listOf(
+                        SykefraversstatistikkMetadataVirksomhetImportDto(
+                                orgnr = virksomhet.orgnr,
+                                årstall = gjeldendePeriode.årstall,
+                                kvartal = gjeldendePeriode.kvartal,
+                                sektor = Sektor.PRIVAT.name,
+                                bransje = virksomhet.næringsundergruppe1.tilBransje()?.name,
+                                naring = virksomhet.næringsundergruppe1.tilTosifret()
+                        )
+                )
+        )
+
+        hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr).also {
+            it.orgnr shouldBe virksomhet.orgnr
+            it.graderingsprosent shouldBe null
+            it.tapteDagsverkGradert shouldBe null
+        }
+        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = virksomhet.orgnr).also {
+            it.orgnr shouldBe virksomhet.orgnr
+            it.graderingsprosent shouldBe null
+            it.tapteDagsverkGradert shouldBe null
         }
     }
 

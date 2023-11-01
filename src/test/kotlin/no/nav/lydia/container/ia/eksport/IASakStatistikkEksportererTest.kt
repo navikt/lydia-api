@@ -11,7 +11,6 @@ import no.nav.lydia.helper.*
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
-import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
@@ -29,8 +28,10 @@ import no.nav.lydia.tilgangskontroll.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
 import org.junit.Before
-import java.time.LocalDate
 import kotlin.test.Test
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsespunkterTilDato
+import no.nav.lydia.helper.TestData.Companion.datoSentIGjeldendePeriode
+import no.nav.lydia.helper.TestData.Companion.lagPerioder
 
 class IASakStatistikkEksportererTest {
     private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
@@ -84,16 +85,16 @@ class IASakStatistikkEksportererTest {
 
     @Test
     fun `sjekk at vi får riktig sykefraværsstatistikk basert på når hendelsen skjedde`() {
+        /*
+        * Statistikken for “Gjeldende periode” blir publisert etter at kvartalet er over.
+        * Det betyr at hendelser som skjedde på en dato i “Gjeldende periode” hadde annen statistikk enn det som skjedde “nå”.
+        * Hendelser som skjer i dag bruker statistikk fra "gjeldende periode".
+        * Hendelser som skjer i "gjeldende periode" bruker statistikk fra "forrige periode".
+        * */
         val gjeldendePeriode = TestData.gjeldendePeriode
         val forrigePeriode = gjeldendePeriode.forrigePeriode()
-        val sak = opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = listOf(
-            gjeldendePeriode,
-            forrigePeriode,
-            forrigePeriode.forrigePeriode(),
-        )).orgnr)
-        val datoSentIGjeldenePeriode = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal*4)-1, 28)
-        val dagerSomSkalTrekkesFra = LocalDate.now().toEpochDay() - datoSentIGjeldenePeriode.toEpochDay()
-        sak.oppdaterHendelsesTidspunkter(dagerSomSkalTrekkesFra)
+        val sak = opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = gjeldendePeriode.lagPerioder(3)).orgnr)
+        sak.oppdaterHendelsespunkterTilDato(datoSentIGjeldendePeriode())
         sak.nyHendelse(TA_EIERSKAP_I_SAK)
 
         lydiaApiContainer.performGet(IA_SAK_STATISTIKK_EKSPORT_PATH).tilSingelRespons<Unit>()
@@ -107,6 +108,8 @@ class IASakStatistikkEksportererTest {
                     Json.decodeFromString<IASakStatistikkProdusent.IASakStatistikkValue>(it)
                 }
                 objektene shouldHaveSize 6
+
+                //Kun en hendelse av typen VIRKSOMHET_VURDERES skal ha skjedd i forrige periode
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
                     it.hendelse shouldBe VIRKSOMHET_VURDERES
@@ -116,6 +119,8 @@ class IASakStatistikkEksportererTest {
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe null
                 }
+
+                //Minst en hendelse av typen TA_EIERSKAP_I_SAK skal ha skjedd i gjeldende periode
                 objektene.forAtLeastOne {
                     it.saksnummer shouldBe sak.saksnummer
                     it.hendelse shouldBe TA_EIERSKAP_I_SAK
