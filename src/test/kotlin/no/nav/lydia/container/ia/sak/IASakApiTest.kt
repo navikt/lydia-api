@@ -328,6 +328,7 @@ class IASakApiTest {
         shouldFail { sak.nyHendelse(TILBAKE) }
 
         lydiaApiContainer shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
+        postgresContainer.performUpdate("DELETE FROM ia_sak_hendelse WHERE id = '888'")
     }
 
     @Test
