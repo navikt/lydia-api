@@ -101,6 +101,7 @@ object Jobblytter : CoroutineScope {
                                 logger.info("Jobb ${jobInfo.jobb} ferdig")
                             }
                         }
+                        consumer.commitSync()
                     }
                 } catch (e: WakeupException) {
                     logger.info("Jobblytter is shutting down")
