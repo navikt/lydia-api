@@ -7,9 +7,11 @@ import org.testcontainers.Testcontainers
 class WiremockContainerHelper {
     val azureMock: WireMockServer
     val salesforceMock: WireMockServer
+    val naringMock: WireMockServer
     init {
         azureMock = lagMockServer("azure")
         salesforceMock = lagMockServer("salesforce")
+        naringMock = lagMockServer("naring")
     }
 
     private fun lagMockServer(service: String) = WireMockServer(WireMockConfiguration.options().dynamicPort()).also {
@@ -24,6 +26,7 @@ class WiremockContainerHelper {
     fun envVars() = mapOf(
         "AZURE_GRAPH_URL" to "http://host.testcontainers.internal:${azureMock.port()}/v1.0",
         "SALESFORCE_TOKEN_HOST" to "http://host.testcontainers.internal:${salesforceMock.port()}",
+        "SSB_NARINGS_URL" to "http://host.testcontainers.internal:${naringMock.port()}/naringmock/api/klass/v1/30/json",
         "SALESFORCE_CLIENT_ID" to "clientId",
         "SALESFORCE_CLIENT_SECRET" to "clientSecret",
         "SALESFORCE_USERNAME" to "username",

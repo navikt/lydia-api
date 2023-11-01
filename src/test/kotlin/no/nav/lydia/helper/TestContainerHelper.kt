@@ -122,7 +122,6 @@ class TestContainerHelper {
                                                         .plus(
                                                                 mapOf(
                                                                         "CONSUMER_LOOP_DELAY" to "1",
-                                                                        "SSB_NARINGS_URL" to "/naringmock/api/klass/v1/30/json",
                                                                         "NAIS_CLUSTER_NAME" to "lokal",
                                                                 )
                                                         )

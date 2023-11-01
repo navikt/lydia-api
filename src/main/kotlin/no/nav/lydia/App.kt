@@ -50,6 +50,7 @@ import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
+import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -87,27 +88,76 @@ fun startLydiaBackend() {
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
 
-    HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
-
-    val sistePubliseringService = SistePubliseringService(
-            sistePubliseringRepository = SistePubliseringRepository(
-                    dataSource = dataSource
-            )
-    )
-    val sykefraværsstatistikkService = SykefraværsstatistikkService(
-        sykefraversstatistikkRepository = SykefraversstatistikkRepository(
-            dataSource = dataSource
-        ),
-        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(
-                dataSource = dataSource,
-        ),
+    val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
+    val næringsRepository = NæringsRepository(dataSource = dataSource)
+    val iaSakRepository = IASakRepository(dataSource = dataSource)
+    val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
+    val sykefraværsstatistikkService =
+        SykefraværsstatistikkService(
+            sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
+            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
+            sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
+            virksomhetRepository = virksomhetRepository,
+        )
+    val årsakRepository = ÅrsakRepository(dataSource = dataSource)
+    val auditLog = AuditLog(naisEnv.miljø)
+    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
+    val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
+    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakTopic)
+    val iaSakStatistikkProdusent = IASakStatistikkProdusent(
+        produsent = kafkaProdusent,
+        virksomhetService = virksomhetService,
+        sykefraværsstatistikkService = sykefraværsstatistikkService,
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        geografiService = GeografiService(),
         sistePubliseringService = sistePubliseringService,
-        virksomhetRepository = VirksomhetRepository(dataSource = dataSource),
+        topic = naisEnv.kafka.iaSakStatistikkTopic
     )
+    val iaSakStatusProdusent = IASakStatusProdusent(
+        produsent = kafkaProdusent,
+        topic = naisEnv.kafka.iaSakStatusTopic,
+        iaSakRepository = iaSakRepository,
+    )
+    val azureService = AzureService(
+        tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnv),
+        security = naisEnv.security
+    )
+    val iaSakLeveranseProdusent = IASakLeveranseProdusent(
+        produsent = kafkaProdusent,
+        topic = naisEnv.kafka.iaSakLeveranseTopic,
+        azureService = azureService
+    )
+    val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
 
+    HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
+    
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
+    jobblytter(
+        naisEnv = naisEnv,
+        iaSakEksporterer = IASakEksporterer(
+            iaSakRepository = iaSakRepository,
+            iaSakProdusent = iaSakProdusent
+        ),
+        iaSakStatistikkEksporterer = IASakStatistikkEksporterer(
+            iaSakRepository = iaSakRepository,
+            iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+            iaSakStatistikkProdusent = iaSakStatistikkProdusent,
+        ),
+        iaSakLeveranseEksportør = IASakLeveranseEksportør(
+            iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
+            iaSakLeveranseProdusent = iaSakLeveranseProdusent,
+        ),
+        iaSakStatusExportør = IASakStatusEksportør(
+            iaSakRepository = IASakRepository(dataSource = dataSource),
+            iaSakStatusProdusent = iaSakStatusProdusent,
+        ),
+        næringsDownloader = NæringsDownloader(
+            url = naisEnv.integrasjoner.ssbNæringsUrl,
+            næringsRepository = næringsRepository
+        )
+    )
 
     mapOf(
         naisEnv.kafka.statistikkLandTopic to Kafka.statistikkLandGroupId,
@@ -139,8 +189,21 @@ fun startLydiaBackend() {
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
-            naisEnvironment = naisEnv,
-            dataSource = dataSource,
+            naisEnv,
+            iaSakRepository,
+            iaSakProdusent,
+            dataSource,
+            iaSakStatistikkProdusent,
+            iaSakLeveranseProdusent,
+            iaSakStatusProdusent,
+            næringsRepository,
+            sykefraværsstatistikkService,
+            auditLog,
+            azureService,
+            sistePubliseringService,
+            årsakRepository,
+            iaSakLeveranseObserver,
+            virksomhetRepository
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -170,51 +233,44 @@ private fun brregAlleVirksomheterConsumer(naisEnv: NaisEnvironment, dataSource: 
     }
 }
 
-fun Application.lydiaRestApi(
-    naisEnvironment: NaisEnvironment,
-    dataSource: DataSource,
+private fun jobblytter(
+    naisEnv: NaisEnvironment,
+    iaSakEksporterer: IASakEksporterer,
+    iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
+    iaSakLeveranseEksportør: IASakLeveranseEksportør,
+    iaSakStatusExportør: IASakStatusEksportør,
+    næringsDownloader: NæringsDownloader
 ) {
-    val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
-    val næringsRepository = NæringsRepository(dataSource = dataSource)
-    val iaSakRepository = IASakRepository(dataSource = dataSource)
-    val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
-    val sykefraværsstatistikkService =
-        SykefraværsstatistikkService(
-            sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
-            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
-            sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
-            virksomhetRepository = virksomhetRepository,
+    Jobblytter.apply {
+        create(
+            kafka = naisEnv.kafka,
+            iaSakEksporterer = iaSakEksporterer,
+            iaSakStatistikkEksporterer = iaSakStatistikkEksporterer,
+            iaSakLeveranseEksportør = iaSakLeveranseEksportør,
+            iaSakStatusExportør = iaSakStatusExportør,
+            næringsDownloader = næringsDownloader,
         )
-    val årsakRepository = ÅrsakRepository(dataSource = dataSource)
-    val auditLog = AuditLog(naisEnvironment.miljø)
-    val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
-    val kafkaProdusent = KafkaProdusent(naisEnvironment.kafka)
-    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnvironment.kafka.iaSakTopic)
-    val iaSakStatistikkProdusent = IASakStatistikkProdusent(
-        produsent = kafkaProdusent,
-        virksomhetService = virksomhetService,
-        sykefraværsstatistikkService = sykefraværsstatistikkService,
-        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-        geografiService = GeografiService(),
-        sistePubliseringService = sistePubliseringService,
-        topic = naisEnvironment.kafka.iaSakStatistikkTopic
-    )
-    val iaSakStatusProdusent = IASakStatusProdusent(
-        produsent = kafkaProdusent,
-        topic = naisEnvironment.kafka.iaSakStatusTopic,
-        iaSakRepository = iaSakRepository,
-    )
-    val azureService = AzureService(
-        tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnvironment),
-        security = naisEnvironment.security
-    )
-    val iaSakLeveranseProdusent = IASakLeveranseProdusent(
-        produsent = kafkaProdusent,
-        topic = naisEnvironment.kafka.iaSakLeveranseTopic,
-        azureService = azureService
-    )
-    val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
+        run()
+    }
+}
 
+private fun Application.lydiaRestApi(
+    naisEnv: NaisEnvironment,
+    iaSakRepository: IASakRepository,
+    iaSakProdusent: IASakProdusent,
+    dataSource: DataSource,
+    iaSakStatistikkProdusent: IASakStatistikkProdusent,
+    iaSakLeveranseProdusent: IASakLeveranseProdusent,
+    iaSakStatusProdusent: IASakStatusProdusent,
+    næringsRepository: NæringsRepository,
+    sykefraværsstatistikkService: SykefraværsstatistikkService,
+    auditLog: AuditLog,
+    azureService: AzureService,
+    sistePubliseringService: SistePubliseringService,
+    årsakRepository: ÅrsakRepository,
+    iaSakLeveranseObserver: IASakLeveranseObserver,
+    virksomhetRepository: VirksomhetRepository
+) {
     install(ContentNegotiation) {
         json()
     }
@@ -242,19 +298,19 @@ fun Application.lydiaRestApi(
         registry = Metrics.appMicrometerRegistry
     }
 
-    val jwkProvider = JwkProviderBuilder(naisEnvironment.security.azureConfig.jwksUri)
+    val jwkProvider = JwkProviderBuilder(naisEnv.security.azureConfig.jwksUri)
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
     install(Authentication) {
         jwt {
-            verifier(jwkProvider, naisEnvironment.security.azureConfig.issuer)
+            verifier(jwkProvider, naisEnv.security.azureConfig.issuer)
             validate { credentials ->
                 try {
                     requireNotNull(credentials.payload.audience) {
                         "Auth: Missing audience in token"
                     }
-                    require(credentials.payload.audience.contains(naisEnvironment.security.azureConfig.clientId)) {
+                    require(credentials.payload.audience.contains(naisEnv.security.azureConfig.clientId)) {
                         "Auth: Valid audience not found in claims"
                     }
                     JWTPrincipal(credentials.payload)
@@ -302,7 +358,7 @@ fun Application.lydiaRestApi(
         )
         næringsImport(
             næringsDownloader = NæringsDownloader(
-                url = naisEnvironment.integrasjoner.ssbNæringsUrl,
+                url = naisEnv.integrasjoner.ssbNæringsUrl,
                 næringsRepository = næringsRepository
             )
         )
@@ -314,7 +370,7 @@ fun Application.lydiaRestApi(
                 sykefraværsstatistikkService = sykefraværsstatistikkService,
                 næringsRepository = næringsRepository,
                 auditLog = auditLog,
-                naisEnvironment = naisEnvironment,
+                naisEnvironment = naisEnv,
                 azureService = azureService,
                 sistePubliseringService = sistePubliseringService,
             )
@@ -328,15 +384,15 @@ fun Application.lydiaRestApi(
                     leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
                     leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
                 },
-                adGrupper = naisEnvironment.security.adGrupper,
+                adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
-                salesforceClient = SalesforceClient(salesforce = naisEnvironment.integrasjoner.salesforce),
+                salesforceClient = SalesforceClient(salesforce = naisEnv.integrasjoner.salesforce),
                 auditLog = auditLog,
-                adGrupper = naisEnvironment.security.adGrupper,
+                adGrupper = naisEnv.security.adGrupper,
             )
             statusoversikt(
                 sistePubliseringService = sistePubliseringService,
@@ -345,7 +401,7 @@ fun Application.lydiaRestApi(
                     statusoversiktRepository = StatusoversiktRepository(dataSource = dataSource)
                 ),
                 auditLog = auditLog,
-                naisEnvironment = naisEnvironment
+                naisEnvironment = naisEnv
             )
         }
     }

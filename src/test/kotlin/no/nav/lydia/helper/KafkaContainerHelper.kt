@@ -56,6 +56,7 @@ class KafkaContainerHelper(
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
         const val iaSakStatusTopic = "pia.ia-sak-status-v1"
         const val iaSakLeveranseTopic = "pia.ia-sak-leveranse-v1"
+        const val jobblytterTopic = "pia.jobblytter-v1"
         const val brregOppdateringTopic = "pia.brreg-oppdatering"
         const val brregAlleVirksomheterTopic = "pia.brreg-alle-virksomheter"
     }
@@ -96,6 +97,7 @@ class KafkaContainerHelper(
                 statistikkVirksomhetTopic,
                 statistikkVirksomhetGraderingTopic,
                 iaSakStatusTopic,
+                jobblytterTopic,
             )
             kafkaProducer = producer()
         }
@@ -117,6 +119,7 @@ class KafkaContainerHelper(
             statistikkVirksomhetGraderingTopic = statistikkVirksomhetGraderingTopic,
             brregOppdateringTopic = brregOppdateringTopic,
             brregAlleVirksomheterTopic = brregAlleVirksomheterTopic,
+            jobblytterTopic = jobblytterTopic,
             consumerLoopDelay = 1,
             credstorePassword = "",
             keystoreLocation = "",
@@ -139,6 +142,7 @@ class KafkaContainerHelper(
         "STATISTIKK_NARINGSKODE_TOPIC" to statistikkNæringskodeTopic,
         "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
         "STATISTIKK_VIRKSOMHET_GRADERING_TOPIC" to statistikkVirksomhetGraderingTopic,
+        "JOBBLYTTER_TOPIC" to jobblytterTopic,
         "IA_SAK_TOPIC" to iaSakTopic,
         "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
         "IA_SAK_STATUS_TOPIC" to iaSakStatusTopic,
