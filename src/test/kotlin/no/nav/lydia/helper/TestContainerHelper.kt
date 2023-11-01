@@ -13,6 +13,8 @@ import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import kotlin.io.path.Path
+import kotlin.test.fail
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
@@ -81,8 +83,6 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import kotlin.io.path.Path
-import kotlin.test.fail
 
 class TestContainerHelper {
     companion object {
@@ -530,6 +530,11 @@ class SakHelper {
                         where saksnummer='${this.saksnummer}';
                 """.trimIndent())
             return requireNotNull(hentSaker(this.orgnr, token = token).find { it.saksnummer == this.saksnummer })
+        }
+
+        fun IASakDto.oppdaterHendelsespunkterTilDato(dato : java.time.LocalDate) : IASakDto {
+            val dagerSomSkalTrekkesFra = java.time.LocalDate.now().toEpochDay() - dato.toEpochDay()
+            return this.oppdaterHendelsesTidspunkter(antallDagerTilbake = dagerSomSkalTrekkesFra)
         }
 
         fun IASakDto.leggTilLeveranseOgFullførSak(modulId: Int = 1, token: String = oauth2ServerContainer.saksbehandler1.token): IASakDto {

@@ -5,6 +5,7 @@ import no.nav.lydia.sykefraversstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import java.math.RoundingMode
+import java.time.LocalDate
 import kotlin.random.Random
 
 const val MAX_SYKEFRAVÆRSPROSENT = 20
@@ -54,6 +55,8 @@ class TestData(
         fun Periode.lagPerioder(antall: Int): List<Periode> {
             return rekursivtLagPerioder(antall, mutableListOf(), this)
         }
+
+        fun datoSentIGjeldendePeriode() = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal*3), 30)
 
         private fun rekursivtLagPerioder(
                 perioderIgjen: Int,
