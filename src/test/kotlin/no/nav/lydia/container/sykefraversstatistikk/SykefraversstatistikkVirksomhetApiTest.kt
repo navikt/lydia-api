@@ -3,6 +3,10 @@ package no.nav.lydia.container.sykefraversstatistikk
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer.TRANSPORT
 import io.kotest.matchers.shouldBe
+import kotlin.test.Test
+import kotlin.test.fail
+import no.nav.lydia.Kafka
+import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -15,8 +19,9 @@ import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
 import no.nav.lydia.sykefraversstatistikk.domene.BransjeSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
-import kotlin.test.Test
-import kotlin.test.fail
+import no.nav.lydia.sykefraversstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.sykefraversstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.sykefraversstatistikk.import.GradertSykemeldingImportDto
 
 class SykefraversstatistikkVirksomhetApiTest {
 
@@ -99,11 +104,36 @@ class SykefraversstatistikkVirksomhetApiTest {
                         graderingsprosent = 25.9,
                         perioder = listOf(
                                 gjeldendePeriode,
-                                gjeldendePeriode.forrigePeriode(),
-                                Periode(kvartal = 4, årstall = 2019)
                         ),
                 )
         )
+        //Legg til testdata i forrige periode så vi kan verifisere at disse ikke blir hentet
+        val statistikk = GradertSykemeldingImportDto(
+                kategori = "VIRKSOMHET_GRADERT",
+                kode = virksomhet.orgnr,
+                sistePubliserteKvartal = GraderingSistePubliserteKvartal(
+                        årstall = gjeldendePeriode.forrigePeriode().årstall,
+                        kvartal = gjeldendePeriode.forrigePeriode().kvartal,
+                        prosent = 32.5,
+                        tapteDagsverkGradert = 1000.0,
+                        tapteDagsverk = 10000.0,
+                        antallPersoner = 150,
+                        erMaskert = false
+                ),
+                siste4Kvartal = GraderingSiste4Kvartal(
+                        prosent = 25.3,
+                        tapteDagsverkGradert = 900.0,
+                        tapteDagsverk = 7000.0,
+                        erMaskert = false,
+                        kvartaler = listOf(TestData.gjeldendePeriode.tilKvartal(), TestData.gjeldendePeriode.forrigePeriode().tilKvartal())
+                )
+        )
+        TestContainerHelper.kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
+                importDtoer = listOf(statistikk),
+                topic = KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+                groupId = Kafka.statistikkVirksomhetGraderingGroupId
+        )
+
         val result =
                 StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
         result.arstall shouldBe gjeldendePeriode.årstall

@@ -136,20 +136,25 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
-                    SELECT
-                        orgnr,
-                        sykefravar_statistikk_virksomhet_siste_4_kvartal.tapte_dagsverk,
-                        sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.tapte_dagsverk_gradert,
-                        sykefravar_statistikk_virksomhet_siste_4_kvartal.mulige_dagsverk,
-                        sykefravar_statistikk_virksomhet_siste_4_kvartal.prosent,
-                        sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.prosent as graderingsprosent,
-                        sykefravar_statistikk_virksomhet_siste_4_kvartal.maskert,
-                        sykefravar_statistikk_virksomhet_siste_4_kvartal.antall_kvartaler,
-                        sykefravar_statistikk_virksomhet_siste_4_kvartal.sist_endret,
-                        sykefravar_statistikk_virksomhet_siste_4_kvartal.kvartaler
-                  FROM sykefravar_statistikk_virksomhet_siste_4_kvartal
-                  LEFT JOIN sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal USING (orgnr)
-                  WHERE (sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr = :orgnr)
+                      SELECT
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr,
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.tapte_dagsverk,
+                          sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.tapte_dagsverk_gradert,
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.mulige_dagsverk,
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.prosent,
+                          sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.prosent as graderingsprosent,
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.maskert,
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.antall_kvartaler,
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.sist_endret,
+                          sykefravar_statistikk_virksomhet_siste_4_kvartal.kvartaler
+                    FROM sykefravar_statistikk_virksomhet_siste_4_kvartal
+                    LEFT JOIN sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal 
+                      ON (
+                      sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr = sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.orgnr
+                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.publisert_kvartal
+                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.publisert_arstall
+                      )
+                    WHERE (sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr = :orgnr)
                   ${periode?.let {
                         """
                             AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = ${it.kvartal}
@@ -168,20 +173,25 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
-                    SELECT
-                        orgnr,
-                        sykefravar_statistikk_virksomhet.arstall,
-                        sykefravar_statistikk_virksomhet.kvartal,
-                        sykefravar_statistikk_virksomhet.antall_personer,
-                        sykefravar_statistikk_virksomhet_gradering.tapte_dagsverk_gradert,
-                        sykefravar_statistikk_virksomhet.tapte_dagsverk,
-                        sykefravar_statistikk_virksomhet.mulige_dagsverk,
-                        sykefravar_statistikk_virksomhet.sykefraversprosent,
-                        sykefravar_statistikk_virksomhet_gradering.prosent as graderingsprosent,
-                        sykefravar_statistikk_virksomhet.maskert
-                  FROM sykefravar_statistikk_virksomhet 
-                  LEFT JOIN sykefravar_statistikk_virksomhet_gradering USING (orgnr)
-                  WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
+                      SELECT
+                          sykefravar_statistikk_virksomhet.orgnr,
+                          sykefravar_statistikk_virksomhet.arstall,
+                          sykefravar_statistikk_virksomhet.kvartal,
+                          sykefravar_statistikk_virksomhet.antall_personer,
+                          sykefravar_statistikk_virksomhet_gradering.tapte_dagsverk_gradert,
+                          sykefravar_statistikk_virksomhet.tapte_dagsverk,
+                          sykefravar_statistikk_virksomhet.mulige_dagsverk,
+                          sykefravar_statistikk_virksomhet.sykefraversprosent,
+                          sykefravar_statistikk_virksomhet_gradering.prosent as graderingsprosent,
+                          sykefravar_statistikk_virksomhet.maskert
+                    FROM sykefravar_statistikk_virksomhet 
+                    LEFT JOIN sykefravar_statistikk_virksomhet_gradering
+                    ON (
+                      sykefravar_statistikk_virksomhet.orgnr = sykefravar_statistikk_virksomhet_gradering.orgnr
+                         AND sykefravar_statistikk_virksomhet.kvartal = sykefravar_statistikk_virksomhet_gradering.kvartal
+                         AND sykefravar_statistikk_virksomhet.arstall = sykefravar_statistikk_virksomhet_gradering.arstall
+                      )
+                    WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
                   ${
                       periode?.let { """
                           AND sykefravar_statistikk_virksomhet.kvartal = ${it.kvartal}
