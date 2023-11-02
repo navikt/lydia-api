@@ -88,7 +88,7 @@ spec:
     - name: STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
       value: arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1
     - name: JOBBLYTTER_TOPIC
-      value: arbeidsgiver.jobblytter-v1
+      value: pia.jobblytter-v1
     - name: CONSUMER_LOOP_DELAY
       value: "1000"
     - name: SSB_NARINGS_URL
