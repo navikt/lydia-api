@@ -14,6 +14,7 @@ import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.lagSykefraversstatistikkPerKategoriImportDto
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.sykefraversstatistikk.api.Periode
 import no.nav.lydia.sykefraversstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
@@ -22,6 +23,9 @@ import no.nav.lydia.sykefraversstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.GraderingSiste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.GraderingSistePubliserteKvartal
 import no.nav.lydia.sykefraversstatistikk.import.GradertSykemeldingImportDto
+import no.nav.lydia.sykefraversstatistikk.import.Kategori
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.virksomhet.domene.Sektor
 
 class SykefraversstatistikkVirksomhetApiTest {
 
@@ -91,6 +95,52 @@ class SykefraversstatistikkVirksomhetApiTest {
         result.arstall shouldBe gjeldendePeriode.årstall
         result.kvartal shouldBe gjeldendePeriode.kvartal
         result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
+    }
+
+    @Test
+    fun `skal kunne hente statistikk selv om det finnes ingen statistikk for gradering for virksomheten`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
+        val virksomhet = TestVirksomhet.nyVirksomhet()
+        val statistikk = lagSykefraversstatistikkPerKategoriImportDto(
+            kategori = Kategori.VIRKSOMHET,
+            kode = virksomhet.orgnr,
+            periode = TestData.gjeldendePeriode,
+            sykefraværsProsent = 5.3,
+            antallPersoner = 100,
+            tapteDagsverk = 35.0,
+        )
+        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+            importDtoer = listOf(statistikk),
+            topic = KafkaContainerHelper.statistikkVirksomhetTopic,
+            groupId = Kafka.statistikkVirksomhetGroupId
+        )
+
+        TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
+            listOf(
+                SykefraversstatistikkMetadataVirksomhetImportDto(
+                    orgnr = virksomhet.orgnr,
+                    årstall = TestData.gjeldendePeriode.årstall,
+                    kvartal = TestData.gjeldendePeriode.kvartal,
+                    sektor = Sektor.PRIVAT.name,
+                    bransje = virksomhet.næringsundergruppe1.tilBransje()?.name,
+                    naring = virksomhet.næringsundergruppe1.tilTosifret()
+                )
+            )
+        )
+
+        val resultStatistikkSisteKvartal =
+            StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
+        resultStatistikkSisteKvartal.arstall shouldBe gjeldendePeriode.årstall
+        resultStatistikkSisteKvartal.kvartal shouldBe gjeldendePeriode.kvartal
+        resultStatistikkSisteKvartal.sykefraversprosent shouldBe 5.3
+        resultStatistikkSisteKvartal.graderingsprosent shouldBe null
+        resultStatistikkSisteKvartal.tapteDagsverkGradert shouldBe null
+
+        val resultStatistikkSiste4Kvartal =
+            StatistikkHelper.hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = virksomhet.orgnr)
+        resultStatistikkSiste4Kvartal.sykefraversprosent shouldBe 5.3
+        resultStatistikkSiste4Kvartal.graderingsprosent shouldBe null
+        resultStatistikkSiste4Kvartal.tapteDagsverkGradert shouldBe null
     }
 
     @Test
