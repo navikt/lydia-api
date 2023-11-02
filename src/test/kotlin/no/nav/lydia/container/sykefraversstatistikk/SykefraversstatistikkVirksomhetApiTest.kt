@@ -98,7 +98,7 @@ class SykefraversstatistikkVirksomhetApiTest {
     }
 
     @Test
-    fun `skal kunne hente statistikk selv om det finnes ingen statistikk for gradering for virksomheten`() {
+    fun `skal kunne hente statistikk selv om virksomheten mangler statistikk for gradering`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = TestVirksomhet.nyVirksomhet()
         val statistikk = lagSykefraversstatistikkPerKategoriImportDto(
