@@ -206,8 +206,8 @@ class TestContainerHelper {
                             )
                         }
                     },
-                    topic = KafkaContainerHelper.statistikkBransjeTopic,
-                    groupId = Kafka.statistikkBransjeGroupId
+                    topic = KafkaContainerHelper.statistikkSektorTopic,
+                    groupId = Kafka.statistikkSektorGroupId
             )
 
             // -- laster inn standard virksomheter (med statistikk)
