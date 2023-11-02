@@ -24,5 +24,5 @@ jobs:
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: ${{ matrix.cluster }}-gcp
-          RESOURCE: .nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-status-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml
+          RESOURCE: ./nais/topics/jobblytter-topic.yaml,.nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-status-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml
           VARS: .nais/${{ matrix.cluster }}.yaml
