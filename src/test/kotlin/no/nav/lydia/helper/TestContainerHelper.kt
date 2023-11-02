@@ -520,13 +520,13 @@ class SakHelper {
             TestContainerHelper.postgresContainer.performUpdate(
                     """
                     update ia_sak_hendelse 
-                        set opprettet=(current_date - interval '$antallDagerTilbake' day)
+                        set opprettet=(opprettet - interval '$antallDagerTilbake' day)
                         where saksnummer='${this.saksnummer}';
                 """.trimIndent())
             TestContainerHelper.postgresContainer.performUpdate(
                     """
                     update ia_sak 
-                        set endret=(current_date - interval '$antallDagerTilbake' day)
+                        set endret=(opprettet - interval '$antallDagerTilbake' day)
                         where saksnummer='${this.saksnummer}';
                 """.trimIndent())
             return requireNotNull(hentSaker(this.orgnr, token = token).find { it.saksnummer == this.saksnummer })
