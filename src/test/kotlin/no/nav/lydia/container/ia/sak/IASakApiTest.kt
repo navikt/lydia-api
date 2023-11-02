@@ -295,6 +295,7 @@ class IASakApiTest {
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.InternalServerError.value
         lydiaApiContainer shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
+        postgresContainer.performUpdate("DELETE FROM ia_sak_hendelse WHERE id = '777'")
     }
 
     @Test
