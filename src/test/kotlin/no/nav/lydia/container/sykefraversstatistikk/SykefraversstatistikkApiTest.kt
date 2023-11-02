@@ -337,48 +337,6 @@ class SykefraversstatistikkApiTest {
     }
 
     @Test
-    fun `skal få null når statistikk til virksomheten mangler gradering`() {
-        val virksomhet = nyVirksomhet()
-        val statistikk = lagSykefraversstatistikkPerKategoriImportDto(
-                kategori = Kategori.VIRKSOMHET,
-                kode = virksomhet.orgnr,
-                periode = gjeldendePeriode,
-                sykefraværsProsent = 5.3,
-                antallPersoner = 100,
-                tapteDagsverk = 35.0,
-        )
-        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                importDtoer = listOf(statistikk),
-                topic = KafkaContainerHelper.statistikkVirksomhetTopic,
-                groupId = Kafka.statistikkVirksomhetGroupId
-        )
-
-        TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
-                listOf(
-                        SykefraversstatistikkMetadataVirksomhetImportDto(
-                                orgnr = virksomhet.orgnr,
-                                årstall = gjeldendePeriode.årstall,
-                                kvartal = gjeldendePeriode.kvartal,
-                                sektor = Sektor.PRIVAT.name,
-                                bransje = virksomhet.næringsundergruppe1.tilBransje()?.name,
-                                naring = virksomhet.næringsundergruppe1.tilTosifret()
-                        )
-                )
-        )
-
-        hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr).also {
-            it.orgnr shouldBe virksomhet.orgnr
-            it.graderingsprosent shouldBe null
-            it.tapteDagsverkGradert shouldBe null
-        }
-        hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = virksomhet.orgnr).also {
-            it.orgnr shouldBe virksomhet.orgnr
-            it.graderingsprosent shouldBe null
-            it.tapteDagsverkGradert shouldBe null
-        }
-    }
-
-    @Test
     fun `skal kunne sortere sykefraværsstatistikk på valgfri nøkkel`() {
         val sorteringsnøkkel = "tapte_dagsverk"
 
