@@ -21,3 +21,6 @@ spec:
     - team: pia
       application: pia-devops
       access: read
+    - team: pia
+      application: pia-jobbsender
+      access: write
