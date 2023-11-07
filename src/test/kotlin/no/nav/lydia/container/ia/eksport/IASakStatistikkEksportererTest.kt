@@ -7,31 +7,32 @@ import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import no.nav.lydia.helper.*
+import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsespunkterTilDato
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestData.Companion.datoSentIGjeldendePeriode
+import no.nav.lydia.helper.TestData.Companion.lagPerioder
+import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
-import no.nav.lydia.ia.eksport.IA_SAK_STATISTIKK_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
+import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import no.nav.lydia.tilgangskontroll.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
-import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsespunkterTilDato
-import no.nav.lydia.helper.TestData.Companion.datoSentIGjeldendePeriode
-import no.nav.lydia.helper.TestData.Companion.lagPerioder
 
 class IASakStatistikkEksportererTest {
     private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
@@ -97,7 +98,7 @@ class IASakStatistikkEksportererTest {
         sak.oppdaterHendelsespunkterTilDato(datoSentIGjeldendePeriode())
         sak.nyHendelse(TA_EIERSKAP_I_SAK)
 
-        lydiaApiContainer.performGet(IA_SAK_STATISTIKK_EKSPORT_PATH).tilSingelRespons<Unit>()
+        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakStatistikkEksport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -139,7 +140,7 @@ class IASakStatistikkEksportererTest {
         val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
         postgresContainer.performUpdate("DELETE from iasak_leveranse where saksnummer='${sak.saksnummer}'")
 
-        lydiaApiContainer.performGet(IA_SAK_STATISTIKK_EKSPORT_PATH).tilSingelRespons<Unit>()
+        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakStatistikkEksport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

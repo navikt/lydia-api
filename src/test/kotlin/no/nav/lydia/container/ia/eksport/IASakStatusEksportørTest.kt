@@ -12,21 +12,18 @@ import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
-import no.nav.lydia.ia.eksport.IA_SAK_STATUS_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
+import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
@@ -59,7 +56,7 @@ class IASakStatusEksportørTest {
                     token = oauth2ServerContainer.saksbehandler1.token
                 )
 
-        TestContainerHelper.lydiaApiContainer.performGet(IA_SAK_STATUS_EKSPORT_PATH).tilSingelRespons<Unit>()
+        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakStatusExport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

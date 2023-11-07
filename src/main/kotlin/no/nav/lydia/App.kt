@@ -26,7 +26,6 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
-import no.nav.lydia.ia.debug.debug
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
@@ -36,7 +35,6 @@ import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
-import no.nav.lydia.ia.eksport.iaSakEksporterer
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -54,7 +52,6 @@ import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.integrasjoner.ssb.næringsImport
 import no.nav.lydia.statusoverikt.StatusoversiktRepository
 import no.nav.lydia.statusoverikt.StatusoversiktService
 import no.nav.lydia.statusoverikt.api.statusoversikt
@@ -336,33 +333,6 @@ private fun Application.lydiaRestApi(
     routing {
         healthChecks(HelseMonitor)
         metrics()
-
-        iaSakEksporterer(
-            iaSakEksporterer = IASakEksporterer(
-                iaSakRepository = iaSakRepository,
-                iaSakProdusent = iaSakProdusent
-            ),
-            iaSakStatistikkEksporterer = IASakStatistikkEksporterer(
-                iaSakRepository = iaSakRepository,
-                iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-                iaSakStatistikkProdusent = iaSakStatistikkProdusent,
-            ),
-            iaSakLeveranseEksportør = IASakLeveranseEksportør(
-                iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
-                iaSakLeveranseProdusent = iaSakLeveranseProdusent,
-            ),
-            iaSakStatusExportør = IASakStatusEksportør(
-                iaSakRepository = IASakRepository(dataSource = dataSource),
-                iaSakStatusProdusent = iaSakStatusProdusent,
-            ),
-        )
-        næringsImport(
-            næringsDownloader = NæringsDownloader(
-                url = naisEnv.integrasjoner.ssbNæringsUrl,
-                næringsRepository = næringsRepository
-            )
-        )
-        debug(iaSakRepository = iaSakRepository, iaSakshendelseRepository = IASakshendelseRepository(dataSource))
 
         authenticate {
             sykefraversstatistikk(

@@ -15,16 +15,13 @@ import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
-import no.nav.lydia.ia.eksport.IA_SAK_LEVERANSE_EKSPORT_PATH
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import no.nav.lydia.tilgangskontroll.Rolle
 import org.junit.After
 import org.junit.Before
@@ -142,7 +139,7 @@ class IASakLeveranseEksportererTest {
             }
         }
 
-        lydiaApiContainer.performGet(IA_SAK_LEVERANSE_EKSPORT_PATH).tilSingelRespons<Unit>()
+        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakLeveranseEksport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

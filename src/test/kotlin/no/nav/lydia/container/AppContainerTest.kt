@@ -2,14 +2,9 @@ package no.nav.lydia.container
 
 import com.github.kittinunf.fuel.core.isSuccessful
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
-import no.nav.lydia.helper.statuskode
-import no.nav.lydia.ia.debug.KAST_FEIL_ENDEPUNKT
-import no.nav.lydia.ia.debug.KAST_FEIL_ENDEPUNKT_MELDING
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -17,12 +12,6 @@ class AppContainerTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val postgresContainer = TestContainerHelper.postgresContainer
 
-
-    @Test
-    fun `feil skal logges som error, med melding`() {
-        lydiaApiContainer.performGet(KAST_FEIL_ENDEPUNKT).response().statuskode() shouldBe 500
-        lydiaApiContainer shouldContainLog "$KAST_FEIL_ENDEPUNKT_MELDING.*\"level\":\"ERROR\".*$".toRegex()
-    }
 
     @Test
     fun `kaller isAlive`() {

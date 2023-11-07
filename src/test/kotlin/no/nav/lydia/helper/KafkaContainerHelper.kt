@@ -11,6 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
+import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkMetadataVirksomhet
 import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkPerKategori
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
@@ -277,6 +278,19 @@ class KafkaContainerHelper(
                 recordMetadata = sendtMelding
             )
         }
+    }
+
+    fun sendJobbMelding(jobb: Jobb) {
+        sendOgVentTilKonsumert(
+            nøkkel = jobb.name,
+            melding = """{
+                "jobb": "${jobb.name}",
+                "tidspunkt": "2023-01-01T00:00:00.000Z",
+                "applikasjon": "lydia-api"
+            }""".trimIndent(),
+            topic = jobblytterTopic,
+            konsumentGruppeId = Kafka.jobblytterConsumerGroupId,
+        )
     }
 
     private fun OppdateringVirksomhet.tilProducerRecord() = ProducerRecord(
