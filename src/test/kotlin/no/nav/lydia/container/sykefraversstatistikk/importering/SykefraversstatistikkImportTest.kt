@@ -63,7 +63,7 @@ class SykefraversstatistikkImportTest {
     }
 
     @Test
-    fun `vi maskerer statistikk som eventuelt ikke er maskert i produsent`() {
+    fun `vi maskerer statistikk for siste kvartal som eventuelt ikke er maskert i produsent`() {
         val statistikkSomBurdeVæreMaskert = JsonMelding(
                 kategori = Kategori.VIRKSOMHET,
                 kode = "999999999",
@@ -100,6 +100,43 @@ class SykefraversstatistikkImportTest {
         statistikk_Q1_2023.muligeDagsverk shouldBe 0.0
         statistikk_Q1_2023.tapteDagsverk shouldBe 0.0
         statistikkSiste4Kvartal shouldBe siste4Kvartal_fra_Q1_2023
+    }
+
+    @Test
+    fun `vi maskerer statistikk for siste fire kvartal som eventuelt ikke er maskert i produsent`() {
+        val statistikkSomBurdeVæreMaskert = JsonMelding(
+                kategori = Kategori.VIRKSOMHET,
+                kode = "999999999",
+                kvartal = KVARTAL_2023_1,
+                siste4Kvartal = Siste4Kvartal(
+                        tapteDagsverk = 17.5,
+                        muligeDagsverk = 761.3,
+                        prosent = 2.3,
+                        erMaskert = true,
+                        kvartaler = siste4Kvartal_fra_Q1_2023.kvartaler
+                ),
+                sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023
+        )
+
+        kafkaContainer.sendOgVentTilKonsumert(
+                statistikkSomBurdeVæreMaskert.toJsonKey(),
+                statistikkSomBurdeVæreMaskert.toJsonValue(),
+                KafkaContainerHelper.statistikkVirksomhetTopic,
+                Kafka.statistikkVirksomhetGroupId
+        )
+
+        val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
+                Kategori.VIRKSOMHET,
+                "999999999",
+                KVARTAL_2023_1
+        ).sistePubliserteKvartal
+        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
+
+        statistikkSiste4Kvartal.erMaskert shouldBe true
+        statistikkSiste4Kvartal.prosent shouldBe 0.0
+        statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
+        statistikkSiste4Kvartal.tapteDagsverk shouldBe 0.0
+        statistikk_Q1_2023 shouldBe sistePubliserteKvartal_Q1_2023
     }
 
     @Test
