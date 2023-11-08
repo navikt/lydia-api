@@ -112,7 +112,7 @@ class SykefraversstatistikkImportTest {
                         tapteDagsverk = 17.5,
                         muligeDagsverk = 761.3,
                         prosent = 2.3,
-                        erMaskert = true,
+                        erMaskert = true, //her må vi bare stole på at erMaskert er riktig, da vi ikke har antallPersoner for siste4kvartal
                         kvartaler = siste4Kvartal_fra_Q1_2023.kvartaler
                 ),
                 sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023
@@ -125,13 +125,11 @@ class SykefraversstatistikkImportTest {
                 Kafka.statistikkVirksomhetGroupId
         )
 
-        val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
-                Kategori.VIRKSOMHET,
-                "999999999",
-                KVARTAL_2023_1
-        ).sistePubliserteKvartal
         val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
 
+        statistikkSiste4Kvartal.tapteDagsverk shouldBe 0.0
+        statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
+        statistikkSiste4Kvartal.prosent shouldBe 0.0
         statistikkSiste4Kvartal.erMaskert shouldBe true
         statistikkSiste4Kvartal.prosent shouldBe 0.0
         statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
