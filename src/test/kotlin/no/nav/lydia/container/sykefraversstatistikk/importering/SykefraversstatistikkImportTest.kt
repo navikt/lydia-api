@@ -1,5 +1,6 @@
 package no.nav.lydia.container.sykefraversstatistikk.importering
 
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_1
@@ -13,6 +14,7 @@ import no.nav.lydia.container.sykefraversstatistikk.importering.Sykefraversstati
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.JsonMelding
 import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.TestContainerHelper
@@ -131,10 +133,36 @@ class SykefraversstatistikkImportTest {
         statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
         statistikkSiste4Kvartal.prosent shouldBe 0.0
         statistikkSiste4Kvartal.erMaskert shouldBe true
-        statistikkSiste4Kvartal.prosent shouldBe 0.0
-        statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
-        statistikkSiste4Kvartal.tapteDagsverk shouldBe 0.0
-        statistikk_Q1_2023 shouldBe sistePubliserteKvartal_Q1_2023
+    }
+
+    @Test
+    fun `hent ut virksomheter hvor sykefraværsprosent er lik NULL i kafkamelding`() {
+        val statistikkSomBurdeVæreMaskert = JsonMelding(
+                kategori = Kategori.VIRKSOMHET,
+                kode = "99999999",
+                kvartal = KVARTAL_2023_1,
+                sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023.copy(
+                        tapteDagsverk = null,
+                        muligeDagsverk = null,
+                        prosent = null,
+                        antallPersoner = 4,
+                ),
+                siste4Kvartal = siste4Kvartal_fra_Q1_2023.copy(
+                        tapteDagsverk = null,
+                        muligeDagsverk = null,
+                        prosent = null,
+                        erMaskert = true,
+                )
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+                statistikkSomBurdeVæreMaskert.toJsonKey(),
+                statistikkSomBurdeVæreMaskert.toJsonValue(),
+                KafkaContainerHelper.statistikkVirksomhetTopic,
+                Kafka.statistikkVirksomhetGroupId
+        )
+
+        val listeAvVirksomheter = hentSykefraværForAlleVirksomheter()
+        listeAvVirksomheter.filter { it.orgnr == "99999999" } shouldHaveSize  1
     }
 
     @Test
