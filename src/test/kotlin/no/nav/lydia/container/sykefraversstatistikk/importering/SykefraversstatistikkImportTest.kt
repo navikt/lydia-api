@@ -109,68 +109,68 @@ class SykefraversstatistikkImportTest {
         statistikk_Q1_2023.tapteDagsverk shouldBe 0.0
         statistikkSiste4Kvartal shouldBe siste4Kvartal_fra_Q1_2023
     }
-//
-//    @Test
-//    fun `vi maskerer statistikk for siste fire kvartal som eventuelt ikke er maskert i produsent`() {
-//        val statistikkSomBurdeVæreMaskert = JsonMelding(
-//                kategori = Kategori.VIRKSOMHET,
-//                kode = "999999999",
-//                kvartal = KVARTAL_2023_1,
-//                siste4Kvartal = Siste4Kvartal(
-//                        tapteDagsverk = 17.5,
-//                        muligeDagsverk = 761.3,
-//                        prosent = 2.3,
-//                        erMaskert = true, //her må vi bare stole på at erMaskert er riktig, da vi ikke har antallPersoner for siste4kvartal
-//                        kvartaler = siste4Kvartal_fra_Q1_2023.kvartaler
-//                ),
-//                sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023
-//        )
-//
-//        kafkaContainer.sendOgVentTilKonsumert(
-//                statistikkSomBurdeVæreMaskert.toJsonKey(),
-//                statistikkSomBurdeVæreMaskert.toJsonValue(),
-//                KafkaContainerHelper.statistikkVirksomhetTopic,
-//                Kafka.statistikkVirksomhetGroupId
-//        )
-//
-//        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
-//
-//        statistikkSiste4Kvartal.tapteDagsverk shouldBe 0.0
-//        statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
-//        statistikkSiste4Kvartal.prosent shouldBe 0.0
-//        statistikkSiste4Kvartal.erMaskert shouldBe true
-//    }
-//
-//    @Test
-//    fun `hent ut virksomheter hvor sykefraværsprosent er lik NULL i kafkamelding`() {
-//       val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
-//            nyVirksomhet = TestVirksomhet.nyVirksomhet(
-//                orgnr = "99999999"
-//            ),
-//        )
-//
-//        val statistikkSomBurdeVæreMaskert = JsonMelding(
-//                kategori = Kategori.VIRKSOMHET,
-//                kode = virksomhet.orgnr,
-//                kvartal = gjeldendePeriode.tilKvartal(),
-//                sistePubliserteKvartal = sistePubliserteKvartal_gjeldende_periode,
-//                siste4Kvartal = siste4Kvartal_gjeldende_periode.copy(
-//                        tapteDagsverk = null,
-//                        muligeDagsverk = null,
-//                        prosent = null,
-//                        erMaskert = true,
-//                )
-//        )
-//        kafkaContainer.sendOgVentTilKonsumert(
-//                statistikkSomBurdeVæreMaskert.toJsonKey(),
-//                statistikkSomBurdeVæreMaskert.toJsonValue(),
-//                KafkaContainerHelper.statistikkVirksomhetTopic,
-//                Kafka.statistikkVirksomhetGroupId
-//        )
-//
-//        val listeAvVirksomheter = hentSykefraværForAlleVirksomheter()
-//        listeAvVirksomheter.filter { it.orgnr == virksomhet.orgnr } shouldHaveSize  1
-//    }
+
+    @Test
+    fun `vi maskerer statistikk for siste fire kvartal som eventuelt ikke er maskert i produsent`() {
+        val statistikkSomBurdeVæreMaskert = JsonMelding(
+                kategori = Kategori.VIRKSOMHET,
+                kode = "999999999",
+                kvartal = KVARTAL_2023_1,
+                siste4Kvartal = Siste4Kvartal(
+                        tapteDagsverk = 17.5,
+                        muligeDagsverk = 761.3,
+                        prosent = 2.3,
+                        erMaskert = true, //her må vi bare stole på at erMaskert er riktig, da vi ikke har antallPersoner for siste4kvartal
+                        kvartaler = siste4Kvartal_fra_Q1_2023.kvartaler
+                ),
+                sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023
+        )
+
+        kafkaContainer.sendOgVentTilKonsumert(
+                statistikkSomBurdeVæreMaskert.toJsonKey(),
+                statistikkSomBurdeVæreMaskert.toJsonValue(),
+                KafkaContainerHelper.statistikkVirksomhetTopic,
+                Kafka.statistikkVirksomhetGroupId
+        )
+
+        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
+
+        statistikkSiste4Kvartal.tapteDagsverk shouldBe 0.0
+        statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
+        statistikkSiste4Kvartal.prosent shouldBe 0.0
+        statistikkSiste4Kvartal.erMaskert shouldBe true
+    }
+
+    @Test
+    fun `hent ut virksomheter hvor sykefraværsprosent er lik NULL i kafkamelding`() {
+       val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(
+                orgnr = "99999999"
+            ),
+        )
+
+        val statistikkSomBurdeVæreMaskert = JsonMelding(
+                kategori = Kategori.VIRKSOMHET,
+                kode = virksomhet.orgnr,
+                kvartal = gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal_gjeldende_periode,
+                siste4Kvartal = siste4Kvartal_gjeldende_periode.copy(
+                        tapteDagsverk = null,
+                        muligeDagsverk = null,
+                        prosent = null,
+                        erMaskert = true,
+                )
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+                statistikkSomBurdeVæreMaskert.toJsonKey(),
+                statistikkSomBurdeVæreMaskert.toJsonValue(),
+                KafkaContainerHelper.statistikkVirksomhetTopic,
+                Kafka.statistikkVirksomhetGroupId
+        )
+
+        val listeAvVirksomheter = hentSykefraværForAlleVirksomheter()
+        listeAvVirksomheter.filter { it.orgnr == virksomhet.orgnr } shouldHaveSize  1
+    }
 
     @Test
     fun `kan importere statistikk for flere kvartal for VIRKSOMHET`() {
