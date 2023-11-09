@@ -791,6 +791,52 @@ class StatistikkHelper {
 
             return liste.toList()
         }
+//
+//        fun hentSykefraværForAlleVirksomheterMedFilterverdier(
+//                                                              side: Int = 1,
+//                                                              kommuner: String = "",
+//                                                              fylker: String = "",
+//                                                              næringsgrupper: String = "",
+//                                                              sorteringsnokkel: String = "",
+//                                                              sorteringsretning: String = "",
+//                                                              sykefraværsprosentFra: String = "",
+//                                                              sykefraværsprosentTil: String = "",
+//                                                              snittFilter: String = "",
+//                                                              ansatteFra: String = "",
+//                                                              ansatteTil: String = "",
+//                                                              iaStatus: String = "",
+//                                                              bransjeProgram: String = "",
+//                                                              eiere: String = "",
+//                                                              sektor: List<Sektor> = listOf(),
+//                                                              token: String = oauth2ServerContainer.saksbehandler1.token,): List<VirksomhetsoversiktDto> {
+//            var itererbarSide = side
+//            val liste = mutableListOf<VirksomhetsoversiktDto>()
+//
+//            do {
+//                val sykefravær = hentSykefravær(
+//                    side = "${itererbarSide++}",
+//                    kommuner = kommuner,
+//                    fylker = fylker,
+//                    næringsgrupper = næringsgrupper,
+//                    sorteringsnokkel = sorteringsnokkel,
+//                    sorteringsretning = sorteringsretning,
+//                    sykefraværsprosentFra = sykefraværsprosentFra,
+//                    sykefraværsprosentTil = sykefraværsprosentTil,
+//                    snittFilter = snittFilter,
+//                    ansatteFra = ansatteFra,
+//                    ansatteTil = ansatteTil,
+//                    iaStatus = iaStatus,
+//                    bransjeProgram = bransjeProgram,
+//                    eiere = eiere,
+//                    sektor = sektor,
+//                    token = token,
+//            )
+//                liste.addAll(sykefravær.data)
+//            } while (sykefravær.data.size == VIRKSOMHETER_PER_SIDE)
+//
+//            return liste.toList()
+//
+//        }
 
         fun hentTotaltAntallTreffISykefravær(
                 kommuner: String = "",
