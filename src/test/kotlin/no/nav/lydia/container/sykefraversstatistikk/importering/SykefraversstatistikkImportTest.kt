@@ -1,5 +1,6 @@
 package no.nav.lydia.container.sykefraversstatistikk.importering
 
+import arrow.core.const
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
@@ -15,13 +16,13 @@ import no.nav.lydia.container.sykefraversstatistikk.importering.Sykefraversstati
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.JsonMelding
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheter
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheterMedFilter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.gjeldendePeriode
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.helper.TestVirksomhet
@@ -30,7 +31,6 @@ import no.nav.lydia.sykefraversstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraversstatistikk.import.Kategori
 import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
 import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
-import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -143,33 +143,41 @@ class SykefraversstatistikkImportTest {
 
     @Test
     fun `hent ut virksomheter hvor sykefraværsprosent er lik NULL i kafkamelding`() {
-       val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                orgnr = "99999999"
+                orgnr = "99999999",
             ),
+            perioder = gjeldendePeriode.forrigePeriode().lagPerioder(4)
         )
 
         val statistikkSomBurdeVæreMaskert = JsonMelding(
-                kategori = Kategori.VIRKSOMHET,
-                kode = virksomhet.orgnr,
-                kvartal = gjeldendePeriode.tilKvartal(),
-                sistePubliserteKvartal = sistePubliserteKvartal_gjeldende_periode,
-                siste4Kvartal = siste4Kvartal_gjeldende_periode.copy(
-                        tapteDagsverk = null,
-                        muligeDagsverk = null,
-                        prosent = null,
-                        erMaskert = true,
-                )
+            kategori = Kategori.VIRKSOMHET,
+            kode = virksomhet.orgnr,
+            kvartal = gjeldendePeriode.tilKvartal(),
+            sistePubliserteKvartal = sistePubliserteKvartal_gjeldende_periode,
+            siste4Kvartal = Siste4Kvartal(
+                tapteDagsverk = null,
+                muligeDagsverk = null,
+                prosent = null,
+                erMaskert = true,
+                kvartaler = siste4Kvartal_gjeldende_periode.kvartaler
+            ),
         )
         kafkaContainer.sendOgVentTilKonsumert(
-                statistikkSomBurdeVæreMaskert.toJsonKey(),
-                statistikkSomBurdeVæreMaskert.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            statistikkSomBurdeVæreMaskert.toJsonKey(),
+            statistikkSomBurdeVæreMaskert.toJsonValue(),
+            KafkaContainerHelper.statistikkVirksomhetTopic,
+            Kafka.statistikkVirksomhetGroupId
         )
+        TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
 
-        val listeAvVirksomheter = hentSykefraværForAlleVirksomheter()
-        listeAvVirksomheter.filter { it.orgnr == virksomhet.orgnr } shouldHaveSize  1
+        val listeAvVirksomheter = hentSykefraværForAlleVirksomheterMedFilter(
+            ansatteFra = "0",
+            sykefraværsprosentFra = "0.00"
+        )
+        val virksomhetenVår = listeAvVirksomheter.filter { it.orgnr == virksomhet.orgnr }
+
+        virksomhetenVår shouldHaveSize 1
     }
 
     @Test
