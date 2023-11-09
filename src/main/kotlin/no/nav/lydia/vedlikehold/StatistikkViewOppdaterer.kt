@@ -39,7 +39,7 @@ object StatistikkViewOppdaterer: CoroutineScope {
 
         launch {
             while (job.isActive) {
-                if (now().toLocalDateTime(TimeZone.UTC).hour == 12) { // skal vere 00
+                if (now().toLocalDateTime(TimeZone.UTC).hour == 13) { // skal vere 00
                     logger.info("Oppdaterer statistikkview...")
                     val tidBrukt = measureTimeMillis {
                         using(sessionOf(dataSource)) { session ->
