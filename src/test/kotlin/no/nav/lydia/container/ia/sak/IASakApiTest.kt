@@ -299,8 +299,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal logge doble eventer i midten`() {
-        // TODO Testrydding: lag betre namn på testen
+    fun `skal logge feilmelding ved statusendring om saken har to like hendelser på rad i historikken (som ikke er TILBAKE)`() {
         val orgnummer = nyttOrgnummer()
         val sak = nySakIViBistår(orgnummer = orgnummer)
 
@@ -400,8 +399,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `tilgangskontroll - en virksomhet skal bare kunne vurderes for oppfølging av en superbruker`() {
-        // TODO Testrydding: Vurder å kalle det "settes til vurderes"  i staden for "kunne vurderes for oppfølging"
+    fun `tilgangskontroll - bare superbruker skal kunne sette virksomheter til VURDERES`() {
         val orgnr = nyttOrgnummer()
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
@@ -462,8 +460,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `tilgangskontroll - en sak UTEN eier skal kunne vises av alle med tilgangsrolle`() {
-        // TODO Testrydding: Gje testen eit betre namn (kva meiner vi med "tilgangsrolle"?)
+    fun `tilgangskontroll - alle brukere skal kunne se saker UTEN eier`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
             hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
@@ -500,8 +497,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `tilgangskontroll - en sak MED eier skal kunne vises av alle med tilgangsrolle`() {
-        // TODO Testrydding: Gje testen eit betre namn (kva meiner vi med "tilgangsrolle"?)
+    fun `tilgangskontroll - alle brukere skal kunne se saker MED eier`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
             nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
