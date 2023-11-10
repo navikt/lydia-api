@@ -88,9 +88,11 @@ class SykefraværsstatistikkService(
     }
 
     private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
+        val sykefraværsstatistikkForVirksomheter = sykefraværsstatistikkKategoriImportDtoListe
+            .filter { it.kategori == VIRKSOMHET }
+
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
-            sykefraværsstatistikk = sykefraværsstatistikkKategoriImportDtoListe
-                .filter { it.kategori == VIRKSOMHET }
+            sykefraværsstatistikk = sykefraværsstatistikkForVirksomheter
         )
 
         val sykefraværsstatistikkForAndreKategorier = sykefraværsstatistikkKategoriImportDtoListe
