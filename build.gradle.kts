@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.5"
+    val ktorVersion = "2.3.6"
     val fuelVersion = "2.3.1"
 
     implementation(kotlin("stdlib"))
@@ -103,6 +103,12 @@ dependencies {
                 require("2.5.0")
             }
             because("From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.")
+        }
+        implementation("io.netty:netty-codec-http2") {
+            version {
+                require("4.1.100.Final")
+            }
+            because("Affected versions < 4.1.100.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
     }
 }
