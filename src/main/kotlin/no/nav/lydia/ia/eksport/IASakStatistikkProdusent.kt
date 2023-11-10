@@ -103,13 +103,17 @@ class IASakStatistikkProdusent(
                 avsluttetTidspunkt = if (this.status.regnesSomAvsluttet()) this.endretTidspunkt?.toKotlinLocalDateTime() else null,
                 antallPersoner = virksomhetsstatistikkSisteKvartal?.antallPersoner,
                 tapteDagsverk = virksomhetsstatistikkSisteKvartal?.tapteDagsverk,
+                tapteDagsverkGradert = virksomhetsstatistikkSisteKvartal?.tapteDagsverkGradert,
                 muligeDagsverk = virksomhetsstatistikkSisteKvartal?.muligeDagsverk,
                 sykefraversprosent = virksomhetsstatistikkSisteKvartal?.sykefraversprosent,
+                graderingsprosent = virksomhetsstatistikkSisteKvartal?.graderingsprosent,
                 arstall = virksomhetsstatistikkSisteKvartal?.arstall,
                 kvartal = virksomhetsstatistikkSisteKvartal?.kvartal,
                 tapteDagsverkSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.tapteDagsverk,
+                tapteDagsverkGradertSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.tapteDagsverkGradert,
                 muligeDagsverkSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.muligeDagsverk,
                 sykefraversprosentSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.sykefraversprosent,
+                graderingsprosentSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.graderingsprosent,
                 kvartaler = virksomhetsstatistikkSiste4Kvartal?.kvartaler ?: emptyList(),
                 sektor = virksomhet?.sektor,
                 neringer = virksomhet?.hentNæringsgrupper() ?: emptyList(),
@@ -146,13 +150,17 @@ class IASakStatistikkProdusent(
         val avsluttetTidspunkt: LocalDateTime?,
         val antallPersoner: Double?,
         val tapteDagsverk: Double?,
+        val tapteDagsverkGradert: Double?,
         val muligeDagsverk: Double?,
         val sykefraversprosent: Double?,
+        val graderingsprosent: Double?,
         val arstall: Int?,
         val kvartal: Int?,
         val tapteDagsverkSiste4Kvartal: Double?,
+        val tapteDagsverkGradertSiste4Kvartal: Double?,
         val muligeDagsverkSiste4Kvartal: Double?,
         val sykefraversprosentSiste4Kvartal: Double?,
+        val graderingsprosentSiste4Kvartal: Double?,
         val kvartaler: List<Kvartal>,
         val sektor: Sektor?,
         val neringer: List<Næringsgruppe>,
@@ -170,7 +178,7 @@ fun finnBransje(næringsgrupper: List<Næringsgruppe>?): Bransjer? {
         kode.replace(".", "")
     }
 
-    return Bransjer.values()
+    return Bransjer.entries
         .firstOrNull { bransje ->
             næringskoderUtenPunktum?.any { næringskode ->
                 bransje.næringskoder.any { næringskode.startsWith(it)}
