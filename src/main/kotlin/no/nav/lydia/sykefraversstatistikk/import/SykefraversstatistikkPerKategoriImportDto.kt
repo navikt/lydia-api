@@ -131,6 +131,21 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
+        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal() =
+            BehandletVirksomhetSykefraværsstatistikkSiste4Kvartal(
+                statistikk = SykefraværsstatistikkForVirksomhetSiste4Kvartal(
+                    publisertÅrstall = this.sistePubliserteKvartal.årstall,
+                    publisertKvartal = this.sistePubliserteKvartal.kvartal,
+                    prosent = this.siste4Kvartal.prosent ?: 0.0,
+                    muligeDagsverk = this.siste4Kvartal.muligeDagsverk ?: 0.0,
+                    tapteDagsverk = this.siste4Kvartal.tapteDagsverk ?: 0.0,
+                    maskert = this.siste4Kvartal.erMaskert,
+                    kvartaler = this.siste4Kvartal.kvartaler,
+                    kategori = this.kategori.name,
+                    orgnr = this.kode
+                )
+            )
+
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletLandSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletLandSykefraværsstatistikk()
@@ -159,6 +174,11 @@ data class SykefraversstatistikkPerKategoriImportDto(
         fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletVirksomhetSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletVirksomhetSykefraværsstatistikk()
+            }
+
+        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal() =
+            this.map {
+                it.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal()
             }
     }
 }

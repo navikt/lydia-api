@@ -120,7 +120,7 @@ class SykefraversstatistikkImportTest {
                         tapteDagsverk = 17.5,
                         muligeDagsverk = 761.3,
                         prosent = 2.3,
-                        erMaskert = true, //her må vi bare stole på at erMaskert er riktig, da vi ikke har antallPersoner for siste4kvartal
+                        erMaskert = true, // her stoler vi på at `maskert` er riktig siden vi ikke har antallPersoner for siste4kvartal
                         kvartaler = siste4Kvartal_fra_Q1_2023.kvartaler
                 ),
                 sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023
@@ -175,9 +175,8 @@ class SykefraversstatistikkImportTest {
             ansatteFra = "0",
             sykefraværsprosentFra = "0.00"
         )
-        val virksomhetenVår = listeAvVirksomheter.filter { it.orgnr == virksomhet.orgnr }
 
-        virksomhetenVår shouldHaveSize 1
+        listeAvVirksomheter.filter { it.orgnr == virksomhet.orgnr } shouldHaveSize 1
     }
 
     @Test

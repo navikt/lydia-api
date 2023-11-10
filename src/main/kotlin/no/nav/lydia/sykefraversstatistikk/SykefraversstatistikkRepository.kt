@@ -14,6 +14,7 @@ import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategor
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringsundergruppeSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
 import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
+import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
@@ -340,10 +341,17 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>,
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
-            sykefraværsstatistikk.forEach {
-                tx.run(
-                    queryOf(
-                        """
+            tx.insertVirksomhetsstatistikkSiste4Kvartal(
+                behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe = sykefraværsstatistikk.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal()
+            )
+        }
+    }
+
+    private fun TransactionalSession.insertVirksomhetsstatistikkSiste4Kvartal(behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe: List<BehandletVirksomhetSykefraværsstatistikkSiste4Kvartal>) =
+        behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe.forEach { sykefraværsstatistikk ->
+            run(
+                queryOf(
+                    """
                             INSERT INTO sykefravar_statistikk_virksomhet_siste_4_kvartal(
                                 orgnr,
                                 tapte_dagsverk,
@@ -375,22 +383,20 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                                 kvartaler = :kvartaler::jsonb,
                                 sist_endret = now()
                         """.trimIndent(),
-                        mapOf(
-                            "orgnr" to it.kode,
-                            "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
-                            "mulige_dagsverk" to it.siste4Kvartal.muligeDagsverk,
-                            "prosent" to it.siste4Kvartal.prosent,
-                            "maskert" to it.siste4Kvartal.erMaskert,
-                            "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
-                            "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
-                            "publisert_kvartal" to it.sistePubliserteKvartal.kvartal,
-                            "publisert_arstall" to it.sistePubliserteKvartal.årstall,
-                        )
-                    ).asUpdate
-                )
-            }
+                    mapOf(
+                        "orgnr" to sykefraværsstatistikk.orgnr,
+                        "tapte_dagsverk" to sykefraværsstatistikk.tapteDagsverk,
+                        "mulige_dagsverk" to sykefraværsstatistikk.muligeDagsverk,
+                        "prosent" to sykefraværsstatistikk.prosent,
+                        "maskert" to sykefraværsstatistikk.maskert,
+                        "antall_kvartaler" to sykefraværsstatistikk.kvartaler.size,
+                        "kvartaler" to gson.toJson(sykefraværsstatistikk.kvartaler),
+                        "publisert_kvartal" to sykefraværsstatistikk.publisertKvartal,
+                        "publisert_arstall" to sykefraværsstatistikk.publisertÅrstall,
+                    )
+                ).asUpdate
+            )
         }
-    }
 
     fun insertMetadataForVirksomhet(
         virksomhetMetadata: List<BehandletImportMetadataVirksomhet>
