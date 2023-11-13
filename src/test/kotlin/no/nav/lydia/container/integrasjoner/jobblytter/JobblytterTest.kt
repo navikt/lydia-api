@@ -39,4 +39,10 @@ class JobblytterTest {
         kafkaContainer.sendJobbMelding(Jobb.næringsImport)
         lydiaApiContainer shouldContainLog "Jobb næringsImport ferdig".toRegex()
     }
+
+    @Test
+    fun `skal kunne trigge materialized view oppdatering jobb via kafka`() {
+        kafkaContainer.sendJobbMelding(Jobb.materializedViewOppdatering)
+        lydiaApiContainer shouldContainLog "Oppdaterte statistikkview på ".toRegex()
+    }
 }

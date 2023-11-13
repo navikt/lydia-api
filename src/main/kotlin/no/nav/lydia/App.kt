@@ -133,6 +133,7 @@ fun startLydiaBackend() {
 
     jobblytter(
         naisEnv = naisEnv,
+        dataSource = dataSource,
         iaSakEksporterer = IASakEksporterer(
             iaSakRepository = iaSakRepository,
             iaSakProdusent = iaSakProdusent
@@ -232,6 +233,7 @@ private fun brregAlleVirksomheterConsumer(naisEnv: NaisEnvironment, dataSource: 
 
 private fun jobblytter(
     naisEnv: NaisEnvironment,
+    dataSource: DataSource,
     iaSakEksporterer: IASakEksporterer,
     iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
     iaSakLeveranseEksportør: IASakLeveranseEksportør,
@@ -241,6 +243,7 @@ private fun jobblytter(
     Jobblytter.apply {
         create(
             kafka = naisEnv.kafka,
+            dataSource = dataSource,
             iaSakEksporterer = iaSakEksporterer,
             iaSakStatistikkEksporterer = iaSakStatistikkEksporterer,
             iaSakLeveranseEksportør = iaSakLeveranseEksportør,

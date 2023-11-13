@@ -14,6 +14,7 @@ import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.vedlikehold.oppdaterStatistikkView
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException
@@ -21,12 +22,14 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import javax.sql.DataSource
 import kotlin.coroutines.CoroutineContext
 
 object Jobblytter : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     lateinit var job: Job
     lateinit var kafka: Kafka
+    lateinit var dataSource: DataSource
 
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
     lateinit var iaSakEksporterer: IASakEksporterer
@@ -44,6 +47,7 @@ object Jobblytter : CoroutineScope {
 
     fun create(
         kafka: Kafka,
+        dataSource: DataSource,
         iaSakEksporterer: IASakEksporterer,
         iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
         iaSakLeveranseEksportør: IASakLeveranseEksportør,
@@ -53,6 +57,7 @@ object Jobblytter : CoroutineScope {
         logger.info("Creating kafka consumer job for ${kafka.jobblytterTopic}")
         job = Job()
         Jobblytter.kafka = kafka
+        Jobblytter.dataSource = dataSource
         kafkaConsumer = KafkaConsumer(
             Jobblytter.kafka.consumerProperties(consumerGroupId = Kafka.jobblytterConsumerGroupId),
             StringDeserializer(),
@@ -97,6 +102,9 @@ object Jobblytter : CoroutineScope {
                                     Jobb.næringsImport -> {
                                         næringsDownloader.lastNedNæringer()
                                     }
+                                    Jobb.materializedViewOppdatering -> {
+                                        oppdaterStatistikkView(dataSource = dataSource, logger = logger)
+                                    }
                                 }
                                 logger.info("Jobb ${jobInfo.jobb} ferdig")
                             }
@@ -135,5 +143,6 @@ enum class Jobb {
     iaSakStatistikkEksport,
     iaSakStatusExport,
     iaSakLeveranseEksport,
-    næringsImport;
+    næringsImport,
+    materializedViewOppdatering;
 }

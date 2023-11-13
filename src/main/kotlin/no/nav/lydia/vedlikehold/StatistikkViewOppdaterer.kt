@@ -19,6 +19,20 @@ import javax.sql.DataSource
 import kotlin.coroutines.CoroutineContext
 import kotlin.system.measureTimeMillis
 
+fun oppdaterStatistikkView(dataSource: DataSource, logger: Logger) {
+    logger.info("Oppdaterer statistikkview...")
+    val tidBrukt = measureTimeMillis {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    "REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering"
+                ).asExecute
+            )
+        }
+    }
+    logger.info("Oppdaterte statistikkview på $tidBrukt ms")
+}
+
 object StatistikkViewOppdaterer: CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     lateinit var job: Job
@@ -40,17 +54,7 @@ object StatistikkViewOppdaterer: CoroutineScope {
         launch {
             while (job.isActive) {
                 if (now().toLocalDateTime(TimeZone.UTC).hour == 0) {
-                    logger.info("Oppdaterer statistikkview...")
-                    val tidBrukt = measureTimeMillis {
-                        using(sessionOf(dataSource)) { session ->
-                            session.run(
-                                queryOf(
-                                    "REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering"
-                                ).asExecute
-                            )
-                        }
-                    }
-                    logger.info("Oppdaterte statistikkview på $tidBrukt ms")
+                    oppdaterStatistikkView(dataSource, logger)
                 } else
                     logger.debug("Statistikkview oppdateres kun mellom kl 00:00 og 00:59")
 
