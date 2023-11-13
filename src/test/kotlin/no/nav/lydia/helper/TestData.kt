@@ -7,6 +7,8 @@ import no.nav.lydia.virksomhet.domene.Sektor
 import java.math.RoundingMode
 import java.time.LocalDate
 import kotlin.random.Random
+import no.nav.lydia.ia.sak.domene.IATjeneste
+import no.nav.lydia.ia.sak.domene.Modul
 
 const val MAX_SYKEFRAVÆRSPROSENT = 20
 const val MAX_GRADERINGSPROSENT = 80
@@ -37,6 +39,9 @@ class TestData(
             Næringsgruppe(kode = "90.012", navn = "Utøvende kunstnere og underholdningsvirksomhet innen scenekunst")
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
+
+        val AKTIV_IATJENESTE = IATjeneste(1, "Redusere sykefravær", false)
+        val AKTIV_MODUL = Modul(15, AKTIV_IATJENESTE, "Redusere sykefravær", false)
 
         val gjeldendePeriode = Periode(årstall = 2023, kvartal = 2)
         fun fraVirksomhet(

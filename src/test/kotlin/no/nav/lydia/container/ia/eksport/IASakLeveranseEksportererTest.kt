@@ -27,6 +27,7 @@ import org.junit.After
 import org.junit.Before
 import java.sql.Timestamp
 import kotlin.test.Test
+import no.nav.lydia.helper.TestData
 
 class IASakLeveranseEksportererTest {
     private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
@@ -45,7 +46,7 @@ class IASakLeveranseEksportererTest {
     @Test
     fun `skal trigge kafka-eksport av IASakLeveranse`() {
         val sak = nySakIViBistår()
-        val leveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
+        val leveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id, token = oauth2ServerContainer.saksbehandler1.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -78,7 +79,7 @@ class IASakLeveranseEksportererTest {
     @Test
     fun `skal trigge kafka-eksport av IASakLeveranse ved alle endringer`() {
         val sak = nySakIViBistår()
-        val nyLeveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
+        val nyLeveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id, token = oauth2ServerContainer.saksbehandler1.token)
         sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
 
         val levertLeveranse = nyLeveranse.oppdaterIASakLeveranse(
@@ -125,7 +126,7 @@ class IASakLeveranseEksportererTest {
     @Test
     fun  `spille av leveranser burde gi samme resultat`() {
         val sak = nySakIViBistår()
-        val nyLeveranse = sak.opprettIASakLeveranse(modulId = 1, token = oauth2ServerContainer.saksbehandler1.token)
+        val nyLeveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id, token = oauth2ServerContainer.saksbehandler1.token)
 
         var melding: IASakLeveranseValue? = null
 
