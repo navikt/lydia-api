@@ -537,7 +537,7 @@ class SakHelper {
             return this.oppdaterHendelsesTidspunkter(antallDagerTilbake = dagerSomSkalTrekkesFra)
         }
 
-        fun IASakDto.leggTilLeveranseOgFullførSak(modulId: Int = 1, token: String = oauth2ServerContainer.saksbehandler1.token): IASakDto {
+        fun IASakDto.leggTilLeveranseOgFullførSak(modulId: Int = TestData.AKTIV_MODUL.id, token: String = oauth2ServerContainer.saksbehandler1.token): IASakDto {
             val leveranse = this.opprettIASakLeveranse(modulId = modulId)
             leveranse.oppdaterIASakLeveranse(this.orgnr, IASakLeveranseStatus.LEVERT)
             return nyHendelse(FULLFØR_BISTAND, token)
