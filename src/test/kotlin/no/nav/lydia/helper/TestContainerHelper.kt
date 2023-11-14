@@ -55,8 +55,8 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
-import no.nav.lydia.statusoverikt.api.STATUSOVERSIKT_PATH
+import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
+import no.nav.lydia.statusoversikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraversstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraversstatistikk.Publiseringsinfo
 import no.nav.lydia.sykefraversstatistikk.api.ANTALL_TREFF

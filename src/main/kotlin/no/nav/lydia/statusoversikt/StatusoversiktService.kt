@@ -1,4 +1,4 @@
-package no.nav.lydia.statusoverikt
+package no.nav.lydia.statusoversikt
 
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere

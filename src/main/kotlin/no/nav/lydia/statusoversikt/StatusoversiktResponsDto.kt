@@ -1,4 +1,4 @@
-package no.nav.lydia.statusoverikt
+package no.nav.lydia.statusoversikt
 
 @kotlinx.serialization.Serializable
 data class StatusoversiktResponsDto(

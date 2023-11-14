@@ -1,4 +1,4 @@
-package no.nav.lydia.statusoverikt.api
+package no.nav.lydia.statusoversikt.api
 
 import arrow.core.right
 import io.ktor.server.application.*
@@ -7,8 +7,8 @@ import io.ktor.server.routing.*
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.statusoverikt.StatusoversiktResponsDto
-import no.nav.lydia.statusoverikt.StatusoversiktService
+import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
+import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService

@@ -52,9 +52,9 @@ import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.statusoverikt.StatusoversiktRepository
-import no.nav.lydia.statusoverikt.StatusoversiktService
-import no.nav.lydia.statusoverikt.api.statusoversikt
+import no.nav.lydia.statusoversikt.StatusoversiktRepository
+import no.nav.lydia.statusoversikt.StatusoversiktService
+import no.nav.lydia.statusoversikt.api.statusoversikt
 import no.nav.lydia.sykefraversstatistikk.SistePubliseringRepository
 import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.SykefraversstatistikkRepository
