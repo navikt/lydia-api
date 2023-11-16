@@ -68,7 +68,7 @@ jobs:
     permissions: {}
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/sikre-maskering-siste-4-kvartal'
+    if: github.ref == 'refs/heads/skru-av-moduler'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
