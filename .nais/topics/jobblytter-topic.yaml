@@ -24,3 +24,6 @@ spec:
     - team: pia
       application: pia-jobbsender
       access: write
+    - team: pia
+      application: pia-jobbsender-nattlig
+      access: write
