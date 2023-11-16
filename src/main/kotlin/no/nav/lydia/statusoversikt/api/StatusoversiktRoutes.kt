@@ -9,7 +9,6 @@ import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoversikt.StatusoversiktService
-import no.nav.lydia.sykefraversstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.søkeparametere
 import no.nav.lydia.sykefraversstatistikk.api.geografi.GeografiService
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -17,7 +16,6 @@ import no.nav.lydia.tilgangskontroll.somSaksbehandler
 const val STATUSOVERSIKT_PATH = "statusoversikt"
 
 fun Route.statusoversikt(
-    sistePubliseringService: SistePubliseringService,
     geografiService: GeografiService,
     statusoversiktService: StatusoversiktService,
     auditLog: AuditLog,
@@ -25,9 +23,8 @@ fun Route.statusoversikt(
 ) {
     val adGrupper = naisEnvironment.security.adGrupper
     get("$STATUSOVERSIKT_PATH/") {
-        val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            call.request.søkeparametere(gjeldendePeriode, geografiService, navAnsatt = saksbehandler)
+            call.request.søkeparametere(geografiService, navAnsatt = saksbehandler)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")

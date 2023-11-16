@@ -368,7 +368,6 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
             )
             statusoversikt(
-                sistePubliseringService = sistePubliseringService,
                 geografiService = GeografiService(),
                 statusoversiktService = StatusoversiktService(
                     statusoversiktRepository = StatusoversiktRepository(dataSource = dataSource)

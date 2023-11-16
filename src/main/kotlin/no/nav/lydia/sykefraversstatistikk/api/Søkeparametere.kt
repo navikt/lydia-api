@@ -1,6 +1,8 @@
 package no.nav.lydia.sykefraversstatistikk.api
 
 import arrow.core.*
+import arrow.core.raise.either
+import arrow.core.raise.zipOrAccumulate
 import ia.felles.definisjoner.bransjer.Bransjer
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -66,32 +68,35 @@ data class Søkeparametere(
         const val IA_SAK_EIERE = "eiere"
         const val SEKTOR = "sektor"
 
-        fun ApplicationRequest.søkeparametere(gjeldendePeriode: Periode, geografiService: GeografiService, navAnsatt: NavAnsatt) =
-            queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().zip(
-                queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent(),
-                queryParameters[SIDE].tomSomNull()?.tilValidertHeltall() ?: Valid(1),
-                queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall() ?: Valid(null),
-                queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall() ?: Valid(null)
-            ) { sykefraværsProsentFra, sykefraværsProsentTil, side, ansatteFra, ansatteTil ->
-                Søkeparametere(
-                    sykefraværsprosentFra = sykefraværsProsentFra,
-                    sykefraværsprosentTil = sykefraværsProsentTil,
-                    snittFilter = queryParameters[SNITT_FILTER].tomSomNull()?.let { SnittFilter.valueOf(it) },
-                    side = side,
-                    ansatteFra = ansatteFra,
-                    ansatteTil = ansatteTil,
-                    kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
-                    næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
-                    sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
-                    sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
-                    status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
-                    navIdenter = navIdenter(navAnsatt = navAnsatt),
-                    bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
-                    sektor = finnSektor(queryParameters[SEKTOR])
-                )
+        fun ApplicationRequest.søkeparametere(geografiService: GeografiService, navAnsatt: NavAnsatt) =
+            either<NonEmptyList<String>, Søkeparametere> {
+                zipOrAccumulate(
+                    { queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().bind() },
+                    { queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent().bind() },
+                    { queryParameters[SIDE].tomSomNull()?.tilValidertHeltall()?.bind() },
+                    { queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall()?.bind() },
+                    { queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall()?.bind() }
+                ) { sykefraværsProsentFra, sykefraværsProsentTil, side, ansatteFra, ansatteTil ->
+                    Søkeparametere(
+                        sykefraværsprosentFra = sykefraværsProsentFra,
+                        sykefraværsprosentTil = sykefraværsProsentTil,
+                        snittFilter = queryParameters[SNITT_FILTER].tomSomNull()?.let { SnittFilter.valueOf(it) },
+                        side = side ?: 1,
+                        ansatteFra = ansatteFra,
+                        ansatteTil = ansatteTil,
+                        kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
+                        næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
+                        sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
+                        sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
+                        status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
+                        navIdenter = navIdenter(navAnsatt = navAnsatt),
+                        bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
+                        sektor = finnSektor(queryParameters[SEKTOR])
+                    )
+                }
             }.mapLeft {
                 Feil(it.joinToString(separator = "\n"), HttpStatusCode.BadRequest)
-            }.toEither()
+            }
 
         fun filtrerPåSektor(søkeparametere: Søkeparametere) =
             if(søkeparametere.sektor.isEmpty()) ""
@@ -230,21 +235,6 @@ data class Søkeparametere(
 data class Periode(val kvartal: Int, val årstall: Int) {
     companion object {
         fun fraDato(dato: LocalDateTime) = Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
-
-        fun tilValidertPeriode(kvartal: String?, årstall: String?, gjeldendePeriode: Periode) =
-            kvartal.tilValidertKvartal(gjeldendePeriode).zip(
-                årstall.tomSomNull()?.tilValidertHeltall() ?: Valid(gjeldendePeriode.årstall)
-            ) { validertKvartal, validertÅrstall ->
-                Periode(kvartal = validertKvartal, årstall = validertÅrstall)
-            }
-
-        private fun String?.tilValidertKvartal(gjeldendePeriode: Periode) =
-            tomSomNull()?.tilValidertHeltall()?.andThen {
-                if ((1..4).contains(it))
-                    it.valid()
-                else
-                    "$it er ikke et gyldig kvartal. Kvartal er forventet å være 1 >= kvartal <= 4".invalidNel()
-            } ?: Valid(gjeldendePeriode.kvartal)
     }
 
     fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)
@@ -298,29 +288,29 @@ enum class Sorteringsretning(private val retning: String) {
 
 class Sykefraværsprosent private constructor(val sykefraværsProsent: Double) {
     companion object {
-        fun String?.tilSykefraværsProsent(): ValidatedNel<String, Sykefraværsprosent?> =
-            tomSomNull()?.tilValidertFlyttall()?.andThen { it.tilSykefraværsProsent() } ?: Valid(null)
+        fun String?.tilSykefraværsProsent(): Either<String, Sykefraværsprosent?> =
+            tomSomNull()?.tilValidertFlyttall()?.flatMap { it.tilSykefraværsProsent() } ?: Either.Right(null)
 
-        fun Double.tilSykefraværsProsent(): ValidatedNel<String, Sykefraværsprosent> =
+        fun Double.tilSykefraværsProsent(): Either<String, Sykefraværsprosent> =
             if (this.isFinite() && (0.0..100.0).contains(this))
-                Sykefraværsprosent(this).valid()
+                Sykefraværsprosent(this).right()
             else
-                "$this er ikke en gyldig sykefraværsprosent. Sykefraværsprosent er forventet å være '0.0 >= prosent <= 100.0'".invalidNel()
+                "$this er ikke en gyldig sykefraværsprosent. Sykefraværsprosent er forventet å være '0.0 >= prosent <= 100.0'".left()
     }
 
     override fun toString() = sykefraværsProsent.toString()
 }
 
 private fun String.tilValidertFlyttall() = try {
-    this.toDouble().valid()
+    this.toDouble().right()
 } catch (e: Exception) {
-    "$this er ikke et gyldig flyttall".invalidNel()
+    "$this er ikke et gyldig flyttall".left()
 }
 
 private fun String.tilValidertHeltall() = try {
-    this.toInt().valid()
+    this.toInt().right()
 } catch (e: Exception) {
-    "$this er ikke et gyldig heltall".invalidNel()
+    "$this er ikke et gyldig heltall".left()
 }
 
 private fun String?.tomSomNull() = this?.ifBlank { null }

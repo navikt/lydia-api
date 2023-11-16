@@ -10,20 +10,20 @@ class SykefraværsprosentTest {
     fun  `gyldig sykefraværsprosent skal validere`() {
         listOf(
             "0", "7.5", "40.0", "100", "100.0000"
-        ).forAll { it.tilSykefraværsProsent().isValid shouldBe true }
+        ).forAll { it.tilSykefraværsProsent().isRight() shouldBe true }
     }
 
     @Test
     fun `ugylgide sykefraværs prosenter skal ikke validere`() {
         listOf(
             "-10", "100.1", "a"
-        ).forAll { it.tilSykefraværsProsent().isInvalid shouldBe true }
+        ).forAll { it.tilSykefraværsProsent().isLeft() shouldBe true }
     }
 
     @Test
     fun `null og tomme skal validere og være null`() {
         listOf("", null).forAll {
-            it.tilSykefraværsProsent().isValid shouldBe true
+            it.tilSykefraværsProsent().isRight() shouldBe true
             it.tilSykefraværsProsent().map {
                 it shouldBe null
             }

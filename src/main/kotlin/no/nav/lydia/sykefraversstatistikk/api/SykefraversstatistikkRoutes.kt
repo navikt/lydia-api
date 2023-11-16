@@ -42,8 +42,7 @@ fun Route.sykefraversstatistikk(
     val adGrupper = naisEnvironment.security.adGrupper
     get("$SYKEFRAVERSSTATISTIKK_PATH/") {
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
-            val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-            call.request.søkeparametere(gjeldendePeriode, geografiService, navAnsatt = navAnsatt)
+            call.request.søkeparametere(geografiService, navAnsatt = navAnsatt)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
                 melding = it.orNull()?.toLogString(), severity = "INFO")
@@ -56,8 +55,7 @@ fun Route.sykefraversstatistikk(
 
     get("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF") {
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
-            val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-            call.request.søkeparametere(gjeldendePeriode, geografiService, navAnsatt = navAnsatt)
+            call.request.søkeparametere(geografiService, navAnsatt = navAnsatt)
         }.flatMap { søkeparametere ->
             sykefraværsstatistikkService.hentTotaltAntallVirksomheter(søkeparametere = søkeparametere)
         }.map {
