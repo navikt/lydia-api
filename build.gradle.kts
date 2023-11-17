@@ -90,7 +90,7 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("com.github.tomakehurst:wiremock-standalone:3.0.1")
+    testImplementation("org.wiremock:wiremock-standalone:3.3.1")
 
 
     // Autentisering
