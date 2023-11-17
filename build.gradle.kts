@@ -118,6 +118,7 @@ application {
     mainClass.set("no.nav.lydia.AppKt")
 }
 
+val lokalDbDump: String by project
 tasks {
     shadowJar {
         manifest {
@@ -127,6 +128,11 @@ tasks {
 
     withType<Test>{
         dependsOn(shadowJar)
+        useJUnit {
+            if (!project.hasProperty("lokalDbDump")) {
+                excludeCategories("no.nav.lydia.CommandLineOnlyTest")
+            }
+        }
     }
 }
 
