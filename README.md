@@ -154,6 +154,9 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 `Database`: `postgres`  
 4. Trykk på `Test connection` for å verifisere at tilkoblingen fungerer
 
+### Fra kommandolinja
+Kjør `./gradlew cleanTest test --tests no.nav.lydia.DbDumpTest -PlokalDbDump=true`
+
 ## Kode generert av GitHub Copilot
 
 Dette repoet tar i bruk GitHub Copilot for kodeforslag.
