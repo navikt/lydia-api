@@ -5,6 +5,7 @@ import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.TestContainerHelper
 import org.junit.experimental.categories.Category
 import kotlin.test.Test
+import no.nav.lydia.helper.VirksomhetHelper
 
 
 class DbDumpTest {
@@ -12,6 +13,7 @@ class DbDumpTest {
     @Category(CommandLineOnlyTest::class) // OBS: ikke fjern denne ellers vil denne testen kjøre i CI (GitHub actions)
     @Test
     fun createTestDump() {
+        VirksomhetHelper.lastInnStandardTestdata(500)
         val jdbcUrl = TestContainerHelper.postgresContainer.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
         val portOgDbNavn = getPortAndDBnameFromJdbcUrl(jdbcUrl)

@@ -89,6 +89,7 @@ class TestContainerHelper {
         const val ANTALL_NÆRINGS_PERIODER = 10
         const val ANTALL_BRANSJE_PERIODER = 11
         const val ANTALL_SEKTOR_PERIODER = 9
+        const val ANTALL_TEST_VIRKSOMHETER = 50
 
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -211,7 +212,7 @@ class TestContainerHelper {
             )
 
             // -- laster inn standard virksomheter (med statistikk)
-            VirksomhetHelper.lastInnStandardTestdata()
+            VirksomhetHelper.lastInnStandardTestdata(ANTALL_TEST_VIRKSOMHETER)
         }
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"

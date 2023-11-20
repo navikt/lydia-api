@@ -99,8 +99,8 @@ class VirksomhetHelper {
                 .onEach(this::lastInnNyVirksomhet)
         }
 
-        fun lastInnStandardTestdata() {
-            lastInnTestdata(TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = 500))
+        fun lastInnStandardTestdata(antallTestVirksomheter: Int) {
+            lastInnTestdata(TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = antallTestVirksomheter))
         }
 
         fun lastInnTestdata(testData: TestData) {
