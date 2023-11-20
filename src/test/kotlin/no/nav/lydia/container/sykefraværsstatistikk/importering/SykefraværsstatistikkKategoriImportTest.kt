@@ -2,10 +2,10 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import io.kotest.inspectors.forAll
 import no.nav.lydia.Kafka
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestData
@@ -16,7 +16,7 @@ import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class SykefraversstatistikkKategoriImportTest {
+class SykefraværsstatistikkKategoriImportTest {
     val KATEGORIER = Kategori.entries.filter { it != Kategori.VIRKSOMHET }
 
     @BeforeTest
@@ -31,7 +31,7 @@ class SykefraversstatistikkKategoriImportTest {
     fun `vi lagrer sykefraværsstatistikk for kategori (både siste kvartal OG siste 4 kvartaler)`() {
         KATEGORIER.forAll { kategori ->
             val kode = kodeForKategori(kategori)
-            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                 kategori = kategori,
                 kode = kode,
                 kvartal = TestData.gjeldendePeriode.tilKvartal(),
@@ -47,13 +47,13 @@ class SykefraversstatistikkKategoriImportTest {
             )
 
             kafkaMelding sistePubliserteKvartalShouldBeEqual
-                    SykefraversstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
+                    SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
                         kategori,
                         kode,
                         TestData.gjeldendePeriode.tilKvartal()
                     ).sistePubliserteKvartal
             kafkaMelding siste4KvartalShouldBeEqual
-                    SykefraversstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
+                    SykefraværsstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
                         kategori,
                         kode,
                         TestData.gjeldendePeriode.tilKvartal()
@@ -65,7 +65,7 @@ class SykefraversstatistikkKategoriImportTest {
     fun `vi oppdaterer sykefraværsstatistikk for kategorier`() {
         KATEGORIER.forAll { kategori ->
             val kode = kodeForKategori(kategori)
-            val førsteKafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val førsteKafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                 kategori = kategori,
                 kode = kode,
                 kvartal = TestData.gjeldendePeriode.tilKvartal(),
@@ -73,7 +73,7 @@ class SykefraversstatistikkKategoriImportTest {
                 siste4Kvartal = siste4Kvartal
             )
 
-            val oppdatertKafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val oppdatertKafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                 kategori = kategori,
                 kode = kode,
                 kvartal = TestData.gjeldendePeriode.tilKvartal(),
@@ -105,13 +105,13 @@ class SykefraversstatistikkKategoriImportTest {
             )
 
             oppdatertKafkaMelding sistePubliserteKvartalShouldBeEqual
-                    SykefraversstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
+                    SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
                         kategori,
                         kode,
                         TestData.gjeldendePeriode.tilKvartal()
                     ).sistePubliserteKvartal
             oppdatertKafkaMelding siste4KvartalShouldBeEqual
-                    SykefraversstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
+                    SykefraværsstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
                         kategori,
                         kode,
                         TestData.gjeldendePeriode.tilKvartal()
@@ -141,8 +141,8 @@ class SykefraversstatistikkKategoriImportTest {
 
     private val sistePubliserteKvartal: SistePubliserteKvartal =
         SistePubliserteKvartal(
-            årstall = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1.årstall,
-            kvartal = SykefraversstatistikkImportTestUtils.KVARTAL_2023_1.kvartal,
+            årstall = SykefraværsstatistikkImportTestUtils.KVARTAL_2023_1.årstall,
+            kvartal = SykefraværsstatistikkImportTestUtils.KVARTAL_2023_1.kvartal,
             tapteDagsverk = 504339.8,
             muligeDagsverk = 10104849.1,
             prosent = 6.0,
@@ -155,6 +155,6 @@ class SykefraversstatistikkKategoriImportTest {
             muligeDagsverk = 578099000.3,
             prosent = 5.4,
             erMaskert = false,
-            kvartaler = listOf(SykefraversstatistikkImportTestUtils.KVARTAL_2023_1)
+            kvartaler = listOf(SykefraværsstatistikkImportTestUtils.KVARTAL_2023_1)
         )
 }

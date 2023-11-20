@@ -3,16 +3,16 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_1
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_2
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_3
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_4
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2023_1
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.JsonMelding
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_1
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_2
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_3
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_4
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2023_1
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.JsonMelding
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheterMedFilter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
@@ -40,13 +40,13 @@ import kotlin.test.Test
  *  - importerte data skal kunne hentes ut og være like
  */
 
-class SykefraversstatistikkImportTest {
+class SykefraværsstatistikkImportTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
 
     @BeforeTest
     fun cleanUp() {
-        SykefraversstatistikkImportTestUtils.cleanUpStatistikkTable(Kategori.VIRKSOMHET, "999999999")
-        SykefraversstatistikkImportTestUtils.cleanUpStatistikkSiste4KvartalTable(Kategori.VIRKSOMHET, "999999999")
+        SykefraværsstatistikkImportTestUtils.cleanUpStatistikkTable(Kategori.VIRKSOMHET, "999999999")
+        SykefraværsstatistikkImportTestUtils.cleanUpStatistikkSiste4KvartalTable(Kategori.VIRKSOMHET, "999999999")
     }
 
     @Test

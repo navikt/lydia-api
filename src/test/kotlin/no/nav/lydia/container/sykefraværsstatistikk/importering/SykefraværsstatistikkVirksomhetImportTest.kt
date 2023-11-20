@@ -3,18 +3,18 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_4
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2023_1
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpGraderingStatistikkSiste4KvartalTable
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpGraderingStatistikkTable
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkVirksomhetGraderingGjeldendeKvartal
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.hentStatistikkVirksomhetGraderingSiste4Kvartal
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_4
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2023_1
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpGraderingStatistikkSiste4KvartalTable
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpGraderingStatistikkTable
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkVirksomhetGraderingGjeldendeKvartal
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkVirksomhetGraderingSiste4Kvartal
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
@@ -29,7 +29,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 
-class SykefraversstatistikkVirksomhetImportTest {
+class SykefraværsstatistikkVirksomhetImportTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
 
     private val sistePubliserteKvartal: SistePubliserteKvartal =
@@ -80,7 +80,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi tar hensyn til maskering på gradering siste publiserte kvartal`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
             kode = "999999997",
             kvartal = KVARTAL_2023_1,
@@ -110,7 +110,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi tar hensyn til maskering på gradering siste 4 kvartal`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
                 kategori = "VIRKSOMHET_GRADERT",
                 kode = "999999997",
                 kvartal = KVARTAL_2023_1,
@@ -141,7 +141,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi lagrer IKKE statistikk når alt er NULL`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
             kode = "999999997",
             kvartal = KVARTAL_2023_1,
@@ -174,7 +174,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi lagrer statistikk når prosent er NULL`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
             kode = "999999998",
             kvartal = KVARTAL_2023_1,
@@ -205,7 +205,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi lagrer sykefraværsstatistikk for kategori VIRKSOMHET (både siste kvartal OG siste 4 kvartaler)`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
             kategori = VIRKSOMHET,
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
@@ -232,7 +232,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi lagrer statistikk for gradert sykemelding i siste kvartal`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
@@ -261,7 +261,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi lagrer statistikk for gradert sykemelding i de siste 4 kvartaler`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
@@ -288,7 +288,7 @@ class SykefraversstatistikkVirksomhetImportTest {
 
     @Test
     fun `vi oppdaterer statistikk for gradert sykemelding i både siste kvartal og siste 4 kvartal`() {
-        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
@@ -301,7 +301,7 @@ class SykefraversstatistikkVirksomhetImportTest {
             KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
             Kafka.statistikkVirksomhetGraderingGroupId
         )
-        val oppdatertStatistikkMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+        val oppdatertStatistikkMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
             kode = "999999999",
             kvartal = KVARTAL_2023_1,

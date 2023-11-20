@@ -27,7 +27,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
 import no.nav.lydia.virksomhet.domene.Sektor
 
-class SykefraversstatistikkVirksomhetApiTest {
+class SykefraværsstatistikkVirksomhetApiTest {
 
     @Test
     fun `skal hente sykefraværsstatistikk for næring`(){

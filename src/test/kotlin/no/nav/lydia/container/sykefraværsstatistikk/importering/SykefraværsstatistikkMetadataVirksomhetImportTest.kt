@@ -9,7 +9,7 @@ import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-class SykefraversstatistikkMetadataVirksomhetImportTest {
+class SykefraværsstatistikkMetadataVirksomhetImportTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
     private val KVARTAL_2022_4 = Kvartal(2022, 4)
 

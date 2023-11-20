@@ -28,7 +28,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlin.test.Test
 import kotlin.test.fail
 import no.nav.lydia.Kafka
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -1208,7 +1208,7 @@ class SykefraværsstatistikkApiTest {
                 prosentSiste4Kvartal: Double,
                 prosentSistePubliserteKvartal: Double = 2.0
         ) {
-            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.NÆRING,
                     kode = næring,
                     kvartal = gjeldendePeriode.tilKvartal(),
@@ -1229,7 +1229,7 @@ class SykefraværsstatistikkApiTest {
                 prosentSiste4Kvartal: Double,
                 prosentSistePubliserteKvartal: Double = 2.0
         ) {
-            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.BRANSJE,
                     kode = bransje.name.uppercase(),
                     kvartal = gjeldendePeriode.tilKvartal(),
@@ -1250,7 +1250,7 @@ class SykefraværsstatistikkApiTest {
                 prosentSiste4Kvartal: Double,
                 prosentSistePubliserteKvartal: Double = 2.0
         ) {
-            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.SEKTOR,
                     kode = sektor.kode,
                     kvartal = gjeldendePeriode.tilKvartal(),
@@ -1270,7 +1270,7 @@ class SykefraværsstatistikkApiTest {
                 prosentSiste4Kvartal: Double,
                 prosentSistePubliserteKvartal: Double = 2.0
         ) {
-            val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMelding(
+            val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                     kategori = Kategori.LAND,
                     kode = LANDKODE_NO,
                     kvartal = gjeldendePeriode.tilKvartal(),
