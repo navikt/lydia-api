@@ -1,4 +1,4 @@
-package no.nav.lydia.container.sykefraversstatistikk
+package no.nav.lydia.container.sykefraværsstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer.TRANSPORT
@@ -31,7 +31,7 @@ class SykefraversstatistikkVirksomhetApiTest {
 
     @Test
     fun `skal hente sykefraværsstatistikk for næring`(){
-        SykefraversstatistikkApiTest.settSykefraværsprosentNæring(NÆRING_JORDBRUK, 4.5)
+        SykefraværsstatistikkApiTest.settSykefraværsprosentNæring(NÆRING_JORDBRUK, 4.5)
 
         val result = TestContainerHelper.lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
                 .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
@@ -50,7 +50,7 @@ class SykefraversstatistikkVirksomhetApiTest {
 
     @Test
     fun `skal hente sykefraværsstatistikk for bransje`(){
-        SykefraversstatistikkApiTest.settSykefraværsprosentBransje(TRANSPORT, 9.9, 8.7)
+        SykefraværsstatistikkApiTest.settSykefraværsprosentBransje(TRANSPORT, 9.9, 8.7)
 
         val url = "$SYKEFRAVÆRSSTATISTIKK_PATH/bransje/${TRANSPORT.name}"
         val result = TestContainerHelper.lydiaApiContainer.performGet(url)

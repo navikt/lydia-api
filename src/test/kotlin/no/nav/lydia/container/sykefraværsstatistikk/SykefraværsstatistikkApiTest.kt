@@ -1,4 +1,4 @@
-package no.nav.lydia.container.sykefraversstatistikk
+package no.nav.lydia.container.sykefraværsstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer
@@ -28,7 +28,7 @@ import io.kotest.matchers.string.shouldStartWith
 import kotlin.test.Test
 import kotlin.test.fail
 import no.nav.lydia.Kafka
-import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils
+import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraversstatistikkImportTestUtils
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -100,7 +100,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 
-class SykefraversstatistikkApiTest {
+class SykefraværsstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val mockOAuth2Server = oauth2ServerContainer
 
@@ -396,12 +396,12 @@ class SykefraversstatistikkApiTest {
     fun `skal få sykefraværsstatistikk for siste fire kvartal`() {
         val orgnummer = nyttOrgnummer()
 
-        val sykefraversprosent = hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraversprosent
+        val sykefraværsprosent = hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraversprosent
 
         val sykefraværsprosentSiste4Kvartal = postgresContainer.hentEnkelKolonne<Double>(
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
         )
-        sykefraversprosent shouldBe sykefraværsprosentSiste4Kvartal
+        sykefraværsprosent shouldBe sykefraværsprosentSiste4Kvartal
     }
 
     @Test
@@ -824,23 +824,23 @@ class SykefraversstatistikkApiTest {
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
-            response.data.forAll { sykefraversstatistikkVirksomhetDto ->
-                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 3.0
+            response.data.forAll { sykefraværsstatistikkVirksomhetDto ->
+                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 3.0
             }
         }, sykefraværsprosentFra = "3.0")
 
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
-            response.data.forAll { sykefraversstatistikkVirksomhetDto ->
-                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 5.0
+            response.data.forAll { sykefraværsstatistikkVirksomhetDto ->
+                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 5.0
             }
         }, sykefraværsprosentTil = "5.0")
 
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
-            response.data.forAll { sykefraversstatistikkVirksomhetDto ->
-                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 2.0
-                sykefraversstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 6.0
+            response.data.forAll { sykefraværsstatistikkVirksomhetDto ->
+                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 2.0
+                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 6.0
             }
         }, sykefraværsprosentFra = "2.0", sykefraværsprosentTil = "6.0")
 

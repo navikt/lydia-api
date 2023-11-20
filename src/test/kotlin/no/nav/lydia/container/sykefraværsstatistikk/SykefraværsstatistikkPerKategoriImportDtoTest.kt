@@ -1,4 +1,4 @@
-package no.nav.lydia.container.sykefraversstatistikk
+package no.nav.lydia.container.sykefraværsstatistikk
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.sykefraværsstatistikk.import.*

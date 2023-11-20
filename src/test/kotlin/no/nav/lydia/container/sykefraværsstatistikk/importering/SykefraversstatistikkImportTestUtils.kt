@@ -1,4 +1,4 @@
-package no.nav.lydia.container.sykefraversstatistikk.importering
+package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
@@ -8,7 +8,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.*
 import java.sql.ResultSet
 
 
-class SykefraversstatistikkImportTestUtils {
+class SykefraværsstatistikkImportTestUtils {
 
     data class StatistikkGjeldendeKvartal(
             val kategori: Kategori,
