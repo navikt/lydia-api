@@ -22,7 +22,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.*
 
-const val SYKEFRAVÆRSSTATISTIKK_PATH = "sykefraversstatistikk"
+const val SYKEFRAVÆRSSTATISTIKK_PATH = "sykefravarsstatistikk"
 const val FILTERVERDIER_PATH = "filterverdier"
 const val ANTALL_TREFF = "antallTreff"
 const val SISTE_4_KVARTALER = "siste4kvartaler"

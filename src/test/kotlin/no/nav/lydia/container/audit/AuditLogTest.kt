@@ -12,6 +12,7 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
+import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 
 class AuditLogTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
@@ -226,7 +227,7 @@ class AuditLogTest {
         StatistikkHelper.hentSykefravær()
         .also {
             lydiaApiContainer shouldContainLog auditLog(
-                path = "/sykefraversstatistikk?kommuner=&fylker=&neringsgrupper=&sorteringsnok",
+                path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?kommuner=&fylker=&neringsgrupper=&sorteringsnok",
                 method = "GET",
                 navIdent = saksbehandler.navIdent,
                 auditType = AuditType.access,
@@ -256,7 +257,7 @@ class AuditLogTest {
         )
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
-                    path = "/sykefraversstatistikk?kommuner=1750&fylker=17&neringsgrupper=bil&sort",
+                    path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?kommuner=1750&fylker=17&neringsgrupper=bil&sort",
                     method = "GET",
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
