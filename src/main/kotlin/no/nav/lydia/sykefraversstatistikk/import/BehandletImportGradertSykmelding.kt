@@ -13,6 +13,17 @@ data class BehandletImportGradertSykmelding (
     val erMaskert: Boolean
 )
 
+data class BehandletImportGradertSykmeldingSiste4Kvartal(
+    val publisertÅrstall: Int,
+    val publisertKvartal: Int,
+    val kode: String,
+    val prosent: Double?,
+    val tapteDagsverkGradert: Double?,
+    val tapteDagsverk: Double?,
+    val erMaskert: Boolean,
+    val kvartaler: List<Kvartal>
+)
+
 fun GradertSykemeldingImportDto.skalMaskeres() =
     this.sistePubliserteKvartal.erMaskert
             || this.sistePubliserteKvartal.antallPersoner == null
@@ -30,7 +41,24 @@ fun GradertSykemeldingImportDto.tilBehandletImportGradertSykmelding() =
         erMaskert = this.skalMaskeres()
     )
 
+fun GradertSykemeldingImportDto.tilBehandletImportGradertSykmeldingSiste4Kvartal() =
+    BehandletImportGradertSykmeldingSiste4Kvartal(
+        publisertÅrstall = this.sistePubliserteKvartal.årstall,
+        publisertKvartal = this.sistePubliserteKvartal.kvartal,
+        kode = this.kode,
+        prosent = if (this.siste4Kvartal.erMaskert) 0.0 else this.siste4Kvartal.prosent,
+        tapteDagsverkGradert = if (this.siste4Kvartal.erMaskert) 0.0 else this.siste4Kvartal.tapteDagsverkGradert,
+        tapteDagsverk = if (this.siste4Kvartal.erMaskert) 0.0 else this.siste4Kvartal.tapteDagsverk,
+        erMaskert = this.siste4Kvartal.erMaskert,
+        kvartaler = this.siste4Kvartal.kvartaler
+    )
+
 fun List<GradertSykemeldingImportDto>.tilBehandletImportGradertSykmelding() =
     this.map {
         it.tilBehandletImportGradertSykmelding()
+    }
+
+fun List<GradertSykemeldingImportDto>.tilBehandletImportGradertSykmeldingSiste4Kvartal() =
+    this.map {
+        it.tilBehandletImportGradertSykmeldingSiste4Kvartal()
     }

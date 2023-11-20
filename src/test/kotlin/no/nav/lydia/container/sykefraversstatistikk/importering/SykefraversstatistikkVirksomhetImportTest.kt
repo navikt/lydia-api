@@ -1,6 +1,7 @@
 package no.nav.lydia.container.sykefraversstatistikk.importering
 
 import io.kotest.assertions.shouldFail
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_4
@@ -106,6 +107,37 @@ class SykefraversstatistikkVirksomhetImportTest {
         gjeldendeKvartal.graderingSistePubliserteKvartal.prosent shouldBe 0.0
         gjeldendeKvartal.graderingSistePubliserteKvartal.tapteDagsverk shouldBe 0.0
         gjeldendeKvartal.graderingSistePubliserteKvartal.tapteDagsverkGradert shouldBe 0.0
+    }
+
+    @Test
+    fun `vi tar hensyn til maskering på gradering siste 4 kvartal`() {
+        val kafkaMelding = SykefraversstatistikkImportTestUtils.JsonMeldingGradering(
+                kategori = "VIRKSOMHET_GRADERT",
+                kode = "999999997",
+                kvartal = KVARTAL_2023_1,
+                siste4Kvartal = graderingSiste4Kvartal.copy(
+                        tapteDagsverkGradert = 10.0,
+                        tapteDagsverk = 100.0,
+                        prosent = 10.0,
+                        erMaskert = true
+                ),
+                sistePubliserteKvartal = graderingSistePubliserteKvartal
+        )
+        kafkaContainer.sendOgVentTilKonsumert(
+                kafkaMelding.toJsonKey(),
+                kafkaMelding.toJsonValue(),
+                KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
+                Kafka.statistikkVirksomhetGraderingGroupId
+        )
+
+        val siste4Kvartaler = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
+
+        siste4Kvartaler.graderingSiste4Kvartal.erMaskert shouldBe true
+        siste4Kvartaler.graderingSiste4Kvartal.prosent shouldBe 0.0
+        siste4Kvartaler.graderingSiste4Kvartal.tapteDagsverk shouldBe 0.0
+        siste4Kvartaler.graderingSiste4Kvartal.tapteDagsverkGradert shouldBe 0.0
+        siste4Kvartaler.publisertÅrstall shouldBe KVARTAL_2023_1.årstall
+        siste4Kvartaler.publisertKvartal shouldBe KVARTAL_2023_1.kvartal
     }
 
     @Test

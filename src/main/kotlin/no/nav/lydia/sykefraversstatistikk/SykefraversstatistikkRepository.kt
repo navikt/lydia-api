@@ -173,7 +173,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
         gradertSykemeldingImportDtoList: List<GradertSykemeldingImportDto>
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
-            gradertSykemeldingImportDtoList.forEach {
+            gradertSykemeldingImportDtoList.tilBehandletImportGradertSykmeldingSiste4Kvartal().forEach {
                 tx.run(
                     queryOf(
                         """
@@ -210,14 +210,14 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
                         """.trimIndent(),
                         mapOf(
                             "orgnr" to it.kode,
-                            "publisert_arstall" to it.sistePubliserteKvartal.årstall,
-                            "publisert_kvartal" to it.sistePubliserteKvartal.kvartal,
-                            "tapte_dagsverk_gradert" to it.siste4Kvartal.tapteDagsverkGradert,
-                            "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
-                            "prosent" to it.siste4Kvartal.prosent,
-                            "maskert" to it.siste4Kvartal.erMaskert,
-                            "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
-                            "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                            "publisert_arstall" to it.publisertÅrstall,
+                            "publisert_kvartal" to it.publisertKvartal,
+                            "tapte_dagsverk_gradert" to it.tapteDagsverkGradert,
+                            "tapte_dagsverk" to it.tapteDagsverk,
+                            "prosent" to it.prosent,
+                            "maskert" to it.erMaskert,
+                            "antall_kvartaler" to it.kvartaler.size,
+                            "kvartaler" to gson.toJson(it.kvartaler),
                         )
                     ).asUpdate
                 )
