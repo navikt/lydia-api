@@ -14,7 +14,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
-import no.nav.lydia.sykefraversstatistikk.api.SykefraværsstatistikkError
+import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
 

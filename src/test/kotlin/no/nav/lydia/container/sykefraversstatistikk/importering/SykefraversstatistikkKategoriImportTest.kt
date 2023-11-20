@@ -9,9 +9,9 @@ import no.nav.lydia.container.sykefraversstatistikk.importering.Sykefraversstati
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraversstatistikk.import.Kategori
-import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test

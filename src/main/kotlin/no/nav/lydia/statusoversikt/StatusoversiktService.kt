@@ -1,7 +1,7 @@
 package no.nav.lydia.statusoversikt
 
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import org.slf4j.LoggerFactory
 
 class StatusoversiktService(

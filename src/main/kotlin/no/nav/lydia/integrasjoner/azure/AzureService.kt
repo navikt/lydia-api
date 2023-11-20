@@ -16,7 +16,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.AzureConfig
 import no.nav.lydia.Security
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.sykefraversstatistikk.api.EierDTO
+import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
 import org.slf4j.LoggerFactory
 
 @Serializable

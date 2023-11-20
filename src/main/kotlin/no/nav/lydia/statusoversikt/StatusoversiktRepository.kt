@@ -5,11 +5,11 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåBransjeOgNæring
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
-import no.nav.lydia.sykefraversstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåBransjeOgNæring
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåKommuner
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåSektor
 import javax.sql.DataSource
 
 class StatusoversiktRepository(val dataSource: DataSource) {

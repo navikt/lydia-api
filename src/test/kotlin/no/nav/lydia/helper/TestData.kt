@@ -1,7 +1,7 @@
 package no.nav.lydia.helper
 
-import no.nav.lydia.sykefraversstatistikk.api.Periode
-import no.nav.lydia.sykefraversstatistikk.import.*
+import no.nav.lydia.sykefraværsstatistikk.api.Periode
+import no.nav.lydia.sykefraværsstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import java.math.RoundingMode

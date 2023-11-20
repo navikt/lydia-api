@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraversstatistikk.import.*
+import no.nav.lydia.sykefraværsstatistikk.import.*
 import java.sql.ResultSet
 
 

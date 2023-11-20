@@ -75,7 +75,7 @@ import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseT
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
-import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
+import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import no.nav.lydia.tilgangskontroll.Rolle
 import kotlin.test.Test
 import kotlin.test.assertTrue

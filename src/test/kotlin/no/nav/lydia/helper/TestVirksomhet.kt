@@ -5,7 +5,7 @@ import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
-import no.nav.lydia.sykefraversstatistikk.api.geografi.Kommune
+import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 
 data class TestVirksomhet(

@@ -1,7 +1,6 @@
 package no.nav.lydia.container.sykefraversstatistikk.importering
 
 import io.kotest.assertions.shouldFail
-import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraversstatistikk.importering.SykefraversstatistikkImportTestUtils.Companion.KVARTAL_2022_4
@@ -21,11 +20,11 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
-import no.nav.lydia.sykefraversstatistikk.import.GraderingSiste4Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.GraderingSistePubliserteKvartal
-import no.nav.lydia.sykefraversstatistikk.import.Kategori.VIRKSOMHET
-import no.nav.lydia.sykefraversstatistikk.import.Siste4Kvartal
-import no.nav.lydia.sykefraversstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori.VIRKSOMHET
+import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 

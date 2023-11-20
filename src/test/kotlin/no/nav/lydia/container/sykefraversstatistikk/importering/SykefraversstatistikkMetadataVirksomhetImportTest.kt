@@ -3,8 +3,8 @@ package no.nav.lydia.container.sykefraversstatistikk.importering
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
 import no.nav.lydia.helper.*
-import no.nav.lydia.sykefraversstatistikk.import.Kategori
-import no.nav.lydia.sykefraversstatistikk.import.Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test

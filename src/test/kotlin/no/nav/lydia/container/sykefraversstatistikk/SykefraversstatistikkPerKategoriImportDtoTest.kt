@@ -1,9 +1,9 @@
 package no.nav.lydia.container.sykefraversstatistikk
 
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.sykefraversstatistikk.import.*
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.*
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
 import kotlin.test.Test
 
 class SykefraversstatistikkPerKategoriImportDtoTest {

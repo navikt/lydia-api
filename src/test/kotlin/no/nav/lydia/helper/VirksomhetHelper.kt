@@ -13,7 +13,7 @@ import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirk
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
 import no.nav.lydia.integrasjoner.salesforce.SalesforceUrlResponse
-import no.nav.lydia.sykefraversstatistikk.api.Periode
+import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.SALESFORCE_LENKE_PATH
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH

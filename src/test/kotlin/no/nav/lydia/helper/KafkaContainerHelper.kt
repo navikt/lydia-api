@@ -12,10 +12,10 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
 import no.nav.lydia.integrasjoner.jobblytter.Jobb
-import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkMetadataVirksomhet
-import no.nav.lydia.sykefraversstatistikk.import.KeySykefraversstatistikkPerKategori
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
-import no.nav.lydia.sykefraversstatistikk.import.SykefraversstatistikkPerKategoriImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraversstatistikkMetadataVirksomhet
+import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraversstatistikkPerKategori
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -37,7 +37,7 @@ import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.util.*
-import no.nav.lydia.sykefraversstatistikk.import.GradertSykemeldingImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 
 
 class KafkaContainerHelper(
