@@ -2,11 +2,11 @@ package no.nav.lydia.container.sykefraversstatistikk
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.sykefraværsstatistikk.import.*
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
 import kotlin.test.Test
 
-class SykefraversstatistikkPerKategoriImportDtoTest {
+class SykefraværsstatistikkPerKategoriImportDtoTest {
 
     val gjeldendeKvartal = Kvartal(2023, 1)
 
@@ -59,7 +59,7 @@ class SykefraversstatistikkPerKategoriImportDtoTest {
 
 
     private fun statistikkDto(kategori: Kategori, kode: String, antallPersoner: Int) =
-        SykefraversstatistikkPerKategoriImportDto(
+        SykefraværsstatistikkPerKategoriImportDto(
             kategori = kategori,
             kode = kode,
             sistePubliserteKvartal = SistePubliserteKvartal(

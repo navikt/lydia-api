@@ -86,19 +86,19 @@ class StatistikkPerKategoriConsumer(
         logger.info("Stopped kafka consumer job i StatistikkPerKategoriConsumer (topic '$topic')")
     }
 
-    private fun ConsumerRecords<String, String>.toSykefraværsstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {
+    private fun ConsumerRecords<String, String>.toSykefraværsstatistikkPerKategoriImportDto(): List<SykefraværsstatistikkPerKategoriImportDto> {
         val gson = GsonBuilder().create()
         return this.filter { erMeldingenGyldig(it) }.map {
             gson.fromJson(
                 it.value(),
-                SykefraversstatistikkPerKategoriImportDto::class.java
+                SykefraværsstatistikkPerKategoriImportDto::class.java
             )
         }
     }
 
     private fun erMeldingenGyldig(consumerRecord: ConsumerRecord<String, String>): Boolean {
         val gson = GsonBuilder().create()
-        val key = gson.fromJson(consumerRecord.key(), KeySykefraversstatistikkPerKategori::class.java)
+        val key = gson.fromJson(consumerRecord.key(), KeySykefraværsstatistikkPerKategori::class.java)
 
         return if (Kategori.entries.map { it.name }.contains( key.kategori) && key.kode.isNotEmpty()) {
             true

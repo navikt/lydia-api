@@ -78,11 +78,11 @@ class TestData(
     }
 
     private val sykefraværsstatistikkVirksomhetKafkaMeldinger =
-        mutableSetOf<SykefraversstatistikkPerKategoriImportDto>()
+        mutableSetOf<SykefraværsstatistikkPerKategoriImportDto>()
     private val graderingStatistikkVirksomhetKafkaMeldinger =
             mutableSetOf<GradertSykemeldingImportDto>()
     private val sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger =
-        mutableSetOf<SykefraversstatistikkMetadataVirksomhetImportDto>()
+        mutableSetOf<SykefraværsstatistikkMetadataVirksomhetImportDto>()
     val brregVirksomheter = mutableSetOf<TestVirksomhet>()
 
     init {
@@ -191,7 +191,7 @@ class TestData(
                     )
             )
             sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger.add(
-                SykefraversstatistikkMetadataVirksomhetImportDto(
+                SykefraværsstatistikkMetadataVirksomhetImportDto(
                     orgnr = virksomhet.orgnr,
                     årstall = periode.årstall,
                     kvartal = periode.kvartal,
@@ -227,7 +227,7 @@ fun lagSykefraversstatistikkPerKategoriImportDto(
     muligeDagsverk: Double = 125.0,
     maskert: Boolean = false,
 ) =
-    SykefraversstatistikkPerKategoriImportDto(
+    SykefraværsstatistikkPerKategoriImportDto(
         kategori = kategori,
         kode = kode,
         sistePubliserteKvartal = SistePubliserteKvartal(

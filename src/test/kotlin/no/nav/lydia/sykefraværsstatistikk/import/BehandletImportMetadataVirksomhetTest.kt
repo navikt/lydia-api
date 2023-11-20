@@ -19,7 +19,7 @@ class BehandletImportMetadataVirksomhetTest {
     @Test
     fun `Metadata virksomhet uten gyldig sektor filtreres vekk og blir ikke importert`() {
         val result = listOf(
-            SykefraversstatistikkMetadataVirksomhetImportDto(
+            SykefraværsstatistikkMetadataVirksomhetImportDto(
                 sektor = "",
                 årstall = 2023,
                 kvartal = 2,
@@ -27,7 +27,7 @@ class BehandletImportMetadataVirksomhetTest {
                 naring = "41",
                 bransje = "BYGG"
             ),
-            SykefraversstatistikkMetadataVirksomhetImportDto(
+            SykefraværsstatistikkMetadataVirksomhetImportDto(
                 sektor = "PRIVAT",
                 årstall = 2023,
                 kvartal = 2,
@@ -35,7 +35,7 @@ class BehandletImportMetadataVirksomhetTest {
                 naring = "49",
                 bransje = "TRANSPORT"
             ),
-            SykefraversstatistikkMetadataVirksomhetImportDto(
+            SykefraværsstatistikkMetadataVirksomhetImportDto(
                 sektor = "UKJENT",
                 årstall = 2023,
                 kvartal = 2,
@@ -53,7 +53,7 @@ class BehandletImportMetadataVirksomhetTest {
 
     private fun assertSektorIkkeStøttesTilImport(sektor: String) {
         val exceptionFordiSektorIkkeStøttesTilImport = shouldThrow<IllegalStateException> {
-            SykefraversstatistikkMetadataVirksomhetImportDto(
+            SykefraværsstatistikkMetadataVirksomhetImportDto(
                 sektor = sektor,
                 årstall = 2023,
                 kvartal = 2,

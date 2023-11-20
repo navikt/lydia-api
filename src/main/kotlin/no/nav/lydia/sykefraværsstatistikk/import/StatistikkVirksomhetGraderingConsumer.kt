@@ -103,7 +103,7 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
 
     private fun erMeldingenGyldig(consumerRecord: ConsumerRecord<String, String>): Boolean {
         val gson = GsonBuilder().create()
-        val key = gson.fromJson(consumerRecord.key(), KeySykefraversstatistikkPerKategori::class.java)
+        val key = gson.fromJson(consumerRecord.key(), KeySykefraværsstatistikkPerKategori::class.java)
 
         return if (key.kategori == "VIRKSOMHET_GRADERT" && key.kode.isNotEmpty()) {
             true

@@ -84,12 +84,12 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
     }
 
     private fun ConsumerRecords<String, String>.toSykefraværsstatistikkMetadataVirksomhetImportDto():
-            List<SykefraversstatistikkMetadataVirksomhetImportDto> {
+            List<SykefraværsstatistikkMetadataVirksomhetImportDto> {
         val gson = GsonBuilder().create()
         return this.map {
             gson.fromJson(
                 it.value(),
-                SykefraversstatistikkMetadataVirksomhetImportDto::class.java
+                SykefraværsstatistikkMetadataVirksomhetImportDto::class.java
             )
         }
     }

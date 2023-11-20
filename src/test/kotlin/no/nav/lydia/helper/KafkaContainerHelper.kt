@@ -12,10 +12,10 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
 import no.nav.lydia.integrasjoner.jobblytter.Jobb
-import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraversstatistikkMetadataVirksomhet
-import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraversstatistikkPerKategori
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkMetadataVirksomhet
+import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkPerKategori
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.admin.AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG
@@ -186,7 +186,7 @@ class KafkaContainerHelper(
     }
 
     fun sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
-        importDtoer: List<SykefraversstatistikkMetadataVirksomhetImportDto>,
+        importDtoer: List<SykefraværsstatistikkMetadataVirksomhetImportDto>,
     ) {
         runBlocking {
             val sendteMeldinger = importDtoer.map { melding ->
@@ -200,7 +200,7 @@ class KafkaContainerHelper(
     }
 
     fun sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
-        importDtoer: List<SykefraversstatistikkPerKategoriImportDto>,
+        importDtoer: List<SykefraværsstatistikkPerKategoriImportDto>,
         topic: String,
         groupId: String,
     ) {
@@ -211,7 +211,7 @@ class KafkaContainerHelper(
                 kafkaProducer.send(ProducerRecord(
                     topic,
                     gson.toJson(
-                        KeySykefraversstatistikkPerKategori(
+                        KeySykefraværsstatistikkPerKategori(
                             kategori = melding.kategori.name,
                             kode = melding.kode,
                             årstall = melding.sistePubliserteKvartal.årstall,
@@ -240,7 +240,7 @@ class KafkaContainerHelper(
                 kafkaProducer.send(ProducerRecord(
                     topic,
                     gson.toJson(
-                        KeySykefraversstatistikkPerKategori(
+                        KeySykefraværsstatistikkPerKategori(
                             kategori = melding.kategori,
                             kode = melding.kode,
                             årstall = melding.sistePubliserteKvartal.årstall,
@@ -301,11 +301,11 @@ class KafkaContainerHelper(
             )
         )
 
-    private fun SykefraversstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
+    private fun SykefraværsstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
         ProducerRecord(
             statistikkMetadataVirksomhetTopic,
             gson.toJson(
-                KeySykefraversstatistikkMetadataVirksomhet(
+                KeySykefraværsstatistikkMetadataVirksomhet(
                     orgnr = orgnr,
                     arstall = årstall,
                     kvartal = kvartal

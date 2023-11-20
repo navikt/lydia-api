@@ -24,7 +24,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
 import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
 import no.nav.lydia.virksomhet.domene.Sektor
 
 class SykefraversstatistikkVirksomhetApiTest {
@@ -117,7 +117,7 @@ class SykefraversstatistikkVirksomhetApiTest {
 
         TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
             listOf(
-                SykefraversstatistikkMetadataVirksomhetImportDto(
+                SykefraværsstatistikkMetadataVirksomhetImportDto(
                     orgnr = virksomhet.orgnr,
                     årstall = TestData.gjeldendePeriode.årstall,
                     kvartal = TestData.gjeldendePeriode.kvartal,

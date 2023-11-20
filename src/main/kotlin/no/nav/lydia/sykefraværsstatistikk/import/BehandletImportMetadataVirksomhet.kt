@@ -14,7 +14,7 @@ data class BehandletImportMetadataVirksomhet (
 ) {
 
     companion object {
-        fun SykefraversstatistikkMetadataVirksomhetImportDto.tilBehandletImportMetadataVirksomhet() =
+        fun SykefraværsstatistikkMetadataVirksomhetImportDto.tilBehandletImportMetadataVirksomhet() =
             BehandletImportMetadataVirksomhet(
                 orgnr = this.orgnr,
                 kvartal = Kvartal(this.årstall, this.kvartal),
@@ -27,7 +27,7 @@ data class BehandletImportMetadataVirksomhet (
                 )
             )
 
-        fun List<SykefraversstatistikkMetadataVirksomhetImportDto>.tilBehandletImportMetadataVirksomhet() =
+        fun List<SykefraværsstatistikkMetadataVirksomhetImportDto>.tilBehandletImportMetadataVirksomhet() =
             this.filter { dto ->
                 dto.sektor.isNotEmpty() && SEKTOR_FRA_SYKEFRAVÆRSSTATISTIKK_TIL_IMPORT.contains(dto.sektor)
             }.map { it.tilBehandletImportMetadataVirksomhet() }

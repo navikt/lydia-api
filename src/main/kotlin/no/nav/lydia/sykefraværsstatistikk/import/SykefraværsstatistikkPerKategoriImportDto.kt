@@ -31,7 +31,7 @@ enum class Kategori {
     }
 }
 
-data class SykefraversstatistikkPerKategoriImportDto(
+data class SykefraværsstatistikkPerKategoriImportDto(
     @SerializedName("kategori")
     val kategori: Kategori,
     @SerializedName("kode")
@@ -42,7 +42,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
     val siste4Kvartal: Siste4Kvartal,
 ) {
     companion object {
-        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletLandSykefraværsstatistikk() =
+        private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletLandSykefraværsstatistikk() =
             BehandletLandSykefraværsstatistikk(
                 statistikk = LandSykefravær(
                     årstall = this.sistePubliserteKvartal.årstall,
@@ -56,7 +56,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
                     kode = this.kode,
                 )
             )
-        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletSektorSykefraværsstatistikk() =
+        private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletSektorSykefraværsstatistikk() =
             BehandletSektorSykefraværsstatistikk(
                 statistikk = SektorSykefravær(
                     årstall = this.sistePubliserteKvartal.årstall,
@@ -71,7 +71,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
-        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletBransjeSykefraværsstatistikk() =
+        private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletBransjeSykefraværsstatistikk() =
             BehandletBransjeSykefraværsstatistikk(
                 statistikk = BransjeSykefravær(
                     årstall = this.sistePubliserteKvartal.årstall,
@@ -86,7 +86,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
-        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletNæringSykefraværsstatistikk() =
+        private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletNæringSykefraværsstatistikk() =
             BehandletNæringSykefraværsstatistikk(
                 statistikk = NæringSykefravær(
                     årstall = this.sistePubliserteKvartal.årstall,
@@ -101,7 +101,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
-        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletNæringsundergruppeSykefraværsstatistikk() =
+        private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletNæringsundergruppeSykefraværsstatistikk() =
             BehandletNæringsundergruppeSykefraværsstatistikk(
                 statistikk = NæringsundergruppeSykefravær(
                     årstall = this.sistePubliserteKvartal.årstall,
@@ -116,7 +116,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
-        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikk() =
+        private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikk() =
             BehandletVirksomhetSykefraværsstatistikk(
                 statistikk = SykefraværsstatistikkForVirksomhet(
                     årstall = this.sistePubliserteKvartal.årstall,
@@ -131,7 +131,7 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
-        private fun SykefraversstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal() =
+        private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal() =
             BehandletVirksomhetSykefraværsstatistikkSiste4Kvartal(
                 statistikk = SykefraværsstatistikkForVirksomhetSiste4Kvartal(
                     publisertÅrstall = this.sistePubliserteKvartal.årstall,
@@ -146,37 +146,37 @@ data class SykefraversstatistikkPerKategoriImportDto(
                 )
             )
 
-        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletLandSykefraværsstatistikk() =
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletLandSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletLandSykefraværsstatistikk()
             }
 
-        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletSektorSykefraværsstatistikk() =
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletSektorSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletSektorSykefraværsstatistikk()
             }
 
-        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletBransjeSykefraværsstatistikk() =
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletBransjeSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletBransjeSykefraværsstatistikk()
             }
 
-        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletNæringSykefraværsstatistikk() =
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletNæringSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletNæringSykefraværsstatistikk()
             }
 
-        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletNæringsundergruppeSykefraværsstatistikk() =
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletNæringsundergruppeSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletNæringsundergruppeSykefraværsstatistikk()
             }
 
-        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletVirksomhetSykefraværsstatistikk() =
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletVirksomhetSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletVirksomhetSykefraværsstatistikk()
             }
 
-        fun List<SykefraversstatistikkPerKategoriImportDto>.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal() =
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal() =
             this.map {
                 it.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal()
             }
@@ -223,7 +223,7 @@ data class SistePubliserteKvartal(
     val erMaskert: Boolean
 )
 
-data class KeySykefraversstatistikkPerKategori(
+data class KeySykefraværsstatistikkPerKategori(
     val kategori: String,
     val kode: String,
     val kvartal: Int,

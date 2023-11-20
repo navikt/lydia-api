@@ -8,13 +8,13 @@ import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.domene.BransjeSykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.*
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletBransjeSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletNæringsundergruppeSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
-import no.nav.lydia.sykefraværsstatistikk.import.SykefraversstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletBransjeSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletNæringSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletNæringsundergruppeSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletSektorSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal
 import javax.sql.DataSource
 
 class SykefraversstatistikkRepository(val dataSource: DataSource) {
@@ -98,7 +98,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
             }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
     ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -110,7 +110,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForSektor(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
     ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -122,7 +122,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
     ) {
         using(sessionOf(dataSource)) {session ->
             session.transaction { tx ->
@@ -134,7 +134,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
     ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -146,7 +146,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
     ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -158,7 +158,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
     ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -279,7 +279,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>,
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
             sykefraværsstatistikk.forEach {
@@ -338,7 +338,7 @@ class SykefraversstatistikkRepository(val dataSource: DataSource) {
     }
 
     fun insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
-        sykefraværsstatistikk: List<SykefraversstatistikkPerKategoriImportDto>,
+        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
             tx.insertVirksomhetsstatistikkSiste4Kvartal(

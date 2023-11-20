@@ -2,7 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.import
 
 import com.google.gson.annotations.SerializedName
 
-data class SykefraversstatistikkMetadataVirksomhetImportDto(
+data class SykefraværsstatistikkMetadataVirksomhetImportDto(
     @SerializedName("orgnr")
     val orgnr: String,
     @SerializedName("arstall") // OBS: feltet er 'årstall' og ikke 'arstall' i sykefravarsstatistikk-metadata-virksomhet-v1
@@ -17,7 +17,7 @@ data class SykefraversstatistikkMetadataVirksomhetImportDto(
     val sektor: String,
 )
 
-data class KeySykefraversstatistikkMetadataVirksomhet(
+data class KeySykefraværsstatistikkMetadataVirksomhet(
     val orgnr: String,
     val arstall: Int,
     val kvartal: Int,

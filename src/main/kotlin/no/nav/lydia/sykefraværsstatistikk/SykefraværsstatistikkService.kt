@@ -49,7 +49,7 @@ class SykefraværsstatistikkService(
     }
 
     fun lagreSykefraværsstatistikkPerKategori(
-        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>,
+        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>,
     ) {
         val start = System.currentTimeMillis()
         lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe)
@@ -57,7 +57,7 @@ class SykefraværsstatistikkService(
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${sykefraværsstatistikkKategoriImportDtoListe.size} statistikkmeldinger per kategori")
     }
 
-    private fun lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
+    private fun lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>) {
         sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, LAND)
         )
@@ -87,7 +87,7 @@ class SykefraværsstatistikkService(
         )
     }
 
-    private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>) {
+    private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>) {
         val sykefraværsstatistikkForVirksomheter = sykefraværsstatistikkKategoriImportDtoListe
             .filter { it.kategori == VIRKSOMHET }
 
@@ -125,8 +125,8 @@ class SykefraværsstatistikkService(
     }
 
     private fun filterPåKategoriOgLogInfo(
-        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraversstatistikkPerKategoriImportDto>, kategori: Kategori
-    ): List<SykefraversstatistikkPerKategoriImportDto> {
+        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>, kategori: Kategori
+    ): List<SykefraværsstatistikkPerKategoriImportDto> {
         val statistikkForKategori = sykefraværsstatistikkKategoriImportDtoListe
             .filter { it.kategori == kategori }
 
