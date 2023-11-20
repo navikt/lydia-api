@@ -93,7 +93,7 @@ Denne filen bruker samme testdata som integrasjonstestene våre, dvs kunstig dat
 
 
 ### Opprett en tilkobling til Postgresql db i testcontainer  
- 1. Åpne integrasjsontest "Test for å hente datasource" i `SykefraversstatistikkApiTest` i IntelliJ
+ 1. Åpne integrasjsontest "Test for å hente datasource" i `SykefraværsstatistikkApiTest` i IntelliJ
  2. Legg til en breakpoint etter utledding av `jdbcUrl`, f.eks på linjen med kode `jdbcUrl shouldStartWith "jdbc:postgresql"`
  3. Start testen med debug og kopier innhold av variabel `jdbcUrl` når testen stopper på breakpoint (_copy value_ med `Command + c`)
  4. La testen forbli stoppet på breakpoint da det blir mulig å koble til db i test-container. Du vil miste tilkobling hvis testen kjører ferdig. 

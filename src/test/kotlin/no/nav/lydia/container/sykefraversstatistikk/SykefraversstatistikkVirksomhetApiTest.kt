@@ -14,7 +14,7 @@ import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.helper.lagSykefraversstatistikkPerKategoriImportDto
+import no.nav.lydia.helper.lagSykefraværsstatistikkPerKategoriImportDto
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
@@ -101,7 +101,7 @@ class SykefraversstatistikkVirksomhetApiTest {
     fun `skal kunne hente statistikk selv om virksomheten mangler statistikk for gradering`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = TestVirksomhet.nyVirksomhet()
-        val statistikk = lagSykefraversstatistikkPerKategoriImportDto(
+        val statistikk = lagSykefraværsstatistikkPerKategoriImportDto(
             kategori = Kategori.VIRKSOMHET,
             kode = virksomhet.orgnr,
             periode = TestData.gjeldendePeriode,
@@ -109,7 +109,7 @@ class SykefraversstatistikkVirksomhetApiTest {
             antallPersoner = 100,
             tapteDagsverk = 35.0,
         )
-        TestContainerHelper.kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+        TestContainerHelper.kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
             importDtoer = listOf(statistikk),
             topic = KafkaContainerHelper.statistikkVirksomhetTopic,
             groupId = Kafka.statistikkVirksomhetGroupId

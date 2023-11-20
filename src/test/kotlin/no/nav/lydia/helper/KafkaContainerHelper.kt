@@ -199,7 +199,7 @@ class KafkaContainerHelper(
         }
     }
 
-    fun sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+    fun sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
         importDtoer: List<SykefraværsstatistikkPerKategoriImportDto>,
         topic: String,
         groupId: String,

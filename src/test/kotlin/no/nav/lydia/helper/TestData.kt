@@ -159,7 +159,7 @@ class TestData(
             val graderingsProsent = graderingsprosent ?: (1..MAX_GRADERINGSPROSENT).random().toDouble()
             val tapteDagsverkGradert = (tapteDagsverk * graderingsProsent/100).toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
             sykefraværsstatistikkVirksomhetKafkaMeldinger.add(
-                lagSykefraversstatistikkPerKategoriImportDto(
+                lagSykefraværsstatistikkPerKategoriImportDto(
                     kategori = Kategori.VIRKSOMHET,
                     kode = virksomhet.orgnr,
                     periode = periode,
@@ -217,7 +217,7 @@ class TestData(
 
 }
 
-fun lagSykefraversstatistikkPerKategoriImportDto(
+fun lagSykefraværsstatistikkPerKategoriImportDto(
     kategori: Kategori,
     kode: String,
     periode: Periode,

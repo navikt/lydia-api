@@ -30,7 +30,7 @@ import kotlin.system.measureTimeMillis
 const val LANDKODE_NO = "NO"
 
 class SykefraværsstatistikkService(
-    val sykefraversstatistikkRepository: SykefraversstatistikkRepository,
+    val sykefraværsstatistikkRepository: SykefraværsstatistikkRepository,
     val virksomhetsinformasjonRepository: VirksomhetsinformasjonRepository,
     val sistePubliseringService: SistePubliseringService,
     val virksomhetRepository: VirksomhetRepository,
@@ -42,7 +42,7 @@ class SykefraværsstatistikkService(
             log.info("Lagrer ${behandletImportMetadataVirksomhetListe.size} rad(er) med metadata virksomhet")
         }
         val start = System.currentTimeMillis()
-        sykefraversstatistikkRepository.insertMetadataForVirksomhet(
+        sykefraværsstatistikkRepository.insertMetadataForVirksomhet(
             behandletImportMetadataVirksomhetListe
         )
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å lagre ${behandletImportMetadataVirksomhetListe.size} virksomhet metadata")
@@ -58,31 +58,31 @@ class SykefraværsstatistikkService(
     }
 
     private fun lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>) {
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, LAND)
         )
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForSektor(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForSektor(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, SEKTOR)
         )
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, BRANSJE)
         )
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, NÆRING)
         )
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, NÆRINGSKODE)
         )
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, VIRKSOMHET)
         )
     }
 
     fun lagreStatistikkVirksomhetGradering(gradertSykemeldingImportDtoListe: List<GradertSykemeldingImportDto>) {
-        sykefraversstatistikkRepository.insertStatistikkVirksomhetGraderingGjeldendeKvartal(
+        sykefraværsstatistikkRepository.insertStatistikkVirksomhetGraderingGjeldendeKvartal(
             gradertSykemeldingImportDtoList = gradertSykemeldingImportDtoListe
         )
-        sykefraversstatistikkRepository.insertStatistikkVirksomhetGraderingSiste4Kvartal(
+        sykefraværsstatistikkRepository.insertStatistikkVirksomhetGraderingSiste4Kvartal(
             gradertSykemeldingImportDtoList = gradertSykemeldingImportDtoListe
         )
     }
@@ -91,7 +91,7 @@ class SykefraværsstatistikkService(
         val sykefraværsstatistikkForVirksomheter = sykefraværsstatistikkKategoriImportDtoListe
             .filter { it.kategori == VIRKSOMHET }
 
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
             sykefraværsstatistikk = sykefraværsstatistikkForVirksomheter
         )
 
@@ -101,7 +101,7 @@ class SykefraværsstatistikkService(
         if (sykefraværsstatistikkForAndreKategorier.isNotEmpty()) {
             log.info("Lagrer ${sykefraværsstatistikkForAndreKategorier.size} rad(er) med statistikk for andre kategorier i siste 4 kvartal")
         }
-        sykefraversstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
             sykefraværsstatistikk = sykefraværsstatistikkForAndreKategorier
         )
     }
@@ -223,14 +223,14 @@ class SykefraværsstatistikkService(
 
     fun hentNæringsstatistikk(næringskode: String): Either<Feil, NæringSykefraværsstatistikk> {
         val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        val hentNæringSykefraværsstatistikk = sykefraversstatistikkRepository.hentNæringSykefraværsstatistikk(næringskode, gjeldendePeriode)
+        val hentNæringSykefraværsstatistikk = sykefraværsstatistikkRepository.hentNæringSykefraværsstatistikk(næringskode, gjeldendePeriode)
         return hentNæringSykefraværsstatistikk?.right()
                 ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
     fun hentBransjestatistikk(bransje: String): Either<Feil, BransjeSykefraværsstatistikk> {
         val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        val hentBransjeSykefraværsstatistikk = sykefraversstatistikkRepository.hentBransjeSykefraværsstatistikk(bransje, gjeldendePeriode)
+        val hentBransjeSykefraværsstatistikk = sykefraværsstatistikkRepository.hentBransjeSykefraværsstatistikk(bransje, gjeldendePeriode)
         return hentBransjeSykefraværsstatistikk?.right()
                 ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }

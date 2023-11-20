@@ -17,7 +17,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKateg
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal
 import javax.sql.DataSource
 
-class SykefraversstatistikkRepository(val dataSource: DataSource) {
+class SykefraværsstatistikkRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
 
     private fun felterTilSykefraværsprosent(prefix: String) = """

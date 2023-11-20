@@ -197,20 +197,20 @@ class IASakApiTest {
             lastInnNyVirksomhet(TestVirksomhet.nyVirksomhet(TestVirksomhet.beliggenhet(kommune = utsiraKommune)))
         hentSykefravær(success = { listeFørVirksomhetVurderes ->
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
-            listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                sykefraversstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
-                sykefraversstatistikkVirksomhetDto.status shouldBe IKKE_AKTIV
-                sykefraversstatistikkVirksomhetDto.sistEndret shouldBe null
+            listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraværsstatistikkVirksomhetDto ->
+                sykefraværsstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
+                sykefraværsstatistikkVirksomhetDto.status shouldBe IKKE_AKTIV
+                sykefraværsstatistikkVirksomhetDto.sistEndret shouldBe null
             }
         }, kommuner = utsiraKommune.nummer)
         val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
         assertTrue(ULID.isValid(ulid = sak.saksnummer))
         hentSykefravær(success = { listeEtterVirksomhetVurderes ->
             listeEtterVirksomhetVurderes.data shouldHaveAtLeastSize 1
-            listeEtterVirksomhetVurderes.data.shouldForAtLeastOne { sykefraversstatistikkVirksomhetDto ->
-                sykefraversstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
-                sykefraversstatistikkVirksomhetDto.status shouldBe VURDERES
-                sykefraversstatistikkVirksomhetDto.sistEndret shouldBe java.time.LocalDate.now().toKotlinLocalDate()
+            listeEtterVirksomhetVurderes.data.shouldForAtLeastOne { sykefraværsstatistikkVirksomhetDto ->
+                sykefraværsstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
+                sykefraværsstatistikkVirksomhetDto.status shouldBe VURDERES
+                sykefraværsstatistikkVirksomhetDto.sistEndret shouldBe java.time.LocalDate.now().toKotlinLocalDate()
             }
         }, kommuner = utsiraKommune.nummer)
 

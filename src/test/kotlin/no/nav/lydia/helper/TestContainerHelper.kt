@@ -137,9 +137,9 @@ class TestContainerHelper {
 
         init {
             // -- generer testdata for land
-            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+            kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
                     TestData.gjeldendePeriode.lagPerioder(20).map { periode ->
-                        lagSykefraversstatistikkPerKategoriImportDto(
+                        lagSykefraværsstatistikkPerKategoriImportDto(
                                 kategori = Kategori.LAND,
                                 kode = LANDKODE_NO,
                                 periode = periode,
@@ -157,10 +157,10 @@ class TestContainerHelper {
             NæringsDownloader(url = "", næringsRepository = næringsRepository).lastInnNæringerFraFil()
 
             // -- generer statistikk for næringer
-            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+            kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
                     importDtoer = næringsRepository.hentNæringer().flatMap { næring ->
                         TestData.gjeldendePeriode.lagPerioder(ANTALL_NÆRINGS_PERIODER).map { periode ->
-                            lagSykefraversstatistikkPerKategoriImportDto(
+                            lagSykefraværsstatistikkPerKategoriImportDto(
                                     kategori = Kategori.NÆRING,
                                     kode = næring.kode,
                                     periode = periode,
@@ -175,10 +175,10 @@ class TestContainerHelper {
                     groupId = Kafka.statistikkNæringGroupId
             )
             // -- generer statistikk for bransjer
-            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+            kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
                     importDtoer = Bransjer.entries.flatMap { bransje ->
                         TestData.gjeldendePeriode.lagPerioder(ANTALL_BRANSJE_PERIODER).map { periode ->
-                            lagSykefraversstatistikkPerKategoriImportDto(
+                            lagSykefraværsstatistikkPerKategoriImportDto(
                                     kategori = Kategori.BRANSJE,
                                     kode = bransje.name,
                                     periode = periode,
@@ -193,10 +193,10 @@ class TestContainerHelper {
                     groupId = Kafka.statistikkBransjeGroupId
             )
             // -- generer statistikk for sektorer
-            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+            kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
                     importDtoer = Sektor.entries.flatMap { sektor ->
                         TestData.gjeldendePeriode.lagPerioder(ANTALL_SEKTOR_PERIODER).map { periode ->
-                            lagSykefraversstatistikkPerKategoriImportDto(
+                            lagSykefraværsstatistikkPerKategoriImportDto(
                                     kategori = Kategori.SEKTOR,
                                     kode = sektor.kode,
                                     periode = periode,

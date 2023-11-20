@@ -57,7 +57,7 @@ import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.statusoversikt.api.statusoversikt
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringRepository
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
-import no.nav.lydia.sykefraværsstatistikk.SykefraversstatistikkRepository
+import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkRepository
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraværsstatistikk.VirksomhetsinformasjonRepository
 import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
@@ -91,7 +91,7 @@ fun startLydiaBackend() {
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
-            sykefraversstatistikkRepository = SykefraversstatistikkRepository(dataSource = dataSource),
+            sykefraværsstatistikkRepository = SykefraværsstatistikkRepository(dataSource = dataSource),
             virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
             sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
             virksomhetRepository = virksomhetRepository,

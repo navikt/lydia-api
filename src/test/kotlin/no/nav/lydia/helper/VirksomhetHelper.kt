@@ -110,7 +110,7 @@ class VirksomhetHelper {
                 }
             )
 
-            kafkaContainerHelper.sendSykefraversstatistikkPerKategoriIBulkOgVentTilKonsumert(
+            kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 importDtoer = testData.sykefraværsstatistikkVirksomhetMeldinger().toList(),
                 topic = KafkaContainerHelper.statistikkVirksomhetTopic,
                 groupId = Kafka.statistikkVirksomhetGroupId
