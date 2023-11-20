@@ -133,7 +133,6 @@ fun startLydiaBackend() {
 
     jobblytter(
         naisEnv = naisEnv,
-        dataSource = dataSource,
         iaSakEksporterer = IASakEksporterer(
             iaSakRepository = iaSakRepository,
             iaSakProdusent = iaSakProdusent
@@ -154,7 +153,10 @@ fun startLydiaBackend() {
         næringsDownloader = NæringsDownloader(
             url = naisEnv.integrasjoner.ssbNæringsUrl,
             næringsRepository = næringsRepository
-        )
+        ),
+        statistikkViewOppdaterer = StatistikkViewOppdaterer(
+            dataSource = dataSource
+        ),
     )
 
     mapOf(
@@ -180,10 +182,6 @@ fun startLydiaBackend() {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
-
-    StatistikkViewOppdaterer.apply {
-        run(dataSource = dataSource)
-    }
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
@@ -233,22 +231,22 @@ private fun brregAlleVirksomheterConsumer(naisEnv: NaisEnvironment, dataSource: 
 
 private fun jobblytter(
     naisEnv: NaisEnvironment,
-    dataSource: DataSource,
     iaSakEksporterer: IASakEksporterer,
     iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
     iaSakLeveranseEksportør: IASakLeveranseEksportør,
     iaSakStatusExportør: IASakStatusEksportør,
-    næringsDownloader: NæringsDownloader
+    næringsDownloader: NæringsDownloader,
+    statistikkViewOppdaterer: StatistikkViewOppdaterer,
 ) {
     Jobblytter.apply {
         create(
             kafka = naisEnv.kafka,
-            dataSource = dataSource,
             iaSakEksporterer = iaSakEksporterer,
             iaSakStatistikkEksporterer = iaSakStatistikkEksporterer,
             iaSakLeveranseEksportør = iaSakLeveranseEksportør,
             iaSakStatusExportør = iaSakStatusExportør,
             næringsDownloader = næringsDownloader,
+            statistikkViewOppdaterer = statistikkViewOppdaterer
         )
         run()
     }
