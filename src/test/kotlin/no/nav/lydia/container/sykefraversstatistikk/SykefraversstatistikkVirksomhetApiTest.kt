@@ -17,7 +17,7 @@ import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.lagSykefraversstatistikkPerKategoriImportDto
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.domene.BransjeSykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
@@ -33,7 +33,7 @@ class SykefraversstatistikkVirksomhetApiTest {
     fun `skal hente sykefraværsstatistikk for næring`(){
         SykefraversstatistikkApiTest.settSykefraværsprosentNæring(NÆRING_JORDBRUK, 4.5)
 
-        val result = TestContainerHelper.lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
+        val result = TestContainerHelper.lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
                 .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<NæringSykefraværsstatistikk>()
 
@@ -52,7 +52,7 @@ class SykefraversstatistikkVirksomhetApiTest {
     fun `skal hente sykefraværsstatistikk for bransje`(){
         SykefraversstatistikkApiTest.settSykefraværsprosentBransje(TRANSPORT, 9.9, 8.7)
 
-        val url = "$SYKEFRAVERSSTATISTIKK_PATH/bransje/${TRANSPORT.name}"
+        val url = "$SYKEFRAVÆRSSTATISTIKK_PATH/bransje/${TRANSPORT.name}"
         val result = TestContainerHelper.lydiaApiContainer.performGet(url)
                 .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<BransjeSykefraværsstatistikk>()

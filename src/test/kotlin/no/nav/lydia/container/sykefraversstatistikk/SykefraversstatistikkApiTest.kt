@@ -87,7 +87,7 @@ import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
 import no.nav.lydia.sykefraværsstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.SnittFilter
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktDto
@@ -484,7 +484,7 @@ class SykefraversstatistikkApiTest {
 
     @Test
     fun `uautorisert kall mot sykefraværendepunktet skal returnere 401`() {
-        val request = lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
+        val request = lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
         val (_, response, _) = request.responseString()
 
         response.statusCode shouldBe 401
@@ -631,13 +631,13 @@ class SykefraversstatistikkApiTest {
     @Test
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
-            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
+            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
 
 
         val resultatUtenParametre =
-            lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/")
+            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
 

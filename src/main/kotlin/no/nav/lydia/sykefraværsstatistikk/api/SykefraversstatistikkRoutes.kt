@@ -22,7 +22,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.*
 
-const val SYKEFRAVERSSTATISTIKK_PATH = "sykefraversstatistikk"
+const val SYKEFRAVÆRSSTATISTIKK_PATH = "sykefraversstatistikk"
 const val FILTERVERDIER_PATH = "filterverdier"
 const val ANTALL_TREFF = "antallTreff"
 const val SISTE_4_KVARTALER = "siste4kvartaler"
@@ -30,7 +30,7 @@ const val PUBLISERINGSINFO = "publiseringsinfo"
 const val SISTE_TILGJENGELIGE_KVARTAL = "sistetilgjengeligekvartal"
 const val HISTORISK_STATISTIKK = "historiskstatistikk"
 
-fun Route.sykefraversstatistikk(
+fun Route.sykefraværsstatistikk(
     sistePubliseringService: SistePubliseringService,
     geografiService: GeografiService,
     sykefraværsstatistikkService: SykefraværsstatistikkService,
@@ -40,7 +40,7 @@ fun Route.sykefraversstatistikk(
     azureService: AzureService,
 ) {
     val adGrupper = naisEnvironment.security.adGrupper
-    get("$SYKEFRAVERSSTATISTIKK_PATH/") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/") {
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             call.request.søkeparametere(geografiService, navAnsatt = navAnsatt)
         }.also {
@@ -53,7 +53,7 @@ fun Route.sykefraversstatistikk(
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/$ANTALL_TREFF") {
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             call.request.søkeparametere(geografiService, navAnsatt = navAnsatt)
         }.flatMap { søkeparametere ->
@@ -65,7 +65,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-     get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$SISTE_4_KVARTALER") {
+     get("$SYKEFRAVÆRSSTATISTIKK_PATH/{orgnummer}/$SISTE_4_KVARTALER") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
@@ -79,7 +79,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$SISTE_TILGJENGELIGE_KVARTAL") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/{orgnummer}/$SISTE_TILGJENGELIGE_KVARTAL") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
@@ -94,7 +94,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/{orgnummer}/$HISTORISK_STATISTIKK") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/{orgnummer}/$HISTORISK_STATISTIKK") {
         val orgnummer =
                 call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
@@ -109,7 +109,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/naring/{næring}") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/{næring}") {
         val næringskode = call.parameters["næring"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig næring`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentNæringsstatistikk(næringskode)
@@ -120,7 +120,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/bransje/{bransje}") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/bransje/{bransje}") {
         val bransje = call.parameters["bransje"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig bransje`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentBransjestatistikk(bransje)
@@ -131,7 +131,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get ("$SYKEFRAVERSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
+    get ("$SYKEFRAVÆRSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sistePubliseringService.hentPubliseringsinfo()
         }.map { publiseringsinfo ->
@@ -141,7 +141,7 @@ fun Route.sykefraversstatistikk(
         }
     }
 
-    get("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/$FILTERVERDIER_PATH") {
         val filtrerbareEiere = call.superbruker(adGrupper = adGrupper).map {
             hentEiere(azureService)
         }.getOrElse {

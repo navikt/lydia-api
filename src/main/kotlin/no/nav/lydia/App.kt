@@ -60,9 +60,9 @@ import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraversstatistikkRepository
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
 import no.nav.lydia.sykefraværsstatistikk.VirksomhetsinformasjonRepository
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
-import no.nav.lydia.sykefraværsstatistikk.api.sykefraversstatistikk
+import no.nav.lydia.sykefraværsstatistikk.api.sykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
@@ -285,7 +285,7 @@ private fun Application.lydiaRestApi(
         callIdMdc("requestId")
         disableDefaultColors()
         filter { call ->
-            listOf(SYKEFRAVERSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH).any {
+            listOf(SYKEFRAVÆRSSTATISTIKK_PATH, IA_SAK_RADGIVER_PATH, VIRKSOMHET_PATH).any {
                 call.request.path().startsWith(it)
             }
         }
@@ -336,7 +336,7 @@ private fun Application.lydiaRestApi(
         metrics()
 
         authenticate {
-            sykefraversstatistikk(
+            sykefraværsstatistikk(
                 geografiService = GeografiService(),
                 sykefraværsstatistikkService = sykefraværsstatistikkService,
                 næringsRepository = næringsRepository,

@@ -56,7 +56,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 sykefraværsstatistikkService.lagreStatistikkMetadataVirksomhet(
-                                    records.toSykefraversstatistikkMetadataVirksomhetImportDto().tilBehandletImportMetadataVirksomhet()
+                                    records.toSykefraværsstatistikkMetadataVirksomhetImportDto().tilBehandletImportMetadataVirksomhet()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger om i StatistikkMetadataVirksomhetConsumer")
                                 consumer.commitSync()
@@ -83,7 +83,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         logger.info("Stopped kafka consumer job i StatistikkMetadataVirksomhetConsumer")
     }
 
-    private fun ConsumerRecords<String, String>.toSykefraversstatistikkMetadataVirksomhetImportDto():
+    private fun ConsumerRecords<String, String>.toSykefraværsstatistikkMetadataVirksomhetImportDto():
             List<SykefraversstatistikkMetadataVirksomhetImportDto> {
         val gson = GsonBuilder().create()
         return this.map {

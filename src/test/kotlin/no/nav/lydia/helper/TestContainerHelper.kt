@@ -66,7 +66,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.HISTORISK_STATISTIKK
 import no.nav.lydia.sykefraværsstatistikk.api.PUBLISERINGSINFO
 import no.nav.lydia.sykefraværsstatistikk.api.SISTE_4_KVARTALER
 import no.nav.lydia.sykefraværsstatistikk.api.SISTE_TILGJENGELIGE_KVARTAL
-import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVERSSTATISTIKK_PATH
+import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktDto
@@ -706,7 +706,7 @@ class StatistikkHelper {
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
                 lydiaApiContainer.performGet(
-                        SYKEFRAVERSSTATISTIKK_PATH +
+                        SYKEFRAVÆRSSTATISTIKK_PATH +
                                 "?${Søkeparametere.KOMMUNER}=$kommuner" +
                                 "&${Søkeparametere.FYLKER}=$fylker" +
                                 "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
@@ -732,7 +732,7 @@ class StatistikkHelper {
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
                 lydiaApiContainer.performGet(
-                        "$SYKEFRAVERSSTATISTIKK_PATH/$orgnr/$HISTORISK_STATISTIKK"
+                        "$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnr/$HISTORISK_STATISTIKK"
                 )
                         .authentication().bearer(token)
                         .tilSingelRespons<HistoriskStatistikk>()
@@ -742,14 +742,14 @@ class StatistikkHelper {
                 orgnummer: String,
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
-                lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer/$SISTE_4_KVARTALER")
+                lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnummer/$SISTE_4_KVARTALER")
                         .authentication().bearer(token)
                         .tilSingelRespons<VirksomhetsstatistikkSiste4KvartalDto>()
 
         fun hentPubliseringsinfoRespons(
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
-                lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$PUBLISERINGSINFO")
+                lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$PUBLISERINGSINFO")
                         .authentication().bearer(token)
                         .tilSingelRespons<Publiseringsinfo>()
 
@@ -757,7 +757,7 @@ class StatistikkHelper {
                 orgnummer: String,
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
-                lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$orgnummer/$SISTE_TILGJENGELIGE_KVARTAL")
+                lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnummer/$SISTE_TILGJENGELIGE_KVARTAL")
                         .authentication().bearer(token)
                         .tilSingelRespons<VirksomhetsstatistikkSisteKvartal>()
 
@@ -856,7 +856,7 @@ class StatistikkHelper {
                 sektor: List<Sektor> = listOf(),
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ): Int {
-            return lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$ANTALL_TREFF" +
+            return lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$ANTALL_TREFF" +
                     "?${Søkeparametere.KOMMUNER}=$kommuner" +
                     "&${Søkeparametere.FYLKER}=$fylker" +
                     "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
@@ -880,7 +880,7 @@ class StatistikkHelper {
 
 
         fun hentFilterverdier(token: String = oauth2ServerContainer.saksbehandler1.token) =
-                lydiaApiContainer.performGet("$SYKEFRAVERSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
+                lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
                         .authentication().bearer(token)
                         .tilSingelRespons<FilterverdierDto>()
                         .third

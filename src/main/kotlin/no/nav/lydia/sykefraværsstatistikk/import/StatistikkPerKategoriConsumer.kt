@@ -59,7 +59,7 @@ class StatistikkPerKategoriConsumer(
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
-                                    records.toSykefraversstatistikkPerKategoriImportDto()
+                                    records.toSykefraværsstatistikkPerKategoriImportDto()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger i StatistikkPerKategoriConsumer (topic '$topic') ")
                                 consumer.commitSync()
@@ -86,7 +86,7 @@ class StatistikkPerKategoriConsumer(
         logger.info("Stopped kafka consumer job i StatistikkPerKategoriConsumer (topic '$topic')")
     }
 
-    private fun ConsumerRecords<String, String>.toSykefraversstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {
+    private fun ConsumerRecords<String, String>.toSykefraværsstatistikkPerKategoriImportDto(): List<SykefraversstatistikkPerKategoriImportDto> {
         val gson = GsonBuilder().create()
         return this.filter { erMeldingenGyldig(it) }.map {
             gson.fromJson(
