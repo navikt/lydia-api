@@ -11,7 +11,7 @@ import no.nav.lydia.virksomhet.domene.Sektor
 @Serializable
 data class FilterverdierDto(
     val fylker: List<FylkeOgKommuner>,
-    val neringsgrupper: List<Næringsgruppe> = emptyList(),
+    val naringsgrupper: List<Næringsgruppe> = emptyList(),
     val bransjeprogram: List<Bransjer> = emptyList(),
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
     val statuser: List<IAProsessStatus> = IAProsessStatus.filtrerbareStatuser(),
