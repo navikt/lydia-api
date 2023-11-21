@@ -156,8 +156,8 @@ fun Route.sykefraværsstatistikk(
         call.respond(
             FilterverdierDto(
                 fylker = geografiService.hentFylkerOgKommuner(),
-                neringsgrupper = næringsRepository.hentNæringer(),
-                bransjeprogram = Bransjer.values().asList(),
+                naringsgrupper = næringsRepository.hentNæringer(),
+                bransjeprogram = Bransjer.entries,
                 filtrerbareEiere = filtrerbareEiere,
             )
         )

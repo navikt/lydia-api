@@ -89,6 +89,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.FILTERVERDIER_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.SnittFilter
+import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.VIRKSOMHETER_PER_SIDE
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktDto
 import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktResponsDto
@@ -438,10 +439,10 @@ class SykefraværsstatistikkApiTest {
         filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
         filterverdier.fylker[0].fylke.nummer shouldBe "03"
         filterverdier.fylker[0].kommuner.size shouldBe 1
-        filterverdier.neringsgrupper.find { it.kode == Næringsgruppe.UOPPGITT.tilTosifret() }
+        filterverdier.naringsgrupper.find { it.kode == Næringsgruppe.UOPPGITT.tilTosifret() }
             .shouldNotBeNull()
-        filterverdier.neringsgrupper.size shouldBeGreaterThan 1
-        filterverdier.neringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
+        filterverdier.naringsgrupper.size shouldBeGreaterThan 1
+        filterverdier.naringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
         filterverdier.statuser shouldBe IAProsessStatus.filtrerbareStatuser()
         filterverdier.filtrerbareEiere shouldBe listOf(
             EierDTO(
@@ -631,7 +632,7 @@ class SykefraværsstatistikkApiTest {
     @Test
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
-            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/?neringsgrupper=&fylker=&kommuner=")
+            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/?${Søkeparametere.NÆRINGSGRUPPER}=&fylker=&kommuner=")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
 
