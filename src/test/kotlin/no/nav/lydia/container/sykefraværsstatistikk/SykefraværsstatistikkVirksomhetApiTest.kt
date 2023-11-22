@@ -83,7 +83,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 )
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal = TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
-                """select sykefraversprosent from sykefravar_statistikk_virksomhet 
+                """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.kvartal}
                 and arstall=${gjeldendePeriode.årstall}
@@ -94,7 +94,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
         result.arstall shouldBe gjeldendePeriode.årstall
         result.kvartal shouldBe gjeldendePeriode.kvartal
-        result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
+        result.sykefraværsprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
     @Test
@@ -132,13 +132,13 @@ class SykefraværsstatistikkVirksomhetApiTest {
             StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
         resultStatistikkSisteKvartal.arstall shouldBe gjeldendePeriode.årstall
         resultStatistikkSisteKvartal.kvartal shouldBe gjeldendePeriode.kvartal
-        resultStatistikkSisteKvartal.sykefraversprosent shouldBe 5.3
+        resultStatistikkSisteKvartal.sykefraværsprosent shouldBe 5.3
         resultStatistikkSisteKvartal.graderingsprosent shouldBe null
         resultStatistikkSisteKvartal.tapteDagsverkGradert shouldBe null
 
         val resultStatistikkSiste4Kvartal =
             StatistikkHelper.hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = virksomhet.orgnr)
-        resultStatistikkSiste4Kvartal.sykefraversprosent shouldBe 5.3
+        resultStatistikkSiste4Kvartal.sykefraværsprosent shouldBe 5.3
         resultStatistikkSiste4Kvartal.graderingsprosent shouldBe null
         resultStatistikkSiste4Kvartal.tapteDagsverkGradert shouldBe null
     }
@@ -205,7 +205,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 )
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal = TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
-                """select sykefraversprosent from sykefravar_statistikk_virksomhet 
+                """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.forrigePeriode().kvartal}
                 and arstall=${gjeldendePeriode.forrigePeriode().årstall}
@@ -214,6 +214,6 @@ class SykefraværsstatistikkVirksomhetApiTest {
 
         val result =
                 StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
-        result.sykefraversprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
+        result.sykefraværsprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 }

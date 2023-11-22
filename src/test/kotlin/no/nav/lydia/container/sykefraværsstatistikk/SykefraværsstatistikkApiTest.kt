@@ -137,7 +137,7 @@ class SykefraværsstatistikkApiTest {
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
-        results.forAll { it.sykefraversprosent shouldBeLessThanOrEqual BRANSJE_SYKEHJEM_PROSENT }
+        results.forAll { it.sykefraværsprosent shouldBeLessThanOrEqual BRANSJE_SYKEHJEM_PROSENT }
     }
 
     @Test
@@ -165,7 +165,7 @@ class SykefraværsstatistikkApiTest {
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
-        results.forAll { it.sykefraversprosent shouldBeGreaterThan BRANSJE_SYKEHJEM_PROSENT }
+        results.forAll { it.sykefraværsprosent shouldBeGreaterThan BRANSJE_SYKEHJEM_PROSENT }
     }
 
     @Test
@@ -187,7 +187,7 @@ class SykefraværsstatistikkApiTest {
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
-        results.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
+        results.forAll { it.sykefraværsprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
     }
 
     @Test
@@ -220,8 +220,8 @@ class SykefraværsstatistikkApiTest {
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
-        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
-        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraversprosent shouldBeLessThanOrEqual NÆRING_SKOGBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraværsprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraværsprosent shouldBeLessThanOrEqual NÆRING_SKOGBRUK_PROSENT }
         results.map { it.orgnr} shouldNotContain listOf(virksomhetLikSnittJordbruk, virksomhetUnderSnittSkogbruk)
     }
 
@@ -244,7 +244,7 @@ class SykefraværsstatistikkApiTest {
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
-        results.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
+        results.forAll { it.sykefraværsprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
     }
 
     @Test
@@ -277,8 +277,8 @@ class SykefraværsstatistikkApiTest {
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
-        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
-        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraversprosent shouldBeGreaterThan NÆRING_SKOGBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraværsprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraværsprosent shouldBeGreaterThan NÆRING_SKOGBRUK_PROSENT }
         results.map { it.orgnr} shouldNotContain listOf(virksomhetUnderSnittJordbruk, virksomhetUnderSnittSkogbruk)
     }
 
@@ -397,7 +397,7 @@ class SykefraværsstatistikkApiTest {
     fun `skal få sykefraværsstatistikk for siste fire kvartal`() {
         val orgnummer = nyttOrgnummer()
 
-        val sykefraværsprosent = hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraversprosent
+        val sykefraværsprosent = hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraværsprosent
 
         val sykefraværsprosentSiste4Kvartal = postgresContainer.hentEnkelKolonne<Double>(
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
@@ -826,22 +826,22 @@ class SykefraværsstatistikkApiTest {
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { sykefraværsstatistikkVirksomhetDto ->
-                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 3.0
+                sykefraværsstatistikkVirksomhetDto.sykefraværsprosent shouldBeGreaterThanOrEqual 3.0
             }
         }, sykefraværsprosentFra = "3.0")
 
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { sykefraværsstatistikkVirksomhetDto ->
-                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 5.0
+                sykefraværsstatistikkVirksomhetDto.sykefraværsprosent shouldBeLessThanOrEqual 5.0
             }
         }, sykefraværsprosentTil = "5.0")
 
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll { sykefraværsstatistikkVirksomhetDto ->
-                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeGreaterThanOrEqual 2.0
-                sykefraværsstatistikkVirksomhetDto.sykefraversprosent shouldBeLessThanOrEqual 6.0
+                sykefraværsstatistikkVirksomhetDto.sykefraværsprosent shouldBeGreaterThanOrEqual 2.0
+                sykefraværsstatistikkVirksomhetDto.sykefraværsprosent shouldBeLessThanOrEqual 6.0
             }
         }, sykefraværsprosentFra = "2.0", sykefraværsprosentTil = "6.0")
 
