@@ -11,7 +11,7 @@ data class VirksomhetsstatistikkSisteKvartal(
     val tapteDagsverkGradert: Double?,
     val tapteDagsverk: Double,
     val muligeDagsverk: Double,
-    val sykefraversprosent: Double,
+    val sykefraværsprosent: Double,
     val graderingsprosent: Double?,
     val maskert: Boolean,
 )

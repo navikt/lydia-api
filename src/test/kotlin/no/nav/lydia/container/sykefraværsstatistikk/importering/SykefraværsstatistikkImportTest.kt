@@ -262,7 +262,7 @@ class SykefraværsstatistikkImportTest {
 
         val sykefraværSiste4Kvartal = hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
         sykefraværSiste4Kvartal.orgnr shouldBe "999999999"
-        sykefraværSiste4Kvartal.sykefraversprosent shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.prosent
+        sykefraværSiste4Kvartal.sykefraværsprosent shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.prosent
         sykefraværSiste4Kvartal.muligeDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.muligeDagsverk
         sykefraværSiste4Kvartal.tapteDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.tapteDagsverk
         sykefraværSiste4Kvartal.kvartaler shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.kvartaler.toDto()
@@ -272,7 +272,7 @@ class SykefraværsstatistikkImportTest {
         sykefraværSisteKvartal.arstall shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.årstall
         sykefraværSisteKvartal.kvartal shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.kvartal
         sykefraværSisteKvartal.antallPersoner shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.antallPersoner
-        sykefraværSisteKvartal.sykefraversprosent shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.prosent
+        sykefraværSisteKvartal.sykefraværsprosent shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.prosent
         sykefraværSisteKvartal.muligeDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.muligeDagsverk
         sykefraværSisteKvartal.tapteDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.tapteDagsverk
         sykefraværSisteKvartal.maskert shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.erMaskert
@@ -302,7 +302,7 @@ class SykefraværsstatistikkImportTest {
                 hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
 
         andreLagredeStatistikkSiste4Kvartal.orgnr shouldBe førsteLagredeStatistikkSiste4Kvartal.orgnr
-        andreLagredeStatistikkSiste4Kvartal.sykefraversprosent shouldBe førsteLagredeStatistikkSiste4Kvartal.sykefraversprosent
+        andreLagredeStatistikkSiste4Kvartal.sykefraværsprosent shouldBe førsteLagredeStatistikkSiste4Kvartal.sykefraværsprosent
         andreLagredeStatistikkSiste4Kvartal.muligeDagsverk shouldBe førsteLagredeStatistikkSiste4Kvartal.muligeDagsverk
         andreLagredeStatistikkSiste4Kvartal.tapteDagsverk shouldBe førsteLagredeStatistikkSiste4Kvartal.tapteDagsverk
         andreLagredeStatistikkSisteKvartal.antallPersoner shouldBe førsteLagredeStatistikkSisteKvartal.antallPersoner

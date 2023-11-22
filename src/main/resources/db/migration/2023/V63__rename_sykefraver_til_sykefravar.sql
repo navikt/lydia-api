@@ -1,0 +1,1 @@
+alter table sykefravar_statistikk_virksomhet rename column sykefraversprosent to sykefravarsprosent;
