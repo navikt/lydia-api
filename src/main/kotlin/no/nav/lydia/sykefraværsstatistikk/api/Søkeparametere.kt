@@ -54,11 +54,11 @@ data class Søkeparametere(
 
         const val KOMMUNER = "kommuner"
         const val FYLKER = "fylker"
-        const val NÆRINGSGRUPPER = "neringsgrupper"
+        const val NÆRINGSGRUPPER = "naringsgrupper"
         const val SORTERINGSNØKKEL = "sorteringsnokkel"
         const val SORTERINGSRETNING = "sorteringsretning"
-        const val SYKEFRAVÆRSPROSENT_FRA = "sykefraversprosentFra"
-        const val SYKEFRAVÆRSPROSENT_TIL = "sykefraversprosentTil"
+        const val SYKEFRAVÆRSPROSENT_FRA = "sykefravarsprosentFra"
+        const val SYKEFRAVÆRSPROSENT_TIL = "sykefravarsprosentTil"
         const val SNITT_FILTER = "snittfilter"
         const val ANSATTE_FRA = "ansatteFra"
         const val ANSATTE_TIL = "ansatteTil"
@@ -258,7 +258,7 @@ enum class Sorteringsnøkkel(val verdi: String) {
     TAPTE_DAGSVERK("tapte_dagsverk"),
     ANTALL_PERSONER("antall_personer"),
     MULIGE_DAGSVERK("mulige_dagsverk"),
-    SYKEFRAVÆRSPROSENT("sykefraversprosent"),
+    SYKEFRAVÆRSPROSENT("sykefravarsprosent"),
     SIST_ENDRET("sist_endret");
 
     companion object {
