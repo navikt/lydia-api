@@ -61,7 +61,7 @@ class IASakStatistikkProdusent(
         val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
         val virksomhetsstatistikkSiste4Kvartal =
             if (periode == gjeldendePeriode)
-                sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr, periode).getOrNull()
+                sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).getOrNull()
             else
                 null
         val virksomhetsstatistikkSisteKvartal =

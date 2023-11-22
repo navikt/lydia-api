@@ -132,7 +132,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         session.run(query.map { it.int("total") }.asSingle)
     }
 
-    fun hentVirksomhetsstatistikkSiste4Kvartal(orgnr: String, periode: Periode? = null): VirksomhetsstatistikkSiste4Kvartal? {
+    fun hentVirksomhetsstatistikkSiste4Kvartal(orgnr: String, periode: Periode): VirksomhetsstatistikkSiste4Kvartal? {
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
@@ -155,12 +155,9 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                          AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.publisert_arstall
                       )
                     WHERE (sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr = :orgnr)
-                  ${periode?.let {
-                        """
-                            AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = ${it.kvartal}
-                            AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = ${it.årstall}
-                        """.trimIndent()
-                    } ?: ""}
+                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = ${periode.kvartal}
+                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = ${periode.årstall}
+                  
                 """.trimIndent(), paramMap = mapOf(
                     "orgnr" to orgnr
                 )
