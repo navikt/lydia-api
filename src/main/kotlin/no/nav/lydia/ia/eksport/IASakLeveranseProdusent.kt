@@ -11,7 +11,6 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
-import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.Rolle
 
@@ -35,7 +34,6 @@ class IASakLeveranseProdusent(
         val value = IASakLeveranseValue(
             id = this.id,
             saksnummer = this.saksnummer,
-            modul = this.modul,
             iaTjenesteId = this.modul.iaTjeneste.id,
             iaTjenesteNavn = this.modul.iaTjeneste.navn,
             iaModulId = this.modul.id,
@@ -59,7 +57,6 @@ class IASakLeveranseProdusent(
     data class IASakLeveranseValue(
         val id: Int,
         val saksnummer: String,
-        val modul: Modul,
         val iaTjenesteId: Int,
         val iaTjenesteNavn: String,
         val iaModulId: Int,

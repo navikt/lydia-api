@@ -62,7 +62,7 @@ class IASakLeveranseEksportererTest {
                     it.saksnummer shouldBe sak.saksnummer
                     it.opprettetAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
                     it.sistEndretAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
-                    it.modul.navn shouldBe leveranse.modul.navn
+                    it.iaModulNavn shouldBe leveranse.modul.navn
                     it.frist shouldBe leveranse.frist
                     it.status shouldBe leveranse.status
                     it.fullført shouldBe leveranse.fullført
