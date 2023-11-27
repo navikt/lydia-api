@@ -294,7 +294,7 @@ class SykefraværsstatistikkImportTestUtils {
                         sistePubliserteKvartal = SistePubliserteKvartal(
                                 årstall = rs.getInt("arstall"),
                                 kvartal = rs.getInt("kvartal"),
-                                prosent = if (erKategoriTabell) rs.getDouble("prosent") else rs.getDouble("sykefraversprosent"),
+                                prosent = if (erKategoriTabell) rs.getDouble("prosent") else rs.getDouble("sykefravarsprosent"),
                                 tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                                 muligeDagsverk = rs.getDouble("mulige_dagsverk"),
                                 antallPersoner = rs.getInt("antall_personer"),

@@ -3,10 +3,6 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Kafka
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_1
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_2
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_3
-import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_4
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2023_1
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
@@ -59,7 +55,7 @@ class SykefraværsstatistikkImportTest {
                   "kvartal": ${KVARTAL_2023_1.kvartal},
                   "årstall": ${KVARTAL_2023_1.årstall}
                 }""".trimIndent(),
-                eksport_Q4_2022_For_Virksomhet.toJsonValue(),
+                eksport_Forrige_Kvartal_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
                 Kafka.statistikkVirksomhetGroupId
         )
@@ -83,7 +79,7 @@ class SykefraværsstatistikkImportTest {
                         erMaskert = false,
                         antallPersoner = 4
                 ),
-                siste4Kvartal = siste4Kvartal_fra_Q1_2023
+                siste4Kvartal = siste4Kvartal
         )
 
         kafkaContainer.sendOgVentTilKonsumert(
@@ -105,7 +101,7 @@ class SykefraværsstatistikkImportTest {
         statistikk_Q1_2023.prosent shouldBe 0.0
         statistikk_Q1_2023.muligeDagsverk shouldBe 0.0
         statistikk_Q1_2023.tapteDagsverk shouldBe 0.0
-        statistikkSiste4Kvartal shouldBe siste4Kvartal_fra_Q1_2023
+        statistikkSiste4Kvartal shouldBe siste4Kvartal
     }
 
     @Test
@@ -119,9 +115,9 @@ class SykefraværsstatistikkImportTest {
                         muligeDagsverk = 761.3,
                         prosent = 2.3,
                         erMaskert = true, // her stoler vi på at `maskert` er riktig siden vi ikke har antallPersoner for siste4kvartal
-                        kvartaler = siste4Kvartal_fra_Q1_2023.kvartaler
+                        kvartaler = siste4Kvartal.kvartaler
                 ),
-                sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023
+                sistePubliserteKvartal = sistePubliserteKvartal
         )
 
         kafkaContainer.sendOgVentTilKonsumert(
@@ -180,43 +176,47 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `kan importere statistikk for flere kvartal for VIRKSOMHET`() {
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Q4_2022_For_Virksomhet.toJsonKey(),
-                eksport_Q4_2022_For_Virksomhet.toJsonValue(),
+                eksport_Forrige_Kvartal_For_Virksomhet.toJsonKey(),
+                eksport_Forrige_Kvartal_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
                 Kafka.statistikkVirksomhetGroupId
         )
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Q1_2023_For_Virksomhet.toJsonKey(),
-                eksport_Q1_2023_For_Virksomhet.toJsonValue(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
                 Kafka.statistikkVirksomhetGroupId
         )
 
 
-        val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
+        val statistikk_gjeldendePeriode = hentStatistikkGjeldendeKvartal(
                 Kategori.VIRKSOMHET,
                 "999999999",
-                KVARTAL_2023_1
+                gjeldendePeriode.tilKvartal()
         ).sistePubliserteKvartal
-        val statistikk_Q4_2022 = hentStatistikkGjeldendeKvartal(
+        val statistikk_forrigePeriode = hentStatistikkGjeldendeKvartal(
                 Kategori.VIRKSOMHET,
                 "999999999",
-                KVARTAL_2022_4
+                gjeldendePeriode.forrigePeriode().tilKvartal()
         ).sistePubliserteKvartal
-        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
-        eksport_Q1_2023_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_Q1_2023
-        eksport_Q4_2022_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_Q4_2022
-        eksport_Q1_2023_For_Virksomhet siste4KvartalShouldBeEqual statistikkSiste4Kvartal
+        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(
+            Kategori.VIRKSOMHET,
+            "999999999",
+            gjeldendePeriode.tilKvartal()
+        ).siste4Kvartal
+        eksport_Siste_Kvartal_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_gjeldendePeriode
+        eksport_Forrige_Kvartal_For_Virksomhet sistePubliserteKvartalShouldBeEqual statistikk_forrigePeriode
+        eksport_Siste_Kvartal_For_Virksomhet siste4KvartalShouldBeEqual statistikkSiste4Kvartal
     }
 
     @Test
     fun `sykefraværsstatistikk skal oppdateres om det kommer nye versjoner av samme nøkler`() {
-        val oppdatertStatistikkSistePubliserteKvartal = sistePubliserteKvartal_Q1_2023.copy(
+        val oppdatertStatistikkSistePubliserteKvartal = sistePubliserteKvartal.copy(
                 prosent = 10.0,
                 tapteDagsverk = 2000.0,
                 muligeDagsverk = 20000.0,
         )
-        val oppdatertStatistikkSiste4Kvartal = siste4Kvartal_fra_Q1_2023.copy(
+        val oppdatertStatistikkSiste4Kvartal = siste4Kvartal.copy(
                 prosent = 5.0,
                 tapteDagsverk = 5000.0,
                 muligeDagsverk = 100000.0,
@@ -229,8 +229,8 @@ class SykefraværsstatistikkImportTest {
                 siste4Kvartal = oppdatertStatistikkSiste4Kvartal
         )
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Q1_2023_For_Virksomhet.toJsonKey(),
-                eksport_Q1_2023_For_Virksomhet.toJsonValue(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
                 Kafka.statistikkVirksomhetGroupId
         )
@@ -254,35 +254,35 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `importerte data (på VIRKSOMHET) skal kunne hentes ut og være like`() {
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Q1_2023_For_Virksomhet.toJsonKey(),
-                eksport_Q1_2023_For_Virksomhet.toJsonValue(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
                 Kafka.statistikkVirksomhetGroupId
         )
 
         val sykefraværSiste4Kvartal = hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
         sykefraværSiste4Kvartal.orgnr shouldBe "999999999"
-        sykefraværSiste4Kvartal.sykefraversprosent shouldBe eksport_Q1_2023_For_Virksomhet.value.siste4Kvartal.prosent
-        sykefraværSiste4Kvartal.muligeDagsverk shouldBe eksport_Q1_2023_For_Virksomhet.value.siste4Kvartal.muligeDagsverk
-        sykefraværSiste4Kvartal.tapteDagsverk shouldBe eksport_Q1_2023_For_Virksomhet.value.siste4Kvartal.tapteDagsverk
-        sykefraværSiste4Kvartal.kvartaler shouldBe eksport_Q1_2023_For_Virksomhet.value.siste4Kvartal.kvartaler.toDto()
+        sykefraværSiste4Kvartal.sykefraværsprosent shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.prosent
+        sykefraværSiste4Kvartal.muligeDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.muligeDagsverk
+        sykefraværSiste4Kvartal.tapteDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.tapteDagsverk
+        sykefraværSiste4Kvartal.kvartaler shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.kvartaler.toDto()
 
         val sykefraværSisteKvartal =
                 hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
-        sykefraværSisteKvartal.arstall shouldBe eksport_Q1_2023_For_Virksomhet.value.sistePubliserteKvartal.årstall
-        sykefraværSisteKvartal.kvartal shouldBe eksport_Q1_2023_For_Virksomhet.value.sistePubliserteKvartal.kvartal
-        sykefraværSisteKvartal.antallPersoner shouldBe eksport_Q1_2023_For_Virksomhet.value.sistePubliserteKvartal.antallPersoner
-        sykefraværSisteKvartal.sykefraversprosent shouldBe eksport_Q1_2023_For_Virksomhet.value.sistePubliserteKvartal.prosent
-        sykefraværSisteKvartal.muligeDagsverk shouldBe eksport_Q1_2023_For_Virksomhet.value.sistePubliserteKvartal.muligeDagsverk
-        sykefraværSisteKvartal.tapteDagsverk shouldBe eksport_Q1_2023_For_Virksomhet.value.sistePubliserteKvartal.tapteDagsverk
-        sykefraværSisteKvartal.maskert shouldBe eksport_Q1_2023_For_Virksomhet.value.sistePubliserteKvartal.erMaskert
+        sykefraværSisteKvartal.arstall shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.årstall
+        sykefraværSisteKvartal.kvartal shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.kvartal
+        sykefraværSisteKvartal.antallPersoner shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.antallPersoner
+        sykefraværSisteKvartal.sykefraværsprosent shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.prosent
+        sykefraværSisteKvartal.muligeDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.muligeDagsverk
+        sykefraværSisteKvartal.tapteDagsverk shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.tapteDagsverk
+        sykefraværSisteKvartal.maskert shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.erMaskert
     }
 
     @Test
     fun `import av data er idempotent`() {
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Q1_2023_For_Virksomhet.toJsonKey(),
-                eksport_Q1_2023_For_Virksomhet.toJsonValue(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
                 Kafka.statistikkVirksomhetGroupId
         )
@@ -291,8 +291,8 @@ class SykefraværsstatistikkImportTest {
         val førsteLagredeStatistikkSisteKvartal =
                 hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Q1_2023_For_Virksomhet.toJsonKey(),
-                eksport_Q1_2023_For_Virksomhet.toJsonValue(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
                 KafkaContainerHelper.statistikkVirksomhetTopic,
                 Kafka.statistikkVirksomhetGroupId
         )
@@ -302,7 +302,7 @@ class SykefraværsstatistikkImportTest {
                 hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
 
         andreLagredeStatistikkSiste4Kvartal.orgnr shouldBe førsteLagredeStatistikkSiste4Kvartal.orgnr
-        andreLagredeStatistikkSiste4Kvartal.sykefraversprosent shouldBe førsteLagredeStatistikkSiste4Kvartal.sykefraversprosent
+        andreLagredeStatistikkSiste4Kvartal.sykefraværsprosent shouldBe førsteLagredeStatistikkSiste4Kvartal.sykefraværsprosent
         andreLagredeStatistikkSiste4Kvartal.muligeDagsverk shouldBe førsteLagredeStatistikkSiste4Kvartal.muligeDagsverk
         andreLagredeStatistikkSiste4Kvartal.tapteDagsverk shouldBe førsteLagredeStatistikkSiste4Kvartal.tapteDagsverk
         andreLagredeStatistikkSisteKvartal.antallPersoner shouldBe førsteLagredeStatistikkSisteKvartal.antallPersoner
@@ -319,20 +319,20 @@ class SykefraværsstatistikkImportTest {
                         erMaskert = false,
                         antallPersoner = 1789
                 )
-        private val sistePubliserteKvartal_Q1_2023: SistePubliserteKvartal =
+        private val sistePubliserteKvartal: SistePubliserteKvartal =
                 SistePubliserteKvartal(
-                        årstall = KVARTAL_2023_1.årstall,
-                        kvartal = KVARTAL_2023_1.kvartal,
+                        årstall = gjeldendePeriode.årstall,
+                        kvartal = gjeldendePeriode.kvartal,
                         tapteDagsverk = 1740.5,
                         muligeDagsverk = 76139.3,
                         prosent = 2.3,
                         erMaskert = false,
                         antallPersoner = 1789
                 )
-        private val sistePubliserteKvartal_Q4_2022: SistePubliserteKvartal =
+        private val sistePubliserteKvartal_Forrige_Periode: SistePubliserteKvartal =
                 SistePubliserteKvartal(
-                        årstall = KVARTAL_2022_4.årstall,
-                        kvartal = KVARTAL_2022_4.kvartal,
+                        årstall = gjeldendePeriode.forrigePeriode().årstall,
+                        kvartal = gjeldendePeriode.forrigePeriode().kvartal,
                         tapteDagsverk = 1820.1,
                         muligeDagsverk = 75000.0,
                         prosent = 2.4,
@@ -348,36 +348,36 @@ class SykefraværsstatistikkImportTest {
                         erMaskert = false,
                         kvartaler = gjeldendePeriode.lagPerioder(4).map { it.tilKvartal() }
                 )
-        private val siste4Kvartal_fra_Q1_2023: Siste4Kvartal =
+        private val siste4Kvartal: Siste4Kvartal =
                 Siste4Kvartal(
                         tapteDagsverk = 8020.0,
                         muligeDagsverk = 300991.3,
                         prosent = 2.7,
                         erMaskert = false,
-                        kvartaler = listOf(KVARTAL_2023_1, KVARTAL_2022_4, KVARTAL_2022_3, KVARTAL_2022_2)
+                        kvartaler = gjeldendePeriode.lagPerioder(4).map { it.tilKvartal() }
                 )
-        private val siste4Kvartal_fra_Q4_2022: Siste4Kvartal =
+        private val siste4Kvartal_Forrige_Periode: Siste4Kvartal =
                 Siste4Kvartal(
                         tapteDagsverk = 7990.1,
                         muligeDagsverk = 270221.7,
                         prosent = 2.9,
                         erMaskert = false,
-                        kvartaler = listOf(KVARTAL_2022_4, KVARTAL_2022_3, KVARTAL_2022_2, KVARTAL_2022_1)
+                        kvartaler = gjeldendePeriode.forrigePeriode().lagPerioder(4).map { it.tilKvartal() }
                 )
 
-        private val eksport_Q4_2022_For_Virksomhet = JsonMelding(
+        private val eksport_Forrige_Kvartal_For_Virksomhet = JsonMelding(
                 kategori = Kategori.VIRKSOMHET,
                 kode = "999999999",
-                kvartal = KVARTAL_2022_4,
-                sistePubliserteKvartal = sistePubliserteKvartal_Q4_2022,
-                siste4Kvartal = siste4Kvartal_fra_Q4_2022
+                kvartal = gjeldendePeriode.forrigePeriode().tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal_Forrige_Periode,
+                siste4Kvartal = siste4Kvartal_Forrige_Periode
         )
-        private val eksport_Q1_2023_For_Virksomhet = JsonMelding(
+        private val eksport_Siste_Kvartal_For_Virksomhet = JsonMelding(
                 kategori = Kategori.VIRKSOMHET,
                 kode = "999999999",
-                kvartal = KVARTAL_2023_1,
-                sistePubliserteKvartal = sistePubliserteKvartal_Q1_2023,
-                siste4Kvartal = siste4Kvartal_fra_Q1_2023
+                kvartal = gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal,
+                siste4Kvartal = siste4Kvartal
         )
     }
 }

@@ -61,7 +61,7 @@ class IASakStatistikkProdusent(
         val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
         val virksomhetsstatistikkSiste4Kvartal =
             if (periode == gjeldendePeriode)
-                sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr, periode).getOrNull()
+                sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).getOrNull()
             else
                 null
         val virksomhetsstatistikkSisteKvartal =
@@ -105,14 +105,14 @@ class IASakStatistikkProdusent(
                 tapteDagsverk = virksomhetsstatistikkSisteKvartal?.tapteDagsverk,
                 tapteDagsverkGradert = virksomhetsstatistikkSisteKvartal?.tapteDagsverkGradert,
                 muligeDagsverk = virksomhetsstatistikkSisteKvartal?.muligeDagsverk,
-                sykefraversprosent = virksomhetsstatistikkSisteKvartal?.sykefraversprosent,
+                sykefraversprosent = virksomhetsstatistikkSisteKvartal?.sykefraværsprosent,
                 graderingsprosent = virksomhetsstatistikkSisteKvartal?.graderingsprosent,
                 arstall = virksomhetsstatistikkSisteKvartal?.arstall,
                 kvartal = virksomhetsstatistikkSisteKvartal?.kvartal,
                 tapteDagsverkSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.tapteDagsverk,
                 tapteDagsverkGradertSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.tapteDagsverkGradert,
                 muligeDagsverkSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.muligeDagsverk,
-                sykefraversprosentSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.sykefraversprosent,
+                sykefraversprosentSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.sykefraværsprosent,
                 graderingsprosentSiste4Kvartal = virksomhetsstatistikkSiste4Kvartal?.graderingsprosent,
                 kvartaler = virksomhetsstatistikkSiste4Kvartal?.kvartaler ?: emptyList(),
                 sektor = virksomhet?.sektor,

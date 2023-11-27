@@ -11,7 +11,7 @@ data class Virksomhetsoversikt(
     val antallPersoner: Double,
     val tapteDagsverk: Double,
     val muligeDagsverk: Double,
-    val sykefraversprosent: Double,
+    val sykefraværsprosent: Double,
     val maskert: Boolean,
     val status: IAProsessStatus?,
     val eidAv: String?,

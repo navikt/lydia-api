@@ -452,7 +452,7 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
                             antall_personer,
                             tapte_dagsverk,
                             mulige_dagsverk,
-                            sykefraversprosent,
+                            sykefravarsprosent,
                             maskert
                         )
                         VALUES(
@@ -462,14 +462,14 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
                             :antall_personer,
                             :tapte_dagsverk,
                             :mulige_dagsverk,
-                            :sykefraversprosent,
+                            :sykefravarsprosent,
                             :maskert
                         ) 
                         ON CONFLICT ON CONSTRAINT sykefravar_periode DO UPDATE SET
                             antall_personer = :antall_personer,
                             tapte_dagsverk = :tapte_dagsverk,
                             mulige_dagsverk = :mulige_dagsverk,
-                            sykefraversprosent = :sykefraversprosent,
+                            sykefravarsprosent = :sykefravarsprosent,
                             maskert = :maskert,
                             endret = now()
                         """.trimMargin(),
@@ -480,7 +480,7 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
                         "antall_personer" to sykefraværsStatistikk.antallPersoner,
                         "tapte_dagsverk" to sykefraværsStatistikk.tapteDagsverk,
                         "mulige_dagsverk" to sykefraværsStatistikk.muligeDagsverk,
-                        "sykefraversprosent" to sykefraværsStatistikk.prosent,
+                        "sykefravarsprosent" to sykefraværsStatistikk.prosent,
                         "maskert" to sykefraværsStatistikk.maskert
                     )
                 ).asUpdate

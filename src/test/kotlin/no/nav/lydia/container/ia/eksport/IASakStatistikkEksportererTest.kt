@@ -73,7 +73,7 @@ class IASakStatistikkEksportererTest {
                     it.eierAvSak shouldBe oauth2ServerContainer.saksbehandler1.navIdent
                     it.status shouldBe IAProsessStatus.VURDERES
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
-                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
+                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
                     it.bransjeprogram shouldBe Bransjer.ANLEGG
                     it.endretAvRolle shouldBe Rolle.SAKSBEHANDLER
@@ -117,7 +117,7 @@ class IASakStatistikkEksportererTest {
                     it.arstall shouldBe forrigePeriode.årstall
                     it.kvartal shouldBe forrigePeriode.kvartal
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
-                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
+                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe null
                 }
 
@@ -128,7 +128,7 @@ class IASakStatistikkEksportererTest {
                     it.arstall shouldBe gjeldendePeriode.årstall
                     it.kvartal shouldBe gjeldendePeriode.kvartal
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
-                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefraversprosent")
+                    it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
                 }
             }

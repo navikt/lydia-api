@@ -132,7 +132,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         session.run(query.map { it.int("total") }.asSingle)
     }
 
-    fun hentVirksomhetsstatistikkSiste4Kvartal(orgnr: String, periode: Periode? = null): VirksomhetsstatistikkSiste4Kvartal? {
+    fun hentVirksomhetsstatistikkSiste4Kvartal(orgnr: String, periode: Periode): VirksomhetsstatistikkSiste4Kvartal? {
         return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
                 statement = """
@@ -155,12 +155,9 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                          AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal.publisert_arstall
                       )
                     WHERE (sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr = :orgnr)
-                  ${periode?.let {
-                        """
-                            AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = ${it.kvartal}
-                            AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = ${it.årstall}
-                        """.trimIndent()
-                    } ?: ""}
+                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = ${periode.kvartal}
+                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = ${periode.årstall}
+                  
                 """.trimIndent(), paramMap = mapOf(
                     "orgnr" to orgnr
                 )
@@ -181,7 +178,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                           sykefravar_statistikk_virksomhet_gradering.tapte_dagsverk_gradert,
                           sykefravar_statistikk_virksomhet.tapte_dagsverk,
                           sykefravar_statistikk_virksomhet.mulige_dagsverk,
-                          sykefravar_statistikk_virksomhet.sykefraversprosent,
+                          sykefravar_statistikk_virksomhet.sykefravarsprosent,
                           sykefravar_statistikk_virksomhet_gradering.prosent as graderingsprosent,
                           sykefravar_statistikk_virksomhet.maskert
                     FROM sykefravar_statistikk_virksomhet 
@@ -250,7 +247,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         orgnr,
                         arstall,
                         kvartal,
-                        sykefraversprosent,
+                        sykefravarsprosent,
                         maskert
                   FROM sykefravar_statistikk_virksomhet
                   WHERE (orgnr = :orgnr)
@@ -273,7 +270,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
     private fun mapVirksomhetRowToStatistikkdata(row: Row) = Statistikkdata(
             årstall = row.int("arstall"),
             kvartal = row.int("kvartal"),
-            sykefraværsprosent = row.double("sykefraversprosent"),
+            sykefraværsprosent = row.double("sykefravarsprosent"),
             maskert = row.boolean("maskert"),
     )
 
@@ -285,7 +282,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert"),
         tapteDagsverk = row.double("tapte_dagsverk"),
         muligeDagsverk = row.double("mulige_dagsverk"),
-        sykefraversprosent = row.double("sykefraversprosent"),
+        sykefraværsprosent = row.double("sykefravarsprosent"),
         graderingsprosent = row.doubleOrNull("graderingsprosent"),
         maskert = row.boolean("maskert"),
     )
@@ -299,7 +296,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             antallPersoner = row.double("antall_personer"),
             tapteDagsverk = row.doubleOrNull("tapte_dagsverk") ?: 0.0,
             muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
-            sykefraversprosent = row.doubleOrNull("prosent") ?: 0.0,
+            sykefraværsprosent = row.doubleOrNull("prosent") ?: 0.0,
             maskert = row.boolean("maskert"),
             status = row.stringOrNull("status")?.let {
                 IAProsessStatus.valueOf(it)
@@ -316,7 +313,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             tapteDagsverk = row.doubleOrNull("tapte_dagsverk") ?: 0.0,
             tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert"),
             muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
-            sykefraversprosent = row.doubleOrNull("prosent") ?: 0.0,
+            sykefraværsprosent = row.doubleOrNull("prosent") ?: 0.0,
             graderingsprosent = row.doubleOrNull("graderingsprosent"),
             maskert = row.boolean("maskert"),
             opprettet = row.localDateTime("sist_endret"),

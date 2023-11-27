@@ -8,7 +8,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 @Serializable
 data class VirksomhetsstatistikkSiste4KvartalDto(
     val orgnr: String,
-    val sykefraversprosent: Double,
+    val sykefraværsprosent: Double,
     val graderingsprosent: Double?,
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
@@ -21,7 +21,7 @@ data class VirksomhetsstatistikkSiste4KvartalDto(
         fun VirksomhetsstatistikkSiste4Kvartal.toDto() : VirksomhetsstatistikkSiste4KvartalDto =
             VirksomhetsstatistikkSiste4KvartalDto(
                 orgnr = this.orgnr,
-                sykefraversprosent = this.sykefraversprosent,
+                sykefraværsprosent = this.sykefraværsprosent,
                 graderingsprosent = this.graderingsprosent,
                 muligeDagsverk = this.muligeDagsverk,
                 tapteDagsverk = this.tapteDagsverk,
