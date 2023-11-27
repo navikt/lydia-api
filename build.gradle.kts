@@ -108,7 +108,7 @@ dependencies {
             version {
                 require("4.1.100.Final")
             }
-            because("Affected versions < 4.1.100.Final are vulnerable to HTTP/2 Rapid Reset Attack")
+            because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
     }
 }
