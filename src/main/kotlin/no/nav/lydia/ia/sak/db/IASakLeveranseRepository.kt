@@ -124,7 +124,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                         "modul" to iaSakleveranse.modulId,
                         "frist" to iaSakleveranse.frist.toJavaLocalDate(),
                         "opprettetAv" to saksbehandler.navIdent,
-                        "opprettetAvRolle" to saksbehandler.rolle?.name,
+                        "opprettetAvRolle" to saksbehandler.rolle.name,
                     )
                 ).asUpdateAndReturnGeneratedKey
             ) ?: return@using IASakError.`generell feil under uthenting`.left()
@@ -182,7 +182,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 "fullfort" to fullførtDato,
                 "sistEndret" to LocalDateTime.now(),
                 "sistEndretAv" to saksbehandler.navIdent,
-                "sistEndretAvRolle" to saksbehandler.rolle?.name,
+                "sistEndretAvRolle" to saksbehandler.rolle.name,
             )
         ).asUpdate
         session.run(query)

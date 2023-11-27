@@ -135,7 +135,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
 
     private fun hentMetadataVirksomhet(vararg orgnr: String): List<VirksomhetMetadata> {
         var filter = ""
-        if (orgnr.size > 0) {
+        if (orgnr.isNotEmpty()) {
         val orgnrListe = orgnr.joinToString(transform =  { nummer: String -> "'$nummer'" }, separator = ",")
             filter = "where orgnr in ($orgnrListe)"
         }

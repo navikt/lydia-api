@@ -49,7 +49,7 @@ fun BrregVirksomhetDto.tilVirksomhet(
             adresse = beliggenhetsadresse.adresse ?: emptyList()
         )
     }
-    throw UgyldigAdresseException("Beliggenhetsadresse ${beliggenhetsadresse} for orgnr ${organisasjonsnummer} inneholder ugyldige verdier for lagring")
+    throw UgyldigAdresseException("Beliggenhetsadresse $beliggenhetsadresse for orgnr $organisasjonsnummer inneholder ugyldige verdier for lagring")
 }
 
 @Serializable

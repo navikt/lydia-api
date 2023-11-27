@@ -5,9 +5,9 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import org.testcontainers.Testcontainers
 
 class WiremockContainerHelper {
-    val azureMock: WireMockServer
-    val salesforceMock: WireMockServer
-    val naringMock: WireMockServer
+    private val azureMock: WireMockServer
+    private val salesforceMock: WireMockServer
+    private val naringMock: WireMockServer
     init {
         azureMock = lagMockServer("azure")
         salesforceMock = lagMockServer("salesforce")

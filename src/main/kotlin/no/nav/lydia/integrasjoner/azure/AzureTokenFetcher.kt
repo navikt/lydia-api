@@ -6,7 +6,6 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.github.kittinunf.fuel.httpPost
 import com.nimbusds.jose.jwk.RSAKey
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.exceptions.AzureException

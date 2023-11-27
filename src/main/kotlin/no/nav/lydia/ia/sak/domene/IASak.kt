@@ -352,7 +352,7 @@ enum class IAProsessStatus {
 
     companion object {
         fun filtrerbareStatuser() =
-            values().filterNot { it == NY || it == SLETTET }
+            entries.filterNot { it == NY || it == SLETTET }
     }
 }
 

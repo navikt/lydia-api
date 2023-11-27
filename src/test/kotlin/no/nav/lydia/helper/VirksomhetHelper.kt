@@ -63,7 +63,7 @@ class VirksomhetHelper {
                     failure = { fail(it.message) }
                 )
 
-        fun hentSalesforceUrlRespons(orgnummer: String, token: String) =
+        private fun hentSalesforceUrlRespons(orgnummer: String, token: String) =
             TestContainerHelper.lydiaApiContainer.performGet("$SALESFORCE_LENKE_PATH/$orgnummer")
                 .authentication().bearer(token)
                 .tilSingelRespons<SalesforceUrlResponse>()
@@ -141,7 +141,7 @@ class VirksomhetHelper {
 
         fun TestVirksomhet.genererEndretNavn() = this.navn.reversed()
 
-        fun TestVirksomhet.tilOppdateringVirksomhet(endringstype: BrregVirksomhetEndringstype) =
+        private fun TestVirksomhet.tilOppdateringVirksomhet(endringstype: BrregVirksomhetEndringstype) =
             OppdateringVirksomhet(
                 orgnummer = this.orgnr,
                 oppdateringsid = this.orgnr.toLong() + 1L,

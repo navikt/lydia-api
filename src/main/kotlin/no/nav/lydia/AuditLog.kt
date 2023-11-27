@@ -88,7 +88,7 @@ class AuditLog(val miljø: Environment) {
         }
     }
 
-    fun HttpStatusCode.tilTillat() =
+    private fun HttpStatusCode.tilTillat() =
         when (this) {
             HttpStatusCode.Forbidden, HttpStatusCode.Unauthorized -> Tillat.Nei
             else -> Tillat.Ja

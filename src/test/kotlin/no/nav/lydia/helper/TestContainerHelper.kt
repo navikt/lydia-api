@@ -86,10 +86,10 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 
 class TestContainerHelper {
     companion object {
-        const val ANTALL_NÆRINGS_PERIODER = 10
-        const val ANTALL_BRANSJE_PERIODER = 11
-        const val ANTALL_SEKTOR_PERIODER = 9
-        const val ANTALL_TEST_VIRKSOMHETER = 50
+        private const val ANTALL_NÆRINGS_PERIODER = 10
+        private const val ANTALL_BRANSJE_PERIODER = 11
+        private const val ANTALL_SEKTOR_PERIODER = 9
+        private const val ANTALL_TEST_VIRKSOMHETER = 50
 
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -101,7 +101,7 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
-        val wiremockServer = WiremockContainerHelper()
+        private val wiremockServer = WiremockContainerHelper()
 
         val lydiaApiContainer: GenericContainer<*> =
                 GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
@@ -133,7 +133,7 @@ class TestContainerHelper {
                         }
 
         private val dataSource = postgresContainer.nyDataSource()
-        val næringsRepository = NæringsRepository(dataSource = dataSource)
+        private val næringsRepository = NæringsRepository(dataSource = dataSource)
 
         init {
             // -- generer testdata for land
@@ -370,7 +370,7 @@ class SakHelper {
             return request.tilSingelRespons()
         }
 
-        fun nyHendelsePåSakRequest(
+        private fun nyHendelsePåSakRequest(
                 token: String,
                 sak: IASakDto,
                 hendelsestype: IASakshendelseType,
@@ -578,7 +578,7 @@ class StatusoversiktHelper {
                 token = token
         )
 
-        fun hentStatusoversiktRespons(
+        private fun hentStatusoversiktRespons(
                 kommuner: String = "",
                 fylker: String = "",
                 næringsgrupper: String = "",
@@ -721,7 +721,7 @@ class StatistikkHelper {
                                 "&${Søkeparametere.SIDE}=$side" +
                                 "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
                                 "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
-                                "&${Søkeparametere.SEKTOR}=${sektor.map { it.kode }.joinToString(separator = ",")}"
+                                "&${Søkeparametere.SEKTOR}=${sektor.joinToString(separator = ",") { it.kode }}"
                 )
                         .authentication().bearer(token)
                         .tilSingelRespons<VirksomhetsoversiktResponsDto>()
@@ -746,14 +746,14 @@ class StatistikkHelper {
                         .authentication().bearer(token)
                         .tilSingelRespons<VirksomhetsstatistikkSiste4KvartalDto>()
 
-        fun hentPubliseringsinfoRespons(
+        private fun hentPubliseringsinfoRespons(
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
                 lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$PUBLISERINGSINFO")
                         .authentication().bearer(token)
                         .tilSingelRespons<Publiseringsinfo>()
 
-        fun hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(
+        private fun hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(
                 orgnummer: String,
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
@@ -870,7 +870,7 @@ class StatistikkHelper {
                     "&${Søkeparametere.SIDE}=$side" +
                     "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
                     "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
-                    "&${Søkeparametere.SEKTOR}=${sektor.map { it.kode }.joinToString(separator = ",")}"
+                    "&${Søkeparametere.SEKTOR}=${sektor.joinToString(separator = ",") { it.kode }}"
             )
                     .authentication().bearer(token)
                     .tilSingelRespons<Int>()

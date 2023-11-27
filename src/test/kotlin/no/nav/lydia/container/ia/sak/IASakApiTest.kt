@@ -140,7 +140,7 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val hendelserDetIkkeSkalKunneSlettesEtter = IASakshendelseType.values()
+        val hendelserDetIkkeSkalKunneSlettesEtter = IASakshendelseType.entries
                 .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
 
         hendelserDetIkkeSkalKunneSlettesEtter.forEach {
@@ -714,27 +714,27 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK).also { sakEtterTattEierskap ->
                 sakEtterTattEierskap.gyldigeNesteHendelser
-                    .shouldForAtLeastOne {
-                        it.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                        it.gyldigeÅrsaker.shouldForAtLeastOne {
-                            it.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
-                            it.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
-                            it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                    .shouldForAtLeastOne {hendelse ->
+                        hendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
+                        hendelse.gyldigeÅrsaker.shouldForAtLeastOne {årsak ->
+                            årsak.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
+                            årsak.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
+                            årsak.begrunnelser.somBegrunnelseType().shouldContainAll(
                                 IKKE_DIALOG_MELLOM_PARTENE,
                                 FOR_FÅ_TAPTE_DAGSVERK,
                             )
                         }
-                        it.gyldigeÅrsaker.shouldForAtLeastOne {
-                            it.type shouldBe VIRKSOMHETEN_TAKKET_NEI
-                            it.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
-                            it.begrunnelser.somBegrunnelseType().shouldContainAll(
+                        hendelse.gyldigeÅrsaker.shouldForAtLeastOne {årsak ->
+                            årsak.type shouldBe VIRKSOMHETEN_TAKKET_NEI
+                            årsak.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
+                            årsak.begrunnelser.somBegrunnelseType().shouldContainAll(
                                 VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
                                 VIRKSOMHETEN_HAR_IKKE_RESPONDERT,
                             )
                         }
-                    }.shouldForAtLeastOne {
-                        it.saksHendelsestype shouldBe VIRKSOMHET_SKAL_KONTAKTES
-                        it.gyldigeÅrsaker.shouldBeEmpty()
+                    }.shouldForAtLeastOne { hendelse ->
+                        hendelse.saksHendelsestype shouldBe VIRKSOMHET_SKAL_KONTAKTES
+                        hendelse.gyldigeÅrsaker.shouldBeEmpty()
                     }
             }
     }

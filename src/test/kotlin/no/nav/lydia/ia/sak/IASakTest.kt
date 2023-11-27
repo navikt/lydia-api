@@ -30,9 +30,9 @@ import kotlin.test.Test
 
 class IASakTest {
     companion object {
-        const val orgnummer = "123456789"
+        const val ORGNUMMER = "123456789"
 
-        val adGrupper = ADGrupper(
+        private val adGrupper = ADGrupper(
             superbrukerGruppe = "123",
             saksbehandlerGruppe = "456",
             lesebrukerGruppe = "789",
@@ -64,7 +64,7 @@ class IASakTest {
 
     @Test
     fun `skal kunne merke at en virksomhet skal vurderes`() {
-        val sak = nyIASak(orgnummer = orgnummer, superbruker = superbruker1)
+        val sak = nyIASak(orgnummer = ORGNUMMER, superbruker = superbruker1)
 
         val vurderingsHendelse = nyHendelse(
             VIRKSOMHET_VURDERES,
@@ -82,7 +82,7 @@ class IASakTest {
 
     @Test
     fun `skal kunne bygge sak fra en serie med hendelser`() {
-        val h1 = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
+        val h1 = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val h2 = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1.saksnummer,
@@ -104,7 +104,7 @@ class IASakTest {
 
     @Test
     fun `skal få en liste over gyldige begrunnelser for når en virksomhet ikke er aktuell`() {
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
@@ -145,7 +145,7 @@ class IASakTest {
 
     @Test
     fun `en sak skal inneholde alle sine hendelser`(){
-        val h1_ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
+        val h1_ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
             saksnummer = h1_ny_sak.saksnummer,
@@ -166,7 +166,7 @@ class IASakTest {
 
     @Test
     fun `det skal gå an å angre på en sak`(){
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
+        val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -193,7 +193,7 @@ class IASakTest {
     @Test
     fun `det skal gå ann å fullføre en sak`() {
         // TODO Testrydding: Kva tester denne, eigentleg? Kan vi bruke sakIViBistår til å lage sak her, eller blir det feil?
-        val ny_sak = nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker1, navEnhet = navEnhet)
+        val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
         val kontaktes = eierskap.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)

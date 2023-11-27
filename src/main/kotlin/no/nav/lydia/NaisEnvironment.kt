@@ -21,7 +21,7 @@ class NaisEnvironment(
         }
 
         fun hentMiljø(cluster: String) =
-            Environment.entries.find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø ${cluster}")
+            Environment.entries.find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø $cluster")
     }
 
     val miljø = hentMiljø(cluster)
@@ -118,7 +118,7 @@ class Kafka(
         return producerConfigs.toMap()
     }
 
-    fun securityConfigs() =
+    private fun securityConfigs() =
         mapOf(
             CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "SSL",
             SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG to "",

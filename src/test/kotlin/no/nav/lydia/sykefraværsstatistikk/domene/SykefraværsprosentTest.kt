@@ -22,10 +22,10 @@ class SykefraværsprosentTest {
 
     @Test
     fun `null og tomme skal validere og være null`() {
-        listOf("", null).forAll {
-            it.tilSykefraværsProsent().isRight() shouldBe true
-            it.tilSykefraværsProsent().map {
-                it shouldBe null
+        listOf("", null).forAll { inputstring ->
+            inputstring.tilSykefraværsProsent().isRight() shouldBe true
+            inputstring.tilSykefraværsProsent().map {sykefraværsprosent ->
+                sykefraværsprosent shouldBe null
             }
         }
     }

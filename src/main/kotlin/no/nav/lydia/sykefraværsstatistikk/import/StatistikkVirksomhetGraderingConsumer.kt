@@ -19,12 +19,12 @@ import kotlin.coroutines.CoroutineContext
 
 object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var job: Job
-    lateinit var kafka: Kafka
+    private lateinit var job: Job
+    private lateinit var kafka: Kafka
     private lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
     private lateinit var topic: String
-    var groupId = Kafka.statistikkVirksomhetGraderingGroupId
+    private var groupId = Kafka.statistikkVirksomhetGraderingGroupId
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -79,7 +79,7 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
         }
     }
 
-    fun cancel() = runBlocking {
+    private fun cancel() = runBlocking {
         logger.info("Stopping kafka consumer job i StatistikkVirksomhetGraderingConsumer (topic '$topic')")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()
@@ -113,7 +113,7 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
         }
     }
 
-    fun isRunning() = job.isActive
+    private fun isRunning() = job.isActive
 
     override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN
 }

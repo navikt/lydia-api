@@ -858,7 +858,7 @@ class SykefraværsstatistikkApiTest {
             bransjeProgram = "${Bransjer.BYGG}",
             success = {
                 it.data.size shouldBeGreaterThanOrEqual 1
-                it.data.forExactlyOne { it.orgnr shouldBe virksomhet.orgnr }
+                it.data.forExactlyOne { dataVirksomhet -> dataVirksomhet.orgnr shouldBe virksomhet.orgnr }
             }
         )
     }
@@ -1291,6 +1291,6 @@ class SykefraværsstatistikkApiTest {
 
 private fun <T> VirksomhetsoversiktDto.matcher(kolonne: String, test: (kolonne: T) -> Unit) {
     test(
-        postgresContainer.hentEnkelKolonne<T>("select $kolonne from virksomhet where orgnr = '$orgnr'")
+        postgresContainer.hentEnkelKolonne("select $kolonne from virksomhet where orgnr = '$orgnr'")
     )
 }

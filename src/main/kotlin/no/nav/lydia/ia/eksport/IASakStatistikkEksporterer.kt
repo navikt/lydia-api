@@ -22,12 +22,12 @@ class IASakStatistikkEksporterer(
         KJØRER_STATISTIKK_EKSPORT.set(true)
         val alleSaker = iaSakRepository.hentAlleSaker()
         log.info("Starter re-eksport av ${alleSaker.size} saker")
-        try {
 
+        try {
             alleSaker.forEach { nåværendeIaSak ->
                 val hendelser = iaSakshendelseRepository.hentHendelserForSaksnummer(nåværendeIaSak.saksnummer)
 
-                hendelser.mapIndexed { index, hendelse ->
+                List(hendelser.size) { index ->
                     IASak.fraHendelser(hendelser.subList(0, index + 1))
                 }.forEach { historiskIaSak ->
                     iaSakStatistikkProdusent.reEksporter(historiskIaSak)

@@ -25,7 +25,7 @@ class IASakLeveranseProdusent(
         produsent.sendMelding(topic, kafkaMelding.first, kafkaMelding.second)
     }
 
-    fun IASakLeveranse.tilKafkaMelding(
+    private fun IASakLeveranse.tilKafkaMelding(
     ): Pair<String, String> {
         val key = this.id.toString()
         val navEnhet = azureService.hentNavenhetFraNavIdent(sistEndretAv)

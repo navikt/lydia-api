@@ -121,10 +121,6 @@ class SykefraværsstatistikkImportTestUtils {
     companion object {
         val KVARTAL_2023_1 = Kvartal(2023, 1)
         val KVARTAL_2022_4 = Kvartal(2022, 4)
-        val KVARTAL_2022_3 = Kvartal(2022, 3)
-        val KVARTAL_2022_2 = Kvartal(2022, 2)
-        val KVARTAL_2022_1 = Kvartal(2022, 1)
-
 
         fun cleanUpGraderingStatistikkTable(
             verdi: String? = null,
@@ -189,7 +185,7 @@ class SykefraværsstatistikkImportTestUtils {
                   "årstall": ${kvartal.årstall}
                 }""".trimIndent()
 
-        fun List<Kvartal>.toJson(): String =
+        private fun List<Kvartal>.toJson(): String =
                 this.joinToString(
                         transform = { """{"årstall": ${it.årstall},"kvartal": ${it.kvartal}}""" },
                         separator = ","
@@ -205,7 +201,7 @@ class SykefraværsstatistikkImportTestUtils {
         fun JsonValueGradering.toJson(): String = """
                 {
                   "kategori": "$kategori",
-                  "kode": "${kode}",
+                  "kode": "$kode",
                   "sistePubliserteKvartal": {
                     "årstall": ${kvartal.årstall},
                     "kvartal": ${kvartal.kvartal},
@@ -226,7 +222,7 @@ class SykefraværsstatistikkImportTestUtils {
         fun JsonValue.toJson(): String = """
                 {
                   "kategori": "${kategori.name}",
-                  "kode": "${kode}",
+                  "kode": "$kode",
                   "sistePubliserteKvartal": {
                     "årstall": ${kvartal.årstall},
                     "kvartal": ${kvartal.kvartal},
@@ -245,10 +241,10 @@ class SykefraværsstatistikkImportTestUtils {
                   }
                 }""".trimIndent()
 
-        fun Double.toPlainString(): String =
+        private fun Double.toPlainString(): String =
                 this.toBigDecimal().toPlainString()
 
-        infix fun Double?.shouldBeOrEqualZeroIfNull(expected: Double?) =
+        private infix fun Double?.shouldBeOrEqualZeroIfNull(expected: Double?) =
                 when (expected) {
                     null -> this shouldBe 0.0
                     0.0 -> this shouldBe null

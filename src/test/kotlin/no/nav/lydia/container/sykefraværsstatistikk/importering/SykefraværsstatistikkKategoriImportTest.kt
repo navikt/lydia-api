@@ -17,7 +17,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class SykefraværsstatistikkKategoriImportTest {
-    val KATEGORIER = Kategori.entries.filter { it != Kategori.VIRKSOMHET }
+    private val KATEGORIER = Kategori.entries.filter { it != Kategori.VIRKSOMHET }
 
     @BeforeTest
     fun cleanUp() {

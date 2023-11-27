@@ -87,7 +87,7 @@ jobs:
     needs: build
     permissions:
       contents: read # to write sarif
-      security-events: write # push sarif to github security
+      security-events: write # push sarif to GitHub security
       id-token: write # for nais/login
     runs-on: ubuntu-latest
     steps:

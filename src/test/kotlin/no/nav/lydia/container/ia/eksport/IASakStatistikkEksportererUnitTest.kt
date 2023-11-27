@@ -8,8 +8,8 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
 
 class IASakStatistikkEksportererUnitTest {
-    val næringsgruppeIkkeIBransjeprogram = Næringsgruppe("Denne næringen finnes ikke i et bransjeprogram", "99999")
-    val næringsgruppeBygg = BOLIGBYGGELAG
+    private val næringsgruppeIkkeIBransjeprogram = Næringsgruppe("Denne næringen finnes ikke i et bransjeprogram", "99999")
+    private val næringsgruppeBygg = BOLIGBYGGELAG
     @Test
     fun `skal finne riktig bransje fra næringskoder i bygg (2 siffet kode)`() {
         finnBransje(listOf(næringsgruppeBygg)) shouldBe Bransjer.BYGG

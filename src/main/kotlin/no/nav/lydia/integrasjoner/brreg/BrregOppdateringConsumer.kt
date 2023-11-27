@@ -25,10 +25,10 @@ import kotlin.coroutines.CoroutineContext
 
 object BrregOppdateringConsumer : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var job: Job
-    lateinit var kafka: Kafka
+    private lateinit var job: Job
+    private lateinit var kafka: Kafka
 
-    lateinit var repository: VirksomhetRepository
+    private lateinit var repository: VirksomhetRepository
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
 
     override val coroutineContext: CoroutineContext
@@ -110,7 +110,7 @@ object BrregOppdateringConsumer : CoroutineScope {
         }
     }
 
-    fun cancel() = runBlocking {
+    private fun cancel() = runBlocking {
         logger.info("Stopping kafka consumer job for ${kafka.brregOppdateringTopic}")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()

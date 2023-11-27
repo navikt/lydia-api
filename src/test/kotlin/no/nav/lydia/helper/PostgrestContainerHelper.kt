@@ -13,8 +13,8 @@ import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 
 class PostgrestContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(PostgrestContainerHelper::class.java)) {
     private val postgresNetworkAlias = "postgrescontainer"
-    val lydiaDbName = "lydia-api-container-db"
-    var migreringErKjørt = false
+    private val lydiaDbName = "lydia-api-container-db"
+    private var migreringErKjørt = false
     val postgresContainer: PostgreSQLContainer<*> =
         PostgreSQLContainer("postgres:14")
             .withLogConsumer(

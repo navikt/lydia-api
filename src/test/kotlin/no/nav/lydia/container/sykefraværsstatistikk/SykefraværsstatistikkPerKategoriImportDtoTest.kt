@@ -8,7 +8,7 @@ import kotlin.test.Test
 
 class SykefraværsstatistikkPerKategoriImportDtoTest {
 
-    val gjeldendeKvartal = Kvartal(2023, 1)
+    private val gjeldendeKvartal = Kvartal(2023, 1)
 
     @Test
     fun `Mapper statistikk per kategori LAND til behandlet statistikk`() {

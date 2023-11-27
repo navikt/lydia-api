@@ -19,8 +19,8 @@ import kotlin.coroutines.CoroutineContext
 
 object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var job: Job
-    lateinit var kafka: Kafka
+    private lateinit var job: Job
+    private lateinit var kafka: Kafka
     private lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
 
@@ -76,7 +76,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         }
     }
 
-    fun cancel() = runBlocking {
+    private fun cancel() = runBlocking {
         logger.info("Stopping kafka consumer job i StatistikkMetadataVirksomhetConsumer")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()
@@ -94,7 +94,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         }
     }
 
-    fun isRunning() = job.isActive
+    private fun isRunning() = job.isActive
 
     override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN
 }

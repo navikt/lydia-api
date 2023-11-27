@@ -26,16 +26,16 @@ import kotlin.coroutines.CoroutineContext
 
 object Jobblytter : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-    lateinit var job: Job
-    lateinit var kafka: Kafka
+    private lateinit var job: Job
+    private lateinit var kafka: Kafka
 
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
-    lateinit var iaSakEksporterer: IASakEksporterer
-    lateinit var iaSakStatistikkEksporterer: IASakStatistikkEksporterer
-    lateinit var iaSakLeveranseEksportør: IASakLeveranseEksportør
-    lateinit var iaSakStatusExportør: IASakStatusEksportør
-    lateinit var næringsDownloader: NæringsDownloader
-    lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
+    private lateinit var iaSakEksporterer: IASakEksporterer
+    private lateinit var iaSakStatistikkEksporterer: IASakStatistikkEksporterer
+    private lateinit var iaSakLeveranseEksportør: IASakLeveranseEksportør
+    private lateinit var iaSakStatusExportør: IASakStatusEksportør
+    private lateinit var næringsDownloader: NæringsDownloader
+    private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -123,7 +123,7 @@ object Jobblytter : CoroutineScope {
         }
     }
 
-    fun cancel() = runBlocking {
+    private fun cancel() = runBlocking {
         logger.info("Cancelling kafka consumer job for ${kafka.jobblytterTopic}")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()

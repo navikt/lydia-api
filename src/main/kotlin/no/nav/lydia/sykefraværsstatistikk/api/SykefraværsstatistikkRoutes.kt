@@ -45,7 +45,7 @@ fun Route.sykefraværsstatistikk(
             call.request.søkeparametere(geografiService, navAnsatt = navAnsatt)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
-                melding = it.orNull()?.toLogString(), severity = "INFO")
+                melding = it.getOrNull()?.toLogString(), severity = "INFO")
         }.map { søkeparametere ->
             sykefraværsstatistikkService.søkEtterVirksomheter(søkeparametere = søkeparametere)
         }.map { sykefraværsstatistikkVirksomheter ->

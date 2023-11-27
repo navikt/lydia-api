@@ -27,7 +27,7 @@ fun Route.statusoversikt(
             call.request.søkeparametere(geografiService, navAnsatt = saksbehandler)
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
-                melding = it.orNull()?.toLogString(), severity = "INFO")
+                melding = it.getOrNull()?.toLogString(), severity = "INFO")
         }.map { søkeparametere ->
             statusoversiktService.søkEtterStatusoversikt(søkeparametere = søkeparametere)
         }.map { statusoversiktList ->

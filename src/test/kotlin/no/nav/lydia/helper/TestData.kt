@@ -40,7 +40,7 @@ class TestData(
         val BEDRIFTSRÅDGIVNING =
             Næringsgruppe(kode = "70.220", navn = "Bedriftsrådgivning og annen administrativ rådgivning")
 
-        val AKTIV_IATJENESTE = IATjeneste(1, "Redusere sykefravær", false)
+        private val AKTIV_IATJENESTE = IATjeneste(1, "Redusere sykefravær", false)
         val AKTIV_MODUL = Modul(15, AKTIV_IATJENESTE, "Redusere sykefravær", false)
 
         val gjeldendePeriode = Periode(årstall = 2023, kvartal = 2)

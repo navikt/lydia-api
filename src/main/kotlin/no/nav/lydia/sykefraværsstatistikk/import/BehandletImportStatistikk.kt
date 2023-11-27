@@ -24,7 +24,7 @@ sealed class BehandletKvartalsvisSykefraværsstatistikk(
         maskert || antallPersoner < MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER
 
     companion object {
-        val MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER = 5
+        const val MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER = 5
     }
 }
 

@@ -127,11 +127,11 @@ class IASakStatistikkProdusent(
             return key to Json.encodeToString(value)
 
         }
-        fun Virksomhet?.hentNæringsgrupper() = listOf(
-                this?.næringsundergruppe1,
-                this?.næringsundergruppe2,
-                this?.næringsundergruppe3
-        ).filterNotNull()
+        private fun Virksomhet?.hentNæringsgrupper() = listOfNotNull(
+            this?.næringsundergruppe1,
+            this?.næringsundergruppe2,
+            this?.næringsundergruppe3
+        )
     }
 
     @Serializable
