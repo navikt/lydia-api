@@ -52,6 +52,7 @@ import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.leveranseoversikt.LeveranseoversiktRepository
 import no.nav.lydia.leveranseoversikt.LeveranseoversiktService
 import no.nav.lydia.leveranseoversikt.api.leveranseoversikt
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
@@ -368,7 +369,9 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
             )
             leveranseoversikt(
-                leveranseoversiktService = LeveranseoversiktService(),
+                leveranseoversiktService = LeveranseoversiktService(
+                    leveranseoversiktRepository = LeveranseoversiktRepository()
+                ),
                 auditLog = auditLog,
                 naisEnvironment = naisEnv,
             )
