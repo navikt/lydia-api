@@ -24,8 +24,8 @@ fun Route.leveranseoversikt(
 
 
         }.also {
-            auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
-                melding = it.getOrNull()?.toLogString(), severity = "INFO")
+            // auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
+            //    melding = it.getOrNull()?.toLogString(), severity = "INFO")
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 

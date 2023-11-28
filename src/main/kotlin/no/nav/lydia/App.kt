@@ -52,6 +52,8 @@ import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.leveranseoversikt.LeveranseoversiktService
+import no.nav.lydia.leveranseoversikt.api.leveranseoversikt
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.statusoversikt.api.statusoversikt
@@ -364,6 +366,11 @@ private fun Application.lydiaRestApi(
                 salesforceClient = SalesforceClient(salesforce = naisEnv.integrasjoner.salesforce),
                 auditLog = auditLog,
                 adGrupper = naisEnv.security.adGrupper,
+            )
+            leveranseoversikt(
+                leveranseoversiktService = LeveranseoversiktService(),
+                auditLog = auditLog,
+                naisEnvironment = naisEnv,
             )
             statusoversikt(
                 geografiService = GeografiService(),

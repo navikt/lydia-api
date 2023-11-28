@@ -55,6 +55,9 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.leveranseoversikt.LeveranseoversiktDto
+import no.nav.lydia.leveranseoversikt.api.LEVERANSEOVERSIKT_PATH
+import no.nav.lydia.leveranseoversikt.api.MINE_LEVERANSER_PATH
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoversikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
@@ -545,6 +548,18 @@ class SakHelper {
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
+    }
+}
+
+class LeveranseoversiktHelper {
+    companion object {
+        fun hentMineLeveranser(
+           token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) =
+            lydiaApiContainer.performGet("$LEVERANSEOVERSIKT_PATH/$MINE_LEVERANSER_PATH")
+                .authentication().bearer(token)
+                .tilListeRespons<LeveranseoversiktDto>()
+
     }
 }
 
