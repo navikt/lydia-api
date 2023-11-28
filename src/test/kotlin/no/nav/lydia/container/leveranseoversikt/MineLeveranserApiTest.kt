@@ -1,8 +1,6 @@
 package no.nav.lydia.container.leveranseoversikt
 
-import arrow.core.right
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import no.nav.lydia.helper.LeveranseoversiktHelper
@@ -27,7 +25,7 @@ class MineLeveranserApiTest {
         // både fram og tilbake i tid
         val mineLeveranser = LeveranseoversiktHelper.hentMineLeveranser(token = saksbehandlerToken)
 
-        mineLeveranser.second.statusCode shouldBe HttpStatusCode.OK
+        mineLeveranser.second.statusCode shouldBe HttpStatusCode.OK.value
         mineLeveranser.third.get() shouldHaveAtLeastSize 1
 
     }
