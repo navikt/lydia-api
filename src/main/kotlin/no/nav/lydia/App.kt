@@ -370,7 +370,7 @@ private fun Application.lydiaRestApi(
             )
             leveranseoversikt(
                 leveranseoversiktService = LeveranseoversiktService(
-                    leveranseoversiktRepository = LeveranseoversiktRepository()
+                    leveranseoversiktRepository = LeveranseoversiktRepository(dataSource)
                 ),
                 auditLog = auditLog,
                 naisEnvironment = naisEnv,
