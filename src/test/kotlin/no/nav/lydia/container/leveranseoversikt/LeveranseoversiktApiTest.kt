@@ -7,7 +7,7 @@ import no.nav.lydia.helper.LeveranseoversiktHelper
 import no.nav.lydia.helper.TestContainerHelper
 import org.junit.Test
 
-class MineLeveranserApiTest {
+class LeveranseoversiktApiTest {
     private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
 
     @Test
