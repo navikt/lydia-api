@@ -5,8 +5,10 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import no.nav.lydia.AuditLog
+import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.leveranseoversikt.LeveranseoversiktService
+import no.nav.lydia.tilgangskontroll.innloggetNavIdent
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 const val LEVERANSEOVERSIKT_PATH = "leveranseoversikt"
@@ -21,13 +23,17 @@ fun Route.leveranseoversikt(
     get("$LEVERANSEOVERSIKT_PATH/$MINE_LEVERANSER_PATH") {
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             leveranseoversiktService.hentMineLeveranser(saksbehandler = saksbehandler)
-
         }.also {
-            // auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
-            //    melding = it.getOrNull()?.toLogString(), severity = "INFO")
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = null,
+                auditType = AuditType.access,
+                melding = if (it.isRight()) "Henter leveranser som er under arbeid og eies av: ${call.innloggetNavIdent()}" else "",
+                severity = "INFO"
+            )
         }.map { mineLeveranser ->
             call.respond(mineLeveranser).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
-
 }
