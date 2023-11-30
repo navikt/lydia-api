@@ -13,6 +13,11 @@ import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverModul
+import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverIATjeneste
+import no.nav.lydia.helper.LeveranseHelper.Companion.hentIATjenesterFraDatabase
+import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilIATjeneste
+import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilModul
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
@@ -295,7 +300,7 @@ class IASakLeveranseTest {
         deaktiverModul(modul = modul)
         hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer) shouldHaveSize 1
 
-        deaktiverTjeneste(iaTjeneste = tjeneste)
+        deaktiverIATjeneste(iaTjeneste = tjeneste)
         hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer) shouldHaveSize 1
     }
 
@@ -375,41 +380,4 @@ class IASakLeveranseTest {
         """.trimIndent())?.toLocalDateTime()
         etterFullført shouldBe førFullført
     }
-
-    private fun hentIATjenesterFraDatabase() =
-            postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
-
-    private fun leggTilModul(modul: ModulDto) =
-            postgresContainer.performUpdate(
-                    """
-                insert into modul (id, ia_tjeneste, navn, deaktivert) values (
-                    ${modul.id},
-                    ${modul.iaTjeneste},
-                    '${modul.navn}',
-                    ${modul.deaktivert}
-                )
-            """.trimIndent()
-            )
-
-    private fun leggTilIATjeneste(iaTjeneste: IATjenesteDto) =
-            postgresContainer.performUpdate(
-                    """
-                insert into ia_tjeneste (id, navn, deaktivert) values (
-                    ${iaTjeneste.id},
-                    '${iaTjeneste.navn}',
-                    ${iaTjeneste.deaktivert}
-                )
-            """.trimIndent()
-            )
-
-    private fun deaktiverModul(modul: ModulDto) =
-            postgresContainer.performUpdate("""
-            update modul set deaktivert = true where id = ${modul.id}
-        """.trimIndent())
-
-    private fun deaktiverTjeneste(iaTjeneste: IATjenesteDto) =
-            postgresContainer.performUpdate("""
-            update ia_tjeneste set deaktivert = true where id = ${iaTjeneste.id}
-        """.trimIndent())
-
 }

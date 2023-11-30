@@ -1,11 +1,16 @@
 package no.nav.lydia.container.leveranseoversikt
 
 import io.kotest.inspectors.forAll
+import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.ktor.http.*
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverIATjeneste
+import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverModul
+import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilIATjeneste
+import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilModul
 import no.nav.lydia.helper.LeveranseoversiktHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
@@ -18,7 +23,6 @@ import no.nav.lydia.ia.sak.api.IATjenesteDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 class LeveranseoversiktApiTest {
@@ -82,8 +86,26 @@ class LeveranseoversiktApiTest {
 
     @Test
     fun `skal kunne få ut leveranser selv om IA-tjenesten eller modulen er deaktivert`() {
-        // TODO skriv test
+        // Lagar ia-teneste og modul som skal deaktiverast
+        val iaTjeneste = IATjenesteDto(id = 5001, navn = "Test", deaktivert = false)
+        val modul = ModulDto(id = 5001, navn = "Test", iaTjeneste = iaTjeneste.id, deaktivert = false)
+
+        leggTilIATjeneste(iaTjeneste = iaTjeneste)
+        leggTilModul(modul = modul)
+
+        // Lagar sak og opprettar ein leveranse med den nylaga ia-tenesten og modulen
+        val sak = SakHelper.nySakIViBistår(token = saksbehandlerToken)
+        val leveranse = sak.opprettIASakLeveranse(modulId = modul.id, token = saksbehandlerToken)
+
+        // Deaktiverar modul og teneste
+        deaktiverModul(modul = modul)
+        deaktiverIATjeneste(iaTjeneste = iaTjeneste)
+
+        // Hentar ut mine leveranser
+        val mineLeveranser = LeveranseoversiktHelper.hentMineLeveranser(token = saksbehandlerToken).third.get()
+
+        mineLeveranser shouldHaveAtLeastSize 1
+        mineLeveranser.forAtLeastOne { it.modul.deaktivert && it.iaTjeneste.deaktivert }
+        mineLeveranser.forAtLeastOne { it.iaTjeneste.id == iaTjeneste.id && it.modul.id == modul.id}
     }
-
 }
-
