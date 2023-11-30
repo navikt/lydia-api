@@ -380,4 +380,28 @@ class IASakLeveranseTest {
         """.trimIndent())?.toLocalDateTime()
         etterFullført shouldBe førFullført
     }
+
+    @Test
+    fun `skal kunne hente IA-tjenesten 'Utvikle partssamarbeid'`() {
+        hentIATjenester().forExactlyOne {
+            it.navn shouldBe "Utvikle partssamarbeid"
+            it.id shouldBe 4
+        }
+        hentModuler().forExactlyOne {
+            it.navn shouldBe "Utvikle partssamarbeid"
+            it.id shouldBe 18
+            it.iaTjeneste shouldBe 4
+        }
+    }
+
+    @Test
+    fun `skal kunne opprette leveranser av IA-tjenesten 'Utvikle partssamarbeid'`() {
+        val sak = nySakIViBistår()
+        sak.opprettIASakLeveranse(modulId = 18) // Utvikle partssamarbeid
+        hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer).forExactlyOne {
+            it.leveranser.forExactlyOne {
+                it.modul.id shouldBe 18
+            }
+        }
+    }
 }
