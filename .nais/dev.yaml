@@ -7,6 +7,6 @@ dbTier: db-f1-micro
 dbAutoresizeDisk: false
 limitsCpu: 2000m
 limitsMemory: 1Gi
-requestsCpu: 200m
-requestsMemory: 1Gi
+requestsCpu: 100m
+requestsMemory: 256Mi
 salesforceTokenHost: https://test.salesforce.com

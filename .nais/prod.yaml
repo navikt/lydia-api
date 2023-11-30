@@ -5,8 +5,8 @@ fiaLesetilgangGroup: 790acd42-dc41-46ce-b7e7-cee414b4b4bc
 teamPiaGroup: 1019baaf-898f-49db-b7b8-e09f0b5b051f
 dbTier: db-custom-2-3840
 dbAutoresizeDisk: true
-limitsCpu: 4000m
-limitsMemory: 4Gi
-requestsCpu: 500m
-requestsMemory: 4Gi
+limitsCpu: 2000m
+limitsMemory: 2Gi
+requestsCpu: 100m
+requestsMemory: 512Mi
 salesforceTokenHost: https://login.salesforce.com
