@@ -1,16 +1,21 @@
 package no.nav.lydia.leveranseoversikt
 
+import kotlinx.datetime.toKotlinLocalDate
+import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.api.IATjenesteDto
+import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import javax.sql.DataSource
 
 class LeveranseoversiktRepository(val dataSource: DataSource) {
     fun hentLeveranser(saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle): List<LeveranseoversiktDto> {
-        using(sessionOf(dataSource)) { session ->
-            queryOf(
-                """
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
                     select orgnr,
                            virksomhet.navn        as virksomhetsnavn,
                            frist                  as leveransefrist,
@@ -26,18 +31,35 @@ class LeveranseoversiktRepository(val dataSource: DataSource) {
                            join iasak_leveranse using (saksnummer)
                            join modul on iasak_leveranse.modul = modul.id
                            join ia_tjeneste on modul.ia_tjeneste = ia_tjeneste.id
-                    where eid_av = $saksbehandler; 
-                """.trimIndent()
+                    where eid_av = :navident; 
+                """.trimIndent(),
+                    mapOf(
+                        "navident" to saksbehandler.navIdent
+                    )
+                ).map(this::mapRowToLeveranseoversikt).asList
             )
         }
-
-
-
-        return emptyList()
     }
 
 
-
-
+    private fun mapRowToLeveranseoversikt(rad: Row): LeveranseoversiktDto {
+        return LeveranseoversiktDto(
+            orgnr = rad.string("orgnr"),
+            virksomhetsnavn = rad.string("virksomhetsnavn"),
+            iaTjeneste = IATjenesteDto(
+                id = rad.int("iatjeneste_id"),
+                navn = rad.string("iatjenestenavn"),
+                deaktivert = rad.boolean("iatjeneste_deaktivert"),
+            ),
+            modul = ModulDto(
+                id = rad.int("modul_id"),
+                navn = rad.string("modulnavn"),
+                iaTjeneste = rad.int("iatjeneste_id"),
+                deaktivert = rad.boolean("modul_deaktivert"),
+            ),
+            tentativFrist = rad.localDate("leveransefrist").toKotlinLocalDate(),
+            status = rad.string("leveransestatus"),
+        )
+    }
 
 }
