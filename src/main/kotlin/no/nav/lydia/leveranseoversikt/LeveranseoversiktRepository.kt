@@ -7,6 +7,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.IATjenesteDto
 import no.nav.lydia.ia.sak.api.ModulDto
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import javax.sql.DataSource
 
@@ -31,10 +32,12 @@ class LeveranseoversiktRepository(val dataSource: DataSource) {
                            join iasak_leveranse using (saksnummer)
                            join modul on iasak_leveranse.modul = modul.id
                            join ia_tjeneste on modul.ia_tjeneste = ia_tjeneste.id
-                    where eid_av = :navident; 
+                    where eid_av = :navident
+                    and iasak_leveranse.status = :leveransestatus; 
                 """.trimIndent(),
                     mapOf(
-                        "navident" to saksbehandler.navIdent
+                        "navident" to saksbehandler.navIdent,
+                        "leveransestatus" to IASakLeveranseStatus.UNDER_ARBEID.name
                     )
                 ).map(this::mapRowToLeveranseoversikt).asList
             )
