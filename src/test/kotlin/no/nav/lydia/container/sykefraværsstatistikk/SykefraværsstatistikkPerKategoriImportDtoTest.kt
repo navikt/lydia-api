@@ -1,6 +1,7 @@
 package no.nav.lydia.container.sykefraværsstatistikk
 
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.sykefraværsstatistikk.import.*
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
@@ -8,7 +9,7 @@ import kotlin.test.Test
 
 class SykefraværsstatistikkPerKategoriImportDtoTest {
 
-    private val gjeldendeKvartal = Kvartal(2023, 1)
+    private val gjeldendePeriode = TestData.gjeldendePeriode
 
     @Test
     fun `Mapper statistikk per kategori LAND til behandlet statistikk`() {
@@ -17,8 +18,8 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
 
         result.kategori shouldBe Kategori.LAND.name
         result.land shouldBe "NO"
-        result.årstall shouldBe gjeldendeKvartal.årstall
-        result.kvartal shouldBe gjeldendeKvartal.kvartal
+        result.årstall shouldBe gjeldendePeriode.årstall
+        result.kvartal shouldBe gjeldendePeriode.kvartal
         result.prosent shouldBe 2.5
         result.maskert shouldBe false
         result.antallPersoner shouldBe 10
@@ -33,8 +34,8 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
 
         result.kategori shouldBe Kategori.VIRKSOMHET.name
         result.orgnr shouldBe "999999999"
-        result.årstall shouldBe gjeldendeKvartal.årstall
-        result.kvartal shouldBe gjeldendeKvartal.kvartal
+        result.årstall shouldBe gjeldendePeriode.årstall
+        result.kvartal shouldBe gjeldendePeriode.kvartal
         result.prosent shouldBe 2.5
         result.maskert shouldBe false
         result.antallPersoner shouldBe 10
@@ -48,8 +49,8 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
             .tilBehandletVirksomhetSykefraværsstatistikk().first()
 
         result.orgnr shouldBe "999999999"
-        result.årstall shouldBe gjeldendeKvartal.årstall
-        result.kvartal shouldBe gjeldendeKvartal.kvartal
+        result.årstall shouldBe gjeldendePeriode.årstall
+        result.kvartal shouldBe gjeldendePeriode.kvartal
         result.prosent shouldBe 0.0
         result.maskert shouldBe true
         result.antallPersoner shouldBe 4
@@ -63,8 +64,8 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
             kategori = kategori,
             kode = kode,
             sistePubliserteKvartal = SistePubliserteKvartal(
-                årstall = gjeldendeKvartal.årstall,
-                kvartal = gjeldendeKvartal.kvartal,
+                årstall = gjeldendePeriode.årstall,
+                kvartal = gjeldendePeriode.kvartal,
                 prosent = 2.5,
                 tapteDagsverk = 2500.0,
                 muligeDagsverk = 10000.0,
@@ -76,7 +77,7 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
                 tapteDagsverk = 50000.0,
                 muligeDagsverk = 100000.0,
                 erMaskert = false,
-                kvartaler = listOf(gjeldendeKvartal)
+                kvartaler = listOf(gjeldendePeriode.tilKvartal())
             )
         )
 }
