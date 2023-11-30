@@ -89,7 +89,7 @@ class TestContainerHelper {
         private const val ANTALL_NÆRINGS_PERIODER = 10
         private const val ANTALL_BRANSJE_PERIODER = 11
         private const val ANTALL_SEKTOR_PERIODER = 9
-        private const val ANTALL_TEST_VIRKSOMHETER = 50
+        private const val ANTALL_TEST_VIRKSOMHETER = 150
 
         private var log: Logger = LoggerFactory.getLogger(this::class.java)
 

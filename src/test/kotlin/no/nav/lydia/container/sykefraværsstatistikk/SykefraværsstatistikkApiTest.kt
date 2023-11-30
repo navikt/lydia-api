@@ -400,7 +400,8 @@ class SykefraværsstatistikkApiTest {
         val sykefraværsprosent = hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraværsprosent
 
         val sykefraværsprosentSiste4Kvartal = postgresContainer.hentEnkelKolonne<Double>(
-            "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer'"
+            "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer' " +
+                    "order by publisert_arstall desc, publisert_kvartal desc"
         )
         sykefraværsprosent shouldBe sykefraværsprosentSiste4Kvartal
     }
@@ -802,6 +803,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
+
         hentSykefravær(success = { response1 ->
             response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 

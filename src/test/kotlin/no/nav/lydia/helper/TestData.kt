@@ -43,7 +43,8 @@ class TestData(
         private val AKTIV_IATJENESTE = IATjeneste(1, "Redusere sykefravær", false)
         val AKTIV_MODUL = Modul(15, AKTIV_IATJENESTE, "Redusere sykefravær", false)
 
-        val gjeldendePeriode = Periode(årstall = 2023, kvartal = 2)
+        val gjeldendePeriode = Periode(årstall = 2023, kvartal = 3)
+
         fun fraVirksomhet(
             virksomhet: TestVirksomhet,
             sektor: Sektor = Sektor.STATLIG,
