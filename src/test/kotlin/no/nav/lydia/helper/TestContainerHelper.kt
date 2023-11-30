@@ -563,6 +563,46 @@ class LeveranseoversiktHelper {
     }
 }
 
+class LeveranseHelper {
+    companion object {
+        fun hentIATjenesterFraDatabase() =
+            TestContainerHelper.postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
+
+        fun leggTilModul(modul: ModulDto) =
+            TestContainerHelper.postgresContainer.performUpdate(
+                """
+                insert into modul (id, ia_tjeneste, navn, deaktivert) values (
+                    ${modul.id},
+                    ${modul.iaTjeneste},
+                    '${modul.navn}',
+                    ${modul.deaktivert}
+                )
+            """.trimIndent()
+            )
+
+        fun leggTilIATjeneste(iaTjeneste: IATjenesteDto) =
+            TestContainerHelper.postgresContainer.performUpdate(
+                """
+                insert into ia_tjeneste (id, navn, deaktivert) values (
+                    ${iaTjeneste.id},
+                    '${iaTjeneste.navn}',
+                    ${iaTjeneste.deaktivert}
+                )
+            """.trimIndent()
+            )
+
+        fun deaktiverModul(modul: ModulDto) =
+            TestContainerHelper.postgresContainer.performUpdate("""
+            update modul set deaktivert = true where id = ${modul.id}
+        """.trimIndent())
+
+        fun deaktiverIATjeneste(iaTjeneste: IATjenesteDto) =
+            TestContainerHelper.postgresContainer.performUpdate("""
+            update ia_tjeneste set deaktivert = true where id = ${iaTjeneste.id}
+        """.trimIndent())
+    }
+}
+
 class StatusoversiktHelper {
     companion object {
         fun hentStatusoversikt(
