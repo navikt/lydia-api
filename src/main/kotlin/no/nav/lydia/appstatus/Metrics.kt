@@ -22,13 +22,13 @@ class Metrics {
 
         private val virksomheterSattTilBistår = Counter.build()
             .namespace(NAMESPACE)
-            .name("ia_virksomheter_vi_bistår")
+            .name("ia_virksomheter_vi_bistar")
             .help("Antall virksomheter som blir bistått med ia-samarbeid")
             .register(appMicrometerRegistry.prometheusRegistry)
 
         private val virksomheterFulført = Counter.build()
             .namespace(NAMESPACE)
-            .name("ia_virksomheter_fulført")
+            .name("ia_virksomheter_fulfort")
             .help("Antall virksomheter som har fullført ia-samarbeid")
             .register(appMicrometerRegistry.prometheusRegistry)
 
