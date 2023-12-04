@@ -1,4 +1,4 @@
-package no.nav.lydia.leveranseoversikt.api
+package no.nav.lydia.iatjenesteoversikt.api
 
 import arrow.core.right
 import io.ktor.server.application.*
@@ -7,33 +7,33 @@ import io.ktor.server.routing.*
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
-import no.nav.lydia.leveranseoversikt.LeveranseoversiktService
+import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktService
 import no.nav.lydia.tilgangskontroll.innloggetNavIdent
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
-const val LEVERANSEOVERSIKT_PATH = "leveranseoversikt"
-const val MINE_LEVERANSER_PATH = "mine-leveranser"
+const val IATJENESTEOVERSIKT_PATH = "iatjenesteoversikt"
+const val MINE_IATJENESTER_PATH = "mine-iatjenester"
 
-fun Route.leveranseoversikt(
-    leveranseoversiktService: LeveranseoversiktService,
+fun Route.iaTjenesteoversikt(
+    iaTjenesteoversiktService: IATjenesteoversiktService,
     auditLog: AuditLog,
     naisEnvironment: NaisEnvironment,
 ) {
     val adGrupper = naisEnvironment.security.adGrupper
-    get("$LEVERANSEOVERSIKT_PATH/$MINE_LEVERANSER_PATH") {
+    get("$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH") {
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            leveranseoversiktService.hentMineLeveranser(saksbehandler = saksbehandler)
+            iaTjenesteoversiktService.hentMineIATjenester(saksbehandler = saksbehandler)
         }.also {
             auditLog.auditloggEither(
                 call = call,
                 either = it,
                 orgnummer = null,
                 auditType = AuditType.access,
-                melding = if (it.isRight()) "Henter leveranser som er under arbeid og eies av: ${call.innloggetNavIdent()}" else "",
+                melding = if (it.isRight()) "Henter IA-tjenestene som er under arbeid og eies av: ${call.innloggetNavIdent()}" else "",
                 severity = "INFO"
             )
-        }.map { mineLeveranser ->
-            call.respond(mineLeveranser).right()
+        }.map { mineIATjenester ->
+            call.respond(mineIATjenester).right()
         }.mapLeft { feil -> call.respond(status = feil.httpStatusCode, message = feil.feilmelding) }
     }
 }

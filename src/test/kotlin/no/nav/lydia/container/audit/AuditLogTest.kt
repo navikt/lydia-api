@@ -3,7 +3,7 @@ package no.nav.lydia.container.audit
 import com.github.kittinunf.fuel.core.Request
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
-import no.nav.lydia.helper.LeveranseoversiktHelper
+import no.nav.lydia.helper.IATjenesteoversiktHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
@@ -12,8 +12,8 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.leveranseoversikt.api.LEVERANSEOVERSIKT_PATH
-import no.nav.lydia.leveranseoversikt.api.MINE_LEVERANSER_PATH
+import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
+import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.FYLKER
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.KOMMUNER
@@ -275,25 +275,25 @@ class AuditLogTest {
     }
 
     @Test
-    fun `auditlogger henting av leveranseoversikt`() {
+    fun `auditlogger henting av ia-tjenesteoversikt`() {
         val saksbehandler = mockOAuth2Server.saksbehandler1
-        LeveranseoversiktHelper.hentMineLeveranser(saksbehandler.token)
+        IATjenesteoversiktHelper.hentMineIATjenester(saksbehandler.token)
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
-                    path = "/$LEVERANSEOVERSIKT_PATH/$MINE_LEVERANSER_PATH",
+                    path = "/$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH",
                     method = "GET",
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
-                    melding = "Henter leveranser som er under arbeid og eies av: ${saksbehandler.navIdent}"
+                    melding = "Henter IA-tjenestene som er under arbeid og eies av: ${saksbehandler.navIdent}"
                 )
             }
 
         val lesebruker = mockOAuth2Server.lesebruker
-        LeveranseoversiktHelper.hentMineLeveranser(lesebruker.token)
+        IATjenesteoversiktHelper.hentMineIATjenester(lesebruker.token)
             .also {
                 TestContainerHelper.lydiaApiContainer shouldContainLog auditLog(
-                    path = "/$LEVERANSEOVERSIKT_PATH/$MINE_LEVERANSER_PATH",
+                    path = "/$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH",
                     method = "GET",
                     navIdent = lesebruker.navIdent,
                     auditType = AuditType.access,

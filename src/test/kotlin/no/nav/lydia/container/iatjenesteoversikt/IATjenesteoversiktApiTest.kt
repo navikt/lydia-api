@@ -1,4 +1,4 @@
-package no.nav.lydia.container.leveranseoversikt
+package no.nav.lydia.container.iatjenesteoversikt
 
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -11,7 +11,7 @@ import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverIATjeneste
 import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverModul
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilIATjeneste
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilModul
-import no.nav.lydia.helper.LeveranseoversiktHelper
+import no.nav.lydia.helper.IATjenesteoversiktHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
@@ -25,7 +25,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import org.junit.After
 import org.junit.Test
 
-class LeveranseoversiktApiTest {
+class IATjenesteoversiktApiTest {
     private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
     val saksbehandlerToken = mockOAuth2Server.saksbehandler1.token
 
@@ -52,40 +52,39 @@ class LeveranseoversiktApiTest {
     }
 
     @Test
-    fun `skal kunne hente mine leveranser`() {
-
+    fun `skal kunne hente mine IA-tjenester`() {
         // både fram og tilbake i tid
-        val mineLeveranser = LeveranseoversiktHelper.hentMineLeveranser(token = saksbehandlerToken)
+        val mineLeveranser = IATjenesteoversiktHelper.hentMineIATjenester(token = saksbehandlerToken)
 
         mineLeveranser.second.statusCode shouldBe HttpStatusCode.OK.value
         mineLeveranser.third.get() shouldHaveAtLeastSize 3
     }
 
     @Test
-    fun `skal ikke kunne hente leveranser som lesebruker`() {
+    fun `skal ikke kunne hente ia-tjenester som lesebruker`() {
         val lesebrukerToken = mockOAuth2Server.lesebruker.token
-        val mineLeveranser = LeveranseoversiktHelper.hentMineLeveranser(token = lesebrukerToken)
+        val mineLeveranser = IATjenesteoversiktHelper.hentMineIATjenester(token = lesebrukerToken)
 
         mineLeveranser.second.statusCode shouldBe HttpStatusCode.Forbidden.value
     }
 
     @Test
-    fun `skal ikke få ut fullførte leveranser`() {
-        val mineLeveranser = LeveranseoversiktHelper.hentMineLeveranser(token = saksbehandlerToken).third.get()
+    fun `skal ikke få ut fullførte ia-tjenester`() {
+        val mineLeveranser = IATjenesteoversiktHelper.hentMineIATjenester(token = saksbehandlerToken).third.get()
 
         mineLeveranser.forAll { it.status shouldBe IASakLeveranseStatus.UNDER_ARBEID.name }
     }
 
     @Test
-    fun `skal få ei tom liste om du ikke har planlagte leveranser`() {
+    fun `skal få ei tom liste om du ikke har planlagte ia-tjenester`() {
         val saksbehandler2Token = mockOAuth2Server.saksbehandler2.token
-        val mineLeveranser = LeveranseoversiktHelper.hentMineLeveranser(token = saksbehandler2Token).third.get()
+        val mineLeveranser = IATjenesteoversiktHelper.hentMineIATjenester(token = saksbehandler2Token).third.get()
 
         mineLeveranser shouldHaveSize 0
     }
 
     @Test
-    fun `skal kunne få ut leveranser selv om IA-tjenesten eller modulen er deaktivert`() {
+    fun `skal kunne få ut ia-tjenester selv om IA-tjenesten eller modulen er deaktivert`() {
         // Lagar ia-teneste og modul som skal deaktiverast
         val iaTjeneste = IATjenesteDto(id = 5001, navn = "Test", deaktivert = false)
         val modul = ModulDto(id = 5001, navn = "Test", iaTjeneste = iaTjeneste.id, deaktivert = false)
@@ -93,7 +92,7 @@ class LeveranseoversiktApiTest {
         leggTilIATjeneste(iaTjeneste = iaTjeneste)
         leggTilModul(modul = modul)
 
-        // Lagar sak og opprettar ein leveranse med den nylaga ia-tenesten og modulen
+        // Lagar sak og opprettar ein ia-tjeneste med den nylaga ia-tenesten og modulen
         val sak = SakHelper.nySakIViBistår(token = saksbehandlerToken)
         val leveranse = sak.opprettIASakLeveranse(modulId = modul.id, token = saksbehandlerToken)
 
@@ -101,8 +100,8 @@ class LeveranseoversiktApiTest {
         deaktiverModul(modul = modul)
         deaktiverIATjeneste(iaTjeneste = iaTjeneste)
 
-        // Hentar ut mine leveranser
-        val mineLeveranser = LeveranseoversiktHelper.hentMineLeveranser(token = saksbehandlerToken).third.get()
+        // Hentar ut mine ia-tjenester
+        val mineLeveranser = IATjenesteoversiktHelper.hentMineIATjenester(token = saksbehandlerToken).third.get()
 
         mineLeveranser shouldHaveAtLeastSize 1
         mineLeveranser.forAtLeastOne { it.modul.deaktivert && it.iaTjeneste.deaktivert }

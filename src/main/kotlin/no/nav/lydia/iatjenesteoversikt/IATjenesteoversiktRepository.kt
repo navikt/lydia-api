@@ -1,4 +1,4 @@
-package no.nav.lydia.leveranseoversikt
+package no.nav.lydia.iatjenesteoversikt
 
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.Row
@@ -11,8 +11,8 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import javax.sql.DataSource
 
-class LeveranseoversiktRepository(val dataSource: DataSource) {
-    fun hentLeveranser(saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle): List<LeveranseoversiktDto> {
+class IATjenesteoversiktRepository(val dataSource: DataSource) {
+    fun hentIATjenester(saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle): List<IATjenesteoversiktDto> {
         return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -39,14 +39,14 @@ class LeveranseoversiktRepository(val dataSource: DataSource) {
                         "navident" to saksbehandler.navIdent,
                         "leveransestatus" to IASakLeveranseStatus.UNDER_ARBEID.name
                     )
-                ).map(this::mapRowToLeveranseoversikt).asList
+                ).map(this::mapRowToIATjenesteoversikt).asList
             )
         }
     }
 
 
-    private fun mapRowToLeveranseoversikt(rad: Row): LeveranseoversiktDto {
-        return LeveranseoversiktDto(
+    private fun mapRowToIATjenesteoversikt(rad: Row): IATjenesteoversiktDto {
+        return IATjenesteoversiktDto(
             orgnr = rad.string("orgnr"),
             virksomhetsnavn = rad.string("virksomhetsnavn"),
             iaTjeneste = IATjenesteDto(

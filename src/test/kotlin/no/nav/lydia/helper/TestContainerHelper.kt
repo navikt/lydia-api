@@ -55,9 +55,9 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.leveranseoversikt.LeveranseoversiktDto
-import no.nav.lydia.leveranseoversikt.api.LEVERANSEOVERSIKT_PATH
-import no.nav.lydia.leveranseoversikt.api.MINE_LEVERANSER_PATH
+import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
+import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
+import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoversikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
@@ -551,14 +551,14 @@ class SakHelper {
     }
 }
 
-class LeveranseoversiktHelper {
+class IATjenesteoversiktHelper {
     companion object {
-        fun hentMineLeveranser(
+        fun hentMineIATjenester(
            token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
-            lydiaApiContainer.performGet("$LEVERANSEOVERSIKT_PATH/$MINE_LEVERANSER_PATH")
+            lydiaApiContainer.performGet("$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH")
                 .authentication().bearer(token)
-                .tilListeRespons<LeveranseoversiktDto>()
+                .tilListeRespons<IATjenesteoversiktDto>()
 
     }
 }
