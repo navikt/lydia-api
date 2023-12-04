@@ -1,5 +1,6 @@
 package no.nav.lydia.helper
 
+import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.import.*
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -43,7 +44,13 @@ class TestData(
         private val AKTIV_IATJENESTE = IATjeneste(1, "Redusere sykefravær", false)
         val AKTIV_MODUL = Modul(15, AKTIV_IATJENESTE, "Redusere sykefravær", false)
 
-        val gjeldendePeriode = Periode(årstall = 2023, kvartal = 3)
+        val gjeldendePeriode: Periode by lazy {
+            val publiseringsinfo = hentPubliseringsinfo()
+            Periode(
+                årstall = publiseringsinfo.fraTil.til.årstall,
+                kvartal = publiseringsinfo.fraTil.til.kvartal
+            )
+        }
 
         fun fraVirksomhet(
             virksomhet: TestVirksomhet,

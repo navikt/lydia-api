@@ -7,12 +7,6 @@ Hvert kvartal publiserer NAV ny statistikk for sykefravær iht [publiseringkalen
 
 Lydia-api mottar de nye data via Kafka. Etter importen er ferdig må vi legge til et nytt script som oppdaterer tabellen `siste_publiseringsinfo`. 
 
-### Oppdater tester
-I `TestData.kt` oppdater `gjeldendePeriode` med siste publisert kvartal
-```
-  val gjeldendePeriode = Periode(årstall = 2023, kvartal = 2)
-```
-
 ### Oppdater siste_publiseringsinfo
 Kopier denne f.eks `V64__oppdatere_siste_publiseringsinfo_Q3_2023.sql` og lag en ny fil med riktig datoer.
 Push endringen i produksjon etter import er ferdig. 
