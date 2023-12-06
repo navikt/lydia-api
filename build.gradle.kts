@@ -47,9 +47,9 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.12.0")
 
     // Database
-    implementation("org.postgresql:postgresql:42.6.0")
-    implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("org.flywaydb:flyway-core:9.22.2")
+    implementation("org.postgresql:postgresql:42.7.0")
+    implementation("com.zaxxer:HikariCP:5.1.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.1.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -121,6 +121,7 @@ application {
 val lokalDbDump: String by project
 tasks {
     shadowJar {
+        mergeServiceFiles()
         manifest {
             attributes(Pair("Main-Class", "no.nav.lydia.AppKt"))
         }
