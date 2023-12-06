@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.domene.IATjeneste
@@ -139,6 +140,7 @@ fun Route.iaSakRådgiver(
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
                 iaSakService.behandleHendelse(hendelseDto, saksbehandler = saksbehandler, navEnhet = navEnhet).map { it.toDto(saksbehandler) }
+                    .onRight { Metrics.loggHendelse(hendelseDto.hendelsesType) }
             }
         }.also {
             auditLog.auditloggEither(

@@ -120,7 +120,6 @@ class IASakService(
                                 return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                             }
                             .mapLeft { it.tilFeilMedHttpFeilkode() }
-                        .also { Metrics.loggHendelse(hendelseDto.hendelsesType) }
                 }
     }
 
