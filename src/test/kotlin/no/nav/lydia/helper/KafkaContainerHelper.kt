@@ -68,7 +68,7 @@ class KafkaContainerHelper(
     private var kafkaProducer: KafkaProducer<String, String>
 
     val kafkaContainer = KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.4.0")
+        DockerImageName.parse("confluentinc/cp-kafka:7.4.3")
     )
         .withKraft()
         .withNetwork(network)
@@ -164,11 +164,11 @@ class KafkaContainerHelper(
             mapOf(
                 CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers,
                 CommonClientConfigs.SECURITY_PROTOCOL_CONFIG to "PLAINTEXT",
-                ProducerConfig.ACKS_CONFIG to "all",
-                ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to "1",
+                ProducerConfig.ACKS_CONFIG to "1",
+                ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION to "5",
                 ProducerConfig.LINGER_MS_CONFIG to "0",
                 ProducerConfig.RETRIES_CONFIG to "0",
-                ProducerConfig.BATCH_SIZE_CONFIG to "1",
+                ProducerConfig.BATCH_SIZE_CONFIG to "0",
                 SaslConfigs.SASL_MECHANISM to "PLAIN"
             ),
             StringSerializer(),
@@ -320,7 +320,7 @@ class KafkaContainerHelper(
     ) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {
-                delay(timeMillis = 5L)
+                delay(timeMillis = 1L)
             } while (consumerSinOffset(
                     consumerGroup = konsumentGruppeId,
                     topic = recordMetadata.topic()
@@ -333,10 +333,10 @@ class KafkaContainerHelper(
         konsument: KafkaConsumer<String, String>,
         block: (meldinger: List<String>) -> Unit,
     ) {
-        withTimeout(Duration.ofSeconds(10)) {
+        withTimeout(Duration.ofSeconds(5)) {
             launch {
                 while (this.isActive) {
-                    val records = konsument.poll(Duration.ofMillis(100))
+                    val records = konsument.poll(Duration.ofMillis(50))
                     val meldinger = records
                         .filter { it.key() == key }
                         .map { it.value() }
