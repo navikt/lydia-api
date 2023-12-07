@@ -33,7 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.4.12")
+    implementation("ch.qos.logback:logback-classic:1.4.14")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -47,7 +47,7 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.12.0")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.0")
+    implementation("org.postgresql:postgresql:42.7.1")
     implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("org.flywaydb:flyway-database-postgresql:10.1.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
@@ -57,7 +57,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.6.0")
+    implementation("org.apache.kafka:kafka-clients:3.6.1")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -71,18 +71,20 @@ dependencies {
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:0.0.6")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+
+    implementation("com.nimbusds:nimbus-jose-jwt:9.37.2")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.7.2"
+    val kotestVerstion = "5.8.0"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.19.1"
+    val testcontainersVersion = "1.19.3"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
@@ -94,8 +96,7 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.0.0")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.37")
+    testImplementation("no.nav.security:mock-oauth2-server:2.0.1")
 
     constraints {
         implementation("net.minidev:json-smart") {
