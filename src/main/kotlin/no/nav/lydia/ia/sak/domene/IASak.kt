@@ -144,10 +144,13 @@ class IASak private constructor(
         abstract fun behandleHendelse(hendelse: IASakshendelse): Either<TilstandsmaskinFeil, ProsessTilstand>
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
-            val hendelserUtenTilbakeOgTaEierskap =
-                hendelser.filter { it.hendelsesType != TILBAKE && it.hendelsesType != TA_EIERSKAP_I_SAK }
-            val sak = fraHendelser(hendelser.minus(hendelserUtenTilbakeOgTaEierskap.last()))
-            return tilstandFraStatus(sak.status)
+            return when(finnForrigeTilstandBasertPåHendelsesrekke(hendelser.map { it.hendelsesType })) {
+                VIRKSOMHET_VURDERES -> VurderesTilstand()
+                VIRKSOMHET_SKAL_KONTAKTES -> KontaktesTilstand()
+                VIRKSOMHET_KARTLEGGES -> KartleggesTilstand()
+                VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand()
+                else -> throw IllegalStateException("Ugyldig forrige tilstand for hendelsesrekke ${hendelser.map { it.hendelsesType } }}")
+            }
         }
 
         abstract fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse>
@@ -299,6 +302,32 @@ class IASak private constructor(
     companion object {
         fun NavAnsattMedSaksbehandlerRolle.utførHendelsePåSak(sak: IASak, hendelse: IASakshendelse) =
             sak.utførHendelseSomRådgiver(this, hendelse)
+
+        fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
+            val hendelserSomEndrerStatus = hendelser.filter { it != TA_EIERSKAP_I_SAK }
+
+            val hendelsesRekkeMedHåndterteTilbakeHendelser = hendelsesRekkeMedHåndterteEldreTilbakeHendelser(hendelserSomEndrerStatus)
+
+            return hendelsesRekkeMedHåndterteTilbakeHendelser.nestSiste()
+        }
+
+        fun hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste: List<IASakshendelseType>): List<IASakshendelseType> {
+            if (liste.siste() != TILBAKE && liste.nestSiste() != TILBAKE)
+                return liste
+
+            if (liste.nestSiste() == TILBAKE) {
+                val rekursjonUtenSisteElement = hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste.dropLast(1))
+                return hendelsesRekkeMedHåndterteEldreTilbakeHendelser(rekursjonUtenSisteElement.plus(liste.siste()))
+            }
+
+            if (liste.siste() == TILBAKE)
+                return hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste.dropLast(2))
+
+            throw IllegalStateException("Merkelig hendelsesrekke: $liste")
+        }
+
+        fun List<IASakshendelseType>.nestSiste() = this.dropLast(1).last()
+        fun List<IASakshendelseType>.siste() = this.last()
 
         fun fraFørsteHendelse(hendelse: IASakshendelse): IASak =
             IASak(
