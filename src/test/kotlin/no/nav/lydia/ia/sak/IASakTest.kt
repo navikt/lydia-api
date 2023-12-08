@@ -226,6 +226,195 @@ class IASakTest {
         gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
     }
 
+    @Test
+    fun `teste utenTilbake finnforrigetilstand`() {
+        val utenTilbake = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_KARTLEGGES
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(utenTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+    @Test
+    fun `teste utenTilbakeMedIkkeAktuell finnforrigetilstand`() {
+        val utenTilbakeMedIkkeAktuell = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_ER_IKKE_AKTUELL,
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(utenTilbakeMedIkkeAktuell) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+    @Test
+    fun `teste medIrrelevantTilbake finnforrigetilstand`() {
+        val medIrrelevantTilbake = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES,
+            TILBAKE,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_ER_IKKE_AKTUELL,
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(medIrrelevantTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+    @Test
+    fun `teste medEnRelevantTilbake finnforrigetilstand`() {
+        val medEnRelevantTilbake = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_KARTLEGGES,
+            VIRKSOMHET_SKAL_BISTÅS,
+            TILBAKE,
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(medEnRelevantTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+
+    @Test
+    fun `teste medEnRelevantTilbakeNestSist finnforrigetilstand`() {
+        val medEnRelevantTilbakeNestSist = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_KARTLEGGES,
+            TILBAKE,
+            VIRKSOMHET_KARTLEGGES,
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(medEnRelevantTilbakeNestSist) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+
+    @Test
+    fun `teste medToRelevanteTilbake finnforrigetilstand`() {
+        val medToRelevanteTilbake = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_KARTLEGGES,
+            VIRKSOMHET_SKAL_BISTÅS,
+            VIRKSOMHET_ER_IKKE_AKTUELL,
+            TILBAKE,
+            TILBAKE,
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(medToRelevanteTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+
+    @Test
+    fun `teste medTreRelevanteTilbake finnforrigetilstand`() {
+        val medTreRelevanteTilbake = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES, // VI SKAL HIT!
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES,
+            VIRKSOMHET_KARTLEGGES,
+            VIRKSOMHET_SKAL_BISTÅS,
+            VIRKSOMHET_ER_IKKE_AKTUELL,
+            TILBAKE,
+            TILBAKE,
+            TILBAKE
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(medTreRelevanteTilbake) shouldBe VIRKSOMHET_VURDERES
+    }
+
+    @Test
+    fun `teste medFremOgTilbake finnforrigetilstand`() {
+        val medFremOgTilbake = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_KARTLEGGES,
+            TILBAKE,
+            VIRKSOMHET_KARTLEGGES,
+            TILBAKE,
+            VIRKSOMHET_KARTLEGGES,
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(medFremOgTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+
+    @Test
+    fun `teste medFremOgTilbakeMedTilbakeSiste finnforrigetilstand`() {
+        val medFremOgTilbake = listOf(
+            OPPRETT_SAK_FOR_VIRKSOMHET,
+            VIRKSOMHET_VURDERES,
+            TA_EIERSKAP_I_SAK,
+            VIRKSOMHET_SKAL_KONTAKTES, // VI SKAL HIT!
+            VIRKSOMHET_KARTLEGGES,
+            VIRKSOMHET_SKAL_BISTÅS,
+            TILBAKE,
+            VIRKSOMHET_SKAL_BISTÅS,
+            TILBAKE,
+            VIRKSOMHET_SKAL_BISTÅS,
+            TILBAKE,
+        )
+        IASak.finnForrigeTilstandBasertPåHendelsesrekke(medFremOgTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
+    }
+
+
+
+    @Test
+    fun `nye versjoner av tilstandsmaskinen skal ikke gi andre statuser for gammel eventrekke`() {
+        val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
+        val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
+        val medEier = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
+        val kontaktes = medEier.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val tilbake1 = kontaktes.nesteHendelse(TILBAKE)
+        val kontaktesAllikevel = tilbake1.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val kartlegges = kontaktesAllikevel.nesteHendelse(VIRKSOMHET_KARTLEGGES)
+        val tilbake2 = kartlegges.nesteHendelse(TILBAKE)
+        val kartleggesAllikevel = tilbake2.nesteHendelse(VIRKSOMHET_KARTLEGGES)
+        val ikkeAktuellHendelse = kartleggesAllikevel.nesteHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
+        val tilbake3 = ikkeAktuellHendelse.nesteHendelse(TILBAKE)
+        val bistå = tilbake3.nesteHendelse(VIRKSOMHET_SKAL_BISTÅS)
+        val fullfør = bistå.nesteHendelse(FULLFØR_BISTAND)
+        val liste = listOf(
+            ny_sak,
+            vurderes,
+            medEier,
+            kontaktes,
+            tilbake1,
+            kontaktesAllikevel,
+            kartlegges,
+            tilbake2,
+            kartleggesAllikevel,
+            ikkeAktuellHendelse,
+            tilbake3,
+            bistå,
+            fullfør
+        )
+        IASak.fraHendelser(liste).status shouldBe FULLFØRT
+    }
+
+    @Test
+    fun `ytelse test`() {
+        val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
+        val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
+        val medEier = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
+        val kontaktes = medEier.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val kartlegges = kontaktes.nesteHendelse(VIRKSOMHET_KARTLEGGES)
+        val liste = mutableListOf(
+            ny_sak,
+            vurderes,
+            medEier,
+            kontaktes,
+            kartlegges,
+        )
+        var hendelse = kartlegges
+        repeat(300) {
+            val viBistår = hendelse.nesteHendelse(VIRKSOMHET_SKAL_BISTÅS)
+            hendelse = viBistår.nesteHendelse(TILBAKE)
+            liste.add(viBistår)
+            liste.add(hendelse)
+        }
+        IASak.fraHendelser(liste).status shouldBe KARTLEGGES
+    }
+
     private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, navAnsatt: NavAnsatt, navEnhet: NavEnhet = IASakTest.navEnhet) =
         IASakshendelse(
             id = ULID.random(),
