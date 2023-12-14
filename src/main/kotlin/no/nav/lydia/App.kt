@@ -69,6 +69,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.sykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
+import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -130,12 +131,13 @@ fun startLydiaBackend() {
     val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
-    
+
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     jobblytter(
         naisEnv = naisEnv,
+        iaSakStatusOppdaterer = IASakStatusOppdaterer(),
         iaSakEksporterer = IASakEksporterer(
             iaSakRepository = iaSakRepository,
             iaSakProdusent = iaSakProdusent
@@ -234,6 +236,7 @@ private fun brregAlleVirksomheterConsumer(naisEnv: NaisEnvironment, dataSource: 
 
 private fun jobblytter(
     naisEnv: NaisEnvironment,
+    iaSakStatusOppdaterer: IASakStatusOppdaterer,
     iaSakEksporterer: IASakEksporterer,
     iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
     iaSakLeveranseEksportør: IASakLeveranseEksportør,
@@ -244,6 +247,7 @@ private fun jobblytter(
     Jobblytter.apply {
         create(
             kafka = naisEnv.kafka,
+            iaSakStatusOppdaterer = iaSakStatusOppdaterer,
             iaSakEksporterer = iaSakEksporterer,
             iaSakStatistikkEksporterer = iaSakStatistikkEksporterer,
             iaSakLeveranseEksportør = iaSakLeveranseEksportør,

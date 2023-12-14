@@ -10,6 +10,12 @@ class JobblytterTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
 
     @Test
+    fun `skal kunne trigge ryddeIStilleligendeSaker jobb via kafka`() {
+        kafkaContainer.sendJobbMelding(Jobb.ryddeIStilleligendeSaker)
+        lydiaApiContainer shouldContainLog "Jobb ryddeIStilleligendeSaker ferdig".toRegex()
+    }
+
+    @Test
     fun `skal kunne trigge iaSakEksport jobb via kafka`() {
         kafkaContainer.sendJobbMelding(Jobb.iaSakEksport)
         lydiaApiContainer shouldContainLog "Jobb iaSakEksport ferdig".toRegex()

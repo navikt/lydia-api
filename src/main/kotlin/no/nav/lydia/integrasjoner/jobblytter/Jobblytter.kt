@@ -14,6 +14,7 @@ import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -30,6 +31,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var kafka: Kafka
 
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
+    private lateinit var iaSakStatusOppdaterer: IASakStatusOppdaterer
     private lateinit var iaSakEksporterer: IASakEksporterer
     private lateinit var iaSakStatistikkEksporterer: IASakStatistikkEksporterer
     private lateinit var iaSakLeveranseEksportør: IASakLeveranseEksportør
@@ -46,6 +48,7 @@ object Jobblytter : CoroutineScope {
 
     fun create(
         kafka: Kafka,
+        iaSakStatusOppdaterer: IASakStatusOppdaterer,
         iaSakEksporterer: IASakEksporterer,
         iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
         iaSakLeveranseEksportør: IASakLeveranseEksportør,
@@ -62,6 +65,7 @@ object Jobblytter : CoroutineScope {
             StringDeserializer(),
             StringDeserializer()
         )
+        this.iaSakStatusOppdaterer = iaSakStatusOppdaterer
         this.iaSakEksporterer = iaSakEksporterer
         this.iaSakStatusExportør = iaSakStatusExportør
         this.iaSakStatistikkEksporterer = iaSakStatistikkEksporterer
@@ -87,6 +91,9 @@ object Jobblytter : CoroutineScope {
                             else {
                                 logger.info("Starter jobb $jobInfo")
                                 when (jobInfo.jobb) {
+                                    Jobb.ryddeIStilleligendeSaker -> {
+                                        iaSakStatusOppdaterer.ryddeIStilleligendeSaker()
+                                    }
                                     Jobb.iaSakEksport -> {
                                         iaSakEksporterer.eksporter()
                                     }
@@ -139,6 +146,7 @@ data class JobInfo(
 )
 
 enum class Jobb {
+    ryddeIStilleligendeSaker,
     iaSakEksport,
     iaSakStatistikkEksport,
     iaSakStatusExport,
