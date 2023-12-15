@@ -94,6 +94,9 @@ object Jobblytter : CoroutineScope {
                                     Jobb.ryddeIUrørteSaker -> {
                                         iaSakStatusOppdaterer.ryddeIUrørteSaker()
                                     }
+                                    Jobb.ryddeIUrørteSakerTørrKjør -> {
+                                        iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
+                                    }
                                     Jobb.iaSakEksport -> {
                                         iaSakEksporterer.eksporter()
                                     }
@@ -147,6 +150,7 @@ data class JobInfo(
 
 enum class Jobb {
     ryddeIUrørteSaker,
+    ryddeIUrørteSakerTørrKjør,
     iaSakEksport,
     iaSakStatistikkEksport,
     iaSakStatusExport,
