@@ -141,16 +141,18 @@ class IASakService(
                 }
     }
 
-    fun tilbakeførSaker() =
+    fun tilbakeførSaker(tørrKjør: Boolean) =
         iaSakRepository.hentUrørteSakerIVurderesUtenEier().map {
             val tilbakeføringsHendelse = it.nyTilbakeføringsHendelse()
             val sistEndretAvHendelseId = it.endretAvHendelseId
             val endretTidspunkt = it.endretTidspunkt
-            tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
-            val oppdatertSak = tilbakeførSak(it, tilbakeføringsHendelse)
-            årsakService.lagreÅrsak(tilbakeføringsHendelse)
-            oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
-            log.info("Tilbakeførte sak med saksnummer ${it.saksnummer}, sist oppdatert: $endretTidspunkt")
+            if (!tørrKjør) {
+                tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
+                val oppdatertSak = tilbakeførSak(it, tilbakeføringsHendelse)
+                årsakService.lagreÅrsak(tilbakeføringsHendelse)
+                oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
+            }
+            log.info("${if(tørrKjør) "Skulle tilbakeføre" else "Tilbakeførte"} sak med saksnummer ${it.saksnummer}, sist oppdatert: $endretTidspunkt")
         }.size
 
     private fun IASak.nyTilbakeføringsHendelse() =

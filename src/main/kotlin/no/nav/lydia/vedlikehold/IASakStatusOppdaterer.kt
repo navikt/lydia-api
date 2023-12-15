@@ -19,9 +19,9 @@ class IASakStatusOppdaterer(
 
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun ryddeIUrørteSaker() {
+    fun ryddeIUrørteSaker(tørrKjør: Boolean = false) {
         KJØRER_RYDDE_I_URØRTE_SAKER.set(true)
-        val antallSaker = iaSakService.tilbakeførSaker()
+        val antallSaker = iaSakService.tilbakeførSaker(tørrKjør = tørrKjør)
         log.info("Ferdig med å rydde opp i urørte saker. Ryddet opp i $antallSaker saker")
         KJØRER_RYDDE_I_URØRTE_SAKER.set(false)
     }
