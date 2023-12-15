@@ -92,9 +92,6 @@ class IASak private constructor(
 
     private fun erEierAvSak(navAnsatt: NavAnsattMedSaksbehandlerRolle) = eidAv == navAnsatt.navIdent
 
-    private fun tilbakeførSak(hendelse: IASakshendelse) =
-        behandleHendelse(hendelse)
-
     private fun utførHendelseSomRådgiver(navAnsatt: NavAnsattMedSaksbehandlerRolle, hendelse: IASakshendelse) =
         if (kanUtføreHendelse(hendelse = hendelse, navAnsatt = navAnsatt))
             behandleHendelse(hendelse = hendelse).right()
@@ -315,7 +312,11 @@ class IASak private constructor(
             sak.utførHendelseSomRådgiver(this, hendelse)
 
         fun tilbakeførSak(iaSak: IASak, hendelse: IASakshendelse) =
-            iaSak.tilbakeførSak(hendelse)
+            when(hendelse) {
+                is VirksomhetIkkeAktuellHendelse -> iaSak.behandleHendelse(hendelse)
+                else -> throw IllegalStateException("Kan ikke tilbakeføre sak med hendelsestype ${hendelse.hendelsesType.name}")
+            }
+
 
         fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
             val hendelserSomEndrerStatus = hendelser.filter { it != TA_EIERSKAP_I_SAK }
