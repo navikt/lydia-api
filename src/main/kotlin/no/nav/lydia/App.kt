@@ -130,6 +130,15 @@ fun startLydiaBackend() {
     )
     val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
 
+    val iaSakService = IASakService(
+        iaSakRepository = iaSakRepository,
+        iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
+        iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
+        årsakService = ÅrsakService(årsakRepository = årsakRepository)
+    ).apply {
+        leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
+        leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
+    }
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
@@ -137,7 +146,7 @@ fun startLydiaBackend() {
 
     jobblytter(
         naisEnv = naisEnv,
-        iaSakStatusOppdaterer = IASakStatusOppdaterer(),
+        iaSakStatusOppdaterer = IASakStatusOppdaterer(iaSakService = iaSakService),
         iaSakEksporterer = IASakEksporterer(
             iaSakRepository = iaSakRepository,
             iaSakProdusent = iaSakProdusent
@@ -190,21 +199,15 @@ fun startLydiaBackend() {
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
-            naisEnv,
-            iaSakRepository,
-            iaSakProdusent,
-            dataSource,
-            iaSakStatistikkProdusent,
-            iaSakLeveranseProdusent,
-            iaSakStatusProdusent,
-            næringsRepository,
-            sykefraværsstatistikkService,
-            auditLog,
-            azureService,
-            sistePubliseringService,
-            årsakRepository,
-            iaSakLeveranseObserver,
-            virksomhetRepository
+            naisEnv = naisEnv,
+            dataSource = dataSource,
+            næringsRepository = næringsRepository,
+            sykefraværsstatistikkService = sykefraværsstatistikkService,
+            auditLog = auditLog,
+            azureService = azureService,
+            sistePubliseringService = sistePubliseringService,
+            virksomhetRepository = virksomhetRepository,
+            iaSakService = iaSakService,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -261,20 +264,14 @@ private fun jobblytter(
 
 private fun Application.lydiaRestApi(
     naisEnv: NaisEnvironment,
-    iaSakRepository: IASakRepository,
-    iaSakProdusent: IASakProdusent,
     dataSource: DataSource,
-    iaSakStatistikkProdusent: IASakStatistikkProdusent,
-    iaSakLeveranseProdusent: IASakLeveranseProdusent,
-    iaSakStatusProdusent: IASakStatusProdusent,
     næringsRepository: NæringsRepository,
     sykefraværsstatistikkService: SykefraværsstatistikkService,
     auditLog: AuditLog,
     azureService: AzureService,
     sistePubliseringService: SistePubliseringService,
-    årsakRepository: ÅrsakRepository,
-    iaSakLeveranseObserver: IASakLeveranseObserver,
-    virksomhetRepository: VirksomhetRepository
+    virksomhetRepository: VirksomhetRepository,
+    iaSakService: IASakService
 ) {
     install(ContentNegotiation) {
         json()
@@ -353,15 +350,7 @@ private fun Application.lydiaRestApi(
                 sistePubliseringService = sistePubliseringService,
             )
             iaSakRådgiver(
-                iaSakService = IASakService(
-                    iaSakRepository = iaSakRepository,
-                    iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
-                    iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
-                    årsakService = ÅrsakService(årsakRepository = årsakRepository)
-                ).apply {
-                    leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
-                    leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
-                },
+                iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,

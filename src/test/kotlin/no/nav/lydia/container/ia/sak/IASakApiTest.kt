@@ -716,18 +716,18 @@ class IASakApiTest {
                 sakEtterTattEierskap.gyldigeNesteHendelser
                     .shouldForAtLeastOne {hendelse ->
                         hendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
-                        hendelse.gyldigeÅrsaker.shouldForAtLeastOne {årsak ->
+                        hendelse.gyldigeÅrsaker.shouldForAtLeastOne { årsak ->
                             årsak.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
                             årsak.navn shouldBe NAV_IGANGSETTER_IKKE_TILTAK.navn
-                            årsak.begrunnelser.somBegrunnelseType().shouldContainAll(
+                            årsak.begrunnelser.somBegrunnelseType().shouldContainExactly(
                                 IKKE_DIALOG_MELLOM_PARTENE,
                                 FOR_FÅ_TAPTE_DAGSVERK,
                             )
                         }
-                        hendelse.gyldigeÅrsaker.shouldForAtLeastOne {årsak ->
+                        hendelse.gyldigeÅrsaker.shouldForAtLeastOne { årsak ->
                             årsak.type shouldBe VIRKSOMHETEN_TAKKET_NEI
                             årsak.navn shouldBe VIRKSOMHETEN_TAKKET_NEI.navn
-                            årsak.begrunnelser.somBegrunnelseType().shouldContainAll(
+                            årsak.begrunnelser.somBegrunnelseType().shouldContainExactly(
                                 VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
                                 VIRKSOMHETEN_HAR_IKKE_RESPONDERT,
                             )

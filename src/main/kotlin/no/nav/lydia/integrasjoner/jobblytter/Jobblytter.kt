@@ -91,8 +91,8 @@ object Jobblytter : CoroutineScope {
                             else {
                                 logger.info("Starter jobb $jobInfo")
                                 when (jobInfo.jobb) {
-                                    Jobb.ryddeIStilleligendeSaker -> {
-                                        iaSakStatusOppdaterer.ryddeIStilleligendeSaker()
+                                    Jobb.ryddeIUrørteSaker -> {
+                                        iaSakStatusOppdaterer.ryddeIUrørteSaker()
                                     }
                                     Jobb.iaSakEksport -> {
                                         iaSakEksporterer.eksporter()
@@ -146,7 +146,7 @@ data class JobInfo(
 )
 
 enum class Jobb {
-    ryddeIStilleligendeSaker,
+    ryddeIUrørteSaker,
     iaSakEksport,
     iaSakStatistikkEksport,
     iaSakStatusExport,

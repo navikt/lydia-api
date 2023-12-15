@@ -68,7 +68,7 @@ jobs:
     permissions: {}
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/ny-ia-tjeneste'
+    if: github.ref == 'refs/heads/tilbake_til_status_IKKE_AKTIV_etter_6_mnd'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

@@ -9,6 +9,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import java.time.LocalDateTime
@@ -162,6 +163,20 @@ class IASakRepository(val dataSource: DataSource) {
             )
         }
     }
+
+    fun hentUrørteSakerIVurderesUtenEier() =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM ia_sak 
+                     WHERE eid_av IS NULL
+                     AND status = '${IAProsessStatus.VURDERES.name}'
+                     AND endret < (now() - INTERVAL '6 MONTH')
+                    """.trimIndent()
+                ).map(this::mapRowToIASak).asList
+            )
+        }
 
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
