@@ -50,6 +50,10 @@ enum class BegrunnelseType(val navn: String) {
     VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID(navn = "Virksomheten ønsker ikke forpliktende samarbeid med NAV om IA"),
     VIRKSOMHETEN_HAR_IKKE_RESPONDERT(navn = "Virksomheten har ikke respondert på forespørsel om forpliktende samarbeid"),
 
+    // -- FOR SYSTEMET. Ikke bruk
+    AUTOMATISK_LUKKET(navn = "Automatisk lukket: Ingen eierskap tatt på seks måneder"),
+    // --
+
     // -- UTDATERT. Ikke bruk. Ikke slett heller, da knekker samarbeidshistorikken.
     MANGLER_PARTSGRUPPE(navn = "Virksomheten mangler partsgruppe"),
     IKKE_TILFREDSSTILLENDE_SAMARBEID(navn = "Virksomheten har ikke tilfredsstillende samarbeid med partsgruppen"),

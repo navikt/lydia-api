@@ -4,24 +4,42 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import io.ktor.http.*
+import com.github.guepardoapps.kulid.ULID
+import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.ia.sak.api.*
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
+import no.nav.lydia.ia.sak.api.IASakError
+import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
+import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
+import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.domene.*
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
+import no.nav.lydia.ia.sak.domene.IASakLeveranse
+import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType
+import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
+import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class IASakService(
         private val iaSakRepository: IASakRepository,
@@ -123,6 +141,30 @@ class IASakService(
                 }
     }
 
+    fun tilbakeførSaker() =
+        iaSakRepository.hentUrørteSakerIVurderesUtenEier().map {
+            val tilbakeføringsHendelse = it.nyTilbakeføringsHendelse()
+            val sistEndretAvHendelseId = it.endretAvHendelseId
+            tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
+            val oppdatertSak = tilbakeførSak(it, tilbakeføringsHendelse)
+            årsakService.lagreÅrsak(tilbakeføringsHendelse)
+            oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
+        }.size
+
+    private fun IASak.nyTilbakeføringsHendelse() =
+        VirksomhetIkkeAktuellHendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = this.saksnummer,
+            orgnummer = this.orgnr,
+            opprettetAv = "Fia system",
+            opprettetAvRolle = Rolle.SUPERBRUKER,
+            navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING,
+            valgtÅrsak = ValgtÅrsak(
+                type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
+                begrunnelser = listOf(BegrunnelseType.AUTOMATISK_LUKKET)
+            )
+        )
     private fun slettSak(sak: IASak, sistEndretAvHendelseId: String?) =
             try {
                 iaSakRepository.slettSak(sak.saksnummer, sistEndretAvHendelseId)
