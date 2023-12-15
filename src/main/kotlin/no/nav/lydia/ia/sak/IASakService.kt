@@ -145,10 +145,12 @@ class IASakService(
         iaSakRepository.hentUrørteSakerIVurderesUtenEier().map {
             val tilbakeføringsHendelse = it.nyTilbakeføringsHendelse()
             val sistEndretAvHendelseId = it.endretAvHendelseId
+            val endretTidspunkt = it.endretTidspunkt
             tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
             val oppdatertSak = tilbakeførSak(it, tilbakeføringsHendelse)
             årsakService.lagreÅrsak(tilbakeføringsHendelse)
             oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
+            log.info("Tilbakeførte sak med saksnummer ${it.saksnummer}, sist oppdatert: $endretTidspunkt")
         }.size
 
     private fun IASak.nyTilbakeføringsHendelse() =
