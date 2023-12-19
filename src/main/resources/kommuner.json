@@ -1,5 +1,260 @@
 [
   {
+    "navn": "Oslo",
+    "navnNorsk": "Oslo",
+    "nummer": "0301"
+  },
+  {
+    "navn": "Eigersund",
+    "navnNorsk": "Eigersund",
+    "nummer": "1101"
+  },
+  {
+    "navn": "Stavanger",
+    "navnNorsk": "Stavanger",
+    "nummer": "1103"
+  },
+  {
+    "navn": "Haugesund",
+    "navnNorsk": "Haugesund",
+    "nummer": "1106"
+  },
+  {
+    "navn": "Sandnes",
+    "navnNorsk": "Sandnes",
+    "nummer": "1108"
+  },
+  {
+    "navn": "Sokndal",
+    "navnNorsk": "Sokndal",
+    "nummer": "1111"
+  },
+  {
+    "navn": "Lund",
+    "navnNorsk": "Lund",
+    "nummer": "1112"
+  },
+  {
+    "navn": "Bjerkreim",
+    "navnNorsk": "Bjerkreim",
+    "nummer": "1114"
+  },
+  {
+    "navn": "Hå",
+    "navnNorsk": "Hå",
+    "nummer": "1119"
+  },
+  {
+    "navn": "Klepp",
+    "navnNorsk": "Klepp",
+    "nummer": "1120"
+  },
+  {
+    "navn": "Time",
+    "navnNorsk": "Time",
+    "nummer": "1121"
+  },
+  {
+    "navn": "Gjesdal",
+    "navnNorsk": "Gjesdal",
+    "nummer": "1122"
+  },
+  {
+    "navn": "Sola",
+    "navnNorsk": "Sola",
+    "nummer": "1124"
+  },
+  {
+    "navn": "Randaberg",
+    "navnNorsk": "Randaberg",
+    "nummer": "1127"
+  },
+  {
+    "navn": "Strand",
+    "navnNorsk": "Strand",
+    "nummer": "1130"
+  },
+  {
+    "navn": "Hjelmeland",
+    "navnNorsk": "Hjelmeland",
+    "nummer": "1133"
+  },
+  {
+    "navn": "Suldal",
+    "navnNorsk": "Suldal",
+    "nummer": "1134"
+  },
+  {
+    "navn": "Sauda",
+    "navnNorsk": "Sauda",
+    "nummer": "1135"
+  },
+  {
+    "navn": "Kvitsøy",
+    "navnNorsk": "Kvitsøy",
+    "nummer": "1144"
+  },
+  {
+    "navn": "Bokn",
+    "navnNorsk": "Bokn",
+    "nummer": "1145"
+  },
+  {
+    "navn": "Tysvær",
+    "navnNorsk": "Tysvær",
+    "nummer": "1146"
+  },
+  {
+    "navn": "Karmøy",
+    "navnNorsk": "Karmøy",
+    "nummer": "1149"
+  },
+  {
+    "navn": "Utsira",
+    "navnNorsk": "Utsira",
+    "nummer": "1151"
+  },
+  {
+    "navn": "Vindafjord",
+    "navnNorsk": "Vindafjord",
+    "nummer": "1160"
+  },
+  {
+    "navn": "Kristiansund",
+    "navnNorsk": "Kristiansund",
+    "nummer": "1505"
+  },
+  {
+    "navn": "Molde",
+    "navnNorsk": "Molde",
+    "nummer": "1506"
+  },
+  {
+    "navn": "Ålesund",
+    "navnNorsk": "Ålesund",
+    "nummer": "1508"
+  },
+  {
+    "navn": "Vanylven",
+    "navnNorsk": "Vanylven",
+    "nummer": "1511"
+  },
+  {
+    "navn": "Sande",
+    "navnNorsk": "Sande",
+    "nummer": "1514"
+  },
+  {
+    "navn": "Herøy (Møre og Romsdal)",
+    "navnNorsk": "Herøy (Møre og Romsdal)",
+    "nummer": "1515"
+  },
+  {
+    "navn": "Ulstein",
+    "navnNorsk": "Ulstein",
+    "nummer": "1516"
+  },
+  {
+    "navn": "Hareid",
+    "navnNorsk": "Hareid",
+    "nummer": "1517"
+  },
+  {
+    "navn": "Ørsta",
+    "navnNorsk": "Ørsta",
+    "nummer": "1520"
+  },
+  {
+    "navn": "Stranda",
+    "navnNorsk": "Stranda",
+    "nummer": "1525"
+  },
+  {
+    "navn": "Sykkylven",
+    "navnNorsk": "Sykkylven",
+    "nummer": "1528"
+  },
+  {
+    "navn": "Sula",
+    "navnNorsk": "Sula",
+    "nummer": "1531"
+  },
+  {
+    "navn": "Giske",
+    "navnNorsk": "Giske",
+    "nummer": "1532"
+  },
+  {
+    "navn": "Vestnes",
+    "navnNorsk": "Vestnes",
+    "nummer": "1535"
+  },
+  {
+    "navn": "Rauma",
+    "navnNorsk": "Rauma",
+    "nummer": "1539"
+  },
+  {
+    "navn": "Aukra",
+    "navnNorsk": "Aukra",
+    "nummer": "1547"
+  },
+  {
+    "navn": "Averøy",
+    "navnNorsk": "Averøy",
+    "nummer": "1554"
+  },
+  {
+    "navn": "Gjemnes",
+    "navnNorsk": "Gjemnes",
+    "nummer": "1557"
+  },
+  {
+    "navn": "Tingvoll",
+    "navnNorsk": "Tingvoll",
+    "nummer": "1560"
+  },
+  {
+    "navn": "Sunndal",
+    "navnNorsk": "Sunndal",
+    "nummer": "1563"
+  },
+  {
+    "navn": "Surnadal",
+    "navnNorsk": "Surnadal",
+    "nummer": "1566"
+  },
+  {
+    "navn": "Smøla",
+    "navnNorsk": "Smøla",
+    "nummer": "1573"
+  },
+  {
+    "navn": "Aure",
+    "navnNorsk": "Aure",
+    "nummer": "1576"
+  },
+  {
+    "navn": "Volda",
+    "navnNorsk": "Volda",
+    "nummer": "1577"
+  },
+  {
+    "navn": "Fjord",
+    "navnNorsk": "Fjord",
+    "nummer": "1578"
+  },
+  {
+    "navn": "Hustadvika",
+    "navnNorsk": "Hustadvika",
+    "nummer": "1579"
+  },
+  {
+    "navn": "Haram",
+    "navnNorsk": "Haram",
+    "nummer": "1580"
+  },
+  {
     "navn": "Bodø",
     "navnNorsk": "Bodø",
     "nummer": "1804"
@@ -35,8 +290,8 @@
     "nummer": "1816"
   },
   {
-    "navn": "Herøy",
-    "navnNorsk": "Herøy",
+    "navn": "Herøy (Nordland)",
+    "navnNorsk": "Herøy (Nordland)",
     "nummer": "1818"
   },
   {
@@ -60,7 +315,7 @@
     "nummer": "1825"
   },
   {
-    "navn": "Aarborte",
+    "navn": "Hattfjelldal",
     "navnNorsk": "Hattfjelldal",
     "nummer": "1826"
   },
@@ -200,604 +455,264 @@
     "nummer": "1874"
   },
   {
-    "navn": "Hábmer",
+    "navn": "Hamarøy",
     "navnNorsk": "Hamarøy",
     "nummer": "1875"
   },
   {
-    "navn": "Raarvihke",
-    "navnNorsk": "Røyrvik",
-    "nummer": "5043"
-  },
-  {
-    "navn": "Namsskogan",
-    "navnNorsk": "Namsskogan",
-    "nummer": "5044"
-  },
-  {
-    "navn": "Høylandet",
-    "navnNorsk": "Høylandet",
-    "nummer": "5046"
-  },
-  {
-    "navn": "Leka",
-    "navnNorsk": "Leka",
-    "nummer": "5052"
-  },
-  {
-    "navn": "Nærøysund",
-    "navnNorsk": "Nærøysund",
-    "nummer": "5060"
-  },
-  {
-    "navn": "Tromsø",
-    "navnNorsk": "Tromsø",
-    "nummer": "5401"
-  },
-  {
-    "navn": "Harstad",
-    "navnNorsk": "Harstad",
-    "nummer": "5402"
-  },
-  {
-    "navn": "Alta",
-    "navnNorsk": "Alta",
-    "nummer": "5403"
-  },
-  {
-    "navn": "Vardø",
-    "navnNorsk": "Vardø",
-    "nummer": "5404"
-  },
-  {
-    "navn": "Vadsø",
-    "navnNorsk": "Vadsø",
-    "nummer": "5405"
-  },
-  {
-    "navn": "Hammerfest",
-    "navnNorsk": "Hammerfest",
-    "nummer": "5406"
-  },
-  {
-    "navn": "Kvæfjord",
-    "navnNorsk": "Kvæfjord",
-    "nummer": "5411"
-  },
-  {
-    "navn": "Dielddanuorri",
-    "navnNorsk": "Tjeldsund",
-    "nummer": "5412"
-  },
-  {
-    "navn": "Ibestad",
-    "navnNorsk": "Ibestad",
-    "nummer": "5413"
-  },
-  {
-    "navn": "Gratangen",
-    "navnNorsk": "Gratangen",
-    "nummer": "5414"
-  },
-  {
-    "navn": "Loabák",
-    "navnNorsk": "Lavangen",
-    "nummer": "5415"
-  },
-  {
-    "navn": "Bardu",
-    "navnNorsk": "Bardu",
-    "nummer": "5416"
-  },
-  {
-    "navn": "Salangen",
-    "navnNorsk": "Salangen",
-    "nummer": "5417"
-  },
-  {
-    "navn": "Målselv",
-    "navnNorsk": "Målselv",
-    "nummer": "5418"
-  },
-  {
-    "navn": "Sørreisa",
-    "navnNorsk": "Sørreisa",
-    "nummer": "5419"
-  },
-  {
-    "navn": "Dyrøy",
-    "navnNorsk": "Dyrøy",
-    "nummer": "5420"
-  },
-  {
-    "navn": "Senja",
-    "navnNorsk": "Senja",
-    "nummer": "5421"
-  },
-  {
-    "navn": "Balsfjord",
-    "navnNorsk": "Balsfjord",
-    "nummer": "5422"
-  },
-  {
-    "navn": "Karlsøy",
-    "navnNorsk": "Karlsøy",
-    "nummer": "5423"
-  },
-  {
-    "navn": "Lyngen",
-    "navnNorsk": "Lyngen",
-    "nummer": "5424"
-  },
-  {
-    "navn": "Storfjord",
-    "navnNorsk": "Storfjord",
-    "nummer": "5425"
-  },
-  {
-    "navn": "Gáivuotna",
-    "navnNorsk": "Kåfjord",
-    "nummer": "5426"
-  },
-  {
-    "navn": "Skjervøy",
-    "navnNorsk": "Skjervøy",
-    "nummer": "5427"
-  },
-  {
-    "navn": "Nordreisa",
-    "navnNorsk": "Nordreisa",
-    "nummer": "5428"
-  },
-  {
-    "navn": "Kvænangen",
-    "navnNorsk": "Kvænangen",
-    "nummer": "5429"
-  },
-  {
-    "navn": "Guovdageaidnu",
-    "navnNorsk": "Kautokeino",
-    "nummer": "5430"
-  },
-  {
-    "navn": "Loppa",
-    "navnNorsk": "Loppa",
-    "nummer": "5432"
-  },
-  {
-    "navn": "Hasvik",
-    "navnNorsk": "Hasvik",
-    "nummer": "5433"
-  },
-  {
-    "navn": "Måsøy",
-    "navnNorsk": "Måsøy",
-    "nummer": "5434"
-  },
-  {
-    "navn": "Nordkapp",
-    "navnNorsk": "Nordkapp",
-    "nummer": "5435"
-  },
-  {
-    "navn": "Porsanger",
-    "navnNorsk": "Porsanger",
-    "nummer": "5436"
-  },
-  {
-    "navn": "Kárášjohka",
-    "navnNorsk": "Karasjok",
-    "nummer": "5437"
-  },
-  {
-    "navn": "Lebesby",
-    "navnNorsk": "Lebesby",
-    "nummer": "5438"
-  },
-  {
-    "navn": "Gamvik",
-    "navnNorsk": "Gamvik",
-    "nummer": "5439"
-  },
-  {
-    "navn": "Berlevåg",
-    "navnNorsk": "Berlevåg",
-    "nummer": "5440"
-  },
-  {
-    "navn": "Deatnu",
-    "navnNorsk": "Tana",
-    "nummer": "5441"
-  },
-  {
-    "navn": "Unjárga",
-    "navnNorsk": "Nesseby",
-    "nummer": "5442"
-  },
-  {
-    "navn": "Båtsfjord",
-    "navnNorsk": "Båtsfjord",
-    "nummer": "5443"
-  },
-  {
-    "navn": "Sør-Varanger",
-    "navnNorsk": "Sør-Varanger",
-    "nummer": "5444"
-  },
-  {
-    "navn": "Oslo",
-    "navnNorsk": "Oslo",
-    "nummer": "0301"
-  },
-  {
-    "navn": "Haugesund",
-    "navnNorsk": "Haugesund",
-    "nummer": "1106"
-  },
-  {
-    "navn": "Suldal",
-    "navnNorsk": "Suldal",
-    "nummer": "1134"
-  },
-  {
-    "navn": "Sauda",
-    "navnNorsk": "Sauda",
-    "nummer": "1135"
-  },
-  {
-    "navn": "Vindafjord",
-    "navnNorsk": "Vindafjord",
-    "nummer": "1160"
-  },
-  {
-    "navn": "Kristiansund",
-    "navnNorsk": "Kristiansund",
-    "nummer": "1505"
-  },
-  {
-    "navn": "Molde",
-    "navnNorsk": "Molde",
-    "nummer": "1506"
-  },
-  {
-    "navn": "Ålesund",
-    "navnNorsk": "Ålesund",
-    "nummer": "1507"
-  },
-  {
-    "navn": "Vanylven",
-    "navnNorsk": "Vanylven",
-    "nummer": "1511"
-  },
-  {
-    "navn": "Sande",
-    "navnNorsk": "Sande",
-    "nummer": "1514"
-  },
-  {
-    "navn": "Herøy",
-    "navnNorsk": "Herøy",
-    "nummer": "1515"
-  },
-  {
-    "navn": "Ulstein",
-    "navnNorsk": "Ulstein",
-    "nummer": "1516"
-  },
-  {
-    "navn": "Hareid",
-    "navnNorsk": "Hareid",
-    "nummer": "1517"
-  },
-  {
-    "navn": "Ørsta",
-    "navnNorsk": "Ørsta",
-    "nummer": "1520"
-  },
-  {
-    "navn": "Stranda",
-    "navnNorsk": "Stranda",
-    "nummer": "1525"
-  },
-  {
-    "navn": "Sykkylven",
-    "navnNorsk": "Sykkylven",
-    "nummer": "1528"
-  },
-  {
-    "navn": "Sula",
-    "navnNorsk": "Sula",
-    "nummer": "1531"
-  },
-  {
-    "navn": "Giske",
-    "navnNorsk": "Giske",
-    "nummer": "1532"
-  },
-  {
-    "navn": "Vestnes",
-    "navnNorsk": "Vestnes",
-    "nummer": "1535"
-  },
-  {
-    "navn": "Rauma",
-    "navnNorsk": "Rauma",
-    "nummer": "1539"
-  },
-  {
-    "navn": "Aukra",
-    "navnNorsk": "Aukra",
-    "nummer": "1547"
-  },
-  {
-    "navn": "Averøy",
-    "navnNorsk": "Averøy",
-    "nummer": "1554"
-  },
-  {
-    "navn": "Gjemnes",
-    "navnNorsk": "Gjemnes",
-    "nummer": "1557"
-  },
-  {
-    "navn": "Tingvoll",
-    "navnNorsk": "Tingvoll",
-    "nummer": "1560"
-  },
-  {
-    "navn": "Sunndal",
-    "navnNorsk": "Sunndal",
-    "nummer": "1563"
-  },
-  {
-    "navn": "Surnadal",
-    "navnNorsk": "Surnadal",
-    "nummer": "1566"
-  },
-  {
-    "navn": "Smøla",
-    "navnNorsk": "Smøla",
-    "nummer": "1573"
-  },
-  {
-    "navn": "Aure",
-    "navnNorsk": "Aure",
-    "nummer": "1576"
-  },
-  {
-    "navn": "Volda",
-    "navnNorsk": "Volda",
-    "nummer": "1577"
-  },
-  {
-    "navn": "Fjord",
-    "navnNorsk": "Fjord",
-    "nummer": "1578"
-  },
-  {
-    "navn": "Hustadvika",
-    "navnNorsk": "Hustadvika",
-    "nummer": "1579"
+    "navn": "Halden",
+    "navnNorsk": "Halden",
+    "nummer": "3101"
   },
   {
     "navn": "Moss",
     "navnNorsk": "Moss",
-    "nummer": "3002"
+    "nummer": "3103"
   },
   {
-    "navn": "Drammen",
-    "navnNorsk": "Drammen",
-    "nummer": "3005"
+    "navn": "Sarpsborg",
+    "navnNorsk": "Sarpsborg",
+    "nummer": "3105"
   },
   {
-    "navn": "Kongsberg",
-    "navnNorsk": "Kongsberg",
-    "nummer": "3006"
+    "navn": "Fredrikstad",
+    "navnNorsk": "Fredrikstad",
+    "nummer": "3107"
   },
   {
-    "navn": "Ringerike",
-    "navnNorsk": "Ringerike",
-    "nummer": "3007"
+    "navn": "Hvaler",
+    "navnNorsk": "Hvaler",
+    "nummer": "3110"
   },
   {
-    "navn": "Marker",
-    "navnNorsk": "Marker",
-    "nummer": "3013"
-  },
-  {
-    "navn": "Indre Østfold",
-    "navnNorsk": "Indre Østfold",
-    "nummer": "3014"
-  },
-  {
-    "navn": "Skiptvet",
-    "navnNorsk": "Skiptvet",
-    "nummer": "3015"
+    "navn": "Råde",
+    "navnNorsk": "Råde",
+    "nummer": "3112"
   },
   {
     "navn": "Våler",
     "navnNorsk": "Våler",
-    "nummer": "3018"
+    "nummer": "3114"
   },
   {
-    "navn": "Vestby",
-    "navnNorsk": "Vestby",
-    "nummer": "3019"
+    "navn": "Skiptvet",
+    "navnNorsk": "Skiptvet",
+    "nummer": "3116"
   },
   {
-    "navn": "Nordre Follo",
-    "navnNorsk": "Nordre Follo",
-    "nummer": "3020"
+    "navn": "Indre Østfold",
+    "navnNorsk": "Indre Østfold",
+    "nummer": "3118"
   },
   {
-    "navn": "Ås",
-    "navnNorsk": "Ås",
-    "nummer": "3021"
+    "navn": "Rakkestad",
+    "navnNorsk": "Rakkestad",
+    "nummer": "3120"
   },
   {
-    "navn": "Frogn",
-    "navnNorsk": "Frogn",
-    "nummer": "3022"
+    "navn": "Marker",
+    "navnNorsk": "Marker",
+    "nummer": "3122"
   },
   {
-    "navn": "Nesodden",
-    "navnNorsk": "Nesodden",
-    "nummer": "3023"
+    "navn": "Aremark",
+    "navnNorsk": "Aremark",
+    "nummer": "3124"
   },
   {
     "navn": "Bærum",
     "navnNorsk": "Bærum",
-    "nummer": "3024"
+    "nummer": "3201"
   },
   {
     "navn": "Asker",
     "navnNorsk": "Asker",
-    "nummer": "3025"
-  },
-  {
-    "navn": "Aurskog-Høland",
-    "navnNorsk": "Aurskog-Høland",
-    "nummer": "3026"
-  },
-  {
-    "navn": "Rælingen",
-    "navnNorsk": "Rælingen",
-    "nummer": "3027"
-  },
-  {
-    "navn": "Enebakk",
-    "navnNorsk": "Enebakk",
-    "nummer": "3028"
-  },
-  {
-    "navn": "Lørenskog",
-    "navnNorsk": "Lørenskog",
-    "nummer": "3029"
+    "nummer": "3203"
   },
   {
     "navn": "Lillestrøm",
     "navnNorsk": "Lillestrøm",
-    "nummer": "3030"
+    "nummer": "3205"
   },
   {
-    "navn": "Nittedal",
-    "navnNorsk": "Nittedal",
-    "nummer": "3031"
-  },
-  {
-    "navn": "Gjerdrum",
-    "navnNorsk": "Gjerdrum",
-    "nummer": "3032"
+    "navn": "Nordre Follo",
+    "navnNorsk": "Nordre Follo",
+    "nummer": "3207"
   },
   {
     "navn": "Ullensaker",
     "navnNorsk": "Ullensaker",
-    "nummer": "3033"
+    "nummer": "3209"
+  },
+  {
+    "navn": "Nesodden",
+    "navnNorsk": "Nesodden",
+    "nummer": "3212"
+  },
+  {
+    "navn": "Frogn",
+    "navnNorsk": "Frogn",
+    "nummer": "3214"
+  },
+  {
+    "navn": "Vestby",
+    "navnNorsk": "Vestby",
+    "nummer": "3216"
+  },
+  {
+    "navn": "Ås",
+    "navnNorsk": "Ås",
+    "nummer": "3218"
+  },
+  {
+    "navn": "Enebakk",
+    "navnNorsk": "Enebakk",
+    "nummer": "3220"
+  },
+  {
+    "navn": "Lørenskog",
+    "navnNorsk": "Lørenskog",
+    "nummer": "3222"
+  },
+  {
+    "navn": "Rælingen",
+    "navnNorsk": "Rælingen",
+    "nummer": "3224"
+  },
+  {
+    "navn": "Aurskog-Høland",
+    "navnNorsk": "Aurskog-Høland",
+    "nummer": "3226"
   },
   {
     "navn": "Nes",
     "navnNorsk": "Nes",
-    "nummer": "3034"
+    "nummer": "3228"
   },
   {
-    "navn": "Eidsvoll",
-    "navnNorsk": "Eidsvoll",
-    "nummer": "3035"
+    "navn": "Gjerdrum",
+    "navnNorsk": "Gjerdrum",
+    "nummer": "3230"
   },
   {
-    "navn": "Nannestad",
-    "navnNorsk": "Nannestad",
-    "nummer": "3036"
-  },
-  {
-    "navn": "Hurdal",
-    "navnNorsk": "Hurdal",
-    "nummer": "3037"
-  },
-  {
-    "navn": "Hole",
-    "navnNorsk": "Hole",
-    "nummer": "3038"
-  },
-  {
-    "navn": "Flå",
-    "navnNorsk": "Flå",
-    "nummer": "3039"
-  },
-  {
-    "navn": "Nesbyen",
-    "navnNorsk": "Nesbyen",
-    "nummer": "3040"
-  },
-  {
-    "navn": "Gol",
-    "navnNorsk": "Gol",
-    "nummer": "3041"
-  },
-  {
-    "navn": "Hemsedal",
-    "navnNorsk": "Hemsedal",
-    "nummer": "3042"
-  },
-  {
-    "navn": "Ål",
-    "navnNorsk": "Ål",
-    "nummer": "3043"
-  },
-  {
-    "navn": "Hol",
-    "navnNorsk": "Hol",
-    "nummer": "3044"
-  },
-  {
-    "navn": "Sigdal",
-    "navnNorsk": "Sigdal",
-    "nummer": "3045"
-  },
-  {
-    "navn": "Krødsherad",
-    "navnNorsk": "Krødsherad",
-    "nummer": "3046"
-  },
-  {
-    "navn": "Modum",
-    "navnNorsk": "Modum",
-    "nummer": "3047"
-  },
-  {
-    "navn": "Øvre Eiker",
-    "navnNorsk": "Øvre Eiker",
-    "nummer": "3048"
-  },
-  {
-    "navn": "Lier",
-    "navnNorsk": "Lier",
-    "nummer": "3049"
-  },
-  {
-    "navn": "Flesberg",
-    "navnNorsk": "Flesberg",
-    "nummer": "3050"
-  },
-  {
-    "navn": "Rollag",
-    "navnNorsk": "Rollag",
-    "nummer": "3051"
-  },
-  {
-    "navn": "Nore og Uvdal",
-    "navnNorsk": "Nore og Uvdal",
-    "nummer": "3052"
-  },
-  {
-    "navn": "Jevnaker",
-    "navnNorsk": "Jevnaker",
-    "nummer": "3053"
+    "navn": "Nittedal",
+    "navnNorsk": "Nittedal",
+    "nummer": "3232"
   },
   {
     "navn": "Lunner",
     "navnNorsk": "Lunner",
-    "nummer": "3054"
+    "nummer": "3234"
+  },
+  {
+    "navn": "Jevnaker",
+    "navnNorsk": "Jevnaker",
+    "nummer": "3236"
+  },
+  {
+    "navn": "Nannestad",
+    "navnNorsk": "Nannestad",
+    "nummer": "3238"
+  },
+  {
+    "navn": "Eidsvoll",
+    "navnNorsk": "Eidsvoll",
+    "nummer": "3240"
+  },
+  {
+    "navn": "Hurdal",
+    "navnNorsk": "Hurdal",
+    "nummer": "3242"
+  },
+  {
+    "navn": "Drammen",
+    "navnNorsk": "Drammen",
+    "nummer": "3301"
+  },
+  {
+    "navn": "Kongsberg",
+    "navnNorsk": "Kongsberg",
+    "nummer": "3303"
+  },
+  {
+    "navn": "Ringerike",
+    "navnNorsk": "Ringerike",
+    "nummer": "3305"
+  },
+  {
+    "navn": "Hole",
+    "navnNorsk": "Hole",
+    "nummer": "3310"
+  },
+  {
+    "navn": "Lier",
+    "navnNorsk": "Lier",
+    "nummer": "3312"
+  },
+  {
+    "navn": "Øvre Eiker",
+    "navnNorsk": "Øvre Eiker",
+    "nummer": "3314"
+  },
+  {
+    "navn": "Modum",
+    "navnNorsk": "Modum",
+    "nummer": "3316"
+  },
+  {
+    "navn": "Krødsherad",
+    "navnNorsk": "Krødsherad",
+    "nummer": "3318"
+  },
+  {
+    "navn": "Flå",
+    "navnNorsk": "Flå",
+    "nummer": "3320"
+  },
+  {
+    "navn": "Nesbyen",
+    "navnNorsk": "Nesbyen",
+    "nummer": "3322"
+  },
+  {
+    "navn": "Gol",
+    "navnNorsk": "Gol",
+    "nummer": "3324"
+  },
+  {
+    "navn": "Hemsedal",
+    "navnNorsk": "Hemsedal",
+    "nummer": "3326"
+  },
+  {
+    "navn": "Ål",
+    "navnNorsk": "Ål",
+    "nummer": "3328"
+  },
+  {
+    "navn": "Hol",
+    "navnNorsk": "Hol",
+    "nummer": "3330"
+  },
+  {
+    "navn": "Sigdal",
+    "navnNorsk": "Sigdal",
+    "nummer": "3332"
+  },
+  {
+    "navn": "Flesberg",
+    "navnNorsk": "Flesberg",
+    "nummer": "3334"
+  },
+  {
+    "navn": "Rollag",
+    "navnNorsk": "Rollag",
+    "nummer": "3336"
+  },
+  {
+    "navn": "Nore og Uvdal",
+    "navnNorsk": "Nore og Uvdal",
+    "nummer": "3338"
   },
   {
     "navn": "Kongsvinger",
@@ -860,8 +775,8 @@
     "nummer": "3418"
   },
   {
-    "navn": "Våler",
-    "navnNorsk": "Våler",
+    "navn": "Våler (Innlandet)",
+    "navnNorsk": "Våler (Innlandet)",
     "nummer": "3419"
   },
   {
@@ -1030,54 +945,244 @@
     "nummer": "3454"
   },
   {
+    "navn": "Horten",
+    "navnNorsk": "Horten",
+    "nummer": "3901"
+  },
+  {
     "navn": "Holmestrand",
     "navnNorsk": "Holmestrand",
-    "nummer": "3802"
+    "nummer": "3903"
+  },
+  {
+    "navn": "Tønsberg",
+    "navnNorsk": "Tønsberg",
+    "nummer": "3905"
+  },
+  {
+    "navn": "Sandefjord",
+    "navnNorsk": "Sandefjord",
+    "nummer": "3907"
+  },
+  {
+    "navn": "Larvik",
+    "navnNorsk": "Larvik",
+    "nummer": "3909"
+  },
+  {
+    "navn": "Færder",
+    "navnNorsk": "Færder",
+    "nummer": "3911"
+  },
+  {
+    "navn": "Porsgrunn",
+    "navnNorsk": "Porsgrunn",
+    "nummer": "4001"
+  },
+  {
+    "navn": "Skien",
+    "navnNorsk": "Skien",
+    "nummer": "4003"
   },
   {
     "navn": "Notodden",
     "navnNorsk": "Notodden",
-    "nummer": "3808"
+    "nummer": "4005"
+  },
+  {
+    "navn": "Siljan",
+    "navnNorsk": "Siljan",
+    "nummer": "4010"
+  },
+  {
+    "navn": "Bamble",
+    "navnNorsk": "Bamble",
+    "nummer": "4012"
+  },
+  {
+    "navn": "Kragerø",
+    "navnNorsk": "Kragerø",
+    "nummer": "4014"
+  },
+  {
+    "navn": "Drangedal",
+    "navnNorsk": "Drangedal",
+    "nummer": "4016"
+  },
+  {
+    "navn": "Nome",
+    "navnNorsk": "Nome",
+    "nummer": "4018"
   },
   {
     "navn": "Midt-Telemark",
     "navnNorsk": "Midt-Telemark",
-    "nummer": "3817"
-  },
-  {
-    "navn": "Tinn",
-    "navnNorsk": "Tinn",
-    "nummer": "3818"
-  },
-  {
-    "navn": "Hjartdal",
-    "navnNorsk": "Hjartdal",
-    "nummer": "3819"
+    "nummer": "4020"
   },
   {
     "navn": "Seljord",
     "navnNorsk": "Seljord",
-    "nummer": "3820"
+    "nummer": "4022"
+  },
+  {
+    "navn": "Hjartdal",
+    "navnNorsk": "Hjartdal",
+    "nummer": "4024"
+  },
+  {
+    "navn": "Tinn",
+    "navnNorsk": "Tinn",
+    "nummer": "4026"
   },
   {
     "navn": "Kviteseid",
     "navnNorsk": "Kviteseid",
-    "nummer": "3821"
+    "nummer": "4028"
+  },
+  {
+    "navn": "Nissedal",
+    "navnNorsk": "Nissedal",
+    "nummer": "4030"
+  },
+  {
+    "navn": "Fyresdal",
+    "navnNorsk": "Fyresdal",
+    "nummer": "4032"
   },
   {
     "navn": "Tokke",
     "navnNorsk": "Tokke",
-    "nummer": "3824"
+    "nummer": "4034"
   },
   {
     "navn": "Vinje",
     "navnNorsk": "Vinje",
-    "nummer": "3825"
+    "nummer": "4036"
+  },
+  {
+    "navn": "Risør",
+    "navnNorsk": "Risør",
+    "nummer": "4201"
+  },
+  {
+    "navn": "Grimstad",
+    "navnNorsk": "Grimstad",
+    "nummer": "4202"
+  },
+  {
+    "navn": "Arendal",
+    "navnNorsk": "Arendal",
+    "nummer": "4203"
+  },
+  {
+    "navn": "Kristiansand",
+    "navnNorsk": "Kristiansand",
+    "nummer": "4204"
+  },
+  {
+    "navn": "Lindesnes",
+    "navnNorsk": "Lindesnes",
+    "nummer": "4205"
+  },
+  {
+    "navn": "Farsund",
+    "navnNorsk": "Farsund",
+    "nummer": "4206"
+  },
+  {
+    "navn": "Flekkefjord",
+    "navnNorsk": "Flekkefjord",
+    "nummer": "4207"
+  },
+  {
+    "navn": "Gjerstad",
+    "navnNorsk": "Gjerstad",
+    "nummer": "4211"
+  },
+  {
+    "navn": "Vegårshei",
+    "navnNorsk": "Vegårshei",
+    "nummer": "4212"
+  },
+  {
+    "navn": "Tvedestrand",
+    "navnNorsk": "Tvedestrand",
+    "nummer": "4213"
+  },
+  {
+    "navn": "Froland",
+    "navnNorsk": "Froland",
+    "nummer": "4214"
+  },
+  {
+    "navn": "Lillesand",
+    "navnNorsk": "Lillesand",
+    "nummer": "4215"
+  },
+  {
+    "navn": "Birkenes",
+    "navnNorsk": "Birkenes",
+    "nummer": "4216"
+  },
+  {
+    "navn": "Åmli",
+    "navnNorsk": "Åmli",
+    "nummer": "4217"
+  },
+  {
+    "navn": "Iveland",
+    "navnNorsk": "Iveland",
+    "nummer": "4218"
+  },
+  {
+    "navn": "Evje og Hornnes",
+    "navnNorsk": "Evje og Hornnes",
+    "nummer": "4219"
+  },
+  {
+    "navn": "Bygland",
+    "navnNorsk": "Bygland",
+    "nummer": "4220"
+  },
+  {
+    "navn": "Valle",
+    "navnNorsk": "Valle",
+    "nummer": "4221"
   },
   {
     "navn": "Bykle",
     "navnNorsk": "Bykle",
     "nummer": "4222"
+  },
+  {
+    "navn": "Vennesla",
+    "navnNorsk": "Vennesla",
+    "nummer": "4223"
+  },
+  {
+    "navn": "Åseral",
+    "navnNorsk": "Åseral",
+    "nummer": "4224"
+  },
+  {
+    "navn": "Lyngdal",
+    "navnNorsk": "Lyngdal",
+    "nummer": "4225"
+  },
+  {
+    "navn": "Hægebostad",
+    "navnNorsk": "Hægebostad",
+    "nummer": "4226"
+  },
+  {
+    "navn": "Kvinesdal",
+    "navnNorsk": "Kvinesdal",
+    "nummer": "4227"
+  },
+  {
+    "navn": "Sirdal",
+    "navnNorsk": "Sirdal",
+    "nummer": "4228"
   },
   {
     "navn": "Bergen",
@@ -1405,9 +1510,24 @@
     "nummer": "5042"
   },
   {
+    "navn": "Raarvihke",
+    "navnNorsk": "Røyrvik",
+    "nummer": "5043"
+  },
+  {
+    "navn": "Namsskogan",
+    "navnNorsk": "Namsskogan",
+    "nummer": "5044"
+  },
+  {
     "navn": "Grong",
     "navnNorsk": "Grong",
     "nummer": "5045"
+  },
+  {
+    "navn": "Høylandet",
+    "navnNorsk": "Høylandet",
+    "nummer": "5046"
   },
   {
     "navn": "Overhalla",
@@ -1415,39 +1535,14 @@
     "nummer": "5047"
   },
   {
-    "navn": "Tysvær",
-    "navnNorsk": "Tysvær",
-    "nummer": "1146"
-  },
-  {
-    "navn": "Rakkestad",
-    "navnNorsk": "Rakkestad",
-    "nummer": "3016"
-  },
-  {
-    "navn": "Råde",
-    "navnNorsk": "Råde",
-    "nummer": "3017"
-  },
-  {
-    "navn": "Horten",
-    "navnNorsk": "Horten",
-    "nummer": "3801"
-  },
-  {
-    "navn": "Tønsberg",
-    "navnNorsk": "Tønsberg",
-    "nummer": "3803"
-  },
-  {
-    "navn": "Siljan",
-    "navnNorsk": "Siljan",
-    "nummer": "3812"
-  },
-  {
     "navn": "Flatanger",
     "navnNorsk": "Flatanger",
     "nummer": "5049"
+  },
+  {
+    "navn": "Leka",
+    "navnNorsk": "Leka",
+    "nummer": "5052"
   },
   {
     "navn": "Inderøy",
@@ -1485,298 +1580,208 @@
     "nummer": "5059"
   },
   {
+    "navn": "Nærøysund",
+    "navnNorsk": "Nærøysund",
+    "nummer": "5060"
+  },
+  {
     "navn": "Rindal",
     "navnNorsk": "Rindal",
     "nummer": "5061"
   },
   {
-    "navn": "Eigersund",
-    "navnNorsk": "Eigersund",
-    "nummer": "1101"
+    "navn": "Tromsø",
+    "navnNorsk": "Tromsø",
+    "nummer": "5501"
   },
   {
-    "navn": "Stavanger",
-    "navnNorsk": "Stavanger",
-    "nummer": "1103"
+    "navn": "Harstad",
+    "navnNorsk": "Harstad",
+    "nummer": "5503"
   },
   {
-    "navn": "Sandnes",
-    "navnNorsk": "Sandnes",
-    "nummer": "1108"
+    "navn": "Kvæfjord",
+    "navnNorsk": "Kvæfjord",
+    "nummer": "5510"
   },
   {
-    "navn": "Sokndal",
-    "navnNorsk": "Sokndal",
-    "nummer": "1111"
+    "navn": "Tjeldsund",
+    "navnNorsk": "Tjeldsund",
+    "nummer": "5512"
   },
   {
-    "navn": "Lund",
-    "navnNorsk": "Lund",
-    "nummer": "1112"
+    "navn": "Ibestad",
+    "navnNorsk": "Ibestad",
+    "nummer": "5514"
   },
   {
-    "navn": "Bjerkreim",
-    "navnNorsk": "Bjerkreim",
-    "nummer": "1114"
+    "navn": "Gratangen",
+    "navnNorsk": "Gratangen",
+    "nummer": "5516"
   },
   {
-    "navn": "Hå",
-    "navnNorsk": "Hå",
-    "nummer": "1119"
+    "navn": "Loabák",
+    "navnNorsk": "Lavangen",
+    "nummer": "5518"
   },
   {
-    "navn": "Klepp",
-    "navnNorsk": "Klepp",
-    "nummer": "1120"
+    "navn": "Bardu",
+    "navnNorsk": "Bardu",
+    "nummer": "5520"
   },
   {
-    "navn": "Time",
-    "navnNorsk": "Time",
-    "nummer": "1121"
+    "navn": "Salangen",
+    "navnNorsk": "Salangen",
+    "nummer": "5522"
   },
   {
-    "navn": "Gjesdal",
-    "navnNorsk": "Gjesdal",
-    "nummer": "1122"
+    "navn": "Målselv",
+    "navnNorsk": "Målselv",
+    "nummer": "5524"
   },
   {
-    "navn": "Sola",
-    "navnNorsk": "Sola",
-    "nummer": "1124"
+    "navn": "Sørreisa",
+    "navnNorsk": "Sørreisa",
+    "nummer": "5526"
   },
   {
-    "navn": "Randaberg",
-    "navnNorsk": "Randaberg",
-    "nummer": "1127"
+    "navn": "Dyrøy",
+    "navnNorsk": "Dyrøy",
+    "nummer": "5528"
   },
   {
-    "navn": "Strand",
-    "navnNorsk": "Strand",
-    "nummer": "1130"
+    "navn": "Senja",
+    "navnNorsk": "Senja",
+    "nummer": "5530"
   },
   {
-    "navn": "Hjelmeland",
-    "navnNorsk": "Hjelmeland",
-    "nummer": "1133"
+    "navn": "Balsfjord",
+    "navnNorsk": "Balsfjord",
+    "nummer": "5532"
   },
   {
-    "navn": "Kvitsøy",
-    "navnNorsk": "Kvitsøy",
-    "nummer": "1144"
+    "navn": "Karlsøy",
+    "navnNorsk": "Karlsøy",
+    "nummer": "5534"
   },
   {
-    "navn": "Bokn",
-    "navnNorsk": "Bokn",
-    "nummer": "1145"
+    "navn": "Lyngen",
+    "navnNorsk": "Lyngen",
+    "nummer": "5536"
   },
   {
-    "navn": "Karmøy",
-    "navnNorsk": "Karmøy",
-    "nummer": "1149"
+    "navn": "Omasvuotna",
+    "navnNorsk": "Storfjord",
+    "nummer": "5538"
   },
   {
-    "navn": "Utsira",
-    "navnNorsk": "Utsira",
-    "nummer": "1151"
+    "navn": "Gáivuotna",
+    "navnNorsk": "Kåfjord",
+    "nummer": "5540"
   },
   {
-    "navn": "Halden",
-    "navnNorsk": "Halden",
-    "nummer": "3001"
+    "navn": "Skjervøy",
+    "navnNorsk": "Skjervøy",
+    "nummer": "5542"
   },
   {
-    "navn": "Sarpsborg",
-    "navnNorsk": "Sarpsborg",
-    "nummer": "3003"
+    "navn": "Nordreisa",
+    "navnNorsk": "Nordreisa",
+    "nummer": "5544"
   },
   {
-    "navn": "Fredrikstad",
-    "navnNorsk": "Fredrikstad",
-    "nummer": "3004"
+    "navn": "Kvænangen",
+    "navnNorsk": "Kvænangen",
+    "nummer": "5546"
   },
   {
-    "navn": "Hvaler",
-    "navnNorsk": "Hvaler",
-    "nummer": "3011"
+    "navn": "Alta",
+    "navnNorsk": "Alta",
+    "nummer": "5601"
   },
   {
-    "navn": "Aremark",
-    "navnNorsk": "Aremark",
-    "nummer": "3012"
+    "navn": "Hammerfest",
+    "navnNorsk": "Hammerfest",
+    "nummer": "5603"
   },
   {
-    "navn": "Sandefjord",
-    "navnNorsk": "Sandefjord",
-    "nummer": "3804"
+    "navn": "Sør-Varanger",
+    "navnNorsk": "Sør-Varanger",
+    "nummer": "5605"
   },
   {
-    "navn": "Larvik",
-    "navnNorsk": "Larvik",
-    "nummer": "3805"
+    "navn": "Vadsø",
+    "navnNorsk": "Vadsø",
+    "nummer": "5607"
   },
   {
-    "navn": "Porsgrunn",
-    "navnNorsk": "Porsgrunn",
-    "nummer": "3806"
+    "navn": "Kárásjohka",
+    "navnNorsk": "Karasjok",
+    "nummer": "5610"
   },
   {
-    "navn": "Skien",
-    "navnNorsk": "Skien",
-    "nummer": "3807"
+    "navn": "Guovdageaidnu",
+    "navnNorsk": "Kautokeino",
+    "nummer": "5612"
   },
   {
-    "navn": "Færder",
-    "navnNorsk": "Færder",
-    "nummer": "3811"
+    "navn": "Loppa",
+    "navnNorsk": "Loppa",
+    "nummer": "5614"
   },
   {
-    "navn": "Bamble",
-    "navnNorsk": "Bamble",
-    "nummer": "3813"
+    "navn": "Hasvik",
+    "navnNorsk": "Hasvik",
+    "nummer": "5616"
   },
   {
-    "navn": "Kragerø",
-    "navnNorsk": "Kragerø",
-    "nummer": "3814"
+    "navn": "Måsøy",
+    "navnNorsk": "Måsøy",
+    "nummer": "5618"
   },
   {
-    "navn": "Drangedal",
-    "navnNorsk": "Drangedal",
-    "nummer": "3815"
+    "navn": "Nordkapp",
+    "navnNorsk": "Nordkapp",
+    "nummer": "5620"
   },
   {
-    "navn": "Nome",
-    "navnNorsk": "Nome",
-    "nummer": "3816"
+    "navn": "Porsángu",
+    "navnNorsk": "Porsanger",
+    "nummer": "5622"
   },
   {
-    "navn": "Nissedal",
-    "navnNorsk": "Nissedal",
-    "nummer": "3822"
+    "navn": "Lebesby",
+    "navnNorsk": "Lebesby",
+    "nummer": "5624"
   },
   {
-    "navn": "Fyresdal",
-    "navnNorsk": "Fyresdal",
-    "nummer": "3823"
+    "navn": "Gamvik",
+    "navnNorsk": "Gamvik",
+    "nummer": "5626"
   },
   {
-    "navn": "Risør",
-    "navnNorsk": "Risør",
-    "nummer": "4201"
+    "navn": "Deatnu",
+    "navnNorsk": "Tana",
+    "nummer": "5628"
   },
   {
-    "navn": "Grimstad",
-    "navnNorsk": "Grimstad",
-    "nummer": "4202"
+    "navn": "Berlevåg",
+    "navnNorsk": "Berlevåg",
+    "nummer": "5630"
   },
   {
-    "navn": "Arendal",
-    "navnNorsk": "Arendal",
-    "nummer": "4203"
+    "navn": "Båtsfjord",
+    "navnNorsk": "Båtsfjord",
+    "nummer": "5632"
   },
   {
-    "navn": "Kristiansand",
-    "navnNorsk": "Kristiansand",
-    "nummer": "4204"
+    "navn": "Vardø",
+    "navnNorsk": "Vardø",
+    "nummer": "5634"
   },
   {
-    "navn": "Lindesnes",
-    "navnNorsk": "Lindesnes",
-    "nummer": "4205"
-  },
-  {
-    "navn": "Farsund",
-    "navnNorsk": "Farsund",
-    "nummer": "4206"
-  },
-  {
-    "navn": "Flekkefjord",
-    "navnNorsk": "Flekkefjord",
-    "nummer": "4207"
-  },
-  {
-    "navn": "Gjerstad",
-    "navnNorsk": "Gjerstad",
-    "nummer": "4211"
-  },
-  {
-    "navn": "Vegårshei",
-    "navnNorsk": "Vegårshei",
-    "nummer": "4212"
-  },
-  {
-    "navn": "Tvedestrand",
-    "navnNorsk": "Tvedestrand",
-    "nummer": "4213"
-  },
-  {
-    "navn": "Froland",
-    "navnNorsk": "Froland",
-    "nummer": "4214"
-  },
-  {
-    "navn": "Lillesand",
-    "navnNorsk": "Lillesand",
-    "nummer": "4215"
-  },
-  {
-    "navn": "Birkenes",
-    "navnNorsk": "Birkenes",
-    "nummer": "4216"
-  },
-  {
-    "navn": "Åmli",
-    "navnNorsk": "Åmli",
-    "nummer": "4217"
-  },
-  {
-    "navn": "Iveland",
-    "navnNorsk": "Iveland",
-    "nummer": "4218"
-  },
-  {
-    "navn": "Evje og Hornnes",
-    "navnNorsk": "Evje og Hornnes",
-    "nummer": "4219"
-  },
-  {
-    "navn": "Bygland",
-    "navnNorsk": "Bygland",
-    "nummer": "4220"
-  },
-  {
-    "navn": "Valle",
-    "navnNorsk": "Valle",
-    "nummer": "4221"
-  },
-  {
-    "navn": "Vennesla",
-    "navnNorsk": "Vennesla",
-    "nummer": "4223"
-  },
-  {
-    "navn": "Åseral",
-    "navnNorsk": "Åseral",
-    "nummer": "4224"
-  },
-  {
-    "navn": "Lyngdal",
-    "navnNorsk": "Lyngdal",
-    "nummer": "4225"
-  },
-  {
-    "navn": "Hægebostad",
-    "navnNorsk": "Hægebostad",
-    "nummer": "4226"
-  },
-  {
-    "navn": "Kvinesdal",
-    "navnNorsk": "Kvinesdal",
-    "nummer": "4227"
-  },
-  {
-    "navn": "Sirdal",
-    "navnNorsk": "Sirdal",
-    "nummer": "4228"
+    "navn": "Unjárga",
+    "navnNorsk": "Nesseby",
+    "nummer": "5636"
   }
 ]
