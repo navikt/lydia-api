@@ -16,16 +16,28 @@
     "nummer": "18"
   },
   {
-    "navn": "Viken",
-    "nummer": "30"
+    "navn": "Østfold",
+    "nummer": "31"
+  },
+  {
+    "navn": "Akershus",
+    "nummer": "32"
+  },
+  {
+    "navn": "Buskerud",
+    "nummer": "33"
   },
   {
     "navn": "Innlandet",
     "nummer": "34"
   },
   {
-    "navn": "Vestfold og Telemark",
-    "nummer": "38"
+    "navn": "Vestfold",
+    "nummer": "39"
+  },
+  {
+    "navn": "Telemark",
+    "nummer": "40"
   },
   {
     "navn": "Agder",
@@ -40,7 +52,11 @@
     "nummer": "50"
   },
   {
-    "navn": "Troms og Finnmark",
-    "nummer": "54"
+    "navn": "Troms",
+    "nummer": "55"
+  },
+  {
+    "navn": "Finnmark",
+    "nummer": "56"
   }
 ]
