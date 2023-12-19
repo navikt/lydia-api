@@ -6,7 +6,6 @@ import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
@@ -25,8 +24,6 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import kotlin.test.Test
-import kotlin.test.fail
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils
 import no.nav.lydia.helper.KafkaContainerHelper
@@ -66,7 +63,6 @@ import no.nav.lydia.helper.TestData.Companion.gjeldendePeriode
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
 import no.nav.lydia.helper.TestVirksomhet.Companion.BERGEN
 import no.nav.lydia.helper.TestVirksomhet.Companion.INDRE_ØSTFOLD
-import no.nav.lydia.helper.TestVirksomhet.Companion.KOMMUNE_OSLO
 import no.nav.lydia.helper.TestVirksomhet.Companion.LUNNER
 import no.nav.lydia.helper.TestVirksomhet.Companion.TESTVIRKSOMHET_FOR_STATUSFILTER
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
@@ -100,6 +96,8 @@ import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
 import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
+import kotlin.test.Test
+import kotlin.test.fail
 
 class SykefraværsstatistikkApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
@@ -423,9 +421,9 @@ class SykefraværsstatistikkApiTest {
     @Test
     fun `skal returnere både samiske og norske kommunenavn`() {
         val filterverdier = hentFilterverdier()
-        val tromsOgFinnmark = filterverdier.fylker.first { it.fylke.nummer == "54" }
+        val tromsOgFinnmark = filterverdier.fylker.first { it.fylke.nummer == "56" }
         tromsOgFinnmark.kommuner.forExactlyOne {
-            it.nummer shouldBe "5441"
+            it.nummer shouldBe "5628"
             it.navn shouldBe "Deatnu"
             it.navnNorsk shouldBe "Tana"
         }
@@ -523,41 +521,6 @@ class SykefraværsstatistikkApiTest {
     }
 
     @Test
-    fun `skal kunne filtrere på øst-viken fylke`() {
-        val virksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
-        lastInnNyVirksomhet(nyVirksomhet = virksomhet)
-        val alleKommunenummerIØstViken = GeografiService().hentKommunerFraFylkesnummer(listOf("Ø30")).map { it.nummer }
-        hentSykefravær(
-            fylker = "Ø30",
-            success = { response ->
-                response.data.size shouldBeGreaterThan 0
-                response.data.forAll { dto ->
-                    dto.matcher<String>(kolonne = "kommunenummer") {
-                        it shouldBeIn alleKommunenummerIØstViken
-                    }
-                }
-            }
-        )
-    }
-
-    @Test
-    fun `skal kunne filtrere på en enkelt kommune i øst-viken`() {
-        val virksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
-        lastInnNyVirksomhet(nyVirksomhet = virksomhet)
-        hentSykefravær(
-            kommuner = INDRE_ØSTFOLD.nummer,
-            success = { response ->
-                response.data.size shouldBeGreaterThan 0
-                response.data.forAll { dto ->
-                    dto.matcher<String>(kolonne = "kommunenummer") {
-                        it shouldBe INDRE_ØSTFOLD.nummer
-                    }
-                }
-            }
-        )
-    }
-
-    @Test
     fun `skal kun få treff fra kommuner definert i søkeparemeter og ikke fra hele fylke (hvis man spesifiserer fylke)`() {
         val virksomhet1 = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
         lastInnNyVirksomhet(nyVirksomhet = virksomhet1)
@@ -576,25 +539,6 @@ class SykefraværsstatistikkApiTest {
             }
         )
     }
-
-    @Test
-    fun `skal kunne filtrere på kommuner utenfor øst-viken samt fylke øst-viken`() {
-        val virksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = INDRE_ØSTFOLD))
-        lastInnNyVirksomhet(nyVirksomhet = virksomhet)
-        hentSykefravær(
-            kommuner = KOMMUNE_OSLO.nummer,
-            fylker = "Ø30",
-            success = { response ->
-                response.data.size shouldBeGreaterThan 0
-                response.data.forAll { dto ->
-                    dto.matcher<String>(kolonne = "kommunenummer") {
-                        it.substring(0..1) shouldBeIn setOf("30", "03")
-                    }
-                }
-            }
-        )
-    }
-
 
     @Test
     fun `skal kunne hente alle virksomheter i et gitt fylke og en gitt kommune`() {
