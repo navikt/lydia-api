@@ -2,6 +2,7 @@ package no.nav.lydia.container.iatjenesteoversikt
 
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
+import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -106,5 +107,26 @@ class IATjenesteoversiktApiTest {
         mineLeveranser shouldHaveAtLeastSize 1
         mineLeveranser.forAtLeastOne { it.modul.deaktivert && it.iaTjeneste.deaktivert }
         mineLeveranser.forAtLeastOne { it.iaTjeneste.id == iaTjeneste.id && it.modul.id == modul.id}
+    }
+
+    @Test
+    fun `skal ikke få ut leveranser i saker som er avsluttet`() {
+        val virksomhet1 = VirksomhetHelper.lastInnNyVirksomhet()
+        val leveranseIAvsluttetSak = SakHelper.nySakIViBistår(orgnummer = virksomhet1.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
+        TestContainerHelper.postgresContainer.performUpdate("UPDATE ia_sak SET status = 'FULLFØRT' WHERE saksnummer = '${leveranseIAvsluttetSak.saksnummer}'")
+
+        val virksomhet2 = VirksomhetHelper.lastInnNyVirksomhet()
+        val leveranseIÅpenSak = SakHelper.nySakIViBistår(orgnummer = virksomhet2.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
+        val mineleveranser = IATjenesteoversiktHelper.hentMineIATjenester().third.get()
+        mineleveranser.forAtLeastOne {
+            it.orgnr shouldBe virksomhet2.orgnr
+        }
+        mineleveranser.forNone {
+            it.orgnr shouldBe virksomhet1.orgnr
+        }
+
+        // rydd opp
+        TestContainerHelper.postgresContainer.performUpdate("delete from iasak_leveranse where saksnummer = '${leveranseIAvsluttetSak.saksnummer}'")
+        leveranseIÅpenSak.slettIASakLeveranse(virksomhet2.orgnr, saksbehandlerToken)
     }
 }
