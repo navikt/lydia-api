@@ -808,7 +808,7 @@ class StatistikkHelper {
                         .authentication().bearer(token)
                         .tilSingelRespons<Publiseringsinfo>()
 
-        private fun hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(
+        fun hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(
                 orgnummer: String,
                 token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
@@ -850,22 +850,22 @@ class StatistikkHelper {
 
         // Defaultverdiane her er standard-verdiane i kall frå frontend per 2023-11-09
         fun hentSykefraværForAlleVirksomheterMedFilter(
-                                                              side: Int = 1,
-                                                              kommuner: String = "",
-                                                              fylker: String = "",
-                                                              næringsgrupper: String = "",
-                                                              sorteringsnokkel: String = "",
-                                                              sorteringsretning: String = "",
-                                                              sykefraværsprosentFra: String = "0.00",
-                                                              sykefraværsprosentTil: String = "100.00",
-                                                              snittFilter: String = "",
-                                                              ansatteFra: String = "5",
-                                                              ansatteTil: String = "",
-                                                              iaStatus: String = "",
-                                                              bransjeProgram: String = "",
-                                                              eiere: String = "",
-                                                              sektor: List<Sektor> = listOf(),
-                                                              token: String = oauth2ServerContainer.saksbehandler1.token,): List<VirksomhetsoversiktDto> {
+                                                            side: Int = 1,
+                                                            kommuner: String = "",
+                                                            fylker: String = "",
+                                                            næringsgrupper: String = "",
+                                                            sorteringsnokkel: String = "",
+                                                            sorteringsretning: String = "",
+                                                            sykefraværsprosentFra: String = "0.00",
+                                                            sykefraværsprosentTil: String = "100.00",
+                                                            snittFilter: String = "",
+                                                            ansatteFra: String = "5",
+                                                            ansatteTil: String = "",
+                                                            iaStatus: String = "",
+                                                            bransjeProgram: String = "",
+                                                            eiere: String = "",
+                                                            sektor: List<Sektor> = listOf(),
+                                                            token: String = oauth2ServerContainer.saksbehandler1.token,): List<VirksomhetsoversiktDto> {
             var itererbarSide = side
             val liste = mutableListOf<VirksomhetsoversiktDto>()
 

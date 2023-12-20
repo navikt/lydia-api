@@ -216,4 +216,27 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
         result.sykefraværsprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
+
+    @Test
+    fun `skal kunne hente sykefraværsstatistikk riktig når vi har nyere perioder enn gjeldene`() {
+        val gjeldendePeriode = TestData.gjeldendePeriode
+        val virksomhet = TestVirksomhet.nyVirksomhet()
+        VirksomhetHelper.lastInnTestdata(
+                TestData().lagData(
+                        virksomhet = virksomhet,
+                        perioder = listOf(gjeldendePeriode, gjeldendePeriode.nestePeriode()), // med ekstra periode
+                )
+        )
+        val sykefraværsprosentSisteTilgjengeligeKvartal = TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
+                """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
+                where orgnr='${virksomhet.orgnr}' 
+                and kvartal=${gjeldendePeriode.kvartal}
+                and arstall=${gjeldendePeriode.årstall}
+                """.trimMargin()
+        )
+
+        val result =
+                StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
+        result.sykefraværsprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
+    }
 }

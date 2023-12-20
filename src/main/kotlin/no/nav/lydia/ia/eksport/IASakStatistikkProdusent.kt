@@ -65,7 +65,7 @@ class IASakStatistikkProdusent(
             else
                 null
         val virksomhetsstatistikkSisteKvartal =
-            sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(input.orgnr, periode = periode)
+            sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(orgnr = input.orgnr, periode = periode)
                 .getOrNull()
         val fylkesnummer = virksomhet?.let { geografiService.finnFylke(it.kommunenummer) }
         val kafkaMelding = input.tilKafkaMelding(

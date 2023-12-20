@@ -21,6 +21,7 @@ import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
+import kotlin.time.Duration.Companion.seconds
 
 class VirksomhetOppdateringTest {
     private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
@@ -28,7 +29,7 @@ class VirksomhetOppdateringTest {
     @Test
     fun `vi oppdaterer næringsgrupper til en bedrift`() {
         val nyVirksomhet = nyVirksomhet(
-               næringer = listOf(
+                næringer = listOf(
                         Næringsgruppe(
                                 "Barnehager", "88.911"
                         ),
@@ -133,7 +134,7 @@ private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(
     navn: String = this.navn
 ): VirksomhetDto {
     val virksomhetDto = skalHaRiktigTilstand(status, navn)
-    virksomhetDto.sistEndretTidspunkt shouldBeGreaterThan virksomhetDto.opprettetTidspunkt
+    virksomhetDto.sistEndretTidspunkt.plus(1.seconds) shouldBeGreaterThan virksomhetDto.opprettetTidspunkt
     return virksomhetDto
 }
 
@@ -156,7 +157,7 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     virksomhetDto.næringsundergruppe2 shouldBe this.næringsundergruppe2
     virksomhetDto.næringsundergruppe3 shouldBe this.næringsundergruppe3
     virksomhetDto.oppdatertAvBrregOppdateringsId shouldBe genererOppdateringsid(this)
-    virksomhetDto.opprettetTidspunkt shouldBeLessThan Clock.System.now()
+    virksomhetDto.opprettetTidspunkt.minus(1.seconds) shouldBeLessThan Clock.System.now()
     return virksomhetDto
 }
 

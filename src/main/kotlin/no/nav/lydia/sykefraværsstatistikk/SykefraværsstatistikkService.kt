@@ -172,7 +172,7 @@ class SykefraværsstatistikkService(
     ): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhetSisteKvartal =
-            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr, periode = periode)
+            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr, periode = periode, gjeldenPeriode = sistePubliseringService.hentGjelendePeriode())
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhetSisteKvartal?.right()
