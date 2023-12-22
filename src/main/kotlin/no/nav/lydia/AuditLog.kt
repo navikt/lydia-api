@@ -33,7 +33,8 @@ class AuditLog(val miljø: Environment) {
         tillat: Tillat,
         saksnummer: String?,
         melding: String?,
-        severity: String
+        severity: String,
+        feilkode: String? = null
     ) {
         val logstring =
             "CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=${System.currentTimeMillis()} " +
@@ -50,7 +51,8 @@ class AuditLog(val miljø: Environment) {
                     "flexString1Label=Decision " +
                     "flexString1=${tillat.tillat}" +
                     (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
-                    (melding?.let { " msg=$it" } ?: "")
+                    (melding?.let { " msg=$it" } ?: "") +
+                    (feilkode?.let { " flexString3Label=feilkode flexString3=$it" })
 
         when (miljø) {
             `PROD-GCP` -> auditLog.info(logstring)
@@ -72,6 +74,7 @@ class AuditLog(val miljø: Environment) {
             is Either.Left -> either.value.httpStatusCode.tilTillat()
             else -> Tillat.Ja
         }
+        val feilkode: String? = either.leftOrNull()?.httpStatusCode?.value?.toString()
 
         call.innloggetNavIdent()?.let { navIdent ->
             log(
@@ -83,7 +86,8 @@ class AuditLog(val miljø: Environment) {
                 tillat = tillat,
                 saksnummer = saksnummer,
                 melding = melding,
-                severity = severity
+                severity = severity,
+                feilkode = feilkode,
             )
         }
     }

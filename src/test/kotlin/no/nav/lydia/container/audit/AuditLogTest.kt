@@ -1,6 +1,7 @@
 package no.nav.lydia.container.audit
 
 import com.github.kittinunf.fuel.core.Request
+import io.ktor.http.HttpStatusCode
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
 import no.nav.lydia.helper.IATjenesteoversiktHelper
@@ -198,6 +199,21 @@ class AuditLogTest {
     }
 
     @Test
+    fun `auditlogger uthenting av sykefraværsstatistikk med feilkode på en ikke eksisterende virksomhet`() {
+        val orgnummer = "ikke_org_nr"
+        StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).also {
+            lydiaApiContainer shouldContainLog auditLog(
+                request = it.first,
+                navIdent = mockOAuth2Server.lesebruker.navIdent,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                tillat = Tillat.Ja,
+                feilkode = HttpStatusCode.NotFound.value.toString()
+            )
+        }
+    }
+
+    @Test
     fun `auditlogger uthenting av virksomhetsdata for en spesifikk virksomhet`() {
         val orgnummer = TestVirksomhet.BERGEN.orgnr
         val superbruker = mockOAuth2Server.superbruker1
@@ -310,7 +326,8 @@ class AuditLogTest {
         auditType: AuditType,
         tillat: Tillat,
         saksnummer: String? = null,
-        severity: String = "INFO"
+        severity: String = "INFO",
+        feilkode: String? = null,
     ): Regex {
         return auditLog(
             method = request.method.toString(),
@@ -320,7 +337,8 @@ class AuditLogTest {
             auditType = auditType,
             tillat = tillat,
             saksnummer = saksnummer,
-            severity = severity
+            severity = severity,
+            feilkode = feilkode,
         )
     }
 
@@ -333,7 +351,8 @@ class AuditLogTest {
         tillat: Tillat,
         saksnummer: String? = null,
         melding: String? = null,
-        severity: String = "INFO"
+        severity: String = "INFO",
+        feilkode: String? = null,
     ) =
         ("CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=[0-9]+ " +
                 "suid=$navIdent " +
@@ -344,6 +363,7 @@ class AuditLogTest {
                 "flexString1Label=Decision " +
                 "flexString1=${tillat.tillat}" +
                 (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
+                (feilkode?.let { " flexString3Label=feilkode flexString3=$it" } ?: "") +
                 (melding?.let { " msg=${it.replace("[","\\[").replace("]","\\]")}" } ?: "")
                 ).replace("|", "\\|").replace("?", "\\?").toRegex()
 }
