@@ -1,5 +1,3 @@
-version: "3.0"
-
 services:
   authserver:
     image: ghcr.io/navikt/mock-oauth2-server:0.5.8
@@ -138,8 +136,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_URI_FIASESSIONS: redis://redis:6379
+      REDIS_USERNAME_FIASESSIONS: brukernavn
+      REDIS_PASSWORD_FIASESSIONS: passord
       NAIS_CLUSTER_NAME: dev
       SESSION_SECRET: secret
       OBO_TOKEN_ENC_KEY: bogus
@@ -159,11 +158,10 @@ services:
 
   redis:
     image: redis:7-alpine
-    restart: always
     ports:
-      - "6379:6379"
-    volumes:
-      - redis-cache:/data
+      - 6379:6379
+    command: ["redis-server", "--user brukernavn on +@all ~* >passord"]
+    restart: unless-stopped
 
   wonderwall:
     image: ghcr.io/nais/wonderwall:latest
