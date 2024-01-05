@@ -1,8 +1,8 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "1.9.21"
+    kotlin("jvm") version "1.9.22"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "1.9.21"
+    kotlin("plugin.serialization") version "1.9.22"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.6"
+    val ktorVersion = "2.3.7"
     val fuelVersion = "2.3.1"
 
     implementation(kotlin("stdlib"))
@@ -44,12 +44,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.12.0")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.12.1")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.1")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.1.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.4.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -73,7 +73,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.37.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -96,7 +96,7 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.0.1")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.0")
 
     constraints {
         implementation("net.minidev:json-smart") {
@@ -107,7 +107,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.101.Final")
+                require("4.1.104.Final")
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
