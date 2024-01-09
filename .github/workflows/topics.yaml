@@ -7,7 +7,8 @@ on:
       - .nais/topics/** # Deploy topics ved endringer i topics-mappen
       - .github/workflows/topics.yaml # Deploy topics ved endringer i topics.yaml
 
-permissions: {}
+permissions:
+  id-token: write
 
 jobs:
   deploy:
@@ -20,9 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy topics to ${{ matrix.cluster }}
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: ${{ matrix.cluster }}-gcp
           RESOURCE: .nais/topics/jobblytter-topic.yaml,.nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-status-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml,.nais/topics/kartlegging-topic.yaml
           VARS: .nais/${{ matrix.cluster }}.yaml

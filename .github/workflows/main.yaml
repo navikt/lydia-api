@@ -45,7 +45,8 @@ jobs:
       image: ${{ steps.docker-push.outputs.image }}
 
   deploy:
-    permissions: {}
+    permissions:
+      id-token: write
     strategy:
       matrix:
         cluster: [dev, prod]
@@ -56,16 +57,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy application to ${{ matrix.cluster }}
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
           IMAGE: ${{ needs.build.outputs.image }}
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: ${{ matrix.cluster }}-gcp
           RESOURCE: .nais/nais.yaml
           VARS: .nais/${{ matrix.cluster }}.yaml
 
   deploy-dev-branch:
-    permissions: {}
+    permissions:
+      id-token: write
     name: Deploy app to dev
     needs: build
     if: github.ref == 'refs/heads/tilbake_til_status_IKKE_AKTIV_etter_6_mnd'
@@ -73,10 +74,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Deploy application to dev
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
           IMAGE: ${{ needs.build.outputs.image }}
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           CLUSTER: dev-gcp
           RESOURCE: .nais/nais.yaml
           VARS: .nais/dev.yaml
