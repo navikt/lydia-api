@@ -10,7 +10,7 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: gradle/wrapper-validation-action@v1
       - uses: actions/cache@v3
         with:
@@ -54,7 +54,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Deploy application to ${{ matrix.cluster }}
         uses: nais/deploy/actions/deploy@v1
         env:
@@ -71,7 +71,7 @@ jobs:
     if: github.ref == 'refs/heads/tilbake_til_status_IKKE_AKTIV_etter_6_mnd'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Deploy application to dev
         uses: nais/deploy/actions/deploy@v1
         env:
