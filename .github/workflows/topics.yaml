@@ -24,5 +24,12 @@ jobs:
         uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: ${{ matrix.cluster }}-gcp
-          RESOURCE: .nais/topics/jobblytter-topic.yaml,.nais/topics/ia-sak-topic.yaml,.nais/topics/ia-sak-statistikk-topic.yaml,.nais/topics/ia-sak-status-topic.yaml,.nais/topics/ia-sak-leveranse-topic.yaml,.nais/topics/kartlegging-topic.yaml
+          RESOURCE: "\
+            .nais/topics/jobblytter-topic.yaml,\
+            .nais/topics/ia-sak-topic.yaml,\
+            .nais/topics/ia-sak-statistikk-topic.yaml,\
+            .nais/topics/ia-sak-status-topic.yaml,\
+            .nais/topics/ia-sak-leveranse-topic.yaml,\
+            .nais/topics/kartlegging-topic.yaml,\
+            .nais/topics/kartlegging-svar-topic.yaml"
           VARS: .nais/${{ matrix.cluster }}.yaml
