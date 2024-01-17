@@ -8,9 +8,15 @@ enum class Sektor(val kode: String, val beskrivelse: String) {
 
 fun String.tilSektor(): Sektor? {
     return when (this) {
-        "1" -> Sektor.STATLIG
-        "2" -> Sektor.KOMMUNAL
-        "3" -> Sektor.PRIVAT
+        Sektor.STATLIG.kode -> Sektor.STATLIG
+        Sektor.STATLIG.name -> Sektor.STATLIG
+        Sektor.KOMMUNAL.kode -> Sektor.KOMMUNAL
+        Sektor.KOMMUNAL.name -> Sektor.KOMMUNAL
+        Sektor.PRIVAT.kode -> Sektor.PRIVAT
+        Sektor.PRIVAT.name -> Sektor.PRIVAT
         else -> null
     }
 }
+
+fun String.erGyldigSektor(): Boolean =
+    this.tilSektor() != null

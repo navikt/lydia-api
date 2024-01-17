@@ -2,6 +2,9 @@ package no.nav.lydia.sykefraværsstatistikk.import
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
+import no.nav.lydia.virksomhet.domene.erGyldigSektor
+import no.nav.lydia.virksomhet.domene.tilSektor
+import java.lang.IllegalArgumentException
 
 // OBS: Statistisk sentralbyrå (SSB) og Brønnøysundregistret bruker SN2007 standard for næringskoder
 // (dvs kode som 'viser virksomhets hovedaktivitet').
@@ -56,6 +59,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     kode = this.kode,
                 )
             )
+
         private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletSektorSykefraværsstatistikk() =
             BehandletSektorSykefraværsstatistikk(
                 statistikk = SektorSykefravær(
@@ -67,7 +71,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     tapteDagsverk = this.sistePubliserteKvartal.tapteDagsverk ?: 0.0,
                     maskert = this.sistePubliserteKvartal.erMaskert,
                     kategori = this.kategori.name,
-                    kode = this.kode,
+                    kode = this.kode.tilSektor()?.kode ?: throw IllegalArgumentException("Ukjent sektor"), // Dette skal aldri skje, DTO er allerede filtrert
                 )
             )
 
@@ -146,15 +150,34 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                 )
             )
 
+        // Vi får Sektor fra Sykefraværsstatistikk-api som en 'beskrivelse' men lagre statistikk på tilsvarende 'kode'
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.mapSektorNavnTilSektorKode() =
+            this.map {
+                when (it.kategori) {
+                    Kategori.SEKTOR -> SykefraværsstatistikkPerKategoriImportDto(
+                        kategori = it.kategori,
+                        kode = it.kode.tilSektor()?.kode
+                            ?: throw IllegalArgumentException("Ukjent sektor"), // Dette skal aldri skje, DTO er allerede filtrert
+                        sistePubliserteKvartal = it.sistePubliserteKvartal,
+                        siste4Kvartal = it.siste4Kvartal
+                    )
+                    else -> it
+                }
+            }
+
+        fun List<SykefraværsstatistikkPerKategoriImportDto>.filterPåKategoriSektorOgGyldigSektor() =
+            this.filter { it.kategori == Kategori.SEKTOR && it.kode.erGyldigSektor() }
+
         fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletLandSykefraværsstatistikk() =
             this.map {
                 it.tilBehandletLandSykefraværsstatistikk()
             }
 
         fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletSektorSykefraværsstatistikk() =
-            this.map {
-                it.tilBehandletSektorSykefraværsstatistikk()
-            }
+            this.filterPåKategoriSektorOgGyldigSektor()
+                .map {
+                    it.tilBehandletSektorSykefraværsstatistikk()
+                }
 
         fun List<SykefraværsstatistikkPerKategoriImportDto>.tilBehandletBransjeSykefraværsstatistikk() =
             this.map {
