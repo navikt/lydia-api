@@ -22,6 +22,8 @@ import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSiste4Kva
 import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraværsstatistikk.import.*
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori.*
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.filterPåKategoriSektorOgGyldigSektor
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.mapSektorNavnTilSektorKode
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
@@ -95,8 +97,19 @@ class SykefraværsstatistikkService(
             sykefraværsstatistikk = sykefraværsstatistikkForVirksomheter
         )
 
+        val sykefraværsstatistikkForSektor = sykefraværsstatistikkKategoriImportDtoListe
+            .filterPåKategoriSektorOgGyldigSektor()
+            .mapSektorNavnTilSektorKode()
+
+        if (sykefraværsstatistikkForSektor.isNotEmpty()) {
+            log.info("Lagrer ${sykefraværsstatistikkForSektor.size} rad(er) med statistikk for SEKTOR i siste 4 kvartal")
+        }
+        sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
+            sykefraværsstatistikk = sykefraværsstatistikkForSektor
+        )
+
         val sykefraværsstatistikkForAndreKategorier = sykefraværsstatistikkKategoriImportDtoListe
-            .filter { it.kategori != VIRKSOMHET }
+            .filter { it.kategori != VIRKSOMHET && it.kategori != SEKTOR }
 
         if (sykefraværsstatistikkForAndreKategorier.isNotEmpty()) {
             log.info("Lagrer ${sykefraværsstatistikkForAndreKategorier.size} rad(er) med statistikk for andre kategorier i siste 4 kvartal")

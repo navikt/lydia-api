@@ -1,5 +1,6 @@
 package no.nav.lydia.container.sykefraværsstatistikk.importering
 
+import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import no.nav.lydia.Kafka
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
@@ -13,6 +14,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
 import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import no.nav.lydia.virksomhet.domene.Sektor
+import no.nav.lydia.virksomhet.domene.tilSektor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
@@ -49,15 +51,110 @@ class SykefraværsstatistikkKategoriImportTest {
             kafkaMelding sistePubliserteKvartalShouldBeEqual
                     SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
                         kategori,
-                        kode,
+                        henteKodeIDatabasen(kategori),
                         TestData.gjeldendePeriode.tilKvartal()
                     ).sistePubliserteKvartal
+
             kafkaMelding siste4KvartalShouldBeEqual
                     SykefraværsstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
                         kategori,
-                        kode,
+                        henteKodeIDatabasen(kategori),
                         TestData.gjeldendePeriode.tilKvartal()
                     ).siste4Kvartal
+        }
+    }
+
+    @Test
+    fun `vi lagrer sykefraværsstatistikk sektor ut ifra navn til sektor (og ikke kode)`() {
+        listOf(
+            Sektor.KOMMUNAL.name,
+            Sektor.PRIVAT.name,
+            Sektor.STATLIG.name
+        ).forAll { sektorNavn ->
+            val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
+                kategori = Kategori.SEKTOR,
+                kode = sektorNavn,
+                kvartal = TestData.gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal,
+                siste4Kvartal = siste4Kvartal
+            )
+
+            kafkaContainerHelper.sendOgVentTilKonsumert(
+                kafkaMelding.toJsonKey(),
+                kafkaMelding.toJsonValue(),
+                topicForKategori(Kategori.SEKTOR),
+                groupIdForKategori(Kategori.SEKTOR)
+            )
+
+            val sektorKode = sektorNavn.tilSektor()!!.kode
+
+            kafkaMelding sistePubliserteKvartalShouldBeEqual
+                    SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
+                        Kategori.SEKTOR,
+                        sektorKode,
+                        TestData.gjeldendePeriode.tilKvartal()
+                    ).sistePubliserteKvartal
+
+            kafkaMelding siste4KvartalShouldBeEqual
+                    SykefraværsstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
+                        Kategori.SEKTOR,
+                        sektorKode,
+                        TestData.gjeldendePeriode.tilKvartal()
+                    ).siste4Kvartal
+        }
+    }
+
+    @Test
+    fun `sykefraværsstatistikk med ukjent sektor blir ikke lagret`() {
+        listOf(
+            "UKJENT",
+            "Noe annet",
+        ).forAll { sektorSomKodeEllerBeskrivelse ->
+            val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
+                kategori = Kategori.SEKTOR,
+                kode = sektorSomKodeEllerBeskrivelse,
+                kvartal = TestData.gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal,
+                siste4Kvartal = siste4Kvartal
+            )
+
+            kafkaContainerHelper.sendOgVentTilKonsumert(
+                kafkaMelding.toJsonKey(),
+                kafkaMelding.toJsonValue(),
+                topicForKategori(Kategori.SEKTOR),
+                groupIdForKategori(Kategori.SEKTOR)
+            )
+
+            shouldFail {
+                 SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
+                     Kategori.SEKTOR,
+                     "0",
+                     TestData.gjeldendePeriode.tilKvartal()
+                 )
+            }
+            shouldFail {
+                SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
+                    Kategori.SEKTOR,
+                    "UKJENT",
+                    TestData.gjeldendePeriode.tilKvartal()
+                )
+            }
+
+            shouldFail {
+                SykefraværsstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
+                    Kategori.SEKTOR,
+                    "0",
+                    TestData.gjeldendePeriode.tilKvartal()
+                )
+            }
+            shouldFail {
+                SykefraværsstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
+                    Kategori.SEKTOR,
+                    "UKJENT",
+                    TestData.gjeldendePeriode.tilKvartal()
+                )
+            }
+
         }
     }
 
@@ -107,30 +204,36 @@ class SykefraværsstatistikkKategoriImportTest {
             oppdatertKafkaMelding sistePubliserteKvartalShouldBeEqual
                     SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
                         kategori,
-                        kode,
+                        henteKodeIDatabasen(kategori),
                         TestData.gjeldendePeriode.tilKvartal()
                     ).sistePubliserteKvartal
             oppdatertKafkaMelding siste4KvartalShouldBeEqual
                     SykefraværsstatistikkImportTestUtils.hentStatistikkSiste4Kvartal(
                         kategori,
-                        kode,
+                        henteKodeIDatabasen(kategori),
                         TestData.gjeldendePeriode.tilKvartal()
                     ).siste4Kvartal
-
         }
     }
 
-    private fun kodeForKategori(kategori: Kategori) = when(kategori) {
+    // Kode som Sykefraværsstatistikk sender på Kafka
+    private fun kodeForKategori(kategori: Kategori) = when (kategori) {
         Kategori.NÆRING -> TestData.NÆRING_JORDBRUK
         Kategori.NÆRINGSKODE -> TestData.NÆRINGSKODE_BARNEHAGER
         Kategori.LAND -> "NO"
-        Kategori.SEKTOR -> Sektor.PRIVAT.kode
+        Kategori.SEKTOR -> Sektor.PRIVAT.name
         Kategori.BRANSJE -> TestData.BRANSJE_BARNEHAGE
         else -> error("Kategori $kategori støttes ikke i testen")
     }
+
+    private fun henteKodeIDatabasen(kategori: Kategori) = when (kategori) {
+        Kategori.SEKTOR -> Sektor.PRIVAT.kode
+        else -> kodeForKategori(kategori)
+    }
+
     private fun topicForKategori(kategori: Kategori) = kafkaConfigForKategori(kategori).first
     private fun groupIdForKategori(kategori: Kategori) = kafkaConfigForKategori(kategori).second
-    private fun kafkaConfigForKategori(kategori: Kategori) = when(kategori) {
+    private fun kafkaConfigForKategori(kategori: Kategori) = when (kategori) {
         Kategori.NÆRING -> KafkaContainerHelper.statistikkNæringTopic to Kafka.statistikkNæringGroupId
         Kategori.NÆRINGSKODE -> KafkaContainerHelper.statistikkNæringskodeTopic to Kafka.statistikkNæringskodeGroupId
         Kategori.LAND -> KafkaContainerHelper.statistikkLandTopic to Kafka.statistikkLandGroupId
