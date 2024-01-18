@@ -39,6 +39,7 @@ import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
+import no.nav.lydia.ia.sak.api.kartlegging.iaSakKartlegging
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
@@ -350,6 +351,12 @@ private fun Application.lydiaRestApi(
                 sistePubliseringService = sistePubliseringService,
             )
             iaSakRådgiver(
+                iaSakService = iaSakService,
+                adGrupper = naisEnv.security.adGrupper,
+                auditLog = auditLog,
+                azureService = azureService,
+            )
+            iaSakKartlegging(
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,

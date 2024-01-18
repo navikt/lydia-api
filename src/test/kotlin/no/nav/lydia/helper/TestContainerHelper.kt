@@ -338,6 +338,17 @@ class SakHelper {
                 failure = { fail(it.message) }
         )
 
+        fun nySakIKartlegges(
+            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = opprettSakForVirksomhet(orgnummer)
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
+            .also {
+                it.status shouldBe IAProsessStatus.KARTLEGGES
+            }
+
         fun nySakIViBistår(
                 orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
                 token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -548,6 +559,18 @@ class SakHelper {
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
+    }
+}
+
+class IASakKartleggingHelper {
+    companion object {
+        fun opprettIASakKartlegging(
+            orgnr: String,
+            saksnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/kartlegging")
+                .authentication().bearer(token)
     }
 }
 

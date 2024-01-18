@@ -21,6 +21,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
+import no.nav.lydia.ia.sak.domene.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
@@ -40,6 +41,7 @@ import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import java.util.UUID
 
 class IASakService(
         private val iaSakRepository: IASakRepository,
@@ -82,6 +84,10 @@ class IASakService(
 
     private fun varsleIASakLeveranseObservers(leveranse: IASakLeveranse) {
         iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
+    }
+
+    fun opprettKartlegging(orgnummer: String, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet): Either<Feil, IASakKartlegging>  {
+        return IASakKartlegging(kartleggingId = UUID.randomUUID()).right()
     }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet): Either<Feil, IASak> {
