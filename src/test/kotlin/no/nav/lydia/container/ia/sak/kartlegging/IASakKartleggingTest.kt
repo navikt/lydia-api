@@ -7,6 +7,7 @@ import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakKartleggingDto
@@ -47,4 +48,13 @@ class IASakKartleggingTest {
         resp.second.body().asString("text/plain") shouldMatch "Ugyldig orgnummer"
     }
 
+    @Test
+    fun `skal få feil når sak ikke er i kartleggingsstatus`() {
+        val sak = nySakIViBistår()
+        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+            .tilSingelRespons<IASakKartleggingDto>()
+
+        resp.second.statusCode shouldBe HttpStatusCode.Forbidden.value
+        resp.second.body().asString("text/plain") shouldMatch "Sak m.. v..re i kartleggingsstatus for .. starte kartlegging"
+    }
 }
