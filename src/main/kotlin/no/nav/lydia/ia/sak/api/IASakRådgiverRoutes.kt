@@ -265,7 +265,7 @@ fun Route.iaSakRådgiver(
     }
 }
 
-private suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)
+suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)
 
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode) {
     companion object {
