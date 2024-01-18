@@ -1,11 +1,13 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import kotlin.test.Test
 import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakKartleggingDto
-import kotlin.test.Test
 
 class IASakKartleggingTest {
 
@@ -17,5 +19,11 @@ class IASakKartleggingTest {
             .tilSingelRespons<IASakKartleggingDto>()
 
         resp.third.get().kartleggingId.length shouldBe 36
+
+        postgresContainer
+            .hentEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().kartleggingId}'"
+            ) shouldNotBe null
     }
+
 }

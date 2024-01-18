@@ -86,8 +86,21 @@ class IASakService(
         iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
     }
 
-    fun opprettKartlegging(orgnummer: String, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet): Either<Feil, IASakKartlegging>  {
-        return IASakKartlegging(kartleggingId = UUID.randomUUID()).right()
+    fun opprettKartlegging(
+        orgnummer: String,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        navEnhet: NavEnhet,
+        saksnummer: String
+    ): Either<Feil, IASakKartlegging>  {
+        val kartleggingId = UUID.randomUUID()
+        iaSakRepository.opprettKartlegging(
+            orgnummer = orgnummer,
+            saksnummer = saksnummer,
+            saksbehandler = saksbehandler,
+            kartleggingId = kartleggingId
+        )
+
+        return IASakKartlegging(kartleggingId = kartleggingId).right()
     }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet): Either<Feil, IASak> {

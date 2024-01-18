@@ -2,6 +2,9 @@ package no.nav.lydia.ia.sak.db
 
 import arrow.core.Either
 import arrow.core.rightIfNotNull
+import java.time.LocalDateTime
+import java.util.UUID
+import javax.sql.DataSource
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -12,8 +15,8 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
-import java.time.LocalDateTime
-import javax.sql.DataSource
+import no.nav.lydia.ia.sak.domene.IASakKartlegging
+import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 
 class IASakRepository(val dataSource: DataSource) {
 
@@ -177,6 +180,52 @@ class IASakRepository(val dataSource: DataSource) {
                 ).map(this::mapRowToIASak).asList
             )
         }
+
+    fun opprettKartlegging(
+        orgnummer: String,
+        kartleggingId: UUID,
+        saksnummer: String,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle
+    ): IASakKartlegging =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    INSERT INTO ia_sak_kartlegging (
+                        kartlegging_id,
+                        orgnr,
+                        saksnummer,
+                        status,
+                        opprettet_av
+                    )
+                    VALUES (
+                        :kartlegging_id,
+                        :orgnr,
+                        :saksnummer,
+                        :status,
+                        :opprettet_av
+                    )
+                    returning *                            
+                """.trimMargin(),
+                    mapOf(
+                        "kartlegging_id" to kartleggingId,
+                        "orgnr" to orgnummer,
+                        "saksnummer" to saksnummer,
+                        "status" to "OPPRETTET",
+                        "opprettet_av" to saksbehandler.navIdent
+                    )
+                ).map(this::mapRowToIASakKartlegging).asSingle
+            )!!
+        }
+
+    private fun mapRowToIASakKartlegging(row: Row): IASakKartlegging {
+        return row.tilIASakKartlegging()
+    }
+
+    fun Row.tilIASakKartlegging(): IASakKartlegging =
+        IASakKartlegging(
+            kartleggingId = UUID.fromString(this.string("kartlegging_id")),
+        )
 
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(

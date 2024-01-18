@@ -29,6 +29,7 @@ fun Route.iaSakKartlegging(
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
                 iaSakService.opprettKartlegging(
                     orgnummer = orgnummer,
+                    saksnummer = saksnummer,
                     saksbehandler = saksbehandler,
                     navEnhet = navEnhet
                 ).map { it.toDto() }
