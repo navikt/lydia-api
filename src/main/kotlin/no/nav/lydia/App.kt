@@ -27,6 +27,7 @@ import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.IASakEksporterer
+import no.nav.lydia.ia.eksport.IASakKartleggingProdusent
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
 import no.nav.lydia.ia.eksport.IASakProdusent
@@ -135,7 +136,11 @@ fun startLydiaBackend() {
         iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
-        årsakService = ÅrsakService(årsakRepository = årsakRepository)
+        årsakService = ÅrsakService(årsakRepository = årsakRepository),
+        iaSakKartleggingProdusent = IASakKartleggingProdusent(
+            produsent = kafkaProdusent,
+            topic = naisEnv.kafka.iaSakKartleggingTopic
+        )
     ).apply {
         leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
         leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
@@ -360,7 +365,6 @@ private fun Application.lydiaRestApi(
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
-                azureService = azureService,
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),

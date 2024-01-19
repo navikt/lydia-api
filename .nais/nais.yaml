@@ -67,6 +67,8 @@ spec:
       value: pia.ia-sak-status-v1
     - name: IA_SAK_LEVERANSE_TOPIC
       value: pia.ia-sak-leveranse-v1
+    - name: IA_SAK_KARTLEGGING_TOPIC
+      value: pia.kartlegging-v1
     - name: BRREG_OPPDATERING_TOPIC
       value: pia.brreg-oppdatering
     - name: BRREG_ALLE_VIRKSOMHETER_TOPIC

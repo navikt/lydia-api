@@ -224,7 +224,10 @@ class IASakRepository(val dataSource: DataSource) {
 
     fun Row.tilIASakKartlegging(): IASakKartlegging =
         IASakKartlegging(
-            kartleggingId = UUID.fromString(this.string("kartlegging_id")),
+            id = UUID.fromString(this.string("kartlegging_id")),
+            saksnummer = this.string("saksnummer"),
+            status = this.string("status"),
+            spørsmålOgSvaralternativer = listOf()
         )
 
     companion object {

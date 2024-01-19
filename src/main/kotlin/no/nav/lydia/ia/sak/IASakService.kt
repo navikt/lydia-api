@@ -8,6 +8,7 @@ import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
+import no.nav.lydia.ia.eksport.IASakKartleggingProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
 import no.nav.lydia.ia.sak.api.IASakError
@@ -44,12 +45,13 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class IASakService(
-        private val iaSakRepository: IASakRepository,
-        private val iaSakshendelseRepository: IASakshendelseRepository,
-        private val iaSakLeveranseRepository: IASakLeveranseRepository,
-        private val årsakService: ÅrsakService,
-        private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
-        private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
+    private val iaSakRepository: IASakRepository,
+    private val iaSakshendelseRepository: IASakshendelseRepository,
+    private val iaSakLeveranseRepository: IASakLeveranseRepository,
+    private val årsakService: ÅrsakService,
+    private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
+    private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
+    private val iaSakKartleggingProdusent: IASakKartleggingProdusent,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -89,18 +91,18 @@ class IASakService(
     fun opprettKartlegging(
         orgnummer: String,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        navEnhet: NavEnhet,
         saksnummer: String
     ): Either<Feil, IASakKartlegging>  {
         val kartleggingId = UUID.randomUUID()
-        iaSakRepository.opprettKartlegging(
+        return iaSakRepository.opprettKartlegging(
             orgnummer = orgnummer,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
             kartleggingId = kartleggingId
-        )
+        ).right().onRight {
+            iaSakKartleggingProdusent.sendPåKafka(it)
+        }
 
-        return IASakKartlegging(kartleggingId = kartleggingId).right()
     }
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet): Either<Feil, IASak> {
