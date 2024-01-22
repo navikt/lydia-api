@@ -45,6 +45,7 @@ import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -571,6 +572,14 @@ class IASakKartleggingHelper {
         ) =
             lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer/opprett")
                 .authentication().bearer(token)
+
+        fun hentIASakKartlegginger(
+            orgnr: String,
+            saksnummer: String,
+        ) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer")
+                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+                .tilListeRespons<IASakKartleggingDto>()
     }
 }
 

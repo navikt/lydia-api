@@ -15,6 +15,7 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
@@ -102,8 +103,20 @@ class IASakService(
         ).right().onRight {
             iaSakKartleggingProdusent.sendPåKafka(it)
         }
-
     }
+
+    fun hentKartlegging(
+        saksnummer: String,
+    ): Either<Feil, List<IASakKartlegging>> {
+        return try {
+            val kartlegginger = iaSakRepository.hentKartlegging(saksnummer = saksnummer)
+            kartlegginger.right()
+        } catch (e: Exception) {
+            log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
+            IASakKartleggingError.`generell feil under uthenting`.left()
+        }
+    }
+
 
     fun opprettSakOgMerkSomVurdert(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet): Either<Feil, IASak> {
         if (!iaSakRepository.hentSaker(orgnummer).all { it.status.regnesSomAvsluttet() }) {

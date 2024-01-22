@@ -104,4 +104,15 @@ class IASakSpørsmålOgSvaralternativerTest {
             }
         }
     }
+
+    @Test
+    fun `skal kunne hente ut liste over alle kartlegginger knyttet til en sak`() {
+        val sak = nySakIKartlegges()
+
+        IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+            .tilSingelRespons<IASakKartleggingDto>()
+
+        IASakKartleggingHelper.hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+            .third.get().shouldHaveSize(1)
+    }
 }

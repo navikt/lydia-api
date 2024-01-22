@@ -5,6 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
@@ -49,9 +50,35 @@ fun Route.iaSakKartlegging(
             call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
+
+    get("$IA_SAK_RADGIVER_PATH/kartlegging/{orgnummer}/{saksnummer}") {
+        val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val iaSak = iaSakService.hentIASak(saksnummer).getOrNull() ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        if (orgnummer != iaSak.orgnr) return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaSakService.hentKartlegging(
+                saksnummer = saksnummer,
+            ).map { it.toDto() }
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                saksnummer = saksnummer
+            )
+        }.map {
+            call.respond(HttpStatusCode.OK, it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
 }
 
 object IASakKartleggingError {
+    val `generell feil under uthenting` =
+        Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
 }

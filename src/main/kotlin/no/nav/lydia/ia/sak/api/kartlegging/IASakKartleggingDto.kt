@@ -11,6 +11,7 @@ data class IASakKartleggingDto (
     val spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativerDto>
 )
 
+fun List<IASakKartlegging>.toDto() = map { it.toDto() }
 fun IASakKartlegging.toDto() = IASakKartleggingDto(
     id = id.toString(),
     status = status,

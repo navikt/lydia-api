@@ -1,7 +1,8 @@
 package no.nav.lydia.ia.sak.db
 
 import arrow.core.Either
-import arrow.core.rightIfNotNull
+import arrow.core.left
+import arrow.core.right
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -81,7 +82,7 @@ class IASakRepository(val dataSource: DataSource) {
                             "endret_av_hendelse" to iaSak.endretAvHendelseId
                         )
                     ).map(this::mapRowToIASak).asSingle
-                ).rightIfNotNull { IASakError.`fikk ikke oppdatert sak` }
+                )?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
             }
         }
 
@@ -216,6 +217,22 @@ class IASakRepository(val dataSource: DataSource) {
                     )
                 ).map(this::mapRowToIASakKartlegging).asSingle
             )!!
+        }
+
+    fun hentKartlegging(saksnummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak_kartlegging
+                    WHERE saksnummer = :saksnummer
+                """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    )
+                ).map(this::mapRowToIASakKartlegging).asList
+            )
         }
 
     private fun mapRowToIASakKartlegging(row: Row): IASakKartlegging {
