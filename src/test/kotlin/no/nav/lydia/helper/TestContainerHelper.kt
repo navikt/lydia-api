@@ -569,7 +569,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/kartlegging")
+            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer/opprett")
                 .authentication().bearer(token)
     }
 }

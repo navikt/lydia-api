@@ -22,7 +22,7 @@ fun Route.iaSakKartlegging(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     ) {
-    post("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/kartlegging") {
+    post("$IA_SAK_RADGIVER_PATH/kartlegging/{orgnummer}/{saksnummer}/opprett") {
         val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val iaSak = iaSakService.hentIASak(saksnummer).getOrNull() ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.parameters["orgnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
