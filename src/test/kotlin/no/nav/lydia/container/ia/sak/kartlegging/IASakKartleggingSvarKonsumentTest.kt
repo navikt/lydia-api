@@ -1,6 +1,6 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
-import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.shouldBe
 import java.util.UUID
 import kotlin.test.Test
 import kotlinx.serialization.encodeToString
@@ -19,10 +19,10 @@ class IASakKartleggingSvarKonsumentTest {
     @Test
     fun `skal lagre svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartlegges()
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val response = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        val kartleggingId = resp.third.get().id
+        val kartleggingId = response.third.get().id
         val spørsmålId = UUID.randomUUID()
         val sesjonId = UUID.randomUUID()
         val svarId = UUID.randomUUID()
@@ -31,7 +31,7 @@ class IASakKartleggingSvarKonsumentTest {
             nøkkel = "${sesjonId}_${spørsmålId}",
             melding = Json.encodeToString(
                 KartleggingSvarDto(
-                    spørreundersøkelseId = kartleggingId,
+                    kartleggingId = kartleggingId,
                     sesjonId = sesjonId.toString(),
                     spørsmålId = spørsmålId.toString(),
                     svarId = svarId.toString()
@@ -43,7 +43,7 @@ class IASakKartleggingSvarKonsumentTest {
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select id from ia_sak_kartlegging_svar where kartlegging_id = '$kartleggingId'"
-            ) shouldNotBe null
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '$kartleggingId'"
+            ) shouldBe kartleggingId
     }
 }
