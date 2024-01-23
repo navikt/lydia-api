@@ -80,6 +80,9 @@ import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingRepository
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 
 fun main() {
     startLydiaBackend()
@@ -94,6 +97,8 @@ fun startLydiaBackend() {
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
+    val kartleggingRepository = KartleggingRepository(dataSource = dataSource)
+    val kartleggingService = KartleggingService(kartleggingRepository = kartleggingRepository)
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
@@ -200,6 +205,14 @@ fun startLydiaBackend() {
 
     StatistikkMetadataVirksomhetConsumer.apply {
         create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
+        run()
+    }.also { HelseMonitor.leggTilHelsesjekk(it) }
+
+    KartleggingSvarConsumer(
+        topic = naisEnv.kafka.iaSakKartleggingSvarTopic,
+        groupId = Kafka.iaSakKartleggingSvarGroupId
+    ).apply {
+        create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
