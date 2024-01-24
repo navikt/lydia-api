@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.util.UUID
@@ -11,6 +12,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarDto
@@ -23,87 +25,87 @@ class IASakKartleggingSvarKonsumentTest {
         val response = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        val kartleggingId = response.third.get().id
-        val spørsmålId = UUID.randomUUID()
-        val sesjonId = UUID.randomUUID()
-        val svarId = UUID.randomUUID()
-
-        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-            nøkkel = "${sesjonId}_${spørsmålId}",
-            melding = Json.encodeToString(
-                KartleggingSvarDto(
-                    kartleggingId = kartleggingId,
-                    sesjonId = sesjonId.toString(),
-                    spørsmålId = spørsmålId.toString(),
-                    svarId = svarId.toString()
-                )
-            ),
-            topic = KafkaContainerHelper.iaSakKartleggingSvarTopic,
-            konsumentGruppeId = iaSakKartleggingSvarGroupId
+        val kartleggingSvarDto = sendKartleggingSvarTilKafka(
+            kartleggingId = response.third.get().id,
         )
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '$kartleggingId'"
-            ) shouldBe kartleggingId
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+            ) shouldBe kartleggingSvarDto.kartleggingId
     }
+
+    @Test
+    fun `Skal ikke kunne svare på kartlegging som ikke eksisterer`() {
+        val kartleggingSvarDto = sendKartleggingSvarTilKafka()
+
+        TestContainerHelper.postgresContainer
+            .hentAlleRaderTilEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+            ) shouldHaveSize 0
+        TestContainerHelper.lydiaApiContainer.shouldContainLog("Fant ikke kartlegging på denne iden".toRegex())
+    }
+
     @Test
     fun `skal oppdatere ved nytt svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartlegges()
         val response = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        val kartleggingId = response.third.get().id
-        val spørsmålId = UUID.randomUUID()
-        val sesjonId = UUID.randomUUID()
-        val svarId = UUID.randomUUID()
-
-        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-            nøkkel = "${sesjonId}_${spørsmålId}",
-            melding = Json.encodeToString(
-                KartleggingSvarDto(
-                    kartleggingId = kartleggingId,
-                    sesjonId = sesjonId.toString(),
-                    spørsmålId = spørsmålId.toString(),
-                    svarId = svarId.toString()
-                )
-            ),
-            topic = KafkaContainerHelper.iaSakKartleggingSvarTopic,
-            konsumentGruppeId = iaSakKartleggingSvarGroupId
+        val kartleggingSvarDto = sendKartleggingSvarTilKafka(
+            kartleggingId = response.third.get().id,
         )
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '$kartleggingId'"
-            ) shouldBe svarId.toString()
+                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+            ) shouldBe kartleggingSvarDto.svarId
+
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '$kartleggingId'"
+                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
             ) shouldBe null
 
-        val nySvarId = UUID.randomUUID()
+        val nySvarId = UUID.randomUUID().toString()
 
-        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-            nøkkel = "${sesjonId}_${spørsmålId}",
-            melding = Json.encodeToString(
-                KartleggingSvarDto(
-                    kartleggingId = kartleggingId,
-                    sesjonId = sesjonId.toString(),
-                    spørsmålId = spørsmålId.toString(),
-                    svarId = nySvarId.toString()
-                )
-            ),
-            topic = KafkaContainerHelper.iaSakKartleggingSvarTopic,
-            konsumentGruppeId = iaSakKartleggingSvarGroupId
+        sendKartleggingSvarTilKafka(
+            kartleggingId = kartleggingSvarDto.kartleggingId,
+            spørsmålId = kartleggingSvarDto.spørsmålId,
+            sesjonId = kartleggingSvarDto.sesjonId,
+            svarId = nySvarId
         )
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '$kartleggingId'"
-            ) shouldBe nySvarId.toString()
+                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+            ) shouldBe nySvarId
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '$kartleggingId'"
+                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
             ) shouldNotBe null
+    }
+
+    private fun sendKartleggingSvarTilKafka(
+        kartleggingId: String = UUID.randomUUID().toString(),
+        spørsmålId: String = UUID.randomUUID().toString(),
+        sesjonId: String = UUID.randomUUID().toString(),
+        svarId: String = UUID.randomUUID().toString(),
+    ): KartleggingSvarDto {
+
+        val kartleggingSvarDto = KartleggingSvarDto(
+            kartleggingId = kartleggingId,
+            spørsmålId = spørsmålId,
+            sesjonId = sesjonId,
+            svarId = svarId
+        )
+        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = "${sesjonId}_${spørsmålId}",
+            melding = Json.encodeToString(
+                kartleggingSvarDto
+            ),
+            topic = KafkaContainerHelper.iaSakKartleggingSvarTopic,
+            konsumentGruppeId = iaSakKartleggingSvarGroupId
+        )
+        return kartleggingSvarDto
     }
 }

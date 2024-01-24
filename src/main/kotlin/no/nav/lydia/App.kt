@@ -98,7 +98,10 @@ fun startLydiaBackend() {
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
     val kartleggingRepository = KartleggingRepository(dataSource = dataSource)
-    val kartleggingService = KartleggingService(kartleggingRepository = kartleggingRepository)
+    val kartleggingService = KartleggingService(
+        kartleggingRepository = kartleggingRepository,
+        iaSakRepository = iaSakRepository,
+    )
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
@@ -199,7 +202,7 @@ fun startLydiaBackend() {
     }
 
     StatistikkVirksomhetGraderingConsumer.apply {
-        create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService )
+        create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 

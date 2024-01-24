@@ -235,6 +235,22 @@ class IASakRepository(val dataSource: DataSource) {
             )
         }
 
+    fun hentKartleggingEtterId(kartleggingId: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT *
+                        FROM ia_sak_kartlegging
+                        WHERE kartlegging_id = :kartleggingId
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to kartleggingId,
+                    )
+                ).map(this::mapRowToIASakKartlegging).asSingle
+            )
+        }
+
     private fun mapRowToIASakKartlegging(row: Row): IASakKartlegging {
         return row.tilIASakKartlegging()
     }
