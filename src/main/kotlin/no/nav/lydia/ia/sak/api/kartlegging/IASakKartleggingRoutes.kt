@@ -16,10 +16,12 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 fun Route.iaSakKartlegging(
     iaSakService: IASakService,
+    kartleggingService: KartleggingService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     ) {
@@ -74,6 +76,32 @@ fun Route.iaSakKartlegging(
             call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
+
+    get("$IA_SAK_RADGIVER_PATH/kartlegging/{orgnummer}/{saksnummer}/{kartleggingId}") {
+        val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val iaSak = iaSakService.hentIASak(saksnummer).getOrNull() ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnummer = call.parameters["orgnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        if (orgnummer != iaSak.orgnr) return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val kartleggingId = call.parameters["kartleggingId"] ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            kartleggingService.hentKartleggingMedSvar(
+                saksnummer = saksnummer,
+                kartleggingId = kartleggingId
+            ).map { it }
+        }.also { iaSakEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = iaSakEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                saksnummer = saksnummer
+            )
+        }.map {
+            call.respond(HttpStatusCode.OK, it)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
 }
 
 object IASakKartleggingError {
@@ -81,4 +109,5 @@ object IASakKartleggingError {
         Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
+    val `ugyldig kartleggingId` = Feil("Ugyldig kartlegging", HttpStatusCode.BadRequest)
 }

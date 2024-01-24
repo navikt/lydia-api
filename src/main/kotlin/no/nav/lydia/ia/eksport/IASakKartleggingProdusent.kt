@@ -13,7 +13,7 @@ class IASakKartleggingProdusent (
     fun sendPåKafka(iaSakKartlegging: IASakKartlegging) {
         produsent.sendMelding(
             topic = topic,
-            nøkkel = iaSakKartlegging.id.toString(),
+            nøkkel = iaSakKartlegging.kartleggingId.toString(),
             verdi = Json.encodeToString(iaSakKartlegging.toDto())
         )
     }

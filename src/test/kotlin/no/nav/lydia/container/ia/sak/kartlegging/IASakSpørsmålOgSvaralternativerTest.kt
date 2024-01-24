@@ -41,11 +41,11 @@ class IASakSpørsmålOgSvaralternativerTest {
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        resp.third.get().id.length shouldBe 36
+        resp.third.get().kartleggingId.length shouldBe 36
 
         postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().id}'"
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().kartleggingId}'"
             ) shouldNotBe null
     }
 
@@ -85,7 +85,7 @@ class IASakSpørsmålOgSvaralternativerTest {
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        val id = resp.third.get().id
+        val id = resp.third.get().kartleggingId
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -94,7 +94,7 @@ class IASakSpørsmålOgSvaralternativerTest {
             ) { liste ->
                 liste.map { melding ->
                     val kartlegging = Json.decodeFromString<IASakKartleggingDto>(melding)
-                    kartlegging.id shouldBe id
+                    kartlegging.kartleggingId shouldBe id
                     kartlegging.status shouldBe "OPPRETTET"
                     kartlegging.spørsmålOgSvaralternativer shouldHaveSize 3
                     kartlegging.spørsmålOgSvaralternativer.forAll {
@@ -114,5 +114,21 @@ class IASakSpørsmålOgSvaralternativerTest {
 
         IASakKartleggingHelper.hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .third.get().shouldHaveSize(1)
+    }
+
+    @Test
+    fun `skal kunne hente ut svar på en kartlegging`() {
+        val sak = nySakIKartlegges()
+
+        val kartleggingId =
+            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+                .tilSingelRespons<IASakKartleggingDto>().third.get().kartleggingId
+
+        val kartleggingMedSvar = IASakKartleggingHelper.hentIASakKartleggingMedSvar(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartleggingId
+        ).third.get()
+        kartleggingMedSvar.kartleggingId shouldBe kartleggingId
     }
 }

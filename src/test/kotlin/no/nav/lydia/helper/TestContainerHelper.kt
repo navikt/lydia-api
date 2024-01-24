@@ -59,6 +59,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
 import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
 import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingMedSvar
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoversikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
@@ -580,6 +581,15 @@ class IASakKartleggingHelper {
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilListeRespons<IASakKartleggingDto>()
+
+        fun hentIASakKartleggingMedSvar(
+            orgnr: String,
+            saksnummer: String,
+            kartleggingId: String
+        ) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer/$kartleggingId")
+                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+                .tilSingelRespons<KartleggingMedSvar>()
     }
 }
 

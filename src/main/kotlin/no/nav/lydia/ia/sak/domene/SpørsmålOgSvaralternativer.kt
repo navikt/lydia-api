@@ -3,8 +3,8 @@ package no.nav.lydia.ia.sak.domene
 import java.util.UUID
 
 class SpørsmålOgSvaralternativer(
-    val id: UUID,
+    val spørsmålId: UUID,
     val kategori: String,
-    val spørsmål: String,
+    val spørsmåltekst: String,
     val svaralternativer: List<Svaralternativ>
 )

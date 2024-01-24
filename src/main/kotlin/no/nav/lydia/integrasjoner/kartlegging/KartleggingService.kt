@@ -1,5 +1,8 @@
 package no.nav.lydia.integrasjoner.kartlegging
 
+import arrow.core.Either
+import arrow.core.right
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.db.IASakRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -22,5 +25,13 @@ class KartleggingService(
             kartleggingRepository.lagreSvar(it)
             log.info("Lagret svar for kartlegging med id: '${it.kartleggingId}'")
         }
+    }
+
+    fun hentKartleggingMedSvar(kartleggingId: String, saksnummer: String): Either<Feil, KartleggingMedSvar> {
+        val kartlegginger = iaSakRepository.hentKartlegginger(saksnummer = saksnummer)
+        val iaSakKartlegging = kartlegginger.first { it.kartleggingId.toString() == kartleggingId }
+        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
+
+        return KartleggingMedSvar(iaSakKartlegging, alleSvar).right()
     }
 }

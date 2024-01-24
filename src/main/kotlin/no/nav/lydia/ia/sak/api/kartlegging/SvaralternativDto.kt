@@ -5,12 +5,12 @@ import no.nav.lydia.ia.sak.domene.Svaralternativ
 
 @Serializable
 data class SvaralternativDto(
-    val id: String,
-    val tekst: String
+    val svarId: String,
+    val svartekst: String
 )
 
 fun List<Svaralternativ>.toDto() = map { it.toDto() }
 fun Svaralternativ.toDto() = SvaralternativDto(
-    id = id.toString(),
-    tekst = tekst
+    svarId = svarId.toString(),
+    svartekst = svartekst
 )

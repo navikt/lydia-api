@@ -26,7 +26,7 @@ class IASakKartleggingSvarKonsumentTest {
             .tilSingelRespons<IASakKartleggingDto>()
 
         val kartleggingSvarDto = sendKartleggingSvarTilKafka(
-            kartleggingId = response.third.get().id,
+            kartleggingId = response.third.get().kartleggingId,
         )
 
         TestContainerHelper.postgresContainer
@@ -53,7 +53,7 @@ class IASakKartleggingSvarKonsumentTest {
             .tilSingelRespons<IASakKartleggingDto>()
 
         val kartleggingSvarDto = sendKartleggingSvarTilKafka(
-            kartleggingId = response.third.get().id,
+            kartleggingId = response.third.get().kartleggingId,
         )
 
         TestContainerHelper.postgresContainer

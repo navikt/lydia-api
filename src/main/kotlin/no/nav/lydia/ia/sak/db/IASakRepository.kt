@@ -219,7 +219,7 @@ class IASakRepository(val dataSource: DataSource) {
             )!!
         }
 
-    fun hentKartlegging(saksnummer: String) =
+    fun hentKartlegginger(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -257,7 +257,7 @@ class IASakRepository(val dataSource: DataSource) {
 
     fun Row.tilIASakKartlegging(): IASakKartlegging =
         IASakKartlegging(
-            id = UUID.fromString(this.string("kartlegging_id")),
+            kartleggingId = UUID.fromString(this.string("kartlegging_id")),
             saksnummer = this.string("saksnummer"),
             status = this.string("status"),
             spørsmålOgSvaralternativer = listOf()

@@ -230,6 +230,7 @@ fun startLydiaBackend() {
             sistePubliseringService = sistePubliseringService,
             virksomhetRepository = virksomhetRepository,
             iaSakService = iaSakService,
+            kartleggingService = kartleggingService
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -293,7 +294,8 @@ private fun Application.lydiaRestApi(
     azureService: AzureService,
     sistePubliseringService: SistePubliseringService,
     virksomhetRepository: VirksomhetRepository,
-    iaSakService: IASakService
+    iaSakService: IASakService,
+    kartleggingService: KartleggingService
 ) {
     install(ContentNegotiation) {
         json()
@@ -381,6 +383,7 @@ private fun Application.lydiaRestApi(
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
+                kartleggingService = kartleggingService
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),

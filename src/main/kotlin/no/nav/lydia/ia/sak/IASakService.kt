@@ -109,7 +109,7 @@ class IASakService(
         saksnummer: String,
     ): Either<Feil, List<IASakKartlegging>> {
         return try {
-            val kartlegginger = iaSakRepository.hentKartlegging(saksnummer = saksnummer)
+            val kartlegginger = iaSakRepository.hentKartlegginger(saksnummer = saksnummer)
             kartlegginger.right()
         } catch (e: Exception) {
             log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
