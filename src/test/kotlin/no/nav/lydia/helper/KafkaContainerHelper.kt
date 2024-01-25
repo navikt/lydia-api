@@ -57,8 +57,8 @@ class KafkaContainerHelper(
         const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
         const val iaSakStatusTopic = "pia.ia-sak-status-v1"
         const val iaSakLeveranseTopic = "pia.ia-sak-leveranse-v1"
-        const val iaSakKartleggingTopic = "pia.kartlegging-v1"
-        const val iaSakKartleggingSvarTopic = "pia.kartlegging-svar-v1"
+        const val spørreundersøkelseTopic = "pia.sporreundersokelse-v1"
+        const val spørreundersøkelseSvarTopic = "pia.sporreundersokelse-svar-v1"
         const val jobblytterTopic = "pia.jobblytter-v1"
         const val brregOppdateringTopic = "pia.brreg-oppdatering"
         const val brregAlleVirksomheterTopic = "pia.brreg-alle-virksomheter"
@@ -112,8 +112,8 @@ class KafkaContainerHelper(
             iaSakStatistikkTopic = iaSakStatistikkTopic,
             iaSakStatusTopic = iaSakStatusTopic,
             iaSakLeveranseTopic = iaSakLeveranseTopic,
-            iaSakKartleggingTopic = iaSakKartleggingTopic,
-            iaSakKartleggingSvarTopic = iaSakKartleggingSvarTopic,
+            spørrundersøkelseTopic = spørreundersøkelseTopic,
+            iaSakKartleggingSvarTopic = spørreundersøkelseSvarTopic,
             statistikkMetadataVirksomhetTopic = statistikkMetadataVirksomhetTopic,
             statistikkLandTopic = statistikkLandTopic,
             statistikkSektorTopic = statistikkSektorTopic,
@@ -152,8 +152,8 @@ class KafkaContainerHelper(
         "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
         "IA_SAK_STATUS_TOPIC" to iaSakStatusTopic,
         "IA_SAK_LEVERANSE_TOPIC" to iaSakLeveranseTopic,
-        "IA_SAK_KARTLEGGING_TOPIC" to iaSakKartleggingTopic,
-        "IA_SAK_KARTLEGGING_SVAR_TOPIC" to iaSakKartleggingSvarTopic,
+        "SPORREUNDERSOKELSE_TOPIC" to spørreundersøkelseTopic,
+        "SPORREUNDERSOKELSE_SVAR_TOPIC" to spørreundersøkelseSvarTopic,
         "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic,
         "BRREG_ALLE_VIRKSOMHETER_TOPIC" to brregAlleVirksomheterTopic
     )

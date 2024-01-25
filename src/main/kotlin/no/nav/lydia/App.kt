@@ -147,7 +147,7 @@ fun startLydiaBackend() {
         årsakService = ÅrsakService(årsakRepository = årsakRepository),
         spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
             produsent = kafkaProdusent,
-            topic = naisEnv.kafka.iaSakKartleggingTopic
+            topic = naisEnv.kafka.spørrundersøkelseTopic
         )
     ).apply {
         leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
@@ -213,7 +213,7 @@ fun startLydiaBackend() {
 
     KartleggingSvarConsumer(
         topic = naisEnv.kafka.iaSakKartleggingSvarTopic,
-        groupId = Kafka.iaSakKartleggingSvarGroupId
+        groupId = Kafka.spørreundersøkelseSvarGroupId
     ).apply {
         create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
         run()

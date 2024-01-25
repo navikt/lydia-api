@@ -76,8 +76,8 @@ class Kafka(
     val iaSakStatistikkTopic: String = getEnvVar("IA_SAK_STATISTIKK_TOPIC"),
     val iaSakStatusTopic: String = getEnvVar("IA_SAK_STATUS_TOPIC"),
     val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
-    val iaSakKartleggingTopic: String = getEnvVar("IA_SAK_KARTLEGGING_TOPIC"),
-    val iaSakKartleggingSvarTopic: String = getEnvVar("IA_SAK_KARTLEGGING_SVAR_TOPIC"),
+    val spørrundersøkelseTopic: String = getEnvVar("SPORREUNDERSOKELSE_TOPIC"),
+    val iaSakKartleggingSvarTopic: String = getEnvVar("SPORREUNDERSOKELSE_SVAR_TOPIC"),
     val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
     val brregAlleVirksomheterTopic: String = getEnvVar("BRREG_ALLE_VIRKSOMHETER_TOPIC"),
     val statistikkMetadataVirksomhetTopic: String = getEnvVar("STATISTIKK_METADATA_VIRKSOMHET_TOPIC"),
@@ -102,7 +102,7 @@ class Kafka(
         const val statistikkMetadataVirksomhetGroupId = "lydia-api-statistikk-metadata-virksomhet-consumer"
         const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
         const val jobblytterConsumerGroupId = "lydia-api-jobblytter-consumer"
-        const val iaSakKartleggingSvarGroupId = "lydia-api-ia-sak-kartlegging-svar-consumer"
+        const val spørreundersøkelseSvarGroupId = "lydia-api-sporreundersokelse-svar-consumer"
         const val clientId: String = "lydia-api"
     }
 

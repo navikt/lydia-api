@@ -25,7 +25,7 @@ class IASakSpørsmålOgSvaralternativerTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
     @Before
     fun setUp() {
-        kartleggingKonsument.subscribe(mutableListOf(KafkaContainerHelper.iaSakKartleggingTopic))
+        kartleggingKonsument.subscribe(mutableListOf(KafkaContainerHelper.spørreundersøkelseTopic))
     }
 
     @After
