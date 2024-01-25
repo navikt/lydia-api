@@ -17,6 +17,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
+import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
 
@@ -93,11 +94,11 @@ class IASakSpørsmålOgSvaralternativerTest {
                 konsument = kartleggingKonsument
             ) { liste ->
                 liste.map { melding ->
-                    val kartlegging = Json.decodeFromString<IASakKartleggingDto>(melding)
-                    kartlegging.kartleggingId shouldBe id
-                    kartlegging.status shouldBe "OPPRETTET"
-                    kartlegging.spørsmålOgSvaralternativer shouldHaveSize 3
-                    kartlegging.spørsmålOgSvaralternativer.forAll {
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    spørreundersøkelse.spørreundersøkelseId shouldBe id
+                    spørreundersøkelse.status shouldBe "OPPRETTET"
+                    spørreundersøkelse.spørsmålOgSvaralternativer shouldHaveSize 3
+                    spørreundersøkelse.spørsmålOgSvaralternativer.forAll {
                         it.svaralternativer shouldHaveSize 5
                     }
                 }
