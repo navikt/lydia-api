@@ -1,7 +1,7 @@
 apiVersion: kafka.nais.io/v1
 kind: Topic
 metadata:
-  name: kartlegging-svar-v1
+  name: sporreundersokelse-svar-v1
   namespace: pia
   labels:
     team: pia
