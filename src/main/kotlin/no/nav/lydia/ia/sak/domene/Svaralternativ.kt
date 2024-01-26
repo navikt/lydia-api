@@ -2,7 +2,7 @@ package no.nav.lydia.ia.sak.domene
 
 import java.util.UUID
 
-class Svaralternativ(
+data class Svaralternativ(
     val svarId: UUID,
-    val svartekst: String
+    val svartekst: String,
 )

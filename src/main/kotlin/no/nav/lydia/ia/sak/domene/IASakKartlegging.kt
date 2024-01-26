@@ -6,5 +6,5 @@ class IASakKartlegging(
     val kartleggingId: UUID,
     val saksnummer: String,
     val status: String,
-    val spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativer>
+    var spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativer>,
 )
