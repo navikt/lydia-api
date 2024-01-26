@@ -8,7 +8,7 @@ import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.ia.eksport.IASakKartleggingProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
 import no.nav.lydia.ia.sak.api.IASakError
@@ -52,7 +52,7 @@ class IASakService(
     private val årsakService: ÅrsakService,
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
     private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
-    private val iaSakKartleggingProdusent: IASakKartleggingProdusent,
+    private val spørreundersøkelseProdusent: SpørreundersøkelseProdusent,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -99,7 +99,7 @@ class IASakService(
             orgnummer = orgnummer,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
-            kartleggingId = kartleggingId,
+            kartleggingId = kartleggingId
         ).right().onRight { nyKartlegging ->
             iaSakRepository.hentAlleSpørsmålIDer().forEach { spørsmålId ->
                 iaSakRepository.lagreKartleggingOgSpørsmålRelasjon(
@@ -107,7 +107,7 @@ class IASakService(
                     spørsmålId
                 )
             }
-            iaSakKartleggingProdusent.sendPåKafka(nyKartlegging)
+            spørreundersøkelseProdusent.sendPåKafka(nyKartlegging)
         }
     }
 

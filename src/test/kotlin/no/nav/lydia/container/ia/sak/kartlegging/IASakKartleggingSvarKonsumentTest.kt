@@ -7,7 +7,7 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import no.nav.lydia.Kafka.Companion.iaSakKartleggingSvarGroupId
+import no.nav.lydia.Kafka.Companion.spørreundersøkelseSvarGroupId
 import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper
@@ -133,8 +133,8 @@ class IASakKartleggingSvarKonsumentTest {
             melding = Json.encodeToString(
                 kartleggingSvarDto
             ),
-            topic = KafkaContainerHelper.iaSakKartleggingSvarTopic,
-            konsumentGruppeId = iaSakKartleggingSvarGroupId
+            topic = KafkaContainerHelper.spørreundersøkelseSvarTopic,
+            konsumentGruppeId = spørreundersøkelseSvarGroupId
         )
         return kartleggingSvarDto
     }

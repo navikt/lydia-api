@@ -30,6 +30,6 @@ jobs:
             .nais/topics/ia-sak-statistikk-topic.yaml,\
             .nais/topics/ia-sak-status-topic.yaml,\
             .nais/topics/ia-sak-leveranse-topic.yaml,\
-            .nais/topics/kartlegging-topic.yaml,\
-            .nais/topics/kartlegging-svar-topic.yaml"
+            .nais/topics/sporreundersokelse-topic.yaml,\
+            .nais/topics/sporreundersokelse-svar-topic.yaml"
           VARS: .nais/${{ matrix.cluster }}.yaml

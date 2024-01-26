@@ -27,7 +27,7 @@ import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.IASakEksporterer
-import no.nav.lydia.ia.eksport.IASakKartleggingProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
 import no.nav.lydia.ia.eksport.IASakProdusent
@@ -145,9 +145,9 @@ fun startLydiaBackend() {
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
         årsakService = ÅrsakService(årsakRepository = årsakRepository),
-        iaSakKartleggingProdusent = IASakKartleggingProdusent(
+        spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
             produsent = kafkaProdusent,
-            topic = naisEnv.kafka.iaSakKartleggingTopic
+            topic = naisEnv.kafka.spørrundersøkelseTopic
         )
     ).apply {
         leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
@@ -213,7 +213,7 @@ fun startLydiaBackend() {
 
     KartleggingSvarConsumer(
         topic = naisEnv.kafka.iaSakKartleggingSvarTopic,
-        groupId = Kafka.iaSakKartleggingSvarGroupId
+        groupId = Kafka.spørreundersøkelseSvarGroupId
     ).apply {
         create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
         run()

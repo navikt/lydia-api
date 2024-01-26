@@ -1,14 +1,14 @@
 apiVersion: kafka.nais.io/v1
 kind: Topic
 metadata:
-  name: kartlegging-v1
+  name: sporreundersokelse-svar-v1
   namespace: pia
   labels:
     team: pia
 spec:
   pool: {{kafkaPool}}
   config:  # optional; all fields are optional too; defaults shown
-    cleanupPolicy: compact  # delete, compact, compact,delete
+    cleanupPolicy: delete  # delete, compact, compact,delete
     minimumInSyncReplicas: 2
     partitions: 1
     replication: 3  # see min/max requirements
@@ -17,10 +17,10 @@ spec:
   acl:
     - team: pia
       application: lydia-api
-      access: readwrite   # read, write, readwrite
+      access: read   # read, write, readwrite
     - team: pia
       application: fia-arbeidsgiver
-      access: read   # read, write, readwrite
+      access: readwrite   # read, write, readwrite
     - team: pia
       application: pia-devops
       access: read
