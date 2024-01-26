@@ -17,6 +17,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
+import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.Svaralternativ
 import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 
 class IASakRepository(val dataSource: DataSource) {
@@ -192,22 +194,22 @@ class IASakRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                    INSERT INTO ia_sak_kartlegging (
-                        kartlegging_id,
-                        orgnr,
-                        saksnummer,
-                        status,
-                        opprettet_av
-                    )
-                    VALUES (
-                        :kartlegging_id,
-                        :orgnr,
-                        :saksnummer,
-                        :status,
-                        :opprettet_av
-                    )
-                    returning *                            
-                """.trimMargin(),
+                        INSERT INTO ia_sak_kartlegging (
+                            kartlegging_id,
+                            orgnr,
+                            saksnummer,
+                            status,
+                            opprettet_av
+                        )
+                        VALUES (
+                            :kartlegging_id,
+                            :orgnr,
+                            :saksnummer,
+                            :status,
+                            :opprettet_av
+                        )
+                        returning *                            
+                    """.trimMargin(),
                     mapOf(
                         "kartlegging_id" to kartleggingId,
                         "orgnr" to orgnummer,
@@ -215,7 +217,7 @@ class IASakRepository(val dataSource: DataSource) {
                         "status" to "OPPRETTET",
                         "opprettet_av" to saksbehandler.navIdent
                     )
-                ).map(this::mapRowToIASakKartlegging).asSingle
+                ).map(this::mapRowToNyIASakKartlegging).asSingle
             )!!
         }
 
@@ -251,17 +253,112 @@ class IASakRepository(val dataSource: DataSource) {
             )
         }
 
+    data class SpørsmålOgSvar(
+        val spørsmålId: UUID,
+        val spørsmåltekst: String,
+        val svarId: UUID,
+        val svartekst: String
+    )
+
+    fun hentAlleSpørsmålIDer() = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                    SELECT sporsmal_id
+                    FROM ia_sak_kartlegging_sporsmal
+                """.trimMargin()
+            ).map { UUID.fromString(it.string("sporsmal_id")) }.asList
+        )
+    }
+
+    private fun hentSpørsmålOgSvaralternativer(kartleggingId: UUID) =
+        using(sessionOf(dataSource)) { session ->
+            val results = session.run(
+                queryOf(
+                    """
+                        SELECT *
+                        FROM ia_sak_kartlegging_sporsmal
+                        JOIN ia_sak_kartlegging_svaralternativer USING (sporsmal_id) 
+                        JOIN ia_sak_kartlegging_sporsmal_til_kartlegging USING (sporsmal_id) 
+                        WHERE kartlegging_id = :kartleggingId
+                    """.trimMargin(), mapOf(
+                        "kartleggingId" to kartleggingId.toString(),
+                    )
+                ).map { row ->
+                    SpørsmålOgSvar(
+                        spørsmålId = UUID.fromString(row.string("sporsmal_id")),
+                        spørsmåltekst = row.string("sporsmal_tekst"),
+                        svarId = UUID.fromString(row.string("svaralternativ_id")),
+                        svartekst = row.string("svaralternativ_tekst")
+                    )
+                }.asList
+            )
+
+            results.groupBy { it.spørsmålId }
+                .map { spørsmål ->
+                    SpørsmålOgSvaralternativer(
+                        spørsmålId = spørsmål.key,
+                        kategori = "Partssamarbeid",
+                        spørsmåltekst = spørsmål.value.first().spørsmåltekst,
+                        svaralternativer = spørsmål.value.map {
+                            Svaralternativ(
+                                svarId = it.svarId,
+                                svartekst = it.svartekst
+                            )
+                        }
+                    )
+                }
+        }
+
+    private fun mapRowToNyIASakKartlegging(row: Row): IASakKartlegging {
+        return row.tilNyIASakKartlegging()
+    }
+
     private fun mapRowToIASakKartlegging(row: Row): IASakKartlegging {
         return row.tilIASakKartlegging()
     }
 
-    fun Row.tilIASakKartlegging(): IASakKartlegging =
-        IASakKartlegging(
+    private fun Row.tilNyIASakKartlegging(): IASakKartlegging {
+        return IASakKartlegging(
             kartleggingId = UUID.fromString(this.string("kartlegging_id")),
             saksnummer = this.string("saksnummer"),
             status = this.string("status"),
-            spørsmålOgSvaralternativer = listOf()
+            spørsmålOgSvaralternativer = emptyList(),
         )
+    }
+
+    private fun Row.tilIASakKartlegging(): IASakKartlegging {
+        val kartleggingId = UUID.fromString(this.string("kartlegging_id"))
+        return IASakKartlegging(
+            kartleggingId = kartleggingId,
+            saksnummer = this.string("saksnummer"),
+            status = this.string("status"),
+            spørsmålOgSvaralternativer = hentSpørsmålOgSvaralternativer(kartleggingId),
+        )
+    }
+
+    fun lagreKartleggingOgSpørsmålRelasjon(kartleggingId: UUID, sporsmalId: UUID) {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    INSERT INTO ia_sak_kartlegging_sporsmal_til_kartlegging (
+                        kartlegging_id,
+                        sporsmal_id
+                    )
+                    VALUES (
+                        :kartleggingId,
+                        :sporsmalId
+                    )
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to kartleggingId,
+                        "sporsmalId" to sporsmalId,
+                    )
+                ).asUpdate
+            )
+        }
+    }
 
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
@@ -288,4 +385,3 @@ class IASakRepository(val dataSource: DataSource) {
         }
     }
 }
-
