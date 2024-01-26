@@ -95,22 +95,18 @@ class IASakService(
         saksnummer: String,
     ): Either<Feil, IASakKartlegging> {
         val kartleggingId = UUID.randomUUID()
-        val alleSpørsmålOgSvar = iaSakRepository.hentSpørsmålOgSvaralternativer()
         return iaSakRepository.opprettKartlegging(
             orgnummer = orgnummer,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
             kartleggingId = kartleggingId,
         ).right().onRight { nyKartlegging ->
-            nyKartlegging.spørsmålOgSvaralternativer = alleSpørsmålOgSvar
-
-            alleSpørsmålOgSvar.forEach { spørsmål ->
+            iaSakRepository.hentAlleSpørsmålIDer().forEach { spørsmålId ->
                 iaSakRepository.lagreKartleggingOgSpørsmålRelasjon(
                     kartleggingId,
-                    spørsmål.spørsmålId
+                    spørsmålId
                 )
             }
-
             iaSakKartleggingProdusent.sendPåKafka(nyKartlegging)
         }
     }

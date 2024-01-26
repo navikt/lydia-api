@@ -22,6 +22,7 @@ import org.junit.Before
 
 class IASakSpørsmålOgSvaralternativerTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
+
     @Before
     fun setUp() {
         kartleggingKonsument.subscribe(mutableListOf(KafkaContainerHelper.iaSakKartleggingTopic))
@@ -75,7 +76,8 @@ class IASakSpørsmålOgSvaralternativerTest {
             .tilSingelRespons<IASakKartleggingDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.Forbidden.value
-        resp.second.body().asString("text/plain") shouldMatch "Sak m.. v..re i kartleggingsstatus for .. starte kartlegging"
+        resp.second.body()
+            .asString("text/plain") shouldMatch "Sak m.. v..re i kartleggingsstatus for .. starte kartlegging"
     }
 
     @Test
@@ -130,5 +132,6 @@ class IASakSpørsmålOgSvaralternativerTest {
             kartleggingId = kartleggingId
         ).third.get()
         kartleggingMedSvar.kartleggingId shouldBe kartleggingId
+        kartleggingMedSvar.spørsmålMedSvar.size shouldBe 3
     }
 }
