@@ -5,7 +5,7 @@ VALUES ('b16c4b1c-b45e-470d-a1a5-d6f87424d410',
         'Hvilke av disse faktorene tror du har størst innflytelse på sykefraværet der du jobber?');
 
 insert into ia_sak_kartlegging_svaralternativer (svaralternativ_id, sporsmal_id, svaralternativ_tekst)
-VALUES (gen_random_uuid(), 'b16c4b1c-b45e-470d-a1a5-d6f87424d410', 'Arbeidsbelstning');
+VALUES (gen_random_uuid(), 'b16c4b1c-b45e-470d-a1a5-d6f87424d410', 'Arbeidsbelastning');
 insert into ia_sak_kartlegging_svaralternativer (svaralternativ_id, sporsmal_id, svaralternativ_tekst)
 VALUES (gen_random_uuid(), 'b16c4b1c-b45e-470d-a1a5-d6f87424d410', 'Arbeidstid');
 insert into ia_sak_kartlegging_svaralternativer (svaralternativ_id, sporsmal_id, svaralternativ_tekst)
@@ -47,4 +47,4 @@ VALUES (gen_random_uuid(), '62b3a863-cba3-4c92-8c7e-19d8b4688d49', 'Litt enig');
 insert into ia_sak_kartlegging_svaralternativer (svaralternativ_id, sporsmal_id, svaralternativ_tekst)
 VALUES (gen_random_uuid(), '62b3a863-cba3-4c92-8c7e-19d8b4688d49', 'Veldig enig');
 insert into ia_sak_kartlegging_svaralternativer (svaralternativ_id, sporsmal_id, svaralternativ_tekst)
-VALUES (gen_random_uuid(), '62b3a863-cba3-4c92-8c7e-19d8b4688d49', 'Vet Ikke');
+VALUES (gen_random_uuid(), '62b3a863-cba3-4c92-8c7e-19d8b4688d49', 'Vet ikke');
