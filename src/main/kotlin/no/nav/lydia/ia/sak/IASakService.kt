@@ -89,27 +89,21 @@ class IASakService(
         iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
     }
 
+    fun hentAlleSpørsmål() = iaSakRepository.hentAlleSpørsmålIDer()
+
     fun opprettKartlegging(
         orgnummer: String,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         saksnummer: String,
-    ): Either<Feil, IASakKartlegging> {
-        val kartleggingId = UUID.randomUUID()
-        return iaSakRepository.opprettKartlegging(
+        spørsmål: List<UUID>,
+    ): Either<Feil, IASakKartlegging> =
+        iaSakRepository.opprettKartlegging(
             orgnummer = orgnummer,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
-            kartleggingId = kartleggingId
-        ).right().onRight { nyKartlegging ->
-            iaSakRepository.hentAlleSpørsmålIDer().forEach { spørsmålId ->
-                iaSakRepository.lagreKartleggingOgSpørsmålRelasjon(
-                    kartleggingId,
-                    spørsmålId
-                )
-            }
-            spørreundersøkelseProdusent.sendPåKafka(nyKartlegging)
-        }
-    }
+            kartleggingId = UUID.randomUUID(),
+            spørsmålIDer = spørsmål,
+        ).onRight { spørreundersøkelseProdusent.sendPåKafka(it) }
 
     fun hentKartlegging(
         saksnummer: String,

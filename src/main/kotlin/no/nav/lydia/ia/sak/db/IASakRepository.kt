@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import io.ktor.http.HttpStatusCode
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -188,38 +189,68 @@ class IASakRepository(val dataSource: DataSource) {
         orgnummer: String,
         kartleggingId: UUID,
         saksnummer: String,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle
-    ): IASakKartlegging =
+        saksbehandler: NavAnsattMedSaksbehandlerRolle,
+        spørsmålIDer: List<UUID>,
+    ): Either<Feil, IASakKartlegging> {
         using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        INSERT INTO ia_sak_kartlegging (
-                            kartlegging_id,
-                            orgnr,
-                            saksnummer,
-                            status,
-                            opprettet_av
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                            INSERT INTO ia_sak_kartlegging (
+                                kartlegging_id,
+                                orgnr,
+                                saksnummer,
+                                status,
+                                opprettet_av
+                            )
+                            VALUES (
+                                :kartlegging_id,
+                                :orgnr,
+                                :saksnummer,
+                                :status,
+                                :opprettet_av
+                            )
+                        """.trimMargin(),
+                        mapOf(
+                            "kartlegging_id" to kartleggingId,
+                            "orgnr" to orgnummer,
+                            "saksnummer" to saksnummer,
+                            "status" to "OPPRETTET",
+                            "opprettet_av" to saksbehandler.navIdent
                         )
-                        VALUES (
-                            :kartlegging_id,
-                            :orgnr,
-                            :saksnummer,
-                            :status,
-                            :opprettet_av
-                        )
-                        returning *                            
-                    """.trimMargin(),
-                    mapOf(
-                        "kartlegging_id" to kartleggingId,
-                        "orgnr" to orgnummer,
-                        "saksnummer" to saksnummer,
-                        "status" to "OPPRETTET",
-                        "opprettet_av" to saksbehandler.navIdent
+                    ).asUpdate
+                )
+
+                spørsmålIDer.forEach { sporsmalId ->
+                    tx.run(
+                        queryOf(
+                            """
+                    INSERT INTO ia_sak_kartlegging_sporsmal_til_kartlegging (
+                        kartlegging_id,
+                        sporsmal_id
                     )
-                ).map(this::mapRowToNyIASakKartlegging).asSingle
-            )!!
+                    VALUES (
+                        :kartleggingId,
+                        :sporsmalId
+                    )
+                    """.trimMargin(),
+                            mapOf(
+                                "kartleggingId" to kartleggingId,
+                                "sporsmalId" to sporsmalId,
+                            )
+                        ).asUpdate,
+                    )
+                }
+            }
         }
+
+        return hentKartleggingEtterId(kartleggingId = kartleggingId.toString())?.right()
+            ?: Feil(
+                feilmelding = "Kunne ikke opprette kartlegging",
+                httpStatusCode = HttpStatusCode.InternalServerError
+            ).left()
+    }
 
     fun hentKartlegginger(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
@@ -310,21 +341,8 @@ class IASakRepository(val dataSource: DataSource) {
                 }
         }
 
-    private fun mapRowToNyIASakKartlegging(row: Row): IASakKartlegging {
-        return row.tilNyIASakKartlegging()
-    }
-
     private fun mapRowToIASakKartlegging(row: Row): IASakKartlegging {
         return row.tilIASakKartlegging()
-    }
-
-    private fun Row.tilNyIASakKartlegging(): IASakKartlegging {
-        return IASakKartlegging(
-            kartleggingId = UUID.fromString(this.string("kartlegging_id")),
-            saksnummer = this.string("saksnummer"),
-            status = this.string("status"),
-            spørsmålOgSvaralternativer = emptyList(),
-        )
     }
 
     private fun Row.tilIASakKartlegging(): IASakKartlegging {
@@ -337,28 +355,6 @@ class IASakRepository(val dataSource: DataSource) {
         )
     }
 
-    fun lagreKartleggingOgSpørsmålRelasjon(kartleggingId: UUID, sporsmalId: UUID) {
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    INSERT INTO ia_sak_kartlegging_sporsmal_til_kartlegging (
-                        kartlegging_id,
-                        sporsmal_id
-                    )
-                    VALUES (
-                        :kartleggingId,
-                        :sporsmalId
-                    )
-                    """.trimMargin(),
-                    mapOf(
-                        "kartleggingId" to kartleggingId,
-                        "sporsmalId" to sporsmalId,
-                    )
-                ).asUpdate
-            )
-        }
-    }
 
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(

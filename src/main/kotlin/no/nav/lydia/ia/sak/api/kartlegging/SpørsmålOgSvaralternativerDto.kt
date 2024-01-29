@@ -8,13 +8,15 @@ data class SpørsmålOgSvaralternativerDto(
     val id: String,
     val kategori: String,
     val spørsmål: String,
-    val svaralternativer: List<SvaralternativDto>
+    val svaralternativer: List<SvaralternativDto>,
 )
 
 fun List<SpørsmålOgSvaralternativer>.toDto() = map { it.toDto() }
-fun SpørsmålOgSvaralternativer.toDto() = SpørsmålOgSvaralternativerDto(
-    id = spørsmålId.toString(),
-    kategori = kategori,
-    spørsmål = spørsmåltekst,
-    svaralternativer = svaralternativer.toDto()
-)
+
+fun SpørsmålOgSvaralternativer.toDto() =
+    SpørsmålOgSvaralternativerDto(
+        id = spørsmålId.toString(),
+        kategori = kategori,
+        spørsmål = spørsmåltekst,
+        svaralternativer = svaralternativer.toDto(),
+    )
