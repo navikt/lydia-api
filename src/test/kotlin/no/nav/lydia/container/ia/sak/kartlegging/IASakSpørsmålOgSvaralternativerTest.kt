@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -120,8 +121,11 @@ class IASakSpørsmålOgSvaralternativerTest {
     }
 
     @Test
-    fun `skal kunne hente ut svar på en kartlegging`() {
+    fun `nylig opprettet kartlegging får alle spørsmål med rette svar knyttet til seg`() {
         val sak = nySakIKartlegges()
+
+        val spørsmålIder =
+            postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select sporsmal_id from ia_sak_kartlegging_sporsmal")
 
         val kartleggingId =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
@@ -133,6 +137,15 @@ class IASakSpørsmålOgSvaralternativerTest {
             kartleggingId = kartleggingId
         ).third.get()
         kartleggingMedSvar.kartleggingId shouldBe kartleggingId
-        kartleggingMedSvar.spørsmålMedSvar.size shouldBe 3
+        kartleggingMedSvar.spørsmålMedSvar.map { it.spørsmålId } shouldContainAll spørsmålIder
+
+        kartleggingMedSvar.spørsmålMedSvar.forAll { spørsmålMedSvar ->
+            val svarIder =
+                postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+                    "select svaralternativ_id from ia_sak_kartlegging_svaralternativer where sporsmal_id = '${spørsmålMedSvar.spørsmålId}'"
+                )
+            spørsmålMedSvar.svarListe.map { it.svarId } shouldContainAll svarIder
+        }
+
     }
 }
