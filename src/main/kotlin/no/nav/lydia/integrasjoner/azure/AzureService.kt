@@ -136,6 +136,7 @@ class AzureService(
                     },
                     ifLeft = {
                         log.error(it.feilmelding)
+                        url = ""
                     }
                 )
         } while (url.isNotEmpty())
