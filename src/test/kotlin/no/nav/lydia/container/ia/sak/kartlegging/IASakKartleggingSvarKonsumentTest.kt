@@ -15,7 +15,7 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarDto
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
 
 class IASakKartleggingSvarKonsumentTest {
     @Test
@@ -30,8 +30,8 @@ class IASakKartleggingSvarKonsumentTest {
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
-            ) shouldBe kartleggingSvarDto.kartleggingId
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
+            ) shouldBe kartleggingSvarDto.spørreundersøkelseId
     }
 
     @Test
@@ -71,7 +71,7 @@ class IASakKartleggingSvarKonsumentTest {
 
         TestContainerHelper.postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
             ) shouldHaveSize 0
         TestContainerHelper.lydiaApiContainer.shouldContainLog("Fant ikke kartlegging på denne iden".toRegex())
     }
@@ -88,18 +88,18 @@ class IASakKartleggingSvarKonsumentTest {
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
             ) shouldBe kartleggingSvarDto.svarId
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
             ) shouldBe null
 
         val nySvarId = UUID.randomUUID().toString()
 
         sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingSvarDto.kartleggingId,
+            kartleggingId = kartleggingSvarDto.spørreundersøkelseId,
             spørsmålId = kartleggingSvarDto.spørsmålId,
             sesjonId = kartleggingSvarDto.sesjonId,
             svarId = nySvarId
@@ -107,11 +107,11 @@ class IASakKartleggingSvarKonsumentTest {
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
             ) shouldBe nySvarId
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.kartleggingId}'"
+                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
             ) shouldNotBe null
     }
 
@@ -120,10 +120,10 @@ class IASakKartleggingSvarKonsumentTest {
         spørsmålId: String = UUID.randomUUID().toString(),
         sesjonId: String = UUID.randomUUID().toString(),
         svarId: String = UUID.randomUUID().toString(),
-    ): KartleggingSvarDto {
+    ): SpørreundersøkelseSvarDto {
 
-        val kartleggingSvarDto = KartleggingSvarDto(
-            kartleggingId = kartleggingId,
+        val spørreundersøkelseSvarDto = SpørreundersøkelseSvarDto(
+            spørreundersøkelseId = kartleggingId,
             spørsmålId = spørsmålId,
             sesjonId = sesjonId,
             svarId = svarId
@@ -131,11 +131,11 @@ class IASakKartleggingSvarKonsumentTest {
         TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = "${sesjonId}_${spørsmålId}",
             melding = Json.encodeToString(
-                kartleggingSvarDto
+                spørreundersøkelseSvarDto
             ),
             topic = KafkaContainerHelper.spørreundersøkelseSvarTopic,
             konsumentGruppeId = spørreundersøkelseSvarGroupId
         )
-        return kartleggingSvarDto
+        return spørreundersøkelseSvarDto
     }
 }

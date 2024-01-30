@@ -62,7 +62,7 @@ class KartleggingSvarConsumer(
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 kartleggingService.lagreSvar(
-                                    records.toKarleggingSvarDto()
+                                    records.tilSpørreundersøkelseSvarDto()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger i $consumer (topic '$topic') ")
                                 consumer.commitSync()
@@ -89,12 +89,12 @@ class KartleggingSvarConsumer(
         logger.info("Stopped kafka consumer job i $consumer (topic '$topic')")
     }
 
-    private fun ConsumerRecords<String, String>.toKarleggingSvarDto(): List<KartleggingSvarDto> {
+    private fun ConsumerRecords<String, String>.tilSpørreundersøkelseSvarDto(): List<SpørreundersøkelseSvarDto> {
         val gson = GsonBuilder().create()
-        return this.filter { erKartleggingSvarMeldingenGyldig(it) }.map {
+        return this.filter { erSpørreundersøkelseSvarMeldingenGyldig(it) }.map {
             gson.fromJson(
                 it.value(),
-                KartleggingSvarDto::class.java
+                SpørreundersøkelseSvarDto::class.java
             )
         }
     }
@@ -116,12 +116,12 @@ class KartleggingSvarConsumer(
             false
         }
 
-        fun erKartleggingSvarMeldingenGyldig(kartleggingSvarRecord: ConsumerRecord<String, String>): Boolean {
+        fun erSpørreundersøkelseSvarMeldingenGyldig(kartleggingSvarRecord: ConsumerRecord<String, String>): Boolean {
             val nøkkel = kartleggingSvarRecord.key()
             val verdi = kartleggingSvarRecord.value()
 
             try {
-                Json.decodeFromString<KartleggingSvarDto>(verdi)
+                Json.decodeFromString<SpørreundersøkelseSvarDto>(verdi)
             } catch (e: Exception){
                 logger.warn("Feil formatert Kafka melding (value) i topic ${kartleggingSvarRecord.topic()} for value '$verdi' ")
                 return false
