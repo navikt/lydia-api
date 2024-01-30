@@ -19,23 +19,23 @@ class KartleggingRepository(val dataSource: DataSource) {
                     mapOf(
                         "kartleggingId" to kartleggingId,
                     )
-                ).map(this::mapRowToKartleggingSvarDto).asList
+                ).map(this::mapRowToSpørreundersøkelseSvarDto).asList
             )
         }
 
-    private fun mapRowToKartleggingSvarDto(row: Row): KartleggingSvarDto {
-        return row.tilKartleggingSvarDto()
+    private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvarDto {
+        return row.tilSpørreundersøkelseSvarDto()
     }
 
-    fun Row.tilKartleggingSvarDto(): KartleggingSvarDto =
-        KartleggingSvarDto(
-            kartleggingId = this.string("kartlegging_id"),
+    fun Row.tilSpørreundersøkelseSvarDto(): SpørreundersøkelseSvarDto =
+        SpørreundersøkelseSvarDto(
+            spørreundersøkelseId = this.string("kartlegging_id"),
             sesjonId = this.string("sesjon_id"),
             spørsmålId = this.string("sporsmal_id"),
             svarId = this.string("svar_id")
         )
     
-    fun lagreSvar(karleggingSvarDto: KartleggingSvarDto) =
+    fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -57,7 +57,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                             endret = now()
                         """.trimMargin(),
                     mapOf(
-                        "kartleggingId" to karleggingSvarDto.kartleggingId,
+                        "kartleggingId" to karleggingSvarDto.spørreundersøkelseId,
                         "sesjonId" to karleggingSvarDto.sesjonId,
                         "sporsmalId" to karleggingSvarDto.spørsmålId,
                         "svarId" to karleggingSvarDto.svarId
