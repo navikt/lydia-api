@@ -22,7 +22,7 @@ data class KartleggingMedSvar(
     val kartleggingId: String,
     val spørsmålMedSvar: List<SpørsmålMedSvar>
 ) {
-    constructor(kartlegging: IASakKartlegging, spørsmålMedSvarListe: List<KartleggingSvarDto>) :
+    constructor(kartlegging: IASakKartlegging, spørsmålMedSvarListe: List<SpørreundersøkelseSvarDto>) :
             this(
                 kartleggingId = kartlegging.kartleggingId.toString(),
                 spørsmålMedSvar = kartlegging.spørsmålOgSvaralternativer.map { spørsmålOgSvaralternativ ->

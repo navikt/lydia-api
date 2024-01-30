@@ -16,12 +16,13 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
+import kotlinx.serialization.json.Json
 
 class KartleggingSvarConsumer(
     val topic: String,
     val groupId: String
 ) : CoroutineScope, Helsesjekk  {
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
 
     private lateinit var job: Job
     private lateinit var kafka: Kafka
@@ -61,7 +62,7 @@ class KartleggingSvarConsumer(
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 kartleggingService.lagreSvar(
-                                    records.toKarleggingSvarDto()
+                                    records.tilSpørreundersøkelseSvarDto()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger i $consumer (topic '$topic') ")
                                 consumer.commitSync()
@@ -88,38 +89,53 @@ class KartleggingSvarConsumer(
         logger.info("Stopped kafka consumer job i $consumer (topic '$topic')")
     }
 
-    private fun ConsumerRecords<String, String>.toKarleggingSvarDto(): List<KartleggingSvarDto> {
+    private fun ConsumerRecords<String, String>.tilSpørreundersøkelseSvarDto(): List<SpørreundersøkelseSvarDto> {
         val gson = GsonBuilder().create()
-        return this.filter { erMeldingenGyldig(it) }.map {
+        return this.filter { erSpørreundersøkelseSvarMeldingenGyldig(it) }.map {
             gson.fromJson(
                 it.value(),
-                KartleggingSvarDto::class.java
+                SpørreundersøkelseSvarDto::class.java
             )
         }
     }
 
-    private fun erMeldingenGyldig(kartleggingSvarRecord: ConsumerRecord<String, String>): Boolean {
-        val nøkkel = kartleggingSvarRecord.key()
-
-        return if (nøkkel.erGyldigNøkkel()) {
-            true
-        } else {
-            logger.warn("Feil formatert Kafka melding i topic ${kartleggingSvarRecord.topic()} for key $nøkkel")
-            false
-        }
-    }
-
-    fun String.erGyldigNøkkel() = try {
-        val sesjonIdOgSpørsmålId = this.split("_")
-        UUID.fromString(sesjonIdOgSpørsmålId[0])
-        UUID.fromString(sesjonIdOgSpørsmålId[1])
-        true
-    } catch (e: Exception) {
-        false
-    }
 
     private fun isRunning() = job.isActive
 
     override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN
 
+    companion object {
+
+        private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+        fun String.erGyldigNøkkel() = try {
+            val sesjonIdOgSpørsmålId = this.split("_")
+            UUID.fromString(sesjonIdOgSpørsmålId[0])
+            UUID.fromString(sesjonIdOgSpørsmålId[1])
+            true
+        } catch (e: Exception) {
+            false
+        }
+
+        fun erSpørreundersøkelseSvarMeldingenGyldig(kartleggingSvarRecord: ConsumerRecord<String, String>): Boolean {
+            val nøkkel = kartleggingSvarRecord.key()
+            val verdi = kartleggingSvarRecord.value()
+
+            try {
+                Json.decodeFromString<SpørreundersøkelseSvarDto>(verdi)
+            } catch (e: Exception){
+                logger.warn("Feil formatert Kafka melding (value) i topic ${kartleggingSvarRecord.topic()} for value '$verdi' ")
+                return false
+            }
+
+            return if (nøkkel.erGyldigNøkkel()) {
+                true
+            } else {
+                logger.warn("Feil formatert Kafka melding i topic ${kartleggingSvarRecord.topic()} for key $nøkkel")
+                false
+            }
+        }
+
+    }
 }
+
+

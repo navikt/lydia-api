@@ -13,17 +13,17 @@ class KartleggingService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun lagreSvar(karleggingSvarDtoListe: List<KartleggingSvarDto>) {
+    fun lagreSvar(karleggingSvarDtoListe: List<SpørreundersøkelseSvarDto>) {
         karleggingSvarDtoListe.forEach {
-            val kartlegging = iaSakRepository.hentKartleggingEtterId(it.kartleggingId)
+            val kartlegging = iaSakRepository.hentKartleggingEtterId(it.spørreundersøkelseId)
 
             if (kartlegging == null) {
-                log.error("Fant ikke kartlegging på denne iden: ${it.kartleggingId}, hopper over")
+                log.error("Fant ikke kartlegging på denne iden: ${it.spørreundersøkelseId}, hopper over")
                 return@forEach
             }
 
             kartleggingRepository.lagreSvar(it)
-            log.info("Lagret svar for kartlegging med id: '${it.kartleggingId}'")
+            log.info("Lagret svar for kartlegging med id: '${it.spørreundersøkelseId}'")
         }
     }
 
