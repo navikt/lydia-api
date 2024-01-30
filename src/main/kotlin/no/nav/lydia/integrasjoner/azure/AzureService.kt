@@ -63,7 +63,7 @@ class AzureService(
     ): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
         val url = "${security.azureConfig.graphDatabaseUrl}/users/${objectId}?\$select=$azureAdProps"
-        return hentFraAzure(url, accessToken)
+        return hentFraAzure(url, accessToken, AzureType.NAVENHET_FRA_INNLOGGET_BRUKER)
             .map { json -> deserializer.decodeFromString<AzureAdBruker>(json) }
             .map { azureAdBruker ->
                 NavEnhet(
@@ -78,7 +78,7 @@ class AzureService(
     ): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
         val url = "${security.azureConfig.graphDatabaseUrl}/users?\$search=\"onPremisesSamAccountName:$navIdent\"&\$select=$azureAdProps"
-        return hentFraAzure(url, accessToken)
+        return hentFraAzure(url, accessToken, AzureType.NAVENHET_FRA_NAVIDENT)
             .map { json -> deserializer.decodeFromString<AzureResponse>(json) }
             .map { azureResponse -> azureResponse.value.firstOrNull() }
             .map { azureAdBruker ->
@@ -127,7 +127,7 @@ class AzureService(
         var url = "${azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=$azureAdProps&\$top=$antallVeilederePerSide"
 
         do {
-            hentFraAzure(url, accessToken)
+            hentFraAzure(url, accessToken, AzureType.BRUKERE_I_GRUPPE)
                 .map { json -> deserializer.decodeFromString<AzureResponse>(json) }
                 .fold(
                     ifRight = {
@@ -144,9 +144,16 @@ class AzureService(
     }
 
 
+    enum class AzureType {
+        NAVENHET_FRA_INNLOGGET_BRUKER,
+        NAVENHET_FRA_NAVIDENT,
+        BRUKERE_I_GRUPPE
+    }
+
     private fun hentFraAzure(
         url: String,
-        accessToken: String
+        accessToken: String,
+        typeSpørring: AzureType,
     ) =
         url.httpGet()
             .authentication()
@@ -161,7 +168,7 @@ class AzureService(
                 it.toString(Charsets.UTF_8).right()
             }, failure = {
                 Feil(
-                    feilmelding = "Feilet under henting av veiledere fra Azure: ${it.message} ${it.errorData.toString(Charsets.UTF_8)}",
+                    feilmelding = "Feilet under henting fra Azure (${typeSpørring.name}): ${it.message} ${it.errorData.toString(Charsets.UTF_8)}",
                     httpStatusCode = HttpStatusCode.InternalServerError
                 ).left()
             })
