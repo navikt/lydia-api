@@ -60,6 +60,7 @@ import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
 import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
 import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingMedSvar
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoversikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
@@ -88,6 +89,7 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.util.UUID
 
 class TestContainerHelper {
     companion object {
@@ -582,14 +584,64 @@ class IASakKartleggingHelper {
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilListeRespons<IASakKartleggingDto>()
 
-        fun hentIASakKartleggingMedSvar(
+        fun IASakDto.opprettKartlegging(
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) = opprettIASakKartlegging(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            token = token
+        ).tilSingelRespons<IASakKartleggingDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) }
+        )
+
+        fun IASakKartleggingDto.sendKartleggingSvarTilKafka(
+            spørsmålId: String = spørsmålOgSvaralternativer.first().id,
+            sesjonId: String = UUID.randomUUID().toString(),
+            svarId: String = spørsmålOgSvaralternativer.first().svaralternativer.first().svarId,
+        ) = sendKartleggingSvarTilKafka(
+            kartleggingId = kartleggingId,
+            spørsmålId = spørsmålId,
+            sesjonId = sesjonId,
+            svarId = svarId
+        )
+
+        fun sendKartleggingSvarTilKafka(
+            kartleggingId: String = UUID.randomUUID().toString(),
+            spørsmålId: String = UUID.randomUUID().toString(),
+            sesjonId: String = UUID.randomUUID().toString(),
+            svarId: String = UUID.randomUUID().toString(),
+        ): SpørreundersøkelseSvarDto {
+
+            val spørreundersøkelseSvarDto = SpørreundersøkelseSvarDto(
+                spørreundersøkelseId = kartleggingId,
+                spørsmålId = spørsmålId,
+                sesjonId = sesjonId,
+                svarId = svarId
+            )
+            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+                nøkkel = "${sesjonId}_${spørsmålId}",
+                melding = Json.encodeToString(
+                    spørreundersøkelseSvarDto
+                ),
+                topic = KafkaContainerHelper.spørreundersøkelseSvarTopic,
+                konsumentGruppeId = Kafka.spørreundersøkelseSvarGroupId
+            )
+            return spørreundersøkelseSvarDto
+        }
+
+        fun hentResultaterForKartlegging(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnr: String,
             saksnummer: String,
             kartleggingId: String
         ) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer/$kartleggingId")
-                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-                .tilSingelRespons<KartleggingMedSvar>()
+                .authentication().bearer(token)
+                .tilSingelRespons<KartleggingMedSvar>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail(it.message) }
+                )
     }
 }
 

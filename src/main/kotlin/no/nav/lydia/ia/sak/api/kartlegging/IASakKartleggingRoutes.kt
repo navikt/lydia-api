@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
+import no.nav.lydia.tilgangskontroll.innloggetNavIdent
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 fun Route.iaSakKartlegging(
@@ -86,8 +87,14 @@ fun Route.iaSakKartlegging(
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val iaSak =
             iaSakService.hentIASak(saksnummer).getOrNull() ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         if (orgnummer != iaSak.orgnr) return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+
+        val innloggetNavIdent = call.innloggetNavIdent()
+        if (innloggetNavIdent != iaSak.eidAv) return@get call.sendFeil(IASakError.`ikke eier av sak`)
+
+
         val kartleggingId =
             call.parameters["kartleggingId"] ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->

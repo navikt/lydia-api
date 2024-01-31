@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
+import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
@@ -9,20 +10,25 @@ import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import kotlin.test.Test
 import no.nav.lydia.helper.IASakKartleggingHelper
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentResultaterForKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
+import kotlin.test.Test
 
-class IASakSpørsmålOgSvaralternativerTest {
+class IASakKartleggingApiTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     @Before
@@ -131,11 +137,11 @@ class IASakSpørsmålOgSvaralternativerTest {
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
                 .tilSingelRespons<IASakKartleggingDto>().third.get().kartleggingId
 
-        val kartleggingMedSvar = IASakKartleggingHelper.hentIASakKartleggingMedSvar(
+        val kartleggingMedSvar = hentResultaterForKartlegging(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingId
-        ).third.get()
+        )
         kartleggingMedSvar.kartleggingId shouldBe kartleggingId
         kartleggingMedSvar.spørsmålMedSvar.map { it.spørsmålId } shouldContainAll spørsmålIder
 
@@ -148,4 +154,28 @@ class IASakSpørsmålOgSvaralternativerTest {
         }
 
     }
+
+    @Test
+    fun `kun eier av sak skal kunne hente resultater av kartlegging`() {
+        val sak = nySakIKartlegges()
+        val kartlegging = sak.opprettKartlegging()
+        val resultater = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartlegging.kartleggingId
+        )
+        resultater.kartleggingId shouldBe kartlegging.kartleggingId
+
+        sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
+        shouldFail {
+            hentResultaterForKartlegging(
+                token = oauth2ServerContainer.saksbehandler1.token,
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                kartleggingId = kartlegging.kartleggingId
+            )
+        }
+
+    }
 }
+
