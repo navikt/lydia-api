@@ -46,6 +46,7 @@ import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
+import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -573,14 +574,14 @@ class IASakKartleggingHelper {
             saksnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
-            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer/opprett")
+            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/opprett")
                 .authentication().bearer(token)
 
         fun hentIASakKartlegginger(
             orgnr: String,
             saksnummer: String,
         ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer")
+            lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilListeRespons<IASakKartleggingDto>()
 
@@ -636,7 +637,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
             kartleggingId: String
         ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/kartlegging/$orgnr/$saksnummer/$kartleggingId")
+            lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
                 .authentication().bearer(token)
                 .tilSingelRespons<KartleggingMedSvar>().third.fold(
                     success = { respons -> respons },

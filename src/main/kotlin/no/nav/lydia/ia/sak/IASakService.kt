@@ -8,14 +8,12 @@ import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
@@ -23,7 +21,6 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
-import no.nav.lydia.ia.sak.domene.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
@@ -43,7 +40,6 @@ import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
-import java.util.UUID
 
 class IASakService(
     private val iaSakRepository: IASakRepository,
@@ -52,7 +48,6 @@ class IASakService(
     private val årsakService: ÅrsakService,
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
     private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
-    private val spørreundersøkelseProdusent: SpørreundersøkelseProdusent,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -88,35 +83,6 @@ class IASakService(
     private fun varsleIASakLeveranseObservers(leveranse: IASakLeveranse) {
         iaSaksLeveranseObservers.forEach { observer -> observer.receive(leveranse) }
     }
-
-    fun hentAlleSpørsmål() = iaSakRepository.hentAlleSpørsmålIDer()
-
-    fun opprettKartlegging(
-        orgnummer: String,
-        saksbehandler: NavAnsattMedSaksbehandlerRolle,
-        saksnummer: String,
-        spørsmål: List<UUID>,
-    ): Either<Feil, IASakKartlegging> =
-        iaSakRepository.opprettKartlegging(
-            orgnummer = orgnummer,
-            saksnummer = saksnummer,
-            saksbehandler = saksbehandler,
-            kartleggingId = UUID.randomUUID(),
-            spørsmålIDer = spørsmål,
-        ).onRight { spørreundersøkelseProdusent.sendPåKafka(it) }
-
-    fun hentKartlegging(
-        saksnummer: String,
-    ): Either<Feil, List<IASakKartlegging>> {
-        return try {
-            val kartlegginger = iaSakRepository.hentKartlegginger(saksnummer = saksnummer)
-            kartlegginger.right()
-        } catch (e: Exception) {
-            log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
-            IASakKartleggingError.`generell feil under uthenting`.left()
-        }
-    }
-
 
     fun opprettSakOgMerkSomVurdert(
         orgnummer: String,

@@ -98,10 +98,7 @@ fun startLydiaBackend() {
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
     val kartleggingRepository = KartleggingRepository(dataSource = dataSource)
-    val kartleggingService = KartleggingService(
-        kartleggingRepository = kartleggingRepository,
-        iaSakRepository = iaSakRepository,
-    )
+
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
         SykefraværsstatistikkService(
@@ -145,14 +142,19 @@ fun startLydiaBackend() {
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
         årsakService = ÅrsakService(årsakRepository = årsakRepository),
-        spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
-            produsent = kafkaProdusent,
-            topic = naisEnv.kafka.spørrundersøkelseTopic
-        )
     ).apply {
         leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
         leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
     }
+
+    val kartleggingService = KartleggingService(
+        kartleggingRepository = kartleggingRepository,
+        spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
+            produsent = kafkaProdusent,
+            topic = naisEnv.kafka.spørrundersøkelseTopic
+        )
+    )
+
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
