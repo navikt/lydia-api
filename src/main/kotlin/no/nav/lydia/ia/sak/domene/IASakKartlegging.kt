@@ -5,6 +5,6 @@ import java.util.UUID
 data class IASakKartlegging(
     val kartleggingId: UUID,
     val saksnummer: String,
-    val status: String,
+    val status: KartleggingStatus,
     val spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativer>,
 )

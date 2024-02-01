@@ -32,7 +32,7 @@ fun Route.iaSakKartlegging(
     auditLog: AuditLog,
 ) {
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             val spørmål = kartleggingService.hentAlleSpørsmål()
@@ -58,8 +58,8 @@ fun Route.iaSakKartlegging(
     }
 
     get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}") {
-        val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val orgnummer = call.parameters["orgnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         call.somSaksbehandler(adGrupper = adGrupper) { _ ->
             kartleggingService.hentKartlegginger(saksnummer = saksnummer)
         }.also { kartleggingerEither ->
@@ -78,17 +78,16 @@ fun Route.iaSakKartlegging(
     }
 
     get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
-        val kartleggingId =
-            call.parameters["kartleggingId"] ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+        val kartleggingId = call.kartleggingId ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
             kartleggingService.hentKartleggingMedSvar(kartleggingId = kartleggingId)
         }.also { kartlegging ->
             auditLog.auditloggEither(
                 call = call,
                 either = kartlegging,
-                orgnummer = call.parameters["orgnummer"],
+                orgnummer = call.orgnummer,
                 auditType = AuditType.access,
-                saksnummer = call.parameters["saksnummer"]
+                saksnummer = call.saksnummer
             )
         }.map {
             call.respond(HttpStatusCode.OK, it)
@@ -96,12 +95,32 @@ fun Route.iaSakKartlegging(
             call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
+
+    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/avslutt") {
+        val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+
+        call.somEierAvSakIKartlegges(iaSakService, adGrupper) { _, _ ->
+            kartleggingService.avsluttKartlegging(kartleggingId)
+        }.also { kartlegging ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartlegging,
+                orgnummer = call.orgnummer,
+                auditType = AuditType.access,
+                saksnummer = call.saksnummer
+            )
+        }.map {
+            call.respond(it.toDto())
+        }.mapLeft {
+            call.sendFeil(it)
+        }
+    }
 }
 
 private fun <T> ApplicationCall.somEierAvSakIKartlegges(iaSakService: IASakService, adGrupper: ADGrupper, block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>) =
     somSaksbehandler(adGrupper) { saksbehandler ->
-        val saksnummer = parameters["saksnummer"] ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-        val orgnummer = parameters["orgnummer"] ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
+        val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+        val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
         val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull() ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
         if (iaSak.orgnr != orgnummer)
             IASakError.`ugyldig orgnummer`.left()
@@ -112,6 +131,13 @@ private fun <T> ApplicationCall.somEierAvSakIKartlegges(iaSakService: IASakServi
         else
             block(saksbehandler, iaSak)
     }
+
+private val ApplicationCall.orgnummer
+    get() = parameters["orgnummer"]
+private val ApplicationCall.saksnummer
+    get() = parameters["saksnummer"]
+private val ApplicationCall.kartleggingId
+    get() = parameters["kartleggingId"]
 
 object IASakKartleggingError {
     val `generell feil under uthenting` =

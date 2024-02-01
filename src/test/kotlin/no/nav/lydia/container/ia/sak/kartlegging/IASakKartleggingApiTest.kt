@@ -11,6 +11,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.IASakKartleggingHelper
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentResultaterForKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.KafkaContainerHelper
@@ -20,9 +22,11 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
@@ -105,7 +109,7 @@ class IASakKartleggingApiTest {
                 liste.map { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
                     spørreundersøkelse.spørreundersøkelseId shouldBe id
-                    spørreundersøkelse.status shouldBe "OPPRETTET"
+                    spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
                     spørreundersøkelse.spørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.spørsmålOgSvaralternativer.forAll {
                         it.svaralternativer shouldHaveSize 5
@@ -122,8 +126,7 @@ class IASakKartleggingApiTest {
         IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        IASakKartleggingHelper.hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .third.get().shouldHaveSize(1)
+        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer).shouldHaveSize(1)
     }
 
     @Test
@@ -175,7 +178,31 @@ class IASakKartleggingApiTest {
                 kartleggingId = kartlegging.kartleggingId
             )
         }
+    }
 
+    @Test
+    fun `skal kunne avslutte kartlegging`() {
+        val sak = nySakIKartlegges()
+        val kartleggingDto = sak.opprettKartlegging()
+        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+
+        val avsluttetKartlegging = kartleggingDto.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        avsluttetKartlegging.status shouldBe KartleggingStatus.AVSLUTTET
+
+        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer).forExactlyOne {
+            it.status shouldBe KartleggingStatus.AVSLUTTET
+        }
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = kartleggingDto.kartleggingId,
+                konsument = kartleggingKonsument
+            ) {
+                it.forExactlyOne { melding ->
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    spørreundersøkelse.status shouldBe KartleggingStatus.AVSLUTTET
+                }
+            }
+        }
     }
 }
-

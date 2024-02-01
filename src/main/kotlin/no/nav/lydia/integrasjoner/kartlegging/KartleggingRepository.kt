@@ -10,6 +10,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
+import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.Svaralternativ
 import no.nav.lydia.tilgangskontroll.NavAnsatt
@@ -160,7 +161,7 @@ class KartleggingRepository(val dataSource: DataSource) {
         return IASakKartlegging(
             kartleggingId = kartleggingId,
             saksnummer = this.string("saksnummer"),
-            status = this.string("status"),
+            status = KartleggingStatus.valueOf(this.string("status")),
             spørsmålOgSvaralternativer = hentSpørsmålOgSvaralternativer(kartleggingId),
         )
     }
@@ -245,6 +246,23 @@ class KartleggingRepository(val dataSource: DataSource) {
                         "svarId" to karleggingSvarDto.svarId
                     )
                 ).asUpdate
+            )
+        }
+
+    fun avsluttKartlegging(kartleggingId: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        UPDATE ia_sak_kartlegging SET
+                            status = 'AVSLUTTET'
+                        WHERE kartlegging_id = :kartleggingId
+                        RETURNING *
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to kartleggingId
+                    )
+                ).map(this::mapRowToIASakKartlegging).asSingle
             )
         }
 }

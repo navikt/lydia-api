@@ -583,7 +583,10 @@ class IASakKartleggingHelper {
         ) =
             lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-                .tilListeRespons<IASakKartleggingDto>()
+                .tilListeRespons<IASakKartleggingDto>().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) }
+                )
 
         fun IASakDto.opprettKartlegging(
             token: String = oauth2ServerContainer.saksbehandler1.token
@@ -595,6 +598,18 @@ class IASakKartleggingHelper {
             success = { respons -> respons },
             failure = { fail(it.message) }
         )
+
+        fun IASakKartleggingDto.avslutt(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            orgnummer: String,
+            saksnummer: String
+        ) =
+            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/avslutt")
+                .authentication().bearer(token)
+                .tilSingelRespons<IASakKartleggingDto>().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) }
+                )
 
         fun IASakKartleggingDto.sendKartleggingSvarTilKafka(
             spørsmålId: String = spørsmålOgSvaralternativer.first().id,
