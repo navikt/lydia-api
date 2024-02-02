@@ -38,18 +38,18 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
 
     fun create(kafka: Kafka, repository: VirksomhetRepository) {
         val topicNavn = kafka.brregAlleVirksomheterTopic
-        val consumerGroupNavn = Kafka.brregConsumerGroupId
+        val consumerGroupId = Kafka.brregAlleVirksomheterConsumerGroupId
 
-        logger.info("Creating kafka consumer job for $topicNavn i group $consumerGroupNavn")
+        logger.info("Creating kafka consumer job for $topicNavn i group $consumerGroupId")
         job = Job()
         BrregAlleVirksomheterConsumer.kafka = kafka
         virksomhetRepository = repository
         kafkaConsumer = KafkaConsumer(
-            BrregAlleVirksomheterConsumer.kafka.consumerProperties(consumerGroupId = Kafka.brregConsumerGroupId),
+            BrregAlleVirksomheterConsumer.kafka.consumerProperties(consumerGroupId = consumerGroupId),
             StringDeserializer(),
             StringDeserializer()
         )
-        logger.info("Created kafka consumer job for $topicNavn i group $consumerGroupNavn")
+        logger.info("Created kafka consumer job for $topicNavn i group $consumerGroupId")
     }
 
     fun run() {

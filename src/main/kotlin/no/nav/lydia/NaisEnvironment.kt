@@ -101,6 +101,7 @@ class Kafka(
         const val statistikkVirksomhetGraderingGroupId = "lydia-api-statistikk-virksomhet-gradering-consumer"
         const val statistikkMetadataVirksomhetGroupId = "lydia-api-statistikk-metadata-virksomhet-consumer"
         const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
+        const val brregAlleVirksomheterConsumerGroupId = "lydia-api-brreg-alle-virksomheter-consumer"
         const val jobblytterConsumerGroupId = "lydia-api-jobblytter-consumer"
         const val spørreundersøkelseSvarGroupId = "lydia-api-sporreundersokelse-svar-consumer"
         const val clientId: String = "lydia-api"
