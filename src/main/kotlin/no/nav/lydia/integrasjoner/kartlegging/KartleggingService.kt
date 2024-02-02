@@ -3,7 +3,6 @@ package no.nav.lydia.integrasjoner.kartlegging
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
@@ -69,13 +68,14 @@ class KartleggingService(
 
     fun hentAlleSpørsmål() = kartleggingRepository.hentAlleSpørsmålIDer()
 
-    fun avsluttKartlegging(kartleggingId: String) =
-        (
-            kartleggingRepository.avsluttKartlegging(kartleggingId = kartleggingId)?.right() ?: Feil(
-                feilmelding = "Kunne ikke avslutte kartlegging",
-                httpStatusCode = HttpStatusCode.InternalServerError
-            ).left()
-        ).onRight {
-            spørreundersøkelseProdusent.sendPåKafka(it)
-        }
+    fun avsluttKartlegging(kartleggingId: String): Either<Feil, IASakKartlegging> {
+        kartleggingRepository.hentKartleggingEtterId(kartleggingId)
+            ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
+        val avsluttetKartlegging = kartleggingRepository.avsluttKartlegging(kartleggingId = kartleggingId)
+            ?: return IASakKartleggingError.`feil under oppdatering`.left()
+
+        spørreundersøkelseProdusent.sendPåKafka(avsluttetKartlegging)
+
+        return avsluttetKartlegging.right()
+    }
 }

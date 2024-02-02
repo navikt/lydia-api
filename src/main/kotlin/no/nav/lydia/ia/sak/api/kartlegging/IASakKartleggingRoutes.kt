@@ -142,6 +142,8 @@ private val ApplicationCall.kartleggingId
 object IASakKartleggingError {
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
+    val `feil under oppdatering` =
+            Feil("Feil under oppdatering av kartlegging", HttpStatusCode.InternalServerError)
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
     val `ugyldig kartleggingId` = Feil("Ugyldig kartlegging", HttpStatusCode.BadRequest)
