@@ -105,23 +105,6 @@ services:
       KAFKA_TRUSTSTORE_PATH: ""
       KAFKA_KEYSTORE_PATH: ""
       KAFKA_CREDSTORE_PASSWORD: ""
-      STATISTIKK_METADATA_VIRKSOMHET_TOPIC: arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1
-      STATISTIKK_LAND_TOPIC: arbeidsgiver.sykefravarsstatistikk-land-v1
-      STATISTIKK_SEKTOR_TOPIC: arbeidsgiver.sykefravarsstatistikk-sektor-v1
-      STATISTIKK_BRANSJE_TOPIC: arbeidsgiver.sykefravarsstatistikk-bransje-v1
-      STATISTIKK_NARING_TOPIC: arbeidsgiver.sykefravarsstatistikk-naring-v1
-      STATISTIKK_NARINGSKODE_TOPIC: arbeidsgiver.sykefravarsstatistikk-naringskode-v1
-      STATISTIKK_VIRKSOMHET_TOPIC: arbeidsgiver.sykefravarsstatistikk-virksomhet-v1
-      STATISTIKK_VIRKSOMHET_GRADERING_TOPIC: arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1
-      JOBBLYTTER_TOPIC: pia.jobblytter-v1
-      IA_SAK_TOPIC: pia.ia-sak-v1
-      IA_SAK_STATISTIKK_TOPIC: pia.ia-sak-statistikk-v1
-      IA_SAK_STATUS_TOPIC: pia.ia-sak-status-v1
-      IA_SAK_LEVERANSE_TOPIC: pia.ia-sak-leveranse-v1
-      SPORREUNDERSOKELSE_TOPIC: pia.sporreundersokelse-v1
-      SPORREUNDERSOKELSE_SVAR_TOPIC: pia.sporreundersokelse-svar-v1
-      BRREG_OPPDATERING_TOPIC: pia.brreg-oppdatering
-      BRREG_ALLE_VIRKSOMHETER_TOPIC: pia.brreg-alle-virksomheter
       # Backend spesifikk env
       CONSUMER_LOOP_DELAY: 1
       SSB_NARINGS_URL: /naringmock/api/klass/v1/30/json

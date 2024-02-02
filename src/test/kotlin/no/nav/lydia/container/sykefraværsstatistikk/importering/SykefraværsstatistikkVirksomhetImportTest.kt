@@ -2,7 +2,7 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2022_4
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2023_1
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpGraderingStatistikkSiste4KvartalTable
@@ -15,7 +15,6 @@ import no.nav.lydia.container.sykefraværsstatistikk.importering.Sykefraværssta
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkVirksomhetGraderingSiste4Kvartal
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
-import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -96,8 +95,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-            Kafka.statistikkVirksomhetGraderingGroupId
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         val gjeldendeKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
@@ -123,10 +121,9 @@ class SykefraværsstatistikkVirksomhetImportTest {
                 sistePubliserteKvartal = graderingSistePubliserteKvartal
         )
         kafkaContainer.sendOgVentTilKonsumert(
-                kafkaMelding.toJsonKey(),
-                kafkaMelding.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-                Kafka.statistikkVirksomhetGraderingGroupId
+            kafkaMelding.toJsonKey(),
+            kafkaMelding.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         val siste4Kvartaler = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
@@ -159,8 +156,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-            Kafka.statistikkVirksomhetGraderingGroupId
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         lydiaApiContainer shouldNotContainLog "PSQLException: ERROR: null value in column".toRegex()
@@ -192,8 +188,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-            Kafka.statistikkVirksomhetGraderingGroupId
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         val graderingGjeldendeKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999998", kvartal = KVARTAL_2023_1)
@@ -216,8 +211,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetTopic,
-            Kafka.statistikkVirksomhetGroupId
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         kafkaMelding sistePubliserteKvartalShouldBeEqual
@@ -242,8 +236,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-            Kafka.statistikkVirksomhetGraderingGroupId
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         lydiaApiContainer shouldContainLog "Lagret 1 meldinger i StatistikkVirksomhetGraderingConsumer \\(topic 'arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1'\\)".toRegex()
@@ -271,8 +264,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-            Kafka.statistikkVirksomhetGraderingGroupId
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         val resultat = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
@@ -298,8 +290,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-            Kafka.statistikkVirksomhetGraderingGroupId
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
         val oppdatertStatistikkMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
@@ -323,8 +314,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             oppdatertStatistikkMelding.toJsonKey(),
             oppdatertStatistikkMelding.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-            Kafka.statistikkVirksomhetGraderingGroupId
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         val resultatSistePubliserteKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)

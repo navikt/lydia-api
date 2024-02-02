@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
@@ -38,6 +39,8 @@ object Jobblytter : CoroutineScope {
     private lateinit var iaSakStatusExportør: IASakStatusEksportør
     private lateinit var næringsDownloader: NæringsDownloader
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
+    private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
+    private val konsumentGruppe = Topic.JOBBLYTTER_TOPIC.konsumentGruppe
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -56,12 +59,12 @@ object Jobblytter : CoroutineScope {
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
     ) {
-        logger.info("Creating kafka consumer job for ${kafka.jobblytterTopic}")
+        logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
         Jobblytter.kafka = kafka
 
         kafkaConsumer = KafkaConsumer(
-            Jobblytter.kafka.consumerProperties(consumerGroupId = Kafka.jobblytterConsumerGroupId),
+            Jobblytter.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
             StringDeserializer()
         )
@@ -73,15 +76,15 @@ object Jobblytter : CoroutineScope {
         this.næringsDownloader = næringsDownloader
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
 
-        logger.info("Created kafka consumer job for ${kafka.jobblytterTopic}")
+        logger.info("Created kafka consumer job for $topicNavn")
     }
 
     fun run() {
         launch {
             kafkaConsumer.use { consumer ->
                 try {
-                    consumer.subscribe(listOf(kafka.jobblytterTopic))
-                    logger.info("Kafka consumer subscribed to ${kafka.jobblytterTopic}")
+                    consumer.subscribe(listOf(topicNavn))
+                    logger.info("Kafka consumer subscribed to $topicNavn")
                     while (job.isActive) {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         records.forEach {
@@ -126,7 +129,7 @@ object Jobblytter : CoroutineScope {
                 } catch (e: RetriableException) {
                     logger.error("Kafka consumer got retriable exception", e)
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner for ${kafka.jobblytterTopic}", e)
+                    logger.error("Exception is shutting down kafka listner for $topicNavn", e)
                     throw e
                 }
             }
@@ -134,10 +137,10 @@ object Jobblytter : CoroutineScope {
     }
 
     private fun cancel() = runBlocking {
-        logger.info("Cancelling kafka consumer job for ${kafka.jobblytterTopic}")
+        logger.info("Cancelling kafka consumer job for $topicNavn")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()
-        logger.info("Cancelled kafka consumer job for ${kafka.jobblytterTopic}")
+        logger.info("Cancelled kafka consumer job for $topicNavn")
     }
 }
 

@@ -11,6 +11,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.exceptions.UgyldigAdresseException
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -30,6 +31,8 @@ object BrregOppdateringConsumer : CoroutineScope {
 
     private lateinit var repository: VirksomhetRepository
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
+    private val topicNavn = Topic.BRREG_OPPDATERING_TOPIC.navn
+    private val konsumentGruppe = Topic.BRREG_OPPDATERING_TOPIC.konsumentGruppe
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -39,31 +42,31 @@ object BrregOppdateringConsumer : CoroutineScope {
     }
 
     fun create(kafka: Kafka, repository: VirksomhetRepository) {
-        logger.info("Creating kafka consumer job for ${kafka.brregOppdateringTopic}")
+        logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
         BrregOppdateringConsumer.kafka = kafka
         BrregOppdateringConsumer.repository = repository
         kafkaConsumer = KafkaConsumer(
-            BrregOppdateringConsumer.kafka.consumerProperties(consumerGroupId = Kafka.brregConsumerGroupId),
+            BrregOppdateringConsumer.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
             StringDeserializer()
         )
-        logger.info("Created kafka consumer job for ${kafka.brregOppdateringTopic}")
+        logger.info("Created kafka consumer job for $topicNavn")
     }
 
     fun run() {
         launch {
             kafkaConsumer.use { consumer ->
                 try {
-                    consumer.subscribe(listOf(kafka.brregOppdateringTopic))
-                    logger.info("Kafka consumer subscribed to ${kafka.brregOppdateringTopic}")
+                    consumer.subscribe(listOf(topicNavn))
+                    logger.info("Kafka consumer subscribed to $topicNavn")
                     while (job.isActive) {
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             val antallMeldinger = records.count()
                             if (antallMeldinger < 1) continue
                             var antallIrrelevanteBedrifter = 0
-                            logger.info("Fant $antallMeldinger nye meldinger for ${kafka.brregOppdateringTopic}")
+                            logger.info("Fant $antallMeldinger nye meldinger for $topicNavn")
                             records.forEach { record ->
                                 val oppdateringVirksomhet = Json.decodeFromString<OppdateringVirksomhet>(record.value())
                                 when (oppdateringVirksomhet.endringstype) {
@@ -90,20 +93,20 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     )
                                 }
                             }
-                            logger.info("Lagret $antallMeldinger meldinger for ${kafka.brregOppdateringTopic}")
+                            logger.info("Lagret $antallMeldinger meldinger for $topicNavn")
                             if (antallIrrelevanteBedrifter > 0) {
                                 logger.info("Fant $antallIrrelevanteBedrifter irrelevante bedrifter.")
                             }
                             consumer.commitSync()
                         } catch (e: RetriableException) {
-                            logger.warn("Had a retriable exception for ${kafka.brregOppdateringTopic}, retrying", e)
+                            logger.warn("Had a retriable exception for $topicNavn, retrying", e)
                         }
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
                     logger.info("BrregOppdateringConsumer is shutting down...")
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner for ${kafka.brregOppdateringTopic}", e)
+                    logger.error("Exception is shutting down kafka listner for $topicNavn", e)
                     throw e
                 }
             }
@@ -111,10 +114,10 @@ object BrregOppdateringConsumer : CoroutineScope {
     }
 
     private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job for ${kafka.brregOppdateringTopic}")
+        logger.info("Stopping kafka consumer job for $topicNavn")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job for ${kafka.brregOppdateringTopic}")
+        logger.info("Stopped kafka consumer job for $topicNavn")
     }
 
     @Serializable

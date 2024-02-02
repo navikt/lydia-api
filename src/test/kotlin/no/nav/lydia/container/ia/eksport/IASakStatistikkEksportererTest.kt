@@ -7,7 +7,7 @@ import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -39,7 +39,7 @@ class IASakStatistikkEksportererTest {
 
     @Before
     fun setUp() {
-        konsument.subscribe(mutableListOf(KafkaContainerHelper.iaSakStatistikkTopic))
+        konsument.subscribe(mutableListOf(Topic.IA_SAK_STATISTIKK_TOPIC.navn))
     }
 
     @After

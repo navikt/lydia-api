@@ -6,14 +6,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
+import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 
-class IASakProdusent(private val produsent: KafkaProdusent, private val topic: String) : Observer<IASak> {
+class IASakProdusent(private val produsent: KafkaProdusent) : Observer<IASak> {
 
     override fun receive(input: IASak) {
         val kafkaMelding = input.tilKafkaMelding()
-        produsent.sendMelding(topic, kafkaMelding.first, kafkaMelding.second)
+        produsent.sendMelding(Topic.IA_SAK_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
     }
 
     companion object {

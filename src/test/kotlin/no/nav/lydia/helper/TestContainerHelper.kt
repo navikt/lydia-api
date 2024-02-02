@@ -13,8 +13,6 @@ import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import kotlin.io.path.Path
-import kotlin.test.fail
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
@@ -22,7 +20,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
@@ -55,13 +53,13 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
-import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
-import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
 import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
 import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingMedSvar
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
+import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
 import no.nav.lydia.statusoversikt.api.STATUSOVERSIKT_PATH
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
@@ -91,6 +89,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
 import java.util.UUID
+import kotlin.io.path.Path
+import kotlin.test.fail
 
 class TestContainerHelper {
     companion object {
@@ -146,19 +146,18 @@ class TestContainerHelper {
         init {
             // -- generer testdata for land
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                    TestData.gjeldendePeriode.lagPerioder(20).map { periode ->
-                        lagSykefraværsstatistikkPerKategoriImportDto(
-                                kategori = Kategori.LAND,
-                                kode = LANDKODE_NO,
-                                periode = periode,
-                                sykefraværsProsent = (4..7).random().toDouble(),
-                                antallPersoner = 1000,
-                                muligeDagsverk = 250_000.0,
-                                tapteDagsverk = 12_500.0,
-                        )
-                    },
-                    topic = KafkaContainerHelper.statistikkLandTopic,
-                    groupId = Kafka.statistikkLandGroupId
+                TestData.gjeldendePeriode.lagPerioder(20).map { periode ->
+                    lagSykefraværsstatistikkPerKategoriImportDto(
+                            kategori = Kategori.LAND,
+                            kode = LANDKODE_NO,
+                            periode = periode,
+                            sykefraværsProsent = (4..7).random().toDouble(),
+                            antallPersoner = 1000,
+                            muligeDagsverk = 250_000.0,
+                            tapteDagsverk = 12_500.0,
+                    )
+                },
+                topic = Topic.STATISTIKK_LAND_TOPIC
             )
 
             // -- Last inn alle næringer
@@ -166,57 +165,54 @@ class TestContainerHelper {
 
             // -- generer statistikk for næringer
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                    importDtoer = næringsRepository.hentNæringer().flatMap { næring ->
-                        TestData.gjeldendePeriode.lagPerioder(ANTALL_NÆRINGS_PERIODER).map { periode ->
-                            lagSykefraværsstatistikkPerKategoriImportDto(
-                                    kategori = Kategori.NÆRING,
-                                    kode = næring.kode,
-                                    periode = periode,
-                                    sykefraværsProsent = 5.0,
-                                    antallPersoner = 1000,
-                                    muligeDagsverk = 250_000.0,
-                                    tapteDagsverk = 12_500.0,
-                            )
-                        }
-                    },
-                    topic = KafkaContainerHelper.statistikkNæringTopic,
-                    groupId = Kafka.statistikkNæringGroupId
+                importDtoer = næringsRepository.hentNæringer().flatMap { næring ->
+                    TestData.gjeldendePeriode.lagPerioder(ANTALL_NÆRINGS_PERIODER).map { periode ->
+                        lagSykefraværsstatistikkPerKategoriImportDto(
+                                kategori = Kategori.NÆRING,
+                                kode = næring.kode,
+                                periode = periode,
+                                sykefraværsProsent = 5.0,
+                                antallPersoner = 1000,
+                                muligeDagsverk = 250_000.0,
+                                tapteDagsverk = 12_500.0,
+                        )
+                    }
+                },
+                topic = Topic.STATISTIKK_NARING_TOPIC
             )
             // -- generer statistikk for bransjer
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                    importDtoer = Bransjer.entries.flatMap { bransje ->
-                        TestData.gjeldendePeriode.lagPerioder(ANTALL_BRANSJE_PERIODER).map { periode ->
-                            lagSykefraværsstatistikkPerKategoriImportDto(
-                                    kategori = Kategori.BRANSJE,
-                                    kode = bransje.name,
-                                    periode = periode,
-                                    sykefraværsProsent = 6.0,
-                                    antallPersoner = 100000,
-                                    muligeDagsverk = 250_000.0,
-                                    tapteDagsverk = 15_000.0,
-                            )
-                        }
-                    },
-                    topic = KafkaContainerHelper.statistikkBransjeTopic,
-                    groupId = Kafka.statistikkBransjeGroupId
+                importDtoer = Bransjer.entries.flatMap { bransje ->
+                    TestData.gjeldendePeriode.lagPerioder(ANTALL_BRANSJE_PERIODER).map { periode ->
+                        lagSykefraværsstatistikkPerKategoriImportDto(
+                                kategori = Kategori.BRANSJE,
+                                kode = bransje.name,
+                                periode = periode,
+                                sykefraværsProsent = 6.0,
+                                antallPersoner = 100000,
+                                muligeDagsverk = 250_000.0,
+                                tapteDagsverk = 15_000.0,
+                        )
+                    }
+                },
+                topic = Topic.STATISTIKK_BRANSJE_TOPIC
             )
             // -- generer statistikk for sektorer
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                    importDtoer = Sektor.entries.flatMap { sektor ->
-                        TestData.gjeldendePeriode.lagPerioder(ANTALL_SEKTOR_PERIODER).map { periode ->
-                            lagSykefraværsstatistikkPerKategoriImportDto(
-                                    kategori = Kategori.SEKTOR,
-                                    kode = sektor.kode,
-                                    periode = periode,
-                                    sykefraværsProsent = 4.9,
-                                    antallPersoner = 100000,
-                                    muligeDagsverk = 250_000.0,
-                                    tapteDagsverk = 12_250.0,
-                            )
-                        }
-                    },
-                    topic = KafkaContainerHelper.statistikkSektorTopic,
-                    groupId = Kafka.statistikkSektorGroupId
+                importDtoer = Sektor.entries.flatMap { sektor ->
+                    TestData.gjeldendePeriode.lagPerioder(ANTALL_SEKTOR_PERIODER).map { periode ->
+                        lagSykefraværsstatistikkPerKategoriImportDto(
+                                kategori = Kategori.SEKTOR,
+                                kode = sektor.kode,
+                                periode = periode,
+                                sykefraværsProsent = 4.9,
+                                antallPersoner = 100000,
+                                muligeDagsverk = 250_000.0,
+                                tapteDagsverk = 12_250.0,
+                        )
+                    }
+                },
+                topic = Topic.STATISTIKK_SEKTOR_TOPIC
             )
 
             // -- laster inn standard virksomheter (med statistikk)
@@ -640,8 +636,7 @@ class IASakKartleggingHelper {
                 melding = Json.encodeToString(
                     spørreundersøkelseSvarDto
                 ),
-                topic = KafkaContainerHelper.spørreundersøkelseSvarTopic,
-                konsumentGruppeId = Kafka.spørreundersøkelseSvarGroupId
+                topic = Topic.SPORREUNDERSOKELSE_SVAR_TOPIC
             )
             return spørreundersøkelseSvarDto
         }

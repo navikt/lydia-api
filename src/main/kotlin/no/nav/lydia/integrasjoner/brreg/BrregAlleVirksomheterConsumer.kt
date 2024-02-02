@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.exceptions.UgyldigAdresseException
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -28,6 +29,8 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
 
     private lateinit var virksomhetRepository: VirksomhetRepository
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
+    private val topicNavn = Topic.BRREG_ALLE_VIRKSOMHETER_TOPIC.navn
+    private val consumerGroupId = Topic.BRREG_ALLE_VIRKSOMHETER_TOPIC.konsumentGruppe
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -37,9 +40,6 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
     }
 
     fun create(kafka: Kafka, repository: VirksomhetRepository) {
-        val topicNavn = kafka.brregAlleVirksomheterTopic
-        val consumerGroupId = Kafka.brregAlleVirksomheterConsumerGroupId
-
         logger.info("Creating kafka consumer job for $topicNavn i group $consumerGroupId")
         job = Job()
         BrregAlleVirksomheterConsumer.kafka = kafka
@@ -53,7 +53,6 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
     }
 
     fun run() {
-        val topicNavn = kafka.brregAlleVirksomheterTopic
         launch {
             kafkaConsumer.use { consumer ->
                 try {
@@ -101,9 +100,9 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
     }
 
     private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job for ${kafka.brregAlleVirksomheterTopic}")
+        logger.info("Stopping kafka consumer job for $topicNavn")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job for ${kafka.brregAlleVirksomheterTopic}")
+        logger.info("Stopped kafka consumer job for $topicNavn")
     }
 }

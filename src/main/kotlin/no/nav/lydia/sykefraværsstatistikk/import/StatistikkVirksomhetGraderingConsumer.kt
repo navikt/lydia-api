@@ -3,6 +3,7 @@ package no.nav.lydia.sykefraværsstatistikk.import
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
@@ -23,8 +24,8 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
     private lateinit var kafka: Kafka
     private lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
-    private lateinit var topic: String
-    private var groupId = Kafka.statistikkVirksomhetGraderingGroupId
+    private var topicNavn = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC.navn
+    private var konsumentGruppe = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC.konsumentGruppe
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -34,25 +35,24 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
     }
 
     fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
-        logger.info("Creating kafka consumer job i StatistikkVirksomhetGraderingConsumer i groupId '$groupId'")
+        logger.info("Creating kafka consumer job i StatistikkVirksomhetGraderingConsumer i groupId '$konsumentGruppe'")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
-        this.topic = kafka.statistikkVirksomhetGraderingTopic
         this.kafkaConsumer = KafkaConsumer(
-            this.kafka.consumerProperties(consumerGroupId = groupId),
+            this.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
             StringDeserializer()
         )
-        logger.info("Created kafka consumer job i StatistikkVirksomhetGraderingConsumer i groupId '$groupId'")
+        logger.info("Created kafka consumer job i StatistikkVirksomhetGraderingConsumer i groupId '$konsumentGruppe'")
     }
 
     fun run() {
         launch {
             kafkaConsumer.use { consumer ->
                 try {
-                    consumer.subscribe(listOf(topic))
-                    logger.info("Kafka consumer subscribed to topic '$topic' of groupId '$groupId' )' in StatistikkVirksomhetGraderingConsumer")
+                    consumer.subscribe(listOf(topicNavn))
+                    logger.info("Kafka consumer subscribed to topic '$topicNavn' of groupId '$konsumentGruppe' )' in StatistikkVirksomhetGraderingConsumer")
 
                     while (job.isActive) {
                         try {
@@ -61,18 +61,18 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
                                 sykefraværsstatistikkService.lagreStatistikkVirksomhetGradering(
                                    records.tilGradertSykemeldingImportDto()
                                 )
-                                logger.info("Lagret ${records.count()} meldinger i StatistikkVirksomhetGraderingConsumer (topic '$topic') ")
+                                logger.info("Lagret ${records.count()} meldinger i StatistikkVirksomhetGraderingConsumer (topic '$topicNavn') ")
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
-                            logger.warn("Had a retriable exception in StatistikkVirksomhetGraderingConsumer (topic '$topic'), retrying", e)
+                            logger.warn("Had a retriable exception in StatistikkVirksomhetGraderingConsumer (topic '$topicNavn'), retrying", e)
                         }
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("StatistikkVirksomhetGraderingConsumer (topic '$topic')  is shutting down...")
+                    logger.info("StatistikkVirksomhetGraderingConsumer (topic '$topicNavn')  is shutting down...")
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner i StatistikkVirksomhetGraderingConsumer (topic '$topic')", e)
+                    logger.error("Exception is shutting down kafka listner i StatistikkVirksomhetGraderingConsumer (topic '$topicNavn')", e)
                     throw e
                 }
             }
@@ -80,10 +80,10 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
     }
 
     private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job i StatistikkVirksomhetGraderingConsumer (topic '$topic')")
+        logger.info("Stopping kafka consumer job i StatistikkVirksomhetGraderingConsumer (topic '$topicNavn')")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job i StatistikkVirksomhetGraderingConsumer (topic '$topic')")
+        logger.info("Stopped kafka consumer job i StatistikkVirksomhetGraderingConsumer (topic '$topicNavn')")
     }
 
     private fun ConsumerRecords<String, String>.tilGradertSykemeldingImportDto(): List<GradertSykemeldingImportDto> {

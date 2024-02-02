@@ -8,7 +8,7 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
-import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
@@ -17,6 +17,7 @@ import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
@@ -27,14 +28,13 @@ import org.junit.After
 import org.junit.Before
 import java.sql.Timestamp
 import kotlin.test.Test
-import no.nav.lydia.helper.TestData
 
 class IASakLeveranseEksportererTest {
     private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
     @Before
     fun setUp() {
-        konsument.subscribe(mutableListOf(KafkaContainerHelper.iaSakLeveranseTopic))
+        konsument.subscribe(mutableListOf(Topic.IA_SAK_LEVERANSE_TOPIC.navn))
     }
 
     @After

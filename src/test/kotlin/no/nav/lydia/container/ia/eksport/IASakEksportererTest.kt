@@ -4,7 +4,7 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
-import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -22,7 +22,7 @@ class IASakEksportererTest {
 
     @Before
     fun setUp() {
-        konsument.subscribe(mutableListOf(KafkaContainerHelper.iaSakTopic))
+        konsument.subscribe(mutableListOf(Topic.IA_SAK_TOPIC.navn))
     }
 
     @After

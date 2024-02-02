@@ -72,38 +72,9 @@ class Kafka(
     val truststoreLocation: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
     val keystoreLocation: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
-    val iaSakTopic: String = getEnvVar("IA_SAK_TOPIC"),
-    val iaSakStatistikkTopic: String = getEnvVar("IA_SAK_STATISTIKK_TOPIC"),
-    val iaSakStatusTopic: String = getEnvVar("IA_SAK_STATUS_TOPIC"),
-    val iaSakLeveranseTopic: String = getEnvVar("IA_SAK_LEVERANSE_TOPIC"),
-    val spørrundersøkelseTopic: String = getEnvVar("SPORREUNDERSOKELSE_TOPIC"),
-    val iaSakKartleggingSvarTopic: String = getEnvVar("SPORREUNDERSOKELSE_SVAR_TOPIC"),
-    val brregOppdateringTopic: String = getEnvVar("BRREG_OPPDATERING_TOPIC"),
-    val brregAlleVirksomheterTopic: String = getEnvVar("BRREG_ALLE_VIRKSOMHETER_TOPIC"),
-    val statistikkMetadataVirksomhetTopic: String = getEnvVar("STATISTIKK_METADATA_VIRKSOMHET_TOPIC"),
-    val statistikkLandTopic: String = getEnvVar("STATISTIKK_LAND_TOPIC"),
-    val statistikkSektorTopic: String = getEnvVar("STATISTIKK_SEKTOR_TOPIC"),
-    val statistikkBransjeTopic: String = getEnvVar("STATISTIKK_BRANSJE_TOPIC"),
-    val statistikkNæringTopic: String = getEnvVar("STATISTIKK_NARING_TOPIC"),
-    val statistikkNæringskodeTopic: String = getEnvVar("STATISTIKK_NARINGSKODE_TOPIC"),
-    val statistikkVirksomhetTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_TOPIC"),
-    val statistikkVirksomhetGraderingTopic: String = getEnvVar("STATISTIKK_VIRKSOMHET_GRADERING_TOPIC"),
-    val jobblytterTopic: String = getEnvVar("JOBBLYTTER_TOPIC"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong()
 ) {
     companion object {
-        const val statistikkLandGroupId = "lydia-api-statistikk-land-consumer"
-        const val statistikkSektorGroupId = "lydia-api-statistikk-sektor-consumer"
-        const val statistikkBransjeGroupId = "lydia-api-statistikk-bransje-consumer"
-        const val statistikkNæringGroupId = "lydia-api-statistikk-naring-consumer"
-        const val statistikkNæringskodeGroupId = "lydia-api-statistikk-naringskode-consumer"
-        const val statistikkVirksomhetGroupId = "lydia-api-statistikk-virksomhet-consumer"
-        const val statistikkVirksomhetGraderingGroupId = "lydia-api-statistikk-virksomhet-gradering-consumer"
-        const val statistikkMetadataVirksomhetGroupId = "lydia-api-statistikk-metadata-virksomhet-consumer"
-        const val brregConsumerGroupId = "lydia-api-brreg-oppdatering-consumer"
-        const val brregAlleVirksomheterConsumerGroupId = "lydia-api-brreg-alle-virksomheter-consumer"
-        const val jobblytterConsumerGroupId = "lydia-api-jobblytter-consumer"
-        const val spørreundersøkelseSvarGroupId = "lydia-api-sporreundersokelse-svar-consumer"
         const val clientId: String = "lydia-api"
     }
 
@@ -171,6 +142,29 @@ class Integrasjoner(
     val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
     val salesforce: Salesforce = Salesforce(),
 )
+
+enum class Topic(val navn: String, private val consumerGroupId: String? = null) {
+    IA_SAK_TOPIC("pia.ia-sak-v1"),
+    IA_SAK_STATISTIKK_TOPIC("pia.ia-sak-statistikk-v1"),
+    IA_SAK_STATUS_TOPIC("pia.ia-sak-status-v1"),
+    IA_SAK_LEVERANSE_TOPIC("pia.ia-sak-leveranse-v1"),
+    SPORREUNDERSOKELSE_TOPIC("pia.sporreundersokelse-v1"),
+    SPORREUNDERSOKELSE_SVAR_TOPIC("pia.sporreundersokelse-svar-v1", "lydia-api-sporreundersokelse-svar-consumer"),
+    BRREG_OPPDATERING_TOPIC("pia.brreg-oppdatering", "lydia-api-brreg-oppdatering-consumer"),
+    BRREG_ALLE_VIRKSOMHETER_TOPIC("pia.brreg-alle-virksomheter", "lydia-api-brreg-alle-virksomheter-consumer"),
+    STATISTIKK_METADATA_VIRKSOMHET_TOPIC("arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1", "lydia-api-statistikk-metadata-virksomhet-consumer"),
+    STATISTIKK_LAND_TOPIC("arbeidsgiver.sykefravarsstatistikk-land-v1", "lydia-api-statistikk-land-consumer"),
+    STATISTIKK_SEKTOR_TOPIC("arbeidsgiver.sykefravarsstatistikk-sektor-v1", "lydia-api-statistikk-sektor-consumer"),
+    STATISTIKK_BRANSJE_TOPIC("arbeidsgiver.sykefravarsstatistikk-bransje-v1", "lydia-api-statistikk-bransje-consumer"),
+    STATISTIKK_NARING_TOPIC("arbeidsgiver.sykefravarsstatistikk-naring-v1", "lydia-api-statistikk-naring-consumer"),
+    STATISTIKK_NARINGSKODE_TOPIC("arbeidsgiver.sykefravarsstatistikk-naringskode-v1", "lydia-api-statistikk-naringskode-consumer"),
+    STATISTIKK_VIRKSOMHET_TOPIC("arbeidsgiver.sykefravarsstatistikk-virksomhet-v1", "lydia-api-statistikk-virksomhet-consumer"),
+    STATISTIKK_VIRKSOMHET_GRADERING_TOPIC("arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1", "lydia-api-statistikk-virksomhet-gradering-consumer"),
+    JOBBLYTTER_TOPIC("pia.jobblytter-v1", "lydia-api-jobblytter-consumer");
+
+    val konsumentGruppe
+        get() = consumerGroupId ?: throw RuntimeException("Topic $navn mangler consumerGroupId")
+}
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
     System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable $varName")

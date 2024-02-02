@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
+import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
@@ -34,7 +35,6 @@ class IASakStatistikkProdusent(
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val geografiService: GeografiService,
     sistePubliseringService: SistePubliseringService,
-    private val topic: String,
 ) : Observer<IASak> {
     private val allPubliseringsinfo = sistePubliseringService.hentAllPubliseringsinfo()
     private val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
@@ -75,7 +75,7 @@ class IASakStatistikkProdusent(
             virksomhetsstatistikkSiste4Kvartal,
             virksomhetsstatistikkSisteKvartal
         )
-        produsent.sendMelding(topic, kafkaMelding.first, kafkaMelding.second)
+        produsent.sendMelding(Topic.IA_SAK_STATISTIKK_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
     }
 
     companion object {

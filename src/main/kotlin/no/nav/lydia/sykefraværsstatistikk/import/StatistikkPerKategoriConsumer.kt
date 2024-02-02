@@ -3,6 +3,7 @@ package no.nav.lydia.sykefraværsstatistikk.import
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
@@ -18,8 +19,7 @@ import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 
 class StatistikkPerKategoriConsumer(
-    val topic: String,
-    val groupId: String
+    val topic: Topic,
 ) : CoroutineScope, Helsesjekk  {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private lateinit var job: Job
@@ -35,24 +35,24 @@ class StatistikkPerKategoriConsumer(
     }
 
     fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
-        logger.info("Creating kafka consumer job i StatistikkPerKategoriConsumer i groupId '$groupId'")
+        logger.info("Creating kafka consumer job i StatistikkPerKategoriConsumer i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
         this.kafkaConsumer = KafkaConsumer(
-            this.kafka.consumerProperties(consumerGroupId = groupId),
+            this.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
             StringDeserializer(),
             StringDeserializer()
         )
-        logger.info("Created kafka consumer job i StatistikkPerKategoriConsumer i groupId '$groupId'")
+        logger.info("Created kafka consumer job i StatistikkPerKategoriConsumer i groupId '${topic.konsumentGruppe}'")
     }
 
     fun run() {
         launch {
             kafkaConsumer.use { consumer ->
                 try {
-                    consumer.subscribe(listOf(topic))
-                    logger.info("Kafka consumer subscribed to topic '$topic' of groupId '$groupId' )' in StatistikkPerKategoriConsumer")
+                    consumer.subscribe(listOf(topic.navn))
+                    logger.info("Kafka consumer subscribed to topic '$topic' of groupId '${topic.konsumentGruppe}' )' in StatistikkPerKategoriConsumer")
 
                     while (job.isActive) {
                         try {

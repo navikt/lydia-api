@@ -2,7 +2,7 @@ package no.nav.lydia.helper
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import kotlinx.datetime.Clock.System.now
-import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype
@@ -112,14 +112,12 @@ class VirksomhetHelper {
 
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 importDtoer = testData.sykefraværsstatistikkVirksomhetMeldinger().toList(),
-                topic = KafkaContainerHelper.statistikkVirksomhetTopic,
-                groupId = Kafka.statistikkVirksomhetGroupId
+                topic = Topic.STATISTIKK_VIRKSOMHET_TOPIC
             )
 
             kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
                     importDtoer = testData.graderingStatistikkVirksomhetKafkaMeldinger().toList(),
-                    topic = KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-                    groupId = Kafka.statistikkVirksomhetGraderingGroupId
+                    topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
             )
 
             kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(

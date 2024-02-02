@@ -2,12 +2,11 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
-import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpStatistikkSiste4KvartalTable
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.cleanUpStatistikkTable
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
-import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
@@ -45,7 +44,6 @@ class SykefraværsstatistikkKategoriImportTest {
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 topicForKategori(kategori),
-                groupIdForKategori(kategori)
             )
 
             kafkaMelding sistePubliserteKvartalShouldBeEqual
@@ -83,7 +81,6 @@ class SykefraværsstatistikkKategoriImportTest {
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 topicForKategori(Kategori.SEKTOR),
-                groupIdForKategori(Kategori.SEKTOR)
             )
 
             val sektorKode = sektorNavn.tilSektor()!!.kode
@@ -122,7 +119,6 @@ class SykefraværsstatistikkKategoriImportTest {
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 topicForKategori(Kategori.SEKTOR),
-                groupIdForKategori(Kategori.SEKTOR)
             )
 
             shouldFail {
@@ -191,14 +187,12 @@ class SykefraværsstatistikkKategoriImportTest {
                 førsteKafkaMelding.toJsonKey(),
                 førsteKafkaMelding.toJsonValue(),
                 topicForKategori(kategori),
-                groupIdForKategori(kategori)
             )
 
             kafkaContainerHelper.sendOgVentTilKonsumert(
                 oppdatertKafkaMelding.toJsonKey(),
                 oppdatertKafkaMelding.toJsonValue(),
                 topicForKategori(kategori),
-                groupIdForKategori(kategori)
             )
 
             oppdatertKafkaMelding sistePubliserteKvartalShouldBeEqual
@@ -231,14 +225,12 @@ class SykefraværsstatistikkKategoriImportTest {
         else -> kodeForKategori(kategori)
     }
 
-    private fun topicForKategori(kategori: Kategori) = kafkaConfigForKategori(kategori).first
-    private fun groupIdForKategori(kategori: Kategori) = kafkaConfigForKategori(kategori).second
-    private fun kafkaConfigForKategori(kategori: Kategori) = when (kategori) {
-        Kategori.NÆRING -> KafkaContainerHelper.statistikkNæringTopic to Kafka.statistikkNæringGroupId
-        Kategori.NÆRINGSKODE -> KafkaContainerHelper.statistikkNæringskodeTopic to Kafka.statistikkNæringskodeGroupId
-        Kategori.LAND -> KafkaContainerHelper.statistikkLandTopic to Kafka.statistikkLandGroupId
-        Kategori.SEKTOR -> KafkaContainerHelper.statistikkSektorTopic to Kafka.statistikkSektorGroupId
-        Kategori.BRANSJE -> KafkaContainerHelper.statistikkBransjeTopic to Kafka.statistikkBransjeGroupId
+    private fun topicForKategori(kategori: Kategori) = when (kategori) {
+        Kategori.NÆRING -> Topic.STATISTIKK_NARING_TOPIC
+        Kategori.NÆRINGSKODE -> Topic.STATISTIKK_NARINGSKODE_TOPIC
+        Kategori.LAND -> Topic.STATISTIKK_LAND_TOPIC
+        Kategori.SEKTOR -> Topic.STATISTIKK_SEKTOR_TOPIC
+        Kategori.BRANSJE -> Topic.STATISTIKK_BRANSJE_TOPIC
         else -> error("Kategori $kategori støttes ikke i testen")
     }
 

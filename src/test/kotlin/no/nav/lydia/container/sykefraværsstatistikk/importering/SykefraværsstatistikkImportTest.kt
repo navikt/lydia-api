@@ -2,14 +2,13 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.KVARTAL_2023_1
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkGjeldendeKvartal
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkSiste4Kvartal
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.JsonMelding
-import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForAlleVirksomheterMedFilter
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4Kvartaler
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSisteTilgjengeligKvartal
@@ -56,12 +55,11 @@ class SykefraværsstatistikkImportTest {
                   "årstall": ${KVARTAL_2023_1.årstall}
                 }""".trimIndent(),
                 eksport_Forrige_Kvartal_For_Virksomhet.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+                Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         lydiaApiContainer shouldNotContainLog "NullPointerException.*".toRegex()
-        lydiaApiContainer shouldContainLog "Feil formatert Kafka melding i topic ${KafkaContainerHelper.statistikkVirksomhetTopic}".toRegex()
+        lydiaApiContainer shouldContainLog "Feil formatert Kafka melding i topic ${Topic.STATISTIKK_VIRKSOMHET_TOPIC.navn}".toRegex()
     }
 
     @Test
@@ -85,8 +83,7 @@ class SykefraværsstatistikkImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
                 statistikkSomBurdeVæreMaskert.toJsonKey(),
                 statistikkSomBurdeVæreMaskert.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+                Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
@@ -123,8 +120,7 @@ class SykefraværsstatistikkImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
                 statistikkSomBurdeVæreMaskert.toJsonKey(),
                 statistikkSomBurdeVæreMaskert.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+                Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
@@ -160,8 +156,7 @@ class SykefraværsstatistikkImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             statistikkSomBurdeVæreMaskert.toJsonKey(),
             statistikkSomBurdeVæreMaskert.toJsonValue(),
-            KafkaContainerHelper.statistikkVirksomhetTopic,
-            Kafka.statistikkVirksomhetGroupId
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
         TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
 
@@ -176,16 +171,14 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `kan importere statistikk for flere kvartal for VIRKSOMHET`() {
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Forrige_Kvartal_For_Virksomhet.toJsonKey(),
-                eksport_Forrige_Kvartal_For_Virksomhet.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            eksport_Forrige_Kvartal_For_Virksomhet.toJsonKey(),
+            eksport_Forrige_Kvartal_For_Virksomhet.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
 
@@ -229,16 +222,14 @@ class SykefraværsstatistikkImportTest {
                 siste4Kvartal = oppdatertStatistikkSiste4Kvartal
         )
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
         kafkaContainer.sendOgVentTilKonsumert(
-                nyEksport.toJsonKey(),
-                nyEksport.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            nyEksport.toJsonKey(),
+            nyEksport.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
@@ -254,10 +245,9 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `importerte data (på VIRKSOMHET) skal kunne hentes ut og være like`() {
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         val sykefraværSiste4Kvartal = hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
@@ -281,20 +271,18 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `import av data er idempotent`() {
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
         val førsteLagredeStatistikkSiste4Kvartal =
-                hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
+            hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
         val førsteLagredeStatistikkSisteKvartal =
-                hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
+            hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
         kafkaContainer.sendOgVentTilKonsumert(
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
-                eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
-                KafkaContainerHelper.statistikkVirksomhetTopic,
-                Kafka.statistikkVirksomhetGroupId
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
+            eksport_Siste_Kvartal_For_Virksomhet.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
         val andreLagredeStatistikkSiste4Kvartal =
                 hentSykefraværForVirksomhetSiste4Kvartaler("999999999")

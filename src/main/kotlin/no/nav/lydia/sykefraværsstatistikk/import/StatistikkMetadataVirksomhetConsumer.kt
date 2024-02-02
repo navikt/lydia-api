@@ -3,6 +3,7 @@ package no.nav.lydia.sykefraværsstatistikk.import
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.*
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
@@ -23,6 +24,8 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
     private lateinit var kafka: Kafka
     private lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
+    private val topicNavn = Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC.navn
+    private val konsumentGruppe = Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC.konsumentGruppe
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -37,7 +40,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
         this.kafkaConsumer = KafkaConsumer(
-            StatistikkMetadataVirksomhetConsumer.kafka.consumerProperties(consumerGroupId = Kafka.statistikkMetadataVirksomhetGroupId),
+            StatistikkMetadataVirksomhetConsumer.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
             StringDeserializer()
         )
@@ -48,8 +51,8 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         launch {
             kafkaConsumer.use { consumer ->
                 try {
-                    consumer.subscribe(listOf(kafka.statistikkMetadataVirksomhetTopic))
-                    logger.info("Kafka consumer subscribed to ${kafka.statistikkMetadataVirksomhetTopic} in StatistikkMetadataVirksomhetConsumer")
+                    consumer.subscribe(listOf(topicNavn))
+                    logger.info("Kafka consumer subscribed to $topicNavn in StatistikkMetadataVirksomhetConsumer")
 
                     while (job.isActive) {
                         try {

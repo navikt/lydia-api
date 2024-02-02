@@ -1,8 +1,8 @@
 package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.Kafka
-import no.nav.lydia.helper.*
+import no.nav.lydia.Topic
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -29,8 +29,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "KOMMUNAL"),
-            KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
-            Kafka.statistikkMetadataVirksomhetGroupId
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
         )
 
         val results = hentMetadataVirksomhet("888888888", "999999999")
@@ -43,14 +42,12 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "STATLIG"),
-            KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
-            Kafka.statistikkMetadataVirksomhetGroupId
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
         )
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("888888888"),
             jsonValue(orgnr = "888888888", sektor = "EN_HELT_UKJENT_SEKTOR"),
-            KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
-            Kafka.statistikkMetadataVirksomhetGroupId
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
         )
 
         val results = hentMetadataVirksomhet("888888888", "999999999")
@@ -67,8 +64,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             value,
-            KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
-            Kafka.statistikkMetadataVirksomhetGroupId
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
         )
 
         val results = hentMetadataVirksomhet("999999999")
@@ -84,14 +80,12 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "STATLIG"),
-            KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
-            Kafka.statistikkMetadataVirksomhetGroupId
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
         )
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "PRIVAT"),
-            KafkaContainerHelper.statistikkMetadataVirksomhetTopic,
-            Kafka.statistikkMetadataVirksomhetGroupId
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
         )
 
         val results = hentMetadataVirksomhet("999999999")

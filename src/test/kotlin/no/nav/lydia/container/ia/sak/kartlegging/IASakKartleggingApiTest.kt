@@ -10,12 +10,12 @@ import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentResultaterForKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
-import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -37,7 +37,7 @@ class IASakKartleggingApiTest {
 
     @Before
     fun setUp() {
-        kartleggingKonsument.subscribe(mutableListOf(KafkaContainerHelper.spørreundersøkelseTopic))
+        kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
     }
 
     @After

@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -33,7 +33,7 @@ class IASakStatusEksportørTest {
 
     @Before
     fun setUp() {
-        konsument.subscribe(mutableListOf(KafkaContainerHelper.iaSakStatusTopic))
+        konsument.subscribe(mutableListOf(Topic.IA_SAK_STATUS_TOPIC.navn))
     }
 
     @After

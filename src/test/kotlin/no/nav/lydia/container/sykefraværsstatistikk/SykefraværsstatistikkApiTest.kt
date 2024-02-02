@@ -24,9 +24,8 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils
-import no.nav.lydia.helper.KafkaContainerHelper
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
@@ -1166,8 +1165,7 @@ class SykefraværsstatistikkApiTest {
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                     kafkaMelding.toJsonKey(),
                     kafkaMelding.toJsonValue(),
-                    KafkaContainerHelper.statistikkNæringTopic,
-                    Kafka.statistikkNæringGroupId
+                    Topic.STATISTIKK_NARING_TOPIC
             )
         }
 
@@ -1187,8 +1185,7 @@ class SykefraværsstatistikkApiTest {
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                     kafkaMelding.toJsonKey(),
                     kafkaMelding.toJsonValue(),
-                    KafkaContainerHelper.statistikkBransjeTopic,
-                    Kafka.statistikkBransjeGroupId
+                    Topic.STATISTIKK_BRANSJE_TOPIC
             )
         }
 
@@ -1208,8 +1205,7 @@ class SykefraværsstatistikkApiTest {
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                     kafkaMelding.toJsonKey(),
                     kafkaMelding.toJsonValue(),
-                    KafkaContainerHelper.statistikkSektorTopic,
-                    Kafka.statistikkSektorGroupId
+                    Topic.STATISTIKK_SEKTOR_TOPIC
             )
         }
 
@@ -1228,8 +1224,7 @@ class SykefraværsstatistikkApiTest {
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                     kafkaMelding.toJsonKey(),
                     kafkaMelding.toJsonValue(),
-                    KafkaContainerHelper.statistikkLandTopic,
-                    Kafka.statistikkLandGroupId
+                    Topic.STATISTIKK_LAND_TOPIC
             )
         }
     }

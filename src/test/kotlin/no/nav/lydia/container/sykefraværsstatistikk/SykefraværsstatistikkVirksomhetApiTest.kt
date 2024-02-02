@@ -3,10 +3,7 @@ package no.nav.lydia.container.sykefraværsstatistikk
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer.TRANSPORT
 import io.kotest.matchers.shouldBe
-import kotlin.test.Test
-import kotlin.test.fail
-import no.nav.lydia.Kafka
-import no.nav.lydia.helper.KafkaContainerHelper
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
@@ -26,6 +23,8 @@ import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
 import no.nav.lydia.virksomhet.domene.Sektor
+import kotlin.test.Test
+import kotlin.test.fail
 
 class SykefraværsstatistikkVirksomhetApiTest {
 
@@ -111,8 +110,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
         )
         TestContainerHelper.kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
             importDtoer = listOf(statistikk),
-            topic = KafkaContainerHelper.statistikkVirksomhetTopic,
-            groupId = Kafka.statistikkVirksomhetGroupId
+            topic = Topic.STATISTIKK_VIRKSOMHET_TOPIC,
         )
 
         TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
@@ -181,8 +179,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
         )
         TestContainerHelper.kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
                 importDtoer = listOf(statistikk),
-                topic = KafkaContainerHelper.statistikkVirksomhetGraderingTopic,
-                groupId = Kafka.statistikkVirksomhetGraderingGroupId
+                topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
         val result =

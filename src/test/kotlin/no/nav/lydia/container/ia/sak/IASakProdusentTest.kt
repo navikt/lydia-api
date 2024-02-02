@@ -4,7 +4,7 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
-import no.nav.lydia.helper.KafkaContainerHelper.Companion.iaSakTopic
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.toJson
@@ -25,7 +25,7 @@ class IASakProdusentTest {
 
     @Before
     fun setUp() {
-        konsument.subscribe(mutableListOf(iaSakTopic))
+        konsument.subscribe(mutableListOf(Topic.IA_SAK_TOPIC.navn))
     }
 
     @After

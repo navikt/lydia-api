@@ -10,8 +10,10 @@ import kotlinx.coroutines.time.withTimeoutOrNull
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
 import no.nav.lydia.integrasjoner.jobblytter.Jobb
+import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkMetadataVirksomhet
 import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkPerKategori
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
@@ -36,34 +38,13 @@ import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.util.*
-import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
+import java.util.TimeZone
 
 
 class KafkaContainerHelper(
     network: Network = Network.newNetwork(),
     log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java),
 ) {
-    companion object {
-        const val statistikkMetadataVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1"
-        const val statistikkLandTopic = "arbeidsgiver.sykefravarsstatistikk-land-v1"
-        const val statistikkSektorTopic = "arbeidsgiver.sykefravarsstatistikk-sektor-v1"
-        const val statistikkBransjeTopic = "arbeidsgiver.sykefravarsstatistikk-bransje-v1"
-        const val statistikkNæringTopic = "arbeidsgiver.sykefravarsstatistikk-naring-v1"
-        const val statistikkNæringskodeTopic = "arbeidsgiver.sykefravarsstatistikk-naringskode-v1"
-        const val statistikkVirksomhetTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1"
-        const val statistikkVirksomhetGraderingTopic = "arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1"
-        const val iaSakTopic = "pia.ia-sak-v1"
-        const val iaSakStatistikkTopic = "pia.ia-sak-statistikk-v1"
-        const val iaSakStatusTopic = "pia.ia-sak-status-v1"
-        const val iaSakLeveranseTopic = "pia.ia-sak-leveranse-v1"
-        const val spørreundersøkelseTopic = "pia.sporreundersokelse-v1"
-        const val spørreundersøkelseSvarTopic = "pia.sporreundersokelse-svar-v1"
-        const val jobblytterTopic = "pia.jobblytter-v1"
-        const val brregOppdateringTopic = "pia.brreg-oppdatering"
-        const val brregAlleVirksomheterTopic = "pia.brreg-alle-virksomheter"
-    }
-
     private val gson = GsonBuilder().create()
     private val kafkaNetworkAlias = "kafkaContainer"
     private var adminClient: AdminClient
@@ -89,42 +70,13 @@ class KafkaContainerHelper(
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
-            createTopic(
-                iaSakTopic,
-                brregOppdateringTopic,
-                brregAlleVirksomheterTopic,
-                statistikkMetadataVirksomhetTopic,
-                statistikkLandTopic,
-                statistikkSektorTopic,
-                statistikkBransjeTopic,
-                statistikkVirksomhetTopic,
-                statistikkVirksomhetGraderingTopic,
-                iaSakStatusTopic,
-                jobblytterTopic,
-            )
+            createTopics()
             kafkaProducer = producer()
         }
 
     fun nyKonsument(consumerGroupId: String) =
         Kafka(
             brokers = kafkaContainer.bootstrapServers,
-            iaSakTopic = iaSakTopic,
-            iaSakStatistikkTopic = iaSakStatistikkTopic,
-            iaSakStatusTopic = iaSakStatusTopic,
-            iaSakLeveranseTopic = iaSakLeveranseTopic,
-            spørrundersøkelseTopic = spørreundersøkelseTopic,
-            iaSakKartleggingSvarTopic = spørreundersøkelseSvarTopic,
-            statistikkMetadataVirksomhetTopic = statistikkMetadataVirksomhetTopic,
-            statistikkLandTopic = statistikkLandTopic,
-            statistikkSektorTopic = statistikkSektorTopic,
-            statistikkBransjeTopic = statistikkBransjeTopic,
-            statistikkNæringTopic = statistikkNæringTopic,
-            statistikkNæringskodeTopic = statistikkNæringskodeTopic,
-            statistikkVirksomhetTopic = statistikkVirksomhetTopic,
-            statistikkVirksomhetGraderingTopic = statistikkVirksomhetGraderingTopic,
-            brregOppdateringTopic = brregOppdateringTopic,
-            brregAlleVirksomheterTopic = brregAlleVirksomheterTopic,
-            jobblytterTopic = jobblytterTopic,
             consumerLoopDelay = 1,
             credstorePassword = "",
             keystoreLocation = "",
@@ -139,28 +91,11 @@ class KafkaContainerHelper(
         "KAFKA_TRUSTSTORE_PATH" to "",
         "KAFKA_KEYSTORE_PATH" to "",
         "KAFKA_CREDSTORE_PASSWORD" to "",
-        "STATISTIKK_LAND_TOPIC" to statistikkLandTopic,
-        "STATISTIKK_METADATA_VIRKSOMHET_TOPIC" to statistikkMetadataVirksomhetTopic,
-        "STATISTIKK_SEKTOR_TOPIC" to statistikkSektorTopic,
-        "STATISTIKK_BRANSJE_TOPIC" to statistikkBransjeTopic,
-        "STATISTIKK_NARING_TOPIC" to statistikkNæringTopic,
-        "STATISTIKK_NARINGSKODE_TOPIC" to statistikkNæringskodeTopic,
-        "STATISTIKK_VIRKSOMHET_TOPIC" to statistikkVirksomhetTopic,
-        "STATISTIKK_VIRKSOMHET_GRADERING_TOPIC" to statistikkVirksomhetGraderingTopic,
-        "JOBBLYTTER_TOPIC" to jobblytterTopic,
-        "IA_SAK_TOPIC" to iaSakTopic,
-        "IA_SAK_STATISTIKK_TOPIC" to iaSakStatistikkTopic,
-        "IA_SAK_STATUS_TOPIC" to iaSakStatusTopic,
-        "IA_SAK_LEVERANSE_TOPIC" to iaSakLeveranseTopic,
-        "SPORREUNDERSOKELSE_TOPIC" to spørreundersøkelseTopic,
-        "SPORREUNDERSOKELSE_SVAR_TOPIC" to spørreundersøkelseSvarTopic,
-        "BRREG_OPPDATERING_TOPIC" to brregOppdateringTopic,
-        "BRREG_ALLE_VIRKSOMHETER_TOPIC" to brregAlleVirksomheterTopic
     )
 
-    private fun createTopic(vararg topics: String) {
-        val newTopics = topics
-            .map { topic -> NewTopic(topic, 1, 1.toShort()) }
+    private fun createTopics() {
+        val newTopics = Topic.entries
+            .map { topic -> NewTopic(topic.navn, 1, 1.toShort()) }
         adminClient.createTopics(newTopics)
     }
 
@@ -181,11 +116,11 @@ class KafkaContainerHelper(
             StringSerializer()
         )
 
-    fun sendOgVentTilKonsumert(nøkkel: String, melding: String, topic: String, konsumentGruppeId: String) {
+    fun sendOgVentTilKonsumert(nøkkel: String, melding: String, topic: Topic) {
         runBlocking {
-            val sendtMelding = kafkaProducer.send(ProducerRecord(topic, nøkkel, melding)).get()
+            val sendtMelding = kafkaProducer.send(ProducerRecord(topic.navn, nøkkel, melding)).get()
             ventTilKonsumert(
-                konsumentGruppeId = konsumentGruppeId,
+                konsumentGruppeId = topic.konsumentGruppe,
                 recordMetadata = sendtMelding
             )
         }
@@ -199,7 +134,7 @@ class KafkaContainerHelper(
                 kafkaProducer.send(melding.tilProducerRecord()).get()
             }
             ventTilKonsumert(
-                konsumentGruppeId = Kafka.statistikkMetadataVirksomhetGroupId,
+                konsumentGruppeId = Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC.konsumentGruppe,
                 recordMetadata = sendteMeldinger.last()
             )
         }
@@ -207,15 +142,14 @@ class KafkaContainerHelper(
 
     fun sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
         importDtoer: List<SykefraværsstatistikkPerKategoriImportDto>,
-        topic: String,
-        groupId: String,
+        topic: Topic,
     ) {
         runBlocking {
             if (importDtoer.isEmpty()) return@runBlocking
 
             val sendteMeldinger = importDtoer.map { melding ->
                 kafkaProducer.send(ProducerRecord(
-                    topic,
+                    topic.navn,
                     gson.toJson(
                         KeySykefraværsstatistikkPerKategori(
                             kategori = melding.kategori.name,
@@ -228,7 +162,7 @@ class KafkaContainerHelper(
                 )).get()
             }
             ventTilKonsumert(
-                konsumentGruppeId = groupId,
+                konsumentGruppeId = topic.konsumentGruppe,
                 recordMetadata = sendteMeldinger.last()
             )
         }
@@ -236,15 +170,14 @@ class KafkaContainerHelper(
 
     fun sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
             importDtoer: List<GradertSykemeldingImportDto>,
-            topic: String,
-            groupId: String,
+            topic: Topic,
     ) {
         runBlocking {
             if (importDtoer.isEmpty()) return@runBlocking
 
             val sendteMeldinger = importDtoer.map { melding ->
                 kafkaProducer.send(ProducerRecord(
-                    topic,
+                    topic.navn,
                     gson.toJson(
                         KeySykefraværsstatistikkPerKategori(
                             kategori = melding.kategori,
@@ -257,7 +190,7 @@ class KafkaContainerHelper(
                 )).get()
             }
             ventTilKonsumert(
-                konsumentGruppeId = groupId,
+                konsumentGruppeId = topic.konsumentGruppe,
                 recordMetadata = sendteMeldinger.last()
             )
         }
@@ -271,7 +204,7 @@ class KafkaContainerHelper(
         }
 
         ventTilKonsumert(
-            konsumentGruppeId = Kafka.brregConsumerGroupId,
+            konsumentGruppeId = Topic.BRREG_OPPDATERING_TOPIC.konsumentGruppe,
             recordMetadata = sendteMeldinger.last()
         )
     }
@@ -280,7 +213,7 @@ class KafkaContainerHelper(
         runBlocking {
             val sendtMelding = kafkaProducer.send(virksomhet.tilProducerRecord()).get()
             ventTilKonsumert(
-                konsumentGruppeId = Kafka.brregConsumerGroupId,
+                konsumentGruppeId = Topic.BRREG_OPPDATERING_TOPIC.konsumentGruppe,
                 recordMetadata = sendtMelding
             )
         }
@@ -294,13 +227,12 @@ class KafkaContainerHelper(
                 "tidspunkt": "2023-01-01T00:00:00.000Z",
                 "applikasjon": "lydia-api"
             }""".trimIndent(),
-            topic = jobblytterTopic,
-            konsumentGruppeId = Kafka.jobblytterConsumerGroupId,
+            topic = Topic.JOBBLYTTER_TOPIC,
         )
     }
 
     private fun OppdateringVirksomhet.tilProducerRecord() = ProducerRecord(
-            brregOppdateringTopic,
+            Topic.BRREG_OPPDATERING_TOPIC.navn,
             this.orgnummer,
             Json.encodeToString(
                 this
@@ -309,7 +241,7 @@ class KafkaContainerHelper(
 
     private fun SykefraværsstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
         ProducerRecord(
-            statistikkMetadataVirksomhetTopic,
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC.navn,
             gson.toJson(
                 KeySykefraværsstatistikkMetadataVirksomhet(
                     orgnr = orgnr,

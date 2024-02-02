@@ -111,7 +111,7 @@ fun startLydiaBackend() {
     val auditLog = AuditLog(naisEnv.miljø)
     val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
     val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
-    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent, topic = naisEnv.kafka.iaSakTopic)
+    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent)
     val iaSakStatistikkProdusent = IASakStatistikkProdusent(
         produsent = kafkaProdusent,
         virksomhetService = virksomhetService,
@@ -119,11 +119,9 @@ fun startLydiaBackend() {
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         geografiService = GeografiService(),
         sistePubliseringService = sistePubliseringService,
-        topic = naisEnv.kafka.iaSakStatistikkTopic
     )
     val iaSakStatusProdusent = IASakStatusProdusent(
         produsent = kafkaProdusent,
-        topic = naisEnv.kafka.iaSakStatusTopic,
         iaSakRepository = iaSakRepository,
     )
     val azureService = AzureService(
@@ -132,7 +130,6 @@ fun startLydiaBackend() {
     )
     val iaSakLeveranseProdusent = IASakLeveranseProdusent(
         produsent = kafkaProdusent,
-        topic = naisEnv.kafka.iaSakLeveranseTopic,
         azureService = azureService
     )
     val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
@@ -151,7 +148,6 @@ fun startLydiaBackend() {
         kartleggingRepository = kartleggingRepository,
         spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
             produsent = kafkaProdusent,
-            topic = naisEnv.kafka.spørrundersøkelseTopic
         )
     )
 
@@ -189,15 +185,15 @@ fun startLydiaBackend() {
         ),
     )
 
-    mapOf(
-        naisEnv.kafka.statistikkLandTopic to Kafka.statistikkLandGroupId,
-        naisEnv.kafka.statistikkSektorTopic to Kafka.statistikkSektorGroupId,
-        naisEnv.kafka.statistikkBransjeTopic to Kafka.statistikkBransjeGroupId,
-        naisEnv.kafka.statistikkNæringTopic to Kafka.statistikkNæringGroupId,
-        naisEnv.kafka.statistikkNæringskodeTopic to Kafka.statistikkNæringskodeGroupId,
-        naisEnv.kafka.statistikkVirksomhetTopic to Kafka.statistikkVirksomhetGroupId,
-    ).forEach { (topic, groupId) ->
-        StatistikkPerKategoriConsumer(topic = topic, groupId = groupId).apply {
+    listOf(
+        Topic.STATISTIKK_LAND_TOPIC,
+        Topic.STATISTIKK_SEKTOR_TOPIC,
+        Topic.STATISTIKK_BRANSJE_TOPIC,
+        Topic.STATISTIKK_NARING_TOPIC,
+        Topic.STATISTIKK_NARINGSKODE_TOPIC,
+        Topic.STATISTIKK_VIRKSOMHET_TOPIC,
+    ).forEach { topic ->
+        StatistikkPerKategoriConsumer(topic = topic).apply {
             create(kafka = naisEnv.kafka, sykefraværsstatistikkService = sykefraværsstatistikkService)
             run()
         }.also { HelseMonitor.leggTilHelsesjekk(it) }
@@ -213,10 +209,7 @@ fun startLydiaBackend() {
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
-    KartleggingSvarConsumer(
-        topic = naisEnv.kafka.iaSakKartleggingSvarTopic,
-        groupId = Kafka.spørreundersøkelseSvarGroupId
-    ).apply {
+    KartleggingSvarConsumer().apply {
         create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
