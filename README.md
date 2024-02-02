@@ -49,6 +49,7 @@ For å koble seg mot Aiven Kafka lokalt trenger man:
 Vi har gitt tilgang til en k8s-ressurs som heter `pia-devops` som har lese- og skrivetilgang til `ia-sak-v1`-topicet. 
 Det er denne man bruker som utvikler om man vil koble seg opp mot topicet lokalt. Det gjør man slik: 
 
+0. `logg på gcloud og sett cluster med kubectx`
 1. `nais aiven create kafka pia-devops pia` (lager en [AivenApplication](https://doc.nais.io/cli/commands/aiven/#aiven-command))
 2. `kubectl get AivenApplication -c <cluster> -n pia` for å finne ut hva den genererte secreten til `pia-devops` heter
 3. `nais aiven get kafka <navn på secret> pia` (lager en lokal config i under `/var/` basert på k8s-secreten)
