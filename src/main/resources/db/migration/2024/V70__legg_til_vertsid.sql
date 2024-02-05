@@ -1,0 +1,1 @@
+alter table ia_sak_kartlegging add column vert_id varchar(36);

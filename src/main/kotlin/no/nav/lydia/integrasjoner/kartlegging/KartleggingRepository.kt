@@ -158,8 +158,10 @@ class KartleggingRepository(val dataSource: DataSource) {
 
     private fun Row.tilIASakKartlegging(): IASakKartlegging {
         val kartleggingId = UUID.fromString(this.string("kartlegging_id"))
+        val vertId = this.stringOrNull("vert_id")?.let { UUID.fromString(it) }
         return IASakKartlegging(
             kartleggingId = kartleggingId,
+            vertId = vertId,
             saksnummer = this.string("saksnummer"),
             status = KartleggingStatus.valueOf(this.string("status")),
             spørsmålOgSvaralternativer = hentSpørsmålOgSvaralternativer(kartleggingId),
