@@ -69,6 +69,7 @@ class KartleggingRepository(val dataSource: DataSource) {
     fun opprettKartlegging(
         orgnummer: String,
         kartleggingId: UUID,
+        vertId: UUID,
         saksnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         spørsmålIDer: List<UUID>,
@@ -80,6 +81,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                         """
                             INSERT INTO ia_sak_kartlegging (
                                 kartlegging_id,
+                                vert_id,
                                 orgnr,
                                 saksnummer,
                                 status,
@@ -87,6 +89,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                             )
                             VALUES (
                                 :kartlegging_id,
+                                :vert_id,
                                 :orgnr,
                                 :saksnummer,
                                 :status,
@@ -95,6 +98,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                         """.trimMargin(),
                         mapOf(
                             "kartlegging_id" to kartleggingId,
+                            "vert_id" to vertId,
                             "orgnr" to orgnummer,
                             "saksnummer" to saksnummer,
                             "status" to "OPPRETTET",

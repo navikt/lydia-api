@@ -51,6 +51,7 @@ class KartleggingService(
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
             kartleggingId = UUID.randomUUID(),
+            vertId = UUID.randomUUID(),
             spørsmålIDer = spørsmål,
         ).onRight { spørreundersøkelseProdusent.sendPåKafka(it) }
 
