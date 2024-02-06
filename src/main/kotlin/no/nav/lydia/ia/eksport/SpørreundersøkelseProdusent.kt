@@ -23,6 +23,7 @@ class SpørreundersøkelseProdusent(
     fun IASakKartlegging.tilSpørreundersøkelse() =
         SpørreundersøkelseDto(
             spørreundersøkelseId = this.kartleggingId.toString(),
+            vertId = this.vertId?.toString() ?: "",
             status = this.status,
             type = "kartlegging",
             spørsmålOgSvaralternativer = this.spørsmålOgSvaralternativer.toDto(),

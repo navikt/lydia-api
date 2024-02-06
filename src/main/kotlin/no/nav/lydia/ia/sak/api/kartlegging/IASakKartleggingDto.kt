@@ -7,6 +7,7 @@ import no.nav.lydia.ia.sak.domene.KartleggingStatus
 @Serializable
 data class IASakKartleggingDto(
     val kartleggingId: String,
+    val vertId: String,
     val status: KartleggingStatus,
     val spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativerDto>,
 )
@@ -16,6 +17,7 @@ fun List<IASakKartlegging>.toDto() = map { it.toDto() }
 fun IASakKartlegging.toDto() =
     IASakKartleggingDto(
         kartleggingId = kartleggingId.toString(),
+        vertId = vertId?.toString() ?: "",
         status = status,
         spørsmålOgSvaralternativer = spørsmålOgSvaralternativer.toDto(),
     )

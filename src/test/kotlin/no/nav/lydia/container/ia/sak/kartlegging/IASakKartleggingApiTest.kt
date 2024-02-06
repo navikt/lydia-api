@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
@@ -109,6 +110,7 @@ class IASakKartleggingApiTest {
                 liste.map { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
                     spørreundersøkelse.spørreundersøkelseId shouldBe id
+                    spørreundersøkelse.vertId shouldHaveLength 36
                     spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
                     spørreundersøkelse.spørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.spørsmålOgSvaralternativer.forAll {
@@ -126,7 +128,9 @@ class IASakKartleggingApiTest {
         IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer).shouldHaveSize(1)
+        val alleKartlegginger = hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        alleKartlegginger shouldHaveSize 1
+        alleKartlegginger.first().vertId shouldHaveLength 36
     }
 
     @Test
