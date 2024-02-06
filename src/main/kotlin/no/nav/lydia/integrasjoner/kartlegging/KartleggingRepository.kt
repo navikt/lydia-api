@@ -139,6 +139,7 @@ class KartleggingRepository(val dataSource: DataSource) {
 
 
     data class SpørsmålOgSvar(
+        val kartleggingId: UUID,
         val spørsmålId: UUID,
         val spørsmåltekst: String,
         val svarId: UUID,
@@ -187,6 +188,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                     )
                 ).map { row ->
                     SpørsmålOgSvar(
+                        kartleggingId = kartleggingId,
                         spørsmålId = UUID.fromString(row.string("sporsmal_id")),
                         spørsmåltekst = row.string("sporsmal_tekst"),
                         svarId = UUID.fromString(row.string("svaralternativ_id")),
@@ -201,6 +203,10 @@ class KartleggingRepository(val dataSource: DataSource) {
                         spørsmålId = spørsmål.key,
                         kategori = "Partssamarbeid",
                         spørsmåltekst = spørsmål.value.first().spørsmåltekst,
+                        antallSvar = hentAntallSvar(
+                            kartleggingId = kartleggingId,
+                            spørsmålId = spørsmål.key,
+                        ),
                         svaralternativer = spørsmål.value.map {
                             Svaralternativ(
                                 svarId = it.svarId,
@@ -211,6 +217,23 @@ class KartleggingRepository(val dataSource: DataSource) {
                 }
         }
 
+    private fun hentAntallSvar(kartleggingId: UUID, spørsmålId: UUID) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT COUNT(*) AS antallSvar 
+                        FROM ia_sak_kartlegging_svar
+                        WHERE kartlegging_id = :kartleggingId
+                        AND sporsmal_id = :sporsmalId
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to kartleggingId.toString(),
+                        "sporsmalId" to spørsmålId.toString()
+                    )
+                ).map { rad -> rad.int("antallSvar") }.asSingle
+            )
+        } ?: 0
 
     private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvarDto {
         return row.tilSpørreundersøkelseSvarDto()

@@ -8,6 +8,7 @@ data class SpørsmålOgSvaralternativerDto(
     val id: String,
     val kategori: String,
     val spørsmål: String,
+    val antallSvar: Int,
     val svaralternativer: List<SvaralternativDto>,
 )
 
@@ -18,5 +19,6 @@ fun SpørsmålOgSvaralternativer.toDto() =
         id = spørsmålId.toString(),
         kategori = kategori,
         spørsmål = spørsmåltekst,
+        antallSvar = antallSvar,
         svaralternativer = svaralternativer.toDto(),
     )

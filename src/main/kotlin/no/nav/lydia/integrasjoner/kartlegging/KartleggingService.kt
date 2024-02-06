@@ -19,16 +19,19 @@ class KartleggingService(
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun lagreSvar(karleggingSvarDtoListe: List<SpørreundersøkelseSvarDto>) {
-        karleggingSvarDtoListe.forEach {
-            val kartlegging = kartleggingRepository.hentKartleggingEtterId(it.spørreundersøkelseId)
+        karleggingSvarDtoListe.forEach { svar ->
+            val kartlegging = kartleggingRepository.hentKartleggingEtterId(svar.spørreundersøkelseId)
 
             if (kartlegging == null) {
-                log.error("Fant ikke kartlegging på denne iden: ${it.spørreundersøkelseId}, hopper over")
+                log.error("Fant ikke kartlegging på denne iden: ${svar.spørreundersøkelseId}, hopper over")
                 return@forEach
             }
 
-            kartleggingRepository.lagreSvar(it)
-            log.info("Lagret svar for kartlegging med id: '${it.spørreundersøkelseId}'")
+            kartleggingRepository.lagreSvar(svar)
+            kartleggingRepository.hentKartleggingEtterId(svar.spørreundersøkelseId)?.let {
+                spørreundersøkelseProdusent.sendPåKafka(it)
+            }
+            log.info("Lagret svar for kartlegging med id: '${svar.spørreundersøkelseId}'")
         }
     }
 
