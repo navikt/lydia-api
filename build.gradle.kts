@@ -111,7 +111,7 @@ dependencies {
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
-        implementation("com.jayway.jsonpath:json-path") {
+        testImplementation("com.jayway.jsonpath:json-path") {
             version {
                 require("2.9.0")
             }
