@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.7"
+    val ktorVersion = "2.3.8"
     val fuelVersion = "2.3.1"
 
     implementation(kotlin("stdlib"))
@@ -44,7 +44,7 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.12.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.12.2")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.1")
@@ -84,7 +84,7 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.19.3"
+    val testcontainersVersion = "1.19.4"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
@@ -96,7 +96,7 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.0")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.1")
 
     constraints {
         implementation("net.minidev:json-smart") {
@@ -107,7 +107,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.104.Final")
+                require("4.1.106.Final")
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
