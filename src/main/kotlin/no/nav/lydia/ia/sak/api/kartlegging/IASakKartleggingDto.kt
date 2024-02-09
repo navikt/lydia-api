@@ -12,12 +12,12 @@ data class IASakKartleggingDto(
     val spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativerDto>,
 )
 
-fun List<IASakKartlegging>.toDto() = map { it.toDto() }
+fun List<IASakKartlegging>.toDto(erEier: Boolean) = map { it.toDto( erEier = erEier) }
 
-fun IASakKartlegging.toDto() =
+fun IASakKartlegging.toDto(erEier: Boolean) =
     IASakKartleggingDto(
-        kartleggingId = kartleggingId.toString(),
-        vertId = vertId?.toString() ?: "",
+        kartleggingId = if (erEier) kartleggingId.toString() else "",
+        vertId = if (erEier) { vertId?.toString() ?: "" } else "",
         status = status,
-        spørsmålOgSvaralternativer = spørsmålOgSvaralternativer.toDto(),
+        spørsmålOgSvaralternativer = if (erEier) spørsmålOgSvaralternativer.toDto() else emptyList(),
     )

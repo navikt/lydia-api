@@ -51,7 +51,7 @@ fun Route.iaSakKartlegging(
                 saksnummer = kartleggingEither.getOrNull()?.saksnummer
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it.toDto())
+            call.respond(HttpStatusCode.Created, it.toDto(true))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -60,7 +60,12 @@ fun Route.iaSakKartlegging(
     get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        call.somSaksbehandler(adGrupper = adGrupper) { _ ->
+        var erEier = false
+
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
+                ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+            erEier = iaSak.eidAv == saksbehandler.navIdent
             kartleggingService.hentKartlegginger(saksnummer = saksnummer)
         }.also { kartleggingerEither ->
             auditLog.auditloggEither(
@@ -71,7 +76,7 @@ fun Route.iaSakKartlegging(
                 saksnummer = saksnummer
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.toDto())
+            call.respond(HttpStatusCode.OK, it.toDto(erEier))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -110,7 +115,7 @@ fun Route.iaSakKartlegging(
                 saksnummer = call.saksnummer
             )
         }.map {
-            call.respond(it.toDto())
+            call.respond(it.toDto(true))
         }.mapLeft {
             call.sendFeil(it)
         }
