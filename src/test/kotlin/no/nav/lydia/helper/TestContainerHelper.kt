@@ -576,9 +576,10 @@ class IASakKartleggingHelper {
         fun hentIASakKartlegginger(
             orgnr: String,
             saksnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
-                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+                .authentication().bearer(token)
                 .tilListeRespons<IASakKartleggingDto>().third.fold(
                     success = { it },
                     failure = { fail(it.message) }

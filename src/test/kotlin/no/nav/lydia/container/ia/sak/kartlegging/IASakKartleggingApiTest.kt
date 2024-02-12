@@ -4,6 +4,7 @@ import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveLength
@@ -128,9 +129,30 @@ class IASakKartleggingApiTest {
         IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<IASakKartleggingDto>()
 
-        val alleKartlegginger = hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val alleKartlegginger = hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        )
         alleKartlegginger shouldHaveSize 1
         alleKartlegginger.first().vertId shouldHaveLength 36
+    }
+
+    @Test
+    fun `skal kunne hente ut en liste med minimal informasjon over alle kartlegginger knyttet til en sak dersom bruker ikke er eier`() {
+        val sak = nySakIKartlegges()
+
+        IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+            .tilSingelRespons<IASakKartleggingDto>()
+
+        val alleKartlegginger = hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            token = oauth2ServerContainer.saksbehandler2.token
+        )
+        alleKartlegginger shouldHaveSize 1
+        alleKartlegginger.forAll { it.vertId shouldBeEqual "" }
+        alleKartlegginger.forAll { it.kartleggingId shouldBeEqual "" }
+        alleKartlegginger.forAll { it.spørsmålOgSvaralternativer shouldHaveSize 0 }
     }
 
     @Test
@@ -193,7 +215,10 @@ class IASakKartleggingApiTest {
         val avsluttetKartlegging = kartleggingDto.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         avsluttetKartlegging.status shouldBe KartleggingStatus.AVSLUTTET
 
-        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer).forExactlyOne {
+        hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        ).forExactlyOne {
             it.status shouldBe KartleggingStatus.AVSLUTTET
         }
 
