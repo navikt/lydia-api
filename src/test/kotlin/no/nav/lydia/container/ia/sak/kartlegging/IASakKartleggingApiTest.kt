@@ -5,6 +5,7 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveLength
@@ -135,6 +136,10 @@ class IASakKartleggingApiTest {
         )
         alleKartlegginger shouldHaveSize 1
         alleKartlegginger.first().vertId shouldHaveLength 36
+        alleKartlegginger.first().spørsmålOgSvaralternativer.size shouldBeGreaterThan 0
+        alleKartlegginger.first().opprettetAv shouldBeEqual oauth2ServerContainer.saksbehandler1.navIdent
+        alleKartlegginger.first().opprettetTidspunkt shouldNotBe null
+        alleKartlegginger.first().endretTidspunkt shouldBe null
     }
 
     @Test
@@ -153,6 +158,9 @@ class IASakKartleggingApiTest {
         alleKartlegginger.forAll { it.vertId shouldBeEqual "" }
         alleKartlegginger.forAll { it.kartleggingId shouldBeEqual "" }
         alleKartlegginger.forAll { it.spørsmålOgSvaralternativer shouldHaveSize 0 }
+        alleKartlegginger.forAll { it.opprettetAv shouldBeEqual oauth2ServerContainer.saksbehandler1.navIdent }
+        alleKartlegginger.forAll { it.opprettetTidspunkt shouldNotBe null }
+        alleKartlegginger.forAll { it.endretTidspunkt shouldBe null }
     }
 
     @Test
@@ -220,6 +228,7 @@ class IASakKartleggingApiTest {
             saksnummer = sak.saksnummer,
         ).forExactlyOne {
             it.status shouldBe KartleggingStatus.AVSLUTTET
+            it.endretTidspunkt shouldNotBe null
         }
 
         runBlocking {

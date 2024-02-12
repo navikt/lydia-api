@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import java.time.LocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -170,6 +171,9 @@ class KartleggingRepository(val dataSource: DataSource) {
             saksnummer = this.string("saksnummer"),
             status = KartleggingStatus.valueOf(this.string("status")),
             spørsmålOgSvaralternativer = hentSpørsmålOgSvaralternativer(kartleggingId),
+            opprettetAv = this.string("opprettet_av"),
+            opprettetTidspunkt = this.localDateTime("opprettet"),
+            endretTidspunkt = this.localDateTimeOrNull("endret"),
         )
     }
 
@@ -278,18 +282,20 @@ class KartleggingRepository(val dataSource: DataSource) {
             )
         }
 
-    fun avsluttKartlegging(kartleggingId: String) =
+    fun avsluttKartlegging(kartleggingId: String, sistEndret: LocalDateTime = LocalDateTime.now()) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                         UPDATE ia_sak_kartlegging SET
-                            status = 'AVSLUTTET'
+                            status = 'AVSLUTTET',
+                            endret = :sistEndret
                         WHERE kartlegging_id = :kartleggingId
                         RETURNING *
                     """.trimIndent(),
                     mapOf(
-                        "kartleggingId" to kartleggingId
+                        "kartleggingId" to kartleggingId,
+                        "sistEndret" to sistEndret
                     )
                 ).map(this::mapRowToIASakKartlegging).asSingle
             )

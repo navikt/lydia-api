@@ -35,12 +35,12 @@ fun Route.iaSakKartlegging(
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            val spørmål = kartleggingService.hentAlleSpørsmål()
+            val spørsmål = kartleggingService.hentAlleSpørsmål()
             kartleggingService.opprettKartlegging(
                 orgnummer = orgnummer,
                 saksnummer = iaSak.saksnummer,
                 saksbehandler = saksbehandler,
-                spørsmål = spørmål
+                spørsmål = spørsmål
             )
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
