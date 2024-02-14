@@ -19,6 +19,7 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -106,7 +107,33 @@ fun Route.iaSakKartlegging(
         val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
         call.somEierAvSakIKartlegges(iaSakService, adGrupper) { _, _ ->
-            kartleggingService.avsluttKartlegging(kartleggingId)
+            kartleggingService.endreKartleggingStatus(
+                kartleggingId = kartleggingId,
+                status = KartleggingStatus.AVSLUTTET
+            )
+        }.also { kartlegging ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartlegging,
+                orgnummer = call.orgnummer,
+                auditType = AuditType.access,
+                saksnummer = call.saksnummer
+            )
+        }.map {
+            call.respond(it.toDto(true))
+        }.mapLeft {
+            call.sendFeil(it)
+        }
+    }
+
+    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/start") {
+        val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+
+        call.somEierAvSakIKartlegges(iaSakService, adGrupper) { _, _ ->
+            kartleggingService.endreKartleggingStatus(
+                kartleggingId = kartleggingId,
+                status = KartleggingStatus.PÅBEGYNT
+            )
         }.also { kartlegging ->
             auditLog.auditloggEither(
                 call = call,

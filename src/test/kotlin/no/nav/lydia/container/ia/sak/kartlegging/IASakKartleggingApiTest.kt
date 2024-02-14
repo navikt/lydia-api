@@ -19,6 +19,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentResultaterForKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -211,6 +212,36 @@ class IASakKartleggingApiTest {
                 saksnummer = sak.saksnummer,
                 kartleggingId = kartlegging.kartleggingId
             )
+        }
+    }
+
+    @Test
+    fun `skal kunne starte kartlegging`() {
+        val sak = nySakIKartlegges()
+        val kartleggingDto = sak.opprettKartlegging()
+        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+
+        val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        pågåendeKartlegging.status shouldBe KartleggingStatus.PÅBEGYNT
+
+        hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        ).forExactlyOne {
+            it.status shouldBe KartleggingStatus.PÅBEGYNT
+            it.endretTidspunkt shouldNotBe null
+        }
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = kartleggingDto.kartleggingId,
+                konsument = kartleggingKonsument
+            ) {
+                it.forExactlyOne { melding ->
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
+                }
+            }
         }
     }
 

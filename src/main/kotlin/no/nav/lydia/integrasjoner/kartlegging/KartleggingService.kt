@@ -11,6 +11,7 @@ import no.nav.lydia.tilgangskontroll.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.UUID
+import no.nav.lydia.ia.sak.domene.KartleggingStatus
 
 class KartleggingService(
     val kartleggingRepository: KartleggingRepository,
@@ -72,14 +73,17 @@ class KartleggingService(
 
     fun hentAlleSpørsmål() = kartleggingRepository.hentAlleSpørsmålIDer()
 
-    fun avsluttKartlegging(kartleggingId: String): Either<Feil, IASakKartlegging> {
+    fun endreKartleggingStatus(kartleggingId: String, status: KartleggingStatus): Either<Feil, IASakKartlegging> {
         kartleggingRepository.hentKartleggingEtterId(kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
-        val avsluttetKartlegging = kartleggingRepository.avsluttKartlegging(kartleggingId = kartleggingId)
+        val oppdatertKartlegging = kartleggingRepository.endreKartleggingStatus(
+            kartleggingId = kartleggingId,
+            status = status
+        )
             ?: return IASakKartleggingError.`feil under oppdatering`.left()
 
-        spørreundersøkelseProdusent.sendPåKafka(avsluttetKartlegging)
+        spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
 
-        return avsluttetKartlegging.right()
+        return oppdatertKartlegging.right()
     }
 }

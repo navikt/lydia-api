@@ -282,13 +282,17 @@ class KartleggingRepository(val dataSource: DataSource) {
             )
         }
 
-    fun avsluttKartlegging(kartleggingId: String, sistEndret: LocalDateTime = LocalDateTime.now()) =
+    fun endreKartleggingStatus(
+        kartleggingId: String,
+        status: KartleggingStatus,
+        sistEndret: LocalDateTime = LocalDateTime.now()
+    ) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                         UPDATE ia_sak_kartlegging SET
-                            status = 'AVSLUTTET',
+                            status = '${status.name}',
                             endret = :sistEndret
                         WHERE kartlegging_id = :kartleggingId
                         RETURNING *

@@ -596,6 +596,18 @@ class IASakKartleggingHelper {
             failure = { fail(it.message) }
         )
 
+        fun IASakKartleggingDto.start(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            orgnummer: String,
+            saksnummer: String
+        ) =
+            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/start")
+                .authentication().bearer(token)
+                .tilSingelRespons<IASakKartleggingDto>().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) }
+                )
+
         fun IASakKartleggingDto.avslutt(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
