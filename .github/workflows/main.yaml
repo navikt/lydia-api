@@ -1,6 +1,8 @@
 name: Build and deploy lydia-api
 on: [ push ]
 
+permissions: {}
+
 jobs:
   build:
     permissions:
