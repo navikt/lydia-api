@@ -21,6 +21,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
 import no.nav.lydia.tilgangskontroll.NavAnsatt
+import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 const val KARTLEGGING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
@@ -62,10 +63,10 @@ fun Route.iaSakKartlegging(
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         var erEier = false
 
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+        call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
             val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
-                ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-            erEier = iaSak.eidAv == saksbehandler.navIdent
+                ?: return@somLesebruker IASakError.`ugyldig saksnummer`.left()
+            erEier = iaSak.eidAv == lesebruker.navIdent
             kartleggingService.hentKartlegginger(saksnummer = saksnummer)
         }.also { kartleggingerEither ->
             auditLog.auditloggEither(
