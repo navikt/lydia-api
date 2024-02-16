@@ -5,6 +5,7 @@ import arrow.core.left
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
+import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -104,9 +105,15 @@ fun Route.iaSakKartlegging(
     }
 
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/avslutt") {
+        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
-        call.somEierAvSakIKartlegges(iaSakService, adGrupper) { _, _ ->
+        call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+            val kartlegging = kartleggingService.hentKartlegginger(saksnummer = saksnummer)
+
+            if (kartlegging.getOrNull()?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != KartleggingStatus.PÅBEGYNT)
+                return@somEierAvSakIKartlegges IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
+
             kartleggingService.endreKartleggingStatus(
                 kartleggingId = kartleggingId,
                 status = KartleggingStatus.AVSLUTTET
@@ -122,6 +129,7 @@ fun Route.iaSakKartlegging(
         }.map {
             call.respond(it.toDto(true))
         }.mapLeft {
+            call.application.log.error(it.feilmelding)
             call.sendFeil(it)
         }
     }
@@ -173,6 +181,8 @@ private val ApplicationCall.kartleggingId
     get() = parameters["kartleggingId"]
 
 object IASakKartleggingError {
+    val `kartlegging er ikke i påbegynt` =
+        Feil("Kartlegging er ikke i påbegynt status", HttpStatusCode.Forbidden)
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
     val `feil under oppdatering` =

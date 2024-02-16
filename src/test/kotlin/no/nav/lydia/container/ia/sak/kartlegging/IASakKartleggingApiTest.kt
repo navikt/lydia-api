@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
+import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
@@ -35,6 +36,10 @@ import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
+import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
 
 class IASakKartleggingApiTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
@@ -246,12 +251,13 @@ class IASakKartleggingApiTest {
     }
 
     @Test
-    fun `skal kunne avslutte kartlegging`() {
+    fun `skal kunne avslutte en påbegynt kartlegging`() {
         val sak = nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
-        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+        val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        påbegyntKartlegging.status shouldBe KartleggingStatus.PÅBEGYNT
 
-        val avsluttetKartlegging = kartleggingDto.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val avsluttetKartlegging = påbegyntKartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         avsluttetKartlegging.status shouldBe KartleggingStatus.AVSLUTTET
 
         hentIASakKartlegginger(
@@ -273,5 +279,20 @@ class IASakKartleggingApiTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `skal ikke kunne avslutte kartlegging med status OPPRETTET`() {
+        val sak = nySakIKartlegges()
+        val kartleggingDto = sak.opprettKartlegging()
+        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+
+        val response = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
+            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+            .tilSingelRespons<IASakKartleggingDto>()
+
+        response.second.statusCode shouldBe HttpStatusCode.Forbidden.value
+
+        lydiaApiContainer shouldContainLog "Kartlegging er ikke i påbegynt".toRegex()
     }
 }
