@@ -39,9 +39,15 @@ class KartleggingService(
     fun hentKartleggingMedSvar(kartleggingId: String): Either<Feil, KartleggingMedSvar> {
         val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
-        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
 
-        return KartleggingMedSvar(kartlegging, alleSvar).right()
+        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
+        val antallUnikeDeltakereMedMinstEttSvar = kartleggingRepository.hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId = kartleggingId)
+
+        return KartleggingMedSvar(
+            kartlegging = kartlegging,
+            antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
+            spørsmålMedSvarListe =  alleSvar
+        ).right()
     }
 
     fun opprettKartlegging(

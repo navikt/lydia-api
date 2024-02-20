@@ -20,11 +20,17 @@ data class SpørsmålMedSvar(
 @Serializable
 data class KartleggingMedSvar(
     val kartleggingId: String,
+    val antallUnikeDeltakereMedMinstEttSvar: Int,
     val spørsmålMedSvar: List<SpørsmålMedSvar>
 ) {
-    constructor(kartlegging: IASakKartlegging, spørsmålMedSvarListe: List<SpørreundersøkelseSvarDto>) :
+    constructor(
+        kartlegging: IASakKartlegging,
+        antallUnikeDeltakereMedMinstEttSvar: Int,
+        spørsmålMedSvarListe: List<SpørreundersøkelseSvarDto>
+    ) :
             this(
                 kartleggingId = kartlegging.kartleggingId.toString(),
+                antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
                 spørsmålMedSvar = kartlegging.spørsmålOgSvaralternativer.map { spørsmålOgSvaralternativ ->
                     SpørsmålMedSvar(
                         spørsmålId = spørsmålOgSvaralternativ.spørsmålId.toString(),

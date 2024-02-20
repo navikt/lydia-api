@@ -35,6 +35,22 @@ class KartleggingRepository(val dataSource: DataSource) {
             )
         }
 
+    fun hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT COUNT(DISTINCT sesjon_id) AS antall
+                        FROM ia_sak_kartlegging_svar
+                        WHERE kartlegging_id = :kartleggingId
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to kartleggingId,
+                    )
+                ).map { rad -> rad.int("antall") }.asSingle
+            ) ?: 0
+        }
+
     fun hentKartlegginger(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -250,7 +266,7 @@ class KartleggingRepository(val dataSource: DataSource) {
             spørsmålId = this.string("sporsmal_id"),
             svarId = this.string("svar_id")
         )
-    
+
     fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =
         using(sessionOf(dataSource)) { session ->
             session.run(

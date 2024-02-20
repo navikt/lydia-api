@@ -12,6 +12,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
+import java.util.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
@@ -36,6 +37,7 @@ import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -196,6 +198,42 @@ class IASakKartleggingApiTest {
             spørsmålMedSvar.svarListe.map { it.svarId } shouldContainAll svarIder
         }
 
+    }
+
+    @Test
+    fun `skal hente antall unike deltakere som har svart på minst ett spørsmål`() {
+        val sak = nySakIKartlegges()
+
+        val kartleggingId =
+            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+                .tilSingelRespons<IASakKartleggingDto>().third.get().kartleggingId
+
+        val kartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartleggingId
+        )
+
+        sendKartleggingSvarTilKafka(
+            kartleggingId = kartleggingId,
+            spørsmålId = kartleggingMedSvar.spørsmålMedSvar.first().spørsmålId,
+            sesjonId = UUID.randomUUID().toString(),
+            svarId = kartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().svarId
+        )
+
+        sendKartleggingSvarTilKafka(
+            kartleggingId = kartleggingId,
+            spørsmålId = kartleggingMedSvar.spørsmålMedSvar.first().spørsmålId,
+            sesjonId = UUID.randomUUID().toString(),
+            svarId = kartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().svarId
+        )
+
+        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartleggingId
+        )
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
     }
 
     @Test
