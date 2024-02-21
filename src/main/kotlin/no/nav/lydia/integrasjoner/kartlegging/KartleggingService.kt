@@ -7,6 +7,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
+import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -67,7 +68,7 @@ class KartleggingService(
 
     fun hentKartlegginger(
         saksnummer: String,
-    ): Either<Feil, List<IASakKartlegging>> {
+    ): Either<Feil, List<IASakKartleggingOversikt>> {
         return try {
             val kartlegginger = kartleggingRepository.hentKartlegginger(saksnummer = saksnummer)
             kartlegginger.right()

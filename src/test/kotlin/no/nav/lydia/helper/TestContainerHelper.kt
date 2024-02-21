@@ -44,6 +44,7 @@ import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
+import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingOversiktDto
 import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
@@ -580,7 +581,7 @@ class IASakKartleggingHelper {
         ) =
             lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
                 .authentication().bearer(token)
-                .tilListeRespons<IASakKartleggingDto>().third.fold(
+                .tilListeRespons<IASakKartleggingOversiktDto>().third.fold(
                     success = { it },
                     failure = { fail(it.message) }
                 )

@@ -144,7 +144,6 @@ class IASakKartleggingApiTest {
         )
         alleKartlegginger shouldHaveSize 1
         alleKartlegginger.first().vertId shouldHaveLength 36
-        alleKartlegginger.first().spørsmålOgSvaralternativer.size shouldBeGreaterThan 0
         alleKartlegginger.first().opprettetAv shouldBeEqual oauth2ServerContainer.saksbehandler1.navIdent
         alleKartlegginger.first().opprettetTidspunkt shouldNotBe null
         alleKartlegginger.first().endretTidspunkt shouldBe null
@@ -165,7 +164,6 @@ class IASakKartleggingApiTest {
         alleKartlegginger shouldHaveSize 1
         alleKartlegginger.forAll { it.vertId shouldBeEqual "" }
         alleKartlegginger.forAll { it.kartleggingId shouldBeEqual "" }
-        alleKartlegginger.forAll { it.spørsmålOgSvaralternativer shouldHaveSize 0 }
         alleKartlegginger.forAll { it.opprettetAv shouldBeEqual oauth2ServerContainer.saksbehandler1.navIdent }
         alleKartlegginger.forAll { it.opprettetTidspunkt shouldNotBe null }
         alleKartlegginger.forAll { it.endretTidspunkt shouldBe null }

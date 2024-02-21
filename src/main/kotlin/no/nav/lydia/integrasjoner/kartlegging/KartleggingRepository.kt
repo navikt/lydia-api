@@ -11,6 +11,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
+import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
 import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.Svaralternativ
@@ -63,7 +64,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                     mapOf(
                         "saksnummer" to saksnummer,
                     )
-                ).map(this::mapRowToIASakKartlegging).asList
+                ).map(this::mapRowToIASakKartleggingOversikt).asList
             )
         }
 
@@ -79,7 +80,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                     mapOf(
                         "kartleggingId" to kartleggingId,
                     )
-                ).map(this::mapRowToIASakKartlegging).asSingle
+                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle
             )
         }
 
@@ -174,11 +175,29 @@ class KartleggingRepository(val dataSource: DataSource) {
         )
     }
 
-    private fun mapRowToIASakKartlegging(row: Row): IASakKartlegging {
-        return row.tilIASakKartlegging()
+    private fun mapRowToIASakKartleggingOversikt(row: Row): IASakKartleggingOversikt {
+        return row.tilIASakKartleggingOversikt()
     }
 
-    private fun Row.tilIASakKartlegging(): IASakKartlegging {
+    private fun Row.tilIASakKartleggingOversikt(): IASakKartleggingOversikt {
+        val kartleggingId = UUID.fromString(this.string("kartlegging_id"))
+        val vertId = this.stringOrNull("vert_id")?.let { UUID.fromString(it) }
+        return IASakKartleggingOversikt(
+            kartleggingId = kartleggingId,
+            vertId = vertId,
+            saksnummer = this.string("saksnummer"),
+            status = KartleggingStatus.valueOf(this.string("status")),
+            opprettetAv = this.string("opprettet_av"),
+            opprettetTidspunkt = this.localDateTime("opprettet"),
+            endretTidspunkt = this.localDateTimeOrNull("endret"),
+        )
+    }
+
+    private fun mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer(row: Row): IASakKartlegging {
+        return row.tilIASakKartleggingMedSpørsmålOgSvaralternativer()
+    }
+
+    private fun Row.tilIASakKartleggingMedSpørsmålOgSvaralternativer(): IASakKartlegging {
         val kartleggingId = UUID.fromString(this.string("kartlegging_id"))
         val vertId = this.stringOrNull("vert_id")?.let { UUID.fromString(it) }
         return IASakKartlegging(
@@ -317,7 +336,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                         "kartleggingId" to kartleggingId,
                         "sistEndret" to sistEndret
                     )
-                ).map(this::mapRowToIASakKartlegging).asSingle
+                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle
             )
         }
 }
