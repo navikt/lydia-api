@@ -21,16 +21,19 @@ data class SpørsmålMedSvar(
 data class KartleggingMedSvar(
     val kartleggingId: String,
     val antallUnikeDeltakereMedMinstEttSvar: Int,
+    val antallUnikeDeltakereSomHarSvartPåAlt: Int,
     val spørsmålMedSvar: List<SpørsmålMedSvar>
 ) {
     constructor(
         kartlegging: IASakKartlegging,
         antallUnikeDeltakereMedMinstEttSvar: Int,
+        antallUnikeDeltakereSomHarSvartPåAlt: Int,
         spørsmålMedSvarListe: List<SpørreundersøkelseSvarDto>
     ) :
             this(
                 kartleggingId = kartlegging.kartleggingId.toString(),
                 antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
+                antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
                 spørsmålMedSvar = kartlegging.spørsmålOgSvaralternativer.map { spørsmålOgSvaralternativ ->
                     SpørsmålMedSvar(
                         spørsmålId = spørsmålOgSvaralternativ.spørsmålId.toString(),

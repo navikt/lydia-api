@@ -231,6 +231,47 @@ class IASakKartleggingApiTest {
             kartleggingId = kartleggingId
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
+    }
+
+    @Test
+    fun `skal hente antall unike deltakere som har svart på alle spørsmål`() {
+        val sak = nySakIKartlegges()
+        val sesjonId = UUID.randomUUID().toString()
+
+        val kartleggingId =
+            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+                .tilSingelRespons<IASakKartleggingDto>().third.get().kartleggingId
+
+        val kartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartleggingId
+        )
+
+        sendKartleggingSvarTilKafka(
+            kartleggingId = kartleggingId,
+            spørsmålId = kartleggingMedSvar.spørsmålMedSvar.first().spørsmålId,
+            sesjonId = UUID.randomUUID().toString(),
+            svarId = kartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().svarId
+        )
+
+        kartleggingMedSvar.spørsmålMedSvar.forEach { spørsmålMedSvar ->
+            sendKartleggingSvarTilKafka(
+                kartleggingId = kartleggingId,
+                spørsmålId = spørsmålMedSvar.spørsmålId,
+                sesjonId = sesjonId,
+                svarId = spørsmålMedSvar.svarListe.first().svarId
+            )
+        }
+
+        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartleggingId
+        )
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
     }
 
     @Test

@@ -49,9 +49,15 @@ class KartleggingService(
         val antallUnikeDeltakereMedMinstEttSvar =
             kartleggingRepository.hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId = kartleggingId)
 
+        val antallUnikeDeltakereSomHarSvartPåAlt =
+            kartleggingRepository.hentAntallUnikeDeltakereSomHarSvartPåAlt(kartleggingId = kartleggingId,
+                antallSpørsmål = kartlegging.spørsmålOgSvaralternativer.size
+            )
+
         return KartleggingMedSvar(
             kartlegging = kartlegging,
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
+            antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
             spørsmålMedSvarListe = alleSvar
         ).right()
     }

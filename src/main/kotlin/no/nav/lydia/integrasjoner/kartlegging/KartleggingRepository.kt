@@ -52,6 +52,25 @@ class KartleggingRepository(val dataSource: DataSource) {
             ) ?: 0
         }
 
+    fun hentAntallUnikeDeltakereSomHarSvartPåAlt(kartleggingId: String, antallSpørsmål: Int) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT COUNT(DISTINCT svar_id) AS antall_svar
+                        FROM ia_sak_kartlegging_svar
+                        WHERE kartlegging_id = :kartleggingId
+                        GROUP BY sesjon_id
+                        HAVING COUNT(DISTINCT svar_id) = :antallSporsmal
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to kartleggingId,
+                        "antallSporsmal" to antallSpørsmål,
+                    )
+                ).map { rad -> rad.int("antall_svar") }.asList
+            ).size
+        }
+
     fun hentKartlegginger(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
