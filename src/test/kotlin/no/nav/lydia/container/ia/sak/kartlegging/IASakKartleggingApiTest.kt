@@ -6,7 +6,6 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
-import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveLength
@@ -232,6 +231,41 @@ class IASakKartleggingApiTest {
             kartleggingId = kartleggingId
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
+    }
+
+    @Test
+    fun `skal ikke kune hente resultat før kartlegging er avsluttet`() {
+        val sak = nySakIKartlegges()
+        val kartlegging =
+            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+                .tilSingelRespons<IASakKartleggingDto>().third.get()
+        kartlegging.status shouldBe KartleggingStatus.OPPRETTET
+
+        val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        sendKartleggingSvarTilKafka(
+            kartleggingId = pågåendeKartlegging.kartleggingId,
+            spørsmålId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().id,
+            sesjonId = UUID.randomUUID().toString(),
+            svarId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+        )
+
+        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = pågåendeKartlegging.kartleggingId
+        )
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 1
+        oppdatertKartleggingMedSvar.spørsmålMedSvar.forAll { it.svarListe.forAll { it.antallSvar shouldBe 0 } }
+
+        val avsluttetKartlegging = kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val avsluttetKartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = avsluttetKartlegging.kartleggingId
+        )
+        avsluttetKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 1
+        avsluttetKartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().antallSvar shouldBe 1
     }
 
     @Test

@@ -41,13 +41,18 @@ class KartleggingService(
         val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
-        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
-        val antallUnikeDeltakereMedMinstEttSvar = kartleggingRepository.hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId = kartleggingId)
+        val alleSvar = if (kartlegging.status == KartleggingStatus.AVSLUTTET) {
+            kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
+        } else {
+            emptyList()
+        }
+        val antallUnikeDeltakereMedMinstEttSvar =
+            kartleggingRepository.hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId = kartleggingId)
 
         return KartleggingMedSvar(
             kartlegging = kartlegging,
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
-            spørsmålMedSvarListe =  alleSvar
+            spørsmålMedSvarListe = alleSvar
         ).right()
     }
 
