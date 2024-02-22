@@ -259,7 +259,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                 .map { spørsmål ->
                     SpørsmålOgSvaralternativer(
                         spørsmålId = spørsmål.key,
-                        kategori = "Partssamarbeid",
+                        kategori = SpørsmålOgSvaralternativer.Kategori.PARTSAMARBEID,
                         spørsmåltekst = spørsmål.value.first().spørsmåltekst,
                         antallSvar = hentAntallSvar(
                             kartleggingId = kartleggingId,

@@ -17,7 +17,7 @@ fun List<SpørsmålOgSvaralternativer>.toDto() = map { it.toDto() }
 fun SpørsmålOgSvaralternativer.toDto() =
     SpørsmålOgSvaralternativerDto(
         id = spørsmålId.toString(),
-        kategori = kategori,
+        kategori = kategori.name,
         spørsmål = spørsmåltekst,
         antallSvar = antallSvar,
         svaralternativer = svaralternativer.toDto(),
