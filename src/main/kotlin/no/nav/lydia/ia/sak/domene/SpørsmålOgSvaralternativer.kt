@@ -10,6 +10,6 @@ data class SpørsmålOgSvaralternativer(
     val svaralternativer: List<Svaralternativ>,
 ) {
     enum class Kategori {
-        PARTSAMARBEID,
+        PARTSSAMARBEID,
     }
 }
