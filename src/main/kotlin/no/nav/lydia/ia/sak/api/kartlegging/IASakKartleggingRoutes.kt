@@ -86,9 +86,15 @@ fun Route.iaSakKartlegging(
     }
 
     get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
-        val kartleggingId = call.kartleggingId ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
-        call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
-            kartleggingService.hentKartleggingMedSvar(kartleggingId = kartleggingId)
+        val kartleggingId =
+            call.kartleggingId ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+        val saksnummer =
+            call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaSakService.somEierAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) { _ ->
+                kartleggingService.hentKartleggingMedSvar(kartleggingId = kartleggingId)
+            }
         }.also { kartlegging ->
             auditLog.auditloggEither(
                 call = call,
@@ -106,12 +112,15 @@ fun Route.iaSakKartlegging(
 
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/avslutt") {
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+        val kartleggingId =
+            call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
             val kartlegging = kartleggingService.hentKartlegginger(saksnummer = saksnummer)
 
-            if (kartlegging.getOrNull()?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != KartleggingStatus.PÅBEGYNT)
+            if (kartlegging.getOrNull()
+                    ?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != KartleggingStatus.PÅBEGYNT
+            )
                 return@somEierAvSakIKartlegges IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
 
             kartleggingService.endreKartleggingStatus(
@@ -135,7 +144,8 @@ fun Route.iaSakKartlegging(
     }
 
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/start") {
-        val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+        val kartleggingId =
+            call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
         call.somEierAvSakIKartlegges(iaSakService, adGrupper) { _, _ ->
             kartleggingService.endreKartleggingStatus(
@@ -158,11 +168,16 @@ fun Route.iaSakKartlegging(
     }
 }
 
-private fun <T> ApplicationCall.somEierAvSakIKartlegges(iaSakService: IASakService, adGrupper: ADGrupper, block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>) =
+private fun <T> ApplicationCall.somEierAvSakIKartlegges(
+    iaSakService: IASakService,
+    adGrupper: ADGrupper,
+    block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>
+) =
     somSaksbehandler(adGrupper) { saksbehandler ->
         val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
         val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
-        val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull() ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+        val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
+            ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
         if (iaSak.orgnr != orgnummer)
             IASakError.`ugyldig orgnummer`.left()
         else if (iaSak.eidAv != saksbehandler.navIdent)
@@ -186,7 +201,7 @@ object IASakKartleggingError {
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
     val `feil under oppdatering` =
-            Feil("Feil under oppdatering av kartlegging", HttpStatusCode.InternalServerError)
+        Feil("Feil under oppdatering av kartlegging", HttpStatusCode.InternalServerError)
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
     val `ugyldig kartleggingId` = Feil("Ugyldig kartlegging", HttpStatusCode.BadRequest)

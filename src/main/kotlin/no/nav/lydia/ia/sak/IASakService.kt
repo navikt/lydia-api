@@ -279,7 +279,7 @@ class IASakService(
     fun hentIASak(saksnummer: String) =
         iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
 
-    private fun <T> somEierAvSak(
+    fun <T> somEierAvSak(
         saksnummer: String,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         block: (IASak) -> Either<Feil, T>
