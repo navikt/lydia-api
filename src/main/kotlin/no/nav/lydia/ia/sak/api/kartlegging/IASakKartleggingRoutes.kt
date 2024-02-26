@@ -143,6 +143,27 @@ fun Route.iaSakKartlegging(
         }
     }
 
+    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/slett") {
+        val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+
+        call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+            kartleggingService.slettKartlegging(kartleggingId = kartleggingId)
+        }.also { kartlegging ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartlegging,
+                orgnummer = call.orgnummer,
+                auditType = AuditType.delete,
+                saksnummer = call.saksnummer
+            )
+        }.map {
+            call.respond(HttpStatusCode.OK)
+        }.mapLeft {
+            call.application.log.error(it.feilmelding)
+            call.sendFeil(it)
+        }
+    }
+
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/start") {
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)

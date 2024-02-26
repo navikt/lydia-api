@@ -201,25 +201,27 @@ class IASakKartleggingApiTest {
     fun `skal hente antall unike deltakere som har svart på minst ett spørsmål`() {
         val sak = nySakIKartlegges()
 
-        val kartleggingId =
+        val kartleggingDto =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get().kartleggingId
+                .tilSingelRespons<IASakKartleggingDto>().third.get()
+        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
 
         val kartleggingMedSvar = hentResultaterForKartlegging(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingId
+            kartleggingId = kartleggingDto.kartleggingId
         )
 
         sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingId,
+            kartleggingId = kartleggingDto.kartleggingId,
             spørsmålId = kartleggingMedSvar.spørsmålMedSvar.first().spørsmålId,
             sesjonId = UUID.randomUUID().toString(),
             svarId = kartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().svarId
         )
 
         sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingId,
+            kartleggingId = kartleggingDto.kartleggingId,
             spørsmålId = kartleggingMedSvar.spørsmålMedSvar.first().spørsmålId,
             sesjonId = UUID.randomUUID().toString(),
             svarId = kartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().svarId
@@ -228,7 +230,7 @@ class IASakKartleggingApiTest {
         val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingId
+            kartleggingId = kartleggingDto.kartleggingId
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
@@ -239,18 +241,19 @@ class IASakKartleggingApiTest {
         val sak = nySakIKartlegges()
         val sesjonId = UUID.randomUUID().toString()
 
-        val kartleggingId =
+        val kartleggingDto =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get().kartleggingId
+                .tilSingelRespons<IASakKartleggingDto>().third.get()
+        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val kartleggingMedSvar = hentResultaterForKartlegging(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingId
+            kartleggingId = kartleggingDto.kartleggingId
         )
 
         sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingId,
+            kartleggingId = kartleggingDto.kartleggingId,
             spørsmålId = kartleggingMedSvar.spørsmålMedSvar.first().spørsmålId,
             sesjonId = UUID.randomUUID().toString(),
             svarId = kartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().svarId
@@ -258,7 +261,7 @@ class IASakKartleggingApiTest {
 
         kartleggingMedSvar.spørsmålMedSvar.forEach { spørsmålMedSvar ->
             sendKartleggingSvarTilKafka(
-                kartleggingId = kartleggingId,
+                kartleggingId = kartleggingDto.kartleggingId,
                 spørsmålId = spørsmålMedSvar.spørsmålId,
                 sesjonId = sesjonId,
                 svarId = spørsmålMedSvar.svarListe.first().svarId
@@ -268,7 +271,7 @@ class IASakKartleggingApiTest {
         val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingId
+            kartleggingId = kartleggingDto.kartleggingId
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
@@ -405,5 +408,58 @@ class IASakKartleggingApiTest {
         response.second.statusCode shouldBe HttpStatusCode.Forbidden.value
 
         lydiaApiContainer shouldContainLog "Kartlegging er ikke i påbegynt".toRegex()
+    }
+
+    @Test
+    fun `skal kunne slette en kartlegging`() {
+        val sak = nySakIKartlegges()
+        val kartleggingDto = sak.opprettKartlegging()
+        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+
+        val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        sendKartleggingSvarTilKafka(
+            kartleggingId = pågåendeKartlegging.kartleggingId,
+            spørsmålId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().id,
+            sesjonId = UUID.randomUUID().toString(),
+            svarId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+        )
+
+        postgresContainer
+            .hentAlleRaderTilEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+            ) shouldHaveSize 1
+
+        val response = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/slett")
+            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+            .tilSingelRespons<IASakKartleggingDto>()
+
+        response.second.statusCode shouldBe HttpStatusCode.OK.value
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = kartleggingDto.kartleggingId,
+                konsument = kartleggingKonsument
+            ) {
+                it.forExactlyOne { melding ->
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    spørreundersøkelse.status shouldBe KartleggingStatus.SLETTET
+                }
+            }
+        }
+
+        postgresContainer
+            .hentAlleRaderTilEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+            ) shouldHaveSize 0
+        postgresContainer
+            .hentAlleRaderTilEnkelKolonne<String>(
+                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+            ).forAll { it shouldBe "SLETTET" }
+
+        hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        ) shouldHaveSize 0
     }
 }

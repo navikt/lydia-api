@@ -79,6 +79,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                     SELECT *
                     FROM ia_sak_kartlegging
                     WHERE saksnummer = :saksnummer
+                    AND status != '${KartleggingStatus.SLETTET}'
                 """.trimMargin(),
                     mapOf(
                         "saksnummer" to saksnummer,
@@ -334,6 +335,41 @@ class KartleggingRepository(val dataSource: DataSource) {
                     )
                 ).asUpdate
             )
+        }
+
+    fun slettKartlegging(
+        kartleggingId: String,
+        sistEndret: LocalDateTime = LocalDateTime.now()
+    ) =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction {tx->
+                tx.run (
+                    queryOf(
+                        """
+                        DELETE FROM ia_sak_kartlegging_svar
+                        WHERE kartlegging_id = :kartleggingId
+                    """.trimMargin(),
+                        mapOf(
+                            "kartleggingId" to kartleggingId
+                        )
+                    ).asUpdate
+                )
+                tx.run (
+                    queryOf(
+                        """
+                        UPDATE ia_sak_kartlegging SET
+                            status = '${KartleggingStatus.SLETTET}',
+                            endret = :sistEndret
+                        WHERE kartlegging_id = :kartleggingId
+                        RETURNING *
+                    """.trimIndent(),
+                        mapOf(
+                            "kartleggingId" to kartleggingId,
+                            "sistEndret" to sistEndret
+                        )
+                    ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle
+                )
+            }
         }
 
     fun endreKartleggingStatus(

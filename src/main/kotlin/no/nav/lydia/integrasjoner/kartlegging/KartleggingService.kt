@@ -13,6 +13,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.UUID
 import no.nav.lydia.ia.sak.domene.KartleggingStatus
+import java.time.LocalDateTime
 
 class KartleggingService(
     val kartleggingRepository: KartleggingRepository,
@@ -26,6 +27,10 @@ class KartleggingService(
 
             if (kartlegging == null) {
                 log.error("Fant ikke kartlegging på denne iden: ${svar.spørreundersøkelseId}, hopper over")
+                return@forEach
+            }
+            if (kartlegging.status != KartleggingStatus.PÅBEGYNT) {
+                log.warn("Kan ikke svare på en kartlegging i status ${kartlegging.status}, hopper over")
                 return@forEach
             }
 
@@ -76,6 +81,18 @@ class KartleggingService(
             vertId = UUID.randomUUID(),
             spørsmålIDer = spørsmål,
         ).onRight { spørreundersøkelseProdusent.sendPåKafka(it) }
+
+    fun slettKartlegging(kartleggingId: String): Either<Feil, IASakKartlegging> {
+        val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId)
+            ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
+
+        kartleggingRepository.slettKartlegging(kartleggingId = kartleggingId,)
+
+        val oppdatertKartlegging = kartlegging.copy(status = KartleggingStatus.SLETTET, endretTidspunkt = LocalDateTime.now())
+        spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
+
+        return oppdatertKartlegging.right()
+    }
 
     fun hentKartlegginger(
         saksnummer: String,
