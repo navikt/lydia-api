@@ -38,6 +38,7 @@ import org.junit.Before
 import kotlin.test.Test
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
@@ -401,9 +402,10 @@ class IASakKartleggingApiTest {
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
 
-        val response = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
-            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-            .tilSingelRespons<IASakKartleggingDto>()
+        val response =
+            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
+                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+                .tilSingelRespons<IASakKartleggingDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.Forbidden.value
 
@@ -430,9 +432,10 @@ class IASakKartleggingApiTest {
                 "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'"
             ) shouldHaveSize 1
 
-        val response = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/slett")
-            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-            .tilSingelRespons<IASakKartleggingDto>()
+        val response =
+            lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
+                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+                .tilSingelRespons<IASakKartleggingDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.OK.value
 

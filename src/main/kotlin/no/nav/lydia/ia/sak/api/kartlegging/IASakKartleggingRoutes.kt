@@ -8,6 +8,7 @@ import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
@@ -143,8 +144,9 @@ fun Route.iaSakKartlegging(
         }
     }
 
-    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/slett") {
-        val kartleggingId = call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+    delete("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
+        val kartleggingId =
+            call.kartleggingId ?: return@delete call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
             kartleggingService.slettKartlegging(kartleggingId = kartleggingId)
@@ -157,7 +159,7 @@ fun Route.iaSakKartlegging(
                 saksnummer = call.saksnummer
             )
         }.map {
-            call.respond(HttpStatusCode.OK)
+            call.respond(it.toDto(erEier = false))
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
