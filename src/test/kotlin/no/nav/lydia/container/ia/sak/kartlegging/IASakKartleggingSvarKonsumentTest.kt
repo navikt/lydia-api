@@ -12,6 +12,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarT
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
@@ -89,7 +90,7 @@ class IASakKartleggingSvarKonsumentTest {
         TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke svare på en kartlegging i status AVSLUTTET".toRegex())
 
         //SLETTET
-        TestContainerHelper.lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}/slett")
+        TestContainerHelper.lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}")
             .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
             .tilSingelRespons<IASakKartleggingDto>()
         kartlegging.sendKartleggingSvarTilKafka()
