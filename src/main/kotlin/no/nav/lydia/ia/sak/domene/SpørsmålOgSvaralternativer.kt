@@ -4,12 +4,12 @@ import java.util.UUID
 
 data class SpørsmålOgSvaralternativer(
     val spørsmålId: UUID,
-    val kategori: Kategori,
+    val tema: Tema,
     val spørsmåltekst: String,
     val antallSvar: Int,
     val svaralternativer: List<Svaralternativ>,
 ) {
-    enum class Kategori {
+    enum class Tema {
         PARTSSAMARBEID,
     }
 }
