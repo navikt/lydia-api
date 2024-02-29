@@ -15,6 +15,8 @@ import java.util.UUID
 import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import java.time.LocalDateTime
 
+const val MINIMUM_ANTALL_DELTAKERE = 3
+
 class KartleggingService(
     val kartleggingRepository: KartleggingRepository,
     private val spørreundersøkelseProdusent: SpørreundersøkelseProdusent,
@@ -59,11 +61,13 @@ class KartleggingService(
                 antallSpørsmål = kartlegging.spørsmålOgSvaralternativer.size
             )
 
+        val harNokDeltakere = antallUnikeDeltakereMedMinstEttSvar >= MINIMUM_ANTALL_DELTAKERE
+
         return KartleggingMedSvar(
             kartlegging = kartlegging,
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
             antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
-            spørsmålMedSvarListe = alleSvar
+            spørsmålMedSvarListe = if (harNokDeltakere) alleSvar else emptyList()
         ).right()
     }
 

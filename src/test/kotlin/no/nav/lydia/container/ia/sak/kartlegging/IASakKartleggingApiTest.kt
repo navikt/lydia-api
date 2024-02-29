@@ -279,7 +279,7 @@ class IASakKartleggingApiTest {
     }
 
     @Test
-    fun `skal ikke kune hente resultat før kartlegging er avsluttet`() {
+    fun `skal ikke kunne hente resultat før kartlegging er avsluttet`() {
         val sak = nySakIKartlegges()
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
@@ -288,19 +288,23 @@ class IASakKartleggingApiTest {
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        sendKartleggingSvarTilKafka(
-            kartleggingId = pågåendeKartlegging.kartleggingId,
-            spørsmålId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().id,
-            sesjonId = UUID.randomUUID().toString(),
-            svarId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
-        )
+        listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
+            pågåendeKartlegging.spørsmålOgSvaralternativer.forEach { spørsmålOgSvaralternativ ->
+                sendKartleggingSvarTilKafka(
+                    kartleggingId = pågåendeKartlegging.kartleggingId,
+                    spørsmålId = spørsmålOgSvaralternativ.id,
+                    sesjonId = sesjonId.toString(),
+                    svarId = spørsmålOgSvaralternativ.svaralternativer.first().svarId
+                )
+            }
+        }
 
         val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = pågåendeKartlegging.kartleggingId
         )
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 1
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
         oppdatertKartleggingMedSvar.spørsmålMedSvar.forAll { it.svarListe.forAll { it.antallSvar shouldBe 0 } }
 
         val avsluttetKartlegging = kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -309,8 +313,49 @@ class IASakKartleggingApiTest {
             saksnummer = sak.saksnummer,
             kartleggingId = avsluttetKartlegging.kartleggingId
         )
-        avsluttetKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 1
-        avsluttetKartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().antallSvar shouldBe 1
+        avsluttetKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
+        avsluttetKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 3
+        avsluttetKartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().antallSvar shouldBe 3
+    }
+
+    @Test
+    fun `skal ikke kunne få antall svar dersom antall deltakere er færre enn 3`() {
+        val sak = nySakIKartlegges()
+        val kartlegging =
+            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+                .tilSingelRespons<IASakKartleggingDto>().third.get()
+        kartlegging.status shouldBe KartleggingStatus.OPPRETTET
+
+        val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        listOf(UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
+            pågåendeKartlegging.spørsmålOgSvaralternativer.forEach { spørsmålOgSvaralternativ ->
+                sendKartleggingSvarTilKafka(
+                    kartleggingId = pågåendeKartlegging.kartleggingId,
+                    spørsmålId = spørsmålOgSvaralternativ.id,
+                    sesjonId = sesjonId.toString(),
+                    svarId = spørsmålOgSvaralternativ.svaralternativer.first().svarId
+                )
+            }
+        }
+
+        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = pågåendeKartlegging.kartleggingId
+        )
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
+        oppdatertKartleggingMedSvar.spørsmålMedSvar.forAll { it.svarListe.forAll { it.antallSvar shouldBe 0 } }
+
+        val avsluttetKartlegging = kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val avsluttetKartleggingMedSvar = hentResultaterForKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = avsluttetKartlegging.kartleggingId
+        )
+        avsluttetKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
+        avsluttetKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 2
+        avsluttetKartleggingMedSvar.spørsmålMedSvar.forAll { it.svarListe.forAll { it.antallSvar shouldBe 0 } }
     }
 
     @Test
