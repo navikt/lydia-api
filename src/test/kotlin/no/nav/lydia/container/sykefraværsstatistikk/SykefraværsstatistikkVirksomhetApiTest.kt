@@ -3,7 +3,6 @@ package no.nav.lydia.container.sykefraværsstatistikk
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer.TRANSPORT
 import io.kotest.matchers.shouldBe
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.fail
 import no.nav.lydia.Topic
@@ -215,7 +214,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
         result.sykefraværsprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
-    @Ignore
+    @Test
     fun `skal kunne hente sykefraværsstatistikk riktig når vi har nyere perioder enn gjeldene`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = TestVirksomhet.nyVirksomhet()

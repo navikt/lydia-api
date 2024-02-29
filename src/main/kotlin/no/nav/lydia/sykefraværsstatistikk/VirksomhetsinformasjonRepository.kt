@@ -189,7 +189,8 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                             AND sykefravar_statistikk_virksomhet.arstall = sykefravar_statistikk_virksomhet_gradering.arstall
                         )
                     WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
-                    AND NOT (sykefravar_statistikk_virksomhet.kvartal > ${gjeldenPeriode.kvartal} AND sykefravar_statistikk_virksomhet.arstall >= ${gjeldenPeriode.årstall})
+                    AND NOT (sykefravar_statistikk_virksomhet.arstall > ${gjeldenPeriode.årstall})
+                    AND NOT (sykefravar_statistikk_virksomhet.arstall = ${gjeldenPeriode.årstall} AND sykefravar_statistikk_virksomhet.kvartal > ${gjeldenPeriode.kvartal})
                     ${
                         periode?.let { """
                             AND sykefravar_statistikk_virksomhet.kvartal = ${it.kvartal}
