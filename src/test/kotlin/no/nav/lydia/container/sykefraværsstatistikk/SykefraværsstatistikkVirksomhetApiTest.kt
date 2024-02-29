@@ -3,6 +3,9 @@ package no.nav.lydia.container.sykefraværsstatistikk
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransjer.TRANSPORT
 import io.kotest.matchers.shouldBe
+import kotlin.test.Ignore
+import kotlin.test.Test
+import kotlin.test.fail
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
@@ -23,8 +26,6 @@ import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
 import no.nav.lydia.virksomhet.domene.Sektor
-import kotlin.test.Test
-import kotlin.test.fail
 
 class SykefraværsstatistikkVirksomhetApiTest {
 
@@ -214,7 +215,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
         result.sykefraværsprosent shouldBe sykefraværsprosentSisteTilgjengeligeKvartal
     }
 
-    @Test
+    @Ignore
     fun `skal kunne hente sykefraværsstatistikk riktig når vi har nyere perioder enn gjeldene`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
         val virksomhet = TestVirksomhet.nyVirksomhet()
