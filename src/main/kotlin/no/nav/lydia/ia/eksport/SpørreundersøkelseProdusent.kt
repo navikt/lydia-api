@@ -5,9 +5,9 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.api.kartlegging.toDto
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.domene.toDto
 
 class SpørreundersøkelseProdusent(
     private val produsent: KafkaProdusent,
@@ -26,7 +26,7 @@ class SpørreundersøkelseProdusent(
             vertId = this.vertId?.toString() ?: "",
             status = this.status,
             type = "kartlegging",
-            spørsmålOgSvaralternativer = this.spørsmålOgSvaralternativer.toDto(),
+            temaMedSpørsmålOgSvaralternativer = temaMedSpørsmålOgSvaralternativer.map { it.toDto() },
             avslutningsdato = now().toKotlinLocalDate(),
         )
 }

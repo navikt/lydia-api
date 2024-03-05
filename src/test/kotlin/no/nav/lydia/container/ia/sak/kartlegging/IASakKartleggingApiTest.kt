@@ -18,7 +18,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentResultaterForKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedDetaljer
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -122,9 +122,12 @@ class IASakKartleggingApiTest {
                     spørreundersøkelse.spørreundersøkelseId shouldBe id
                     spørreundersøkelse.vertId shouldHaveLength 36
                     spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
-                    spørreundersøkelse.spørsmålOgSvaralternativer shouldHaveSize 3
-                    spørreundersøkelse.spørsmålOgSvaralternativer.forAll {
-                        it.svaralternativer shouldHaveSize 5
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 1
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
+                        tema.spørsmålOgSvaralternativer shouldHaveSize 3
+                        tema.spørsmålOgSvaralternativer.forAll {
+                            it.svaralternativer shouldHaveSize 5
+                        }
                     }
                 }
             }
@@ -170,22 +173,25 @@ class IASakKartleggingApiTest {
     }
 
     @Test
-    fun `nylig opprettet kartlegging får alle spørsmål med rette svar knyttet til seg`() {
+    fun `nylig opprettet kartlegging får alle spørsmål med riktige svaralternativer knyttet til seg`() {
         val sak = nySakIKartlegges()
 
-        val spørsmålIder =
-            postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select sporsmal_id from ia_sak_kartlegging_sporsmal")
-
+        // -- har kun partssamarbeid knyttet til seg pdd
         val kartleggingId =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
                 .tilSingelRespons<IASakKartleggingDto>().third.get().kartleggingId
 
-        val kartleggingMedSvar = hentResultaterForKartlegging(
+        val kartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingId
         )
         kartleggingMedSvar.kartleggingId shouldBe kartleggingId
+        kartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaTilSpørsmålOgSvaralternativer ->
+            val tema = temaTilSpørsmålOgSvaralternativer.key
+        }
+
+
         kartleggingMedSvar.spørsmålMedSvar.map { it.spørsmålId } shouldContainAll spørsmålIder
 
         kartleggingMedSvar.spørsmålMedSvar.forAll { spørsmålMedSvar ->
@@ -208,7 +214,7 @@ class IASakKartleggingApiTest {
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
 
-        val kartleggingMedSvar = hentResultaterForKartlegging(
+        val kartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingDto.kartleggingId
@@ -228,7 +234,7 @@ class IASakKartleggingApiTest {
             svarId = kartleggingMedSvar.spørsmålMedSvar.first().svarListe.first().svarId
         )
 
-        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingDto.kartleggingId
@@ -247,7 +253,7 @@ class IASakKartleggingApiTest {
                 .tilSingelRespons<IASakKartleggingDto>().third.get()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val kartleggingMedSvar = hentResultaterForKartlegging(
+        val kartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingDto.kartleggingId
@@ -269,7 +275,7 @@ class IASakKartleggingApiTest {
             )
         }
 
-        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingDto.kartleggingId
@@ -289,7 +295,7 @@ class IASakKartleggingApiTest {
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
-            pågåendeKartlegging.spørsmålOgSvaralternativer.forEach { spørsmålOgSvaralternativ ->
+            pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvaralternativ ->
                 sendKartleggingSvarTilKafka(
                     kartleggingId = pågåendeKartlegging.kartleggingId,
                     spørsmålId = spørsmålOgSvaralternativ.id,
@@ -299,7 +305,7 @@ class IASakKartleggingApiTest {
             }
         }
 
-        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = pågåendeKartlegging.kartleggingId
@@ -308,7 +314,7 @@ class IASakKartleggingApiTest {
         oppdatertKartleggingMedSvar.spørsmålMedSvar.forAll { it.svarListe.forAll { it.antallSvar shouldBe 0 } }
 
         val avsluttetKartlegging = kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val avsluttetKartleggingMedSvar = hentResultaterForKartlegging(
+        val avsluttetKartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = avsluttetKartlegging.kartleggingId
@@ -329,7 +335,7 @@ class IASakKartleggingApiTest {
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         listOf(UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
-            pågåendeKartlegging.spørsmålOgSvaralternativer.forEach { spørsmålOgSvaralternativ ->
+            pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvaralternativ ->
                 sendKartleggingSvarTilKafka(
                     kartleggingId = pågåendeKartlegging.kartleggingId,
                     spørsmålId = spørsmålOgSvaralternativ.id,
@@ -339,7 +345,7 @@ class IASakKartleggingApiTest {
             }
         }
 
-        val oppdatertKartleggingMedSvar = hentResultaterForKartlegging(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = pågåendeKartlegging.kartleggingId
@@ -348,7 +354,7 @@ class IASakKartleggingApiTest {
         oppdatertKartleggingMedSvar.spørsmålMedSvar.forAll { it.svarListe.forAll { it.antallSvar shouldBe 0 } }
 
         val avsluttetKartlegging = kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val avsluttetKartleggingMedSvar = hentResultaterForKartlegging(
+        val avsluttetKartleggingMedSvar = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = avsluttetKartlegging.kartleggingId
@@ -362,7 +368,7 @@ class IASakKartleggingApiTest {
     fun `kun eier av sak skal kunne hente resultater av kartlegging`() {
         val sak = nySakIKartlegges()
         val kartlegging = sak.opprettKartlegging()
-        val resultater = hentResultaterForKartlegging(
+        val resultater = hentKartleggingMedDetaljer(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartlegging.kartleggingId
@@ -371,7 +377,7 @@ class IASakKartleggingApiTest {
 
         sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
         shouldFail {
-            hentResultaterForKartlegging(
+            hentKartleggingMedDetaljer(
                 token = oauth2ServerContainer.saksbehandler1.token,
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
@@ -467,9 +473,9 @@ class IASakKartleggingApiTest {
 
         sendKartleggingSvarTilKafka(
             kartleggingId = pågåendeKartlegging.kartleggingId,
-            spørsmålId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().id,
+            spørsmålId = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().id,
             sesjonId = UUID.randomUUID().toString(),
-            svarId = pågåendeKartlegging.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+            svarId = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().svaralternativer.first().svarId
         )
 
         postgresContainer
