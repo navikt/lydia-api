@@ -7,7 +7,7 @@ metadata:
     team: pia
 spec:
   pool: {{kafkaPool}}
-  config:  # optional; all fields are optional too; defaults shown
+  config:
     cleanupPolicy: delete  # delete, compact, compact,delete
     minimumInSyncReplicas: 2
     partitions: 1
