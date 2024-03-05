@@ -622,9 +622,9 @@ class IASakKartleggingHelper {
                 )
 
         fun IASakKartleggingDto.sendKartleggingSvarTilKafka(
-            spørsmålId: String = spørsmålOgSvaralternativer.first().id,
-            sesjonId: String = UUID.randomUUID().toString(),
-            svarId: String = spørsmålOgSvaralternativer.first().svaralternativer.first().svarId,
+	        spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().id,
+	        sesjonId: String = UUID.randomUUID().toString(),
+	        svarId: String = temaMedSpørsmålOgSvaralternativer.first().svaralternativer.first().svarId,
         ) = sendKartleggingSvarTilKafka(
             kartleggingId = kartleggingId,
             spørsmålId = spørsmålId,
@@ -655,7 +655,7 @@ class IASakKartleggingHelper {
             return spørreundersøkelseSvarDto
         }
 
-        fun hentResultaterForKartlegging(
+        fun hentKartleggingMedDetaljer(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnr: String,
             saksnummer: String,

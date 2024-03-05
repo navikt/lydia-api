@@ -146,7 +146,7 @@ class IASakKartleggingSvarKonsumentTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
-                    spørreundersøkelse.spørsmålOgSvaralternativer.first().antallSvar shouldBe 0
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.first().antallSvar shouldBe 0
                 }
             }
         }
@@ -161,7 +161,7 @@ class IASakKartleggingSvarKonsumentTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
-                    spørreundersøkelse.spørsmålOgSvaralternativer.first().antallSvar shouldBe 1
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.first().antallSvar shouldBe 1
                 }
             }
         }
