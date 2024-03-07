@@ -166,7 +166,7 @@ class IASakKartleggingSvarKonsumentTest {
             ) {
                 it.forExactlyOne { melding ->
                     val antallSvarForSpørsmål = Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(melding)
-                    antallSvarForSpørsmål.kartleggingId shouldBe kartleggingDto.kartleggingId
+                    antallSvarForSpørsmål.spørreundersøkelseId shouldBe kartleggingDto.kartleggingId
                     antallSvarForSpørsmål.spørsmålId shouldBe spørsmålId
                     antallSvarForSpørsmål.antallSvar shouldBe 1
                 }

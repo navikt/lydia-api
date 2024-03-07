@@ -288,13 +288,13 @@ class KartleggingRepository(val dataSource: DataSource) {
                         "sporsmalId" to spørsmålId.toString()
                     )
                 ).map { rad -> SpørreundersøkelseAntallSvar(
-                    kartleggingId = kartleggingId,
+                    spørreundersøkelseId = kartleggingId,
                     spørsmålId = spørsmålId,
                     antallSvar = rad.int("antallSvar")
                 )}.asSingle
             )
         } ?: SpørreundersøkelseAntallSvar(
-                kartleggingId = kartleggingId,
+                spørreundersøkelseId = kartleggingId,
                 spørsmålId = spørsmålId,
                 antallSvar = 0
             )
