@@ -36,6 +36,7 @@ import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -148,7 +149,10 @@ fun startLydiaBackend() {
         kartleggingRepository = kartleggingRepository,
         spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
             produsent = kafkaProdusent,
-        )
+        ),
+        spørreundersøkelseAntallSvarProdusent = SpørreundersøkelseAntallSvarProdusent(
+            produsent = kafkaProdusent
+        ),
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))

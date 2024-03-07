@@ -19,6 +19,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
 import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.kartlegging.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
 import org.junit.After
@@ -28,17 +29,21 @@ import kotlin.test.Test
 
 class IASakKartleggingSvarKonsumentTest {
 
-    val kartleggingKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument(this::class.java.name)
+    val kartleggingKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelse")
+    val spørreundersøkelseAntallSvarKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelseAntallSvar")
 
     @Before
     fun setUp() {
         kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
+        spørreundersøkelseAntallSvarKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_ANTALL_SVAR_TOPIC.navn))
     }
 
     @After
     fun tearDown() {
         kartleggingKonsument.unsubscribe()
         kartleggingKonsument.close()
+        spørreundersøkelseAntallSvarKonsument.unsubscribe()
+        spørreundersøkelseAntallSvarKonsument.close()
     }
 
     @Test
@@ -134,7 +139,7 @@ class IASakKartleggingSvarKonsumentTest {
     }
 
     @Test
-    fun `skal oppdatere spørreundersøkelses kafkamelding ved nytt svar`() {
+    fun `skal få oppdatert antall som har svart på et spørsmål i en kartlegging`() {
         val sak = SakHelper.nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -146,22 +151,24 @@ class IASakKartleggingSvarKonsumentTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
-                    spørreundersøkelse.spørsmålOgSvaralternativer.first().antallSvar shouldBe 0
                 }
             }
         }
-
-        kartleggingDto.sendKartleggingSvarTilKafka()
+        val spørsmålId = kartleggingDto.spørsmålOgSvaralternativer.first().id
+        kartleggingDto.sendKartleggingSvarTilKafka(
+            spørsmålId = spørsmålId
+        )
 
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                     key = kartleggingDto.kartleggingId,
-                    konsument = kartleggingKonsument
+                    konsument = spørreundersøkelseAntallSvarKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
-                    spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
-                    spørreundersøkelse.spørsmålOgSvaralternativer.first().antallSvar shouldBe 1
+                    val antallSvarForSpørsmål = Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(melding)
+                    antallSvarForSpørsmål.kartleggingId shouldBe kartleggingDto.kartleggingId
+                    antallSvarForSpørsmål.spørsmålId shouldBe spørsmålId
+                    antallSvarForSpørsmål.antallSvar shouldBe 1
                 }
             }
         }

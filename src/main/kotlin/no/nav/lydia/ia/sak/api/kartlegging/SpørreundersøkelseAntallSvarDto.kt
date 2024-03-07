@@ -1,0 +1,18 @@
+package no.nav.lydia.ia.sak.api.kartlegging
+
+import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.domene.SpørreundersøkelseAntallSvar
+
+@Serializable
+data class SpørreundersøkelseAntallSvarDto(
+	val kartleggingId: String,
+	val spørsmålId: String,
+	val antallSvar: Int,
+)
+
+fun SpørreundersøkelseAntallSvar.toDto() =
+	SpørreundersøkelseAntallSvarDto(
+		kartleggingId = kartleggingId.toString(),
+		spørsmålId = spørsmålId.toString(),
+		antallSvar = antallSvar
+	)

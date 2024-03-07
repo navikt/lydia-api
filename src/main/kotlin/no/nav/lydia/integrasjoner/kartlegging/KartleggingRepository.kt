@@ -13,6 +13,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
 import no.nav.lydia.ia.sak.domene.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.Svaralternativ
 import no.nav.lydia.tilgangskontroll.NavAnsatt
@@ -262,10 +263,6 @@ class KartleggingRepository(val dataSource: DataSource) {
                         spørsmålId = spørsmål.key,
                         tema = SpørsmålOgSvaralternativer.Tema.PARTSSAMARBEID,
                         spørsmåltekst = spørsmål.value.first().spørsmåltekst,
-                        antallSvar = hentAntallSvar(
-                            kartleggingId = kartleggingId,
-                            spørsmålId = spørsmål.key,
-                        ),
                         svaralternativer = spørsmål.value.map {
                             Svaralternativ(
                                 svarId = it.svarId,
@@ -276,7 +273,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                 }
         }
 
-    private fun hentAntallSvar(kartleggingId: UUID, spørsmålId: UUID) =
+    fun hentAntallSvar(kartleggingId: UUID, spørsmålId: UUID) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -290,9 +287,17 @@ class KartleggingRepository(val dataSource: DataSource) {
                         "kartleggingId" to kartleggingId.toString(),
                         "sporsmalId" to spørsmålId.toString()
                     )
-                ).map { rad -> rad.int("antallSvar") }.asSingle
+                ).map { rad -> SpørreundersøkelseAntallSvar(
+                    kartleggingId = kartleggingId,
+                    spørsmålId = spørsmålId,
+                    antallSvar = rad.int("antallSvar")
+                )}.asSingle
             )
-        } ?: 0
+        } ?: SpørreundersøkelseAntallSvar(
+                kartleggingId = kartleggingId,
+                spørsmålId = spørsmålId,
+                antallSvar = 0
+            )
 
     private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvarDto {
         return row.tilSpørreundersøkelseSvarDto()

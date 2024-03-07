@@ -150,6 +150,7 @@ enum class Topic(val navn: String, private val consumerGroupId: String? = null) 
     IA_SAK_LEVERANSE_TOPIC("pia.ia-sak-leveranse-v1"),
     SPORREUNDERSOKELSE_TOPIC("pia.sporreundersokelse-v1"),
     SPORREUNDERSOKELSE_SVAR_TOPIC("pia.sporreundersokelse-svar-v1", "lydia-api-sporreundersokelse-svar-consumer"),
+    SPORREUNDERSOKELSE_ANTALL_SVAR_TOPIC("pia.sporreundersokelse-antall-svar-v1", "lydia-api-sporreundersokelse-antall-svar-consumer"),
     BRREG_OPPDATERING_TOPIC("pia.brreg-oppdatering", "lydia-api-brreg-oppdatering-consumer"),
     BRREG_ALLE_VIRKSOMHETER_TOPIC("pia.brreg-alle-virksomheter", "lydia-api-brreg-alle-virksomheter-consumer"),
     STATISTIKK_METADATA_VIRKSOMHET_TOPIC("arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1", "lydia-api-statistikk-metadata-virksomhet-consumer"),
