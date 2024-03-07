@@ -12,7 +12,7 @@ class SpørreundersøkelseAntallSvarProdusent(
     fun sendPåKafka(antallSvar: SpørreundersøkelseAntallSvar) {
         produsent.sendMelding(
             topic = Topic.SPORREUNDERSOKELSE_ANTALL_SVAR_TOPIC.navn,
-            nøkkel = antallSvar.spørreundersøkelseId.toString(),
+            nøkkel = "${antallSvar.spørreundersøkelseId}-${antallSvar.spørsmålId}",
             verdi = Json.encodeToString(antallSvar.toDto()),
         )
     }

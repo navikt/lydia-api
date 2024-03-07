@@ -161,7 +161,7 @@ class IASakKartleggingSvarKonsumentTest {
 
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                    key = kartleggingDto.kartleggingId,
+                    key = "${kartleggingDto.kartleggingId}-$spørsmålId",
                     konsument = spørreundersøkelseAntallSvarKonsument
             ) {
                 it.forExactlyOne { melding ->
