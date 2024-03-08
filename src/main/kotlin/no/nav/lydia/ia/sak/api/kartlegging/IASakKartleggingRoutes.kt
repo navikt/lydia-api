@@ -222,6 +222,8 @@ private val ApplicationCall.kartleggingId
 object IASakKartleggingError {
     val `kartlegging er ikke i påbegynt` =
         Feil("Kartlegging er ikke i påbegynt status", HttpStatusCode.Forbidden)
+    val `kartlegging er ikke avsluttet` =
+        Feil("Kartlegging er ikke avsluttet", HttpStatusCode.Forbidden)
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
     val `feil under oppdatering` =

@@ -55,18 +55,19 @@ class KartleggingService(
         val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
-        // TODO: avklare --> med denne sjekk på status klarer vi ikke å utledde:
-        //  antallUnikeDeltakereMedMinstEttSvar og antallUnikeDeltakereSomHarSvartPåAlt
-        //   før kartlegging er AVSLUTTET ... men vi har tester som forventer det ???
-        val alleSvar = if (kartlegging.status == KartleggingStatus.AVSLUTTET) {
-            kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
-        } else {
-            emptyList()
-        }
+        if (kartlegging.status != KartleggingStatus.AVSLUTTET)
+            return IASakKartleggingError.`kartlegging er ikke avsluttet`.left()
 
+        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
         val svarPerSesjonId = alleSvar.groupBy { it.sesjonId }
         val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
         val harNokDeltakere = antallUnikeDeltakereMedMinstEttSvar >= MINIMUM_ANTALL_DELTAKERE
+        val antallSpørsmål = kartlegging.temaMedSpørsmålOgSvaralternativer.sumOf { spørsmålForTema ->
+            spørsmålForTema.spørsmålOgSvaralternativer.size
+        }
+        val antallUnikeDeltakereSomHarSvartPåAlt = svarPerSesjonId.filter {
+            it.value.size == antallSpørsmål
+        }.size
 
         val spørsmålMedSvarPerTema: Map<Temanavn, List<SpørsmålMedSvar>> =
             kartlegging.temaMedSpørsmålOgSvaralternativer.map { temaMedSpørsmålOgSvaralternativer ->
@@ -98,7 +99,7 @@ class KartleggingService(
         return KartleggingMedSvar(
             kartleggingId = kartlegging.kartleggingId.toString(),
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
-            antallUnikeDeltakereSomHarSvartPåAlt = 0,
+            antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
             spørsmålMedSvarPerTema = temaerMedSpørsmålOgSvar
         ).right()
     }

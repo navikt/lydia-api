@@ -5,7 +5,6 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
-import java.time.LocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -22,7 +21,8 @@ import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.TemaStatus
 import no.nav.lydia.ia.sak.domene.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
-import java.util.UUID
+import java.time.LocalDateTime
+import java.util.*
 import javax.sql.DataSource
 
 class KartleggingRepository(val dataSource: DataSource) {
@@ -40,41 +40,6 @@ class KartleggingRepository(val dataSource: DataSource) {
                     )
                 ).map(this::mapRowToSpørreundersøkelseSvarDto).asList
             )
-        }
-
-    fun hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId: String) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT COUNT(DISTINCT sesjon_id) AS antall
-                        FROM ia_sak_kartlegging_svar
-                        WHERE kartlegging_id = :kartleggingId
-                    """.trimMargin(),
-                    mapOf(
-                        "kartleggingId" to kartleggingId,
-                    )
-                ).map { rad -> rad.int("antall") }.asSingle
-            ) ?: 0
-        }
-
-    fun hentAntallUnikeDeltakereSomHarSvartPåAlt(kartleggingId: String, antallSpørsmål: Int) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT COUNT(DISTINCT svar_id) AS antall_svar
-                        FROM ia_sak_kartlegging_svar
-                        WHERE kartlegging_id = :kartleggingId
-                        GROUP BY sesjon_id
-                        HAVING COUNT(DISTINCT svar_id) = :antallSporsmal
-                    """.trimMargin(),
-                    mapOf(
-                        "kartleggingId" to kartleggingId,
-                        "antallSporsmal" to antallSpørsmål,
-                    )
-                ).map { rad -> rad.int("antall_svar") }.asList
-            ).size
         }
 
     fun hentKartlegginger(saksnummer: String) =
@@ -155,7 +120,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                     tx.run(
                         queryOf(
                             """
-                    INSERT INTO ia_sak_kartlegging_til_tema (
+                    INSERT INTO ia_sak_kartlegging_kartlegging_til_tema (
                         kartlegging_id,
                         tema_id
                     )
@@ -225,7 +190,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                         SELECT ia_sak_kartlegging_tema.* FROM ia_sak_kartlegging_tema
-                          JOIN ia_sak_kartlegging_til_tema USING (tema_id)
+                          JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
                           WHERE kartlegging_id = :kartlegging_id
                     """.trimIndent(),
                     mapOf(

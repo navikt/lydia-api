@@ -17,14 +17,14 @@ create table ia_sak_kartlegging_tema
 );
 
 -- kobling mellom kartlegging og tema(er)
-create table ia_sak_kartlegging_til_tema
+create table ia_sak_kartlegging_kartlegging_til_tema
 (
     id             serial primary key,
     kartlegging_id varchar(36) not null,
     tema_id        int not null,
-    constraint  fk_ia_sak_kartlegging_til_tema_kartlegging foreign key (kartlegging_id) references ia_sak_kartlegging (kartlegging_id),
-    constraint  fk_ia_sak_kartlegging_til_tema_tema foreign key (tema_id) references ia_sak_kartlegging_tema (tema_id),
-    constraint  uq_ia_sak_kartlegging_til_tema_kartlegging_tema unique (kartlegging_id, tema_id)
+    constraint  fk_ia_sak_kartlegging_kartlegging_til_tema_kartlegging foreign key (kartlegging_id) references ia_sak_kartlegging (kartlegging_id),
+    constraint  fk_ia_sak_kartlegging_kartlegging_til_tema_tema foreign key (tema_id) references ia_sak_kartlegging_tema (tema_id),
+    constraint  uq_ia_sak_kartlegging_kartlegging_til_tema_kartlegging_tema unique (kartlegging_id, tema_id)
 );
 
 -- Legg til temaer
