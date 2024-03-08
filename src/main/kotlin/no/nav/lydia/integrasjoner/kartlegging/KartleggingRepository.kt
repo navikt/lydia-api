@@ -156,17 +156,17 @@ class KartleggingRepository(val dataSource: DataSource) {
                         queryOf(
                             """
                     INSERT INTO ia_sak_kartlegging_til_tema (
-                        kartlegging,
-                        tema
+                        kartlegging_id,
+                        tema_id
                     )
                     VALUES (
-                        :kartlegging,
-                        :tema
+                        :kartlegging_id,
+                        :tema_id
                     )
                     """.trimMargin(),
                             mapOf(
-                                "kartlegging" to kartlegging,
-                                "tema" to tema,
+                                "kartlegging_id" to kartlegging,
+                                "tema_id" to tema.id,
                             )
                         ).asUpdate,
                     )
@@ -219,17 +219,17 @@ class KartleggingRepository(val dataSource: DataSource) {
         )
     }
 
-    private fun hentTemaerForKartlegging(kartlegging: UUID) =
+    private fun hentTemaerForKartlegging(kartleggingId: UUID) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                         SELECT ia_sak_kartlegging_tema.* FROM ia_sak_kartlegging_tema
                           JOIN ia_sak_kartlegging_til_tema USING (tema_id)
-                          WHERE kartlegging = :kartlegging
+                          WHERE kartlegging_id = :kartlegging_id
                     """.trimIndent(),
                     mapOf(
-                        "kartlegging" to kartlegging
+                        "kartlegging_id" to kartleggingId.toString()
                     )
                 ).map(this::mapTilTema).asList
             )
@@ -249,7 +249,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                                 WHERE tema_id = :temaId
                             """.trimMargin(),
                             mapOf(
-                                "temaId" to kartleggingId.toString(),
+                                "temaId" to tema.id,
                             )
                         ).map { row ->
                             val spørsmålId = UUID.fromString(row.string("sporsmal_id"))
@@ -270,7 +270,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                         SELECT * from ia_sak_kartlegging_svaralternativer
-                            WHERE sporsmmal_id = :sporsmalId
+                            WHERE sporsmal_id = :sporsmalId
                     """.trimIndent(),
                     mapOf(
                         "sporsmalId" to spørsmålsId.toString()
@@ -419,7 +419,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                           AND status = '${TemaStatus.AKTIV}'
                     """.trimIndent(),
                     mapOf(
-                        "temanavn" to temanavn
+                        "temanavn" to temanavn.name
                     )
                 ).map(this::mapTilTema).asSingle
             )
@@ -427,7 +427,7 @@ class KartleggingRepository(val dataSource: DataSource) {
 
     private fun mapTilTema(row: Row) =
         Tema(
-            id = row.int("id"),
+            id = row.int("tema_id"),
             navn = Temanavn.valueOf(row.string("navn")),
             beskrivelse = row.string("beskrivelse"),
             status = TemaStatus.valueOf(row.string("status")),

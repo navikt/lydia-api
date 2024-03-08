@@ -3,21 +3,20 @@ package no.nav.lydia.integrasjoner.kartlegging
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import java.time.LocalDateTime
+import java.util.UUID
 import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
+import no.nav.lydia.ia.sak.domene.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvar
+import no.nav.lydia.ia.sak.domene.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.UUID
-import no.nav.lydia.ia.sak.domene.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.Tema
-import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvaralternativer
-import no.nav.lydia.ia.sak.domene.Temanavn
-import java.time.LocalDateTime
 
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
@@ -56,6 +55,9 @@ class KartleggingService(
         val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
+        // TODO: avklare --> med denne sjekk på status klarer vi ikke å utledde:
+        //  antallUnikeDeltakereMedMinstEttSvar og antallUnikeDeltakereSomHarSvartPåAlt
+        //   før kartlegging er AVSLUTTET ... men vi har tester som forventer det ???
         val alleSvar = if (kartlegging.status == KartleggingStatus.AVSLUTTET) {
             kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
         } else {
@@ -66,8 +68,10 @@ class KartleggingService(
         val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
         val harNokDeltakere = antallUnikeDeltakereMedMinstEttSvar >= MINIMUM_ANTALL_DELTAKERE
 
-        val spørsmålMedSvarPerTema = kartlegging.temaMedSpørsmålOgSvaralternativer.map { tema ->
-                tema.tema.navn to tema.spørsmålOgSvaralternativer.map { spørsmål ->
+        val spørsmålMedSvarPerTema: Map<Temanavn, List<SpørsmålMedSvar>> =
+            kartlegging.temaMedSpørsmålOgSvaralternativer.map { temaMedSpørsmålOgSvaralternativer ->
+                temaMedSpørsmålOgSvaralternativer.tema.navn to
+                        temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.map { spørsmål ->
                     SpørsmålMedSvar(
                         spørsmålId = spørsmål.spørsmålId.toString(),
                         tekst = spørsmål.spørsmåltekst,
@@ -86,11 +90,16 @@ class KartleggingService(
                 }
             }.toMap()
 
+        val temaerMedSpørsmålOgSvar = spørsmålMedSvarPerTema.map { TemaMedSpørsmålOgSvar(
+            tema = it.key.name,
+            spørsmålMedSvar = it.value
+        ) }
+
         return KartleggingMedSvar(
             kartleggingId = kartlegging.kartleggingId.toString(),
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
             antallUnikeDeltakereSomHarSvartPåAlt = 0,
-            spørsmålMedSvarPerTema =  spørsmålMedSvarPerTema
+            spørsmålMedSvarPerTema = temaerMedSpørsmålOgSvar
         ).right()
     }
 
