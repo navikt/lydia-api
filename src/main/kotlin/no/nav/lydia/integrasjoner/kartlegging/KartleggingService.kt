@@ -3,18 +3,20 @@ package no.nav.lydia.integrasjoner.kartlegging
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import java.time.LocalDateTime
+import java.util.UUID
 import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
+import no.nav.lydia.ia.sak.domene.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvar
+import no.nav.lydia.ia.sak.domene.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.UUID
-import no.nav.lydia.ia.sak.domene.KartleggingStatus
-import java.time.LocalDateTime
 
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
@@ -53,26 +55,52 @@ class KartleggingService(
         val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
-        val alleSvar = if (kartlegging.status == KartleggingStatus.AVSLUTTET) {
-            kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
-        } else {
-            emptyList()
-        }
-        val antallUnikeDeltakereMedMinstEttSvar =
-            kartleggingRepository.hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId = kartleggingId)
+        if (kartlegging.status != KartleggingStatus.AVSLUTTET)
+            return IASakKartleggingError.`kartlegging er ikke avsluttet`.left()
 
-        val antallUnikeDeltakereSomHarSvartPåAlt =
-            kartleggingRepository.hentAntallUnikeDeltakereSomHarSvartPåAlt(kartleggingId = kartleggingId,
-                antallSpørsmål = kartlegging.spørsmålOgSvaralternativer.size
-            )
-
+        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
+        val svarPerSesjonId = alleSvar.groupBy { it.sesjonId }
+        val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
         val harNokDeltakere = antallUnikeDeltakereMedMinstEttSvar >= MINIMUM_ANTALL_DELTAKERE
+        val antallSpørsmål = kartlegging.temaMedSpørsmålOgSvaralternativer.sumOf { spørsmålForTema ->
+            spørsmålForTema.spørsmålOgSvaralternativer.size
+        }
+        val antallUnikeDeltakereSomHarSvartPåAlt = svarPerSesjonId.filter {
+            it.value.size == antallSpørsmål
+        }.size
+
+        val spørsmålMedSvarPerTema: Map<Temanavn, List<SpørsmålMedSvar>> =
+            kartlegging.temaMedSpørsmålOgSvaralternativer.map { temaMedSpørsmålOgSvaralternativer ->
+                temaMedSpørsmålOgSvaralternativer.tema.navn to
+                        temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.map { spørsmål ->
+                    SpørsmålMedSvar(
+                        spørsmålId = spørsmål.spørsmålId.toString(),
+                        tekst = spørsmål.spørsmåltekst,
+                        svarListe = spørsmål.svaralternativer.map { svar ->
+                            Svar(
+                                svarId = svar.svarId.toString(),
+                                tekst = svar.svartekst,
+                                // TODO: refaktorer til noe bedre:tm
+                                antallSvar = (if(harNokDeltakere) alleSvar else emptyList()).filter {
+                                    it.spørsmålId == spørsmål.spørsmålId.toString() &&
+                                            it.svarId == svar.svarId.toString()
+                                }.size
+                            )
+                        }
+                    )
+                }
+            }.toMap()
+
+        val temaerMedSpørsmålOgSvar = spørsmålMedSvarPerTema.map { TemaMedSpørsmålOgSvar(
+            tema = it.key.name,
+            spørsmålMedSvar = it.value
+        ) }
 
         return KartleggingMedSvar(
-            kartlegging = kartlegging,
+            kartleggingId = kartlegging.kartleggingId.toString(),
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
             antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
-            spørsmålMedSvarListe = if (harNokDeltakere) alleSvar else emptyList()
+            spørsmålMedSvarPerTema = temaerMedSpørsmålOgSvar
         ).right()
     }
 
@@ -80,15 +108,16 @@ class KartleggingService(
         orgnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         saksnummer: String,
-        spørsmål: List<UUID>,
-    ): Either<Feil, IASakKartlegging> =
-        kartleggingRepository.opprettKartlegging(
+        temaNavn: List<Temanavn>,
+    ) = kartleggingRepository.opprettKartlegging(
             orgnummer = orgnummer,
             saksnummer = saksnummer,
             saksbehandler = saksbehandler,
-            kartleggingId = UUID.randomUUID(),
+            kartlegging = UUID.randomUUID(),
             vertId = UUID.randomUUID(),
-            spørsmålIDer = spørsmål,
+            temaer = temaNavn.map {
+                kartleggingRepository.hentTema(it)
+            },
         ).onRight { spørreundersøkelseProdusent.sendPåKafka(it) }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, IASakKartlegging> {
@@ -114,8 +143,6 @@ class KartleggingService(
             IASakKartleggingError.`generell feil under uthenting`.left()
         }
     }
-
-    fun hentAlleSpørsmål() = kartleggingRepository.hentAlleSpørsmålIDer()
 
     fun endreKartleggingStatus(kartleggingId: String, status: KartleggingStatus): Either<Feil, IASakKartlegging> {
         kartleggingRepository.hentKartleggingEtterId(kartleggingId)

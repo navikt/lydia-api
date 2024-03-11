@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import java.time.LocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -16,8 +16,13 @@ import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.Svaralternativ
+import no.nav.lydia.ia.sak.domene.Tema
+import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.TemaStatus
+import no.nav.lydia.ia.sak.domene.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
-import java.util.UUID
+import java.time.LocalDateTime
+import java.util.*
 import javax.sql.DataSource
 
 class KartleggingRepository(val dataSource: DataSource) {
@@ -35,41 +40,6 @@ class KartleggingRepository(val dataSource: DataSource) {
                     )
                 ).map(this::mapRowToSpørreundersøkelseSvarDto).asList
             )
-        }
-
-    fun hentAntallUnikeDeltakereSomHarMinstEttSvar(kartleggingId: String) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT COUNT(DISTINCT sesjon_id) AS antall
-                        FROM ia_sak_kartlegging_svar
-                        WHERE kartlegging_id = :kartleggingId
-                    """.trimMargin(),
-                    mapOf(
-                        "kartleggingId" to kartleggingId,
-                    )
-                ).map { rad -> rad.int("antall") }.asSingle
-            ) ?: 0
-        }
-
-    fun hentAntallUnikeDeltakereSomHarSvartPåAlt(kartleggingId: String, antallSpørsmål: Int) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT COUNT(DISTINCT svar_id) AS antall_svar
-                        FROM ia_sak_kartlegging_svar
-                        WHERE kartlegging_id = :kartleggingId
-                        GROUP BY sesjon_id
-                        HAVING COUNT(DISTINCT svar_id) = :antallSporsmal
-                    """.trimMargin(),
-                    mapOf(
-                        "kartleggingId" to kartleggingId,
-                        "antallSporsmal" to antallSpørsmål,
-                    )
-                ).map { rad -> rad.int("antall_svar") }.asList
-            ).size
         }
 
     fun hentKartlegginger(saksnummer: String) =
@@ -107,11 +77,11 @@ class KartleggingRepository(val dataSource: DataSource) {
 
     fun opprettKartlegging(
         orgnummer: String,
-        kartleggingId: UUID,
+        kartlegging: UUID,
         vertId: UUID,
         saksnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        spørsmålIDer: List<UUID>,
+        temaer: List<Tema>,
     ): Either<Feil, IASakKartlegging> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -136,7 +106,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                             )
                         """.trimMargin(),
                         mapOf(
-                            "kartlegging_id" to kartleggingId,
+                            "kartlegging_id" to kartlegging,
                             "vert_id" to vertId,
                             "orgnr" to orgnummer,
                             "saksnummer" to saksnummer,
@@ -146,22 +116,22 @@ class KartleggingRepository(val dataSource: DataSource) {
                     ).asUpdate
                 )
 
-                spørsmålIDer.forEach { sporsmalId ->
+                temaer.forEach { tema ->
                     tx.run(
                         queryOf(
                             """
-                    INSERT INTO ia_sak_kartlegging_sporsmal_til_kartlegging (
+                    INSERT INTO ia_sak_kartlegging_kartlegging_til_tema (
                         kartlegging_id,
-                        sporsmal_id
+                        tema_id
                     )
                     VALUES (
-                        :kartleggingId,
-                        :sporsmalId
+                        :kartlegging_id,
+                        :tema_id
                     )
                     """.trimMargin(),
                             mapOf(
-                                "kartleggingId" to kartleggingId,
-                                "sporsmalId" to sporsmalId,
+                                "kartlegging_id" to kartlegging,
+                                "tema_id" to tema.id,
                             )
                         ).asUpdate,
                     )
@@ -169,32 +139,13 @@ class KartleggingRepository(val dataSource: DataSource) {
             }
         }
 
-        return hentKartleggingEtterId(kartleggingId = kartleggingId.toString())?.right()
+        return hentKartleggingEtterId(kartleggingId = kartlegging.toString())?.right()
             ?: Feil(
                 feilmelding = "Kunne ikke opprette kartlegging",
                 httpStatusCode = HttpStatusCode.InternalServerError
             ).left()
     }
 
-
-    data class SpørsmålOgSvar(
-        val kartleggingId: UUID,
-        val spørsmålId: UUID,
-        val spørsmåltekst: String,
-        val svarId: UUID,
-        val svartekst: String
-    )
-
-    fun hentAlleSpørsmålIDer() = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                    SELECT sporsmal_id
-                    FROM ia_sak_kartlegging_sporsmal
-                """.trimMargin()
-            ).map { UUID.fromString(it.string("sporsmal_id")) }.asList
-        )
-    }
 
     private fun mapRowToIASakKartleggingOversikt(row: Row): IASakKartleggingOversikt {
         return row.tilIASakKartleggingOversikt()
@@ -226,51 +177,74 @@ class KartleggingRepository(val dataSource: DataSource) {
             vertId = vertId,
             saksnummer = this.string("saksnummer"),
             status = KartleggingStatus.valueOf(this.string("status")),
-            spørsmålOgSvaralternativer = hentSpørsmålOgSvaralternativer(kartleggingId),
+            temaMedSpørsmålOgSvaralternativer = hentTemaMedSpørsmålOgSvaralternativer(kartleggingId),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
             endretTidspunkt = this.localDateTimeOrNull("endret"),
         )
     }
 
-    private fun hentSpørsmålOgSvaralternativer(kartleggingId: UUID) =
+    private fun hentTemaerForKartlegging(kartleggingId: UUID) =
         using(sessionOf(dataSource)) { session ->
-            val results = session.run(
+            session.run(
                 queryOf(
                     """
-                        SELECT *
-                        FROM ia_sak_kartlegging_sporsmal
-                        JOIN ia_sak_kartlegging_svaralternativer USING (sporsmal_id) 
-                        JOIN ia_sak_kartlegging_sporsmal_til_kartlegging USING (sporsmal_id) 
-                        WHERE kartlegging_id = :kartleggingId
-                    """.trimMargin(), mapOf(
-                        "kartleggingId" to kartleggingId.toString(),
+                        SELECT ia_sak_kartlegging_tema.* FROM ia_sak_kartlegging_tema
+                          JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
+                          WHERE kartlegging_id = :kartlegging_id
+                    """.trimIndent(),
+                    mapOf(
+                        "kartlegging_id" to kartleggingId.toString()
                     )
-                ).map { row ->
-                    SpørsmålOgSvar(
-                        kartleggingId = kartleggingId,
-                        spørsmålId = UUID.fromString(row.string("sporsmal_id")),
-                        spørsmåltekst = row.string("sporsmal_tekst"),
-                        svarId = UUID.fromString(row.string("svaralternativ_id")),
-                        svartekst = row.string("svaralternativ_tekst")
-                    )
-                }.asList
+                ).map(this::mapTilTema).asList
             )
+        }
 
-            results.groupBy { it.spørsmålId }
-                .map { spørsmål ->
-                    SpørsmålOgSvaralternativer(
-                        spørsmålId = spørsmål.key,
-                        tema = SpørsmålOgSvaralternativer.Tema.PARTSSAMARBEID,
-                        spørsmåltekst = spørsmål.value.first().spørsmåltekst,
-                        svaralternativer = spørsmål.value.map {
-                            Svaralternativ(
-                                svarId = it.svarId,
-                                svartekst = it.svartekst
+    fun hentTemaMedSpørsmålOgSvaralternativer(kartleggingId: UUID): List<TemaMedSpørsmålOgSvaralternativer> =
+        using(sessionOf(dataSource)) { session ->
+            hentTemaerForKartlegging(kartleggingId).map { tema ->
+                TemaMedSpørsmålOgSvaralternativer(
+                    tema,
+                    session.run(
+                        queryOf(
+                            """
+                                SELECT *
+                                FROM ia_sak_kartlegging_sporsmal
+                                JOIN ia_sak_kartlegging_tema_til_spørsmål USING (sporsmal_id)
+                                WHERE tema_id = :temaId
+                            """.trimMargin(),
+                            mapOf(
+                                "temaId" to tema.id,
                             )
-                        }
+                        ).map { row ->
+                            val spørsmålId = UUID.fromString(row.string("sporsmal_id"))
+                            SpørsmålOgSvaralternativer(
+                                spørsmålId = spørsmålId,
+                                spørsmåltekst = row.string("sporsmal_tekst"),
+                                svaralternativer = hentSvaralternativer(spørsmålId)
+                            )
+                        }.asList
                     )
-                }
+                )
+            }
+        }
+
+    private fun hentSvaralternativer(spørsmålsId: UUID) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT * from ia_sak_kartlegging_svaralternativer
+                            WHERE sporsmal_id = :sporsmalId
+                    """.trimIndent(),
+                    mapOf(
+                        "sporsmalId" to spørsmålsId.toString()
+                    )
+                ).map { Svaralternativ(
+                    svarId = UUID.fromString(it.string("svaralternativ_id")),
+                    svartekst = it.string("svaralternativ_tekst")
+                ) }.asList
+            )
         }
 
     fun hentAntallSvar(kartleggingId: UUID, spørsmålId: UUID) =
@@ -278,7 +252,7 @@ class KartleggingRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        SELECT COUNT(*) AS antallSvar 
+                        SELECT COUNT(*) AS antallSvar
                         FROM ia_sak_kartlegging_svar
                         WHERE kartlegging_id = :kartleggingId
                         AND sporsmal_id = :sporsmalId
@@ -399,4 +373,29 @@ class KartleggingRepository(val dataSource: DataSource) {
                 ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle
             )
         }
+
+    fun hentTema(temanavn: Temanavn) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT * FROM ia_sak_kartlegging_tema 
+                          WHERE navn = :temanavn
+                          AND status = '${TemaStatus.AKTIV}'
+                    """.trimIndent(),
+                    mapOf(
+                        "temanavn" to temanavn.name
+                    )
+                ).map(this::mapTilTema).asSingle
+            )
+        } ?: throw IllegalStateException("Fant ingen aktive kartleggingstemaer for $temanavn")
+
+    private fun mapTilTema(row: Row) =
+        Tema(
+            id = row.int("tema_id"),
+            navn = Temanavn.valueOf(row.string("navn")),
+            beskrivelse = row.string("beskrivelse"),
+            status = TemaStatus.valueOf(row.string("status")),
+            sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
+        )
 }

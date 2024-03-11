@@ -22,6 +22,7 @@ import no.nav.lydia.ia.sak.api.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.Temanavn
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -37,14 +38,14 @@ fun Route.iaSakKartlegging(
 ) {
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val temaer = listOf(Temanavn.PARTSSAMARBEID)
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            val spørsmål = kartleggingService.hentAlleSpørsmål()
             kartleggingService.opprettKartlegging(
                 orgnummer = orgnummer,
                 saksnummer = iaSak.saksnummer,
                 saksbehandler = saksbehandler,
-                spørsmål = spørsmål
+                temaNavn = temaer
             )
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
@@ -221,6 +222,8 @@ private val ApplicationCall.kartleggingId
 object IASakKartleggingError {
     val `kartlegging er ikke i påbegynt` =
         Feil("Kartlegging er ikke i påbegynt status", HttpStatusCode.Forbidden)
+    val `kartlegging er ikke avsluttet` =
+        Feil("Kartlegging er ikke avsluttet", HttpStatusCode.Forbidden)
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
     val `feil under oppdatering` =

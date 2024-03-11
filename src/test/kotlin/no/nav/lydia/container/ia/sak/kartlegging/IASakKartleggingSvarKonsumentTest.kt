@@ -143,6 +143,7 @@ class IASakKartleggingSvarKonsumentTest {
         val sak = SakHelper.nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                     key = kartleggingDto.kartleggingId,
@@ -154,7 +155,8 @@ class IASakKartleggingSvarKonsumentTest {
                 }
             }
         }
-        val spørsmålId = kartleggingDto.spørsmålOgSvaralternativer.first().id
+
+        val spørsmålId = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id
         kartleggingDto.sendKartleggingSvarTilKafka(
             spørsmålId = spørsmålId
         )
