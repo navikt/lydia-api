@@ -51,6 +51,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.Temanavn
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -569,9 +570,11 @@ class IASakKartleggingHelper {
         fun opprettIASakKartlegging(
             orgnr: String,
             saksnummer: String,
+            temaer: List<Temanavn> = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID),
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) =
             lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/opprett")
+                .jsonBody(Json.encodeToString(temaer))
                 .authentication().bearer(token)
 
         fun hentIASakKartlegginger(
@@ -587,11 +590,13 @@ class IASakKartleggingHelper {
                 )
 
         fun IASakDto.opprettKartlegging(
+            temaer: List<Temanavn> = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID),
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) = opprettIASakKartlegging(
             orgnr = orgnr,
             saksnummer = saksnummer,
-            token = token
+            temaer = temaer,
+            token = token,
         ).tilSingelRespons<IASakKartleggingDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) }

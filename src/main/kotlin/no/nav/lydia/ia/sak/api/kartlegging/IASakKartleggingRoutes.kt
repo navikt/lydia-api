@@ -6,6 +6,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.log
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -38,7 +39,7 @@ fun Route.iaSakKartlegging(
 ) {
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val temaer = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID)
+        val temaer = call.receive<List<Temanavn>>()
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             kartleggingService.opprettKartlegging(

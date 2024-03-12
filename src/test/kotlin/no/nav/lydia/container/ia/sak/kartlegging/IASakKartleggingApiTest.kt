@@ -4,7 +4,9 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -72,6 +74,34 @@ class IASakKartleggingApiTest {
             .hentEnkelKolonne<String>(
                 "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().kartleggingId}'"
             ) shouldNotBe null
+    }
+
+    @Test
+    fun `skal kunne opprette en kartlegging med flere temaer`() {
+        val temaer = Temanavn.entries
+
+        val sak = nySakIKartlegges()
+        val kartleggingDto = sak.opprettKartlegging(temaer = temaer)
+
+        kartleggingDto.temaMedSpørsmålOgSvaralternativer.map { it.temanavn } shouldContainExactly temaer
+        kartleggingDto.temaMedSpørsmålOgSvaralternativer.forAll {
+            it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+        }
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = kartleggingDto.kartleggingId,
+                konsument = kartleggingKonsument,
+            ) { meldinger ->
+                meldinger.forExactlyOne { melding ->
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.map { it.temanavn } shouldBeEqual temaer
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
+                        it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+                    }
+                }
+            }
+        }
     }
 
     @Test
