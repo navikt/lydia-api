@@ -12,7 +12,7 @@ data class Tema(
 )
 
 enum class Temanavn {
-	PARTSSAMARBEID,
+	UTVIKLE_PARTSSAMARBEID, REDUSERE_SYKEFRAVÆR
 }
 
 enum class TemaStatus {

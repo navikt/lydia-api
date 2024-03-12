@@ -183,7 +183,7 @@ class IASakKartleggingApiTest {
                 .tilSingelRespons<IASakKartleggingDto>().third.get()
 
         kartlegging.temaMedSpørsmålOgSvaralternativer.forAll { spørsmålOgSvarPerTema ->
-            spørsmålOgSvarPerTema.temanavn shouldBe Temanavn.PARTSSAMARBEID
+            spørsmålOgSvarPerTema.temanavn shouldBe Temanavn.UTVIKLE_PARTSSAMARBEID
         }
 
         // Sjekk at hvert Tema inneholder de riktige spørsmålene --> dette skal fungere med flere temaer

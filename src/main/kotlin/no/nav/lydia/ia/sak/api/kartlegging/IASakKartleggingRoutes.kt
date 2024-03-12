@@ -38,7 +38,7 @@ fun Route.iaSakKartlegging(
 ) {
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val temaer = listOf(Temanavn.PARTSSAMARBEID)
+        val temaer = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID)
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             kartleggingService.opprettKartlegging(
