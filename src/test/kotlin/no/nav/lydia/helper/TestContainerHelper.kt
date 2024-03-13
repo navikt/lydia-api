@@ -93,6 +93,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile
 import java.util.UUID
 import kotlin.io.path.Path
 import kotlin.test.fail
+import no.nav.lydia.ia.sak.api.kartlegging.KartleggingOversiktMedAntallSvarDto
 
 class TestContainerHelper {
     companion object {
@@ -669,6 +670,19 @@ class IASakKartleggingHelper {
             lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
                 .authentication().bearer(token)
                 .tilSingelRespons<KartleggingMedSvar>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail(it.message) }
+                )
+
+        fun hentKartleggingOversiktMedAntallSvar(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            orgnr: String,
+            saksnummer: String,
+            kartleggingId: String
+        ) =
+            lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId/oversikt")
+                .authentication().bearer(token)
+                .tilSingelRespons<KartleggingOversiktMedAntallSvarDto>().third.fold(
                     success = { respons -> respons },
                     failure = { fail(it.message) }
                 )

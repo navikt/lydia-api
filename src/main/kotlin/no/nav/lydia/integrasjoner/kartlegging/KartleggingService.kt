@@ -104,6 +104,45 @@ class KartleggingService(
         ).right()
     }
 
+    fun hentKartleggingOversiktMedAntallSvar(kartleggingId: String): Either<Feil, KartleggingOversiktMedAntallSvar> {
+        val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
+            ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
+
+        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
+        val svarPerSesjonId = alleSvar.groupBy { it.sesjonId }
+        val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
+        val antallSpørsmål = kartlegging.temaMedSpørsmålOgSvaralternativer.sumOf { spørsmålForTema ->
+            spørsmålForTema.spørsmålOgSvaralternativer.size
+        }
+        val antallUnikeDeltakereSomHarSvartPåAlt = svarPerSesjonId.filter {
+            it.value.size == antallSpørsmål
+        }.size
+
+        return KartleggingOversiktMedAntallSvar(
+            kartleggingId = kartlegging.kartleggingId,
+            antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
+            antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
+            spørsmålMedAntallSvarPerTema = kartlegging.temaMedSpørsmålOgSvaralternativer.map { temaMedSpørsmålOgSvaralternativer ->
+                val alleSpørsmålIderITema =
+                    kartlegging.temaMedSpørsmålOgSvaralternativer
+                        .filter { it.tema.id == temaMedSpørsmålOgSvaralternativer.tema.id }
+                        .first().spørsmålOgSvaralternativer
+                        .map { it.spørsmålId.toString() }
+                val alleSvarITema : List<SpørreundersøkelseSvarDto> = alleSvar.filter { it.spørsmålId in alleSpørsmålIderITema }
+                val antallUnikeDeltakereMedMinstEttSvarITema = alleSvarITema.groupBy { it.sesjonId }.size
+                val antallUnikeDeltakereSomHarSvartPåAltITema = alleSvarITema.groupBy { it.sesjonId }.filter { it.value.size == alleSpørsmålIderITema.size }.size
+
+                TemaMedAntallSvar(
+                    tema = temaMedSpørsmålOgSvaralternativer.tema,
+                    antallSpørsmål = temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.size,
+                    antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvarITema,
+                    antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAltITema,
+                    status = temaMedSpørsmålOgSvaralternativer.tema.status
+                )
+            }
+        ).right()
+    }
+
     fun opprettKartlegging(
         orgnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,

@@ -113,6 +113,30 @@ fun Route.iaSakKartlegging(
         }
     }
 
+    get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/oversikt") {
+        val kartleggingId =
+            call.kartleggingId ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+        val saksnummer =
+            call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaSakService.somEierAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) { _ ->
+                kartleggingService.hentKartleggingOversiktMedAntallSvar(kartleggingId = kartleggingId)
+            }
+        }.also { kartlegging ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartlegging,
+                orgnummer = call.orgnummer,
+                auditType = AuditType.access,
+                saksnummer = call.saksnummer
+            )
+        }.map {
+            call.respond(HttpStatusCode.OK, it.toDto())
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/avslutt") {
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val kartleggingId =

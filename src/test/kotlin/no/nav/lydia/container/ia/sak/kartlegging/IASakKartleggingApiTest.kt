@@ -45,6 +45,7 @@ import org.junit.After
 import org.junit.Before
 import java.util.*
 import kotlin.test.Test
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingOversiktMedAntallSvar
 
 class IASakKartleggingApiTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
@@ -373,6 +374,54 @@ class IASakKartleggingApiTest {
                 kartleggingId = kartlegging.kartleggingId
             )
         }
+    }
+
+    @Test
+    fun `kun eier av sak skal kunne hente oversikt med antall svar for en kartlegging`() {
+        val sak = nySakIKartlegges()
+        val kartlegging = sak.opprettKartlegging()
+
+        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val oversiktMedAntallSvar = hentKartleggingOversiktMedAntallSvar(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartlegging.kartleggingId
+        )
+        oversiktMedAntallSvar.kartleggingId shouldBe kartlegging.kartleggingId
+
+        sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
+        shouldFail {
+            hentKartleggingOversiktMedAntallSvar(
+                token = oauth2ServerContainer.saksbehandler1.token,
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                kartleggingId = kartlegging.kartleggingId
+            )
+        }
+    }
+
+    @Test
+    fun `skal kunne hente oversikt med antall svar for en PÅBEGYNT kartlegging`() {
+        val sak = nySakIKartlegges()
+        val kartlegging = sak.opprettKartlegging()
+
+        val kartleggingDto = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val deltaker1 = UUID.randomUUID().toString()
+        enDeltakerSvarerPåEtSpørsmål(kartleggingDto = kartleggingDto, sesjonId = deltaker1)
+
+        val deltaker2 = UUID.randomUUID().toString()
+        enDeltakerSvarerPåALLESpørsmål(kartleggingDto = kartleggingDto, sesjonId = deltaker2)
+
+        val oversiktMedAntallSvar = hentKartleggingOversiktMedAntallSvar(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartlegging.kartleggingId
+        )
+        oversiktMedAntallSvar.kartleggingId shouldBe kartlegging.kartleggingId
+        oversiktMedAntallSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
+        oversiktMedAntallSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
+        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema.first().antallSpørsmål shouldBe 3
     }
 
     @Test
