@@ -61,7 +61,6 @@ class KartleggingService(
         val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
         val svarPerSesjonId = alleSvar.groupBy { it.sesjonId }
         val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
-        val harNokDeltakere = antallUnikeDeltakereMedMinstEttSvar >= MINIMUM_ANTALL_DELTAKERE
         val antallSpørsmål = kartlegging.temaMedSpørsmålOgSvaralternativer.sumOf { spørsmålForTema ->
             spørsmålForTema.spørsmålOgSvaralternativer.size
         }
@@ -81,7 +80,7 @@ class KartleggingService(
                                 svarId = svar.svarId.toString(),
                                 tekst = svar.svartekst,
                                 // TODO: refaktorer til noe bedre:tm
-                                antallSvar = (if(harNokDeltakere) alleSvar else emptyList()).filter {
+                                antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
                                     it.spørsmålId == spørsmål.spørsmålId.toString() &&
                                             it.svarId == svar.svarId.toString()
                                 }.size
@@ -102,6 +101,13 @@ class KartleggingService(
             antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
             spørsmålMedSvarPerTema = temaerMedSpørsmålOgSvar
         ).right()
+    }
+
+    fun filtrerVekkSvarMedForFåBesvarelser(alleSvar: List<SpørreundersøkelseSvarDto>): List<SpørreundersøkelseSvarDto> {
+        val spørsmålMedNokSvar = alleSvar.groupBy { it.spørsmålId }
+            .filter { it.value.size >= MINIMUM_ANTALL_DELTAKERE }
+            .map { it.key }
+        return alleSvar.filter { it.spørsmålId in spørsmålMedNokSvar }
     }
 
     fun hentKartleggingOversiktMedAntallSvar(kartleggingId: String): Either<Feil, KartleggingOversiktMedAntallSvar> {
