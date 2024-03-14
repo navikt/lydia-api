@@ -591,7 +591,7 @@ class IASakKartleggingHelper {
                 )
 
         fun IASakDto.opprettKartlegging(
-            temaer: List<Temanavn> = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID),
+            temaer: List<Temanavn> = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID, Temanavn.REDUSERE_SYKEFRAVÆR),
             token: String = oauth2ServerContainer.saksbehandler1.token
         ) = opprettIASakKartlegging(
             orgnr = orgnr,

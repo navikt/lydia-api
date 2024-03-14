@@ -422,6 +422,10 @@ class IASakKartleggingApiTest {
         oversiktMedAntallSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oversiktMedAntallSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
         oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema.first().antallSpørsmål shouldBe 3
+
+        //-- Flere temaer
+        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema shouldHaveSize 2
+        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema.last().antallSpørsmål shouldBe 1
     }
 
     @Test
