@@ -353,6 +353,44 @@ class IASakKartleggingApiTest {
     }
 
     @Test
+    fun `skal få svar detaljer for et spørsmål dersom antall besvarelser er 3 eller flere`() {
+        val sak = nySakIKartlegges()
+        val kartlegging =
+            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+                .tilSingelRespons<IASakKartleggingDto>().third.get()
+        kartlegging.status shouldBe KartleggingStatus.OPPRETTET
+
+        val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val spørsmålOgSvaralternativ = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val svaralternativ = spørsmålOgSvaralternativ.svaralternativer.first()
+        listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
+                sendKartleggingSvarTilKafka(
+                    kartleggingId = pågåendeKartlegging.kartleggingId,
+                    spørsmålId = spørsmålOgSvaralternativ.id,
+                    sesjonId = sesjonId.toString(),
+                    svarId = svaralternativ.svarId
+                )
+        }
+        kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = pågåendeKartlegging.kartleggingId
+        )
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
+        oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
+        oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
+            temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->
+                spørsmålMedSvar.svarListe.forExactlyOne { svar ->
+                    svar.antallSvar shouldBe 3
+                }
+            }
+        }
+    }
+
+    @Test
     fun `kun eier av sak skal kunne hente resultater av kartlegging`() {
         val sak = nySakIKartlegges()
         val kartlegging = sak.opprettKartlegging()
