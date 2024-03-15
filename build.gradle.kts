@@ -84,8 +84,14 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.19.4"
+    val testcontainersVersion = "1.19.7"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
+    constraints { implementation("org.apache.commons:commons-compress"){
+        version{
+            require("1.26.1")
+        }
+        because("In testcontainers(1.19.5) commons-compress was downgraded to v1.24.0, but v1.20-1.25 are vulnerable to a Denial of Service (DoS) attack via a crafted ZIP file, which is due to an infinite loop in the ZipArchiveInputStream class.")
+    } }
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
     testImplementation("org.testcontainers:kafka:$testcontainersVersion")
