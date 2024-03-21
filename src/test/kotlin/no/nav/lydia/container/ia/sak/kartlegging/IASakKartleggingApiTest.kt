@@ -12,6 +12,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
+import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -99,6 +100,8 @@ class IASakKartleggingApiTest {
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.map { it.temanavn } shouldBeEqual temaer
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
                         it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+                        it.beskrivelse.shouldNotBeEmpty()
+                        it.introtekst.shouldNotBeEmpty()
                     }
                 }
             }

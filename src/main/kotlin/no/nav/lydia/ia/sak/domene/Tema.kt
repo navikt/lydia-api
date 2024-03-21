@@ -7,6 +7,7 @@ data class Tema(
 	val id: Int,
 	val navn: Temanavn,
 	val beskrivelse: String,
+	val introtekst: String,
 	val status: TemaStatus,
 	val sistEndret: LocalDateTime
 )

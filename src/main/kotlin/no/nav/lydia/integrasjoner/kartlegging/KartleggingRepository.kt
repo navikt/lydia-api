@@ -395,6 +395,7 @@ class KartleggingRepository(val dataSource: DataSource) {
             id = row.int("tema_id"),
             navn = Temanavn.valueOf(row.string("navn")),
             beskrivelse = row.string("beskrivelse"),
+            introtekst = row.string("introtekst"),
             status = TemaStatus.valueOf(row.string("status")),
             sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
         )
