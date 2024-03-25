@@ -63,38 +63,36 @@ class KartleggingService(
             kartlegging
         )
 
-        val spørsmålMedSvarPerTema: Map<Temanavn, List<SpørsmålMedSvar>> =
+        val spørsmålMedSvarPerTema: List<TemaMedSpørsmålOgSvar> =
             kartlegging.temaMedSpørsmålOgSvaralternativer.map { temaMedSpørsmålOgSvaralternativer ->
-                temaMedSpørsmålOgSvaralternativer.tema.navn to
-                        temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.map { spørsmål ->
-                    SpørsmålMedSvar(
-                        spørsmålId = spørsmål.spørsmålId.toString(),
-                        tekst = spørsmål.spørsmåltekst,
-                        svarListe = spørsmål.svaralternativer.map { svar ->
-                            Svar(
-                                svarId = svar.svarId.toString(),
-                                tekst = svar.svartekst,
-                                // TODO: refaktorer til noe bedre:tm
-                                antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
-                                    it.spørsmålId == spørsmål.spørsmålId.toString() &&
-                                            it.svarId == svar.svarId.toString()
-                                }.size
-                            )
-                        }
-                    )
-                }
-            }.toMap()
-
-        val temaerMedSpørsmålOgSvar = spørsmålMedSvarPerTema.map { TemaMedSpørsmålOgSvar(
-            tema = it.key.name,
-            spørsmålMedSvar = it.value
-        ) }
+                TemaMedSpørsmålOgSvar (
+                    tema = temaMedSpørsmålOgSvaralternativer.tema.navn.name,
+                    beskrivelse = temaMedSpørsmålOgSvaralternativer.tema.beskrivelse,
+                    spørsmålMedSvar = temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.map { spørsmål ->
+                        SpørsmålMedSvar(
+                            spørsmålId = spørsmål.spørsmålId.toString(),
+                            tekst = spørsmål.spørsmåltekst,
+                            svarListe = spørsmål.svaralternativer.map { svar ->
+                                Svar(
+                                    svarId = svar.svarId.toString(),
+                                    tekst = svar.svartekst,
+                                    // TODO: refaktorer til noe bedre:tm
+                                    antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
+                                        it.spørsmålId == spørsmål.spørsmålId.toString() &&
+                                                it.svarId == svar.svarId.toString()
+                                    }.size
+                                )
+                            }
+                        )
+                    }
+                )
+            }
 
         return KartleggingMedSvar(
             kartleggingId = kartlegging.kartleggingId.toString(),
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
             antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
-            spørsmålMedSvarPerTema = temaerMedSpørsmålOgSvar
+            spørsmålMedSvarPerTema = spørsmålMedSvarPerTema
         ).right()
     }
 

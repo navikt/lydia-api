@@ -6,5 +6,6 @@ import no.nav.lydia.integrasjoner.kartlegging.SpørsmålMedSvar
 @Serializable
 data class TemaMedSpørsmålOgSvar(
 	val tema: String,
+	val beskrivelse: String,
 	val spørsmålMedSvar: List<SpørsmålMedSvar>
 )

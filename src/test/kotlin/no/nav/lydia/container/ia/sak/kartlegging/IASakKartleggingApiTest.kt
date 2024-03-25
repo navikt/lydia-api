@@ -385,6 +385,8 @@ class IASakKartleggingApiTest {
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
+            temaMedSpørsmålOgSvar.tema shouldNotBe null
+            temaMedSpørsmålOgSvar.beskrivelse shouldNotBe null
             temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->
                 spørsmålMedSvar.svarListe.forExactlyOne { svar ->
                     svar.antallSvar shouldBe 3
