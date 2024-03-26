@@ -464,7 +464,7 @@ class IASakKartleggingApiTest {
         oversiktMedAntallSvar.kartleggingId shouldBe kartlegging.kartleggingId
         oversiktMedAntallSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oversiktMedAntallSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
-        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema.first().antallSpørsmål shouldBe 3
+        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema.first().antallSpørsmål shouldBe 7
 
         //-- Flere temaer
         oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema shouldHaveSize 2
