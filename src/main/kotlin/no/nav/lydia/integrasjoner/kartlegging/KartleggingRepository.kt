@@ -192,6 +192,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                         SELECT ia_sak_kartlegging_tema.* FROM ia_sak_kartlegging_tema
                           JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
                           WHERE kartlegging_id = :kartlegging_id
+                          ORDER BY rekkefolge
                     """.trimIndent(),
                     mapOf(
                         "kartlegging_id" to kartleggingId.toString()

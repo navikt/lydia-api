@@ -5,6 +5,7 @@ import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.equals.shouldBeEqual
@@ -142,8 +143,11 @@ class IASakKartleggingApiTest {
     fun `skal sende kartlegging på kafka`() {
         val sak = nySakIKartlegges()
 
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<IASakKartleggingDto>()
+        val resp = IASakKartleggingHelper.opprettIASakKartlegging(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            temaer = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID)
+        ).tilSingelRespons<IASakKartleggingDto>()
 
         val id = resp.third.get().kartleggingId
 
@@ -159,9 +163,9 @@ class IASakKartleggingApiTest {
                     spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 1
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
-                        tema.spørsmålOgSvaralternativer shouldHaveSize 3
+                        tema.spørsmålOgSvaralternativer shouldHaveSize 7 // Det er 7 spørsmål i tema UTVIKLE_PARTSSAMARBEID
                         tema.spørsmålOgSvaralternativer.forAll {
-                            it.svaralternativer shouldHaveSize 5
+                            it.svaralternativer shouldHaveAtLeastSize 4 // Det er minst 4 svaralternativer per spørsmål
                         }
                     }
                 }
