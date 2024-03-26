@@ -116,7 +116,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                     ).asUpdate
                 )
 
-                temaer.forEach { tema ->
+                temaer.sortedBy{ it.rekkefølge }.forEach { tema ->
                     tx.run(
                         queryOf(
                             """
@@ -192,6 +192,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                         SELECT ia_sak_kartlegging_tema.* FROM ia_sak_kartlegging_tema
                           JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
                           WHERE kartlegging_id = :kartlegging_id
+                          ORDER BY rekkefolge
                     """.trimIndent(),
                     mapOf(
                         "kartlegging_id" to kartleggingId.toString()
@@ -393,6 +394,7 @@ class KartleggingRepository(val dataSource: DataSource) {
     private fun mapTilTema(row: Row) =
         Tema(
             id = row.int("tema_id"),
+            rekkefølge = row.int("rekkefolge"),
             navn = Temanavn.valueOf(row.string("navn")),
             beskrivelse = row.string("beskrivelse"),
             introtekst = row.string("introtekst"),
