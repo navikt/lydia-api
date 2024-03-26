@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDateTime
 
 data class Tema(
 	val id: Int,
+	val rekkefølge: Int,
 	val navn: Temanavn,
 	val beskrivelse: String,
 	val introtekst: String,
