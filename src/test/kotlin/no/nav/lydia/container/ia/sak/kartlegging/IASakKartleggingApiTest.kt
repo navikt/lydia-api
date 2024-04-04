@@ -167,6 +167,9 @@ class IASakKartleggingApiTest {
                         tema.spørsmålOgSvaralternativer.forAll {
                             it.svaralternativer shouldHaveAtLeastSize 4 // Det er minst 4 svaralternativer per spørsmål
                         }
+                        tema.spørsmålOgSvaralternativer.forAll {
+                            it.flervalg shouldBe false
+                        }
                     }
                 }
             }
