@@ -6,4 +6,5 @@ data class SpørsmålOgSvaralternativer(
     val spørsmålId: UUID,
     val spørsmåltekst: String,
     val svaralternativer: List<Svaralternativ>,
+    val flervalg: Boolean,
 )

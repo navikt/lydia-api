@@ -18,5 +18,5 @@ fun SpørsmålOgSvaralternativer.toDto() =
         id = spørsmålId.toString(),
         spørsmål = spørsmåltekst,
         svaralternativer = svaralternativer.toDto(),
-        flervalg = false, // default til 'false', vi støtter ikke flervalg spørsmål enda
+        flervalg = flervalg,
     )

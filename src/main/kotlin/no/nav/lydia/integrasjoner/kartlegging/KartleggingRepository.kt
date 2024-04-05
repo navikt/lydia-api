@@ -222,7 +222,8 @@ class KartleggingRepository(val dataSource: DataSource) {
                             SpørsmålOgSvaralternativer(
                                 spørsmålId = spørsmålId,
                                 spørsmåltekst = row.string("sporsmal_tekst"),
-                                svaralternativer = hentSvaralternativer(spørsmålId)
+                                svaralternativer = hentSvaralternativer(spørsmålId),
+                                flervalg = row.boolean("flervalg"),
                             )
                         }.asList
                     )

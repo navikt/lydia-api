@@ -51,6 +51,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingOvers
 
 class IASakKartleggingApiTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
+    val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018e7b0d-fe32-79ab-8e2e-b990afbbc2bf"
 
     @Before
     fun setUp() {
@@ -168,7 +169,11 @@ class IASakKartleggingApiTest {
                             it.svaralternativer shouldHaveAtLeastSize 4 // Det er minst 4 svaralternativer per spørsmål
                         }
                         tema.spørsmålOgSvaralternativer.forAll {
-                            it.flervalg shouldBe false
+                            if (it.id != ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER) {
+                                it.flervalg shouldBe false
+                            } else {
+                                it.flervalg shouldBe true
+                            }
                         }
                     }
                 }
@@ -239,15 +244,15 @@ class IASakKartleggingApiTest {
                 )
             spørsmålOgSvarPerTema.spørsmålOgSvaralternativer.map { spørsmålMedSvar ->
                 spørsmålMedSvar.id
-            }.toList() shouldContainAll  spørsmålIderForEtTema
+            }.toList() shouldContainAll spørsmålIderForEtTema
         }
 
-        kartlegging.temaMedSpørsmålOgSvaralternativer.forEach {  spørsmålMedSvarPerTema ->
+        kartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålMedSvarPerTema ->
             spørsmålMedSvarPerTema.spørsmålOgSvaralternativer.forEach { spørsmålMedSvar ->
                 val svarIderForEtSpørsmål: List<String> =
                     postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
                         "select svaralternativ_id from ia_sak_kartlegging_svaralternativer where sporsmal_id = '${spørsmålMedSvar.id}'"
-                )
+                    )
                 spørsmålMedSvar.svaralternativer.map { it.svarId }.toList() shouldContainAll svarIderForEtSpørsmål
             }
         }
@@ -372,15 +377,16 @@ class IASakKartleggingApiTest {
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val spørsmålOgSvaralternativ = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val spørsmålOgSvaralternativ =
+            pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
         val svaralternativ = spørsmålOgSvaralternativ.svaralternativer.first()
         listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
-                sendKartleggingSvarTilKafka(
-                    kartleggingId = pågåendeKartlegging.kartleggingId,
-                    spørsmålId = spørsmålOgSvaralternativ.id,
-                    sesjonId = sesjonId.toString(),
-                    svarId = svaralternativ.svarId
-                )
+            sendKartleggingSvarTilKafka(
+                kartleggingId = pågåendeKartlegging.kartleggingId,
+                spørsmålId = spørsmålOgSvaralternativ.id,
+                sesjonId = sesjonId.toString(),
+                svarId = svaralternativ.svarId
+            )
         }
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
