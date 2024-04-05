@@ -631,11 +631,13 @@ class IASakKartleggingHelper {
 	        spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
 	        sesjonId: String = UUID.randomUUID().toString(),
 	        svarId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId,
+            svarIder: List<String> = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.map { it.svarId }
         ) = sendKartleggingSvarTilKafka(
             kartleggingId = kartleggingId,
             spørsmålId = spørsmålId,
             sesjonId = sesjonId,
-            svarId = svarId
+            svarId = svarId,
+            svarIder = svarIder
         )
 
         fun sendKartleggingSvarTilKafka(
@@ -643,13 +645,15 @@ class IASakKartleggingHelper {
             spørsmålId: String = UUID.randomUUID().toString(),
             sesjonId: String = UUID.randomUUID().toString(),
             svarId: String = UUID.randomUUID().toString(),
+            svarIder: List<String> = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         ): SpørreundersøkelseSvarDto {
 
             val spørreundersøkelseSvarDto = SpørreundersøkelseSvarDto(
                 spørreundersøkelseId = kartleggingId,
                 spørsmålId = spørsmålId,
                 sesjonId = sesjonId,
-                svarId = svarId
+                svarId = svarId,
+                svarIder = svarIder
             )
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                 nøkkel = "${sesjonId}_${spørsmålId}",

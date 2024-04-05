@@ -284,7 +284,8 @@ class KartleggingRepository(val dataSource: DataSource) {
             spørreundersøkelseId = this.string("kartlegging_id"),
             sesjonId = this.string("sesjon_id"),
             spørsmålId = this.string("sporsmal_id"),
-            svarId = this.string("svar_id")
+            svarId = this.string("svar_id"),
+            svarIder = listOf(this.string("svar_id")) // TODO: FixMe!
         )
 
     fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =

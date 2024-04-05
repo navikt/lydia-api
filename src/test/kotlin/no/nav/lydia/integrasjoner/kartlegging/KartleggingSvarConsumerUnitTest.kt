@@ -33,6 +33,7 @@ class KartleggingSvarConsumerUnitTest {
                 "sesjonId": "${UUID.randomUUID()}", 
                 "spørsmålId": "${UUID.randomUUID()}", 
                 "svarId": "${UUID.randomUUID()}" 
+                "svarIder": ["${UUID.randomUUID()}", "${UUID.randomUUID()}"] 
                 }
                 
             """.trimIndent()

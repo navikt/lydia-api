@@ -7,5 +7,6 @@ data class SpørreundersøkelseSvarDto (
     val spørreundersøkelseId: String,
     val sesjonId: String,
     val spørsmålId: String,
-    val svarId: String
+    val svarId: String,
+    val svarIder: List<String>
 )
