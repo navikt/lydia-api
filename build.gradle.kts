@@ -96,7 +96,7 @@ dependencies {
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.2")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.3")
 
     constraints {
         implementation("net.minidev:json-smart") {
