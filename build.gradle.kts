@@ -49,7 +49,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.10.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.11.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -63,7 +63,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:1.2.3")
+    implementation("io.arrow-kt:arrow-core:1.2.4")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
@@ -92,7 +92,7 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.4.2")
+    testImplementation("org.wiremock:wiremock-standalone:3.5.2")
 
 
     // Autentisering
@@ -101,13 +101,13 @@ dependencies {
     constraints {
         implementation("net.minidev:json-smart") {
             version {
-                require("2.5.0")
+                require("2.5.1")
             }
             because("From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.")
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.107.Final")
+                require("4.1.108.Final")
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
