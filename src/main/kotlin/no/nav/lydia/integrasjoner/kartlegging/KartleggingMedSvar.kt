@@ -17,6 +17,7 @@ data class Svar(
 data class SpørsmålMedSvar(
     val spørsmålId: String,
     val tekst: String,
+    val flervalg: Boolean,
     val svarListe: List<Svar>
 )
 

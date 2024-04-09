@@ -72,11 +72,11 @@ class KartleggingService(
                         SpørsmålMedSvar(
                             spørsmålId = spørsmål.spørsmålId.toString(),
                             tekst = spørsmål.spørsmåltekst,
+                            flervalg = spørsmål.flervalg,
                             svarListe = spørsmål.svaralternativer.map { svar ->
                                 Svar(
                                     svarId = svar.svarId.toString(),
                                     tekst = svar.svartekst,
-                                    // TODO: refaktorer til noe bedre:tm
                                     antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
                                         it.spørsmålId == spørsmål.spørsmålId.toString() &&
                                                 it.svarIder.contains( svar.svarId.toString() )
