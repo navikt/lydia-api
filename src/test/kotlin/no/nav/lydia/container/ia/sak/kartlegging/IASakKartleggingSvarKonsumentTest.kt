@@ -26,6 +26,7 @@ import org.junit.After
 import org.junit.Before
 import java.util.*
 import kotlin.test.Test
+import org.postgresql.util.PGobject
 
 class IASakKartleggingSvarKonsumentTest {
 
@@ -103,35 +104,40 @@ class IASakKartleggingSvarKonsumentTest {
     }
 
     @Test
-    fun `skal oppdatere ved nytt svar mottatt på Kafka topic`() {
+    fun `svar skal overskrives i DB ved nytt svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartlegges()
         val kartleggingDto =  sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val kartleggingSvarDto = kartleggingDto.sendKartleggingSvarTilKafka()
 
-        TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<String>(
-                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
-            ) shouldBe kartleggingSvarDto.svarId
+        val lagredeSvarIder = TestContainerHelper.postgresContainer
+            .hentEnkelKolonne<PGobject>(
+                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
+            )
+        lagredeSvarIder.value shouldNotBe null
+        lagredeSvarIder.value?.let { Json.decodeFromString<List<String>>(it) shouldBe kartleggingSvarDto.svarIder }
 
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
                 "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
             ) shouldBe null
 
-        val nySvarId = UUID.randomUUID().toString()
+        val nyeSvarIder = listOf(UUID.randomUUID().toString())
 
         sendKartleggingSvarTilKafka(
             kartleggingId = kartleggingSvarDto.spørreundersøkelseId,
             spørsmålId = kartleggingSvarDto.spørsmålId,
             sesjonId = kartleggingSvarDto.sesjonId,
-            svarId = nySvarId
+            svarIder = nyeSvarIder
         )
 
-        TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<String>(
-                "select svar_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
-            ) shouldBe nySvarId
+        val oppdaterteSvarIderEtterNyttSvar = TestContainerHelper.postgresContainer
+            .hentEnkelKolonne<PGobject>(
+                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
+            )
+        oppdaterteSvarIderEtterNyttSvar.value shouldNotBe null
+        oppdaterteSvarIderEtterNyttSvar.value?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
+
         TestContainerHelper.postgresContainer
             .hentEnkelKolonne<String>(
                 "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"

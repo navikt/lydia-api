@@ -346,7 +346,7 @@ class IASakKartleggingApiTest {
                     kartleggingId = pågåendeKartlegging.kartleggingId,
                     spørsmålId = spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().id,
                     sesjonId = sesjonId.toString(),
-                    svarId = spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+                    svarIder = listOf(spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
                 )
             }
         }
@@ -368,7 +368,7 @@ class IASakKartleggingApiTest {
     }
 
     @Test
-    fun `skal få svar detaljer for et spørsmål dersom antall besvarelser er 3 eller flere`() {
+    fun `skal få svardetaljer for et spørsmål dersom antall besvarelser er 3 eller flere`() {
         val sak = nySakIKartlegges()
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
@@ -385,7 +385,7 @@ class IASakKartleggingApiTest {
                 kartleggingId = pågåendeKartlegging.kartleggingId,
                 spørsmålId = spørsmålOgSvaralternativ.id,
                 sesjonId = sesjonId.toString(),
-                svarId = svaralternativ.svarId
+                svarIder = listOf(svaralternativ.svarId)
             )
         }
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -573,7 +573,7 @@ class IASakKartleggingApiTest {
             kartleggingId = pågåendeKartlegging.kartleggingId,
             spørsmålId = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
             sesjonId = UUID.randomUUID().toString(),
-            svarId = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+            svarIder = listOf(pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
         )
 
         postgresContainer
@@ -628,7 +628,7 @@ class IASakKartleggingApiTest {
                         kartleggingId = kartleggingDto.kartleggingId,
                         spørsmålId = spørsmålMedSvarAlternativer.id,
                         sesjonId = sesjonId,
-                        svarId = svar.svarId
+                        svarIder = listOf(svar.svarId)
                     )
                 }
             }
@@ -645,7 +645,7 @@ class IASakKartleggingApiTest {
             kartleggingId = kartleggingDto.kartleggingId,
             spørsmålId = førsteSpørsmålIFørsteTema.id,
             sesjonId = sesjonId,
-            svarId = førsteSpørsmålIFørsteTema.svaralternativer.first().svarId
+            svarIder = listOf(førsteSpørsmålIFørsteTema.svaralternativer.first().svarId)
         )
     }
 }

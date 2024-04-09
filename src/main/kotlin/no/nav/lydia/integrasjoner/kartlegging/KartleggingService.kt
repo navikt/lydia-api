@@ -79,7 +79,7 @@ class KartleggingService(
                                     // TODO: refaktorer til noe bedre:tm
                                     antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
                                         it.spørsmålId == spørsmål.spørsmålId.toString() &&
-                                                it.svarId == svar.svarId.toString()
+                                                it.svarIder.contains( svar.svarId.toString() )
                                     }.size
                                 )
                             }
@@ -141,8 +141,8 @@ class KartleggingService(
         kartleggingId: String,
         kartlegging: IASakKartlegging
     ): Triple<List<SpørreundersøkelseSvarDto>, Int, Int> {
-        val alleSvar = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
-        val svarPerSesjonId = alleSvar.groupBy { it.sesjonId }
+        val alleSvar: List<SpørreundersøkelseSvarDto> = kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
+        val svarPerSesjonId: Map<String, List<SpørreundersøkelseSvarDto>> = alleSvar.filter { it.svarIder.isNotEmpty() }.groupBy { it.sesjonId }
         val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
         val antallSpørsmål = kartlegging.temaMedSpørsmålOgSvaralternativer.sumOf { spørsmålForTema ->
             spørsmålForTema.spørsmålOgSvaralternativer.size

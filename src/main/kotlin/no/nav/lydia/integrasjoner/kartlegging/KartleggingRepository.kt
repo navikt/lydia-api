@@ -3,6 +3,9 @@ package no.nav.lydia.integrasjoner.kartlegging
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
@@ -26,6 +29,8 @@ import java.util.*
 import javax.sql.DataSource
 
 class KartleggingRepository(val dataSource: DataSource) {
+    private val gson: Gson = GsonBuilder().create()
+
     fun hentAlleSvar(kartleggingId: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -279,13 +284,15 @@ class KartleggingRepository(val dataSource: DataSource) {
         return row.tilSpørreundersøkelseSvarDto()
     }
 
+    private val svarIderType = object : TypeToken<List<String>>() {}.type
+
     fun Row.tilSpørreundersøkelseSvarDto(): SpørreundersøkelseSvarDto =
         SpørreundersøkelseSvarDto(
             spørreundersøkelseId = this.string("kartlegging_id"),
             sesjonId = this.string("sesjon_id"),
             spørsmålId = this.string("sporsmal_id"),
-            svarId = this.string("svar_id"),
-            svarIder = listOf(this.string("svar_id")) // TODO: FixMe!
+            svarIder = gson.fromJson(this.string("svar_ider"), svarIderType),
+            svarId = "", // Todo: Delete me!
         )
 
     fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =
@@ -297,23 +304,23 @@ class KartleggingRepository(val dataSource: DataSource) {
                             kartlegging_id,
                             sesjon_id,
                             sporsmal_id,
-                            svar_id
+                            svar_ider
                         )
                         VALUES (
                             :kartleggingId,
                             :sesjonId,
                             :sporsmalId,
-                            :svarId
+                            :svar_ider::jsonb
                         )
                         ON CONFLICT ON CONSTRAINT ia_sak_kartlegging_svar_kartlegging_sesjon_spm DO UPDATE SET
-                            svar_id = :svarId,
+                            svar_ider = :svar_ider::jsonb,
                             endret = now()
                         """.trimMargin(),
                     mapOf(
                         "kartleggingId" to karleggingSvarDto.spørreundersøkelseId,
                         "sesjonId" to karleggingSvarDto.sesjonId,
                         "sporsmalId" to karleggingSvarDto.spørsmålId,
-                        "svarId" to karleggingSvarDto.svarId
+                        "svar_ider" to gson.toJson(karleggingSvarDto.svarIder)
                     )
                 ).asUpdate
             )

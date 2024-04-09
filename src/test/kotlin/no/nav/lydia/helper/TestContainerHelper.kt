@@ -627,16 +627,25 @@ class IASakKartleggingHelper {
                     failure = { fail(it.message) }
                 )
 
-        fun IASakKartleggingDto.sendKartleggingSvarTilKafka(
-	        spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
-	        sesjonId: String = UUID.randomUUID().toString(),
-	        svarId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId,
+        fun IASakKartleggingDto.sendKartleggingFlervalgSvarTilKafka(
+            spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
+            sesjonId: String = UUID.randomUUID().toString(),
             svarIder: List<String> = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.map { it.svarId }
         ) = sendKartleggingSvarTilKafka(
             kartleggingId = kartleggingId,
             spørsmålId = spørsmålId,
             sesjonId = sesjonId,
-            svarId = svarId,
+            svarIder = svarIder
+        )
+
+        fun IASakKartleggingDto.sendKartleggingSvarTilKafka(
+	        spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
+	        sesjonId: String = UUID.randomUUID().toString(),
+            svarIder: List<String> = listOf(temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
+        ) = sendKartleggingSvarTilKafka(
+            kartleggingId = kartleggingId,
+            spørsmålId = spørsmålId,
+            sesjonId = sesjonId,
             svarIder = svarIder
         )
 
@@ -644,7 +653,6 @@ class IASakKartleggingHelper {
             kartleggingId: String = UUID.randomUUID().toString(),
             spørsmålId: String = UUID.randomUUID().toString(),
             sesjonId: String = UUID.randomUUID().toString(),
-            svarId: String = UUID.randomUUID().toString(),
             svarIder: List<String> = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         ): SpørreundersøkelseSvarDto {
 
@@ -652,7 +660,7 @@ class IASakKartleggingHelper {
                 spørreundersøkelseId = kartleggingId,
                 spørsmålId = spørsmålId,
                 sesjonId = sesjonId,
-                svarId = svarId,
+                svarId = "",
                 svarIder = svarIder
             )
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
