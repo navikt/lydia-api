@@ -4,12 +4,18 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import java.util.UUID
+import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ia.sak.kartlegging.IASakKartleggingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingFlervalgSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarAlternativerTilEtFlervalgSpørsmål
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarAlternativerTilEtSpørsmål
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
@@ -24,8 +30,6 @@ import no.nav.lydia.ia.sak.domene.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
-import java.util.*
-import kotlin.test.Test
 import org.postgresql.util.PGobject
 
 class IASakKartleggingSvarKonsumentTest {
@@ -104,11 +108,79 @@ class IASakKartleggingSvarKonsumentTest {
     }
 
     @Test
-    fun `svar skal overskrives i DB ved nytt svar mottatt på Kafka topic`() {
+    fun `Skal ikke lagre svar som ikke er et svaralternativ til spørsmål`() {
         val sak = SakHelper.nySakIKartlegges()
-        val kartleggingDto =  sak.opprettKartlegging()
+        val kartlegging = sak.opprettKartlegging()
+        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val svarIderHvorMinstEnIdErUkjent = listOf(
+            kartlegging.svarAlternativerTilEtSpørsmål(ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER).first().svarId,
+            kartlegging.svarAlternativerTilEtSpørsmål(ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER).last().svarId,
+            UUID.randomUUID().toString()
+        )
+
+        kartlegging.sendKartleggingFlervalgSvarTilKafka(
+            svarIder = svarIderHvorMinstEnIdErUkjent,
+        )
+
+        val lagredeSvarIder = TestContainerHelper.postgresContainer
+            .hentAlleRaderTilEnkelKolonne<PGobject>(
+                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartlegging.kartleggingId}'"
+            )
+        lagredeSvarIder.size shouldBe 0
+        TestContainerHelper.lydiaApiContainer.shouldContainLog("Funnet noen ukjente svarIder".toRegex())
+    }
+
+    @Test
+    fun `Skal ikke lagre svar dersom spørsmål ikke er funnet i kartlegging`() {
+        val sak = SakHelper.nySakIKartlegges()
+        val kartlegging = sak.opprettKartlegging()
+        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val ukjentSpørsmålId = UUID.randomUUID().toString()
+        kartlegging.sendKartleggingSvarTilKafka(
+            spørsmålId = ukjentSpørsmålId,
+            svarIder = listOf(kartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
+        )
+
+        TestContainerHelper.lydiaApiContainer.shouldContainLog("Finner ikke spørsmål '${ukjentSpørsmålId}' svaret er knyttet til, hopper over".toRegex())
+        val lagredeSvarIder = TestContainerHelper.postgresContainer
+            .hentAlleRaderTilEnkelKolonne<PGobject>(
+                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartlegging.kartleggingId}'"
+            )
+        lagredeSvarIder.size shouldBe 0
+    }
+
+    @Test
+    fun `Skal ikke lagre svar med flere svarIder på et enkeltvalg spørsmål i en kartlegging`() {
+        val sak = SakHelper.nySakIKartlegges()
+        val kartlegging = sak.opprettKartlegging()
+        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val spørsmålSomIkkeErFlervalg = kartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        spørsmålSomIkkeErFlervalg.flervalg shouldBe false
+
+        kartlegging.sendKartleggingSvarTilKafka(
+            spørsmålId = spørsmålSomIkkeErFlervalg.id,
+            svarIder = spørsmålSomIkkeErFlervalg.svaralternativer.map { it.svarId }
+        )
+
+        TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke lagre flere svar til et ikke flervalg spørsmål".toRegex())
+        val lagredeSvarIder = TestContainerHelper.postgresContainer
+            .hentAlleRaderTilEnkelKolonne<PGobject>(
+                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartlegging.kartleggingId}'"
+            )
+        lagredeSvarIder.size shouldBe 0
+    }
+
+    @Test
+    fun `svar skal overskrives i DB ved nytt svar til et flervalg spørsmål mottatt på Kafka topic`() {
+        val sak = SakHelper.nySakIKartlegges()
+        val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val kartleggingSvarDto = kartleggingDto.sendKartleggingSvarTilKafka()
+
+        val kartleggingSvarDto = kartleggingDto.sendKartleggingFlervalgSvarTilKafka(
+            svarIder = kartleggingDto.svarAlternativerTilEtFlervalgSpørsmål()
+        )
 
         val lagredeSvarIder = TestContainerHelper.postgresContainer
             .hentEnkelKolonne<PGobject>(
@@ -122,7 +194,50 @@ class IASakKartleggingSvarKonsumentTest {
                 "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
             ) shouldBe null
 
-        val nyeSvarIder = listOf(UUID.randomUUID().toString())
+
+        val nyeSvarIder = listOf(kartleggingDto.svarAlternativerTilEtFlervalgSpørsmål().first())
+        sendKartleggingSvarTilKafka(
+            kartleggingId = kartleggingSvarDto.spørreundersøkelseId,
+            spørsmålId = kartleggingSvarDto.spørsmålId,
+            sesjonId = kartleggingSvarDto.sesjonId,
+            svarIder = nyeSvarIder
+        )
+
+        val oppdaterteSvarIderEtterNyttSvar = TestContainerHelper.postgresContainer
+            .hentEnkelKolonne<PGobject>(
+                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
+            )
+        oppdaterteSvarIderEtterNyttSvar.value shouldNotBe null
+        oppdaterteSvarIderEtterNyttSvar.value?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
+
+        TestContainerHelper.postgresContainer
+            .hentEnkelKolonne<String>(
+                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
+            ) shouldNotBe null
+    }
+
+    @Test
+    fun `svar skal overskrives i DB ved nytt svar mottatt på Kafka topic`() {
+        val sak = SakHelper.nySakIKartlegges()
+        val kartleggingDto =  sak.opprettKartlegging()
+        val førsteSvarId = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+        val andreSvarId = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val kartleggingSvarDto = kartleggingDto.sendKartleggingSvarTilKafka(svarIder = listOf(førsteSvarId))
+
+        val lagredeSvarIder = TestContainerHelper.postgresContainer
+            .hentEnkelKolonne<PGobject>(
+                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
+            )
+        lagredeSvarIder.value shouldNotBe null
+        lagredeSvarIder.value?.let { Json.decodeFromString<List<String>>(it) shouldBe kartleggingSvarDto.svarIder }
+
+        TestContainerHelper.postgresContainer
+            .hentEnkelKolonne<String>(
+                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'"
+            ) shouldBe null
+
+        val nyeSvarIder = listOf(andreSvarId)
 
         sendKartleggingSvarTilKafka(
             kartleggingId = kartleggingSvarDto.spørreundersøkelseId,

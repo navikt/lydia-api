@@ -51,7 +51,10 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingOvers
 
 class IASakKartleggingApiTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
-    val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018e7b0d-fe32-79ab-8e2e-b990afbbc2bf"
+
+    companion object {
+        val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018e7b0d-fe32-79ab-8e2e-b990afbbc2bf"
+    }
 
     @Before
     fun setUp() {
@@ -460,7 +463,6 @@ class IASakKartleggingApiTest {
     fun `skal kunne hente oversikt med antall svar for en PÅBEGYNT kartlegging`() {
         val sak = nySakIKartlegges()
         val kartlegging = sak.opprettKartlegging()
-
         val kartleggingDto = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val deltaker1 = UUID.randomUUID().toString()
@@ -623,7 +625,7 @@ class IASakKartleggingApiTest {
 
         kartleggingDto.temaMedSpørsmålOgSvaralternativer.forEach { temaMedSpørsmålOgSvaralternativer ->
             temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.forEach { spørsmålMedSvarAlternativer ->
-                spørsmålMedSvarAlternativer.svaralternativer.forEach { svar ->
+                spørsmålMedSvarAlternativer.svaralternativer.first().let { svar ->
                     sendKartleggingSvarTilKafka(
                         kartleggingId = kartleggingDto.kartleggingId,
                         spørsmålId = spørsmålMedSvarAlternativer.id,

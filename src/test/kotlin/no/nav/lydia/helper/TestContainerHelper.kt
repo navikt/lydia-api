@@ -13,6 +13,9 @@ import ia.felles.definisjoner.bransjer.Bransjer
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import java.util.UUID
+import kotlin.io.path.Path
+import kotlin.test.fail
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
@@ -21,6 +24,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Topic
+import no.nav.lydia.container.ia.sak.kartlegging.IASakKartleggingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
@@ -46,6 +50,7 @@ import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingOversiktDto
 import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.kartlegging.KartleggingOversiktMedAntallSvarDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -90,10 +95,6 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.util.UUID
-import kotlin.io.path.Path
-import kotlin.test.fail
-import no.nav.lydia.ia.sak.api.kartlegging.KartleggingOversiktMedAntallSvarDto
 
 class TestContainerHelper {
     companion object {
@@ -627,15 +628,22 @@ class IASakKartleggingHelper {
                     failure = { fail(it.message) }
                 )
 
+        fun IASakKartleggingDto.svarAlternativerTilEtFlervalgSpørsmål(): List<String> =
+            this.svarAlternativerTilEtSpørsmål(ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER).map { it.svarId }
+
+        fun IASakKartleggingDto.svarAlternativerTilEtSpørsmål(spørsmålId: String) =
+            this.temaMedSpørsmålOgSvaralternativer.map { tema ->
+                tema.spørsmålOgSvaralternativer.firstOrNull { it.id == spørsmålId }
+            }.first()!!.svaralternativer
+
         fun IASakKartleggingDto.sendKartleggingFlervalgSvarTilKafka(
-            spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
             sesjonId: String = UUID.randomUUID().toString(),
-            svarIder: List<String> = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.map { it.svarId }
+            svarIder: List<String> = this.svarAlternativerTilEtFlervalgSpørsmål(),
         ) = sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingId,
-            spørsmålId = spørsmålId,
-            sesjonId = sesjonId,
-            svarIder = svarIder
+                kartleggingId = kartleggingId,
+                spørsmålId = ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER,
+                sesjonId = sesjonId,
+                svarIder = svarIder
         )
 
         fun IASakKartleggingDto.sendKartleggingSvarTilKafka(

@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.sak.domene
 
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingRepository
 import java.time.LocalDateTime
 import java.util.UUID
 

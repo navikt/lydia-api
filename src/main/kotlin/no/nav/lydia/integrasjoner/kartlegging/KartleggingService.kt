@@ -12,6 +12,8 @@ import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
 import no.nav.lydia.ia.sak.domene.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
 import no.nav.lydia.ia.sak.domene.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.Svaralternativ
 import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvar
 import no.nav.lydia.ia.sak.domene.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
@@ -37,6 +39,24 @@ class KartleggingService(
             }
             if (kartlegging.status != KartleggingStatus.PÅBEGYNT) {
                 log.warn("Kan ikke svare på en kartlegging i status ${kartlegging.status}, hopper over")
+                return@forEach
+            }
+
+            val spørsmål = kartlegging.finnSpørsmål(UUID.fromString(svar.spørsmålId))
+            if (spørsmål == null) {
+                log.warn("Finner ikke spørsmål '${svar.spørsmålId}' svaret er knyttet til, hopper over")
+                return@forEach
+            }
+            if (svar.svarIder.size > 1 && !spørsmål.flervalg) {
+                log.warn("Kan ikke lagre flere svar til et ikke flervalg spørsmål '${svar.spørsmålId}', hopper over")
+                return@forEach
+            }
+            if (!spørsmål.svaralternativer
+                    .map<Svaralternativ, String> { it.svarId.toString() }
+                    .toList()
+                    .containsAll(svar.svarIder)
+            ) {
+                log.warn("Funnet noen ukjente svarIder ('${svar.svarIder}') i svar til spørsmål '${svar.spørsmålId}', hopper over")
                 return@forEach
             }
 
@@ -205,5 +225,12 @@ class KartleggingService(
         spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
 
         return oppdatertKartlegging.right()
+    }
+
+
+    private fun IASakKartlegging.finnSpørsmål(spørsmålId: UUID): SpørsmålOgSvaralternativer? {
+        return temaMedSpørsmålOgSvaralternativer
+            .flatMap { it.spørsmålOgSvaralternativer }
+            .firstOrNull { it.spørsmålId == spørsmålId }
     }
 }
