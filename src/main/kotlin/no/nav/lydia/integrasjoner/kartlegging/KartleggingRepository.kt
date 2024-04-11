@@ -291,8 +291,7 @@ class KartleggingRepository(val dataSource: DataSource) {
             spørreundersøkelseId = this.string("kartlegging_id"),
             sesjonId = this.string("sesjon_id"),
             spørsmålId = this.string("sporsmal_id"),
-            svarIder = gson.fromJson(this.string("svar_ider"), svarIderType),
-            svarId = "", // Todo: Delete me!
+            svarIder = gson.fromJson(this.string("svar_ider"), svarIderType)
         )
 
     fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =

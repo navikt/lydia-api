@@ -32,7 +32,6 @@ class KartleggingSvarConsumerUnitTest {
                 "spørreundersøkelseId": "${UUID.randomUUID()}", 
                 "sesjonId": "${UUID.randomUUID()}", 
                 "spørsmålId": "${UUID.randomUUID()}", 
-                "svarId": "${UUID.randomUUID()}" 
                 "svarIder": ["${UUID.randomUUID()}", "${UUID.randomUUID()}"] 
                 }
                 

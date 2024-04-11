@@ -668,7 +668,6 @@ class IASakKartleggingHelper {
                 spørreundersøkelseId = kartleggingId,
                 spørsmålId = spørsmålId,
                 sesjonId = sesjonId,
-                svarId = "",
                 svarIder = svarIder
             )
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
