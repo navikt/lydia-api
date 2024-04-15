@@ -26,8 +26,8 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
 import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.kartlegging.SpørreundersøkelseAntallSvarDto
-import no.nav.lydia.ia.sak.domene.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
 import org.postgresql.util.PGobject

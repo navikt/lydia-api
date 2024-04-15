@@ -3,17 +3,17 @@ package no.nav.lydia.ia.sak.api.kartlegging
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
-import no.nav.lydia.ia.sak.domene.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartleggingOversikt
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 
 @Serializable
 data class IASakKartleggingOversiktDto(
-    val kartleggingId: String,
-    val vertId: String,
-    val status: KartleggingStatus,
-    val opprettetAv: String,
-    val opprettetTidspunkt: LocalDateTime,
-    val endretTidspunkt: LocalDateTime?
+	val kartleggingId: String,
+	val vertId: String,
+	val status: KartleggingStatus,
+	val opprettetAv: String,
+	val opprettetTidspunkt: LocalDateTime,
+	val endretTidspunkt: LocalDateTime?
 )
 
 fun List<IASakKartleggingOversikt>.toDto(erEier: Boolean) = map { it.toDto( erEier = erEier) }

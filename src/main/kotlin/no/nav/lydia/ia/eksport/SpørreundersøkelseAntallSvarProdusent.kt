@@ -4,7 +4,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.api.kartlegging.toDto
-import no.nav.lydia.ia.sak.domene.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
 
 class SpørreundersøkelseAntallSvarProdusent(
     private val produsent: KafkaProdusent,

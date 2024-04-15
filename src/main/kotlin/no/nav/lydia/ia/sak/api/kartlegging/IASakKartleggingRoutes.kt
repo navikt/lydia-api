@@ -22,8 +22,8 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.Temanavn
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker

@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.domene
+package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import kotlinx.serialization.Serializable
 import no.nav.lydia.integrasjoner.kartlegging.SpørsmålMedSvar

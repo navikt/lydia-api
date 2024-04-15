@@ -10,6 +10,7 @@ import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
 import ia.felles.definisjoner.bransjer.Bransjer
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -24,6 +25,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.container.ia.sak.kartlegging.IASakKartleggingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
@@ -56,7 +58,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.Temanavn
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -95,6 +97,12 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.util.UUID
+import kotlin.io.path.Path
+import kotlin.test.fail
+import no.nav.lydia.ia.sak.api.kartlegging.KartleggingOversiktMedAntallSvarDto
+import no.nav.lydia.integrasjoner.kartlegging.HendelsType
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
 
 class TestContainerHelper {
     companion object {
@@ -657,6 +665,17 @@ class IASakKartleggingHelper {
             svarIder = svarIder
         )
 
+        fun IASakKartleggingDto.stengTema(
+            temaId: Int
+        ) {
+            temaMedSpørsmålOgSvaralternativer.filter { it.temaId == temaId } shouldHaveSize 1
+            kafkaContainerHelper.sendOgVentTilKonsumert(
+                nøkkel = Json.encodeToString(SpørreundersøkelseHendeleseNøkkel(this.kartleggingId, HendelsType.STENG_TEMA)),
+                melding = Json.encodeToString(temaId),
+                topic = Topic.SPORREUNDERSOKELSE_HENDELSE_TOPIC
+            )
+        }
+
         fun sendKartleggingSvarTilKafka(
             kartleggingId: String = UUID.randomUUID().toString(),
             spørsmålId: String = UUID.randomUUID().toString(),
@@ -670,7 +689,7 @@ class IASakKartleggingHelper {
                 sesjonId = sesjonId,
                 svarIder = svarIder
             )
-            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            kafkaContainerHelper.sendOgVentTilKonsumert(
                 nøkkel = "${sesjonId}_${spørsmålId}",
                 melding = Json.encodeToString(
                     spørreundersøkelseSvarDto

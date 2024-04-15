@@ -37,6 +37,7 @@ import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -58,6 +59,7 @@ import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktService
 import no.nav.lydia.iatjenesteoversikt.api.iaTjenesteoversikt
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.statusoversikt.api.statusoversikt
@@ -153,6 +155,9 @@ fun startLydiaBackend() {
         spørreundersøkelseAntallSvarProdusent = SpørreundersøkelseAntallSvarProdusent(
             produsent = kafkaProdusent
         ),
+        spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
+            produsent = kafkaProdusent
+        )
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
@@ -214,6 +219,11 @@ fun startLydiaBackend() {
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
     KartleggingSvarConsumer().apply {
+        create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
+        run()
+    }.also { HelseMonitor.leggTilHelsesjekk(it) }
+
+    SpørreundersøkelseHendelseConsumer().apply {
         create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }

@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.api.kartlegging
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålOgSvaralternativer
 
 @Serializable
 data class SpørsmålOgSvaralternativerDto(

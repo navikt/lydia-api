@@ -1,0 +1,1 @@
+alter table ia_sak_kartlegging_kartlegging_til_tema add column stengt boolean default false;

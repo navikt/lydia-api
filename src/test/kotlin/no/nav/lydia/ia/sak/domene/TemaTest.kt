@@ -4,6 +4,9 @@ import io.kotest.matchers.collections.shouldContainInOrder
 import java.time.LocalDateTime.now
 import kotlin.test.Test
 import kotlinx.datetime.toKotlinLocalDateTime
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 
 
 class TemaTest {

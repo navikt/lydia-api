@@ -1,8 +1,8 @@
 package no.nav.lydia.ia.sak.api.kartlegging
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingOversiktMedAntallSvar
-import no.nav.lydia.integrasjoner.kartlegging.TemaMedAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseOversiktMedAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedAntallSvar
 
 
 @Serializable
@@ -31,7 +31,7 @@ fun TemaMedAntallSvar.toDto() =
         status = tema.status.name,
     )
 
-fun KartleggingOversiktMedAntallSvar.toDto() =
+fun SpørreundersøkelseOversiktMedAntallSvar.toDto() =
     KartleggingOversiktMedAntallSvarDto(
         kartleggingId = kartleggingId.toString(),
         antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,

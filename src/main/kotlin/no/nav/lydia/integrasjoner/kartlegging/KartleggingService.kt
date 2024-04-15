@@ -6,16 +6,20 @@ import arrow.core.right
 import java.time.LocalDateTime
 import java.util.UUID
 import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
-import no.nav.lydia.ia.sak.domene.IASakKartlegging
-import no.nav.lydia.ia.sak.domene.IASakKartleggingOversikt
-import no.nav.lydia.ia.sak.domene.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.SpørsmålOgSvaralternativer
-import no.nav.lydia.ia.sak.domene.Svaralternativ
-import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvar
-import no.nav.lydia.ia.sak.domene.Temanavn
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartlegging
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartleggingOversikt
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseOversiktMedAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -26,6 +30,7 @@ class KartleggingService(
     val kartleggingRepository: KartleggingRepository,
     private val spørreundersøkelseProdusent: SpørreundersøkelseProdusent,
     private val spørreundersøkelseAntallSvarProdusent: SpørreundersøkelseAntallSvarProdusent,
+    private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -84,29 +89,7 @@ class KartleggingService(
         )
 
         val spørsmålMedSvarPerTema: List<TemaMedSpørsmålOgSvar> =
-            kartlegging.temaMedSpørsmålOgSvaralternativer.map { temaMedSpørsmålOgSvaralternativer ->
-                TemaMedSpørsmålOgSvar (
-                    tema = temaMedSpørsmålOgSvaralternativer.tema.navn.name,
-                    beskrivelse = temaMedSpørsmålOgSvaralternativer.tema.beskrivelse,
-                    spørsmålMedSvar = temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.map { spørsmål ->
-                        SpørsmålMedSvar(
-                            spørsmålId = spørsmål.spørsmålId.toString(),
-                            tekst = spørsmål.spørsmåltekst,
-                            flervalg = spørsmål.flervalg,
-                            svarListe = spørsmål.svaralternativer.map { svar ->
-                                Svar(
-                                    svarId = svar.svarId.toString(),
-                                    tekst = svar.svartekst,
-                                    antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
-                                        it.spørsmålId == spørsmål.spørsmålId.toString() &&
-                                                it.svarIder.contains( svar.svarId.toString() )
-                                    }.size
-                                )
-                            }
-                        )
-                    }
-                )
-            }
+            kartlegging.temaMedSpørsmålOgSvaralternativer.map{ svarTilTema(alleSvar, it) }
 
         return KartleggingMedSvar(
             kartleggingId = kartlegging.kartleggingId.toString(),
@@ -116,6 +99,32 @@ class KartleggingService(
         ).right()
     }
 
+    private fun svarTilTema(
+        alleSvar: List<SpørreundersøkelseSvarDto>,
+        temaMedSpørsmålOgSvaralternativer: TemaMedSpørsmålOgSvaralternativer
+    ) =
+        TemaMedSpørsmålOgSvar(
+            tema = temaMedSpørsmålOgSvaralternativer.tema.navn.name,
+            beskrivelse = temaMedSpørsmålOgSvaralternativer.tema.beskrivelse,
+            spørsmålMedSvar = temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.map { spørsmål ->
+                SpørsmålMedSvar(
+                    spørsmålId = spørsmål.spørsmålId.toString(),
+                    tekst = spørsmål.spørsmåltekst,
+                    flervalg = spørsmål.flervalg,
+                    svarListe = spørsmål.svaralternativer.map { svar ->
+                        Svar(
+                            svarId = svar.svarId.toString(),
+                            tekst = svar.svartekst,
+                            antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
+                                it.spørsmålId == spørsmål.spørsmålId.toString() &&
+                                        it.svarIder.contains(svar.svarId.toString())
+                            }.size
+                        )
+                    }
+                )
+            }
+        )
+
     fun filtrerVekkSvarMedForFåBesvarelser(alleSvar: List<SpørreundersøkelseSvarDto>): List<SpørreundersøkelseSvarDto> {
         val spørsmålMedNokSvar = alleSvar.groupBy { it.spørsmålId }
             .filter { it.value.size >= MINIMUM_ANTALL_DELTAKERE }
@@ -123,7 +132,7 @@ class KartleggingService(
         return alleSvar.filter { it.spørsmålId in spørsmålMedNokSvar }
     }
 
-    fun hentKartleggingOversiktMedAntallSvar(kartleggingId: String): Either<Feil, KartleggingOversiktMedAntallSvar> {
+    fun hentKartleggingOversiktMedAntallSvar(kartleggingId: String): Either<Feil, SpørreundersøkelseOversiktMedAntallSvar> {
         val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
@@ -132,26 +141,25 @@ class KartleggingService(
             kartlegging
         )
 
-        return KartleggingOversiktMedAntallSvar(
+        return SpørreundersøkelseOversiktMedAntallSvar(
             kartleggingId = kartlegging.kartleggingId,
             antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
             antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
-            spørsmålMedAntallSvarPerTema = kartlegging.temaMedSpørsmålOgSvaralternativer.map { temaMedSpørsmålOgSvaralternativer ->
-                val alleSpørsmålIderITema =
-                    kartlegging.temaMedSpørsmålOgSvaralternativer
-                        .filter { it.tema.id == temaMedSpørsmålOgSvaralternativer.tema.id }
-                        .first().spørsmålOgSvaralternativer
-                        .map { it.spørsmålId.toString() }
-                val alleSvarITema : List<SpørreundersøkelseSvarDto> = alleSvar.filter { it.spørsmålId in alleSpørsmålIderITema }
+            spørsmålMedAntallSvarPerTema = kartlegging.temaMedSpørsmålOgSvaralternativer.map {
+                val alleSpørsmålIderITema = it
+                    .spørsmålOgSvaralternativer
+                    .map { it.spørsmålId.toString() }
+                val alleSvarITema: List<SpørreundersøkelseSvarDto> =
+                    alleSvar.filter { it.spørsmålId in alleSpørsmålIderITema }
                 val antallUnikeDeltakereMedMinstEttSvarITema = alleSvarITema.groupBy { it.sesjonId }.size
-                val antallUnikeDeltakereSomHarSvartPåAltITema = alleSvarITema.groupBy { it.sesjonId }.filter { it.value.size == alleSpørsmålIderITema.size }.size
-
+                val antallUnikeDeltakereSomHarSvartPåAltITema =
+                    alleSvarITema.groupBy { it.sesjonId }.filter { it.value.size == alleSpørsmålIderITema.size }.size
                 TemaMedAntallSvar(
-                    tema = temaMedSpørsmålOgSvaralternativer.tema,
-                    antallSpørsmål = temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.size,
+                    tema = it.tema,
+                    antallSpørsmål = it.spørsmålOgSvaralternativer.size,
                     antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvarITema,
                     antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAltITema,
-                    status = temaMedSpørsmålOgSvaralternativer.tema.status
+                    status = it.tema.status
                 )
             }
         ).right()
@@ -225,6 +233,50 @@ class KartleggingService(
         spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
 
         return oppdatertKartlegging.right()
+    }
+
+    fun stengTema(hendelse: StengTema) {
+        log.info("Mottok stenging av tema: ${hendelse.temaId} i spørreundersøkelse ${hendelse.spørreundersøkelseId}")
+        kartleggingRepository.stengTema(
+            spørreundersøkelseId = hendelse.spørreundersøkelseId,
+            temaId = hendelse.temaId
+        )
+        sendResultaterForTemaPåKafka(
+            spørreundersøkelseId = UUID.fromString(hendelse.spørreundersøkelseId),
+            temaId = hendelse.temaId
+        )
+    }
+
+    private fun sendResultaterForTemaPåKafka(
+        spørreundersøkelseId: UUID,
+        temaId: Int
+    ) = spørreundersøkelseOppdateringProdusent.sendPåKafka(
+        ResultaterForTema(
+            spørreundersøkelseId = spørreundersøkelseId.toString(),
+            resultaterForTema = hentSvarForTema(
+                spørreundersøkelseId = spørreundersøkelseId,
+                temaId = temaId
+            )
+        ))
+
+    private fun hentSvarForTema(
+        spørreundersøkelseId: UUID,
+        temaId: Int
+    ): TemaMedSpørsmålOgSvar {
+        val temaMedSpørsmålOgSvaralternativer = kartleggingRepository.hentTemaMedSpørsmålOgSvaralternativer(
+            kartleggingId = spørreundersøkelseId
+        ).first {
+            it.tema.id == temaId
+        }
+        val svarITema = kartleggingRepository.hentSvarForTema(
+            kartleggingId = spørreundersøkelseId,
+            temaId = temaId
+        )
+
+        return svarTilTema(
+            alleSvar = svarITema,
+            temaMedSpørsmålOgSvaralternativer = temaMedSpørsmålOgSvaralternativer
+        )
     }
 
 

@@ -148,7 +148,7 @@ enum class Topic(val navn: String, private val consumerGroupId: String? = null) 
     IA_SAK_STATISTIKK_TOPIC("pia.ia-sak-statistikk-v1"),
     IA_SAK_STATUS_TOPIC("pia.ia-sak-status-v1"),
     IA_SAK_LEVERANSE_TOPIC("pia.ia-sak-leveranse-v1"),
-    SPORREUNDERSOKELSE_TOPIC("pia.sporreundersokelse-v1"),
+    SPORREUNDERSOKELSE_TOPIC("pia.sporreundersokelse-v1", consumerGroupId = "lydia-api-sporreundersokelse-comsumer"),
 
     @Deprecated("Bruk SPORREUNDERSOKELSE_HENDELSE_TOPIC")
     SPORREUNDERSOKELSE_SVAR_TOPIC("pia.sporreundersokelse-svar-v1", "lydia-api-sporreundersokelse-svar-consumer"),

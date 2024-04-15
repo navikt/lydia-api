@@ -1,10 +1,7 @@
 package no.nav.lydia.integrasjoner.kartlegging
 
-import java.util.*
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.Tema
-import no.nav.lydia.ia.sak.domene.TemaMedSpørsmålOgSvar
-import no.nav.lydia.ia.sak.domene.TemaStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvar
 
 @Serializable
 data class Svar(
@@ -29,17 +26,3 @@ data class KartleggingMedSvar(
     val spørsmålMedSvarPerTema: List<TemaMedSpørsmålOgSvar>
 )
 
-data class TemaMedAntallSvar(
-    val tema: Tema,
-    val antallSpørsmål: Int,
-    val antallUnikeDeltakereMedMinstEttSvar: Int,
-    val antallUnikeDeltakereSomHarSvartPåAlt: Int,
-    val status: TemaStatus
-)
-
-data class KartleggingOversiktMedAntallSvar(
-    val kartleggingId: UUID,
-    val antallUnikeDeltakereMedMinstEttSvar: Int,
-    val antallUnikeDeltakereSomHarSvartPåAlt: Int,
-    val spørsmålMedAntallSvarPerTema: List<TemaMedAntallSvar>
-)

@@ -5,9 +5,9 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.IASakKartlegging
-import no.nav.lydia.ia.sak.domene.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.domene.toDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartlegging
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.toDto
 
 class SpørreundersøkelseProdusent(
     private val produsent: KafkaProdusent,
