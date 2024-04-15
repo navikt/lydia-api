@@ -14,9 +14,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import java.util.UUID
-import kotlin.io.path.Path
-import kotlin.test.fail
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
@@ -25,8 +22,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.container.ia.sak.kartlegging.IASakKartleggingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
@@ -65,7 +62,9 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
 import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
 import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
+import no.nav.lydia.integrasjoner.kartlegging.HendelsType
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingMedSvar
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -97,12 +96,9 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.util.UUID
+import java.util.*
 import kotlin.io.path.Path
 import kotlin.test.fail
-import no.nav.lydia.ia.sak.api.kartlegging.KartleggingOversiktMedAntallSvarDto
-import no.nav.lydia.integrasjoner.kartlegging.HendelsType
-import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
 
 class TestContainerHelper {
     companion object {
