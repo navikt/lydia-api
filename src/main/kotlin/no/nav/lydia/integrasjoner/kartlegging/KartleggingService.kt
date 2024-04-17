@@ -3,8 +3,6 @@ package no.nav.lydia.integrasjoner.kartlegging
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import java.time.LocalDateTime
-import java.util.UUID
 import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
@@ -12,9 +10,11 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartleggingOversikt
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseOversiktMedAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseOversiktMedAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålMedSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvar
@@ -23,6 +23,8 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.*
 
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
