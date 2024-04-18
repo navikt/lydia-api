@@ -74,7 +74,7 @@ class IASakKartleggingHendelseKonsumentTest {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(
                     spørreundersøkelseId = kartleggingDto.kartleggingId,
-                    hendelsesType = OppdateringsType.RESULTATER_FOR_TEMA
+                    oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA
                 )),
                 konsument = spørreundersøkelseOppdateringKonsument
             ) { meldinger ->

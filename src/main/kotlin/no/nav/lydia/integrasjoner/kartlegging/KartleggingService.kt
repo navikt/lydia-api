@@ -106,6 +106,7 @@ class KartleggingService(
         temaMedSpørsmålOgSvaralternativer: TemaMedSpørsmålOgSvaralternativer
     ) =
         TemaMedSpørsmålOgSvar(
+            temaId = temaMedSpørsmålOgSvaralternativer.tema.id,
             tema = temaMedSpørsmålOgSvaralternativer.tema.navn.name,
             beskrivelse = temaMedSpørsmålOgSvaralternativer.tema.beskrivelse,
             spørsmålMedSvar = temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.map { spørsmål ->

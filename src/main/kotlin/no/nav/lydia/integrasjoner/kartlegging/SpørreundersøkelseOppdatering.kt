@@ -11,7 +11,7 @@ class ResultaterForTema(
 	resultaterForTema: TemaMedSpørsmålOgSvar
 ): SpørreundersøkelseOppdatering<TemaMedSpørsmålOgSvar>(
 	spørreundersøkelseId = spørreundersøkelseId,
-	hendelsesType = OppdateringsType.RESULTATER_FOR_TEMA,
+	oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA,
 	data = resultaterForTema
 )
 
@@ -20,18 +20,18 @@ class AntallSvar(
 	antallSvar: SpørreundersøkelseAntallSvar
 ): SpørreundersøkelseOppdatering<SpørreundersøkelseAntallSvar>(
 	spørreundersøkelseId = spørreundersøkelseId,
-	hendelsesType = OppdateringsType.ANTALL_SVAR,
+	oppdateringsType = OppdateringsType.ANTALL_SVAR,
 	data = antallSvar
 )
 
 @Serializable
 sealed class SpørreundersøkelseOppdatering<T>(
 	val spørreundersøkelseId: String,
-	val hendelsesType: OppdateringsType,
+	val oppdateringsType: OppdateringsType,
 	val data: T
 ) {
 	fun tilNøkkel() =
-		Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(spørreundersøkelseId ,hendelsesType))
+		Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(spørreundersøkelseId ,oppdateringsType))
 	fun tilMelding() =
 		when(this) {
 			is ResultaterForTema -> Json.encodeToString(data)
@@ -42,7 +42,7 @@ sealed class SpørreundersøkelseOppdatering<T>(
 @Serializable
 data class SpørreundersøkelseOppdateringNøkkel(
 	val spørreundersøkelseId: String,
-	val hendelsesType: OppdateringsType
+	val oppdateringsType: OppdateringsType
 )
 
 enum class OppdateringsType {

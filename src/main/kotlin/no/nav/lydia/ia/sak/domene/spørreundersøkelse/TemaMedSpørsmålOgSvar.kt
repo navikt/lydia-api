@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TemaMedSpørsmålOgSvar(
+	val temaId: Int,
 	val tema: String,
 	val beskrivelse: String,
 	val spørsmålMedSvar: List<SpørsmålMedSvar>
