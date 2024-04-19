@@ -622,7 +622,6 @@ class IASakKartleggingApiTest {
         kartleggingDto: IASakKartleggingDto,
         sesjonId: String = UUID.randomUUID().toString()
     ) {
-
         kartleggingDto.temaMedSpørsmålOgSvaralternativer.forEach { temaMedSpørsmålOgSvaralternativer ->
             temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.forEach { spørsmålMedSvarAlternativer ->
                 spørsmålMedSvarAlternativer.svaralternativer.first().let { svar ->
@@ -641,13 +640,14 @@ class IASakKartleggingApiTest {
         kartleggingDto: IASakKartleggingDto,
         sesjonId: String = UUID.randomUUID().toString()
     ) {
-        val førsteSpørsmålIFørsteTema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
-            .spørsmålOgSvaralternativer.first()
+        val førsteTema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
+        val førsteSpørsmålId = førsteTema.spørsmålOgSvaralternativer.first().id
+        val førsteSvarId = førsteTema.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
         sendKartleggingSvarTilKafka(
             kartleggingId = kartleggingDto.kartleggingId,
-            spørsmålId = førsteSpørsmålIFørsteTema.id,
+            spørsmålId = førsteSpørsmålId,
             sesjonId = sesjonId,
-            svarIder = listOf(førsteSpørsmålIFørsteTema.svaralternativer.first().svarId)
+            svarIder = listOf(førsteSvarId)
         )
     }
 }

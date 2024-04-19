@@ -3,7 +3,7 @@ package no.nav.lydia.integrasjoner.kartlegging
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.sak.api.kartlegging.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvar
 
 class ResultaterForTema(
@@ -17,8 +17,8 @@ class ResultaterForTema(
 
 class AntallSvar(
 	spørreundersøkelseId: String,
-	antallSvar: SpørreundersøkelseAntallSvar
-): SpørreundersøkelseOppdatering<SpørreundersøkelseAntallSvar>(
+	antallSvar: SpørreundersøkelseAntallSvarDto
+): SpørreundersøkelseOppdatering<SpørreundersøkelseAntallSvarDto>(
 	spørreundersøkelseId = spørreundersøkelseId,
 	oppdateringsType = OppdateringsType.ANTALL_SVAR,
 	data = antallSvar

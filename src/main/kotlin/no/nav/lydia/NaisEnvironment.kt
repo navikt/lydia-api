@@ -152,8 +152,6 @@ enum class Topic(val navn: String, private val consumerGroupId: String? = null) 
 
     @Deprecated("Bruk SPORREUNDERSOKELSE_HENDELSE_TOPIC")
     SPORREUNDERSOKELSE_SVAR_TOPIC("pia.sporreundersokelse-svar-v1", "lydia-api-sporreundersokelse-svar-consumer"),
-    @Deprecated("Bruk SPORREUNDERSOKELSE_OPPDATERING_TOPIC")
-    SPORREUNDERSOKELSE_ANTALL_SVAR_TOPIC("pia.sporreundersokelse-antall-svar-v1", "lydia-api-sporreundersokelse-antall-svar-consumer"),
 
     SPORREUNDERSOKELSE_HENDELSE_TOPIC("pia.sporreundersokelse-hendelse-v1", "lydia-api-sporreundersokelse-hendelse-consumer"),
     SPORREUNDERSOKELSE_OPPDATERING_TOPIC("pia.sporreundersokelse-oppdatering-v1", "lydia-api-sporreundersokelse-oppdatering-consumer"),

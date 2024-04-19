@@ -3,7 +3,6 @@ package no.nav.lydia.integrasjoner.kartlegging
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
@@ -25,13 +24,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.*
+import no.nav.lydia.ia.sak.api.kartlegging.toDto
 
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
 class KartleggingService(
     val kartleggingRepository: KartleggingRepository,
     private val spørreundersøkelseProdusent: SpørreundersøkelseProdusent,
-    private val spørreundersøkelseAntallSvarProdusent: SpørreundersøkelseAntallSvarProdusent,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -72,7 +71,12 @@ class KartleggingService(
                 kartleggingId = kartlegging.kartleggingId,
                 spørsmålId = UUID.fromString(svar.spørsmålId)
             )
-            spørreundersøkelseAntallSvarProdusent.sendPåKafka(antallSvarPåSpørsmål)
+            spørreundersøkelseOppdateringProdusent.sendPåKafka(
+                AntallSvar(
+                    spørreundersøkelseId = kartlegging.kartleggingId.toString(),
+                    antallSvar = antallSvarPåSpørsmål.toDto()
+                )
+            )
 
             log.info("Lagret svar for kartlegging med id: '${svar.spørreundersøkelseId}'")
         }

@@ -5,21 +5,33 @@ package no.nav.lydia
 
 import arrow.core.Either
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
-import io.ktor.server.engine.*
-import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.application.log
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.engine.addShutdownHook
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.stop
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.callid.CallId
+import io.ktor.server.plugins.callid.callIdMdc
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.path
+import io.ktor.server.response.respond
+import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.routing
+import java.util.*
+import java.util.concurrent.TimeUnit
+import javax.sql.DataSource
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
@@ -27,7 +39,6 @@ import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.IASakEksporterer
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
 import no.nav.lydia.ia.eksport.IASakProdusent
@@ -36,8 +47,8 @@ import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
-import no.nav.lydia.ia.eksport.SpørreundersøkelseAntallSvarProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -48,18 +59,21 @@ import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
+import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
+import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktService
+import no.nav.lydia.iatjenesteoversikt.api.iaTjenesteoversikt
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingRepository
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
+import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
-import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
-import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktService
-import no.nav.lydia.iatjenesteoversikt.api.iaTjenesteoversikt
-import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.statusoversikt.api.statusoversikt
@@ -80,12 +94,6 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.virksomhet
-import java.util.*
-import java.util.concurrent.TimeUnit
-import javax.sql.DataSource
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingRepository
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 
 fun main() {
     startLydiaBackend()
@@ -151,9 +159,6 @@ fun startLydiaBackend() {
         kartleggingRepository = kartleggingRepository,
         spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
             produsent = kafkaProdusent,
-        ),
-        spørreundersøkelseAntallSvarProdusent = SpørreundersøkelseAntallSvarProdusent(
-            produsent = kafkaProdusent
         ),
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
             produsent = kafkaProdusent

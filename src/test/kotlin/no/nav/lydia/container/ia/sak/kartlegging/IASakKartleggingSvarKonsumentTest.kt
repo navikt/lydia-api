@@ -4,9 +4,10 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import java.util.UUID
+import java.util.*
 import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.sak.kartlegging.IASakKartleggingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
@@ -28,6 +29,8 @@ import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.kartlegging.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.integrasjoner.kartlegging.OppdateringsType
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseOppdateringNøkkel
 import org.junit.After
 import org.junit.Before
 import org.postgresql.util.PGobject
@@ -35,20 +38,20 @@ import org.postgresql.util.PGobject
 class IASakKartleggingSvarKonsumentTest {
 
     val kartleggingKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelse")
-    val spørreundersøkelseAntallSvarKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelseAntallSvar")
+    val spørreundersøkelseOppdateringKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelseOppdatering")
 
     @Before
     fun setUp() {
         kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-        spørreundersøkelseAntallSvarKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_ANTALL_SVAR_TOPIC.navn))
+        spørreundersøkelseOppdateringKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn))
     }
 
     @After
     fun tearDown() {
         kartleggingKonsument.unsubscribe()
         kartleggingKonsument.close()
-        spørreundersøkelseAntallSvarKonsument.unsubscribe()
-        spørreundersøkelseAntallSvarKonsument.close()
+        spørreundersøkelseOppdateringKonsument.unsubscribe()
+        spørreundersøkelseOppdateringKonsument.close()
     }
 
     @Test
@@ -284,8 +287,11 @@ class IASakKartleggingSvarKonsumentTest {
 
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                    key = "${kartleggingDto.kartleggingId}-$spørsmålId",
-                    konsument = spørreundersøkelseAntallSvarKonsument
+                    key = Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(
+                        kartleggingDto.kartleggingId,
+                        OppdateringsType.ANTALL_SVAR
+                    )),
+                    konsument = spørreundersøkelseOppdateringKonsument
             ) {
                 it.forExactlyOne { melding ->
                     val antallSvarForSpørsmål = Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(melding)
