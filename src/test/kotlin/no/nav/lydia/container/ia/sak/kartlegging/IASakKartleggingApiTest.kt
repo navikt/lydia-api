@@ -21,7 +21,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedDetaljer
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
@@ -276,7 +276,7 @@ class IASakKartleggingApiTest {
         }
 
         kartleggingDto.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingDto.kartleggingId
@@ -300,7 +300,7 @@ class IASakKartleggingApiTest {
         enDeltakerSvarerPåALLESpørsmål(kartleggingDto, sesjonId)
 
         kartleggingDto.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartleggingDto.kartleggingId
@@ -324,7 +324,7 @@ class IASakKartleggingApiTest {
         }
 
         shouldFail {
-            hentKartleggingMedDetaljer(
+            hentKartleggingMedSvar(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
                 kartleggingId = pågåendeKartlegging.kartleggingId
@@ -355,7 +355,7 @@ class IASakKartleggingApiTest {
         }
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = pågåendeKartlegging.kartleggingId
@@ -393,7 +393,7 @@ class IASakKartleggingApiTest {
         }
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val oppdatertKartleggingMedSvar = hentKartleggingMedDetaljer(
+        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = pågåendeKartlegging.kartleggingId
@@ -412,27 +412,25 @@ class IASakKartleggingApiTest {
     }
 
     @Test
-    fun `kun eier av sak skal kunne hente resultater av kartlegging`() {
+    fun `alle med tilgang til fia skal kunne hente resultater av kartlegging`() {
         val sak = nySakIKartlegges()
         val kartlegging = sak.opprettKartlegging()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val resultater = hentKartleggingMedDetaljer(
+        val resultater = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = kartlegging.kartleggingId
         )
         resultater.kartleggingId shouldBe kartlegging.kartleggingId
 
-        sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
-        shouldFail {
-            hentKartleggingMedDetaljer(
-                token = oauth2ServerContainer.saksbehandler1.token,
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                kartleggingId = kartlegging.kartleggingId
-            )
-        }
+        val kartleggingMedSvar = hentKartleggingMedSvar(
+            token = oauth2ServerContainer.saksbehandler2.token,
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            kartleggingId = kartlegging.kartleggingId
+        )
+        kartleggingMedSvar.kartleggingId shouldBe kartlegging.kartleggingId
     }
 
     @Test

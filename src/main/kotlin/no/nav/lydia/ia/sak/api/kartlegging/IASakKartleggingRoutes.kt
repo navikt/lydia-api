@@ -91,13 +91,9 @@ fun Route.iaSakKartlegging(
     get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
         val kartleggingId =
             call.kartleggingId ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
-        val saksnummer =
-            call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
 
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaSakService.somEierAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) { _ ->
-                kartleggingService.hentKartleggingMedSvar(kartleggingId = kartleggingId)
-            }
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            kartleggingService.hentKartleggingMedSvar(kartleggingId = kartleggingId)
         }.also { kartlegging ->
             auditLog.auditloggEither(
                 call = call,

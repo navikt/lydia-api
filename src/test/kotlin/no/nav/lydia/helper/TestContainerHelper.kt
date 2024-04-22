@@ -695,7 +695,7 @@ class IASakKartleggingHelper {
             return spørreundersøkelseSvarDto
         }
 
-        fun hentKartleggingMedDetaljer(
+        fun hentKartleggingMedSvar(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnr: String,
             saksnummer: String,
