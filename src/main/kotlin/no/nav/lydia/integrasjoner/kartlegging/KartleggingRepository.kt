@@ -90,8 +90,10 @@ class KartleggingRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        SELECT *
+                        SELECT ia_sak_kartlegging.*, virksomhet.orgnr, virksomhet.navn
                         FROM ia_sak_kartlegging
+                        JOIN ia_sak using (saksnummer, orgnr)
+                        JOIN virksomhet using (orgnr)
                         WHERE kartlegging_id = :kartleggingId
                     """.trimMargin(),
                     mapOf(
@@ -202,6 +204,8 @@ class KartleggingRepository(val dataSource: DataSource) {
             kartleggingId = kartleggingId,
             vertId = vertId,
             saksnummer = this.string("saksnummer"),
+            orgnummer = this.string("orgnr"),
+            virksomhetsNavn = this.string("navn"),
             status = KartleggingStatus.valueOf(this.string("status")),
             temaMedSpørsmålOgSvaralternativer = hentTemaMedSpørsmålOgSvaralternativer(kartleggingId),
             opprettetAv = this.string("opprettet_av"),
@@ -361,7 +365,7 @@ class KartleggingRepository(val dataSource: DataSource) {
         sistEndret: LocalDateTime = LocalDateTime.now()
     ) =
         using(sessionOf(dataSource)) { session ->
-            session.transaction {tx->
+            session.transaction { tx->
                 tx.run (
                     queryOf(
                         """
@@ -380,15 +384,15 @@ class KartleggingRepository(val dataSource: DataSource) {
                             status = '${KartleggingStatus.SLETTET}',
                             endret = :sistEndret
                         WHERE kartlegging_id = :kartleggingId
-                        RETURNING *
                     """.trimIndent(),
                         mapOf(
                             "kartleggingId" to kartleggingId,
                             "sistEndret" to sistEndret
                         )
-                    ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle
+                    ).asUpdate
                 )
             }
+            hentKartleggingEtterId(kartleggingId)
         }
 
     fun endreKartleggingStatus(
@@ -404,14 +408,14 @@ class KartleggingRepository(val dataSource: DataSource) {
                             status = '${status.name}',
                             endret = :sistEndret
                         WHERE kartlegging_id = :kartleggingId
-                        RETURNING *
                     """.trimIndent(),
                     mapOf(
                         "kartleggingId" to kartleggingId,
                         "sistEndret" to sistEndret
                     )
-                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle
+                ).asUpdate
             )
+            hentKartleggingEtterId(kartleggingId)
         }
 
     fun hentTema(temanavn: Temanavn) =

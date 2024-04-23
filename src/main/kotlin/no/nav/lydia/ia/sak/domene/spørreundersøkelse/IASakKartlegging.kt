@@ -7,6 +7,8 @@ data class IASakKartlegging(
 	val kartleggingId: UUID,
 	val vertId: UUID?,
 	val saksnummer: String,
+	val orgnummer: String,
+	val virksomhetsNavn: String,
 	val status: KartleggingStatus,
 	val temaMedSpørsmålOgSvaralternativer: List<TemaMedSpørsmålOgSvaralternativer>,
 	val opprettetAv: String,

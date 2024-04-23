@@ -24,6 +24,8 @@ class SpørreundersøkelseProdusent(
         SpørreundersøkelseDto(
             spørreundersøkelseId = this.kartleggingId.toString(),
             vertId = this.vertId?.toString() ?: "",
+            orgnummer = orgnummer,
+            virksomhetsNavn = virksomhetsNavn,
             status = this.status,
             type = "kartlegging",
             temaMedSpørsmålOgSvaralternativer = temaMedSpørsmålOgSvaralternativer.map { it.toDto() },

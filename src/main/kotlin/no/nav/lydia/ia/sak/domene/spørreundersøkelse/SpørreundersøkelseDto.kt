@@ -7,6 +7,8 @@ import kotlinx.serialization.Serializable
 data class SpørreundersøkelseDto (
 	val spørreundersøkelseId: String,
 	val vertId: String,
+	val orgnummer: String,
+	val virksomhetsNavn: String,
 	val status: KartleggingStatus,
 	val type: String,
 	val temaMedSpørsmålOgSvaralternativer: List<TemaMedSpørsmålOgSvaralternativerDto>,

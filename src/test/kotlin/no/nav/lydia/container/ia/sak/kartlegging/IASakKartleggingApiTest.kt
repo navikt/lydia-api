@@ -164,6 +164,8 @@ class IASakKartleggingApiTest {
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
                     spørreundersøkelse.spørreundersøkelseId shouldBe id
                     spørreundersøkelse.vertId shouldHaveLength 36
+                    spørreundersøkelse.orgnummer shouldBe sak.orgnr
+                    spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
                     spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 1
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
