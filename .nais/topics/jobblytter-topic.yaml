@@ -22,6 +22,9 @@ spec:
       application: pia-devops
       access: read
     - team: pia
+      application: pia-dvh-import
+      access: read
+    - team: pia
       application: pia-jobbsender
       access: write
     - team: pia
