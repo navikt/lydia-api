@@ -68,7 +68,7 @@ import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingRepository
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingService
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
@@ -155,7 +155,7 @@ fun startLydiaBackend() {
         leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
     }
 
-    val kartleggingService = KartleggingService(
+    val spørreundersøkelseService = SpørreundersøkelseService(
         kartleggingRepository = kartleggingRepository,
         spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
             produsent = kafkaProdusent,
@@ -224,12 +224,12 @@ fun startLydiaBackend() {
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
     KartleggingSvarConsumer().apply {
-        create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
+        create(kafka = naisEnv.kafka, spørreundersøkelseService = spørreundersøkelseService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
     SpørreundersøkelseHendelseConsumer().apply {
-        create(kafka = naisEnv.kafka, kartleggingService = kartleggingService)
+        create(kafka = naisEnv.kafka, spørreundersøkelseService = spørreundersøkelseService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
@@ -244,7 +244,7 @@ fun startLydiaBackend() {
             sistePubliseringService = sistePubliseringService,
             virksomhetRepository = virksomhetRepository,
             iaSakService = iaSakService,
-            kartleggingService = kartleggingService
+            spørreundersøkelseService = spørreundersøkelseService
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -309,7 +309,7 @@ private fun Application.lydiaRestApi(
     sistePubliseringService: SistePubliseringService,
     virksomhetRepository: VirksomhetRepository,
     iaSakService: IASakService,
-    kartleggingService: KartleggingService
+    spørreundersøkelseService: SpørreundersøkelseService,
 ) {
     install(ContentNegotiation) {
         json()
@@ -397,7 +397,7 @@ private fun Application.lydiaRestApi(
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
-                kartleggingService = kartleggingService
+                spørreundersøkelseService = spørreundersøkelseService,
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),

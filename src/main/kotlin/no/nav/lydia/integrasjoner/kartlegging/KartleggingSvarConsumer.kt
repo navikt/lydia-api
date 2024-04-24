@@ -24,11 +24,12 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 
-class KartleggingSvarConsumer : CoroutineScope, Helsesjekk  {
+class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
     private lateinit var job: Job
     private lateinit var kafka: Kafka
-    private lateinit var kartleggingService: KartleggingService
+    private lateinit var spørreundersøkelseService: SpørreundersøkelseService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
     private val topic = Topic.SPORREUNDERSOKELSE_SVAR_TOPIC
 
@@ -39,10 +40,10 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk  {
         Runtime.getRuntime().addShutdownHook(Thread(this::cancel))
     }
 
-    fun create(kafka: Kafka, kartleggingService: KartleggingService) {
+    fun create(kafka: Kafka, spørreundersøkelseService: SpørreundersøkelseService) {
         logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
-        this.kartleggingService = kartleggingService
+        this.spørreundersøkelseService = spørreundersøkelseService
         this.kafka = kafka
         this.kafkaConsumer = KafkaConsumer(
             this.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
@@ -63,7 +64,7 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk  {
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
-                                kartleggingService.lagreSvar(
+                                spørreundersøkelseService.lagreSvar(
                                     records.tilSpørreundersøkelseSvarDto()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger i $consumer (topic '${topic.navn}') ")
@@ -83,7 +84,7 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk  {
             }
         }
     }
-
+    
     private fun cancel() = runBlocking {
         logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
         kafkaConsumer.wakeup()
@@ -124,7 +125,7 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk  {
 
             try {
                 Json.decodeFromString<SpørreundersøkelseSvarDto>(verdi)
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 logger.warn("Feil formatert Kafka melding (value) i topic ${kartleggingSvarRecord.topic()} for value '$verdi' ")
                 return false
             }

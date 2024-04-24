@@ -19,12 +19,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 
-class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk  {
+class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private lateinit var job: Job
     private lateinit var kafka: Kafka
-    private lateinit var kartleggingService: KartleggingService
+    private lateinit var spørreundersøkelseService: SpørreundersøkelseService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
     private val topic = Topic.SPORREUNDERSOKELSE_HENDELSE_TOPIC
 
@@ -35,10 +36,10 @@ class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk  {
         Runtime.getRuntime().addShutdownHook(Thread(this::cancel))
     }
 
-    fun create(kafka: Kafka, kartleggingService: KartleggingService) {
+    fun create(kafka: Kafka, spørreundersøkelseService: SpørreundersøkelseService) {
         logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
-        this.kartleggingService = kartleggingService
+        this.spørreundersøkelseService = spørreundersøkelseService
         this.kafka = kafka
         this.kafkaConsumer = KafkaConsumer(
             this.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
@@ -61,8 +62,8 @@ class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk  {
                             if (!records.isEmpty) {
                                 records.forEach { melding ->
                                     val hendelse = SpørreundersøkelseHendelse.meldingTilHendelse(melding)
-                                    when(hendelse) {
-                                        is StengTema -> kartleggingService.stengTema(hendelse)
+                                    when (hendelse) {
+                                        is StengTema -> spørreundersøkelseService.stengTema(hendelse)
                                         is SvarPåSpørsmål ->
                                             logger.warn("Ikke implementert å ta imot svar på dette topicet ennå")
                                     }
