@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.kartlegging
+package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import arrow.core.Either
 import arrow.core.left
@@ -31,7 +31,7 @@ import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 const val KARTLEGGING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
-fun Route.iaSakKartlegging(
+fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
     spørreundersøkelseService: SpørreundersøkelseService,
     adGrupper: ADGrupper,

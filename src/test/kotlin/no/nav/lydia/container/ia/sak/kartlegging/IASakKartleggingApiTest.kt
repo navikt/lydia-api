@@ -38,8 +38,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
-import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
@@ -47,10 +47,10 @@ import org.junit.After
 import org.junit.Before
 
 class IASakKartleggingApiTest {
-    val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
+    private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     companion object {
-        val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018e7b0d-fe32-79ab-8e2e-b990afbbc2bf"
+        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018e7b0d-fe32-79ab-8e2e-b990afbbc2bf"
     }
 
     @Before
@@ -240,8 +240,8 @@ class IASakKartleggingApiTest {
                     "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.temanavn}'"
                 )
             val spørsmålIderForEtTema: List<String> =
-                postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
-                    "select sporsmal_id from ia_sak_kartlegging_tema_til_spørsmål where tema_id = ${temaId}"
+                postgresContainer.hentAlleRaderTilEnkelKolonne(
+                    "select sporsmal_id from ia_sak_kartlegging_tema_til_spørsmål where tema_id = $temaId"
                 )
             spørsmålOgSvarPerTema.spørsmålOgSvaralternativer.map { spørsmålMedSvar ->
                 spørsmålMedSvar.id
@@ -251,7 +251,7 @@ class IASakKartleggingApiTest {
         kartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålMedSvarPerTema ->
             spørsmålMedSvarPerTema.spørsmålOgSvaralternativer.forEach { spørsmålMedSvar ->
                 val svarIderForEtSpørsmål: List<String> =
-                    postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+                    postgresContainer.hentAlleRaderTilEnkelKolonne(
                         "select svaralternativ_id from ia_sak_kartlegging_svaralternativer where sporsmal_id = '${spørsmålMedSvar.id}'"
                     )
                 spørsmålMedSvar.svaralternativer.map { it.svarId }.toList() shouldContainAll svarIderForEtSpørsmål
@@ -282,7 +282,6 @@ class IASakKartleggingApiTest {
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
     }
-
 
     @Test
     fun `skal hente antall unike deltakere som har svart på alle spørsmål`() {

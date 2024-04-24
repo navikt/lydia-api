@@ -24,9 +24,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
-import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.kartlegging.SpørreundersøkelseAntallSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.integrasjoner.kartlegging.OppdateringsType
@@ -38,7 +38,8 @@ import org.postgresql.util.PGobject
 class IASakKartleggingSvarKonsumentTest {
 
     val kartleggingKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelse")
-    val spørreundersøkelseOppdateringKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelseOppdatering")
+    val spørreundersøkelseOppdateringKonsument =
+        TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelseOppdatering")
 
     @Before
     fun setUp() {
@@ -81,7 +82,7 @@ class IASakKartleggingSvarKonsumentTest {
     @Test
     fun `Skal bare kunne svare på kartlegging dersom den er i pågående status`() {
         val sak = SakHelper.nySakIKartlegges()
-        val kartlegging =  sak.opprettKartlegging()
+        val kartlegging = sak.opprettKartlegging()
 
         //OPRETTET
         kartlegging.sendKartleggingSvarTilKafka()
@@ -159,7 +160,8 @@ class IASakKartleggingSvarKonsumentTest {
         val sak = SakHelper.nySakIKartlegges()
         val kartlegging = sak.opprettKartlegging()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val spørsmålSomIkkeErFlervalg = kartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val spørsmålSomIkkeErFlervalg =
+            kartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
         spørsmålSomIkkeErFlervalg.flervalg shouldBe false
 
         kartlegging.sendKartleggingSvarTilKafka(
@@ -222,9 +224,11 @@ class IASakKartleggingSvarKonsumentTest {
     @Test
     fun `svar skal overskrives i DB ved nytt svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartlegges()
-        val kartleggingDto =  sak.opprettKartlegging()
-        val førsteSvarId = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
-        val andreSvarId = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+        val kartleggingDto = sak.opprettKartlegging()
+        val førsteSvarId =
+            kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+        val andreSvarId =
+            kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val kartleggingSvarDto = kartleggingDto.sendKartleggingSvarTilKafka(svarIder = listOf(førsteSvarId))
 
@@ -270,8 +274,8 @@ class IASakKartleggingSvarKonsumentTest {
 
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                    key = kartleggingDto.kartleggingId,
-                    konsument = kartleggingKonsument
+                key = kartleggingDto.kartleggingId,
+                konsument = kartleggingKonsument
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
@@ -287,11 +291,13 @@ class IASakKartleggingSvarKonsumentTest {
 
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                    key = Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(
+                key = Json.encodeToString(
+                    SpørreundersøkelseOppdateringNøkkel(
                         kartleggingDto.kartleggingId,
                         OppdateringsType.ANTALL_SVAR
-                    )),
-                    konsument = spørreundersøkelseOppdateringKonsument
+                    )
+                ),
+                konsument = spørreundersøkelseOppdateringKonsument
             ) {
                 it.forExactlyOne { melding ->
                     val antallSvarForSpørsmål = Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(melding)

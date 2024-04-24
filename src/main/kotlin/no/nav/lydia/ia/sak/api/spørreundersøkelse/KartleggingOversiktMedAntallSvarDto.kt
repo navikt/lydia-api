@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.kartlegging
+package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedAntallSvar
@@ -11,14 +11,6 @@ data class TemaMedAntallSvarDto(
     val antallUnikeDeltakereMedMinstEttSvar: Int,
     val antallUnikeDeltakereSomHarSvartPåAlt: Int,
     val status: String,
-)
-
-@Serializable
-data class KartleggingOversiktMedAntallSvarDto(
-    val kartleggingId: String,
-    val antallUnikeDeltakereMedMinstEttSvar: Int,
-    val antallUnikeDeltakereSomHarSvartPåAlt: Int,
-    val spørsmålMedAntallSvarPerTema: List<TemaMedAntallSvarDto>,
 )
 
 fun TemaMedAntallSvar.toDto() =

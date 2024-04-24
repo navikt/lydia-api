@@ -1,16 +1,16 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.api.kartlegging.SpørsmålOgSvaralternativerDto
-import no.nav.lydia.ia.sak.api.kartlegging.toDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålOgSvaralternativerDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.toDto
 
 @Serializable
 data class TemaMedSpørsmålOgSvaralternativerDto(
-	val temaId: Int,
-	val temanavn: Temanavn,
-	val beskrivelse: String,
-	val introtekst: String,
-	val spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativerDto>,
+    val temaId: Int,
+    val temanavn: Temanavn,
+    val beskrivelse: String,
+    val introtekst: String,
+    val spørsmålOgSvaralternativer: List<SpørsmålOgSvaralternativerDto>,
 )
 
 fun TemaMedSpørsmålOgSvaralternativer.toDto() =

@@ -260,9 +260,9 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         it.tema
     }.map {
         val tema = it.key
-        val erTemaStengt = it.value.any { it.erTemaStengt }
-        val spørsmålOgSvaralternativer = it.value.groupBy {
-            it.spørsmålId
+        val erTemaStengt = it.value.any { spørsmålsRad -> spørsmålsRad.erTemaStengt }
+        val spørsmålOgSvaralternativer = it.value.groupBy { spørsmålsRad ->
+            spørsmålsRad.spørsmålId
         }.map {
             val spørsmålId = it.key
             val spørsmåltekst = it.value.first().spørsmåltekst

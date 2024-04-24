@@ -66,8 +66,8 @@ class IASakLeveranseTest {
         }
 
         hentIASakLeveranser(
-                orgnr = sakIViBistår.orgnr,
-                saksnummer = sakIViBistår.saksnummer
+            orgnr = sakIViBistår.orgnr,
+            saksnummer = sakIViBistår.saksnummer
         ).map { it.iaTjeneste.navn } shouldBe hentIATjenesterFraDatabase().sorted()
     }
 
@@ -75,17 +75,17 @@ class IASakLeveranseTest {
     fun `skal få ut fullførtdato for leveranser`() {
         val sakIViBistårStatus = nySakIViBistår()
         val leveranse = sakIViBistårStatus.opprettIASakLeveranse(
-                frist = LocalDate.now().toKotlinLocalDate(),
-                modulId = TestData.AKTIV_MODUL.id
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id
         )
         leveranse.oppdaterIASakLeveranse(
-                orgnr = sakIViBistårStatus.orgnr,
-                status = LEVERT
+            orgnr = sakIViBistårStatus.orgnr,
+            status = LEVERT
         )
 
         hentIASakLeveranser(
-                orgnr = sakIViBistårStatus.orgnr,
-                saksnummer = sakIViBistårStatus.saksnummer
+            orgnr = sakIViBistårStatus.orgnr,
+            saksnummer = sakIViBistårStatus.saksnummer
         ).forExactlyOne {
             it.leveranser.forExactlyOne { leveranse ->
                 leveranse.fullført shouldNotBe null
@@ -99,34 +99,36 @@ class IASakLeveranseTest {
         val sakIViBistårStatus = nySakIViBistår()
 
         sakIViBistårStatus.opprettIASakLeveranse(
-                frist = LocalDate.now().toKotlinLocalDate(),
-                modulId = TestData.AKTIV_MODUL.id
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id
         )
 
         opprettIASakLeveranse(
-                orgnr = sakIViBistårStatus.orgnr,
-                saksnummer = sakIViBistårStatus.saksnummer,
-                frist = LocalDate.now().toKotlinLocalDate(),
-                modulId = TestData.AKTIV_MODUL.id).response().statuskode() shouldBe HttpStatusCode.Conflict.value
+            orgnr = sakIViBistårStatus.orgnr,
+            saksnummer = sakIViBistårStatus.saksnummer,
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id
+        ).response().statuskode() shouldBe HttpStatusCode.Conflict.value
 
         hentIASakLeveranser(
-                orgnr = sakIViBistårStatus.orgnr,
-                saksnummer = sakIViBistårStatus.saksnummer) shouldHaveSize 1
+            orgnr = sakIViBistårStatus.orgnr,
+            saksnummer = sakIViBistårStatus.saksnummer
+        ) shouldHaveSize 1
     }
 
     @Test
     fun `skal ikke kunne legge til leveranser dersom en sak ikke er i status Vi Bistår`() {
         val sakIStatusKartlegges = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-                .nyHendelse(TA_EIERSKAP_I_SAK)
-                .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-                .nyHendelse(VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(VIRKSOMHET_KARTLEGGES)
 
         sakIStatusKartlegges.status shouldBe IAProsessStatus.KARTLEGGES
         opprettIASakLeveranse(
-                orgnr = sakIStatusKartlegges.orgnr,
-                saksnummer = sakIStatusKartlegges.saksnummer,
-                frist = LocalDate.now().toKotlinLocalDate(),
-                modulId = TestData.AKTIV_MODUL.id
+            orgnr = sakIStatusKartlegges.orgnr,
+            saksnummer = sakIStatusKartlegges.saksnummer,
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id
         ).response().statuskode() shouldBe HttpStatusCode.Conflict.value
     }
 
@@ -137,9 +139,9 @@ class IASakLeveranseTest {
 
         sakIStatusViBistår.status shouldBe VI_BISTÅR
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
-                frist = frist,
-                modulId = TestData.AKTIV_MODUL.id,
-                token = oauth2ServerContainer.saksbehandler1.token
+            frist = frist,
+            modulId = TestData.AKTIV_MODUL.id,
+            token = oauth2ServerContainer.saksbehandler1.token
         )
 
         leveranse.modul.id shouldBe TestData.AKTIV_MODUL.id
@@ -147,13 +149,17 @@ class IASakLeveranseTest {
         leveranse.status shouldBe IASakLeveranseStatus.UNDER_ARBEID
         leveranse.frist shouldBe frist
 
-        postgresContainer.hentEnkelKolonne<String>("""
+        postgresContainer.hentEnkelKolonne<String>(
+            """
             select sist_endret_av_rolle from iasak_leveranse where id = ${leveranse.id}
-        """.trimIndent()) shouldBe Rolle.SAKSBEHANDLER.name
+        """.trimIndent()
+        ) shouldBe Rolle.SAKSBEHANDLER.name
 
-        postgresContainer.hentEnkelKolonne<String>("""
+        postgresContainer.hentEnkelKolonne<String>(
+            """
             select sist_endret_av from iasak_leveranse where id = ${leveranse.id}
-        """.trimIndent()) shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+        """.trimIndent()
+        ) shouldBe oauth2ServerContainer.saksbehandler1.navIdent
     }
 
     @Test
@@ -164,17 +170,18 @@ class IASakLeveranseTest {
         val sakIStatusViBistår = nySakIViBistår()
 
         sakIStatusViBistår.opprettIASakLeveranse(
-                frist = nå,
-                modulId = TestData.AKTIV_MODUL.id
+            frist = nå,
+            modulId = TestData.AKTIV_MODUL.id
         )
         sakIStatusViBistår.opprettIASakLeveranse(
-                frist = imorgen,
-                modulId = 16
+            frist = imorgen,
+            modulId = 16
         )
 
         val iaSakLeveranserPerTjeneste = hentIASakLeveranser(
-                orgnr = sakIStatusViBistår.orgnr,
-                saksnummer = sakIStatusViBistår.saksnummer)
+            orgnr = sakIStatusViBistår.orgnr,
+            saksnummer = sakIStatusViBistår.saksnummer
+        )
 
         val leveranser = iaSakLeveranserPerTjeneste.flatMap { it.leveranser }
 
@@ -193,28 +200,40 @@ class IASakLeveranseTest {
     fun `kun eier av sak skal kunne slette leveranse`() {
         val sakIStatusViBistår = nySakIViBistår(token = mockOAuth2Server.saksbehandler1.token)
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
-                frist = LocalDate.now().toKotlinLocalDate(),
-                modulId = TestData.AKTIV_MODUL.id,
-                token = mockOAuth2Server.saksbehandler1.token
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id,
+            token = mockOAuth2Server.saksbehandler1.token
         )
 
-        hentIASakLeveranser(orgnr = sakIStatusViBistår.orgnr, saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 1
+        hentIASakLeveranser(
+            orgnr = sakIStatusViBistår.orgnr,
+            saksnummer = sakIStatusViBistår.saksnummer
+        ) shouldHaveSize 1
 
         shouldFail {
-            leveranse.slettIASakLeveranse(orgnr = sakIStatusViBistår.orgnr, token = mockOAuth2Server.saksbehandler2.token)
+            leveranse.slettIASakLeveranse(
+                orgnr = sakIStatusViBistår.orgnr,
+                token = mockOAuth2Server.saksbehandler2.token
+            )
         }
-        hentIASakLeveranser(orgnr = sakIStatusViBistår.orgnr, saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 1
+        hentIASakLeveranser(
+            orgnr = sakIStatusViBistår.orgnr,
+            saksnummer = sakIStatusViBistår.saksnummer
+        ) shouldHaveSize 1
 
         leveranse.slettIASakLeveranse(orgnr = sakIStatusViBistår.orgnr, token = mockOAuth2Server.saksbehandler1.token)
-        hentIASakLeveranser(orgnr = sakIStatusViBistår.orgnr, saksnummer = sakIStatusViBistår.saksnummer) shouldHaveSize 0
+        hentIASakLeveranser(
+            orgnr = sakIStatusViBistår.orgnr,
+            saksnummer = sakIStatusViBistår.saksnummer
+        ) shouldHaveSize 0
     }
 
     @Test
     fun `skal ikke kunne slette leveranser på en sak som ikke er i Vi Bistår`() {
         val sakIViBistår = nySakIViBistår()
         val iaSakLeveranse = sakIViBistår.opprettIASakLeveranse(
-                frist = LocalDate.now().toKotlinLocalDate(),
-                modulId = TestData.AKTIV_MODUL.id
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id
         )
         sakIViBistår.nyHendelse(TILBAKE)
         shouldFail {
@@ -226,11 +245,17 @@ class IASakLeveranseTest {
     fun `skal kunne fullføre en leveranse`() {
         val sakIViBistår = nySakIViBistår()
 
-        val leveranseDto = sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = TestData.AKTIV_MODUL.id)
+        val leveranseDto = sakIViBistår.opprettIASakLeveranse(
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id
+        )
         val fullførtLeveranse = leveranseDto.oppdaterIASakLeveranse(orgnr = sakIViBistår.orgnr, status = LEVERT)
         fullførtLeveranse.status shouldBe LEVERT
 
-        hentIASakLeveranser(orgnr = sakIViBistår.orgnr, saksnummer = sakIViBistår.saksnummer).forExactlyOne { iaSakLeveranserForTjeneste ->
+        hentIASakLeveranser(
+            orgnr = sakIViBistår.orgnr,
+            saksnummer = sakIViBistår.saksnummer
+        ).forExactlyOne { iaSakLeveranserForTjeneste ->
             iaSakLeveranserForTjeneste.leveranser.forExactlyOne {
                 it.id shouldBe leveranseDto.id
                 it.status shouldBe LEVERT
@@ -241,7 +266,10 @@ class IASakLeveranseTest {
     @Test
     fun `skal ikke kunne fullføre sak med leveranser som er under arbeid`() {
         val sakIViBistår = nySakIViBistår()
-        sakIViBistår.opprettIASakLeveranse(frist = LocalDate.now().toKotlinLocalDate(), modulId = TestData.AKTIV_MODUL.id)
+        sakIViBistår.opprettIASakLeveranse(
+            frist = LocalDate.now().toKotlinLocalDate(),
+            modulId = TestData.AKTIV_MODUL.id
+        )
         val response = SakHelper.nyHendelsePåSakMedRespons(
             sak = sakIViBistår,
             hendelsestype = FULLFØR_BISTAND,
@@ -307,7 +335,8 @@ class IASakLeveranseTest {
     @Test
     fun `skal ikke kunne legge til leveranse på deaktivert modul eller tjeneste`() {
         val deaktivertTjeneste = IATjenesteDto(id = 3000, navn = "Test", deaktivert = true)
-        val aktivModulIDeaktivertTjeneste = ModulDto(id = 3000, navn = "Test", iaTjeneste = deaktivertTjeneste.id, deaktivert = false)
+        val aktivModulIDeaktivertTjeneste =
+            ModulDto(id = 3000, navn = "Test", iaTjeneste = deaktivertTjeneste.id, deaktivert = false)
         leggTilIATjeneste(iaTjeneste = deaktivertTjeneste)
         leggTilModul(modul = aktivModulIDeaktivertTjeneste)
 
@@ -369,15 +398,19 @@ class IASakLeveranseTest {
     fun `skal lagre opprettet-tidspunkt for leveranser`() {
         val sak = nySakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id)
-        val førFullført = postgresContainer.hentEnkelKolonne<Timestamp?>("""
+        val førFullført = postgresContainer.hentEnkelKolonne<Timestamp?>(
+            """
             select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
-        """.trimIndent())?.toLocalDateTime()
+            """.trimIndent()
+        )?.toLocalDateTime()
         førFullført shouldNotBe null
 
         leveranse.oppdaterIASakLeveranse(sak.orgnr, LEVERT)
-        val etterFullført = postgresContainer.hentEnkelKolonne<Timestamp?>("""
+        val etterFullført = postgresContainer.hentEnkelKolonne<Timestamp?>(
+            """
             select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
-        """.trimIndent())?.toLocalDateTime()
+        """.trimIndent()
+        )?.toLocalDateTime()
         etterFullført shouldBe førFullført
     }
 
@@ -398,9 +431,9 @@ class IASakLeveranseTest {
     fun `skal kunne opprette leveranser av IA-tjenesten 'Utvikle partssamarbeid'`() {
         val sak = nySakIViBistår()
         sak.opprettIASakLeveranse(modulId = 18) // Utvikle partssamarbeid
-        hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer).forExactlyOne {
-            it.leveranser.forExactlyOne {
-                it.modul.id shouldBe 18
+        hentIASakLeveranser(orgnr = sak.orgnr, saksnummer = sak.saksnummer).forExactlyOne { leveransePerTjeneste ->
+            leveransePerTjeneste.leveranser.forExactlyOne { leveranse ->
+                leveranse.modul.id shouldBe 18
             }
         }
     }

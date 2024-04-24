@@ -22,7 +22,8 @@ import java.util.*
 import kotlin.test.Test
 
 class IASakKartleggingHendelseKonsumentTest {
-    val spørreundersøkelseOppdateringKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.konsumentGruppe)
+    val spørreundersøkelseOppdateringKonsument =
+        TestContainerHelper.kafkaContainerHelper.nyKonsument(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.konsumentGruppe)
 
     @Before
     fun setUp() {
@@ -57,13 +58,13 @@ class IASakKartleggingHendelseKonsumentTest {
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
-        val spørsmål = tema.spørsmålOgSvaralternativer.first()
+        val førsteSpørsmål = tema.spørsmålOgSvaralternativer.first()
         val svarIder = listOf(tema.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
 
         (1..5).forEach { _ ->
             val sesjonId = UUID.randomUUID().toString()
             kartleggingDto.sendKartleggingSvarTilKafka(
-                spørsmålId = spørsmål.id,
+                spørsmålId = førsteSpørsmål.id,
                 sesjonId = sesjonId,
                 svarIder = svarIder
             )
@@ -72,21 +73,23 @@ class IASakKartleggingHendelseKonsumentTest {
         kartleggingDto.stengTema(temaId = tema.temaId)
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(
-                    spørreundersøkelseId = kartleggingDto.kartleggingId,
-                    oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA
-                )),
+                key = Json.encodeToString(
+                    SpørreundersøkelseOppdateringNøkkel(
+                        spørreundersøkelseId = kartleggingDto.kartleggingId,
+                        oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA
+                    )
+                ),
                 konsument = spørreundersøkelseOppdateringKonsument
             ) { meldinger ->
                 meldinger.forEach { melding ->
                     val resultaterForTema = Json.decodeFromString<TemaMedSpørsmålOgSvar>(melding)
                     resultaterForTema.tema shouldBe tema.temanavn.name
-                    resultaterForTema.spørsmålMedSvar.forExactlyOne {
-                        it.spørsmålId shouldBe spørsmål.id
-                        it.svarListe.forEach {
-                            println("${it.svarId} har ${it.antallSvar} svar")
+                    resultaterForTema.spørsmålMedSvar.forExactlyOne { spørsmål ->
+                        spørsmål.spørsmålId shouldBe førsteSpørsmål.id
+                        spørsmål.svarListe.forEach { svar ->
+                            println("${svar.svarId} har ${svar.antallSvar} svar")
                         }
-                        it.svarListe.filter { svar -> svar.antallSvar == 5 } shouldHaveSize 1
+                        spørsmål.svarListe.filter { svar -> svar.antallSvar == 5 } shouldHaveSize 1
                     }
                 }
             }

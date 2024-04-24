@@ -8,8 +8,8 @@ import java.util.*
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
-import no.nav.lydia.ia.sak.api.kartlegging.toDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.toDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartleggingOversikt

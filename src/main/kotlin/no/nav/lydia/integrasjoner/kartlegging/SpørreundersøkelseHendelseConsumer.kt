@@ -61,8 +61,7 @@ class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 records.forEach { melding ->
-                                    val hendelse = SpørreundersøkelseHendelse.meldingTilHendelse(melding)
-                                    when (hendelse) {
+                                    when (val hendelse = SpørreundersøkelseHendelse.meldingTilHendelse(melding)) {
                                         is StengTema -> spørreundersøkelseService.stengTema(hendelse)
                                         is SvarPåSpørsmål ->
                                             logger.warn("Ikke implementert å ta imot svar på dette topicet ennå")

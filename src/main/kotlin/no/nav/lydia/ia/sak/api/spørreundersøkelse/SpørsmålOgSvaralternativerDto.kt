@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.kartlegging
+package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålOgSvaralternativer
