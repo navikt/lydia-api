@@ -15,6 +15,8 @@ import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
+import java.util.*
+import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
@@ -25,7 +27,6 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSv
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -39,15 +40,11 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingDto
 import no.nav.lydia.ia.sak.api.kartlegging.KARTLEGGING_BASE_ROUTE
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import org.junit.After
 import org.junit.Before
-import java.util.*
-import kotlin.test.Test
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingOversiktMedAntallSvar
 
 class IASakKartleggingApiTest {
     val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
@@ -66,7 +63,6 @@ class IASakKartleggingApiTest {
         kartleggingKonsument.unsubscribe()
         kartleggingKonsument.close()
     }
-
 
     @Test
     fun `oppretter en ny kartlegging`() {
@@ -436,57 +432,6 @@ class IASakKartleggingApiTest {
     }
 
     @Test
-    fun `kun eier av sak skal kunne hente oversikt med antall svar for en kartlegging`() {
-        val sak = nySakIKartlegges()
-        val kartlegging = sak.opprettKartlegging()
-
-        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val oversiktMedAntallSvar = hentKartleggingOversiktMedAntallSvar(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            kartleggingId = kartlegging.kartleggingId
-        )
-        oversiktMedAntallSvar.kartleggingId shouldBe kartlegging.kartleggingId
-
-        sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
-        shouldFail {
-            hentKartleggingOversiktMedAntallSvar(
-                token = oauth2ServerContainer.saksbehandler1.token,
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                kartleggingId = kartlegging.kartleggingId
-            )
-        }
-    }
-
-    @Test
-    fun `skal kunne hente oversikt med antall svar for en PÅBEGYNT kartlegging`() {
-        val sak = nySakIKartlegges()
-        val kartlegging = sak.opprettKartlegging()
-        val kartleggingDto = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        val deltaker1 = UUID.randomUUID().toString()
-        enDeltakerSvarerPåEtSpørsmål(kartleggingDto = kartleggingDto, sesjonId = deltaker1)
-
-        val deltaker2 = UUID.randomUUID().toString()
-        enDeltakerSvarerPåALLESpørsmål(kartleggingDto = kartleggingDto, sesjonId = deltaker2)
-
-        val oversiktMedAntallSvar = hentKartleggingOversiktMedAntallSvar(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            kartleggingId = kartlegging.kartleggingId
-        )
-        oversiktMedAntallSvar.kartleggingId shouldBe kartlegging.kartleggingId
-        oversiktMedAntallSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
-        oversiktMedAntallSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
-        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema.first().antallSpørsmål shouldBe 7
-
-        //-- Flere temaer
-        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema shouldHaveSize 2
-        oversiktMedAntallSvar.spørsmålMedAntallSvarPerTema.last().antallSpørsmål shouldBe 1
-    }
-
-    @Test
     fun `skal kunne starte kartlegging`() {
         val sak = nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
@@ -620,7 +565,7 @@ class IASakKartleggingApiTest {
 
     fun enDeltakerSvarerPåALLESpørsmål(
         kartleggingDto: IASakKartleggingDto,
-        sesjonId: String = UUID.randomUUID().toString()
+        sesjonId: String = UUID.randomUUID().toString(),
     ) {
         kartleggingDto.temaMedSpørsmålOgSvaralternativer.forEach { temaMedSpørsmålOgSvaralternativer ->
             temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.forEach { spørsmålMedSvarAlternativer ->
@@ -638,7 +583,7 @@ class IASakKartleggingApiTest {
 
     fun enDeltakerSvarerPåEtSpørsmål(
         kartleggingDto: IASakKartleggingDto,
-        sesjonId: String = UUID.randomUUID().toString()
+        sesjonId: String = UUID.randomUUID().toString(),
     ) {
         val førsteTema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
         val førsteSpørsmålId = førsteTema.spørsmålOgSvaralternativer.first().id

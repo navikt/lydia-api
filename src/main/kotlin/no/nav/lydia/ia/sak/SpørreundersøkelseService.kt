@@ -3,34 +3,32 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import java.time.LocalDateTime
+import java.util.*
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.kartlegging.IASakKartleggingError
+import no.nav.lydia.ia.sak.api.kartlegging.toDto
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartlegging
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartleggingOversikt
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseOversiktMedAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålMedSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
-import no.nav.lydia.tilgangskontroll.NavAnsatt
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.util.*
-import no.nav.lydia.ia.sak.api.kartlegging.toDto
 import no.nav.lydia.integrasjoner.kartlegging.AntallSvar
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingMedSvar
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.integrasjoner.kartlegging.ResultaterForTema
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
+import no.nav.lydia.tilgangskontroll.NavAnsatt
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
@@ -145,38 +143,6 @@ class SpørreundersøkelseService(
         return alleSvar.filter { it.spørsmålId in spørsmålMedNokSvar }
     }
 
-    fun hentKartleggingOversiktMedAntallSvar(kartleggingId: String): Either<Feil, SpørreundersøkelseOversiktMedAntallSvar> {
-        val kartlegging = spørreundersøkelseRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
-            ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
-
-        val (alleSvar, antallUnikeDeltakereMedMinstEttSvar, antallUnikeDeltakereSomHarSvartPåAlt) = beregnAlleSvar(
-            kartleggingId,
-            kartlegging
-        )
-
-        return SpørreundersøkelseOversiktMedAntallSvar(
-            kartleggingId = kartlegging.kartleggingId,
-            antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
-            antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
-            spørsmålMedAntallSvarPerTema = kartlegging.temaMedSpørsmålOgSvaralternativer.map {
-                val alleSpørsmålIderITema = it
-                    .spørsmålOgSvaralternativer
-                    .map { it.spørsmålId.toString() }
-                val alleSvarITema: List<SpørreundersøkelseSvarDto> =
-                    alleSvar.filter { it.spørsmålId in alleSpørsmålIderITema }
-                val antallUnikeDeltakereMedMinstEttSvarITema = alleSvarITema.groupBy { it.sesjonId }.size
-                val antallUnikeDeltakereSomHarSvartPåAltITema =
-                    alleSvarITema.groupBy { it.sesjonId }.filter { it.value.size == alleSpørsmålIderITema.size }.size
-                TemaMedAntallSvar(
-                    tema = it.tema,
-                    antallSpørsmål = it.spørsmålOgSvaralternativer.size,
-                    antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvarITema,
-                    antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAltITema,
-                    status = it.tema.status
-                )
-            }
-        ).right()
-    }
 
     private fun beregnAlleSvar(
         kartleggingId: String,
@@ -230,6 +196,7 @@ class SpørreundersøkelseService(
     ): Either<Feil, List<IASakKartleggingOversikt>> {
         return try {
             val kartlegginger = spørreundersøkelseRepository.hentKartlegginger(saksnummer = saksnummer)
+            //TODO: legg til deltakereSomHarFullført
             kartlegginger.right()
         } catch (e: Exception) {
             log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
@@ -295,7 +262,6 @@ class SpørreundersøkelseService(
             temaMedSpørsmålOgSvaralternativer = temaMedSpørsmålOgSvaralternativer
         )
     }
-
 
     private fun IASakKartlegging.finnSpørsmål(spørsmålId: UUID): SpørsmålOgSvaralternativer? {
         return temaMedSpørsmålOgSvaralternativer
