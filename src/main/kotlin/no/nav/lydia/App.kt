@@ -67,7 +67,7 @@ import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingRepository
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
@@ -108,7 +108,7 @@ fun startLydiaBackend() {
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
-    val kartleggingRepository = KartleggingRepository(dataSource = dataSource)
+    val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
 
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
@@ -156,7 +156,7 @@ fun startLydiaBackend() {
     }
 
     val spørreundersøkelseService = SpørreundersøkelseService(
-        kartleggingRepository = kartleggingRepository,
+        spørreundersøkelseRepository = spørreundersøkelseRepository,
         spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
             produsent = kafkaProdusent,
         ),

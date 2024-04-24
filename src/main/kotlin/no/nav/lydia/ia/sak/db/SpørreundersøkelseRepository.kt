@@ -1,4 +1,4 @@
-package no.nav.lydia.integrasjoner.kartlegging
+package no.nav.lydia.ia.sak.db
 
 import arrow.core.Either
 import arrow.core.left
@@ -27,8 +27,9 @@ import no.nav.lydia.tilgangskontroll.NavAnsatt
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
+import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
 
-class KartleggingRepository(val dataSource: DataSource) {
+class SpørreundersøkelseRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
 
     fun hentSvarForTema(kartleggingId: UUID, temaId: Int) =
@@ -144,7 +145,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                     ).asUpdate
                 )
 
-                temaer.sortedBy{ it.rekkefølge }.forEach { tema ->
+                temaer.sortedBy { it.rekkefølge }.forEach { tema ->
                     tx.run(
                         queryOf(
                             """
@@ -252,7 +253,7 @@ class KartleggingRepository(val dataSource: DataSource) {
         val spørsmålId: UUID,
         val spørsmåltekst: String,
         val flervalg: Boolean,
-        val svaralternativ: Svaralternativ
+        val svaralternativ: Svaralternativ,
     )
 
     private fun List<SpørsmålsRad>.tilTemaMedSpørsmålOgSvaralternativer() = this.groupBy {
@@ -303,17 +304,19 @@ class KartleggingRepository(val dataSource: DataSource) {
                         "kartleggingId" to kartleggingId.toString(),
                         "sporsmalId" to spørsmålId.toString()
                     )
-                ).map { rad -> SpørreundersøkelseAntallSvar(
-                    spørreundersøkelseId = kartleggingId,
-                    spørsmålId = spørsmålId,
-                    antallSvar = rad.int("antallSvar")
-                )}.asSingle
+                ).map { rad ->
+                    SpørreundersøkelseAntallSvar(
+                        spørreundersøkelseId = kartleggingId,
+                        spørsmålId = spørsmålId,
+                        antallSvar = rad.int("antallSvar")
+                    )
+                }.asSingle
             )
         } ?: SpørreundersøkelseAntallSvar(
-                spørreundersøkelseId = kartleggingId,
-                spørsmålId = spørsmålId,
-                antallSvar = 0
-            )
+            spørreundersøkelseId = kartleggingId,
+            spørsmålId = spørsmålId,
+            antallSvar = 0
+        )
 
     private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvarDto {
         return row.tilSpørreundersøkelseSvarDto()
@@ -362,11 +365,11 @@ class KartleggingRepository(val dataSource: DataSource) {
 
     fun slettKartlegging(
         kartleggingId: String,
-        sistEndret: LocalDateTime = LocalDateTime.now()
+        sistEndret: LocalDateTime = LocalDateTime.now(),
     ) =
         using(sessionOf(dataSource)) { session ->
-            session.transaction { tx->
-                tx.run (
+            session.transaction { tx ->
+                tx.run(
                     queryOf(
                         """
                         DELETE FROM ia_sak_kartlegging_svar
@@ -377,7 +380,7 @@ class KartleggingRepository(val dataSource: DataSource) {
                         )
                     ).asUpdate
                 )
-                tx.run (
+                tx.run(
                     queryOf(
                         """
                         UPDATE ia_sak_kartlegging SET
@@ -398,7 +401,7 @@ class KartleggingRepository(val dataSource: DataSource) {
     fun endreKartleggingStatus(
         kartleggingId: String,
         status: KartleggingStatus,
-        sistEndret: LocalDateTime = LocalDateTime.now()
+        sistEndret: LocalDateTime = LocalDateTime.now(),
     ) =
         using(sessionOf(dataSource)) { session ->
             session.run(

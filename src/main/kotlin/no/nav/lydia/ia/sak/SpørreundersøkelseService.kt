@@ -27,7 +27,7 @@ import java.util.*
 import no.nav.lydia.ia.sak.api.kartlegging.toDto
 import no.nav.lydia.integrasjoner.kartlegging.AntallSvar
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingMedSvar
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingRepository
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.integrasjoner.kartlegging.ResultaterForTema
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
@@ -35,7 +35,7 @@ import no.nav.lydia.integrasjoner.kartlegging.StengTema
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
 class SpørreundersøkelseService(
-    val kartleggingRepository: KartleggingRepository,
+    val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     private val spørreundersøkelseProdusent: SpørreundersøkelseProdusent,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
@@ -43,7 +43,7 @@ class SpørreundersøkelseService(
 
     fun lagreSvar(karleggingSvarDtoListe: List<SpørreundersøkelseSvarDto>) {
         karleggingSvarDtoListe.forEach { svar ->
-            val kartlegging = kartleggingRepository.hentKartleggingEtterId(svar.spørreundersøkelseId)
+            val kartlegging = spørreundersøkelseRepository.hentKartleggingEtterId(svar.spørreundersøkelseId)
 
             if (kartlegging == null) {
                 log.error("Fant ikke kartlegging på denne iden: ${svar.spørreundersøkelseId}, hopper over")
@@ -72,8 +72,8 @@ class SpørreundersøkelseService(
                 return@forEach
             }
 
-            kartleggingRepository.lagreSvar(svar)
-            val antallSvarPåSpørsmål = kartleggingRepository.hentAntallSvar(
+            spørreundersøkelseRepository.lagreSvar(svar)
+            val antallSvarPåSpørsmål = spørreundersøkelseRepository.hentAntallSvar(
                 kartleggingId = kartlegging.kartleggingId,
                 spørsmålId = UUID.fromString(svar.spørsmålId)
             )
@@ -89,7 +89,7 @@ class SpørreundersøkelseService(
     }
 
     fun hentKartleggingMedSvar(kartleggingId: String): Either<Feil, KartleggingMedSvar> {
-        val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
+        val kartlegging = spørreundersøkelseRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
         if (kartlegging.status != KartleggingStatus.AVSLUTTET)
@@ -146,7 +146,7 @@ class SpørreundersøkelseService(
     }
 
     fun hentKartleggingOversiktMedAntallSvar(kartleggingId: String): Either<Feil, SpørreundersøkelseOversiktMedAntallSvar> {
-        val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
+        val kartlegging = spørreundersøkelseRepository.hentKartleggingEtterId(kartleggingId = kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
         val (alleSvar, antallUnikeDeltakereMedMinstEttSvar, antallUnikeDeltakereSomHarSvartPåAlt) = beregnAlleSvar(
@@ -183,7 +183,7 @@ class SpørreundersøkelseService(
         kartlegging: IASakKartlegging,
     ): Triple<List<SpørreundersøkelseSvarDto>, Int, Int> {
         val alleSvar: List<SpørreundersøkelseSvarDto> =
-            kartleggingRepository.hentAlleSvar(kartleggingId = kartleggingId)
+            spørreundersøkelseRepository.hentAlleSvar(kartleggingId = kartleggingId)
         val svarPerSesjonId: Map<String, List<SpørreundersøkelseSvarDto>> =
             alleSvar.filter { it.svarIder.isNotEmpty() }.groupBy { it.sesjonId }
         val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
@@ -201,22 +201,22 @@ class SpørreundersøkelseService(
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         saksnummer: String,
         temaNavn: List<Temanavn>,
-    ) = kartleggingRepository.opprettKartlegging(
+    ) = spørreundersøkelseRepository.opprettKartlegging(
         orgnummer = orgnummer,
         saksnummer = saksnummer,
         saksbehandler = saksbehandler,
         kartlegging = UUID.randomUUID(),
         vertId = UUID.randomUUID(),
         temaer = temaNavn.map {
-            kartleggingRepository.hentTema(it)
+            spørreundersøkelseRepository.hentTema(it)
         },
     ).onRight { spørreundersøkelseProdusent.sendPåKafka(it) }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, IASakKartlegging> {
-        val kartlegging = kartleggingRepository.hentKartleggingEtterId(kartleggingId)
+        val kartlegging = spørreundersøkelseRepository.hentKartleggingEtterId(kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
-        kartleggingRepository.slettKartlegging(kartleggingId = kartleggingId)
+        spørreundersøkelseRepository.slettKartlegging(kartleggingId = kartleggingId)
 
         val oppdatertKartlegging =
             kartlegging.copy(status = KartleggingStatus.SLETTET, endretTidspunkt = LocalDateTime.now())
@@ -229,7 +229,7 @@ class SpørreundersøkelseService(
         saksnummer: String,
     ): Either<Feil, List<IASakKartleggingOversikt>> {
         return try {
-            val kartlegginger = kartleggingRepository.hentKartlegginger(saksnummer = saksnummer)
+            val kartlegginger = spørreundersøkelseRepository.hentKartlegginger(saksnummer = saksnummer)
             kartlegginger.right()
         } catch (e: Exception) {
             log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
@@ -238,9 +238,9 @@ class SpørreundersøkelseService(
     }
 
     fun endreKartleggingStatus(kartleggingId: String, status: KartleggingStatus): Either<Feil, IASakKartlegging> {
-        kartleggingRepository.hentKartleggingEtterId(kartleggingId)
+        spørreundersøkelseRepository.hentKartleggingEtterId(kartleggingId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
-        val oppdatertKartlegging = kartleggingRepository.endreKartleggingStatus(
+        val oppdatertKartlegging = spørreundersøkelseRepository.endreKartleggingStatus(
             kartleggingId = kartleggingId,
             status = status
         )
@@ -253,7 +253,7 @@ class SpørreundersøkelseService(
 
     fun stengTema(hendelse: StengTema) {
         log.info("Mottok stenging av tema: ${hendelse.temaId} i spørreundersøkelse ${hendelse.spørreundersøkelseId}")
-        kartleggingRepository.stengTema(
+        spørreundersøkelseRepository.stengTema(
             spørreundersøkelseId = hendelse.spørreundersøkelseId,
             temaId = hendelse.temaId
         )
@@ -280,12 +280,12 @@ class SpørreundersøkelseService(
         spørreundersøkelseId: UUID,
         temaId: Int,
     ): TemaMedSpørsmålOgSvar {
-        val temaMedSpørsmålOgSvaralternativer = kartleggingRepository.hentTemaMedSpørsmålOgSvaralternativer(
+        val temaMedSpørsmålOgSvaralternativer = spørreundersøkelseRepository.hentTemaMedSpørsmålOgSvaralternativer(
             kartleggingId = spørreundersøkelseId
         ).first {
             it.tema.id == temaId
         }
-        val svarITema = kartleggingRepository.hentSvarForTema(
+        val svarITema = spørreundersøkelseRepository.hentSvarForTema(
             kartleggingId = spørreundersøkelseId,
             temaId = temaId
         )
