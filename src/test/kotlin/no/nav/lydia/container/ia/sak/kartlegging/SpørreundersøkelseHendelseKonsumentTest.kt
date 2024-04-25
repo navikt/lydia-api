@@ -2,6 +2,8 @@ package no.nav.lydia.container.ia.sak.kartlegging
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import java.util.*
+import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -13,15 +15,13 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.stengTema
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvar
-import no.nav.lydia.integrasjoner.kartlegging.OppdateringsType
-import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseOppdateringNøkkel
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.RESULTATER_FOR_TEMA
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import org.junit.After
 import org.junit.Before
-import java.util.*
-import kotlin.test.Test
 
-class IASakKartleggingHendelseKonsumentTest {
+class SpørreundersøkelseHendelseKonsumentTest {
     val spørreundersøkelseOppdateringKonsument =
         TestContainerHelper.kafkaContainerHelper.nyKonsument(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.konsumentGruppe)
 
@@ -76,20 +76,20 @@ class IASakKartleggingHendelseKonsumentTest {
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
                         spørreundersøkelseId = kartleggingDto.kartleggingId,
-                        oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA
+                        oppdateringsType = RESULTATER_FOR_TEMA
                     )
                 ),
                 konsument = spørreundersøkelseOppdateringKonsument
             ) { meldinger ->
                 meldinger.forEach { melding ->
-                    val resultaterForTema = Json.decodeFromString<TemaMedSpørsmålOgSvar>(melding)
+                    val resultaterForTema = Json.decodeFromString<TemaResultatDto>(melding)
                     resultaterForTema.tema shouldBe tema.temanavn.name
-                    resultaterForTema.spørsmålMedSvar.forExactlyOne { spørsmål ->
+                    resultaterForTema.spørsmålMedSvarDto.forExactlyOne { spørsmål ->
                         spørsmål.spørsmålId shouldBe førsteSpørsmål.id
-                        spørsmål.svarListe.forEach { svar ->
+                        spørsmål.svarDtoListe.forEach { svar ->
                             println("${svar.svarId} har ${svar.antallSvar} svar")
                         }
-                        spørsmål.svarListe.filter { svar -> svar.antallSvar == 5 } shouldHaveSize 1
+                        spørsmål.svarDtoListe.filter { svar -> svar.antallSvar == 5 } shouldHaveSize 1
                     }
                 }
             }

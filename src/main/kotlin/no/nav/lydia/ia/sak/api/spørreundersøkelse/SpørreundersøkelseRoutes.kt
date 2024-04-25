@@ -42,7 +42,7 @@ fun Route.iaSakSpørreundersøkelse(
         val temaer = call.receive<List<Temanavn>>()
 
         call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            spørreundersøkelseService.opprettKartlegging(
+            spørreundersøkelseService.opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
                 saksnummer = iaSak.saksnummer,
                 saksbehandler = saksbehandler,
@@ -57,7 +57,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = kartleggingEither.getOrNull()?.saksnummer
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it.toDto(true))
+            call.respond(HttpStatusCode.Created, it.tilDto(true))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -82,7 +82,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = saksnummer
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.toDto(erEier))
+            call.respond(HttpStatusCode.OK, it.tilDto(erEier))
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -93,7 +93,7 @@ fun Route.iaSakSpørreundersøkelse(
             call.kartleggingId ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            spørreundersøkelseService.hentKartleggingMedSvar(kartleggingId = kartleggingId)
+            spørreundersøkelseService.hentSpørreundersøkelseResultat(spørreundersøkelseId = kartleggingId)
         }.also { kartlegging ->
             auditLog.auditloggEither(
                 call = call,
@@ -123,7 +123,7 @@ fun Route.iaSakSpørreundersøkelse(
                 return@somEierAvSakIKartlegges IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
 
             spørreundersøkelseService.endreKartleggingStatus(
-                kartleggingId = kartleggingId,
+                spørreundersøkelseId = kartleggingId,
                 status = KartleggingStatus.AVSLUTTET
             )
         }.also { kartlegging ->
@@ -135,7 +135,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer
             )
         }.map {
-            call.respond(it.toDto(true))
+            call.respond(it.tilDto(true))
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -157,7 +157,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer
             )
         }.map {
-            call.respond(it.toDto(erEier = false))
+            call.respond(it.tilDto(erEier = false))
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -170,7 +170,7 @@ fun Route.iaSakSpørreundersøkelse(
 
         call.somEierAvSakIKartlegges(iaSakService, adGrupper) { _, _ ->
             spørreundersøkelseService.endreKartleggingStatus(
-                kartleggingId = kartleggingId,
+                spørreundersøkelseId = kartleggingId,
                 status = KartleggingStatus.PÅBEGYNT
             )
         }.also { kartlegging ->
@@ -182,7 +182,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer
             )
         }.map {
-            call.respond(it.toDto(true))
+            call.respond(it.tilDto(true))
         }.mapLeft {
             call.sendFeil(it)
         }

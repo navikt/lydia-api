@@ -9,9 +9,9 @@ data class SvaralternativDto(
     val svartekst: String,
 )
 
-fun List<Svaralternativ>.toDto() = map { it.toDto() }
+fun List<Svaralternativ>.tilDto() = map { it.tilDto() }
 
-fun Svaralternativ.toDto() =
+fun Svaralternativ.tilDto() =
     SvaralternativDto(
         svarId = svarId.toString(),
         svartekst = svartekst,

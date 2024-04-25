@@ -38,15 +38,15 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import org.junit.After
 import org.junit.Before
 
-class IASakKartleggingApiTest {
+class SpørreundersøkelseApiTest {
     private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     companion object {
@@ -69,7 +69,7 @@ class IASakKartleggingApiTest {
         val sak = nySakIKartlegges()
 
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.third.get().kartleggingId.length shouldBe 36
 
@@ -97,7 +97,8 @@ class IASakKartleggingApiTest {
                 konsument = kartleggingKonsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.map { it.temanavn } shouldBeEqual temaer
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
                         it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -112,7 +113,7 @@ class IASakKartleggingApiTest {
     @Test
     fun `skal få feil når saksnummer er ukjent`() {
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = "123456789", saksnummer = "ukjent")
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
         resp.second.body().asString("text/plain") shouldMatch "Ugyldig saksnummer"
@@ -122,7 +123,7 @@ class IASakKartleggingApiTest {
     fun `skal få feil når orgnummer er feil`() {
         val sak = nySakIKartlegges()
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = "222233334", saksnummer = sak.saksnummer)
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
         resp.second.body().asString("text/plain") shouldMatch "Ugyldig orgnummer"
@@ -132,7 +133,7 @@ class IASakKartleggingApiTest {
     fun `skal få feil når sak ikke er i kartleggingsstatus`() {
         val sak = nySakIViBistår()
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.Forbidden.value
         resp.second.body()
@@ -147,7 +148,7 @@ class IASakKartleggingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             temaer = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID)
-        ).tilSingelRespons<IASakKartleggingDto>()
+        ).tilSingelRespons<SpørreundersøkelseDto>()
 
         val id = resp.third.get().kartleggingId
 
@@ -157,7 +158,8 @@ class IASakKartleggingApiTest {
                 konsument = kartleggingKonsument
             ) { liste ->
                 liste.map { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.spørreundersøkelseId shouldBe id
                     spørreundersøkelse.vertId shouldHaveLength 36
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
@@ -187,7 +189,7 @@ class IASakKartleggingApiTest {
         val sak = nySakIKartlegges()
 
         IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         val alleKartlegginger = hentIASakKartlegginger(
             orgnr = sak.orgnr,
@@ -205,7 +207,7 @@ class IASakKartleggingApiTest {
         val sak = nySakIKartlegges()
 
         IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         val alleKartlegginger = hentIASakKartlegginger(
             orgnr = sak.orgnr,
@@ -227,7 +229,7 @@ class IASakKartleggingApiTest {
         // -- har kun partssamarbeid knyttet til seg pdd
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get()
+                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
 
         kartlegging.temaMedSpørsmålOgSvaralternativer.forAll { spørsmålOgSvarPerTema ->
             spørsmålOgSvarPerTema.temanavn shouldBe Temanavn.UTVIKLE_PARTSSAMARBEID
@@ -266,7 +268,7 @@ class IASakKartleggingApiTest {
 
         val kartleggingDto =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get()
+                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()).forAll { sesjonId ->
@@ -290,7 +292,7 @@ class IASakKartleggingApiTest {
 
         val kartleggingDto =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get()
+                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         enDeltakerSvarerPåEtSpørsmål(kartleggingDto = kartleggingDto, UUID.randomUUID().toString())
@@ -311,7 +313,7 @@ class IASakKartleggingApiTest {
         val sak = nySakIKartlegges()
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get()
+                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
         kartlegging.status shouldBe KartleggingStatus.OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -335,7 +337,7 @@ class IASakKartleggingApiTest {
         val sak = nySakIKartlegges()
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get()
+                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
         kartlegging.status shouldBe KartleggingStatus.OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -359,8 +361,8 @@ class IASakKartleggingApiTest {
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
-            temaMedSpørsmålOgSvar.spørsmålMedSvar.forAll { spørsmålMedSvar ->
-                spørsmålMedSvar.svarListe.forAll { svar ->
+            temaMedSpørsmålOgSvar.spørsmålMedSvarDto.forAll { spørsmålMedSvar ->
+                spørsmålMedSvar.svarDtoListe.forAll { svar ->
                     svar.antallSvar shouldBe 0
                 }
             }
@@ -372,7 +374,7 @@ class IASakKartleggingApiTest {
         val sak = nySakIKartlegges()
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<IASakKartleggingDto>().third.get()
+                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
         kartlegging.status shouldBe KartleggingStatus.OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -400,8 +402,8 @@ class IASakKartleggingApiTest {
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
             temaMedSpørsmålOgSvar.tema shouldNotBe null
             temaMedSpørsmålOgSvar.beskrivelse shouldNotBe null
-            temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->
-                spørsmålMedSvar.svarListe.forExactlyOne { svar ->
+            temaMedSpørsmålOgSvar.spørsmålMedSvarDto.forExactlyOne { spørsmålMedSvar ->
+                spørsmålMedSvar.svarDtoListe.forExactlyOne { svar ->
                     svar.antallSvar shouldBe 3
                 }
             }
@@ -453,7 +455,8 @@ class IASakKartleggingApiTest {
                 konsument = kartleggingKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
                 }
             }
@@ -484,7 +487,8 @@ class IASakKartleggingApiTest {
                 konsument = kartleggingKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.AVSLUTTET
                 }
             }
@@ -500,7 +504,7 @@ class IASakKartleggingApiTest {
         val response =
             lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-                .tilSingelRespons<IASakKartleggingDto>()
+                .tilSingelRespons<SpørreundersøkelseDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.Forbidden.value
 
@@ -530,7 +534,7 @@ class IASakKartleggingApiTest {
         val response =
             lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-                .tilSingelRespons<IASakKartleggingDto>()
+                .tilSingelRespons<SpørreundersøkelseDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.OK.value
 
@@ -540,7 +544,8 @@ class IASakKartleggingApiTest {
                 konsument = kartleggingKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.SLETTET
                 }
             }
@@ -563,7 +568,7 @@ class IASakKartleggingApiTest {
 
 
     fun enDeltakerSvarerPåALLESpørsmål(
-        kartleggingDto: IASakKartleggingDto,
+        kartleggingDto: SpørreundersøkelseDto,
         sesjonId: String = UUID.randomUUID().toString(),
     ) {
         kartleggingDto.temaMedSpørsmålOgSvaralternativer.forEach { temaMedSpørsmålOgSvaralternativer ->
@@ -581,7 +586,7 @@ class IASakKartleggingApiTest {
     }
 
     fun enDeltakerSvarerPåEtSpørsmål(
-        kartleggingDto: IASakKartleggingDto,
+        kartleggingDto: SpørreundersøkelseDto,
         sesjonId: String = UUID.randomUUID().toString(),
     ) {
         val førsteTema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()

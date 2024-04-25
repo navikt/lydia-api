@@ -22,7 +22,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Topic
-import no.nav.lydia.container.ia.sak.kartlegging.IASakKartleggingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
+import no.nav.lydia.container.ia.sak.kartlegging.SpørreundersøkelseApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
@@ -46,8 +46,8 @@ import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingOversiktDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseUtenInnholdDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
@@ -62,9 +62,9 @@ import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
 import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
 import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.integrasjoner.kartlegging.HendelsType
-import no.nav.lydia.integrasjoner.kartlegging.KartleggingMedSvar
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
-import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
@@ -605,7 +605,7 @@ class IASakKartleggingHelper {
         ) =
             lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
                 .authentication().bearer(token)
-                .tilListeRespons<IASakKartleggingOversiktDto>().third.fold(
+                .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
                     success = { it },
                     failure = { fail(it.message) }
                 )
@@ -618,44 +618,44 @@ class IASakKartleggingHelper {
             saksnummer = saksnummer,
             temaer = temaer,
             token = token,
-        ).tilSingelRespons<IASakKartleggingDto>().third.fold(
+        ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) }
         )
 
-        fun IASakKartleggingDto.start(
+        fun SpørreundersøkelseDto.start(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
         ) =
             lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/start")
                 .authentication().bearer(token)
-                .tilSingelRespons<IASakKartleggingDto>().third.fold(
+                .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                     success = { it },
                     failure = { fail(it.message) }
                 )
 
-        fun IASakKartleggingDto.avslutt(
+        fun SpørreundersøkelseDto.avslutt(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
         ) =
             lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/avslutt")
                 .authentication().bearer(token)
-                .tilSingelRespons<IASakKartleggingDto>().third.fold(
+                .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                     success = { it },
                     failure = { fail(it.message) }
                 )
 
-        fun IASakKartleggingDto.svarAlternativerTilEtFlervalgSpørsmål(): List<String> =
+        fun SpørreundersøkelseDto.svarAlternativerTilEtFlervalgSpørsmål(): List<String> =
             this.svarAlternativerTilEtSpørsmål(ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER).map { it.svarId }
 
-        fun IASakKartleggingDto.svarAlternativerTilEtSpørsmål(spørsmålId: String) =
+        fun SpørreundersøkelseDto.svarAlternativerTilEtSpørsmål(spørsmålId: String) =
             this.temaMedSpørsmålOgSvaralternativer.map { tema ->
                 tema.spørsmålOgSvaralternativer.firstOrNull { it.id == spørsmålId }
             }.first()!!.svaralternativer
 
-        fun IASakKartleggingDto.sendKartleggingFlervalgSvarTilKafka(
+        fun SpørreundersøkelseDto.sendKartleggingFlervalgSvarTilKafka(
             sesjonId: String = UUID.randomUUID().toString(),
             svarIder: List<String> = this.svarAlternativerTilEtFlervalgSpørsmål(),
         ) = sendKartleggingSvarTilKafka(
@@ -665,7 +665,7 @@ class IASakKartleggingHelper {
             svarIder = svarIder
         )
 
-        fun IASakKartleggingDto.sendKartleggingSvarTilKafka(
+        fun SpørreundersøkelseDto.sendKartleggingSvarTilKafka(
             spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
             sesjonId: String = UUID.randomUUID().toString(),
             svarIder: List<String> = listOf(temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
@@ -676,7 +676,7 @@ class IASakKartleggingHelper {
             svarIder = svarIder
         )
 
-        fun IASakKartleggingDto.stengTema(
+        fun SpørreundersøkelseDto.stengTema(
             temaId: Int,
         ) {
             temaMedSpørsmålOgSvaralternativer.filter { it.temaId == temaId } shouldHaveSize 1
@@ -723,7 +723,7 @@ class IASakKartleggingHelper {
         ) =
             lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
                 .authentication().bearer(token)
-                .tilSingelRespons<KartleggingMedSvar>().third.fold(
+                .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
                     success = { respons -> respons },
                     failure = { fail(it.message) }
                 )

@@ -1,11 +1,11 @@
-package no.nav.lydia.integrasjoner.kartlegging
+package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class SpørreundersøkelseSvarDto (
+data class SpørreundersøkelseSvarDto(
     val spørreundersøkelseId: String,
     val sesjonId: String,
     val spørsmålId: String,
-    val svarIder: List<String>
+    val svarIder: List<String>,
 )

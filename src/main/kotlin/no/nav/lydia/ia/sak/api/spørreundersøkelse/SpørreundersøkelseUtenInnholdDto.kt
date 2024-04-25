@@ -3,11 +3,11 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.IASakKartleggingOversikt
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 
 @Serializable
-data class IASakKartleggingOversiktDto(
+data class SpørreundersøkelseUtenInnholdDto(
     val kartleggingId: String,
     val vertId: String,
     val status: KartleggingStatus,
@@ -16,10 +16,10 @@ data class IASakKartleggingOversiktDto(
     val endretTidspunkt: LocalDateTime?,
 )
 
-fun List<IASakKartleggingOversikt>.toDto(erEier: Boolean) = map { it.toDto(erEier = erEier) }
+fun List<SpørreundersøkelseUtenInnhold>.tilDto(erEier: Boolean) = map { it.tilDto(erEier = erEier) }
 
-fun IASakKartleggingOversikt.toDto(erEier: Boolean) =
-    IASakKartleggingOversiktDto(
+fun SpørreundersøkelseUtenInnhold.tilDto(erEier: Boolean) =
+    SpørreundersøkelseUtenInnholdDto(
         kartleggingId = if (erEier) kartleggingId.toString() else "",
         vertId = if (erEier) {
             vertId?.toString() ?: ""

@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.container.ia.sak.kartlegging.IASakKartleggingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
+import no.nav.lydia.container.ia.sak.kartlegging.SpørreundersøkelseApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingFlervalgSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
@@ -24,18 +24,18 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.ANTALL_SVAR
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseAntallSvarDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseAntallSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.integrasjoner.kartlegging.OppdateringsType
-import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseOppdateringNøkkel
 import org.junit.After
 import org.junit.Before
 import org.postgresql.util.PGobject
 
-class IASakKartleggingSvarKonsumentTest {
+class SpørreundersøkelseSvarKonsumentTestDto {
 
     val kartleggingKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelse")
     val spørreundersøkelseOppdateringKonsument =
@@ -99,14 +99,14 @@ class IASakKartleggingSvarKonsumentTest {
         //AVSLUTTET
         TestContainerHelper.lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}/avslutt")
             .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
         kartlegging.sendKartleggingSvarTilKafka()
         TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke svare på en kartlegging i status AVSLUTTET".toRegex())
 
         //SLETTET
         TestContainerHelper.lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}")
             .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
-            .tilSingelRespons<IASakKartleggingDto>()
+            .tilSingelRespons<SpørreundersøkelseDto>()
         kartlegging.sendKartleggingSvarTilKafka()
         TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke svare på en kartlegging i status SLETTET".toRegex())
     }
@@ -278,7 +278,8 @@ class IASakKartleggingSvarKonsumentTest {
                 konsument = kartleggingKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseDto>(melding)
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
                 }
             }
@@ -294,13 +295,16 @@ class IASakKartleggingSvarKonsumentTest {
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
                         kartleggingDto.kartleggingId,
-                        OppdateringsType.ANTALL_SVAR
+                        ANTALL_SVAR
                     )
                 ),
                 konsument = spørreundersøkelseOppdateringKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val antallSvarForSpørsmål = Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(melding)
+                    val antallSvarForSpørsmål =
+                        Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(
+                            melding
+                        )
                     antallSvarForSpørsmål.spørreundersøkelseId shouldBe kartleggingDto.kartleggingId
                     antallSvarForSpørsmål.spørsmålId shouldBe spørsmålId
                     antallSvarForSpørsmål.antallSvar shouldBe 1

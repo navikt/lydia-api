@@ -25,6 +25,7 @@ import java.time.Duration
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 
 class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
     private lateinit var job: Job
@@ -84,7 +85,7 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
             }
         }
     }
-    
+
     private fun cancel() = runBlocking {
         logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
         kafkaConsumer.wakeup()

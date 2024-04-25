@@ -1,22 +1,22 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 
 @Serializable
-data class SpørsmålOgSvaralternativerDto(
+data class SpørsmålDto(
     val id: String,
     val spørsmål: String,
     val svaralternativer: List<SvaralternativDto>,
     val flervalg: Boolean,
 )
 
-fun List<SpørsmålOgSvaralternativer>.toDto() = map { it.toDto() }
+fun List<Spørsmål>.tilDto() = map { it.tilDto() }
 
-fun SpørsmålOgSvaralternativer.toDto() =
-    SpørsmålOgSvaralternativerDto(
+fun Spørsmål.tilDto() =
+    SpørsmålDto(
         id = spørsmålId.toString(),
         spørsmål = spørsmåltekst,
-        svaralternativer = svaralternativer.toDto(),
+        svaralternativer = svaralternativer.tilDto(),
         flervalg = flervalg,
     )
