@@ -7,7 +7,7 @@ data class TemaResultatDto(
     val temaId: Int,
     val tema: String,
     val beskrivelse: String,
-    val spørsmålMedSvarDto: List<SpørsmålResultatDto>,
+    val spørsmålMedSvar: List<SpørsmålResultatDto>,
 )
 
 @Serializable
