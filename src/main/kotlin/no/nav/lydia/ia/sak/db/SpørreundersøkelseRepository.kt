@@ -20,7 +20,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntal
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.tilgangskontroll.NavAnsatt
@@ -208,14 +208,14 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             orgnummer = this.string("orgnr"),
             virksomhetsNavn = this.string("navn"),
             status = KartleggingStatus.valueOf(this.string("status")),
-            temaMedSpørsmålOgSvaralternativer = hentTemaMedSpørsmålOgSvaralternativer(spørreundersøkelseId),
+            tema = hentTema(spørreundersøkelseId),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
             endretTidspunkt = this.localDateTimeOrNull("endret"),
         )
     }
 
-    fun hentTemaMedSpørsmålOgSvaralternativer(spørreundersøkelseId: UUID) =
+    fun hentTema(spørreundersøkelseId: UUID) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -277,7 +277,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                 svaralternativer = svaralternativer
             )
         }
-        TemaMedSpørsmålOgSvaralternativer(
+        Tema(
             tema = tema,
             stengtForSvar = erTemaStengt,
             spørsmål = spørsmål

@@ -24,7 +24,7 @@ fun Spørreundersøkelse.tilDto(erEier: Boolean) =
             vertId?.toString() ?: ""
         } else "",
         status = status,
-        temaMedSpørsmålOgSvaralternativer = if (erEier) temaMedSpørsmålOgSvaralternativer.map { it.toDto() } else emptyList(),
+        temaMedSpørsmålOgSvaralternativer = if (erEier) tema.map { it.toDto() } else emptyList(),
         opprettetAv = opprettetAv,
         opprettetTidspunkt = opprettetTidspunkt.toKotlinLocalDateTime(),
         endretTidspunkt = endretTidspunkt?.toKotlinLocalDateTime(),

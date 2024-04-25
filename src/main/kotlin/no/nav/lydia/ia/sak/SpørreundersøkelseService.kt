@@ -18,7 +18,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
@@ -94,7 +94,7 @@ class SpørreundersøkelseService(
         val (alleSvar, antallUnikeDeltakereMedMinstEttSvar, antallUnikeDeltakereSomHarSvartPåAlt) = spørreundersøkelse.beregnAlleSvar()
 
         val spørsmålMedSvarPerTema: List<TemaResultatDto> =
-            spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.map { svarTilTema(alleSvar, it) }
+            spørreundersøkelse.tema.map { svarTilTema(alleSvar, it) }
 
         return SpørreundersøkelseResultatDto(
             kartleggingId = spørreundersøkelse.id.toString(),
@@ -106,13 +106,13 @@ class SpørreundersøkelseService(
 
     private fun svarTilTema(
         alleSvar: List<SpørreundersøkelseSvarDto>,
-        temaMedSpørsmålOgSvaralternativer: TemaMedSpørsmålOgSvaralternativer,
+        tema: Tema,
     ) =
         TemaResultatDto(
-            temaId = temaMedSpørsmålOgSvaralternativer.tema.id,
-            tema = temaMedSpørsmålOgSvaralternativer.tema.navn.name,
-            beskrivelse = temaMedSpørsmålOgSvaralternativer.tema.beskrivelse,
-            spørsmålMedSvar = temaMedSpørsmålOgSvaralternativer.spørsmål.map { spørsmål ->
+            temaId = tema.tema.id,
+            tema = tema.tema.navn.name,
+            beskrivelse = tema.tema.beskrivelse,
+            spørsmålMedSvar = tema.spørsmål.map { spørsmål ->
                 SpørsmålResultatDto(
                     spørsmålId = spørsmål.spørsmålId.toString(),
                     tekst = spørsmål.spørsmåltekst,
@@ -144,7 +144,7 @@ class SpørreundersøkelseService(
         val svarPerSesjonId: Map<String, List<SpørreundersøkelseSvarDto>> =
             alleSvar.filter { it.svarIder.isNotEmpty() }.groupBy { it.sesjonId }
         val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
-        val antallSpørsmål = this.temaMedSpørsmålOgSvaralternativer.sumOf { spørsmålForTema ->
+        val antallSpørsmål = this.tema.sumOf { spørsmålForTema ->
             spørsmålForTema.spørsmål.size
         }
         val antallUnikeDeltakereSomHarSvartPåAlt = svarPerSesjonId.filter {
@@ -241,7 +241,7 @@ class SpørreundersøkelseService(
         spørreundersøkelseId: UUID,
         temaId: Int,
     ): TemaResultatDto {
-        val temaMedSpørsmålOgSvaralternativer = spørreundersøkelseRepository.hentTemaMedSpørsmålOgSvaralternativer(
+        val temaMedSpørsmålOgSvaralternativer = spørreundersøkelseRepository.hentTema(
             spørreundersøkelseId = spørreundersøkelseId
         ).first {
             it.tema.id == temaId
@@ -253,12 +253,12 @@ class SpørreundersøkelseService(
 
         return svarTilTema(
             alleSvar = svarITema,
-            temaMedSpørsmålOgSvaralternativer = temaMedSpørsmålOgSvaralternativer
+            tema = temaMedSpørsmålOgSvaralternativer
         )
     }
 
     private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? {
-        return temaMedSpørsmålOgSvaralternativer
+        return tema
             .flatMap { it.spørsmål }
             .firstOrNull { it.spørsmålId == spørsmålId }
     }

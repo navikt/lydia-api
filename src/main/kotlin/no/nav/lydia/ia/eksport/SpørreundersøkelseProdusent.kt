@@ -11,7 +11,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvaralternativer
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 
 class SpørreundersøkelseProdusent(
@@ -36,13 +36,13 @@ class SpørreundersøkelseProdusent(
                 virksomhetsNavn = virksomhetsNavn,
                 status = this.status,
                 type = "kartlegging",
-                temaMedSpørsmålOgSvaralternativer = temaMedSpørsmålOgSvaralternativer.map { it.tilKafkaMelding() },
+                temaMedSpørsmålOgSvaralternativer = tema.map { it.tilKafkaMelding() },
                 avslutningsdato = now().toKotlinLocalDate(),
             )
             return nøkkel to Json.encodeToString(verdi)
         }
 
-        private fun TemaMedSpørsmålOgSvaralternativer.tilKafkaMelding() =
+        private fun Tema.tilKafkaMelding() =
             TemaKafkaDto(
                 temaId = this.tema.id,
                 temanavn = this.tema.navn,

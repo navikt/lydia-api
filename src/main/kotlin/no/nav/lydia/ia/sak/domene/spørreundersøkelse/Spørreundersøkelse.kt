@@ -10,7 +10,7 @@ data class Spørreundersøkelse(
     val orgnummer: String,
     val virksomhetsNavn: String,
     val status: KartleggingStatus,
-    val temaMedSpørsmålOgSvaralternativer: List<TemaMedSpørsmålOgSvaralternativer>,
+    val tema: List<Tema>,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
