@@ -203,26 +203,6 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal kunne hente ut en liste med minimal informasjon over alle kartlegginger knyttet til en sak dersom bruker ikke er eier`() {
-        val sak = nySakIKartlegges()
-
-        IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<SpørreundersøkelseDto>()
-
-        val alleKartlegginger = hentIASakKartlegginger(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            token = oauth2ServerContainer.saksbehandler2.token
-        )
-        alleKartlegginger shouldHaveSize 1
-        alleKartlegginger.forAll { it.vertId shouldBeEqual "" }
-        alleKartlegginger.forAll { it.kartleggingId shouldBeEqual "" }
-        alleKartlegginger.forAll { it.opprettetAv shouldBeEqual oauth2ServerContainer.saksbehandler1.navIdent }
-        alleKartlegginger.forAll { it.opprettetTidspunkt shouldNotBe null }
-        alleKartlegginger.forAll { it.endretTidspunkt shouldBe null }
-    }
-
-    @Test
     fun `nylig opprettet kartlegging får alle spørsmål med riktige svaralternativer knyttet til seg`() {
         val sak = nySakIKartlegges()
 

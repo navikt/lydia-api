@@ -66,12 +66,10 @@ fun Route.iaSakSpørreundersøkelse(
     get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        var erEier = false
 
-        call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
-            val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
                 ?: return@somLesebruker IASakError.`ugyldig saksnummer`.left()
-            erEier = iaSak.eidAv == lesebruker.navIdent
             spørreundersøkelseService.hentKartlegginger(saksnummer = saksnummer)
         }.also { kartleggingerEither ->
             auditLog.auditloggEither(
@@ -82,7 +80,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = saksnummer
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto(erEier))
+            call.respond(HttpStatusCode.OK, it.tilDto())
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }

@@ -16,14 +16,12 @@ data class SpørreundersøkelseUtenInnholdDto(
     val endretTidspunkt: LocalDateTime?,
 )
 
-fun List<SpørreundersøkelseUtenInnhold>.tilDto(erEier: Boolean) = map { it.tilDto(erEier = erEier) }
+fun List<SpørreundersøkelseUtenInnhold>.tilDto() = map { it.tilDto() }
 
-fun SpørreundersøkelseUtenInnhold.tilDto(erEier: Boolean) =
+fun SpørreundersøkelseUtenInnhold.tilDto() =
     SpørreundersøkelseUtenInnholdDto(
-        kartleggingId = if (erEier) kartleggingId.toString() else "",
-        vertId = if (erEier) {
-            vertId?.toString() ?: ""
-        } else "",
+        kartleggingId = kartleggingId.toString(),
+        vertId = vertId?.toString() ?: "",
         status = status,
         opprettetAv = opprettetAv,
         opprettetTidspunkt = opprettetTidspunkt.toKotlinLocalDateTime(),
