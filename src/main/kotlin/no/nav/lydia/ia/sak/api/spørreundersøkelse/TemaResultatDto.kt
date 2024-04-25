@@ -7,20 +7,20 @@ data class TemaResultatDto(
     val temaId: Int,
     val tema: String,
     val beskrivelse: String,
-    val spørsmålMedSvarDto: List<SpørsmålMedSvarDto>,
+    val spørsmålMedSvarDto: List<SpørsmålResultatDto>,
 )
 
 @Serializable
-data class SvarDto(
-    val svarId: String,
-    val tekst: String,
-    val antallSvar: Int,
-)
-
-@Serializable
-data class SpørsmålMedSvarDto(
+data class SpørsmålResultatDto(
     val spørsmålId: String,
     val tekst: String,
     val flervalg: Boolean,
-    val svarDtoListe: List<SvarDto>,
+    val svarListe: List<SvarResultatDto>,
+)
+
+@Serializable
+data class SvarResultatDto(
+    val svarId: String,
+    val tekst: String,
+    val antallSvar: Int,
 )

@@ -86,10 +86,10 @@ class SpørreundersøkelseHendelseKonsumentTest {
                     resultaterForTema.tema shouldBe tema.temanavn.name
                     resultaterForTema.spørsmålMedSvarDto.forExactlyOne { spørsmål ->
                         spørsmål.spørsmålId shouldBe førsteSpørsmål.id
-                        spørsmål.svarDtoListe.forEach { svar ->
+                        spørsmål.svarListe.forEach { svar ->
                             println("${svar.svarId} har ${svar.antallSvar} svar")
                         }
-                        spørsmål.svarDtoListe.filter { svar -> svar.antallSvar == 5 } shouldHaveSize 1
+                        spørsmål.svarListe.filter { svar -> svar.antallSvar == 5 } shouldHaveSize 1
                     }
                 }
             }

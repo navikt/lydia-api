@@ -14,8 +14,8 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenI
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålMedSvarDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvaralternativer
@@ -113,12 +113,12 @@ class SpørreundersøkelseService(
             tema = temaMedSpørsmålOgSvaralternativer.tema.navn.name,
             beskrivelse = temaMedSpørsmålOgSvaralternativer.tema.beskrivelse,
             spørsmålMedSvarDto = temaMedSpørsmålOgSvaralternativer.spørsmål.map { spørsmål ->
-                SpørsmålMedSvarDto(
+                SpørsmålResultatDto(
                     spørsmålId = spørsmål.spørsmålId.toString(),
                     tekst = spørsmål.spørsmåltekst,
                     flervalg = spørsmål.flervalg,
-                    svarDtoListe = spørsmål.svaralternativer.map { svar ->
-                        SvarDto(
+                    svarListe = spørsmål.svaralternativer.map { svar ->
+                        SvarResultatDto(
                             svarId = svar.svarId.toString(),
                             tekst = svar.svartekst,
                             antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
