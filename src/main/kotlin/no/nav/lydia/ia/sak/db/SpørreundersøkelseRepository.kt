@@ -19,7 +19,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaMedSpørsmålOgSvaralternativer
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
@@ -110,7 +110,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         vertId: UUID,
         saksnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        temaer: List<Tema>,
+        temaer: List<TemaInfo>,
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -248,7 +248,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
 
     private data class SpørsmålsRad(
         val spørreundersøkelseId: UUID,
-        val tema: Tema,
+        val tema: TemaInfo,
         val erTemaStengt: Boolean,
         val spørsmålId: UUID,
         val spørsmåltekst: String,
@@ -438,7 +438,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         } ?: throw IllegalStateException("Fant ingen aktive kartleggingstemaer for $temanavn")
 
     private fun mapTilTema(row: Row) =
-        Tema(
+        TemaInfo(
             id = row.int("tema_id"),
             rekkefølge = row.int("rekkefolge"),
             navn = Temanavn.valueOf(row.string("navn")),

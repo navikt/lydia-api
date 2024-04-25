@@ -112,7 +112,7 @@ class SpørreundersøkelseService(
             temaId = temaMedSpørsmålOgSvaralternativer.tema.id,
             tema = temaMedSpørsmålOgSvaralternativer.tema.navn.name,
             beskrivelse = temaMedSpørsmålOgSvaralternativer.tema.beskrivelse,
-            spørsmålMedSvarDto = temaMedSpørsmålOgSvaralternativer.spørsmål.map { spørsmål ->
+            spørsmålMedSvar = temaMedSpørsmålOgSvaralternativer.spørsmål.map { spørsmål ->
                 SpørsmålResultatDto(
                     spørsmålId = spørsmål.spørsmålId.toString(),
                     tekst = spørsmål.spørsmåltekst,

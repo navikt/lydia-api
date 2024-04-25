@@ -341,7 +341,7 @@ class SpørreundersøkelseApiTest {
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
-            temaMedSpørsmålOgSvar.spørsmålMedSvarDto.forAll { spørsmålMedSvar ->
+            temaMedSpørsmålOgSvar.spørsmålMedSvar.forAll { spørsmålMedSvar ->
                 spørsmålMedSvar.svarListe.forAll { svar ->
                     svar.antallSvar shouldBe 0
                 }
@@ -382,7 +382,7 @@ class SpørreundersøkelseApiTest {
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
             temaMedSpørsmålOgSvar.tema shouldNotBe null
             temaMedSpørsmålOgSvar.beskrivelse shouldNotBe null
-            temaMedSpørsmålOgSvar.spørsmålMedSvarDto.forExactlyOne { spørsmålMedSvar ->
+            temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->
                 spørsmålMedSvar.svarListe.forExactlyOne { svar ->
                     svar.antallSvar shouldBe 3
                 }
