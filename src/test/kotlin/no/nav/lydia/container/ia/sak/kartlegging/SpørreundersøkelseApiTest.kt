@@ -15,7 +15,7 @@ import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
-import java.util.*
+import java.util.UUID
 import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -39,8 +39,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import org.junit.After
@@ -50,7 +50,7 @@ class SpørreundersøkelseApiTest {
     private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     companion object {
-        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018e7b0d-fe32-79ab-8e2e-b990afbbc2bf"
+        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018f4e25-6a40-713f-b769-267afa134896"
     }
 
     @Before
@@ -103,7 +103,6 @@ class SpørreundersøkelseApiTest {
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
                         it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
                         it.beskrivelse.shouldNotBeEmpty()
-                        it.introtekst.shouldNotBeEmpty()
                     }
                 }
             }
@@ -167,9 +166,9 @@ class SpørreundersøkelseApiTest {
                     spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 1
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
-                        tema.spørsmålOgSvaralternativer shouldHaveSize 7 // Det er 7 spørsmål i tema UTVIKLE_PARTSSAMARBEID
+                        tema.spørsmålOgSvaralternativer shouldHaveSize 4 // Det er 4 spørsmål i tema UTVIKLE_PARTSSAMARBEID
                         tema.spørsmålOgSvaralternativer.forAll {
-                            it.svaralternativer shouldHaveAtLeastSize 4 // Det er minst 4 svaralternativer per spørsmål
+                            it.svaralternativer shouldHaveAtLeastSize 6 // Det er minst 6 svaralternativer per spørsmål
                         }
                         tema.spørsmålOgSvaralternativer.forAll {
                             if (it.id != ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER) {
@@ -219,7 +218,7 @@ class SpørreundersøkelseApiTest {
         kartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
                 postgresContainer.hentEnkelKolonne(
-                    "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.temanavn}'"
+                    "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.temanavn}' and status = 'AKTIV'"
                 )
             val spørsmålIderForEtTema: List<String> =
                 postgresContainer.hentAlleRaderTilEnkelKolonne(

@@ -14,7 +14,7 @@ data class TemaInfo(
 )
 
 enum class Temanavn {
-    UTVIKLE_PARTSSAMARBEID, REDUSERE_SYKEFRAVÆR
+    UTVIKLE_PARTSSAMARBEID, REDUSERE_SYKEFRAVÆR, ARBEIDSMILJØ
 }
 
 enum class TemaStatus {
