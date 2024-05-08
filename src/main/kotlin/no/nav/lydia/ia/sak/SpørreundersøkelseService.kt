@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import no.nav.lydia.appstatus.Metrics
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
@@ -167,7 +168,10 @@ class SpørreundersøkelseService(
         temaer = temaNavn.map {
             spørreundersøkelseRepository.hentTema(it)
         },
-    ).onRight { spørreundersøkelseProdusent.sendPåKafka(it) }
+    ).onRight {
+        spørreundersøkelseProdusent.sendPåKafka(it)
+        Metrics.loggBehovsvurdering(it.status)
+    }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, Spørreundersøkelse> {
         val kartlegging = spørreundersøkelseRepository.hentSpørreundersøkelse(kartleggingId)
@@ -178,6 +182,7 @@ class SpørreundersøkelseService(
         val oppdatertKartlegging =
             kartlegging.copy(status = KartleggingStatus.SLETTET, endretTidspunkt = LocalDateTime.now())
         spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
+        Metrics.loggBehovsvurdering(oppdatertKartlegging.status)
 
         return oppdatertKartlegging.right()
     }
@@ -208,6 +213,7 @@ class SpørreundersøkelseService(
             ?: return IASakKartleggingError.`feil under oppdatering`.left()
 
         spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
+        Metrics.loggBehovsvurdering(oppdatertKartlegging.status)
 
         return oppdatertKartlegging.right()
     }

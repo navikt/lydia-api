@@ -3,11 +3,8 @@ package no.nav.lydia.container
 import com.github.kittinunf.fuel.core.isSuccessful
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
-import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.VirksomhetHelper
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -58,9 +55,6 @@ class AppContainerTest {
 
     @Test
     fun `skal få egendefinerte metrikker`() {
-        SakHelper.nySakIViBistår(orgnummer = VirksomhetHelper.nyttOrgnummer())
-            .leggTilLeveranseOgFullførSak(18)
-
         val (_, response, result) = lydiaApiContainer.performGet("metrics")
             .responseString()
 
@@ -70,6 +64,10 @@ class AppContainerTest {
                 metrikker shouldContain "ia_virksomheter_vurdert_total"
                 metrikker shouldContain "ia_virksomheter_vi_bistar_total"
                 metrikker shouldContain "ia_virksomheter_fulfort_total"
+                metrikker shouldContain "ia_behovsvurdering_opprettet_total"
+                metrikker shouldContain "ia_behovsvurdering_startet_total"
+                metrikker shouldContain "ia_behovsvurdering_fullfort_total"
+                metrikker shouldContain "ia_behovsvurdering_slettet_total"
             },
             failure = {
                 fail("")
