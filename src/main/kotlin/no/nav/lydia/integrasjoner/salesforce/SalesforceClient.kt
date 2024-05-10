@@ -39,13 +39,13 @@ class SalesforceClient(private val salesforce: Salesforce) {
         ignoreUnknownKeys = true
     }
 
-    suspend fun hentSalesforceUrl(orgnr: String): Either<Feil, SalesforceUrlResponse> {
+    suspend fun hentSalesforceInfo(orgnr: String): Either<Feil, SalesforceInfoResponse> {
         return hentGyldigToken().flatMap { gyldigToken ->
             val response = httpClient.get {
                 url("${gyldigToken.instanceUrl}$QUERY_PATH")
                 header("Accept", "application/json")
                 header("Authorization", "Bearer ${gyldigToken.accessToken}")
-                parameter("q", "SELECT Id, INT_OrganizationNumber__c FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'")
+                parameter("q", "SELECT Id, INT_OrganizationNumber__c, TAG_Partner_Status__c FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'")
             }
 
             if (!response.status.isSuccess()) {
@@ -59,9 +59,10 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 return SalesforceFeil.`fant ikke salesforce account for orgnummer`.left()
             }
 
-            return SalesforceUrlResponse(
+            return SalesforceInfoResponse(
                 orgnr = orgnr,
-                url = "${gyldigToken.instanceUrl}/${queryResponse.records.first().Id}"
+                url = "${gyldigToken.instanceUrl}/${queryResponse.records.first().Id}",
+                partnerStatus = queryResponse.records.first().TAG_Partner_Status__c
             ).right()
         }
     }

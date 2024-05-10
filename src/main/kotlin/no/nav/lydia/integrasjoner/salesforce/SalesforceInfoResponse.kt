@@ -4,4 +4,8 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class SalesforceUrlResponse(val orgnr: String, val url: String)
+data class SalesforceInfoResponse(
+	val orgnr: String,
+	val url: String,
+	val partnerStatus: String
+)

@@ -19,7 +19,7 @@ import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
 
 const val VIRKSOMHET_PATH = "virksomhet"
-const val SALESFORCE_LENKE_PATH = "${VIRKSOMHET_PATH}/salesforce"
+const val SALESFORCE_INFO_PATH = "${VIRKSOMHET_PATH}/salesforce"
 
 fun Route.virksomhet(
     virksomhetService: VirksomhetService,
@@ -51,11 +51,11 @@ fun Route.virksomhet(
         }
     }
 
-    get("$SALESFORCE_LENKE_PATH/{orgnummer}") {
+    get("$SALESFORCE_INFO_PATH/{orgnummer}") {
         val nå = Clock.System.now()
         val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
-        salesforceClient.hentSalesforceUrl(orgnr = orgnummer).map { salesforceUrlResponse ->
+        salesforceClient.hentSalesforceInfo(orgnr = orgnummer).map { salesforceUrlResponse ->
             call.application.log.info("Hentet salesforce lenke for virksomhet på ${Clock.System.now() - nå} ms")
             call.respond(salesforceUrlResponse)
         }.mapLeft {

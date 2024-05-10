@@ -18,7 +18,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceUrl
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceInfo
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -214,11 +214,12 @@ class VirksomhetApiTest {
     }
 
     @Test
-    fun `skal få riktig salesforce lenke`() {
+    fun `skal få riktig salesforce info`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
-        val salesforceUrl = hentSalesforceUrl(orgnummer = virksomhet.orgnr)
+        val salesforceUrl = hentSalesforceInfo(orgnummer = virksomhet.orgnr)
 
         salesforceUrl.orgnr shouldBe virksomhet.orgnr
         salesforceUrl.url shouldMatch "http://host.testcontainers.internal:\\d+/0015t0000121xU6AAI"
+        salesforceUrl.partnerStatus shouldBe "Samarbeidspartner"
     }
 }
