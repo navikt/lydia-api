@@ -29,6 +29,8 @@ spec:
     path: "/metrics"
   accessPolicy:
     outbound:
+      rules:
+        - application: pia-pdfgen
       external:
         - host: "data.ssb.no"
         - host: "salesforce.com"
