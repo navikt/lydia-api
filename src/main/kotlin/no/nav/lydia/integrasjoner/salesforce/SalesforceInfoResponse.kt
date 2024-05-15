@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 data class SalesforceInfoResponse(
 	val orgnr: String,
 	val url: String,
-	val partnerStatus: String
+	val partnerStatus: String?
 )
