@@ -1,7 +1,7 @@
 package no.nav.lydia.container.sykefraværsstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
@@ -114,7 +114,7 @@ class SykefraværsstatistikkApiTest {
         val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 8.0
         val BRANSJE_SYKEHJEM_PROSENT = 6.0
         settSykefraværsprosentNæring(NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON, NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT)
-        settSykefraværsprosentBransje(Bransjer.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
+        settSykefraværsprosentBransje(Bransje.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
                 Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
                 5.0
@@ -130,7 +130,7 @@ class SykefraværsstatistikkApiTest {
 
         val results = hentSykefravær(
                 snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-                bransjeProgram = Bransjer.SYKEHJEM.name
+                bransjeProgram = Bransje.SYKEHJEM.name
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
@@ -142,7 +142,7 @@ class SykefraværsstatistikkApiTest {
         val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 4.0
         val BRANSJE_SYKEHJEM_PROSENT = 6.0
         settSykefraværsprosentNæring(NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON, NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT)
-        settSykefraværsprosentBransje(Bransjer.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
+        settSykefraværsprosentBransje(Bransje.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
                 Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
                 5.0
@@ -158,7 +158,7 @@ class SykefraværsstatistikkApiTest {
 
         val results = hentSykefravær(
                 snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-                bransjeProgram = Bransjer.SYKEHJEM.name
+                bransjeProgram = Bransje.SYKEHJEM.name
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
@@ -640,7 +640,7 @@ class SykefraværsstatistikkApiTest {
             prosentSistePubliserteKvartal = 75.0,
         )
         settSykefraværsprosentBransje(
-                bransje = Bransjer.BARNEHAGER,
+                bransje = Bransje.BARNEHAGER,
                 prosentSiste4Kvartal = 5.0,
                 prosentSistePubliserteKvartal = 77.7,
         )
@@ -800,7 +800,7 @@ class SykefraværsstatistikkApiTest {
         val virksomhet = nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
         lastInnNyVirksomhet(nyVirksomhet = virksomhet)
         hentSykefravær(
-            bransjeProgram = "${Bransjer.BYGG}",
+            bransjeProgram = "${Bransje.BYGG}",
             success = {
                 it.data.size shouldBeGreaterThanOrEqual 1
                 it.data.forExactlyOne { dataVirksomhet -> dataVirksomhet.orgnr shouldBe virksomhet.orgnr }
@@ -818,7 +818,7 @@ class SykefraværsstatistikkApiTest {
         lastInnNyVirksomhet(virksomhet2)
         lastInnNyVirksomhet(virksomhet3)
         hentSykefravær(
-            bransjeProgram = "${Bransjer.BYGG},${Bransjer.SYKEHUS}",
+            bransjeProgram = "${Bransje.BYGG},${Bransje.SYKEHUS}",
             næringsgrupper = "42",
             success = {
                 it.data.size shouldBeGreaterThanOrEqual 3
@@ -1170,7 +1170,7 @@ class SykefraværsstatistikkApiTest {
         }
 
         fun settSykefraværsprosentBransje(
-                bransje: Bransjer,
+                bransje: Bransje,
                 prosentSiste4Kvartal: Double,
                 prosentSistePubliserteKvartal: Double = 2.0
         ) {

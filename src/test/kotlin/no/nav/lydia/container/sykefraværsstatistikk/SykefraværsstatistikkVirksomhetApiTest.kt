@@ -1,7 +1,7 @@
 package no.nav.lydia.container.sykefraværsstatistikk
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import ia.felles.definisjoner.bransjer.Bransjer.TRANSPORT
+import ia.felles.definisjoner.bransjer.Bransje.TRANSPORT
 import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 import kotlin.test.fail

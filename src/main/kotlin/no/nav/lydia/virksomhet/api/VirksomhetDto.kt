@@ -1,6 +1,6 @@
 package no.nav.lydia.virksomhet.api
 
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -25,7 +25,7 @@ data class VirksomhetDto(
     val næringsundergruppe2: Næringsgruppe?,
     val næringsundergruppe3: Næringsgruppe?,
     val næring: Næringsgruppe,
-    val bransje: Bransjer?
+    val bransje: Bransje?
 )
 
 fun Virksomhet.toDto() = VirksomhetDto(

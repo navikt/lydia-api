@@ -3,7 +3,8 @@ package no.nav.lydia.sykefraværsstatistikk
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
+import javax.sql.DataSource
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.Row
 import kotliquery.queryOf
@@ -32,7 +33,6 @@ import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSisteKvar
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.Sektor
-import javax.sql.DataSource
 
 class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
@@ -211,7 +211,7 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
     fun hentNæringstatistikkPerKvartal(næring: String) =
         hentKategoristatistikkPerKvartal(Kategori.NÆRING, næring)
 
-    fun hentBransjestatistikkPerKvartal(bransje: Bransjer) =
+    fun hentBransjestatistikkPerKvartal(bransje: Bransje) =
         hentKategoristatistikkPerKvartal(Kategori.BRANSJE, bransje.name)
 
     fun hentSektorstatistikkPerKvartal(sektor: Sektor) =

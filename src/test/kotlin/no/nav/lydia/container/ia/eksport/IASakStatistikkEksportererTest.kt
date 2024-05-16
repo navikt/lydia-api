@@ -1,10 +1,12 @@
 package no.nav.lydia.container.ia.eksport
 
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
+import ia.felles.definisjoner.bransjer.BransjeId
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
+import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
@@ -32,7 +34,6 @@ import no.nav.lydia.tilgangskontroll.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
 import org.junit.Before
-import kotlin.test.Test
 
 class IASakStatistikkEksportererTest {
     private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
@@ -50,7 +51,7 @@ class IASakStatistikkEksportererTest {
 
     @Test
     fun `skal trigge kafka-eksport av IASakStatistikk`() {
-        val næringskode = "${Bransjer.ANLEGG.næringskoder.first()}.120"
+        val næringskode = "${(Bransje.ANLEGG.bransjeId as BransjeId.Næring).næring}.120"
         val virksomhet = TestVirksomhet.nyVirksomhet(
             næringer = listOf(Næringsgruppe(kode = næringskode, navn = "Bygging av jernbaner og undergrunnsbaner"))
         )
@@ -75,7 +76,7 @@ class IASakStatistikkEksportererTest {
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")
-                    it.bransjeprogram shouldBe Bransjer.ANLEGG
+                    it.bransjeprogram shouldBe Bransje.ANLEGG
                     it.endretAvRolle shouldBe Rolle.SAKSBEHANDLER
                     it.enhetsnummer shouldBe "2900"
                     it.enhetsnavn shouldBe "IT-avdelingen"
