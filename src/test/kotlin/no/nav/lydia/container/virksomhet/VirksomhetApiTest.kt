@@ -1,6 +1,6 @@
 package no.nav.lydia.container.virksomhet
 
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
@@ -191,11 +191,11 @@ class VirksomhetApiTest {
     fun `skal få bransje på virksomheter som tilhører et bransjeprogram`() {
         val virksomhetBarnehage = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(BARNEHAGER)))
         val virksomhetBarnehageDto = hentVirksomhetsinformasjon(orgnummer = virksomhetBarnehage.orgnr)
-        virksomhetBarnehageDto.bransje shouldBe Bransjer.BARNEHAGER
+        virksomhetBarnehageDto.bransje shouldBe Bransje.BARNEHAGER
 
         val virksomhetNæringsmiddel = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(NÆRINGSMIDLER_IKKE_NEVNT)))
         val virksomhetNæringsmiddelDto = hentVirksomhetsinformasjon(orgnummer = virksomhetNæringsmiddel.orgnr)
-        virksomhetNæringsmiddelDto.bransje shouldBe Bransjer.NÆRINGSMIDDELINDUSTRI
+        virksomhetNæringsmiddelDto.bransje shouldBe Bransje.NÆRINGSMIDDELINDUSTRI
     }
 
     @Test

@@ -3,7 +3,8 @@ package no.nav.lydia.sykefraværsstatistikk.api
 import arrow.core.*
 import arrow.core.raise.either
 import arrow.core.raise.zipOrAccumulate
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
+import ia.felles.definisjoner.bransjer.BransjeId
 import io.ktor.http.*
 import io.ktor.server.request.*
 import no.nav.lydia.ia.sak.api.Feil
@@ -32,7 +33,7 @@ data class Søkeparametere(
     val status: IAProsessStatus?,
     val side: Int,
     val navIdenter: Set<String>,
-    val bransjeprogram: Set<Bransjer>,
+    val bransjeprogram: Set<Bransje>,
     val sektor: Set<Sektor>,
 ) {
     fun toLogString() = "Søk med parametere:" +
@@ -154,7 +155,7 @@ data class Søkeparametere(
                    OR substr(naringsundergruppe3, 1, 2) in (select unnest(:naringer))
                     ${
                     if (søkeparametere.bransjeprogram.isNotEmpty()) {
-                        val koder = søkeparametere.bransjeprogram.flatMap { it.næringskoder }.groupBy {
+                        val koder = søkeparametere.bransjeprogram.flatMap { it.tilNæringskoder() }.groupBy {
                             it.length
                         }
                         val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
@@ -169,6 +170,13 @@ data class Søkeparametere(
             """.trimIndent()
         }
 
+        private fun Bransje.tilNæringskoder(): List<String> {
+            return when (this.bransjeId) {
+                is BransjeId.Næringskoder -> (this.bransjeId as BransjeId.Næringskoder).næringskoder
+                is BransjeId.Næring -> listOf((this.bransjeId as BransjeId.Næring).næring)
+            }
+        }
+
         private fun ApplicationRequest.navIdenter(navAnsatt: NavAnsatt): Set<String> {
             return queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
                 when (navAnsatt) {
@@ -181,9 +189,9 @@ data class Søkeparametere(
         private fun finnSektor(queryParams: String?): Set<Sektor> =
             queryParams.tomSomNull()?.tilUnikeVerdier()?.map { it.tilSektor() }?.requireNoNulls()?.toSet() ?: emptySet()
 
-        private fun finnBransjeProgram(queryParams: String?): Set<Bransjer> {
+        private fun finnBransjeProgram(queryParams: String?): Set<Bransje> {
             val unikeVerdier = queryParams.tilUnikeVerdier().map(String::uppercase)
-            return Bransjer.entries.filter { it.name in unikeVerdier }.toSet()
+            return Bransje.entries.filter { it.name in unikeVerdier }.toSet()
         }
 
         private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
@@ -206,7 +214,7 @@ data class Søkeparametere(
     internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply {
         addAll(
             bransjeprogram.flatMap { bransje ->
-                bransje.næringskoder.map { næringskode ->
+                bransje.tilNæringskoder().map { næringskode ->
                     if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
                     else næringskode
                 }

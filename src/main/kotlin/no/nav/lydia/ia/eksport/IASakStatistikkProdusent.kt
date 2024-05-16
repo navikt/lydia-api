@@ -1,6 +1,6 @@
 package no.nav.lydia.ia.eksport
 
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -164,7 +164,7 @@ class IASakStatistikkProdusent(
         val kvartaler: List<Kvartal>,
         val sektor: Sektor?,
         val neringer: List<Næringsgruppe>,
-        val bransjeprogram: Bransjer?,
+        val bransjeprogram: Bransje?,
         val postnummer: String?,
         val kommunenummer: String?,
         val fylkesnummer: String?,
@@ -173,15 +173,13 @@ class IASakStatistikkProdusent(
     )
 }
 
-fun finnBransje(næringsgrupper: List<Næringsgruppe>?): Bransjer? {
-    val næringskoderUtenPunktum = næringsgrupper?.map{ it.kode }?.map { kode ->
+fun finnBransje(næringsgrupper: List<Næringsgruppe>?): Bransje? {
+    val næringskoderUtenPunktum = næringsgrupper?.map { it.kode }?.map { kode ->
         kode.replace(".", "")
     }
 
-    return Bransjer.entries
-        .firstOrNull { bransje ->
-            næringskoderUtenPunktum?.any { næringskode ->
-                bransje.næringskoder.any { næringskode.startsWith(it)}
-            } ?: false
-        }
+    return næringskoderUtenPunktum?.firstNotNullOfOrNull {
+        Bransje.fra(it)
+    }
+
 }

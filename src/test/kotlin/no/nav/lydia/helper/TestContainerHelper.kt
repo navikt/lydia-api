@@ -9,7 +9,7 @@ import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -189,7 +189,7 @@ class TestContainerHelper {
             )
             // -- generer statistikk for bransjer
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
-                importDtoer = Bransjer.entries.flatMap { bransje ->
+                importDtoer = Bransje.entries.flatMap { bransje ->
                     TestData.gjeldendePeriode.lagPerioder(ANTALL_BRANSJE_PERIODER).map { periode ->
                         lagSykefraværsstatistikkPerKategoriImportDto(
                             kategori = Kategori.BRANSJE,

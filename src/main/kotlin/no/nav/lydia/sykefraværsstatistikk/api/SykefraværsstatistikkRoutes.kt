@@ -3,7 +3,7 @@ package no.nav.lydia.sykefraværsstatistikk.api
 import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.right
-import ia.felles.definisjoner.bransjer.Bransjer
+import ia.felles.definisjoner.bransjer.Bransje
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -157,7 +157,7 @@ fun Route.sykefraværsstatistikk(
             FilterverdierDto(
                 fylker = geografiService.hentFylkerOgKommuner(),
                 naringsgrupper = næringsRepository.hentNæringer(),
-                bransjeprogram = Bransjer.entries,
+                bransjeprogram = Bransje.entries,
                 filtrerbareEiere = filtrerbareEiere,
             )
         )
