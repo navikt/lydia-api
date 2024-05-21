@@ -2,6 +2,7 @@ package no.nav.lydia.container.ia.eksport
 
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.doubles.plusOrMinus
@@ -29,7 +30,6 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
-import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import no.nav.lydia.tilgangskontroll.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import org.junit.After
@@ -57,8 +57,9 @@ class IASakStatistikkEksportererTest {
         )
         lastInnNyVirksomhet(virksomhet)
 
-        val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = oauth2ServerContainer.superbruker1.token)
-            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+        val sak =
+            opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = oauth2ServerContainer.superbruker1.token)
+                .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -95,11 +96,12 @@ class IASakStatistikkEksportererTest {
         * */
         val gjeldendePeriode = TestData.gjeldendePeriode
         val forrigePeriode = gjeldendePeriode.forrigePeriode()
-        val sak = opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = gjeldendePeriode.lagPerioder(3)).orgnr)
+        val sak =
+            opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = gjeldendePeriode.lagPerioder(3)).orgnr)
         sak.oppdaterHendelsespunkterTilDato(datoSentIGjeldendePeriode())
         sak.nyHendelse(TA_EIERSKAP_I_SAK)
 
-        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakStatistikkEksport)
+        kafkaContainerHelper.sendJobbMelding(iaSakStatistikkEksport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -141,7 +143,7 @@ class IASakStatistikkEksportererTest {
         val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
         postgresContainer.performUpdate("DELETE from iasak_leveranse where saksnummer='${sak.saksnummer}'")
 
-        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakStatistikkEksport)
+        kafkaContainerHelper.sendJobbMelding(iaSakStatistikkEksport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

@@ -1,6 +1,7 @@
 package no.nav.lydia.helper
 
 import com.google.gson.GsonBuilder
+import ia.felles.integrasjoner.jobbsender.Jobb
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -12,7 +13,6 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
-import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkMetadataVirksomhet
 import no.nav.lydia.sykefraværsstatistikk.import.KeySykefraværsstatistikkPerKategori
@@ -148,18 +148,20 @@ class KafkaContainerHelper(
             if (importDtoer.isEmpty()) return@runBlocking
 
             val sendteMeldinger = importDtoer.map { melding ->
-                kafkaProducer.send(ProducerRecord(
-                    topic.navn,
-                    gson.toJson(
-                        KeySykefraværsstatistikkPerKategori(
-                            kategori = melding.kategori.name,
-                            kode = melding.kode,
-                            årstall = melding.sistePubliserteKvartal.årstall,
-                            kvartal = melding.sistePubliserteKvartal.kvartal
+                kafkaProducer.send(
+                    ProducerRecord(
+                        topic.navn,
+                        gson.toJson(
+                            KeySykefraværsstatistikkPerKategori(
+                                kategori = melding.kategori.name,
+                                kode = melding.kode,
+                                årstall = melding.sistePubliserteKvartal.årstall,
+                                kvartal = melding.sistePubliserteKvartal.kvartal
+                            ),
                         ),
-                    ),
-                    gson.toJson(melding)
-                )).get()
+                        gson.toJson(melding)
+                    )
+                ).get()
             }
             ventTilKonsumert(
                 konsumentGruppeId = topic.konsumentGruppe,
@@ -169,25 +171,27 @@ class KafkaContainerHelper(
     }
 
     fun sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
-            importDtoer: List<GradertSykemeldingImportDto>,
-            topic: Topic,
+        importDtoer: List<GradertSykemeldingImportDto>,
+        topic: Topic,
     ) {
         runBlocking {
             if (importDtoer.isEmpty()) return@runBlocking
 
             val sendteMeldinger = importDtoer.map { melding ->
-                kafkaProducer.send(ProducerRecord(
-                    topic.navn,
-                    gson.toJson(
-                        KeySykefraværsstatistikkPerKategori(
-                            kategori = melding.kategori,
-                            kode = melding.kode,
-                            årstall = melding.sistePubliserteKvartal.årstall,
-                            kvartal = melding.sistePubliserteKvartal.kvartal
+                kafkaProducer.send(
+                    ProducerRecord(
+                        topic.navn,
+                        gson.toJson(
+                            KeySykefraværsstatistikkPerKategori(
+                                kategori = melding.kategori,
+                                kode = melding.kode,
+                                årstall = melding.sistePubliserteKvartal.årstall,
+                                kvartal = melding.sistePubliserteKvartal.kvartal
+                            ),
                         ),
-                    ),
-                    gson.toJson(melding)
-                )).get()
+                        gson.toJson(melding)
+                    )
+                ).get()
             }
             ventTilKonsumert(
                 konsumentGruppeId = topic.konsumentGruppe,
@@ -232,12 +236,12 @@ class KafkaContainerHelper(
     }
 
     private fun OppdateringVirksomhet.tilProducerRecord() = ProducerRecord(
-            Topic.BRREG_OPPDATERING_TOPIC.navn,
-            this.orgnummer,
-            Json.encodeToString(
-                this
-            )
+        Topic.BRREG_OPPDATERING_TOPIC.navn,
+        this.orgnummer,
+        Json.encodeToString(
+            this
         )
+    )
 
     private fun SykefraværsstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
         ProducerRecord(
@@ -254,7 +258,7 @@ class KafkaContainerHelper(
 
     private suspend fun ventTilKonsumert(
         konsumentGruppeId: String,
-        recordMetadata: RecordMetadata
+        recordMetadata: RecordMetadata,
     ) =
         withTimeoutOrNull(Duration.ofSeconds(5)) {
             do {

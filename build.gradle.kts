@@ -18,6 +18,7 @@ repositories {
 dependencies {
     val ktorVersion = "2.3.9"
     val fuelVersion = "2.3.1"
+    val iaFellesVersion = "1.1.0"
 
     implementation(kotlin("stdlib"))
 
@@ -69,7 +70,7 @@ dependencies {
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
 
     // Felles definisjoner for IA-domenet
-    implementation("com.github.navikt:ia-felles:1.0.0")
+    implementation("com.github.navikt:ia-felles:$iaFellesVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
 
@@ -145,7 +146,7 @@ tasks {
         }
     }
 
-    withType<Test>{
+    withType<Test> {
         dependsOn(shadowJar)
         useJUnit {
             if (!project.hasProperty("lokalDbDump")) {

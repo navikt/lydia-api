@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.eksport
 
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
@@ -22,7 +23,6 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import no.nav.lydia.tilgangskontroll.Rolle
 import org.junit.After
 import org.junit.Before
@@ -46,7 +46,10 @@ class IASakLeveranseEksportererTest {
     @Test
     fun `skal trigge kafka-eksport av IASakLeveranse`() {
         val sak = nySakIViBistår()
-        val leveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id, token = oauth2ServerContainer.saksbehandler1.token)
+        val leveranse = sak.opprettIASakLeveranse(
+            modulId = TestData.AKTIV_MODUL.id,
+            token = oauth2ServerContainer.saksbehandler1.token
+        )
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -68,9 +71,11 @@ class IASakLeveranseEksportererTest {
                     it.fullført shouldBe leveranse.fullført
                     it.enhetsnavn shouldBe "IT-avdelingen"
                     it.enhetsnummer shouldBe "2900"
-                    it.opprettetTidspunkt shouldBe postgresContainer.hentEnkelKolonne<Timestamp?>("""
+                    it.opprettetTidspunkt shouldBe postgresContainer.hentEnkelKolonne<Timestamp?>(
+                        """
                         select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
-                    """.trimIndent())?.toLocalDateTime()?.toKotlinLocalDateTime()
+                    """.trimIndent()
+                    )?.toLocalDateTime()?.toKotlinLocalDateTime()
                 }
             }
         }
@@ -79,11 +84,15 @@ class IASakLeveranseEksportererTest {
     @Test
     fun `skal trigge kafka-eksport av IASakLeveranse ved alle endringer`() {
         val sak = nySakIViBistår()
-        val nyLeveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id, token = oauth2ServerContainer.saksbehandler1.token)
+        val nyLeveranse = sak.opprettIASakLeveranse(
+            modulId = TestData.AKTIV_MODUL.id,
+            token = oauth2ServerContainer.saksbehandler1.token
+        )
         sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
 
         val levertLeveranse = nyLeveranse.oppdaterIASakLeveranse(
-            orgnr = sak.orgnr, status = IASakLeveranseStatus.LEVERT, token = oauth2ServerContainer.saksbehandler2.token)
+            orgnr = sak.orgnr, status = IASakLeveranseStatus.LEVERT, token = oauth2ServerContainer.saksbehandler2.token
+        )
         levertLeveranse.slettIASakLeveranse(sak.orgnr, token = oauth2ServerContainer.saksbehandler2.token)
 
         runBlocking {
@@ -124,9 +133,12 @@ class IASakLeveranseEksportererTest {
     }
 
     @Test
-    fun  `spille av leveranser burde gi samme resultat`() {
+    fun `spille av leveranser burde gi samme resultat`() {
         val sak = nySakIViBistår()
-        val nyLeveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id, token = oauth2ServerContainer.saksbehandler1.token)
+        val nyLeveranse = sak.opprettIASakLeveranse(
+            modulId = TestData.AKTIV_MODUL.id,
+            token = oauth2ServerContainer.saksbehandler1.token
+        )
 
         var melding: IASakLeveranseValue? = null
 
@@ -140,7 +152,7 @@ class IASakLeveranseEksportererTest {
             }
         }
 
-        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakLeveranseEksport)
+        kafkaContainerHelper.sendJobbMelding(iaSakLeveranseEksport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

@@ -1,5 +1,8 @@
 package no.nav.lydia.integrasjoner.jobblytter
 
+import ia.felles.integrasjoner.jobbsender.Jobb
+import ia.felles.integrasjoner.jobbsender.Jobb.*
+import ia.felles.integrasjoner.jobbsender.JobbInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -88,38 +91,47 @@ object Jobblytter : CoroutineScope {
                     while (job.isActive) {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         records.forEach {
-                            val jobInfo = Json.decodeFromString<JobInfo>(it.value())
+                            val jobInfo = Json.decodeFromString<SerializableJobbInfo>(it.value())
                             if (jobInfo.jobb.name != it.key())
                                 logger.warn("Received record with key ${it.key()} and value ${it.value()} from topic ${it.topic()} but jobInfo.job is ${jobInfo.jobb}")
                             else {
                                 logger.info("Starter jobb $jobInfo")
                                 when (jobInfo.jobb) {
-                                    Jobb.ryddeIUrørteSaker -> {
+                                    ryddeIUrørteSaker -> {
                                         iaSakStatusOppdaterer.ryddeIUrørteSaker()
                                     }
-                                    Jobb.ryddeIUrørteSakerTørrKjør -> {
+
+                                    ryddeIUrørteSakerTørrKjør -> {
                                         iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
                                     }
-                                    Jobb.iaSakEksport -> {
+
+                                    iaSakEksport -> {
                                         iaSakEksporterer.eksporter()
                                     }
-                                    Jobb.iaSakStatistikkEksport -> {
+
+                                    iaSakStatistikkEksport -> {
                                         iaSakStatistikkEksporterer.eksporter()
                                     }
-                                    Jobb.iaSakStatusExport -> {
+
+                                    iaSakStatusExport -> {
                                         iaSakStatusExportør.eksporter()
                                     }
-                                    Jobb.iaSakLeveranseEksport -> {
+
+                                    iaSakLeveranseEksport -> {
                                         iaSakLeveranseEksportør.eksporter()
                                     }
-                                    Jobb.næringsImport -> {
+
+                                    næringsImport -> {
                                         næringsDownloader.lastNedNæringer()
                                     }
-                                    Jobb.materializedViewOppdatering -> {
+
+                                    materializedViewOppdatering -> {
                                         statistikkViewOppdaterer.oppdaterStatistikkView()
                                     }
+
+                                    importSykefraværKvartalsstatistikk -> logger.info("Jobb '${jobInfo.jobb}' ignorert")
                                 }
-                                logger.info("Jobb ${jobInfo.jobb} ferdig")
+                                logger.info("Jobb '${jobInfo.jobb}' ferdig")
                             }
                         }
                         consumer.commitSync()
@@ -136,28 +148,17 @@ object Jobblytter : CoroutineScope {
         }
     }
 
+    @Serializable
+    data class SerializableJobbInfo(
+        override val jobb: Jobb,
+        override val tidspunkt: String,
+        override val applikasjon: String,
+    ) : JobbInfo
+
     private fun cancel() = runBlocking {
         logger.info("Cancelling kafka consumer job for $topicNavn")
         kafkaConsumer.wakeup()
         job.cancelAndJoin()
         logger.info("Cancelled kafka consumer job for $topicNavn")
     }
-}
-
-@Serializable
-data class JobInfo(
-    val jobb: Jobb,
-    val tidspunkt: String,
-    val applikasjon: String,
-)
-
-enum class Jobb {
-    ryddeIUrørteSaker,
-    ryddeIUrørteSakerTørrKjør,
-    iaSakEksport,
-    iaSakStatistikkEksport,
-    iaSakStatusExport,
-    iaSakLeveranseEksport,
-    næringsImport,
-    materializedViewOppdatering;
 }

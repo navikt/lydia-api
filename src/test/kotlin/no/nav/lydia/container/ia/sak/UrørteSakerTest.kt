@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.sak
 
+import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.SakHelper
@@ -18,7 +19,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import no.nav.lydia.tilgangskontroll.Rolle
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.junit.Test
@@ -39,7 +39,7 @@ class UrørteSakerTest {
             it.eidAv shouldBe null
         }
 
-        kafkaContainer.sendJobbMelding(Jobb.ryddeIUrørteSaker)
+        kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakerEtterRydding = hentSaker(orgnummer = urørtGammelSak.orgnr)
         sakerEtterRydding shouldHaveSize 1
@@ -79,7 +79,7 @@ class UrørteSakerTest {
             it.eidAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
         }
 
-        kafkaContainer.sendJobbMelding(Jobb.ryddeIUrørteSaker)
+        kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakerEtterRydding = hentSaker(orgnummer = sakMedEier.orgnr)
         sakerEtterRydding shouldHaveSize 1
@@ -102,7 +102,7 @@ class UrørteSakerTest {
             it.eidAv shouldBe null
         }
 
-        kafkaContainer.sendJobbMelding(Jobb.ryddeIUrørteSaker)
+        kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakerEtterRydding = hentSaker(orgnummer = urørtNyereSak.orgnr)
         sakerEtterRydding shouldHaveSize 1

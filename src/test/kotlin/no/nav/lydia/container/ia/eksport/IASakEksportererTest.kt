@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.eksport
 
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.string.shouldContain
@@ -12,7 +13,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
@@ -34,10 +34,13 @@ class IASakEksportererTest {
     @Test
     fun `skal trigge kafka-eksport av IASaker`() {
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
-            .nyHendelse(hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+            .nyHendelse(
+                hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK,
+                token = oauth2ServerContainer.saksbehandler1.token
+            )
 
         runBlocking {
-            kafkaContainerHelper.sendJobbMelding(Jobb.iaSakEksport)
+            kafkaContainerHelper.sendJobbMelding(iaSakEksport)
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = sak.saksnummer,

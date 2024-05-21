@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.eksport
 
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -23,7 +24,6 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.integrasjoner.jobblytter.Jobb
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
@@ -56,7 +56,7 @@ class IASakStatusEksportørTest {
                     token = oauth2ServerContainer.saksbehandler1.token
                 )
 
-        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakStatusExport)
+        kafkaContainerHelper.sendJobbMelding(iaSakStatusExport)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
