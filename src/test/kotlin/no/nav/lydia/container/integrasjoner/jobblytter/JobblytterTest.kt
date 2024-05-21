@@ -20,6 +20,7 @@ class JobblytterTest {
     fun `skal kunne trigge ryddeIUrørteSaker jobb via kafka`() {
         kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
         lydiaApiContainer shouldContainLog "Ferdig med å rydde opp i urørte saker".toRegex()
+        lydiaApiContainer shouldContainLog "Jobb 'ryddeIUrørteSaker' ferdig".toRegex()
     }
 
     @Test
@@ -56,7 +57,8 @@ class JobblytterTest {
     @Test
     fun `skal kunne trigge materialized view oppdatering jobb via kafka`() {
         kafkaContainer.sendJobbMelding(materializedViewOppdatering)
-        lydiaApiContainer shouldContainLog "Oppdaterte 'statistikkview' på ".toRegex()
+        lydiaApiContainer shouldContainLog "Oppdaterte statistikkview på ".toRegex()
+        lydiaApiContainer shouldContainLog "Jobb 'materializedViewOppdatering' ferdig".toRegex()
     }
 
     @Test
