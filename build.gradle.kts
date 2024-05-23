@@ -2,7 +2,7 @@ plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     kotlin("jvm") version "1.9.23"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.23"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.9"
+    val ktorVersion = "2.3.11"
     val fuelVersion = "2.3.1"
     val iaFellesVersion = "1.1.0"
 
@@ -34,7 +34,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.3")
+    implementation("ch.qos.logback:logback-classic:1.5.6")
     implementation("net.logstash.logback:logstash-logback-encoder:7.4")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -50,12 +50,12 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.11.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.13.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.11.0")
 
     // Kafka
     implementation("org.apache.kafka:kafka-clients:3.7.0")
@@ -72,20 +72,20 @@ dependencies {
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:$iaFellesVersion")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.37.3")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.39.1")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.8.1"
+    val kotestVerstion = "5.9.0"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.19.7"
+    val testcontainersVersion = "1.19.8"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
@@ -93,11 +93,11 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.5.2")
+    testImplementation("org.wiremock:wiremock-standalone:3.6.0")
 
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.3")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.5")
 
     constraints {
         implementation("net.minidev:json-smart") {
@@ -108,7 +108,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.108.Final")
+                require("4.1.110.Final")
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
