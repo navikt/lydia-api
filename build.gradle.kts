@@ -114,6 +114,13 @@ dependencies {
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
+        implementation("joda-time:joda-time") {
+            version {
+                require("2.12.7")
+            }
+            because("kotliquery har sårbar versjon på v2.11.0")
+        }
+
         testImplementation("com.jayway.jsonpath:json-path") {
             version {
                 require("2.9.0")
