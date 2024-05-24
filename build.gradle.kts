@@ -95,6 +95,8 @@ dependencies {
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
     testImplementation("org.wiremock:wiremock-standalone:3.6.0")
 
+    // -- validere pdfa
+    testImplementation("org.verapdf:validation-model:1.26.1")
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:2.1.5")

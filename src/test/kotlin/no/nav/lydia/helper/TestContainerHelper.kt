@@ -116,6 +116,8 @@ class TestContainerHelper {
 
         val postgresContainer = PostgrestContainerHelper(network = network, log = log)
 
+        val piaPdfgenContainer = PiaPdfgenContainerHelper(network = network, log = log)
+
         private val wiremockServer = WiremockContainerHelper()
 
         val lydiaApiContainer: GenericContainer<*> =
@@ -123,7 +125,8 @@ class TestContainerHelper {
                 .dependsOn(
                     kafkaContainerHelper.kafkaContainer,
                     postgresContainer.postgresContainer,
-                    oauth2ServerContainer.mockOath2Server
+                    oauth2ServerContainer.mockOath2Server,
+                    piaPdfgenContainer.piaPdfgenContainer
                 )
                 .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
                 .withNetwork(network)
@@ -142,6 +145,7 @@ class TestContainerHelper {
                                     )
                                 )
                         )
+                        .plus(piaPdfgenContainer.envVars())
                 )
                 .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
                     start()

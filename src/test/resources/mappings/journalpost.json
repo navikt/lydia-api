@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/rest/journalpostapi/v1",
+    "queryParameters": {
+      "forsoekFerdigstill": {
+        "equalTo": "true"
+      }
+    },
+    "headers": {
+      "Authorization": {
+        "contains": "Bearer"
+      }
+    }
+  },
+  "response": {
+
+  }
+}

@@ -32,8 +32,9 @@ spec:
       rules:
         - application: pia-pdfgen
       external:
-        - host: "data.ssb.no"
-        - host: "salesforce.com"
+        - host: {{journalpostHost}}
+        - host: data.ssb.no
+        - host: salesforce.com
     inbound:
       rules:
         - application: lydia-radgiver-frontend
@@ -75,3 +76,7 @@ spec:
       value: {{teamPiaGroup}}
     - name: SALESFORCE_TOKEN_HOST
       value: {{salesforceTokenHost}}
+    - name: JOURNALPOST_V1_URL
+      value: {{journalpostApi}}
+    - name: PIA_PDFGEN_URL
+      value: http://pia-pdfgen
