@@ -30,6 +30,10 @@ enum class JournalpostTema {
 	IAR
 }
 
+enum class FagsakSystem {
+	FIA
+}
+
 @Serializable
 data class JournalpostDto(
 	val eksternReferanseId: String,
@@ -61,7 +65,7 @@ data class Bruker(
 data class Sak(
 	val sakstype: Sakstype,
 	val fagsakId: String,
-	val fagsaksystem: String = "FIA"
+	val fagsaksystem: FagsakSystem
 )
 
 @Serializable
