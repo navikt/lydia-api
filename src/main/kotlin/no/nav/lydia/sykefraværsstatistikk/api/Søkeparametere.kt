@@ -13,8 +13,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
-import no.nav.lydia.tilgangskontroll.NavAnsatt
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.tilSektor
 import java.time.LocalDate

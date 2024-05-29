@@ -15,20 +15,21 @@ import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.fia.Rolle
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 
 open class IASakshendelse(
-    val id: String,
-    val opprettetTidspunkt: LocalDateTime,
-    val saksnummer: String,
-    val hendelsesType: IASakshendelseType,
-    val orgnummer: String,
-    val opprettetAv: String,
-    val opprettetAvRolle: Rolle?,
-    val navEnhet: NavEnhet,
+	val id: String,
+	val opprettetTidspunkt: LocalDateTime,
+	val saksnummer: String,
+	val hendelsesType: IASakshendelseType,
+	val orgnummer: String,
+	val opprettetAv: String,
+	val opprettetAvRolle: Rolle?,
+	val navEnhet: NavEnhet,
 ) {
     companion object {
         fun fromDto(dto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet) =
@@ -91,14 +92,14 @@ open class IASakshendelse(
 }
 
 class VirksomhetIkkeAktuellHendelse(
-    id: String,
-    opprettetTidspunkt: LocalDateTime,
-    saksnummer: String,
-    orgnummer: String,
-    opprettetAv: String,
-    opprettetAvRolle: Rolle?,
-    navEnhet: NavEnhet,
-    val valgtÅrsak: ValgtÅrsak
+	id: String,
+	opprettetTidspunkt: LocalDateTime,
+	saksnummer: String,
+	orgnummer: String,
+	opprettetAv: String,
+	opprettetAvRolle: Rolle?,
+	navEnhet: NavEnhet,
+	val valgtÅrsak: ValgtÅrsak
 ) : IASakshendelse(
     id,
     opprettetTidspunkt = opprettetTidspunkt,
@@ -110,7 +111,7 @@ class VirksomhetIkkeAktuellHendelse(
     navEnhet = navEnhet,
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, navAnsatt: no.nav.lydia.tilgangskontroll.NavAnsatt, navEnhet: NavEnhet): Either<Feil, VirksomhetIkkeAktuellHendelse> =
+        fun fromDto(dto: IASakshendelseDto, navAnsatt: NavAnsatt, navEnhet: NavEnhet): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
 
                 try {

@@ -24,7 +24,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
-import no.nav.lydia.tilgangskontroll.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -155,10 +155,10 @@ class SpørreundersøkelseService(
     }
 
     fun opprettSpørreundersøkelse(
-        orgnummer: String,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        saksnummer: String,
-        temaNavn: List<Temanavn>,
+	    orgnummer: String,
+	    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+	    saksnummer: String,
+	    temaNavn: List<Temanavn>,
     ) = spørreundersøkelseRepository.opprettSpørreundersøkelse(
         orgnummer = orgnummer,
         saksnummer = saksnummer,

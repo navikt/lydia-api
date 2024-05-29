@@ -49,6 +49,7 @@ class Security(
 
 class AzureConfig(
     val clientId: String = getEnvVar("AZURE_APP_CLIENT_ID"),
+    val clientSecret: String = getEnvVar("AZURE_APP_CLIENT_SECRET"),
     val jwksUri: URL = URL(getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI")),
     val issuer: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
     val tokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
@@ -140,6 +141,8 @@ class Salesforce (
 
 class Integrasjoner(
     val ssbNæringsUrl: String = getEnvVar("SSB_NARINGS_URL"),
+    val piaPdfgenUrl: String = getEnvVar("PIA_PDFGEN_URL"),
+    val journalpostUrl: String = getEnvVar("JOURNALPOST_V1_URL"),
     val salesforce: Salesforce = Salesforce(),
 )
 
