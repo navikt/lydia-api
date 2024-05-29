@@ -34,6 +34,7 @@ class WiremockContainerHelper {
         "SALESFORCE_CLIENT_SECRET" to "clientSecret",
         "SALESFORCE_USERNAME" to "username",
         "SALESFORCE_PASSWORD" to "password",
-        "SALESFORCE_SECURITY_TOKEN" to "securityToken"
+        "SALESFORCE_SECURITY_TOKEN" to "securityToken",
+        "JOURNALPOST_SCOPE" to "api://dev-fss.teamdokumenthandtering.dokarkiv/.default"
     )
 }

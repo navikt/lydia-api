@@ -145,7 +145,13 @@ class IASakService(
                     .map { oppdatertSak ->
                         sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         årsakService.lagreÅrsak(sakshendelse)
-                        journalpostService.journalfør(sakshendelse, saksbehandler)
+                        when(sakshendelse.hendelsesType) {
+                            IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(sakshendelse, saksbehandler)
+                                .onLeft {
+                                    log.error("Noe gikk feil ved journalføring av hendelse $sakshendelse")
+                                }
+                            else -> {}
+                        }
                         return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
                     .mapLeft { it.tilFeilMedHttpFeilkode() }

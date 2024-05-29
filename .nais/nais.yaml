@@ -80,3 +80,5 @@ spec:
       value: {{journalpostApi}}
     - name: PIA_PDFGEN_URL
       value: http://pia-pdfgen
+    - name: JOURNALPOST_SCOPE
+      value: {{journalpostOboScope}}

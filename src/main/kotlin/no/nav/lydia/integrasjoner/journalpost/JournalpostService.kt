@@ -32,6 +32,7 @@ class JournalpostService(
 ) {
 	private val log = LoggerFactory.getLogger(this::class.java)
 	private val url = naisEnvironment.integrasjoner.journalpostUrl
+	private val scope = naisEnvironment.integrasjoner.journalpostScope
 	private val json = Json {
 		ignoreUnknownKeys = true
 	}
@@ -53,7 +54,7 @@ class JournalpostService(
 		))
 
 		return pdf.flatMap { base64EnkodetPdf ->
-			oboTokenUtveksler.veksleTokenTil(navAnsattMedSaksbehandlerRolle.token, "").flatMap { oboToken ->
+			oboTokenUtveksler.veksleTokenTil(navAnsattMedSaksbehandlerRolle.token, scope).flatMap { oboToken ->
 				val journalpostDto = journalpostDto(sakshendelse, virksomhet, base64EnkodetPdf)
 				journalfør(journalpostDto, oboToken.access_token)
 			}
