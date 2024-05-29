@@ -69,6 +69,7 @@ class JournalpostService(
 		val journalpostDto = JournalpostDto(
 			eksternReferanseId = sakshendelse.id,
 			tittel = "IA-bistand",
+			tema = JournalpostTema.IAR,
 			journalposttype = JournalpostType.UTGAAENDE,
 			journalfoerendeEnhet = sakshendelse.navEnhet.enhetsnummer,
 			kanal = Kanal.NAV_NO,

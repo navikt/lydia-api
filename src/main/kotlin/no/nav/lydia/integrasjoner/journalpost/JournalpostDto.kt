@@ -26,11 +26,15 @@ enum class Kanal {
 	NAV_NO
 }
 
+enum class JournalpostTema {
+	IAR
+}
+
 @Serializable
 data class JournalpostDto(
 	val eksternReferanseId: String,
 	val tittel: String,
-	val tema: String = "IAR",
+	val tema: JournalpostTema,
 	val journalposttype: JournalpostType,
 	val journalfoerendeEnhet: String,
 	val kanal: Kanal,
