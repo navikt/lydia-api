@@ -86,7 +86,7 @@ class JournalpostService(
 			),
 			dokumenter = listOf(
 				Dokument(
-					tittel = "",
+					tittel = "IA-bistand",
 					dokumentvarianter = listOf(
 						DokumentVariant(
 							filtype = FilType.PDFA,
