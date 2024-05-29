@@ -12,3 +12,4 @@ requestsMemory: 512Mi
 salesforceTokenHost: https://login.salesforce.com
 journalpostHost: dokarkiv.prod-fss-pub.nais.io
 journalpostApi: https://dokarkiv.prod-fss-pub.nais.io/rest/journalpostapi/v1
+journalpostOboScope: api://prod-fss.teamdokumenthandtering.dokarkiv/.default
