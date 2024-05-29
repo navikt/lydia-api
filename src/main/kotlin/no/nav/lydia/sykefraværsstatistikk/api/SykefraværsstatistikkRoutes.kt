@@ -21,6 +21,8 @@ import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.søkepa
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.*
+import no.nav.lydia.tilgangskontroll.fia.innloggetNavIdent
+import no.nav.lydia.tilgangskontroll.fia.innloggetNavn
 
 const val SYKEFRAVÆRSSTATISTIKK_PATH = "sykefravarsstatistikk"
 const val FILTERVERDIER_PATH = "filterverdier"

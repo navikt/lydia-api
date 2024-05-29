@@ -29,9 +29,6 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
-import java.util.*
-import java.util.concurrent.TimeUnit
-import javax.sql.DataSource
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
@@ -51,12 +48,14 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
@@ -67,10 +66,10 @@ import no.nav.lydia.integrasjoner.azure.AzureTokenFetcher
 import no.nav.lydia.integrasjoner.brreg.BrregAlleVirksomheterConsumer
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer
 import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
-import no.nav.lydia.ia.sak.SpørreundersøkelseService
+import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
+import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -88,12 +87,16 @@ import no.nav.lydia.sykefraværsstatistikk.api.sykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
+import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.virksomhet
+import java.util.*
+import java.util.concurrent.TimeUnit
+import javax.sql.DataSource
 
 fun main() {
     startLydiaBackend()
@@ -150,6 +153,12 @@ fun startLydiaBackend() {
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         iaSakLeveranseRepository = IASakLeveranseRepository(dataSource = dataSource),
         årsakService = ÅrsakService(årsakRepository = årsakRepository),
+        journalpostService = JournalpostService(
+            naisEnvironment = naisEnv,
+            pdfgenService = PiaPdfgenService(naisEnvironment = naisEnv),
+            oboTokenUtveksler = OboTokenUtveksler(naisEnvironment = naisEnv),
+            virksomhetRepository = virksomhetRepository
+        )
     ).apply {
         leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
         leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)

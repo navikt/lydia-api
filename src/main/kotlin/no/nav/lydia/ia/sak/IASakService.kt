@@ -33,9 +33,10 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.integrasjoner.journalpost.JournalpostService
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -46,6 +47,7 @@ class IASakService(
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val iaSakLeveranseRepository: IASakLeveranseRepository,
     private val årsakService: ÅrsakService,
+    private val journalpostService: JournalpostService,
     private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
     private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
 ) {
@@ -143,6 +145,7 @@ class IASakService(
                     .map { oppdatertSak ->
                         sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         årsakService.lagreÅrsak(sakshendelse)
+                        journalpostService.journalfør(sakshendelse, saksbehandler)
                         return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
                     .mapLeft { it.tilFeilMedHttpFeilkode() }

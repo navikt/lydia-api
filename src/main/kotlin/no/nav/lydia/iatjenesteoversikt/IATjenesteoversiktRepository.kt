@@ -9,7 +9,7 @@ import no.nav.lydia.ia.sak.api.IATjenesteDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
-import no.nav.lydia.tilgangskontroll.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 
 class IATjenesteoversiktRepository(val dataSource: DataSource) {

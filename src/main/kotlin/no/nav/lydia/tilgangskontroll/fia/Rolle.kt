@@ -1,4 +1,4 @@
-package no.nav.lydia.tilgangskontroll
+package no.nav.lydia.tilgangskontroll.fia
 
 enum class Rolle {
     LESE,

@@ -3,7 +3,7 @@ package no.nav.lydia.iatjenesteoversikt
 import arrow.core.Either
 import io.ktor.http.*
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.tilgangskontroll.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.LoggerFactory
 
 class IATjenesteoversiktService(val iaTjenesteoversiktRepository: IATjenesteoversiktRepository) {

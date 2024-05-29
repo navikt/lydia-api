@@ -46,7 +46,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.tilgangskontroll.fia.Rolle
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime

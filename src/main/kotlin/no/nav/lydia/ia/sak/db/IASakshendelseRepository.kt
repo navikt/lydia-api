@@ -12,7 +12,7 @@ import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.tilgangskontroll.fia.Rolle
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource

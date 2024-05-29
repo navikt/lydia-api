@@ -5,6 +5,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.integrasjoner.pdfgen.BistandDto
+import no.nav.lydia.integrasjoner.pdfgen.PdfType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
@@ -51,10 +52,6 @@ class PiaPdfgenContainerHelper(
 		)
 	}
 
-	enum class PdfType(val type: String) {
-		BISTAND("bistand"),
-	}
-
 	fun hentBistandPdf(bistand: BistandDto) =
 		hentPdf(PdfType.BISTAND, Json.encodeToString<BistandDto>(bistand))
 
@@ -65,8 +62,4 @@ class PiaPdfgenContainerHelper(
 				success = { it },
 				failure = { fail(it.message) }
 			)
-
-	private fun ByteArray.tilBase64() =
-		String(Base64.getEncoder().encode(this))
-
 }

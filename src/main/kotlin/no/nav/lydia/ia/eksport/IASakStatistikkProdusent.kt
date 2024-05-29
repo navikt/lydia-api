@@ -22,7 +22,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSisteKvartal
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -136,40 +136,40 @@ class IASakStatistikkProdusent(
 
     @Serializable
     data class IASakStatistikkValue(
-        val saksnummer: String,
-        val orgnr: String,
-        val eierAvSak: String?,
-        val status: IAProsessStatus,
-        val endretAvHendelseId: String,
-        val hendelse: IASakshendelseType?,
-        val endretAv: String?,
-        val endretAvRolle: Rolle?,
-        val ikkeAktuelBegrunnelse: String?,
-        val opprettetTidspunkt: LocalDateTime,
-        val endretTidspunkt: LocalDateTime,
-        val avsluttetTidspunkt: LocalDateTime?,
-        val antallPersoner: Double?,
-        val tapteDagsverk: Double?,
-        val tapteDagsverkGradert: Double?,
-        val muligeDagsverk: Double?,
-        val sykefraversprosent: Double?,
-        val graderingsprosent: Double?,
-        val arstall: Int?,
-        val kvartal: Int?,
-        val tapteDagsverkSiste4Kvartal: Double?,
-        val tapteDagsverkGradertSiste4Kvartal: Double?,
-        val muligeDagsverkSiste4Kvartal: Double?,
-        val sykefraversprosentSiste4Kvartal: Double?,
-        val graderingsprosentSiste4Kvartal: Double?,
-        val kvartaler: List<Kvartal>,
-        val sektor: Sektor?,
-        val neringer: List<Næringsgruppe>,
-        val bransjeprogram: Bransje?,
-        val postnummer: String?,
-        val kommunenummer: String?,
-        val fylkesnummer: String?,
-        val enhetsnummer: String?,
-        val enhetsnavn: String?,
+	    val saksnummer: String,
+	    val orgnr: String,
+	    val eierAvSak: String?,
+	    val status: IAProsessStatus,
+	    val endretAvHendelseId: String,
+	    val hendelse: IASakshendelseType?,
+	    val endretAv: String?,
+	    val endretAvRolle: Rolle?,
+	    val ikkeAktuelBegrunnelse: String?,
+	    val opprettetTidspunkt: LocalDateTime,
+	    val endretTidspunkt: LocalDateTime,
+	    val avsluttetTidspunkt: LocalDateTime?,
+	    val antallPersoner: Double?,
+	    val tapteDagsverk: Double?,
+	    val tapteDagsverkGradert: Double?,
+	    val muligeDagsverk: Double?,
+	    val sykefraversprosent: Double?,
+	    val graderingsprosent: Double?,
+	    val arstall: Int?,
+	    val kvartal: Int?,
+	    val tapteDagsverkSiste4Kvartal: Double?,
+	    val tapteDagsverkGradertSiste4Kvartal: Double?,
+	    val muligeDagsverkSiste4Kvartal: Double?,
+	    val sykefraversprosentSiste4Kvartal: Double?,
+	    val graderingsprosentSiste4Kvartal: Double?,
+	    val kvartaler: List<Kvartal>,
+	    val sektor: Sektor?,
+	    val neringer: List<Næringsgruppe>,
+	    val bransjeprogram: Bransje?,
+	    val postnummer: String?,
+	    val kommunenummer: String?,
+	    val fylkesnummer: String?,
+	    val enhetsnummer: String?,
+	    val enhetsnavn: String?,
     )
 }
 

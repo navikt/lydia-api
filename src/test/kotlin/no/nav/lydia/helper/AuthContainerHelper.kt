@@ -123,6 +123,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
 
     fun envVars() = mapOf(
         "AZURE_APP_CLIENT_ID" to audience,
+        "AZURE_APP_CLIENT_SECRET" to "AZURE_APP_CLIENT_SECRET",
         "AZURE_OPENID_CONFIG_ISSUER" to issuerUrl,
         "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "$issuerUrl/token",
         "AZURE_APP_JWK" to """

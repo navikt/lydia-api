@@ -7,11 +7,12 @@ import arrow.core.right
 import io.ktor.server.application.*
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.tilgangskontroll.NavAnsatt.Lesebruker
-import no.nav.lydia.tilgangskontroll.NavAnsatt.Lesebruker.Companion.lesebruker
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Companion.navAnsattMedSaksbehandlerRolle
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.Lesebruker
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.Lesebruker.Companion.lesebruker
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Companion.navAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 
 fun <T> ApplicationCall.somLesebruker(adGrupper: ADGrupper, block: (Lesebruker) -> Either<Feil, T>) =
     this.lesebruker(adGrupper)

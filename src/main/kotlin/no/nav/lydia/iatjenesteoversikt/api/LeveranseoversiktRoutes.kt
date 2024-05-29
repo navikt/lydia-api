@@ -8,7 +8,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktService
-import no.nav.lydia.tilgangskontroll.innloggetNavIdent
+import no.nav.lydia.tilgangskontroll.fia.innloggetNavIdent
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 const val IATJENESTEOVERSIKT_PATH = "iatjenesteoversikt"

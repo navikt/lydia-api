@@ -15,8 +15,8 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.Modul
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
+import no.nav.lydia.tilgangskontroll.fia.Rolle
 import java.time.LocalDateTime
 import javax.sql.DataSource
 

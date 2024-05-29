@@ -1,22 +1,22 @@
 package no.nav.lydia.ia.sak.domene
 
 import kotlinx.serialization.Serializable
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.tilgangskontroll.fia.Rolle
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class IASakLeveranse(
-    val id: Int,
-    val saksnummer: String,
-    val modul: Modul,
-    val frist: LocalDate,
-    val status: IASakLeveranseStatus,
-    val opprettetAv: String,
-    val sistEndret: LocalDateTime,
-    val sistEndretAv: String,
-    val sistEndretAvRolle: Rolle?,
-    val fullført: LocalDateTime?,
-    val opprettetTidspunkt: LocalDateTime?, // gamle leveranser har ikke opprettet_tidspunkt
+	val id: Int,
+	val saksnummer: String,
+	val modul: Modul,
+	val frist: LocalDate,
+	val status: IASakLeveranseStatus,
+	val opprettetAv: String,
+	val sistEndret: LocalDateTime,
+	val sistEndretAv: String,
+	val sistEndretAvRolle: Rolle?,
+	val fullført: LocalDateTime?,
+	val opprettetTidspunkt: LocalDateTime?, // gamle leveranser har ikke opprettet_tidspunkt
 ) {
     fun slettet(): IASakLeveranse = this.copy(
         status = IASakLeveranseStatus.SLETTET,

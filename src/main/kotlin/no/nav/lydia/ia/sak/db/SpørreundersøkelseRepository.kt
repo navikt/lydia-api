@@ -23,7 +23,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
-import no.nav.lydia.tilgangskontroll.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
@@ -105,12 +105,12 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         }
 
     fun opprettSpørreundersøkelse(
-        orgnummer: String,
-        spørreundersøkelseId: UUID,
-        vertId: UUID,
-        saksnummer: String,
-        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        temaer: List<TemaInfo>,
+	    orgnummer: String,
+	    spørreundersøkelseId: UUID,
+	    vertId: UUID,
+	    saksnummer: String,
+	    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+	    temaer: List<TemaInfo>,
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->

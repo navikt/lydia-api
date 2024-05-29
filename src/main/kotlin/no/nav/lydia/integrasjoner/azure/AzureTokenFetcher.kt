@@ -5,10 +5,10 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.github.kittinunf.fuel.httpPost
 import com.nimbusds.jose.jwk.RSAKey
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.exceptions.AzureException
+import no.nav.lydia.tilgangskontroll.TokenResponse
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.Date
@@ -21,9 +21,6 @@ class AzureTokenFetcher(
         val logger = LoggerFactory.getLogger(this::class.java)
     }
     private val privateKey = RSAKey.parse(naisEnvironment.security.azureConfig.privateJwk)
-
-    @Serializable
-    private data class TokenResponse(val access_token: String)
 
     private val deserializer = Json {
         ignoreUnknownKeys = true

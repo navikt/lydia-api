@@ -22,9 +22,9 @@ import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.tilgangskontroll.NavAnsatt
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler
-import no.nav.lydia.tilgangskontroll.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import java.time.LocalDateTime
 import kotlin.test.Test
 
@@ -41,18 +41,21 @@ class IASakTest {
         val superbruker1 = Superbruker(
             navIdent = "A123456",
             navn = "Super Bruker 1",
+            token = "token",
             ansattesGrupper = setOf(adGrupper.superbrukerGruppe)
         )
 
         val superbruker2 = Superbruker(
             navIdent = "A999111",
             navn = "Super Bruker 2",
+            token = "token",
             ansattesGrupper = setOf(adGrupper.superbrukerGruppe)
         )
 
         val saksbehandler1 = Saksbehandler(
             navIdent = "B123456",
             navn = "Saks Behandler 1",
+            token = "token",
             ansattesGrupper = setOf(adGrupper.saksbehandlerGruppe)
         )
 

@@ -18,6 +18,7 @@ import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.*
+import no.nav.lydia.tilgangskontroll.fia.objectId
 
 const val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 const val SAK_HENDELSE_SUB_PATH = "hendelse"

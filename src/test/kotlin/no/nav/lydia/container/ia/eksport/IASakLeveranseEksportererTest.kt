@@ -23,7 +23,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.tilgangskontroll.Rolle
+import no.nav.lydia.tilgangskontroll.fia.Rolle
 import org.junit.After
 import org.junit.Before
 import java.sql.Timestamp
