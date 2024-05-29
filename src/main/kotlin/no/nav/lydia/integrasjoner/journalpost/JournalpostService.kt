@@ -85,6 +85,7 @@ class JournalpostService(
 			sak = Sak(
 				sakstype = Sakstype.FAGSAK,
 				fagsakId = sakshendelse.saksnummer,
+				fagsaksystem = FagsakSystem.FIA
 			),
 			dokumenter = listOf(
 				Dokument(
