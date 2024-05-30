@@ -1,5 +1,9 @@
 package no.nav.lydia.container.integrasjoner.pdfgen
 
+import java.io.ByteArrayInputStream
+import java.time.ZonedDateTime
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.integrasjoner.pdfgen.ArbeidsgiverDto
 import no.nav.lydia.integrasjoner.pdfgen.BistandDto
@@ -7,11 +11,6 @@ import no.nav.lydia.integrasjoner.pdfgen.SakDto
 import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider
 import org.verapdf.pdfa.Foundries
 import org.verapdf.pdfa.flavours.PDFAFlavour
-import java.io.ByteArrayInputStream
-import java.time.ZonedDateTime
-import kotlin.test.BeforeTest
-import kotlin.test.Ignore
-import kotlin.test.Test
 
 class PdfgenContainerTest {
     private val piaPdfgenContainer = TestContainerHelper.piaPdfgenContainer
@@ -21,7 +20,6 @@ class PdfgenContainerTest {
         VeraGreenfieldFoundryProvider.initialise()
     }
 
-    @Ignore
     @Test
     fun `valider at genererte pdfer er i pdf-a format`() {
         val pdf = piaPdfgenContainer.hentBistandPdf(
