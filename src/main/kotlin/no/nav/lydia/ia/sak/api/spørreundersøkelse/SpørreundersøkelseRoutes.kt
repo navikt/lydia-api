@@ -25,6 +25,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.tilgangskontroll.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -41,7 +42,7 @@ fun Route.iaSakSpørreundersøkelse(
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val temaer = call.receive<List<Temanavn>>()
 
-        call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             spørreundersøkelseService.opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
                 saksnummer = iaSak.saksnummer,
@@ -112,13 +113,13 @@ fun Route.iaSakSpørreundersøkelse(
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
-        call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
             val kartlegging = spørreundersøkelseService.hentKartlegginger(saksnummer = saksnummer)
 
             if (kartlegging.getOrNull()
                     ?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != KartleggingStatus.PÅBEGYNT
             )
-                return@somEierAvSakIKartlegges IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
+                return@somEierAvSakIProsess IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
 
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
@@ -144,7 +145,7 @@ fun Route.iaSakSpørreundersøkelse(
         val kartleggingId =
             call.kartleggingId ?: return@delete call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
-        call.somEierAvSakIKartlegges(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.slettKartlegging(kartleggingId = kartleggingId)
         }.also { kartlegging ->
             auditLog.auditloggEither(
@@ -166,7 +167,7 @@ fun Route.iaSakSpørreundersøkelse(
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
-        call.somEierAvSakIKartlegges(iaSakService, adGrupper) { _, _ ->
+        call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
                 status = KartleggingStatus.PÅBEGYNT
@@ -187,7 +188,7 @@ fun Route.iaSakSpørreundersøkelse(
     }
 }
 
-private fun <T> ApplicationCall.somEierAvSakIKartlegges(
+private fun <T> ApplicationCall.somEierAvSakIProsess(
     iaSakService: IASakService,
     adGrupper: ADGrupper,
     block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>,
@@ -201,7 +202,7 @@ private fun <T> ApplicationCall.somEierAvSakIKartlegges(
             IASakError.`ugyldig orgnummer`.left()
         else if (iaSak.eidAv != saksbehandler.navIdent)
             IASakError.`ikke eier av sak`.left()
-        else if (iaSak.status != KARTLEGGES)
+        else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR)
             IASakKartleggingError.`sak er ikke i kartleggingsstatus`.left()
         else
             block(saksbehandler, iaSak)

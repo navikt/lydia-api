@@ -351,6 +351,16 @@ class SakHelper {
             failure = { fail(it.message) }
         )
 
+        fun nySakIKontaktes(
+            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = opprettSakForVirksomhet(orgnummer)
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+            .also {
+                it.status shouldBe IAProsessStatus.KONTAKTES
+            }
+
         fun nySakIKartlegges(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,

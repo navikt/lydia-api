@@ -28,6 +28,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKontaktes
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
@@ -67,6 +68,21 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `oppretter en ny kartlegging`() {
         val sak = nySakIKartlegges()
+
+        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+            .tilSingelRespons<SpørreundersøkelseDto>()
+
+        resp.third.get().kartleggingId.length shouldBe 36
+
+        postgresContainer
+            .hentEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().kartleggingId}'"
+            ) shouldNotBe null
+    }
+
+    @Test
+    fun `skal også kunne opprette en behovsvurdering i status VI_BISTÅR`() {
+        val sak = nySakIViBistår()
 
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<SpørreundersøkelseDto>()
@@ -129,8 +145,8 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal få feil når sak ikke er i kartleggingsstatus`() {
-        val sak = nySakIViBistår()
+    fun `skal få feil når sak ikke er i riktig status (kartlegges eller vi bistår)`() {
+        val sak = nySakIKontaktes()
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
             .tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -529,6 +545,35 @@ class SpørreundersøkelseApiTest {
                 }
             }
         }
+
+        postgresContainer
+            .hentAlleRaderTilEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+            ) shouldHaveSize 0
+        postgresContainer
+            .hentAlleRaderTilEnkelKolonne<String>(
+                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+            ).forAll { it shouldBe "SLETTET" }
+
+        hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+        ) shouldHaveSize 0
+    }
+
+    @Test
+    fun `skal kunne slette en kartlegging i status VI_BISTÅR`() {
+        val sak = nySakIViBistår()
+        val kartleggingDto = sak.opprettKartlegging()
+        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val response =
+            lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
+                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+                .tilSingelRespons<SpørreundersøkelseDto>()
+
+        response.second.statusCode shouldBe HttpStatusCode.OK.value
 
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
