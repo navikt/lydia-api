@@ -1,5 +1,5 @@
 package no.nav.lydia.integrasjoner.pdfgen
 
 enum class PdfType(val type: String) {
-	BISTAND("bistand"),
+	IA_SAMARBEID("ia-samarbeid"),
 }

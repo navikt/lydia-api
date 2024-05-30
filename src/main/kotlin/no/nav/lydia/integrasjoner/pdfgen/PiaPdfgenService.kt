@@ -14,10 +14,10 @@ import java.util.*
 class PiaPdfgenService(naisEnvironment: NaisEnvironment) {
 	val url = naisEnvironment.integrasjoner.piaPdfgenUrl
 
-	fun genererBase64EnkodetBistandPdf(bistand: BistandDto) =
+	fun genererBase64EnkodetBistandPdf(iaSamarbeidDto: IASamarbeidDto) =
 		genererPdfDokument(
-			PdfType.BISTAND,
-			Json.encodeToString<BistandDto>(bistand)
+			PdfType.IA_SAMARBEID,
+			Json.encodeToString<IASamarbeidDto>(iaSamarbeidDto)
 		).map { it.tilBase64() }
 
 	fun genererPdfDokument(pdfType: PdfType, json: String) =

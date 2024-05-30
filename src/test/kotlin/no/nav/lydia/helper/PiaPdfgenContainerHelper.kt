@@ -4,7 +4,7 @@ import com.github.kittinunf.fuel.core.extensions.jsonBody
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.integrasjoner.pdfgen.BistandDto
+import no.nav.lydia.integrasjoner.pdfgen.IASamarbeidDto
 import no.nav.lydia.integrasjoner.pdfgen.PdfType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -27,7 +27,7 @@ class PiaPdfgenContainerHelper(
 
 	init {
 		piaPdfgenContainer = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-			builder.from("ghcr.io/navikt/pia-pdfgen:v1.0.0-rc.1")
+			builder.from("ghcr.io/navikt/pia-pdfgen:v1.0.0-rc.2")
 				.env(
 					mapOf(
 						"TZ" to TimeZone.getDefault().id,
@@ -52,8 +52,8 @@ class PiaPdfgenContainerHelper(
 		)
 	}
 
-	fun hentBistandPdf(bistand: BistandDto) =
-		hentPdf(PdfType.BISTAND, Json.encodeToString<BistandDto>(bistand))
+	fun hentBistandPdf(bistand: IASamarbeidDto) =
+		hentPdf(PdfType.IA_SAMARBEID, Json.encodeToString<IASamarbeidDto>(bistand))
 
 	private fun hentPdf(pdfType: PdfType, json: String): ByteArray =
 		piaPdfgenContainer.performPost("/api/v1/genpdf/pia/${pdfType.type}")
