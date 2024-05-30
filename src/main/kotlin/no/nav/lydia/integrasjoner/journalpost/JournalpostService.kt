@@ -13,8 +13,8 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.integrasjoner.pdfgen.ArbeidsgiverDto
-import no.nav.lydia.integrasjoner.pdfgen.BistandDto
+import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
+import no.nav.lydia.integrasjoner.pdfgen.IASamarbeidDto
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.integrasjoner.pdfgen.SakDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
@@ -41,9 +41,9 @@ class JournalpostService(
 		val virksomhet = virksomhetRepository.hentVirksomhet(sakshendelse.orgnummer)
 			?: return JournalpostFeil.FantIkkeVirksomhet.left()
 
-		val pdf = pdfgenService.genererBase64EnkodetBistandPdf(bistand = BistandDto(
+		val pdf = pdfgenService.genererBase64EnkodetBistandPdf(iaSamarbeidDto = IASamarbeidDto(
 			dato = ZonedDateTime.now().toString(),
-			arbeidsgiver = ArbeidsgiverDto(
+			virksomhet = VirksomhetDto(
 				orgnummer = virksomhet.orgnr,
 				navn = virksomhet.navn
 			),
@@ -68,7 +68,7 @@ class JournalpostService(
 	): JournalpostDto {
 		val journalpostDto = JournalpostDto(
 			eksternReferanseId = sakshendelse.id,
-			tittel = "IA-bistand",
+			tittel = "IA-samarbeid",
 			tema = JournalpostTema.IAR,
 			journalposttype = JournalpostType.UTGAAENDE,
 			journalfoerendeEnhet = sakshendelse.navEnhet.enhetsnummer,
@@ -89,7 +89,7 @@ class JournalpostService(
 			),
 			dokumenter = listOf(
 				Dokument(
-					tittel = "IA-bistand",
+					tittel = "IA-samarbeid",
 					dokumentvarianter = listOf(
 						DokumentVariant(
 							filtype = FilType.PDFA,
