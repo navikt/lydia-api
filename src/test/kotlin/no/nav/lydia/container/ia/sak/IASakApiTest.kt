@@ -40,6 +40,7 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
@@ -83,6 +84,12 @@ import kotlin.test.assertTrue
 class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
+
+    @Test
+    fun `skal ikke få feil ved journalføring av hendelser`() {
+        nySakIViBistår()
+        lydiaApiContainer shouldNotContainLog "Noe gikk feil ved journalføring av hendelse".toRegex()
+    }
 
     @Test
     fun `skal lagre navenhet på hendelser`() {
