@@ -29,7 +29,7 @@ class WiremockContainerHelper {
         "AZURE_GRAPH_URL" to "http://host.testcontainers.internal:${azureMock.port()}/v1.0",
         "SALESFORCE_TOKEN_HOST" to "http://host.testcontainers.internal:${salesforceMock.port()}",
         "SSB_NARINGS_URL" to "http://host.testcontainers.internal:${naringMock.port()}/naringmock/api/klass/v1/30/json",
-        "JOURNALPOST_V1_URL" to "http://host.testcontainers.internal:${journalpostMock.port()}/rest/journalpostapi/v1",
+        "JOURNALPOST_V1_URL" to "http://host.testcontainers.internal:${journalpostMock.port()}/rest/journalpostapi/v1/journalpost",
         "SALESFORCE_CLIENT_ID" to "clientId",
         "SALESFORCE_CLIENT_SECRET" to "clientSecret",
         "SALESFORCE_USERNAME" to "username",
