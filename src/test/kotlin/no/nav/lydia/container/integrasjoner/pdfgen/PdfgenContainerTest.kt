@@ -27,7 +27,7 @@ class PdfgenContainerTest {
 				dato = ZonedDateTime.now().toString(),
 				sak = SakDto(
 					saksnummer = "tulll",
-					eier = "Donald Duck"
+					navenhet = "Andeby ALS"
 				),
 				virksomhet = VirksomhetDto(
 					orgnummer = "987654321",
