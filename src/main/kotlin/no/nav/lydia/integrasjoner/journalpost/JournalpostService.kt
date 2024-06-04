@@ -71,7 +71,7 @@ class JournalpostService(
 			tittel = "IA-samarbeid",
 			tema = JournalpostTema.IAR,
 			journalposttype = JournalpostType.UTGAAENDE,
-			journalfoerendeEnhet = sakshendelse.navEnhet.enhetsnavn,
+			journalfoerendeEnhet = sakshendelse.navEnhet.enhetsnummer,
 			kanal = Kanal.NAV_NO,
 			avsenderMottaker = AvsenderMottaker(
 				id = sakshendelse.orgnummer,
