@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SakDto(
 	val saksnummer: String,
-	val eier: String
+	val navenhet: String
 )

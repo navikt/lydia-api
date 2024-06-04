@@ -27,7 +27,7 @@ class PiaPdfgenContainerHelper(
 
 	init {
 		piaPdfgenContainer = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-			builder.from("ghcr.io/navikt/pia-pdfgen:v1.0.0-rc.2")
+			builder.from("ghcr.io/navikt/pia-pdfgen:v1.0.0-rc.3")
 				.env(
 					mapOf(
 						"TZ" to TimeZone.getDefault().id,

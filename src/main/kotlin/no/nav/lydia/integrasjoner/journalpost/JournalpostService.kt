@@ -49,7 +49,7 @@ class JournalpostService(
 			),
 			sak = SakDto(
 				saksnummer = sakshendelse.saksnummer,
-				eier = navAnsattMedSaksbehandlerRolle.navIdent
+				navenhet = sakshendelse.navEnhet.enhetsnavn
 			)
 		))
 
@@ -71,7 +71,7 @@ class JournalpostService(
 			tittel = "IA-samarbeid",
 			tema = JournalpostTema.IAR,
 			journalposttype = JournalpostType.UTGAAENDE,
-			journalfoerendeEnhet = sakshendelse.navEnhet.enhetsnummer,
+			journalfoerendeEnhet = sakshendelse.navEnhet.enhetsnavn,
 			kanal = Kanal.NAV_NO,
 			avsenderMottaker = AvsenderMottaker(
 				id = sakshendelse.orgnummer,
