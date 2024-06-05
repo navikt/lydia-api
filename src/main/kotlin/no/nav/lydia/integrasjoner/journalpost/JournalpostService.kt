@@ -13,10 +13,10 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
 import no.nav.lydia.integrasjoner.pdfgen.IASamarbeidDto
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.integrasjoner.pdfgen.SakDto
+import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.virksomhet.VirksomhetRepository
@@ -54,7 +54,7 @@ class JournalpostService(
 		))
 
 		return pdf.flatMap { base64EnkodetPdf ->
-			oboTokenUtveksler.veksleTokenTil(navAnsattMedSaksbehandlerRolle.token, scope).flatMap { oboToken ->
+			oboTokenUtveksler.hentOboTokenForScope(navAnsattMedSaksbehandlerRolle.token, scope).flatMap { oboToken ->
 				val journalpostDto = journalpostDto(sakshendelse, virksomhet, base64EnkodetPdf)
 				journalfør(journalpostDto, oboToken.access_token)
 			}

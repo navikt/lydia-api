@@ -1,10 +1,12 @@
 package no.nav.lydia.tilgangskontroll.obo
 
+import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.github.kittinunf.fuel.httpPost
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
+import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.tilgangskontroll.TilgangskontrollFeil
 import no.nav.lydia.tilgangskontroll.TokenResponse
 import org.slf4j.LoggerFactory
@@ -20,7 +22,21 @@ class OboTokenUtveksler(naisEnvironment: NaisEnvironment) {
 		ignoreUnknownKeys = true
 	}
 
-	fun veksleTokenTil(accessToken: String, scope: String) =
+	private val cache = mutableMapOf<String, TokenResponse>()
+
+	fun hentOboTokenForScope(accessToken: String, scope: String) : Either<Feil, TokenResponse> {
+		val cacheNøkkel = "$scope-$accessToken"
+		val tokenFraCache = cache[cacheNøkkel]
+		if (tokenFraCache != null && !tokenFraCache.erUtløpt())
+			return tokenFraCache.right()
+		else
+			return veksleTokenTil(accessToken, scope).onRight {
+				cache[cacheNøkkel] = it
+			}
+	}
+
+
+	private fun veksleTokenTil(accessToken: String, scope: String) =
 		azureTokenEndpoint.httpPost(
 			listOf(
 				"grant_type" to "urn:ietf:params:oauth:grant-type:jwt-bearer",
