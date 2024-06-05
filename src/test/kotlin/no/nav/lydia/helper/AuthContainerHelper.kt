@@ -11,6 +11,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID
 import no.nav.lydia.Security.Companion.GROUPS_CLAIM
 import no.nav.lydia.Security.Companion.NAME_CLAIM
 import no.nav.lydia.Security.Companion.NAV_IDENT_CLAIM
+import no.nav.lydia.Security.Companion.OBJECT_ID_CLAIM
 import no.nav.security.mock.oauth2.OAuth2Config
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -91,7 +92,8 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
             claims = mapOf(
                 NAV_IDENT_CLAIM to navIdent,
                 NAME_CLAIM to navn,
-                GROUPS_CLAIM to listOf(gruppe)
+                GROUPS_CLAIM to listOf(gruppe),
+                OBJECT_ID_CLAIM to UUID.randomUUID().toString()
             )
         ).serialize()
     }

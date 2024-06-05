@@ -33,7 +33,8 @@ private data class AzureAdBruker(
     val givenName: String? = null,
     val surname: String? = null,
     val streetAddress: String? = null,
-    val department: String? = null,
+    val department: String? = null, // -- mest spesifikk feks "Øst-Viken Arbeidslivssenter Øvre Romerike"
+    val city: String? = null, // -- minst spesifikk feks "Øst-Viken Arbeidslivssenter"
 )
 
 @Serializable
@@ -55,7 +56,7 @@ class AzureService(
     val security: Security,
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
-    private val azureAdProps = "id,givenName,surname,onPremisesSamAccountName,streetAddress,department"
+    private val azureAdProps = "id,givenName,surname,onPremisesSamAccountName,streetAddress,department,city"
     private val deserializer = Json { ignoreUnknownKeys = true }
 
     fun hentNavenhet(
@@ -68,7 +69,7 @@ class AzureService(
             .map { azureAdBruker ->
                 NavEnhet(
                     enhetsnummer = azureAdBruker.streetAddress ?: "Ukjent",
-                    enhetsnavn = azureAdBruker.department ?: "Ukjent",
+                    enhetsnavn = azureAdBruker.department ?: azureAdBruker.city ?: "Ukjent",
                 )
             }
     }

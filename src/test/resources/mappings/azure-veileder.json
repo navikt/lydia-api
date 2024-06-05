@@ -1,6 +1,6 @@
 {
   "request" : {
-    "urlPathPattern" : "/v1.0/users/.*",
+    "urlPathPattern" : "/v1.0/users/.{36}",
     "method" : "GET",
     "queryParameters": {
       "$search": {

@@ -69,7 +69,7 @@ class IASakLeveranseEksportererTest {
                     it.frist shouldBe leveranse.frist
                     it.status shouldBe leveranse.status
                     it.fullført shouldBe leveranse.fullført
-                    it.enhetsnavn shouldBe "IT-avdelingen"
+                    it.enhetsnavn shouldBe "IT-avdelingen 2B"
                     it.enhetsnummer shouldBe "2900"
                     it.opprettetTidspunkt shouldBe postgresContainer.hentEnkelKolonne<Timestamp?>(
                         """
