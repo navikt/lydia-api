@@ -80,7 +80,7 @@ class IASakStatistikkEksportererTest {
                     it.bransjeprogram shouldBe Bransje.ANLEGG
                     it.endretAvRolle shouldBe Rolle.SAKSBEHANDLER
                     it.enhetsnummer shouldBe "2900"
-                    it.enhetsnavn shouldBe "IT-avdelingen"
+                    it.enhetsnavn shouldBe "IT-avdelingen" // -- Bør ha fallback til minst spesifikk avdeling
                 }
             }
         }
