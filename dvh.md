@@ -1,5 +1,7 @@
 # Data delt til datavarehus (DVH)
 
+Denne dokumentasjonen er også delt med DVH under `kontrakt`-punktet i [grensesnittsavtalen vår](https://confluence.adeo.no/display/DVH/Grensesnittsavtale+IA).  
+
 ## Flyt fra Fia til DVH
 
 Når en innlogget IA-rådgiver i Fia gjør noe på en sak for en virksomhet i Fia,
