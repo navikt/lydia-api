@@ -148,7 +148,7 @@ class IASakService(
                         when(sakshendelse.hendelsesType) {
                             IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(sakshendelse, saksbehandler)
                                 .onLeft {
-                                    log.error("Noe gikk feil ved journalføring av hendelse $sakshendelse")
+                                    log.error("Feil ved journalføring av hendelseid: '${sakshendelse.id}'. Feil: ${it.feilmelding}")
                                 }
                             else -> {}
                         }
