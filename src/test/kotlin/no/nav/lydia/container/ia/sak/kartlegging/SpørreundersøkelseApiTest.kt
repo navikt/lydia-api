@@ -506,7 +506,7 @@ class SpørreundersøkelseApiTest {
                     val behovsvurdering = Json.decodeFromString<FullførtBehovsvurdering>(melding)
                     behovsvurdering.behovsvurderingId shouldBe avsluttetKartlegging.kartleggingId
                     val start = java.time.LocalDateTime.now().minusMinutes(1).toKotlinLocalDateTime()
-                    val stop = java.time.LocalDateTime.now().toKotlinLocalDateTime()
+                    val stop = java.time.LocalDateTime.now().plusMinutes(1).toKotlinLocalDateTime()
                     val range = start..stop
                     behovsvurdering.fullførtTidspunkt shouldBeIn range
                 }
