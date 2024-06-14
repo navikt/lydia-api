@@ -6,6 +6,7 @@ import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -16,7 +17,11 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 
 class SpørreundersøkelseProdusent(
     private val produsent: KafkaProdusent,
-) {
+): Observer<Spørreundersøkelse> {
+    override fun receive(input: Spørreundersøkelse) {
+        sendPåKafka(spørreundersøkelse = input)
+    }
+
     fun sendPåKafka(spørreundersøkelse: Spørreundersøkelse) {
         val (nøkkel, verdi) = spørreundersøkelse.tilKafkaMelding()
         produsent.sendMelding(

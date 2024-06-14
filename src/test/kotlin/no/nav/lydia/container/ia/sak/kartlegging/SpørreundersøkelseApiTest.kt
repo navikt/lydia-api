@@ -9,6 +9,7 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.ranges.shouldBeIn
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveLength
@@ -18,6 +19,7 @@ import io.ktor.http.HttpStatusCode
 import java.util.UUID
 import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
@@ -39,6 +41,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
@@ -49,6 +52,9 @@ import org.junit.Before
 
 class SpørreundersøkelseApiTest {
     private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
+    private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(
+        Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe
+    )
 
     companion object {
         const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018f4e25-6a40-713f-b769-267afa134896"
@@ -57,12 +63,15 @@ class SpørreundersøkelseApiTest {
     @Before
     fun setUp() {
         kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
+        fullførtBehovsvurderingKonsument.subscribe(listOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
     }
 
     @After
     fun tearDown() {
         kartleggingKonsument.unsubscribe()
         kartleggingKonsument.close()
+        fullførtBehovsvurderingKonsument.unsubscribe()
+        fullførtBehovsvurderingKonsument.close()
     }
 
     @Test
@@ -477,14 +486,29 @@ class SpørreundersøkelseApiTest {
         }
 
         runBlocking {
+            // -- topic for fia-arbeidsgiver
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = kartleggingDto.kartleggingId,
                 konsument = kartleggingKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse =
-                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe KartleggingStatus.AVSLUTTET
+                }
+            }
+
+            // -- topic for salesforce
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = kartleggingDto.kartleggingId,
+                konsument = fullførtBehovsvurderingKonsument
+            ) {
+                it.forExactlyOne { melding ->
+                    val behovsvurdering = Json.decodeFromString<FullførtBehovsvurdering>(melding)
+                    behovsvurdering.behovsvurderingId shouldBe avsluttetKartlegging.kartleggingId
+                    val start = java.time.LocalDateTime.now().minusMinutes(1).toKotlinLocalDateTime()
+                    val stop = java.time.LocalDateTime.now().toKotlinLocalDateTime()
+                    val range = start..stop
+                    behovsvurdering.fullførtTidspunkt shouldBeIn range
                 }
             }
         }
@@ -589,7 +613,6 @@ class SpørreundersøkelseApiTest {
             saksnummer = sak.saksnummer,
         ) shouldHaveSize 0
     }
-
 
     fun enDeltakerSvarerPåALLESpørsmål(
         kartleggingDto: SpørreundersøkelseDto,

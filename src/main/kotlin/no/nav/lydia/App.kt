@@ -35,6 +35,7 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
+import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
@@ -46,6 +47,7 @@ import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
+import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
@@ -158,17 +160,17 @@ fun startLydiaBackend() {
             pdfgenService = PiaPdfgenService(naisEnvironment = naisEnv),
             oboTokenUtveksler = OboTokenUtveksler(naisEnvironment = naisEnv),
             virksomhetRepository = virksomhetRepository
-        )
-    ).apply {
-        leggTilIASakObservers(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent)
-        leggTilIASakLeveranseObservers(iaSakLeveranseProdusent, iaSakLeveranseObserver)
-    }
+        ),
+        iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
+        iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver)
+    )
 
+    val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(produsent = kafkaProdusent)
+    val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()
+    val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(produsent = kafkaProdusent)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
-        spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
-            produsent = kafkaProdusent,
-        ),
+        behovsvurderingObservers = listOf(spørreundersøkelseProdusent, behovsvurderingMetrikkObserver, fullførtBehovsvurderingProdusent),
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
             produsent = kafkaProdusent
         )

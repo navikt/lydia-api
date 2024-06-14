@@ -48,8 +48,8 @@ class IASakService(
     private val iaSakLeveranseRepository: IASakLeveranseRepository,
     private val årsakService: ÅrsakService,
     private val journalpostService: JournalpostService,
-    private val iaSakObservers: MutableList<Observer<IASak>> = mutableListOf(),
-    private val iaSaksLeveranseObservers: MutableList<Observer<IASakLeveranse>> = mutableListOf(),
+    private val iaSakObservers: List<Observer<IASak>>,
+    private val iaSaksLeveranseObservers: List<Observer<IASakLeveranse>>,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -66,20 +66,8 @@ class IASakService(
         return iaSakRepository.oppdaterSak(this, sistEndretAvHendelseId).onRight(::varsleIASakObservers)
     }
 
-    fun leggTilIASakObservers(vararg observers: Observer<IASak>) {
-        observers.forEach { observer ->
-            iaSakObservers.add(observer)
-        }
-    }
-
     private fun varsleIASakObservers(sak: IASak) {
         iaSakObservers.forEach { observer -> observer.receive(sak) }
-    }
-
-    fun leggTilIASakLeveranseObservers(vararg observers: Observer<IASakLeveranse>) {
-        observers.forEach { observer ->
-            iaSaksLeveranseObservers.add(observer)
-        }
     }
 
     private fun varsleIASakLeveranseObservers(leveranse: IASakLeveranse) {

@@ -3,11 +3,10 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import no.nav.lydia.appstatus.Metrics
+import no.nav.lydia.Observer
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
@@ -32,7 +31,7 @@ const val MINIMUM_ANTALL_DELTAKERE = 3
 
 class SpørreundersøkelseService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-    private val spørreundersøkelseProdusent: SpørreundersøkelseProdusent,
+    val behovsvurderingObservers: List<Observer<Spørreundersøkelse>>,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -168,9 +167,8 @@ class SpørreundersøkelseService(
         temaer = temaNavn.map {
             spørreundersøkelseRepository.hentTema(it)
         },
-    ).onRight {
-        spørreundersøkelseProdusent.sendPåKafka(it)
-        Metrics.loggBehovsvurdering(it.status)
+    ).onRight { behovsvurdering ->
+        behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
     }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, Spørreundersøkelse> {
@@ -181,8 +179,8 @@ class SpørreundersøkelseService(
 
         val oppdatertKartlegging =
             kartlegging.copy(status = KartleggingStatus.SLETTET, endretTidspunkt = LocalDateTime.now())
-        spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
-        Metrics.loggBehovsvurdering(oppdatertKartlegging.status)
+
+        behovsvurderingObservers.forEach { it.receive(oppdatertKartlegging) }
 
         return oppdatertKartlegging.right()
     }
@@ -212,8 +210,7 @@ class SpørreundersøkelseService(
         )
             ?: return IASakKartleggingError.`feil under oppdatering`.left()
 
-        spørreundersøkelseProdusent.sendPåKafka(oppdatertKartlegging)
-        Metrics.loggBehovsvurdering(oppdatertKartlegging.status)
+        behovsvurderingObservers.forEach { it.receive(oppdatertKartlegging) }
 
         return oppdatertKartlegging.right()
     }
