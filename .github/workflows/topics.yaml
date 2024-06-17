@@ -34,5 +34,6 @@ jobs:
             .nais/topics/sporreundersokelse-antall-svar-topic.yaml,\
             .nais/topics/sporreundersokelse-svar-topic.yaml,\
             .nais/topics/sporreundersokelse-oppdatering-topic.yaml,\
+            .nais/topics/fullfort-behovsvurdering-topic.yaml,\
             .nais/topics/sporreundersokelse-hendelse-topic.yaml"
           VARS: .nais/${{ matrix.cluster }}.yaml
