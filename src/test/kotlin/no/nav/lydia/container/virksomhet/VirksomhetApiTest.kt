@@ -214,12 +214,22 @@ class VirksomhetApiTest {
     }
 
     @Test
-    fun `skal få riktig salesforce info`() {
-        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(DYRKING_AV_RIS)))
-        val salesforceUrl = hentSalesforceInfo(orgnummer = virksomhet.orgnr)
+    fun `skal få riktig lenke til virksomhet i salesforce`() {
+        val salesforceInfo = hentSalesforceInfo(orgnummer = "123456789")
 
-        salesforceUrl.orgnr shouldBe virksomhet.orgnr
-        salesforceUrl.url shouldMatch "http://host.testcontainers.internal:\\d+/0015t0000121xU6AAI"
-        salesforceUrl.partnerStatus shouldBe "Samarbeidspartner"
+        salesforceInfo.orgnr shouldBe "123456789"
+        salesforceInfo.url shouldMatch "http://host.testcontainers.internal:\\d+/0015t0000121xU6AAI"
+    }
+
+    @Test
+    fun `skal få kun få partnerStatus for strategisk partner`() {
+        val ikkeStrategiskPartner = hentSalesforceInfo(orgnummer = "123456789")
+        ikkeStrategiskPartner.orgnr shouldBe "123456789"
+        ikkeStrategiskPartner.partnerStatus shouldBe null
+
+        val strategiskPartner = hentSalesforceInfo(orgnummer = "777666555")
+        strategiskPartner.orgnr shouldBe "777666555"
+        strategiskPartner.partnerStatus shouldBe "Strategisk Partner"
+
     }
 }

@@ -60,9 +60,14 @@ class SalesforceClient(private val salesforce: Salesforce) {
             }
 
             return SalesforceInfoResponse(
-                orgnr = orgnr,
+                orgnr = queryResponse.records.first().INT_OrganizationNumber__c,
                 url = "${gyldigToken.instanceUrl}/${queryResponse.records.first().Id}",
-                partnerStatus = queryResponse.records.first().TAG_Partner_Status__c
+                partnerStatus = queryResponse.records.first().TAG_Partner_Status__c?.let { status ->
+                    if (status.equals("Strategisk Partner", ignoreCase = true))
+                        status
+                    else
+                        null
+                }
             ).right()
         }
     }
