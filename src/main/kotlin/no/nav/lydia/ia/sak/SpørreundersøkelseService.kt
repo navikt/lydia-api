@@ -7,6 +7,7 @@ import no.nav.lydia.Observer
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
@@ -75,7 +76,7 @@ class SpørreundersøkelseService(
             spørreundersøkelseOppdateringProdusent.sendPåKafka(
                 SpørreundersøkelseOppdateringProdusent.AntallSvar(
                     spørreundersøkelseId = spørreundersøkelse.id.toString(),
-                    antallSvar = antallSvarPåSpørsmål
+                    antallSvar = antallSvarPåSpørsmål.tilDto()
                 )
             )
 

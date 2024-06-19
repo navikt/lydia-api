@@ -21,7 +21,7 @@ class SpørreundersøkelseOppdateringProdusent(
     }
 
     companion object {
-        fun SpørreundersøkelseAntallSvar.tilKafkaMelding() =
+        fun SpørreundersøkelseAntallSvar.tilDto() =
             SpørreundersøkelseAntallSvarDto(
                 spørreundersøkelseId = spørreundersøkelseId.toString(),
                 spørsmålId = spørsmålId.toString(),
@@ -40,8 +40,8 @@ class SpørreundersøkelseOppdateringProdusent(
 
     class AntallSvar(
         spørreundersøkelseId: String,
-        antallSvar: SpørreundersøkelseAntallSvar,
-    ) : SpørreundersøkelseOppdatering<SpørreundersøkelseAntallSvar>(
+        antallSvar: SpørreundersøkelseAntallSvarDto,
+    ) : SpørreundersøkelseOppdatering<SpørreundersøkelseAntallSvarDto>(
         spørreundersøkelseId = spørreundersøkelseId,
         oppdateringsType = OppdateringsType.ANTALL_SVAR,
         data = antallSvar
@@ -59,8 +59,8 @@ class SpørreundersøkelseOppdateringProdusent(
                 Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(spørreundersøkelseId, oppdateringsType))
 
             val verdi = when (this) {
-                is ResultaterForTema -> Json.encodeToString(data)
-                is AntallSvar -> Json.encodeToString(data.tilKafkaMelding())
+                is ResultaterForTema -> Json.encodeToString<TemaResultatDto>(data)
+                is AntallSvar -> Json.encodeToString<SpørreundersøkelseAntallSvarDto>(data)
             }
             return nøkkel to verdi
         }
