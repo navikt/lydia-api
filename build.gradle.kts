@@ -50,7 +50,7 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.13.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.15.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -74,13 +74,13 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.39.1")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.40")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.9.0"
+    val kotestVerstion = "5.9.1"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
@@ -99,7 +99,7 @@ dependencies {
     testImplementation("org.verapdf:validation-model:1.26.1")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.5")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.6")
 
     constraints {
         implementation("net.minidev:json-smart") {
@@ -110,7 +110,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.110.Final")
+                require("4.1.111.Final")
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
@@ -134,7 +134,7 @@ dependencies {
         }
         testImplementation("org.apache.commons:commons-compress") {
             version {
-                require("1.26.1")
+                require("1.26.2")
             }
             because("testcontainers har sårbar versjon")
         }
