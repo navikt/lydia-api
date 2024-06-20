@@ -120,18 +120,6 @@ dependencies {
             }
             because("kotliquery har sårbar versjon på v2.11.0")
         }
-
-        testImplementation("com.jayway.jsonpath:json-path") {
-            version {
-                require("2.9.0")
-            }
-            because(
-                """
-                json-path v2.8.0 was discovered to contain a stack overflow via the Criteria.parse() method.
-                introdusert gjennom io.kotest:kotest-assertions-json:5.8.0
-                """.trimIndent()
-            )
-        }
         testImplementation("org.apache.commons:commons-compress") {
             version {
                 require("1.26.2")
