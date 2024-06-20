@@ -91,8 +91,9 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        SELECT ia_sak_kartlegging.*, virksomhet.orgnr, virksomhet.navn
+                        SELECT ia_sak_kartlegging.*, ia_sak.saksnummer, virksomhet.orgnr, virksomhet.navn
                         FROM ia_sak_kartlegging
+                        JOIN ia_prosess on (ia_sak_kartlegging.ia_prosess = ia_prosess.id)
                         JOIN ia_sak using (saksnummer, orgnr)
                         JOIN virksomhet using (orgnr)
                         WHERE kartlegging_id = :kartleggingId
@@ -108,7 +109,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
 	    orgnummer: String,
 	    spørreundersøkelseId: UUID,
 	    vertId: UUID,
-	    saksnummer: String,
+        prosessId: Int,
 	    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
 	    temaer: List<TemaInfo>,
     ): Either<Feil, Spørreundersøkelse> {
@@ -121,7 +122,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                                 kartlegging_id,
                                 vert_id,
                                 orgnr,
-                                saksnummer,
+                                ia_prosess,
                                 status,
                                 opprettet_av
                             )
@@ -129,7 +130,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                                 :kartlegging_id,
                                 :vert_id,
                                 :orgnr,
-                                :saksnummer,
+                                :prosessId,
                                 :status,
                                 :opprettet_av
                             )
@@ -138,7 +139,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                             "kartlegging_id" to spørreundersøkelseId,
                             "vert_id" to vertId,
                             "orgnr" to orgnummer,
-                            "saksnummer" to saksnummer,
+                            "prosessId" to prosessId,
                             "status" to "OPPRETTET",
                             "opprettet_av" to saksbehandler.navIdent
                         )

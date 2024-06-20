@@ -99,6 +99,7 @@ import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import no.nav.lydia.ia.sak.db.ProsessRepository
 
 fun main() {
     startLydiaBackend()
@@ -114,6 +115,7 @@ fun startLydiaBackend() {
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
+    val prosessRepository = ProsessRepository(dataSource = dataSource)
 
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
@@ -170,6 +172,7 @@ fun startLydiaBackend() {
     val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(produsent = kafkaProdusent)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
+        prosessRepository = prosessRepository,
         behovsvurderingObservers = listOf(spørreundersøkelseProdusent, behovsvurderingMetrikkObserver, fullførtBehovsvurderingProdusent),
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
             produsent = kafkaProdusent

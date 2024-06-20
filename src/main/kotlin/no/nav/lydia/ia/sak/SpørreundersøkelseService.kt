@@ -23,6 +23,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -32,6 +33,7 @@ const val MINIMUM_ANTALL_DELTAKERE = 3
 
 class SpørreundersøkelseService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
+    val prosessRepository: ProsessRepository,
     val behovsvurderingObservers: List<Observer<Spørreundersøkelse>>,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
@@ -155,21 +157,25 @@ class SpørreundersøkelseService(
     }
 
     fun opprettSpørreundersøkelse(
-	    orgnummer: String,
-	    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-	    saksnummer: String,
-	    temaNavn: List<Temanavn>,
-    ) = spørreundersøkelseRepository.opprettSpørreundersøkelse(
-        orgnummer = orgnummer,
-        saksnummer = saksnummer,
-        saksbehandler = saksbehandler,
-        spørreundersøkelseId = UUID.randomUUID(),
-        vertId = UUID.randomUUID(),
-        temaer = temaNavn.map {
-            spørreundersøkelseRepository.hentTema(it)
-        },
-    ).onRight { behovsvurdering ->
-        behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
+        orgnummer: String,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+        saksnummer: String,
+        temaNavn: List<Temanavn>,
+    ): Either<Feil, Spørreundersøkelse> {
+        val prosess = prosessRepository.hentProsess(saksnummer) ?: prosessRepository.opprettNyProsess(saksnummer)
+
+        return spørreundersøkelseRepository.opprettSpørreundersøkelse(
+            orgnummer = orgnummer,
+            prosessId = prosess.id,
+            saksbehandler = saksbehandler,
+            spørreundersøkelseId = UUID.randomUUID(),
+            vertId = UUID.randomUUID(),
+            temaer = temaNavn.map {
+                spørreundersøkelseRepository.hentTema(it)
+            },
+        ).onRight { behovsvurdering ->
+            behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
+        }
     }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, Spørreundersøkelse> {
