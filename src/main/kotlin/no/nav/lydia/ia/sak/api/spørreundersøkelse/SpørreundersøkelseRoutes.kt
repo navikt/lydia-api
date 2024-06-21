@@ -227,4 +227,5 @@ object IASakKartleggingError {
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
     val `ugyldig kartleggingId` = Feil("Ugyldig kartlegging", HttpStatusCode.BadRequest)
+    val `mangler prosess` = Feil("Fant ikke tilknyttet prosess", HttpStatusCode.InternalServerError)
 }
