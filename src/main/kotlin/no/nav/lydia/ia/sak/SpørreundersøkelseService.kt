@@ -196,7 +196,9 @@ class SpørreundersøkelseService(
         saksnummer: String,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> {
         return try {
-            val kartlegginger = spørreundersøkelseRepository.hentSpørreundersøkelser(saksnummer = saksnummer)
+            val prosess = prosessRepository.hentProsess(saksnummer = saksnummer) ?:
+                return IASakKartleggingError.`mangler prosess`.left()
+            val kartlegginger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosessId = prosess.id)
             //TODO: legg til deltakereSomHarFullført
             kartlegginger.right()
         } catch (e: Exception) {

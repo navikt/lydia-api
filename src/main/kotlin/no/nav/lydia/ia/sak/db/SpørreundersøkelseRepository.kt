@@ -69,18 +69,18 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             )
         }
 
-    fun hentSpørreundersøkelser(saksnummer: String) =
+    fun hentSpørreundersøkelser(prosessId: Int) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT *
                     FROM ia_sak_kartlegging
-                    WHERE saksnummer = :saksnummer
+                    WHERE ia_prosess = :prosessId
                     AND status != '${KartleggingStatus.SLETTET}'
                 """.trimMargin(),
                     mapOf(
-                        "saksnummer" to saksnummer,
+                        "prosessId" to prosessId,
                     )
                 ).map(this::mapRowToIASakKartleggingOversikt).asList
             )
@@ -187,7 +187,6 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         return SpørreundersøkelseUtenInnhold(
             kartleggingId = spørreundersøkelseId,
             vertId = vertId,
-            saksnummer = this.string("saksnummer"),
             status = KartleggingStatus.valueOf(this.string("status")),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
