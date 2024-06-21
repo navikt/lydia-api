@@ -4,30 +4,30 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import no.nav.lydia.Observer
-import java.time.LocalDateTime
-import java.util.*
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import no.nav.lydia.ia.sak.db.ProsessRepository
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.*
 
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
@@ -196,8 +196,7 @@ class SpørreundersøkelseService(
         saksnummer: String,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> {
         return try {
-            val prosess = prosessRepository.hentProsess(saksnummer = saksnummer) ?:
-                return IASakKartleggingError.`mangler prosess`.left()
+            val prosess = prosessRepository.hentProsess(saksnummer = saksnummer) ?: return emptyList<SpørreundersøkelseUtenInnhold>().right()
             val kartlegginger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosessId = prosess.id)
             //TODO: legg til deltakereSomHarFullført
             kartlegginger.right()
