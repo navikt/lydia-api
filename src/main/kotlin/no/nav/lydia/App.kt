@@ -47,17 +47,12 @@ import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
-import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
-import no.nav.lydia.ia.sak.IASakLeveranseObserver
-import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.SpørreundersøkelseService
+import no.nav.lydia.ia.sak.*
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
+import no.nav.lydia.ia.sak.api.iaSakTeam
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
-import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
-import no.nav.lydia.ia.sak.db.IASakRepository
-import no.nav.lydia.ia.sak.db.IASakshendelseRepository
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
+import no.nav.lydia.ia.sak.db.*
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
@@ -114,6 +109,7 @@ fun startLydiaBackend() {
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
+    val iaSakTeamRepository = IASakTeamRepository(dataSource= dataSource)
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
     val prosessRepository = ProsessRepository(dataSource = dataSource)
 
@@ -166,6 +162,8 @@ fun startLydiaBackend() {
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
         iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver)
     )
+
+    val iaSakTeamService = IASakTeamService(iaSakTeamRepository = iaSakTeamRepository)
 
     val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(produsent = kafkaProdusent)
     val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()
@@ -258,7 +256,8 @@ fun startLydiaBackend() {
             sistePubliseringService = sistePubliseringService,
             virksomhetRepository = virksomhetRepository,
             iaSakService = iaSakService,
-            spørreundersøkelseService = spørreundersøkelseService
+            iaSakTeamService = iaSakTeamService,
+            spørreundersøkelseService = spørreundersøkelseService,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -324,6 +323,7 @@ private fun Application.lydiaRestApi(
     virksomhetRepository: VirksomhetRepository,
     iaSakService: IASakService,
     spørreundersøkelseService: SpørreundersøkelseService,
+    iaSakTeamService: IASakTeamService,
 ) {
     install(ContentNegotiation) {
         json()
@@ -402,6 +402,13 @@ private fun Application.lydiaRestApi(
                 sistePubliseringService = sistePubliseringService,
             )
             iaSakRådgiver(
+                iaSakService = iaSakService,
+                adGrupper = naisEnv.security.adGrupper,
+                auditLog = auditLog,
+                azureService = azureService,
+            )
+            iaSakTeam(
+                iaSakTeamService = iaSakTeamService,
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
