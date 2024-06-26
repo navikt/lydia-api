@@ -7,27 +7,27 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import io.ktor.http.HttpStatusCode
+import java.time.LocalDateTime
+import java.util.*
+import javax.sql.DataSource
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
-import java.time.LocalDateTime
-import java.util.*
-import javax.sql.DataSource
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 
 class SpørreundersøkelseRepository(val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
@@ -106,12 +106,12 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         }
 
     fun opprettSpørreundersøkelse(
-	    orgnummer: String,
-	    spørreundersøkelseId: UUID,
-	    vertId: UUID,
+        orgnummer: String,
+        spørreundersøkelseId: UUID,
+        vertId: UUID,
         prosessId: Int,
-	    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-	    temaer: List<TemaInfo>,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+        temaer: List<TemaInfo>,
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -421,22 +421,6 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             hentSpørreundersøkelse(spørreundersøkelseId)
         }
 
-    fun hentTema(temanavn: Temanavn) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT * FROM ia_sak_kartlegging_tema 
-                          WHERE navn = :temanavn
-                          AND status = '${TemaStatus.AKTIV}'
-                    """.trimIndent(),
-                    mapOf(
-                        "temanavn" to temanavn.name
-                    )
-                ).map(this::mapTilTema).asSingle
-            )
-        } ?: throw IllegalStateException("Fant ingen aktive kartleggingstemaer for $temanavn")
-
     private fun mapTilTema(row: Row) =
         TemaInfo(
             id = row.int("tema_id"),
@@ -466,4 +450,16 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             )
         }
     }
+
+    fun hentAktiveTema(): List<TemaInfo> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT * FROM ia_sak_kartlegging_tema
+                        WHERE status = '${TemaStatus.AKTIV}'
+                    """.trimIndent(),
+                ).map(this::mapTilTema).asList
+            )
+        }
 }

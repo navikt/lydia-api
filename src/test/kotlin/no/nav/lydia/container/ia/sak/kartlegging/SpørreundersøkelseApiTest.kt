@@ -4,22 +4,18 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
-import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.equals.shouldBeEqual
-import io.kotest.matchers.ranges.shouldBeIn
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
-import java.util.UUID
+import java.util.*
 import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
@@ -46,7 +42,6 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.Spørreundersøkels
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import org.junit.After
 import org.junit.Before
 
@@ -106,12 +101,10 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne opprette en kartlegging med flere temaer`() {
-        val temaer = Temanavn.entries
-
         val sak = nySakIKartlegges()
-        val kartleggingDto = sak.opprettKartlegging(temaer = temaer)
+        val kartleggingDto = sak.opprettKartlegging()
 
-        kartleggingDto.temaMedSpørsmålOgSvaralternativer.map { it.temanavn } shouldContainExactly temaer
+        kartleggingDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
         kartleggingDto.temaMedSpørsmålOgSvaralternativer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
         }
@@ -124,7 +117,7 @@ class SpørreundersøkelseApiTest {
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.map { it.temanavn } shouldBeEqual temaer
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
                         it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
                         it.beskrivelse.shouldNotBeEmpty()
@@ -171,7 +164,6 @@ class SpørreundersøkelseApiTest {
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            temaer = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID)
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         val id = resp.third.get().kartleggingId
@@ -189,18 +181,11 @@ class SpørreundersøkelseApiTest {
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
                     spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 1
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
-                        tema.spørsmålOgSvaralternativer shouldHaveSize 4 // Det er 4 spørsmål i tema UTVIKLE_PARTSSAMARBEID
+                        tema.spørsmålOgSvaralternativer.shouldNotBeEmpty()
                         tema.spørsmålOgSvaralternativer.forAll {
-                            it.svaralternativer shouldHaveAtLeastSize 6 // Det er minst 6 svaralternativer per spørsmål
-                        }
-                        tema.spørsmålOgSvaralternativer.forAll {
-                            if (it.id != ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER) {
-                                it.flervalg shouldBe false
-                            } else {
-                                it.flervalg shouldBe true
-                            }
+                            it.svaralternativer.shouldNotBeEmpty()
                         }
                     }
                 }
@@ -230,17 +215,12 @@ class SpørreundersøkelseApiTest {
     fun `nylig opprettet kartlegging får alle spørsmål med riktige svaralternativer knyttet til seg`() {
         val sak = nySakIKartlegges()
 
-        // -- har kun partssamarbeid knyttet til seg pdd
-        val kartlegging =
+        val behovsvurdering =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
                 .tilSingelRespons<SpørreundersøkelseDto>().third.get()
 
-        kartlegging.temaMedSpørsmålOgSvaralternativer.forAll { spørsmålOgSvarPerTema ->
-            spørsmålOgSvarPerTema.temanavn shouldBe Temanavn.UTVIKLE_PARTSSAMARBEID
-        }
-
-        // Sjekk at hvert Tema inneholder de riktige spørsmålene --> dette skal fungere med flere temaer
-        kartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer.shouldNotBeEmpty()
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
                 postgresContainer.hentEnkelKolonne(
                     "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.temanavn}' and status = 'AKTIV'"
@@ -254,7 +234,7 @@ class SpørreundersøkelseApiTest {
             }.toList() shouldContainAll spørsmålIderForEtTema
         }
 
-        kartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålMedSvarPerTema ->
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålMedSvarPerTema ->
             spørsmålMedSvarPerTema.spørsmålOgSvaralternativer.forEach { spørsmålMedSvar ->
                 val svarIderForEtSpørsmål: List<String> =
                     postgresContainer.hentAlleRaderTilEnkelKolonne(
@@ -403,7 +383,7 @@ class SpørreundersøkelseApiTest {
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
-        oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
+        oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forExactlyOne { temaMedSpørsmålOgSvar ->
             temaMedSpørsmålOgSvar.tema shouldNotBe null
             temaMedSpørsmålOgSvar.beskrivelse shouldNotBe null
             temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->

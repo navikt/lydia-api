@@ -3,6 +3,8 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import java.time.LocalDateTime
+import java.util.*
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
@@ -21,13 +23,10 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenI
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.util.*
 
 const val MINIMUM_ANTALL_DELTAKERE = 3
 
@@ -160,7 +159,6 @@ class SpørreundersøkelseService(
         orgnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         saksnummer: String,
-        temaNavn: List<Temanavn>,
     ): Either<Feil, Spørreundersøkelse> {
         val prosess = prosessRepository.hentProsess(saksnummer) ?: prosessRepository.opprettNyProsess(saksnummer)
 
@@ -170,9 +168,7 @@ class SpørreundersøkelseService(
             saksbehandler = saksbehandler,
             spørreundersøkelseId = UUID.randomUUID(),
             vertId = UUID.randomUUID(),
-            temaer = temaNavn.map {
-                spørreundersøkelseRepository.hentTema(it)
-            },
+            temaer = spørreundersøkelseRepository.hentAktiveTema(),
         ).onRight { behovsvurdering ->
             behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
         }
@@ -196,7 +192,8 @@ class SpørreundersøkelseService(
         saksnummer: String,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> {
         return try {
-            val prosess = prosessRepository.hentProsess(saksnummer = saksnummer) ?: return emptyList<SpørreundersøkelseUtenInnhold>().right()
+            val prosess = prosessRepository.hentProsess(saksnummer = saksnummer)
+                ?: return emptyList<SpørreundersøkelseUtenInnhold>().right()
             val kartlegginger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosessId = prosess.id)
             //TODO: legg til deltakereSomHarFullført
             kartlegginger.right()

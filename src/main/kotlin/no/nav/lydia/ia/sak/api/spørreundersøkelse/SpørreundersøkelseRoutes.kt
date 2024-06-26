@@ -6,7 +6,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.log
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -16,16 +15,15 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
-import no.nav.lydia.ia.sak.SpørreundersøkelseService
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -40,14 +38,12 @@ fun Route.iaSakSpørreundersøkelse(
 ) {
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val temaer = call.receive<List<Temanavn>>()
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             spørreundersøkelseService.opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
                 saksnummer = iaSak.saksnummer,
                 saksbehandler = saksbehandler,
-                temaNavn = temaer
             )
         }.also { kartleggingEither ->
             auditLog.auditloggEither(

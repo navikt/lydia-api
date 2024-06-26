@@ -14,6 +14,9 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import java.util.*
+import kotlin.io.path.Path
+import kotlin.test.fail
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
@@ -46,15 +49,16 @@ import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseUtenInnholdDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseUtenInnholdDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -62,9 +66,7 @@ import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktDto
 import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
 import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.integrasjoner.kartlegging.HendelsType
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
@@ -95,9 +97,6 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.util.*
-import kotlin.io.path.Path
-import kotlin.test.fail
 
 class TestContainerHelper {
     companion object {
@@ -605,11 +604,9 @@ class IASakKartleggingHelper {
         fun opprettIASakKartlegging(
             orgnr: String,
             saksnummer: String,
-            temaer: List<Temanavn> = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) =
             lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/opprett")
-                .jsonBody(Json.encodeToString(temaer))
                 .authentication().bearer(token)
 
         fun hentIASakKartlegginger(
@@ -625,12 +622,10 @@ class IASakKartleggingHelper {
                 )
 
         fun IASakDto.opprettKartlegging(
-            temaer: List<Temanavn> = listOf(Temanavn.UTVIKLE_PARTSSAMARBEID, Temanavn.REDUSERE_SYKEFRAVÆR),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = opprettIASakKartlegging(
             orgnr = orgnr,
             saksnummer = saksnummer,
-            temaer = temaer,
             token = token,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
