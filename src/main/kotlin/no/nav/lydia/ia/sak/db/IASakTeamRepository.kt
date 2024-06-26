@@ -16,7 +16,7 @@ class IASakTeamRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        INSERT INTO ia_sak (
+                        INSERT INTO ia_sak_team (
                             saksnummer,
                             ident
                         )
