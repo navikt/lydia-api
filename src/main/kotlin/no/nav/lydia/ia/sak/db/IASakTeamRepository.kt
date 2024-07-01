@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.db
 
+import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -7,7 +8,8 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 import no.nav.lydia.ia.sak.domene.IASak
 
-data class BrukerITeam (val ident: String, val saksnummer: String)
+@Serializable
+data class BrukerITeamDto (val ident: String, val saksnummer: String)
 
 class IASakTeamRepository(val dataSource: DataSource) {
 
@@ -24,6 +26,7 @@ class IASakTeamRepository(val dataSource: DataSource) {
                             :saksnummer,
                             :ident
                         )
+                        ON CONFLICT DO NOTHING
                         returning *                            
                     """.trimMargin(),
                     mapOf(
@@ -31,7 +34,7 @@ class IASakTeamRepository(val dataSource: DataSource) {
                         "ident" to navAnsatt.navIdent
                     )
                 ).map { row ->
-                    BrukerITeam(ident = row.string("ident"), saksnummer = row.string("saksnummer"))
+                    BrukerITeamDto(ident = row.string("ident"), saksnummer = row.string("saksnummer"))
                 }.asSingle
             )
         }

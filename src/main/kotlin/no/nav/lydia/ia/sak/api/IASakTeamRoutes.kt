@@ -1,11 +1,13 @@
 package no.nav.lydia.ia.sak.api
 
-import io.ktor.server.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.*
 import io.ktor.server.response.respond
 import io.ktor.server.routing.post
 import io.ktor.server.routing.Route
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
+import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASakTeamService
 import no.nav.lydia.integrasjoner.azure.AzureService
@@ -20,16 +22,29 @@ fun Route.iaSakTeam(
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
+
     post("$IA_SAK_TEAM_PATH/{saksnummer}") {
-        val saksnummer = call.parameters["saksnummer"] ?: return@post call.respond(IASakError.`ugyldig saksnummer`)
+        val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val iaSak = iaSakService.hentIASak(saksnummer).fold(
+            {feil -> return@post call.sendFeil(feil)},
+            {iaSak -> iaSak}
+        )
+
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaSakService.hentIASak(saksnummer).onRight { iaSak ->
-                return@somSaksbehandler iaSakTeamService.knyttBrukerTilSak(iaSak = iaSak, navAnsatt = saksbehandler)
-            }
+            return@somSaksbehandler iaSakTeamService.knyttBrukerTilSak(iaSak = iaSak, navAnsatt = saksbehandler)
+        }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = iaSak.orgnr,
+                auditType = AuditType.update,
+                saksnummer = saksnummer
+            )
         }.onLeft {
-            call.respond(it.httpStatusCode, it)
+            call.application.log.error(it.feilmelding)
+            call.sendFeil(it)
         }.onRight {
-            call.respond(it)
+            call.respond(status = HttpStatusCode.Created, message = it)
         }
     }
 }
