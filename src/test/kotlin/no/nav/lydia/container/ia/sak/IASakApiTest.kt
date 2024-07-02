@@ -15,7 +15,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSakRespons
@@ -58,6 +58,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
@@ -154,14 +155,16 @@ class IASakApiTest {
             sak = when (it) {
                 VIRKSOMHET_ER_IKKE_AKTUELL ->
                     sak.nyHendelse(
-                            it, payload = ValgtÅrsak(
-                            type = VIRKSOMHETEN_TAKKET_NEI,
-                            begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-                    ).toJson()
+                        it, payload = ValgtÅrsak(
+                        type = VIRKSOMHETEN_TAKKET_NEI,
+                        begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
+                        ).toJson()
                     )
 
                 FULLFØR_BISTAND ->
                     sak.leggTilLeveranseOgFullførSak()
+
+                ENDRE_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
 
                 else ->
                     sak.nyHendelse(it)

@@ -10,6 +10,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -35,6 +37,7 @@ open class IASakshendelse(
         fun fromDto(dto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet) =
             when (dto.hendelsesType) {
                 VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
+                ENDRE_PROSESS -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
                 else -> IASakshendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
@@ -130,9 +133,9 @@ class VirksomhetIkkeAktuellHendelse(
                         navEnhet = navEnhet
                     ).right()
                 } catch (e: Exception) {
-                    SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
+                    SaksHendelseFeil.`kunne ikke deserialisere payload`.left()
                 }
-            } ?: SaksHendelseFeil.`kunne ikke deserialisere årsak`.left()
+            } ?: SaksHendelseFeil.`kunne ikke deserialisere payload`.left()
     }
 
     @Serializable
@@ -164,11 +167,48 @@ class VirksomhetIkkeAktuellHendelse(
     }
 }
 
+class ProsessHendelse(
+    id: String,
+    opprettetTidspunkt: LocalDateTime,
+    saksnummer: String,
+    hendelsesType: IASakshendelseType = ENDRE_PROSESS,
+    orgnummer: String,
+    opprettetAv: String,
+    opprettetAvRolle: Rolle?,
+    navEnhet: NavEnhet,
+    val prosessDto: IAProsessDto
+) : IASakshendelse(
+    id,
+    opprettetTidspunkt,
+    saksnummer,
+    hendelsesType,
+    orgnummer,
+    opprettetAv,
+    opprettetAvRolle,
+    navEnhet
+) {
+    companion object {
+        fun fromDto(dto: IASakshendelseDto, navAnsatt: NavAnsatt, navEnhet: NavEnhet): Either<Feil, ProsessHendelse> =
+            dto.payload?.let {
+                ProsessHendelse(
+                    id = ULID.random(),
+                    opprettetTidspunkt = LocalDateTime.now(),
+                    saksnummer = dto.saksnummer,
+                    orgnummer = dto.orgnummer,
+                    opprettetAv = navAnsatt.navIdent,
+                    opprettetAvRolle = navAnsatt.rolle,
+                    prosessDto = Json.decodeFromString<IAProsessDto>(it),
+                    navEnhet = navEnhet,
+                ).right()
+            } ?: SaksHendelseFeil.`kunne ikke deserialisere payload`.left()
+    }
+}
+
 object SaksHendelseFeil {
     val `valgte begrunnelser tilhører ikke riktig årsak` =
         Feil(feilmelding = "valgte begrunnelser tilhører ikke riktig årsak", httpStatusCode = HttpStatusCode.BadRequest)
-    val `kunne ikke deserialisere årsak` =
-        Feil(feilmelding = "Kunne ikke deserialisere årsak", httpStatusCode = HttpStatusCode.BadRequest)
+    val `kunne ikke deserialisere payload` =
+        Feil(feilmelding = "Kunne ikke deserialisere payload", httpStatusCode = HttpStatusCode.BadRequest)
 }
 
 enum class IASakshendelseType {
@@ -179,6 +219,11 @@ enum class IASakshendelseType {
     VIRKSOMHET_KARTLEGGES,
     VIRKSOMHET_SKAL_BISTÅS,
     VIRKSOMHET_ER_IKKE_AKTUELL,
+
+//    NY_PROSESS,
+    ENDRE_PROSESS,
+//    SLETT_PROSESS,
+
     TILBAKE,
     FULLFØR_BISTAND,
     SLETT_SAK

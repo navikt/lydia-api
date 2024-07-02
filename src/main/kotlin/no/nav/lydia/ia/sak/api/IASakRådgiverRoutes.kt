@@ -3,22 +3,33 @@ package no.nav.lydia.ia.sak.api
 import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.right
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
+import no.nav.lydia.ia.sak.api.extensions.iaSakLeveranseId
+import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.extensions.saksnummer
+import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.tilgangskontroll.*
 import no.nav.lydia.tilgangskontroll.fia.objectId
+import no.nav.lydia.tilgangskontroll.somHøyestTilgang
+import no.nav.lydia.tilgangskontroll.somLesebruker
+import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import no.nav.lydia.tilgangskontroll.somSuperbruker
 
 const val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 const val SAK_HENDELSE_SUB_PATH = "hendelse"
@@ -34,7 +45,7 @@ fun Route.iaSakRådgiver(
     azureService: AzureService,
 ) {
     post("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
+        val orgnummer = call.orgnummer ?: return@post call.respond(IASakError.`ugyldig orgnummer`)
         call.somSuperbruker(adGrupper = adGrupper) { superbruker ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
                 iaSakService.opprettSakOgMerkSomVurdert(
@@ -59,7 +70,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }.toDto(navAnsatt = navAnsatt).right()
         }.also { either ->
@@ -77,7 +88,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/aktiv") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             iaSakService.hentSakerForOrgnummer(orgnummer)
                 .sortedByDescending { it.opprettetTidspunkt }
@@ -100,7 +111,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/{orgnummer}") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
             iaSakService.hentSakerForOrgnummer(orgnummer = orgnummer)
@@ -158,9 +169,9 @@ fun Route.iaSakRådgiver(
         }
     }
 
-    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}") {
-        val orgnr = call.parameters["orgnr"] ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}") {
+        val orgnr = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASakLeveranser(saksnummer = saksnummer)
         }.also {
@@ -178,9 +189,9 @@ fun Route.iaSakRådgiver(
         }
     }
 
-    post("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}") {
-        val orgnr = call.parameters["orgnr"] ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
+    post("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}") {
+        val orgnr = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val leveranse = call.receive<IASakLeveranseOpprettelsesDto>()
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
@@ -223,10 +234,10 @@ fun Route.iaSakRådgiver(
         }
     }
 
-    delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}/{iaSakLeveranseId}") {
-        val orgnr = call.parameters["orgnr"] ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.parameters["saksnummer"] ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@delete call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
+    delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}/{iaSakLeveranseId}") {
+        val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val iaSakLeveranseId = call.iaSakLeveranseId ?: return@delete call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             iaSakService.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), saksbehandler)
@@ -265,8 +276,6 @@ fun Route.iaSakRådgiver(
         }
     }
 }
-
-suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)
 
 class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode) {
     companion object {

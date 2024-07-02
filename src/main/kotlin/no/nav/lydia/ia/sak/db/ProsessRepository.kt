@@ -5,6 +5,8 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 
 class ProsessRepository(val dataSource: DataSource) {
@@ -41,6 +43,27 @@ class ProsessRepository(val dataSource: DataSource) {
             )!!
     }
 
+
+    fun oppdaterProsess(sakshendelse: IASakshendelse) {
+        when(sakshendelse) {
+            is ProsessHendelse -> {
+                using(sessionOf(dataSource)) { session ->
+                    session.run(
+                        queryOf(
+                            """
+                                UPDATE ia_prosess SET navn = :navn WHERE id = :prosessId
+                            """.trimIndent(),
+                            mapOf(
+                                "navn" to sakshendelse.prosessDto.navn,
+                                "prosessId" to sakshendelse.prosessDto.id
+                            )
+                        ).asUpdate
+                    )
+                }
+            }
+            else -> {}
+        }
+    }
 
     private fun mapRowToIaProsessDto(row: Row) =
         IAProsess(

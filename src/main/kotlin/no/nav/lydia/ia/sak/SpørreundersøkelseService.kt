@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import java.time.LocalDateTime
@@ -15,8 +16,8 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
-import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
@@ -32,7 +33,7 @@ const val MINIMUM_ANTALL_DELTAKERE = 3
 
 class SpørreundersøkelseService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-    val prosessRepository: ProsessRepository,
+    val iaProsessService: IAProsessService,
     val behovsvurderingObservers: List<Observer<Spørreundersøkelse>>,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
@@ -158,21 +159,20 @@ class SpørreundersøkelseService(
     fun opprettSpørreundersøkelse(
         orgnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        saksnummer: String,
-    ): Either<Feil, Spørreundersøkelse> {
-        val prosess = prosessRepository.hentProsess(saksnummer) ?: prosessRepository.opprettNyProsess(saksnummer)
-
-        return spørreundersøkelseRepository.opprettSpørreundersøkelse(
-            orgnummer = orgnummer,
-            prosessId = prosess.id,
-            saksbehandler = saksbehandler,
-            spørreundersøkelseId = UUID.randomUUID(),
-            vertId = UUID.randomUUID(),
-            temaer = spørreundersøkelseRepository.hentAktiveTema(),
-        ).onRight { behovsvurdering ->
-            behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
-        }
-    }
+        iaSak: IASak,
+    ): Either<Feil, Spørreundersøkelse> =
+	    iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
+		    spørreundersøkelseRepository.opprettSpørreundersøkelse(
+			    orgnummer = orgnummer,
+			    prosessId = prosess.id,
+			    saksbehandler = saksbehandler,
+			    spørreundersøkelseId = UUID.randomUUID(),
+			    vertId = UUID.randomUUID(),
+			    temaer = spørreundersøkelseRepository.hentAktiveTema(),
+		    )
+	    }.onRight { behovsvurdering ->
+		    behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
+	    }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, Spørreundersøkelse> {
         val kartlegging = spørreundersøkelseRepository.hentSpørreundersøkelse(kartleggingId)
@@ -189,10 +189,10 @@ class SpørreundersøkelseService(
     }
 
     fun hentKartlegginger(
-        saksnummer: String,
+        sak: IASak,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> {
         return try {
-            val prosess = prosessRepository.hentProsess(saksnummer = saksnummer)
+            val prosess = iaProsessService.hentIAProsesser(sak).getOrNull()?.firstOrNull()
                 ?: return emptyList<SpørreundersøkelseUtenInnhold>().right()
             val kartlegginger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosessId = prosess.id)
             //TODO: legg til deltakereSomHarFullført

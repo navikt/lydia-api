@@ -47,12 +47,23 @@ import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
-import no.nav.lydia.ia.sak.*
+import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
+import no.nav.lydia.ia.sak.IAProsessService
+import no.nav.lydia.ia.sak.IASakLeveranseObserver
+import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASakTeamService
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.api.iaSakTeam
+import no.nav.lydia.ia.sak.api.prosess.iaProsessApi
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
-import no.nav.lydia.ia.sak.db.*
+import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
+import no.nav.lydia.ia.sak.db.IASakRepository
+import no.nav.lydia.ia.sak.db.IASakTeamRepository
+import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.db.ProsessRepository
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
@@ -94,7 +105,6 @@ import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
-import no.nav.lydia.ia.sak.db.ProsessRepository
 
 fun main() {
     startLydiaBackend()
@@ -160,7 +170,8 @@ fun startLydiaBackend() {
             virksomhetRepository = virksomhetRepository
         ),
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
-        iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver)
+        iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver),
+        iaSakProsessRepository = prosessRepository,
     )
 
     val iaSakTeamService = IASakTeamService(iaSakTeamRepository = iaSakTeamRepository)
@@ -168,9 +179,10 @@ fun startLydiaBackend() {
     val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(produsent = kafkaProdusent)
     val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()
     val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(produsent = kafkaProdusent)
+    val iaProsessService = IAProsessService(prosessRepository = prosessRepository)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
-        prosessRepository = prosessRepository,
+        iaProsessService = iaProsessService,
         behovsvurderingObservers = listOf(spørreundersøkelseProdusent, behovsvurderingMetrikkObserver, fullførtBehovsvurderingProdusent),
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
             produsent = kafkaProdusent
@@ -256,8 +268,9 @@ fun startLydiaBackend() {
             sistePubliseringService = sistePubliseringService,
             virksomhetRepository = virksomhetRepository,
             iaSakService = iaSakService,
-            iaSakTeamService = iaSakTeamService,
-            spørreundersøkelseService = spørreundersøkelseService,
+	        iaSakTeamService = iaSakTeamService,
+	        iaProsessService = iaProsessService,
+            spørreundersøkelseService = spørreundersøkelseService
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -322,6 +335,7 @@ private fun Application.lydiaRestApi(
     sistePubliseringService: SistePubliseringService,
     virksomhetRepository: VirksomhetRepository,
     iaSakService: IASakService,
+    iaProsessService: IAProsessService,
     spørreundersøkelseService: SpørreundersøkelseService,
     iaSakTeamService: IASakTeamService,
 ) {
@@ -413,6 +427,12 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
+            )
+            iaProsessApi(
+                adGrupper = naisEnv.security.adGrupper,
+                iaProsessService = iaProsessService,
+                iaSakService = iaSakService,
+                auditLog = auditLog
             )
             iaSakSpørreundersøkelse(
                 iaSakService = iaSakService,

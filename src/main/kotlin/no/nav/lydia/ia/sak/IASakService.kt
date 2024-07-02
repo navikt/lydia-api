@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
@@ -48,6 +49,7 @@ class IASakService(
     private val iaSakLeveranseRepository: IASakLeveranseRepository,
     private val årsakService: ÅrsakService,
     private val journalpostService: JournalpostService,
+    private val iaSakProsessRepository: ProsessRepository,
     private val iaSakObservers: List<Observer<IASak>>,
     private val iaSaksLeveranseObservers: List<Observer<IASakLeveranse>>,
 ) {
@@ -133,6 +135,7 @@ class IASakService(
                     .map { oppdatertSak ->
                         sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         årsakService.lagreÅrsak(sakshendelse)
+                        iaSakProsessRepository.oppdaterProsess(sakshendelse)
                         when(sakshendelse.hendelsesType) {
                             IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(sakshendelse, saksbehandler)
                                 .onLeft {

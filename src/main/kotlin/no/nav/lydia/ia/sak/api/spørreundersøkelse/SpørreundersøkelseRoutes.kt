@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import arrow.core.Either
+import arrow.core.flatMap
 import arrow.core.left
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -19,7 +20,10 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.sendFeil
+import no.nav.lydia.ia.sak.api.extensions.kartleggingId
+import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.extensions.saksnummer
+import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
@@ -42,7 +46,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             spørreundersøkelseService.opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
-                saksnummer = iaSak.saksnummer,
+                iaSak = iaSak,
                 saksbehandler = saksbehandler,
             )
         }.also { kartleggingEither ->
@@ -65,9 +69,9 @@ fun Route.iaSakSpørreundersøkelse(
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
-                ?: return@somLesebruker IASakError.`ugyldig saksnummer`.left()
-            spørreundersøkelseService.hentKartlegginger(saksnummer = saksnummer)
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                spørreundersøkelseService.hentKartlegginger(sak = iaSak)
+            }
         }.also { kartleggingerEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -109,8 +113,8 @@ fun Route.iaSakSpørreundersøkelse(
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
-            val kartlegging = spørreundersøkelseService.hentKartlegginger(saksnummer = saksnummer)
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
+            val kartlegging = spørreundersøkelseService.hentKartlegginger(sak = iaSak)
 
             if (kartlegging.getOrNull()
                     ?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != KartleggingStatus.PÅBEGYNT
@@ -204,13 +208,6 @@ private fun <T> ApplicationCall.somEierAvSakIProsess(
             block(saksbehandler, iaSak)
     }
 
-private val ApplicationCall.orgnummer
-    get() = parameters["orgnummer"]
-private val ApplicationCall.saksnummer
-    get() = parameters["saksnummer"]
-private val ApplicationCall.kartleggingId
-    get() = parameters["kartleggingId"]
-
 object IASakKartleggingError {
     val `kartlegging er ikke i påbegynt` =
         Feil("Kartlegging er ikke i påbegynt status", HttpStatusCode.Forbidden)
@@ -223,5 +220,4 @@ object IASakKartleggingError {
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
     val `ugyldig kartleggingId` = Feil("Ugyldig kartlegging", HttpStatusCode.BadRequest)
-    val `mangler prosess` = Feil("Fant ikke tilknyttet prosess", HttpStatusCode.InternalServerError)
 }

@@ -23,6 +23,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.feil
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.generellFeil
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -116,6 +117,7 @@ class IASak private constructor(
                     }
             }
 
+            ENDRE_PROSESS -> {}
             TA_EIERSKAP_I_SAK -> {
                 eidAv = hendelse.opprettetAv
             }
@@ -254,7 +256,8 @@ class IASak private constructor(
             if (erEierAvSak(navAnsatt)) listOf(
                 GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
                 GyldigHendelse(saksHendelsestype = TILBAKE),
-                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
+                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS)
             )
             else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
     }
@@ -266,7 +269,8 @@ class IASak private constructor(
             if (erEierAvSak(navAnsatt)) listOf(
                 GyldigHendelse(saksHendelsestype = TILBAKE),
                 GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND),
-                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
+                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS)
             )
             else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
 

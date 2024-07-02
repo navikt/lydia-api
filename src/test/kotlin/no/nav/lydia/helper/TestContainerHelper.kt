@@ -14,9 +14,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import java.util.*
-import kotlin.io.path.Path
-import kotlin.test.fail
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
@@ -49,6 +46,7 @@ import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -97,6 +95,9 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.util.*
+import kotlin.io.path.Path
+import kotlin.test.fail
 
 class TestContainerHelper {
     companion object {
@@ -631,6 +632,15 @@ class IASakKartleggingHelper {
             success = { respons -> respons },
             failure = { fail(it.message) }
         )
+
+        fun IASakDto.hentIAProsesser(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) =
+            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/prosesser")
+            .authentication().bearer(token = token)
+            .tilListeRespons<IAProsessDto>().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) } )
 
         fun SpørreundersøkelseDto.start(
             token: String = oauth2ServerContainer.saksbehandler1.token,
