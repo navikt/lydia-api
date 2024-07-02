@@ -4,8 +4,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import io.ktor.server.routing.get
+import io.ktor.server.routing.Route
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -16,6 +17,7 @@ import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 const val IA_SAK_TEAM_PATH = "iasak/team"
+const val MINE_SAKER_PATH = "iasak/minesaker"
 
 fun Route.iaSakTeam(
     iaSakTeamService: IASakTeamService,
@@ -24,7 +26,6 @@ fun Route.iaSakTeam(
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
-
     post("$IA_SAK_TEAM_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val iaSak = iaSakService.hentIASak(saksnummer).fold(
@@ -49,4 +50,16 @@ fun Route.iaSakTeam(
             call.respond(status = HttpStatusCode.Created, message = it)
         }
     }
+
+    get(MINE_SAKER_PATH) {
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaSakTeamService.hentSakerTilBruker(saksbehandler)
+        }.onLeft {
+            call.application.log.error(it.feilmelding)
+            call.sendFeil(it)
+        }.onRight {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }
+    }
+
 }
