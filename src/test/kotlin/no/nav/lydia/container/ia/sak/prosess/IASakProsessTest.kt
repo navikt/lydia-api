@@ -24,21 +24,20 @@ class IASakProsessTest {
 			SELECT id FROM ia_prosess WHERE saksnummer = '${sak.saksnummer}'
 		""".trimIndent())
 
+		val nyttNavn = "Nytt navn"
 		sak.nyHendelse(
 			hendelsestype = IASakshendelseType.ENDRE_PROSESS,
 			payload = Json.encodeToString(IAProsessDto(
 				id = prosessId,
 				saksnummer = sak.saksnummer,
-				navn = "Nytt navn",
+				navn = nyttNavn,
 				status = "AKTIV"
 			))
 		)
 
-		val navn = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>("""
-			SELECT navn FROM ia_prosess WHERE id = $prosessId
-		""".trimIndent())
-
-		navn shouldBe "Nytt navn"
+		val prosesser = sak.hentIAProsesser()
+		prosesser shouldHaveSize 1
+		prosesser.first().navn shouldBe nyttNavn
 	}
 
 	@Test

@@ -68,6 +68,7 @@ class ProsessRepository(val dataSource: DataSource) {
     private fun mapRowToIaProsessDto(row: Row) =
         IAProsess(
             id = row.int("id"),
-            saksnummer = row.string("saksnummer")
+            saksnummer = row.string("saksnummer"),
+            navn = row.stringOrNull("navn")
         )
 }

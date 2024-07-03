@@ -7,7 +7,7 @@ import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 data class IAProsessDto(
 	val id: Int,
 	val saksnummer: String,
-	val navn: String,
+	val navn: String?,
 	val status: String,
 )
 
@@ -15,6 +15,6 @@ fun List<IAProsess>.tilDto() = map { it.tilDto() }
 fun IAProsess.tilDto() = IAProsessDto(
 	id = id,
 	saksnummer = saksnummer,
-	navn = "",
+	navn = navn,
 	status = "AKTIV"
 )
