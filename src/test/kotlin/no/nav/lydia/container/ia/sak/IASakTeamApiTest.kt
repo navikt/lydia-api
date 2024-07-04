@@ -3,7 +3,7 @@ package no.nav.lydia.container.ia.sak
 import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper
@@ -14,6 +14,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.sak.api.MINE_SAKER_PATH
 import no.nav.lydia.ia.sak.db.BrukerITeamDto
@@ -83,31 +84,42 @@ class IASakTeamApiTest {
     }
 
     //MineSakerTester
+    private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) =
+        orgnr == minsak.orgnr &&
+            saksnummer == minsak.saksnummer &&
+            status == minsak.status &&
+            eidAv == minsak.eidAv &&
+            endretTidspunkt == minsak.endretTidspunkt
+
     @Test
     fun `skal få alle saker man er eier av`() {
-        val bruker1 = mockOAuth2Server.superbruker1.token
-        val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker1)
-        val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker1)
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+        val bruker = mockOAuth2Server.superbruker1.token
+        val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+        val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
 
         val iaSakListe = listOf(sak0, sak1).sortedBy { it.orgnr }
 
         val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
-            .authentication().bearer(bruker1)
+            .authentication().bearer(bruker)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) })
 
         iaSakListe.all{ sak ->
-            res.any { sak.orgnr == it.orgnr && sak.saksnummer == it.saksnummer && sak.status.name == it.status }
+            res.any { sak.sammenlignMedMineSaker(it) }
         } shouldBe true
     }
 
     @Test
     fun `skal ikke få saker man ikke eier av`() {
-        val bruker2 = mockOAuth2Server.superbruker2.token
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker2)
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token)
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token)
 
         val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
@@ -116,7 +128,7 @@ class IASakTeamApiTest {
                 failure = { fail(it.message) })
 
         res.none {
-            (sak.orgnr == it.orgnr && sak.saksnummer == it.saksnummer && sak.status.name == it.status)
+            sak.sammenlignMedMineSaker(it)
         } shouldBe true
     }
 }

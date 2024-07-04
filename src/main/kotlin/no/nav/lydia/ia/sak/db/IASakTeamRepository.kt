@@ -1,9 +1,12 @@
 package no.nav.lydia.ia.sak.db
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 import no.nav.lydia.ia.sak.domene.IASak
@@ -16,9 +19,11 @@ data class BrukerITeamDto (
 @Serializable
 data class MineSakerDto (
     val saksnummer: String,
-    val status: String,
+    val status: IAProsessStatus,
     val orgnr: String,
-    val orgnavn: String
+    val orgnavn: String,
+    val eidAv: String?,
+    val endretTidspunkt: LocalDateTime?,
 )
 
 class IASakTeamRepository(val dataSource: DataSource) {
@@ -57,10 +62,10 @@ class IASakTeamRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                      SELECT ia_sak.saksnummer, ia_sak.status, virksomhet.orgnr, virksomhet.navn 
-                      FROM ia_sak
-                      JOIN virksomhet using (orgnr)
-                      WHERE ia_sak.eid_av = :navident                              
+                      SELECT sak.saksnummer, sak.status, sak.eid_av, sak.endret, v.orgnr, v.navn
+                      FROM ia_sak AS sak
+                      JOIN virksomhet AS v using (orgnr)
+                      WHERE sak.eid_av = :navident                              
                     """.trimMargin(),
                     mapOf(
                         "navident" to navAnsatt.navIdent
@@ -68,9 +73,11 @@ class IASakTeamRepository(val dataSource: DataSource) {
                 ).map { row ->
                     MineSakerDto(
                         saksnummer = row.string("saksnummer"),
-                        status = row.string("status"),
+                        status = IAProsessStatus.valueOf(row.string("status")),
                         orgnr = row.string("orgnr"),
-                        orgnavn = row.string("navn")
+                        orgnavn = row.string("navn"),
+                        endretTidspunkt = row.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
+                        eidAv = row.stringOrNull("eid_av")
                     )
                 }.asList
             )

@@ -11,8 +11,11 @@ import no.nav.lydia.ia.sak.db.IASakTeamRepository
 import no.nav.lydia.ia.sak.db.MineSakerDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import org.slf4j.LoggerFactory
 
 class IASakTeamService(val iaSakTeamRepository: IASakTeamRepository) {
+    val log = LoggerFactory.getLogger(this.javaClass)
+
     fun knyttBrukerTilSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
         iaSakTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right() ?: IASakError.`ugyldig saksnummer`.left()
 
@@ -20,7 +23,8 @@ class IASakTeamService(val iaSakTeamRepository: IASakTeamRepository) {
         return try {
             iaSakTeamRepository.hentSakerTilBruker(navAnsatt = navAnsatt).right()
         } catch (e: Exception) {
-            Feil("Feil ved henting av mine saker", httpStatusCode = HttpStatusCode.InternalServerError).left()
+            log.error("Feil ved henting av en brukers saker. Feilmelding: ${e.message}", e)
+            Feil("Feil ved henting av en brukers saker", httpStatusCode = HttpStatusCode.InternalServerError).left()
         }
     }
 }
