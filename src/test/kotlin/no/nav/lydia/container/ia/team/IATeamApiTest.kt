@@ -1,4 +1,4 @@
-package no.nav.lydia.container.ia.sak
+package no.nav.lydia.container.ia.team
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldHaveSize
@@ -15,10 +15,10 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.IA_SAK_TEAM_PATH
-import no.nav.lydia.ia.sak.api.MINE_SAKER_PATH
-import no.nav.lydia.ia.sak.db.BrukerITeamDto
-import no.nav.lydia.ia.sak.db.MineSakerDto
+import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
+import no.nav.lydia.ia.team.MINE_SAKER_PATH
+import no.nav.lydia.ia.team.BrukerITeamDto
+import no.nav.lydia.ia.team.MineSakerDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
 import kotlin.test.fail

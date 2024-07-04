@@ -1,31 +1,13 @@
-package no.nav.lydia.ia.sak.db
+package no.nav.lydia.ia.team
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
-import kotlinx.serialization.Serializable
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
-import no.nav.lydia.ia.sak.domene.IASak
-
-@Serializable
-data class BrukerITeamDto(
-    val ident: String,
-    val saksnummer: String
-)
-
-@Serializable
-data class MineSakerDto(
-    val saksnummer: String,
-    val status: IAProsessStatus,
-    val orgnr: String,
-    val orgnavn: String,
-    val eidAv: String?,
-    val endretTidspunkt: LocalDateTime?,
-)
 
 class IASakTeamRepository(val dataSource: DataSource) {
 
@@ -83,5 +65,4 @@ class IASakTeamRepository(val dataSource: DataSource) {
                 }.asList
             )
         }
-
 }

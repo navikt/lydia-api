@@ -51,16 +51,16 @@ import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
 import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.IASakTeamService
+import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
-import no.nav.lydia.ia.sak.api.iaSakTeam
+import no.nav.lydia.ia.team.iaSakTeam
 import no.nav.lydia.ia.sak.api.prosess.iaProsessApi
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
-import no.nav.lydia.ia.sak.db.IASakTeamRepository
+import no.nav.lydia.ia.team.IASakTeamRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
@@ -174,7 +174,7 @@ fun startLydiaBackend() {
         iaSakProsessRepository = prosessRepository,
     )
 
-    val iaSakTeamService = IASakTeamService(iaSakTeamRepository = iaSakTeamRepository)
+    val iaTeamService = IATeamService(iaSakTeamRepository = iaSakTeamRepository)
 
     val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(produsent = kafkaProdusent)
     val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()
@@ -272,7 +272,7 @@ fun startLydiaBackend() {
             sistePubliseringService = sistePubliseringService,
             virksomhetRepository = virksomhetRepository,
             iaSakService = iaSakService,
-            iaSakTeamService = iaSakTeamService,
+            iaTeamService = iaTeamService,
             iaProsessService = iaProsessService,
             spørreundersøkelseService = spørreundersøkelseService
         )
@@ -341,7 +341,7 @@ private fun Application.lydiaRestApi(
     iaSakService: IASakService,
     iaProsessService: IAProsessService,
     spørreundersøkelseService: SpørreundersøkelseService,
-    iaSakTeamService: IASakTeamService,
+    iaTeamService: IATeamService,
 ) {
     install(ContentNegotiation) {
         json()
@@ -426,7 +426,7 @@ private fun Application.lydiaRestApi(
                 azureService = azureService,
             )
             iaSakTeam(
-                iaSakTeamService = iaSakTeamService,
+                iaTeamService = iaTeamService,
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,

@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api
+package no.nav.lydia.ia.team
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -11,7 +11,7 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.IASakTeamService
+import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -20,7 +20,7 @@ const val IA_SAK_TEAM_PATH = "iasak/team"
 const val MINE_SAKER_PATH = "iasak/minesaker"
 
 fun Route.iaSakTeam(
-    iaSakTeamService: IASakTeamService,
+    iaTeamService: IATeamService,
     iaSakService: IASakService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
@@ -34,7 +34,7 @@ fun Route.iaSakTeam(
         )
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            return@somSaksbehandler iaSakTeamService.knyttBrukerTilSak(iaSak = iaSak, navAnsatt = saksbehandler)
+            return@somSaksbehandler iaTeamService.knyttBrukerTilSak(iaSak = iaSak, navAnsatt = saksbehandler)
         }.also {
             auditLog.auditloggEither(
                 call = call,
@@ -53,7 +53,7 @@ fun Route.iaSakTeam(
 
     get(MINE_SAKER_PATH) {
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaSakTeamService.hentSakerTilBruker(saksbehandler)
+            iaTeamService.hentSakerTilBruker(saksbehandler)
         }.onLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
