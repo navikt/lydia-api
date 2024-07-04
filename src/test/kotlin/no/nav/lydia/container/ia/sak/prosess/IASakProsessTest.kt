@@ -2,14 +2,12 @@ package no.nav.lydia.container.ia.sak.prosess
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIAProsesser
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.helper.nyttNavnPåProsess
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
 
@@ -20,24 +18,12 @@ class IASakProsessTest {
 		val sak = nySakIKartlegges()
 		sak.opprettKartlegging() // dette burde opprette en prosess
 
-		val prosessId = TestContainerHelper.postgresContainer.hentEnkelKolonne<Int>("""
-			SELECT id FROM ia_prosess WHERE saksnummer = '${sak.saksnummer}'
-		""".trimIndent())
-
-		val nyttNavn = "Nytt navn"
-		sak.nyHendelse(
-			hendelsestype = IASakshendelseType.ENDRE_PROSESS,
-			payload = Json.encodeToString(IAProsessDto(
-				id = prosessId,
-				saksnummer = sak.saksnummer,
-				navn = nyttNavn,
-				status = "AKTIV"
-			))
-		)
-
 		val prosesser = sak.hentIAProsesser()
 		prosesser shouldHaveSize 1
-		prosesser.first().navn shouldBe nyttNavn
+
+		val prosess = prosesser.first()
+		val nyttNavn = "Nytt navn"
+		sak.nyttNavnPåProsess(prosess, nyttNavn).hentIAProsesser().first().navn shouldBe nyttNavn
 	}
 
 	@Test
@@ -48,5 +34,38 @@ class IASakProsessTest {
 		val prosesser = sak.hentIAProsesser()
 		prosesser shouldHaveSize 1
 		prosesser.first().saksnummer shouldBe sak.saksnummer
+	}
+
+	@Test
+	fun `skal ikke få feil i historikken dersom man endrer navn på prosess flere ganger`() {
+		val sak = nySakIKartlegges()
+		sak.opprettKartlegging() // dette burde opprette en prosess
+
+		val prosesser = sak.hentIAProsesser()
+		prosesser shouldHaveSize 1
+
+		val prosess = prosesser.first()
+		sak.nyttNavnPåProsess(prosess, "Første")
+			.nyttNavnPåProsess(prosess, "Andre")
+			.nyttNavnPåProsess(prosess, "Tredje")
+			.hentIAProsesser().first().navn shouldBe "Tredje"
+
+		val samarbeidshistorikk = hentSamarbeidshistorikk(
+			sak.orgnr
+		)
+		samarbeidshistorikk shouldHaveSize 1
+		val sakshendelser = samarbeidshistorikk.first().sakshendelser
+		sakshendelser shouldHaveSize 8
+		sakshendelser.map { it.hendelsestype } shouldBe listOf(
+			IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
+			IASakshendelseType.VIRKSOMHET_VURDERES,
+			IASakshendelseType.TA_EIERSKAP_I_SAK,
+			IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
+			IASakshendelseType.VIRKSOMHET_KARTLEGGES,
+			IASakshendelseType.ENDRE_PROSESS,
+			IASakshendelseType.ENDRE_PROSESS,
+			IASakshendelseType.ENDRE_PROSESS
+		)
+		sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
 	}
 }

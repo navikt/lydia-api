@@ -46,7 +46,6 @@ import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -530,7 +529,7 @@ class SakHelper {
         ) =
             nyHendelsePåSakMedRespons(sak = sak, hendelsestype = hendelsestype, payload = payload, token = token)
                 .third.fold(success = { respons -> respons }, failure = {
-                    fail("${it.message} ${it.response.body().asString(null)}")
+                    fail("${it.message} ${it.response.body().asString("text/plain; charset=UTF-8")}")
                 })
 
         fun IASakDto.slettSak(token: String = oauth2ServerContainer.superbruker1.token) =
@@ -632,15 +631,6 @@ class IASakKartleggingHelper {
             success = { respons -> respons },
             failure = { fail(it.message) }
         )
-
-        fun IASakDto.hentIAProsesser(
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/prosesser")
-            .authentication().bearer(token = token)
-            .tilListeRespons<IAProsessDto>().third.fold(
-                    success = { it },
-                    failure = { fail(it.message) } )
 
         fun SpørreundersøkelseDto.start(
             token: String = oauth2ServerContainer.saksbehandler1.token,

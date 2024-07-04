@@ -8,6 +8,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.ADGrupper
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.*
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
@@ -15,6 +16,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -360,6 +362,20 @@ class IASakTest {
     }
 
 
+    @Test
+    fun `skal kunne endre navn på prosess to ganger etter hverandre`() {
+        val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
+        val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
+        val medEier = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
+        val kontaktes = medEier.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
+        val kartlegges = kontaktes.nesteHendelse(VIRKSOMHET_KARTLEGGES)
+        val førsteNavngivning = kartlegges.nesteHendelse(ENDRE_PROSESS)
+        val andreNavngivning = førsteNavngivning.nesteHendelse(ENDRE_PROSESS)
+
+        val hendelsesRekke = listOf(ny_sak,vurderes,medEier,kontaktes,kartlegges,førsteNavngivning,andreNavngivning)
+        val sak = IASak.fraHendelser(hendelsesRekke)
+        sak.status shouldBe KARTLEGGES
+    }
 
     @Test
     fun `nye versjoner av tilstandsmaskinen skal ikke gi andre statuser for gammel eventrekke`() {
@@ -440,6 +456,16 @@ class IASakTest {
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
                 valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK)),
+                navEnhet = navEnhet
+            )
+            ENDRE_PROSESS -> ProsessHendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = saksnummer,
+                orgnummer = orgnummer,
+                opprettetAv = opprettetAv,
+                opprettetAvRolle = opprettetAvRolle,
+                prosessDto = IAProsessDto(1, saksnummer, "Navn", "Aktiv"),
                 navEnhet = navEnhet
             )
             else -> IASakshendelse(
