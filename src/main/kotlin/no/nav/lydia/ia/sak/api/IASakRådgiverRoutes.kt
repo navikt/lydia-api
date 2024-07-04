@@ -72,7 +72,8 @@ fun Route.iaSakRådgiver(
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
         val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
-            iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }.toDto(navAnsatt = navAnsatt).right()
+            iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }
+                .toDto(navAnsatt = navAnsatt).right()
         }.also { either ->
             auditLog.auditloggEither(
                 call = call,
@@ -81,7 +82,7 @@ fun Route.iaSakRådgiver(
                 auditType = AuditType.access,
             )
         }.map {
-           call.respond(it)
+            call.respond(it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -106,7 +107,7 @@ fun Route.iaSakRådgiver(
             val response = it ?: HttpStatusCode.NoContent
             call.respond(response)
         }.mapLeft {
-            call.respond(status = it.httpStatusCode,message = it.feilmelding)
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
 
@@ -116,11 +117,11 @@ fun Route.iaSakRådgiver(
             val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
             iaSakService.hentSakerForOrgnummer(orgnummer = orgnummer)
                 .map { sak ->
-                    sak.addHendelser(hendelser.filter { hendelse ->  hendelse.saksnummer == sak.saksnummer})
+                    sak.addHendelser(hendelser.filter { hendelse -> hendelse.saksnummer == sak.saksnummer })
                 }
                 .sortedByDescending { it.opprettetTidspunkt }
                 .right()
-        }. also { either ->
+        }.also { either ->
             if (either.isLeft()) {
                 auditLog.auditloggEither(
                     call = call,
@@ -151,7 +152,8 @@ fun Route.iaSakRådgiver(
         val hendelseDto = call.receive<IASakshendelseDto>()
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
-                iaSakService.behandleHendelse(hendelseDto, saksbehandler = saksbehandler, navEnhet = navEnhet).map { it.toDto(saksbehandler) }
+                iaSakService.behandleHendelse(hendelseDto, saksbehandler = saksbehandler, navEnhet = navEnhet)
+                    .map { it.toDto(saksbehandler) }
                     .onRight { Metrics.loggHendelse(hendelseDto.hendelsesType) }
             }
         }.also {
@@ -214,11 +216,16 @@ fun Route.iaSakRådgiver(
     put("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}/{iaSakLeveranseId}") {
         val orgnr = call.parameters["orgnr"] ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.parameters["saksnummer"] ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val iaSakLeveranseId = call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
+        val iaSakLeveranseId =
+            call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
         val oppdateringsDto = call.receive<IASakLeveranseOppdateringsDto>()
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaSakService.oppdaterIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), oppdateringsDto = oppdateringsDto, saksbehandler = saksbehandler)
+            iaSakService.oppdaterIASakLeveranse(
+                iaSakLeveranseId = iaSakLeveranseId.toInt(),
+                oppdateringsDto = oppdateringsDto,
+                saksbehandler = saksbehandler
+            )
         }.also {
             auditLog.auditloggEither(
                 call = call,
@@ -237,7 +244,8 @@ fun Route.iaSakRådgiver(
     delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}/{iaSakLeveranseId}") {
         val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val iaSakLeveranseId = call.iaSakLeveranseId ?: return@delete call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
+        val iaSakLeveranseId =
+            call.iaSakLeveranseId ?: return@delete call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             iaSakService.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), saksbehandler)
@@ -302,6 +310,8 @@ object IASakError {
     )
     val `generell feil under uthenting` = Feil("Generell feil under uthenting", HttpStatusCode.InternalServerError)
 
-    val `kan ikke fullføre med gjenstående leveranser` = Feil("Kan ikke fullføre med gjenstående leveranser", HttpStatusCode.BadRequest)
-    val `kan ikke fullføre da ingen leveranser står på saken` = Feil("Kan ikke fullføre uten leveranser", HttpStatusCode.BadRequest)
+    val `kan ikke fullføre med gjenstående leveranser` =
+        Feil("Kan ikke fullføre med gjenstående leveranser", HttpStatusCode.BadRequest)
+    val `kan ikke fullføre da ingen leveranser står på saken` =
+        Feil("Kan ikke fullføre uten leveranser", HttpStatusCode.BadRequest)
 }

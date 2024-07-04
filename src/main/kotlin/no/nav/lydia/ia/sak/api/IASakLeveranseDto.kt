@@ -11,8 +11,8 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IATjeneste
 
 @Serializable
-data class IASakLeveranseDto (
-    val id : Int,
+data class IASakLeveranseDto(
+    val id: Int,
     val saksnummer: String,
     val modul: ModulDto,
     val frist: LocalDate,
@@ -21,11 +21,11 @@ data class IASakLeveranseDto (
 )
 
 @Serializable
-data class IATjenesteDto (
+data class IATjenesteDto(
     val id: Int,
     val navn: String,
     val deaktivert: Boolean,
-): Comparable<IATjenesteDto> {
+) : Comparable<IATjenesteDto> {
     override fun compareTo(other: IATjenesteDto) =
         compareValuesBy(this, other) { it.navn }
 }
@@ -37,7 +37,7 @@ fun IATjeneste.tilDto() = IATjenesteDto(
 )
 
 @Serializable
-data class ModulDto (
+data class ModulDto(
     val id: Int,
     val iaTjeneste: Int,
     val navn: String,
@@ -52,14 +52,14 @@ fun Modul.tilDto() = ModulDto(
 )
 
 @Serializable
-data class IASakLeveranseOpprettelsesDto (
+data class IASakLeveranseOpprettelsesDto(
     val saksnummer: String,
     val modulId: Int,
     val frist: LocalDate
 )
 
 @Serializable
-data class IASakLeveranseOppdateringsDto (
+data class IASakLeveranseOppdateringsDto(
     val status: IASakLeveranseStatus
 )
 
@@ -88,7 +88,7 @@ fun List<IASakLeveranse>.tilIASakLeveranserPerTjenesteDto() =
 data class IASakLeveranserPerTjenesteDto(
     val iaTjeneste: IATjenesteDto,
     val leveranser: List<IASakLeveranseDto>
-): Comparable<IASakLeveranserPerTjenesteDto> {
+) : Comparable<IASakLeveranserPerTjenesteDto> {
     override fun compareTo(other: IASakLeveranserPerTjenesteDto) =
         compareValuesBy(this, other) {
             it.iaTjeneste

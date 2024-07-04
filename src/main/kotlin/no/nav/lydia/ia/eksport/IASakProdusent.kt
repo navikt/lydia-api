@@ -27,7 +27,8 @@ class IASakProdusent(private val produsent: KafkaProdusent) : Observer<IASak> {
                 endretAvHendelseId = this.endretAvHendelseId,
                 status = this.status,
                 opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
-                endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime() ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
+                endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime()
+                    ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
             )
             return key to Json.encodeToString(value)
 

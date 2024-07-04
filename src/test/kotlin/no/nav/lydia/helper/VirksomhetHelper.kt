@@ -39,12 +39,14 @@ class VirksomhetHelper {
             token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
             success: (List<VirksomhetSøkeresultat>) -> Unit,
         ) =
-            TestContainerHelper.lydiaApiContainer.performGet(url = "$VIRKSOMHET_PATH/finn?q=${
-                URLEncoder.encode(
-                    søkestreng,
-                    Charset.defaultCharset()
-                )
-            }")
+            TestContainerHelper.lydiaApiContainer.performGet(
+                url = "$VIRKSOMHET_PATH/finn?q=${
+                    URLEncoder.encode(
+                        søkestreng,
+                        Charset.defaultCharset()
+                    )
+                }"
+            )
                 .authentication().bearer(token)
                 .tilListeRespons<VirksomhetSøkeresultat>()
                 .third.fold(success = success, failure = { fail(it.message) })
@@ -56,7 +58,8 @@ class VirksomhetHelper {
 
         fun hentVirksomhetsinformasjon(
             orgnummer: String,
-            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token) =
+            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token
+        ) =
             hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
                 .third.fold(
                     success = { response -> response },
@@ -70,7 +73,8 @@ class VirksomhetHelper {
 
         fun hentSalesforceInfo(
             orgnummer: String,
-            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token) =
+            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token
+        ) =
             hentSalesforceInfoRespons(orgnummer = orgnummer, token = token)
                 .third.fold(
                     success = { response -> response },
@@ -85,12 +89,14 @@ class VirksomhetHelper {
             perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode()),
             sykefraværsProsent: Double? = null
         ): TestVirksomhet {
-            lastInnTestdata(TestData.fraVirksomhet(
-                virksomhet = nyVirksomhet,
-                sektor = sektor,
-                perioder = perioder,
-                sykefraværsProsent = sykefraværsProsent
-            ))
+            lastInnTestdata(
+                TestData.fraVirksomhet(
+                    virksomhet = nyVirksomhet,
+                    sektor = sektor,
+                    perioder = perioder,
+                    sykefraværsProsent = sykefraværsProsent
+                )
+            )
             return nyVirksomhet
         }
 
@@ -100,7 +106,12 @@ class VirksomhetHelper {
         }
 
         fun lastInnStandardTestdata(antallTestVirksomheter: Int) {
-            lastInnTestdata(TestData(inkluderStandardVirksomheter = true, antallTilfeldigeVirksomheter = antallTestVirksomheter))
+            lastInnTestdata(
+                TestData(
+                    inkluderStandardVirksomheter = true,
+                    antallTilfeldigeVirksomheter = antallTestVirksomheter
+                )
+            )
         }
 
         fun lastInnTestdata(testData: TestData) {
@@ -116,8 +127,8 @@ class VirksomhetHelper {
             )
 
             kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
-                    importDtoer = testData.graderingStatistikkVirksomhetKafkaMeldinger().toList(),
-                    topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+                importDtoer = testData.graderingStatistikkVirksomhetKafkaMeldinger().toList(),
+                topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
             )
 
             kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(

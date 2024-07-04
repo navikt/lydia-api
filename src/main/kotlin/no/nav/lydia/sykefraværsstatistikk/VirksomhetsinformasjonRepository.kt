@@ -192,11 +192,13 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     AND NOT (sykefravar_statistikk_virksomhet.arstall > ${gjeldenPeriode.årstall})
                     AND NOT (sykefravar_statistikk_virksomhet.arstall = ${gjeldenPeriode.årstall} AND sykefravar_statistikk_virksomhet.kvartal > ${gjeldenPeriode.kvartal})
                     ${
-                        periode?.let { """
+                    periode?.let {
+                        """
                             AND sykefravar_statistikk_virksomhet.kvartal = ${it.kvartal}
                             AND sykefravar_statistikk_virksomhet.arstall = ${it.årstall}
-                        """.trimIndent() } ?: ""
-                    }
+                        """.trimIndent()
+                    } ?: ""
+                }
                     ORDER BY arstall DESC, kvartal DESC
                     LIMIT 1
                 """.trimIndent(),
@@ -242,9 +244,9 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         }
 
     fun hentVirksomhetsstatistikkPerKvartal(orgnr: String) =
-            using(sessionOf(dataSource)) { session ->
-                val query = queryOf(
-                        statement = """
+        using(sessionOf(dataSource)) { session ->
+            val query = queryOf(
+                statement = """
                     SELECT
                         orgnr,
                         arstall,
@@ -255,12 +257,12 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     WHERE (orgnr = :orgnr)
                     ORDER BY arstall DESC, kvartal DESC
                 """.trimIndent(),
-                        paramMap = mapOf(
-                                "orgnr" to orgnr
-                        )
-                ).map { mapVirksomhetRowToStatistikkdata(it) }.asList
-                session.run(query)
-            }
+                paramMap = mapOf(
+                    "orgnr" to orgnr
+                )
+            ).map { mapVirksomhetRowToStatistikkdata(it) }.asList
+            session.run(query)
+        }
 
     private fun mapKategoriRowToStatistikkdata(row: Row) = Statistikkdata(
         årstall = row.int("arstall"),
@@ -270,10 +272,10 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
     )
 
     private fun mapVirksomhetRowToStatistikkdata(row: Row) = Statistikkdata(
-            årstall = row.int("arstall"),
-            kvartal = row.int("kvartal"),
-            sykefraværsprosent = row.double("sykefravarsprosent"),
-            maskert = row.boolean("maskert"),
+        årstall = row.int("arstall"),
+        kvartal = row.int("kvartal"),
+        sykefraværsprosent = row.double("sykefravarsprosent"),
+        maskert = row.boolean("maskert"),
     )
 
     private fun mapRowToSisteKvartal(row: Row) = VirksomhetsstatistikkSisteKvartal(

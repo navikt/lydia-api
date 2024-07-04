@@ -20,6 +20,7 @@ class AzureTokenFetcher(
     private companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
+
     private val privateKey = RSAKey.parse(naisEnvironment.security.azureConfig.privateJwk)
 
     private val deserializer = Json {

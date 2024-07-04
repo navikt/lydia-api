@@ -26,7 +26,7 @@ data class VirksomhetsoversiktDto(
         fun List<Virksomhetsoversikt>.toDto(): List<VirksomhetsoversiktDto> =
             this.map { it.toDto() }
 
-        fun Virksomhetsoversikt.toDto() : VirksomhetsoversiktDto =
+        fun Virksomhetsoversikt.toDto(): VirksomhetsoversiktDto =
             VirksomhetsoversiktDto(
                 orgnr = this.orgnr,
                 virksomhetsnavn = this.virksomhetsnavn,

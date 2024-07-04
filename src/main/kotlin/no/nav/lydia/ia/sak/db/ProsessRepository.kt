@@ -41,11 +41,11 @@ class ProsessRepository(val dataSource: DataSource) {
                     )
                 ).map(this::mapRowToIaProsessDto).asSingle
             )!!
-    }
+        }
 
 
     fun oppdaterProsess(sakshendelse: IASakshendelse) {
-        when(sakshendelse) {
+        when (sakshendelse) {
             is ProsessHendelse -> {
                 using(sessionOf(dataSource)) { session ->
                     session.run(
@@ -61,6 +61,7 @@ class ProsessRepository(val dataSource: DataSource) {
                     )
                 }
             }
+
             else -> {}
         }
     }

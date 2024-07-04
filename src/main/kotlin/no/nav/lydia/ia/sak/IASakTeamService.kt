@@ -17,9 +17,10 @@ class IASakTeamService(val iaSakTeamRepository: IASakTeamRepository) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
     fun knyttBrukerTilSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
-        iaSakTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right() ?: IASakError.`ugyldig saksnummer`.left()
+        iaSakTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
+            ?: IASakError.`ugyldig saksnummer`.left()
 
-    fun hentSakerTilBruker(navAnsatt: NavAnsatt ): Either<Feil, List<MineSakerDto>> {
+    fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<MineSakerDto>> {
         return try {
             iaSakTeamRepository.hentSakerTilBruker(navAnsatt = navAnsatt).right()
         } catch (e: Exception) {

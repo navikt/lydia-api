@@ -22,7 +22,7 @@ data class IASakDto(
     val endretTidspunkt: LocalDateTime?,
     val eidAv: String?,
     val endretAvHendelseId: String,
-    val gyldigeNesteHendelser : List<GyldigHendelse>,
+    val gyldigeNesteHendelser: List<GyldigHendelse>,
     val lukket: Boolean
 ) {
     companion object {
@@ -38,7 +38,7 @@ data class IASakDto(
             endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
             eidAv = this.eidAv,
             endretAvHendelseId = this.endretAvHendelseId,
-            gyldigeNesteHendelser = when(navAnsatt) {
+            gyldigeNesteHendelser = when (navAnsatt) {
                 is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt)
                 else -> listOf()
             },

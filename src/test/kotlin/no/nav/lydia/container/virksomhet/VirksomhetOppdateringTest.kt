@@ -29,26 +29,28 @@ class VirksomhetOppdateringTest {
     @Test
     fun `vi oppdaterer næringsgrupper til en bedrift`() {
         val nyVirksomhet = nyVirksomhet(
-                næringer = listOf(
-                        Næringsgruppe(
-                                "Barnehager", "88.911"
-                        ),
-                        Næringsgruppe(
-                                "Dyrking av ettårige vekster ellers", "01.190"
-                        )
+            næringer = listOf(
+                Næringsgruppe(
+                    "Barnehager", "88.911"
+                ),
+                Næringsgruppe(
+                    "Dyrking av ettårige vekster ellers", "01.190"
                 )
+            )
         )
         lastInnNyVirksomhet(nyVirksomhet)
 
-        val oppdatertVirksomhet = nyVirksomhet.copy(næringsundergrupper = listOf(
-            Næringsgruppe(
-                navn = "Dyrking av ettårige vekster ellers",
-                kode = "01.190"
-            ), Næringsgruppe(
-                navn = "Barnehager",
-                kode = "88.911"
+        val oppdatertVirksomhet = nyVirksomhet.copy(
+            næringsundergrupper = listOf(
+                Næringsgruppe(
+                    navn = "Dyrking av ettårige vekster ellers",
+                    kode = "01.190"
+                ), Næringsgruppe(
+                    navn = "Barnehager",
+                    kode = "88.911"
+                )
             )
-        ))
+        )
         sendEndringForVirksomhet(oppdatertVirksomhet)
 
         oppdatertVirksomhet.skalHaRiktigTilstandEtterOppdatering()
@@ -56,18 +58,20 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `vi lagrer næringsundergrupper til en bedrift`() {
-        lastInnNyVirksomhet(nyVirksomhet(
-            næringer = listOf(
-                Næringsgruppe(
-                    navn = "Barnehager",
-                    kode = "88.911"
-                ),
-                Næringsgruppe(
-                    navn = "Dyrking av ettårige vekster ellers",
-                    kode = "01.190"
+        lastInnNyVirksomhet(
+            nyVirksomhet(
+                næringer = listOf(
+                    Næringsgruppe(
+                        navn = "Barnehager",
+                        kode = "88.911"
+                    ),
+                    Næringsgruppe(
+                        navn = "Dyrking av ettårige vekster ellers",
+                        kode = "01.190"
+                    )
                 )
             )
-        )).skalHaRiktigTilstand()
+        ).skalHaRiktigTilstand()
     }
 
     @Test
@@ -115,11 +119,13 @@ class VirksomhetOppdateringTest {
     @Test
     fun `sjekk på næringskoder`() {
         val virksomhet = lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(TestData.BEDRIFTSRÅDGIVNING)))
-        val virksomhetSomSkalFåNæringskodeOppdatert = virksomhet.copy(næringsundergrupper = listOf(
-            TestData.DYRKING_AV_RIS,
-            TestData.DYRKING_AV_KORN,
-            TestData.BEDRIFTSRÅDGIVNING
-        ))
+        val virksomhetSomSkalFåNæringskodeOppdatert = virksomhet.copy(
+            næringsundergrupper = listOf(
+                TestData.DYRKING_AV_RIS,
+                TestData.DYRKING_AV_KORN,
+                TestData.BEDRIFTSRÅDGIVNING
+            )
+        )
         sendEndringForVirksomhet(virksomhet = virksomhetSomSkalFåNæringskodeOppdatert)
         virksomhetSomSkalFåNæringskodeOppdatert
             .skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)

@@ -38,11 +38,17 @@ class IATjenesteoversiktApiTest {
     val sakVirksomhet2 = SakHelper.nySakIViBistår(orgnummer = virksomhet2.orgnr, saksbehandlerToken)
 
     // Lag leveransar på sakane
-    val leveranseFristIDag = sakVirksomhet1.opprettIASakLeveranse(frist = java.time.LocalDate.now().toKotlinLocalDate(), AKTIV_MODUL.id)
-    val leveranseFristOm10Dager = sakVirksomhet1.opprettIASakLeveranse(frist = java.time.LocalDate.now().plusDays(10).toKotlinLocalDate(), 16)
-    val leveranseFristFor10DagerSiden = sakVirksomhet2.opprettIASakLeveranse(frist = java.time.LocalDate.now().minusDays(10).toKotlinLocalDate(), AKTIV_MODUL.id)
-    val fullførtLeveranse = sakVirksomhet2.opprettIASakLeveranse(frist = java.time.LocalDate.now().toKotlinLocalDate(), 16)
-        .oppdaterIASakLeveranse(virksomhet2.orgnr, IASakLeveranseStatus.LEVERT, saksbehandlerToken)
+    val leveranseFristIDag =
+        sakVirksomhet1.opprettIASakLeveranse(frist = java.time.LocalDate.now().toKotlinLocalDate(), AKTIV_MODUL.id)
+    val leveranseFristOm10Dager =
+        sakVirksomhet1.opprettIASakLeveranse(frist = java.time.LocalDate.now().plusDays(10).toKotlinLocalDate(), 16)
+    val leveranseFristFor10DagerSiden = sakVirksomhet2.opprettIASakLeveranse(
+        frist = java.time.LocalDate.now().minusDays(10).toKotlinLocalDate(),
+        AKTIV_MODUL.id
+    )
+    val fullførtLeveranse =
+        sakVirksomhet2.opprettIASakLeveranse(frist = java.time.LocalDate.now().toKotlinLocalDate(), 16)
+            .oppdaterIASakLeveranse(virksomhet2.orgnr, IASakLeveranseStatus.LEVERT, saksbehandlerToken)
 
     @After
     fun ryddOppLeveranser() {
@@ -106,17 +112,19 @@ class IATjenesteoversiktApiTest {
 
         mineLeveranser shouldHaveAtLeastSize 1
         mineLeveranser.forAtLeastOne { it.modul.deaktivert && it.iaTjeneste.deaktivert }
-        mineLeveranser.forAtLeastOne { it.iaTjeneste.id == iaTjeneste.id && it.modul.id == modul.id}
+        mineLeveranser.forAtLeastOne { it.iaTjeneste.id == iaTjeneste.id && it.modul.id == modul.id }
     }
 
     @Test
     fun `skal ikke få ut leveranser i saker som er avsluttet`() {
         val virksomhet1 = VirksomhetHelper.lastInnNyVirksomhet()
-        val leveranseIAvsluttetSak = SakHelper.nySakIViBistår(orgnummer = virksomhet1.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
+        val leveranseIAvsluttetSak =
+            SakHelper.nySakIViBistår(orgnummer = virksomhet1.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
         TestContainerHelper.postgresContainer.performUpdate("UPDATE ia_sak SET status = 'FULLFØRT' WHERE saksnummer = '${leveranseIAvsluttetSak.saksnummer}'")
 
         val virksomhet2 = VirksomhetHelper.lastInnNyVirksomhet()
-        val leveranseIÅpenSak = SakHelper.nySakIViBistår(orgnummer = virksomhet2.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
+        val leveranseIÅpenSak =
+            SakHelper.nySakIViBistår(orgnummer = virksomhet2.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
         val mineleveranser = IATjenesteoversiktHelper.hentMineIATjenester().third.get()
         mineleveranser.forAtLeastOne {
             it.orgnr shouldBe virksomhet2.orgnr

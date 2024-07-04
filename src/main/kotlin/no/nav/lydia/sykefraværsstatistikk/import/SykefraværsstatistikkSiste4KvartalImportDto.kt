@@ -23,4 +23,4 @@ data class SykefraværsstatistikkForVirksomhetSiste4Kvartal(
     override val maskert: Boolean,
     override val kategori: String,
     val orgnr: String,
-): SykefraværsstatistikkSiste4Kvartal()
+) : SykefraværsstatistikkSiste4Kvartal()

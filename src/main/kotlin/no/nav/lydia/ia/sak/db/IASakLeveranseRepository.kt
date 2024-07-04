@@ -61,7 +61,7 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
 
     fun hentIATjenster() =
         using(sessionOf(dataSource)) { session ->
-        val sql = """
+            val sql = """
                 select 
                     ia_tjeneste.id as iaTjenesteId,
                     ia_tjeneste.navn as iaTjenesteNavn,
@@ -70,9 +70,9 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 where deaktivert = false
             """.trimIndent()
 
-        val query = queryOf(sql).map { mapTilIATjeneste(it) }.asList
-        session.run(query)
-    }
+            val query = queryOf(sql).map { mapTilIATjeneste(it) }.asList
+            session.run(query)
+        }
 
     fun hentModuler() =
         using(sessionOf(dataSource)) { session ->
@@ -94,7 +94,10 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
             session.run(query)
         }
 
-    fun opprettIASakLeveranse(iaSakleveranse: IASakLeveranseOpprettelsesDto, saksbehandler: NavAnsattMedSaksbehandlerRolle) =
+    fun opprettIASakLeveranse(
+        iaSakleveranse: IASakLeveranseOpprettelsesDto,
+        saksbehandler: NavAnsattMedSaksbehandlerRolle
+    ) =
         using(sessionOf(dataSource, returnGeneratedKey = true)) { session ->
             val sql = """
                 insert into iasak_leveranse (
@@ -129,7 +132,8 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 ).asUpdateAndReturnGeneratedKey
             ) ?: return@using IASakError.`generell feil under uthenting`.left()
 
-            hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt())?.right() ?:IASakError.`generell feil under uthenting`.left()
+            hentIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt())?.right()
+                ?: IASakError.`generell feil under uthenting`.left()
         }
 
     fun hentIASakLeveranse(iaSakLeveranseId: Int) =
@@ -139,9 +143,11 @@ class IASakLeveranseRepository(val dataSource: DataSource) {
                 where iasak_leveranse.id = :iaSakLeveranseId
             """.trimIndent()
 
-            val query  = queryOf(sql, mapOf(
-                "iaSakLeveranseId" to iaSakLeveranseId
-            )).map { mapTilIASakLeveranse(it) }.asSingle
+            val query = queryOf(
+                sql, mapOf(
+                    "iaSakLeveranseId" to iaSakLeveranseId
+                )
+            ).map { mapTilIASakLeveranse(it) }.asSingle
             session.run(query)
         }
 

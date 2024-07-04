@@ -31,14 +31,14 @@ class NæringsRepository(
     }
 
     fun hentNæringer() = using(sessionOf(dataSource = dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
+        session.run(
+            queryOf(
+                """
                 select * from naring where length(kode) = 2
             """.trimIndent()
-                ).map {
-                    Næringsgruppe(navn = it.string("navn"), kode = it.string("kode"))
-                }.asList
-            )
-        }
+            ).map {
+                Næringsgruppe(navn = it.string("navn"), kode = it.string("kode"))
+            }.asList
+        )
+    }
 }

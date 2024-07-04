@@ -20,7 +20,7 @@ import kotlin.coroutines.CoroutineContext
 
 class StatistikkPerKategoriConsumer(
     val topic: Topic,
-) : CoroutineScope, Helsesjekk  {
+) : CoroutineScope, Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private lateinit var job: Job
     private lateinit var kafka: Kafka
@@ -65,14 +65,20 @@ class StatistikkPerKategoriConsumer(
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
-                            logger.warn("Had a retriable exception in StatistikkPerKategoriConsumer (topic '$topic'), retrying", e)
+                            logger.warn(
+                                "Had a retriable exception in StatistikkPerKategoriConsumer (topic '$topic'), retrying",
+                                e
+                            )
                         }
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
                     logger.info("StatistikkPerKategoriConsumer (topic '$topic')  is shutting down...")
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner i StatistikkPerKategoriConsumer (topic '$topic')", e)
+                    logger.error(
+                        "Exception is shutting down kafka listner i StatistikkPerKategoriConsumer (topic '$topic')",
+                        e
+                    )
                     throw e
                 }
             }
@@ -100,10 +106,14 @@ class StatistikkPerKategoriConsumer(
         val gson = GsonBuilder().create()
         val key = gson.fromJson(consumerRecord.key(), KeySykefraværsstatistikkPerKategori::class.java)
 
-        return if (Kategori.entries.map { it.name }.contains( key.kategori) && key.kode.isNotEmpty()) {
+        return if (Kategori.entries.map { it.name }.contains(key.kategori) && key.kode.isNotEmpty()) {
             true
         } else {
-            logger.warn("Feil formatert Kafka melding i topic ${consumerRecord.topic()} for key ${consumerRecord.key().trim()}")
+            logger.warn(
+                "Feil formatert Kafka melding i topic ${consumerRecord.topic()} for key ${
+                    consumerRecord.key().trim()
+                }"
+            )
             false
         }
     }

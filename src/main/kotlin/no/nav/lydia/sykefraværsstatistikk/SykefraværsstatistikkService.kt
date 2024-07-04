@@ -185,53 +185,60 @@ class SykefraværsstatistikkService(
     ): Either<Feil, VirksomhetsstatistikkSisteKvartal> {
         val start = System.currentTimeMillis()
         val sykefraværForVirksomhetSisteKvartal =
-            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(orgnr = orgnr, periode = periode, gjeldenPeriode = sistePubliseringService.hentGjelendePeriode())
+            virksomhetsinformasjonRepository.hentVirksomhetsstatistikkSisteKvartal(
+                orgnr = orgnr,
+                periode = periode,
+                gjeldenPeriode = sistePubliseringService.hentGjelendePeriode()
+            )
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for en virksomhet")
 
         return sykefraværForVirksomhetSisteKvartal?.right()
             ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
-    fun hentHistoriskStatistikk(orgnummer: String) : Either<Feil, HistoriskStatistikk> {
-        var virksomhetsstatistikk : HistoriskStatistikk
+    fun hentHistoriskStatistikk(orgnummer: String): Either<Feil, HistoriskStatistikk> {
+        var virksomhetsstatistikk: HistoriskStatistikk
         val tidsbruk = measureTimeMillis {
-            val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnummer) ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
+            val virksomhet = virksomhetRepository.hentVirksomhet(orgnr = orgnummer)
+                ?: return SykefraværsstatistikkError.`feil under uthenting av sykefraværsstatistikk`.left()
             val næring = virksomhet.næring
             val bransje = virksomhet.bransje
             val sektor = virksomhet.sektor
 
-            virksomhetsstatistikk = HistoriskStatistikk (
-                    virksomhetsstatistikk =
-                        KategoriStatistikk(
-                            kategori = VIRKSOMHET,
-                            kode = orgnummer,
-                            beskrivelse = virksomhet.navn,
-                            statistikk = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartal(orgnr = orgnummer)
-                        ),
-                    næringsstatistikk = KategoriStatistikk(
-                        kategori = NÆRING,
-                        kode = næring.kode,
-                        beskrivelse = næring.navn,
-                        statistikk = virksomhetsinformasjonRepository.hentNæringstatistikkPerKvartal(næring = næring.kode)
-                    ),
-                    bransjestatistikk = KategoriStatistikk(
-                        kategori = BRANSJE,
-                        kode = bransje?.navn ?: "",
-                        beskrivelse = bransje?.navn ?: "",
-                        statistikk = bransje?.let { virksomhetsinformasjonRepository.hentBransjestatistikkPerKvartal(bransje = it) } ?: emptyList()
-                    ),
-                    sektorstatistikk = KategoriStatistikk(
-                        kategori = SEKTOR,
-                        kode = sektor?.kode ?: "",
-                        beskrivelse = sektor?.beskrivelse ?: "",
-                        statistikk = sektor?.let { virksomhetsinformasjonRepository.hentSektorstatistikkPerKvartal(sektor = it) } ?: emptyList()
-                    ),
-                    landsstatistikk = KategoriStatistikk(
-                        kategori = LAND,
-                        kode = LANDKODE_NO,
-                        beskrivelse = "Norge",
-                        statistikk = virksomhetsinformasjonRepository.hentLandsstatistikkPerKvartal()
-                    )
+            virksomhetsstatistikk = HistoriskStatistikk(
+                virksomhetsstatistikk =
+                KategoriStatistikk(
+                    kategori = VIRKSOMHET,
+                    kode = orgnummer,
+                    beskrivelse = virksomhet.navn,
+                    statistikk = virksomhetsinformasjonRepository.hentVirksomhetsstatistikkPerKvartal(orgnr = orgnummer)
+                ),
+                næringsstatistikk = KategoriStatistikk(
+                    kategori = NÆRING,
+                    kode = næring.kode,
+                    beskrivelse = næring.navn,
+                    statistikk = virksomhetsinformasjonRepository.hentNæringstatistikkPerKvartal(næring = næring.kode)
+                ),
+                bransjestatistikk = KategoriStatistikk(
+                    kategori = BRANSJE,
+                    kode = bransje?.navn ?: "",
+                    beskrivelse = bransje?.navn ?: "",
+                    statistikk = bransje?.let { virksomhetsinformasjonRepository.hentBransjestatistikkPerKvartal(bransje = it) }
+                        ?: emptyList()
+                ),
+                sektorstatistikk = KategoriStatistikk(
+                    kategori = SEKTOR,
+                    kode = sektor?.kode ?: "",
+                    beskrivelse = sektor?.beskrivelse ?: "",
+                    statistikk = sektor?.let { virksomhetsinformasjonRepository.hentSektorstatistikkPerKvartal(sektor = it) }
+                        ?: emptyList()
+                ),
+                landsstatistikk = KategoriStatistikk(
+                    kategori = LAND,
+                    kode = LANDKODE_NO,
+                    beskrivelse = "Norge",
+                    statistikk = virksomhetsinformasjonRepository.hentLandsstatistikkPerKvartal()
+                )
             )
         }
         log.info("Brukte $tidsbruk ms på å hente statistikk for en virksomhet")
@@ -240,16 +247,18 @@ class SykefraværsstatistikkService(
 
     fun hentNæringsstatistikk(næringskode: String): Either<Feil, NæringSykefraværsstatistikk> {
         val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        val hentNæringSykefraværsstatistikk = sykefraværsstatistikkRepository.hentNæringSykefraværsstatistikk(næringskode, gjeldendePeriode)
+        val hentNæringSykefraværsstatistikk =
+            sykefraværsstatistikkRepository.hentNæringSykefraværsstatistikk(næringskode, gjeldendePeriode)
         return hentNæringSykefraværsstatistikk?.right()
-                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+            ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 
     fun hentBransjestatistikk(bransje: String): Either<Feil, BransjeSykefraværsstatistikk> {
         val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
-        val hentBransjeSykefraværsstatistikk = sykefraværsstatistikkRepository.hentBransjeSykefraværsstatistikk(bransje, gjeldendePeriode)
+        val hentBransjeSykefraværsstatistikk =
+            sykefraværsstatistikkRepository.hentBransjeSykefraværsstatistikk(bransje, gjeldendePeriode)
         return hentBransjeSykefraværsstatistikk?.right()
-                ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
+            ?: SykefraværsstatistikkError.`ingen sykefraværsstatistikk`.left()
     }
 }
 

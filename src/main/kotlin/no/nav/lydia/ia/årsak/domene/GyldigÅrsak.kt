@@ -31,8 +31,8 @@ class GyldigÅrsak(val type: ÅrsakType, val navn: String = type.navn, val begru
 }
 
 @kotlinx.serialization.Serializable
-class GyldigBegrunnelse(val type: BegrunnelseType, val navn: String = type.navn){
-    companion object{
+class GyldigBegrunnelse(val type: BegrunnelseType, val navn: String = type.navn) {
+    companion object {
         fun List<BegrunnelseType>.somGyldigeBegrunnelser() = this.map { GyldigBegrunnelse(type = it) }
         fun List<GyldigBegrunnelse>.somBegrunnelseType() = this.map { it.type }
     }

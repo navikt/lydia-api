@@ -17,7 +17,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 
 class SpørreundersøkelseProdusent(
     private val produsent: KafkaProdusent,
-): Observer<Spørreundersøkelse> {
+) : Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
         sendPåKafka(spørreundersøkelse = input)
     }

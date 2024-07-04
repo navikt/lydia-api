@@ -110,10 +110,12 @@ class IASakApiTest {
     fun `skal validere at begrunnelse tilhører riktig årsak`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelseRespons(hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
-                type = NAV_IGANGSETTER_IKKE_TILTAK,
-                begrunnelser = listOf(VIRKSOMHETEN_HAR_IKKE_RESPONDERT)
-            ).toJson()).statuskode() shouldBe 400
+            .nyHendelseRespons(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                    type = NAV_IGANGSETTER_IKKE_TILTAK,
+                    begrunnelser = listOf(VIRKSOMHETEN_HAR_IKKE_RESPONDERT)
+                ).toJson()
+            ).statuskode() shouldBe 400
     }
 
     @Test
@@ -149,15 +151,15 @@ class IASakApiTest {
     fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
         val hendelserDetIkkeSkalKunneSlettesEtter = IASakshendelseType.entries
-                .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
+            .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
 
         hendelserDetIkkeSkalKunneSlettesEtter.forEach {
             sak = when (it) {
                 VIRKSOMHET_ER_IKKE_AKTUELL ->
                     sak.nyHendelse(
                         it, payload = ValgtÅrsak(
-                        type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
+                            type = VIRKSOMHETEN_TAKKET_NEI,
+                            begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
                         ).toJson()
                     )
 
@@ -297,7 +299,8 @@ class IASakApiTest {
                         '${Rolle.SUPERBRUKER}',
                         '${sak.endretTidspunkt}'
                     ) 
-                """.trimIndent())
+                """.trimIndent()
+        )
         sak.status shouldBe VI_BISTÅR
 
         hentSaker(orgnummer = orgnummer).size shouldBe 1
@@ -333,7 +336,8 @@ class IASakApiTest {
                         '${Rolle.SUPERBRUKER}',
                         '${sak.endretTidspunkt}'
                     ) 
-                """.trimIndent())
+                """.trimIndent()
+        )
         sak.status shouldBe VI_BISTÅR
         shouldFail { sak.nyHendelse(TILBAKE) }
 
@@ -724,7 +728,7 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK).also { sakEtterTattEierskap ->
                 sakEtterTattEierskap.gyldigeNesteHendelser
-                    .shouldForAtLeastOne {hendelse ->
+                    .shouldForAtLeastOne { hendelse ->
                         hendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                         hendelse.gyldigeÅrsaker.shouldForAtLeastOne { årsak ->
                             årsak.type shouldBe NAV_IGANGSETTER_IKKE_TILTAK
@@ -908,8 +912,9 @@ class IASakApiTest {
 
         sak.oppdaterHendelsesTidspunkter(
             antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1,
-            token = oauth2ServerContainer.superbruker1.token).also { sakDto ->
-            sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe  emptyList()
+            token = oauth2ServerContainer.superbruker1.token
+        ).also { sakDto ->
+            sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe emptyList()
         }
     }
 
@@ -1118,7 +1123,8 @@ class IASakApiTest {
                 payload = ValgtÅrsak(
                     type = VIRKSOMHETEN_TAKKET_NEI,
                     begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-                ).toJson())
+                ).toJson()
+            )
             .nyHendelse(TILBAKE)
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .nyHendelse(TILBAKE)
@@ -1136,11 +1142,12 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
         postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
-            "select opprettet_av_rolle from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by opprettet") shouldBe listOf(
-                "SUPERBRUKER",
-                "SUPERBRUKER",
-                "SAKSBEHANDLER"
-            )
+            "select opprettet_av_rolle from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by opprettet"
+        ) shouldBe listOf(
+            "SUPERBRUKER",
+            "SUPERBRUKER",
+            "SAKSBEHANDLER"
+        )
     }
 
 }

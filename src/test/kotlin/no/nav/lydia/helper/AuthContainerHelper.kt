@@ -27,8 +27,10 @@ import java.util.TimeZone
 import java.util.UUID
 
 
-
-class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)) {
+class AuthContainerHelper(
+    network: Network = Network.newNetwork(),
+    log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java)
+) {
 
     private val mockOauth2NetworkAlias: String = "mockoauth2container"
     private val mockOauth2Port: String = "8100"
@@ -46,13 +48,13 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
     private val teamPiaGroupId = "enTeamPiaGroupId"
     private val ugyldigRolleGroupId = "enHeltAnnenRolleGroupId"
 
-    val lesebruker : TestBruker
-    val lesebrukerAudit : TestBruker
-    val saksbehandler1 : TestBruker
-    val saksbehandler2 : TestBruker
-    val superbruker1 : TestBruker
-    val superbruker2 : TestBruker
-    val brukerUtenTilgangsrolle : TestBruker
+    val lesebruker: TestBruker
+    val lesebrukerAudit: TestBruker
+    val saksbehandler1: TestBruker
+    val saksbehandler2: TestBruker
+    val superbruker1: TestBruker
+    val superbruker2: TestBruker
+    val brukerUtenTilgangsrolle: TestBruker
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
@@ -85,7 +87,7 @@ class AuthContainerHelper(network: Network = Network.newNetwork(), log: Logger =
             }
     }
 
-    inner class TestBruker(val navIdent : String, gruppe : String) {
+    inner class TestBruker(val navIdent: String, gruppe: String) {
         val navn = "F_$navIdent E_$navIdent"
         val token: String = issueToken(
             audience = audience,

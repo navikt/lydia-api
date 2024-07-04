@@ -47,15 +47,15 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `håndterer feil formatert meldinger`() {
         kafkaContainer.sendOgVentTilKonsumert(
-                """
+            """
                 {
                   "kategori": "UKJENT_KATEGORI",
                   "kode": "22",
                   "kvartal": ${KVARTAL_2023_1.kvartal},
                   "årstall": ${KVARTAL_2023_1.årstall}
                 }""".trimIndent(),
-                eksport_Forrige_Kvartal_For_Virksomhet.toJsonValue(),
-                Topic.STATISTIKK_VIRKSOMHET_TOPIC
+            eksport_Forrige_Kvartal_For_Virksomhet.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         lydiaApiContainer shouldNotContainLog "NullPointerException.*".toRegex()
@@ -65,33 +65,34 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `vi maskerer statistikk for siste kvartal som eventuelt ikke er maskert i produsent`() {
         val statistikkSomBurdeVæreMaskert = JsonMelding(
-                kategori = Kategori.VIRKSOMHET,
-                kode = "999999999",
-                kvartal = KVARTAL_2023_1,
-                sistePubliserteKvartal = SistePubliserteKvartal(
-                        årstall = KVARTAL_2023_1.årstall,
-                        kvartal = KVARTAL_2023_1.kvartal,
-                        tapteDagsverk = 17.5,
-                        muligeDagsverk = 761.3,
-                        prosent = 2.3,
-                        erMaskert = false,
-                        antallPersoner = 4
-                ),
-                siste4Kvartal = siste4Kvartal
+            kategori = Kategori.VIRKSOMHET,
+            kode = "999999999",
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = SistePubliserteKvartal(
+                årstall = KVARTAL_2023_1.årstall,
+                kvartal = KVARTAL_2023_1.kvartal,
+                tapteDagsverk = 17.5,
+                muligeDagsverk = 761.3,
+                prosent = 2.3,
+                erMaskert = false,
+                antallPersoner = 4
+            ),
+            siste4Kvartal = siste4Kvartal
         )
 
         kafkaContainer.sendOgVentTilKonsumert(
-                statistikkSomBurdeVæreMaskert.toJsonKey(),
-                statistikkSomBurdeVæreMaskert.toJsonValue(),
-                Topic.STATISTIKK_VIRKSOMHET_TOPIC
+            statistikkSomBurdeVæreMaskert.toJsonKey(),
+            statistikkSomBurdeVæreMaskert.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
         val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
-                Kategori.VIRKSOMHET,
-                "999999999",
-                KVARTAL_2023_1
+            Kategori.VIRKSOMHET,
+            "999999999",
+            KVARTAL_2023_1
         ).sistePubliserteKvartal
-        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
+        val statistikkSiste4Kvartal =
+            hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
 
         statistikk_Q1_2023.erMaskert shouldBe true
         statistikk_Q1_2023.antallPersoner shouldBe 4
@@ -104,26 +105,27 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `vi maskerer statistikk for siste fire kvartal som eventuelt ikke er maskert i produsent`() {
         val statistikkSomBurdeVæreMaskert = JsonMelding(
-                kategori = Kategori.VIRKSOMHET,
-                kode = "999999999",
-                kvartal = KVARTAL_2023_1,
-                siste4Kvartal = Siste4Kvartal(
-                        tapteDagsverk = 17.5,
-                        muligeDagsverk = 761.3,
-                        prosent = 2.3,
-                        erMaskert = true, // her stoler vi på at `maskert` er riktig siden vi ikke har antallPersoner for siste4kvartal
-                        kvartaler = siste4Kvartal.kvartaler
-                ),
-                sistePubliserteKvartal = sistePubliserteKvartal
+            kategori = Kategori.VIRKSOMHET,
+            kode = "999999999",
+            kvartal = KVARTAL_2023_1,
+            siste4Kvartal = Siste4Kvartal(
+                tapteDagsverk = 17.5,
+                muligeDagsverk = 761.3,
+                prosent = 2.3,
+                erMaskert = true, // her stoler vi på at `maskert` er riktig siden vi ikke har antallPersoner for siste4kvartal
+                kvartaler = siste4Kvartal.kvartaler
+            ),
+            sistePubliserteKvartal = sistePubliserteKvartal
         )
 
         kafkaContainer.sendOgVentTilKonsumert(
-                statistikkSomBurdeVæreMaskert.toJsonKey(),
-                statistikkSomBurdeVæreMaskert.toJsonValue(),
-                Topic.STATISTIKK_VIRKSOMHET_TOPIC
+            statistikkSomBurdeVæreMaskert.toJsonKey(),
+            statistikkSomBurdeVæreMaskert.toJsonValue(),
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
 
-        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
+        val statistikkSiste4Kvartal =
+            hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
 
         statistikkSiste4Kvartal.tapteDagsverk shouldBe 0.0
         statistikkSiste4Kvartal.muligeDagsverk shouldBe 0.0
@@ -183,14 +185,14 @@ class SykefraværsstatistikkImportTest {
 
 
         val statistikk_gjeldendePeriode = hentStatistikkGjeldendeKvartal(
-                Kategori.VIRKSOMHET,
-                "999999999",
-                gjeldendePeriode.tilKvartal()
+            Kategori.VIRKSOMHET,
+            "999999999",
+            gjeldendePeriode.tilKvartal()
         ).sistePubliserteKvartal
         val statistikk_forrigePeriode = hentStatistikkGjeldendeKvartal(
-                Kategori.VIRKSOMHET,
-                "999999999",
-                gjeldendePeriode.forrigePeriode().tilKvartal()
+            Kategori.VIRKSOMHET,
+            "999999999",
+            gjeldendePeriode.forrigePeriode().tilKvartal()
         ).sistePubliserteKvartal
         val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(
             Kategori.VIRKSOMHET,
@@ -205,21 +207,21 @@ class SykefraværsstatistikkImportTest {
     @Test
     fun `sykefraværsstatistikk skal oppdateres om det kommer nye versjoner av samme nøkler`() {
         val oppdatertStatistikkSistePubliserteKvartal = sistePubliserteKvartal.copy(
-                prosent = 10.0,
-                tapteDagsverk = 2000.0,
-                muligeDagsverk = 20000.0,
+            prosent = 10.0,
+            tapteDagsverk = 2000.0,
+            muligeDagsverk = 20000.0,
         )
         val oppdatertStatistikkSiste4Kvartal = siste4Kvartal.copy(
-                prosent = 5.0,
-                tapteDagsverk = 5000.0,
-                muligeDagsverk = 100000.0,
+            prosent = 5.0,
+            tapteDagsverk = 5000.0,
+            muligeDagsverk = 100000.0,
         )
         val nyEksport = JsonMelding(
-                kategori = Kategori.VIRKSOMHET,
-                kode = "999999999",
-                kvartal = KVARTAL_2023_1,
-                sistePubliserteKvartal = oppdatertStatistikkSistePubliserteKvartal,
-                siste4Kvartal = oppdatertStatistikkSiste4Kvartal
+            kategori = Kategori.VIRKSOMHET,
+            kode = "999999999",
+            kvartal = KVARTAL_2023_1,
+            sistePubliserteKvartal = oppdatertStatistikkSistePubliserteKvartal,
+            siste4Kvartal = oppdatertStatistikkSiste4Kvartal
         )
         kafkaContainer.sendOgVentTilKonsumert(
             eksport_Siste_Kvartal_For_Virksomhet.toJsonKey(),
@@ -233,11 +235,12 @@ class SykefraværsstatistikkImportTest {
         )
 
         val statistikk_Q1_2023 = hentStatistikkGjeldendeKvartal(
-                Kategori.VIRKSOMHET,
-                "999999999",
-                KVARTAL_2023_1
+            Kategori.VIRKSOMHET,
+            "999999999",
+            KVARTAL_2023_1
         ).sistePubliserteKvartal
-        val statistikkSiste4Kvartal = hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
+        val statistikkSiste4Kvartal =
+            hentStatistikkSiste4Kvartal(Kategori.VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
         nyEksport sistePubliserteKvartalShouldBeEqual statistikk_Q1_2023
         nyEksport siste4KvartalShouldBeEqual statistikkSiste4Kvartal
     }
@@ -258,7 +261,7 @@ class SykefraværsstatistikkImportTest {
         sykefraværSiste4Kvartal.kvartaler shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.siste4Kvartal.kvartaler.toDto()
 
         val sykefraværSisteKvartal =
-                hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
+            hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
         sykefraværSisteKvartal.arstall shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.årstall
         sykefraværSisteKvartal.kvartal shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.kvartal
         sykefraværSisteKvartal.antallPersoner shouldBe eksport_Siste_Kvartal_For_Virksomhet.value.sistePubliserteKvartal.antallPersoner
@@ -285,9 +288,9 @@ class SykefraværsstatistikkImportTest {
             Topic.STATISTIKK_VIRKSOMHET_TOPIC
         )
         val andreLagredeStatistikkSiste4Kvartal =
-                hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
+            hentSykefraværForVirksomhetSiste4Kvartaler("999999999")
         val andreLagredeStatistikkSisteKvartal =
-                hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
+            hentSykefraværForVirksomhetSisteTilgjengeligKvartal("999999999")
 
         andreLagredeStatistikkSiste4Kvartal.orgnr shouldBe førsteLagredeStatistikkSiste4Kvartal.orgnr
         andreLagredeStatistikkSiste4Kvartal.sykefraværsprosent shouldBe førsteLagredeStatistikkSiste4Kvartal.sykefraværsprosent
@@ -298,74 +301,74 @@ class SykefraværsstatistikkImportTest {
 
     companion object {
         private val sistePubliserteKvartal_gjeldende_periode: SistePubliserteKvartal =
-                SistePubliserteKvartal(
-                        årstall = gjeldendePeriode.årstall,
-                        kvartal = gjeldendePeriode.kvartal,
-                        tapteDagsverk = 1740.5,
-                        muligeDagsverk = 76139.3,
-                        prosent = 2.3,
-                        erMaskert = false,
-                        antallPersoner = 1789
-                )
+            SistePubliserteKvartal(
+                årstall = gjeldendePeriode.årstall,
+                kvartal = gjeldendePeriode.kvartal,
+                tapteDagsverk = 1740.5,
+                muligeDagsverk = 76139.3,
+                prosent = 2.3,
+                erMaskert = false,
+                antallPersoner = 1789
+            )
         private val sistePubliserteKvartal: SistePubliserteKvartal =
-                SistePubliserteKvartal(
-                        årstall = gjeldendePeriode.årstall,
-                        kvartal = gjeldendePeriode.kvartal,
-                        tapteDagsverk = 1740.5,
-                        muligeDagsverk = 76139.3,
-                        prosent = 2.3,
-                        erMaskert = false,
-                        antallPersoner = 1789
-                )
+            SistePubliserteKvartal(
+                årstall = gjeldendePeriode.årstall,
+                kvartal = gjeldendePeriode.kvartal,
+                tapteDagsverk = 1740.5,
+                muligeDagsverk = 76139.3,
+                prosent = 2.3,
+                erMaskert = false,
+                antallPersoner = 1789
+            )
         private val sistePubliserteKvartal_Forrige_Periode: SistePubliserteKvartal =
-                SistePubliserteKvartal(
-                        årstall = gjeldendePeriode.forrigePeriode().årstall,
-                        kvartal = gjeldendePeriode.forrigePeriode().kvartal,
-                        tapteDagsverk = 1820.1,
-                        muligeDagsverk = 75000.0,
-                        prosent = 2.4,
-                        erMaskert = false,
-                        antallPersoner = 1805
-                )
+            SistePubliserteKvartal(
+                årstall = gjeldendePeriode.forrigePeriode().årstall,
+                kvartal = gjeldendePeriode.forrigePeriode().kvartal,
+                tapteDagsverk = 1820.1,
+                muligeDagsverk = 75000.0,
+                prosent = 2.4,
+                erMaskert = false,
+                antallPersoner = 1805
+            )
 
         private val siste4Kvartal_gjeldende_periode: Siste4Kvartal =
-                Siste4Kvartal(
-                        tapteDagsverk = 8020.0,
-                        muligeDagsverk = 300991.3,
-                        prosent = 2.7,
-                        erMaskert = false,
-                        kvartaler = gjeldendePeriode.lagPerioder(4).map { it.tilKvartal() }
-                )
+            Siste4Kvartal(
+                tapteDagsverk = 8020.0,
+                muligeDagsverk = 300991.3,
+                prosent = 2.7,
+                erMaskert = false,
+                kvartaler = gjeldendePeriode.lagPerioder(4).map { it.tilKvartal() }
+            )
         private val siste4Kvartal: Siste4Kvartal =
-                Siste4Kvartal(
-                        tapteDagsverk = 8020.0,
-                        muligeDagsverk = 300991.3,
-                        prosent = 2.7,
-                        erMaskert = false,
-                        kvartaler = gjeldendePeriode.lagPerioder(4).map { it.tilKvartal() }
-                )
+            Siste4Kvartal(
+                tapteDagsverk = 8020.0,
+                muligeDagsverk = 300991.3,
+                prosent = 2.7,
+                erMaskert = false,
+                kvartaler = gjeldendePeriode.lagPerioder(4).map { it.tilKvartal() }
+            )
         private val siste4Kvartal_Forrige_Periode: Siste4Kvartal =
-                Siste4Kvartal(
-                        tapteDagsverk = 7990.1,
-                        muligeDagsverk = 270221.7,
-                        prosent = 2.9,
-                        erMaskert = false,
-                        kvartaler = gjeldendePeriode.forrigePeriode().lagPerioder(4).map { it.tilKvartal() }
-                )
+            Siste4Kvartal(
+                tapteDagsverk = 7990.1,
+                muligeDagsverk = 270221.7,
+                prosent = 2.9,
+                erMaskert = false,
+                kvartaler = gjeldendePeriode.forrigePeriode().lagPerioder(4).map { it.tilKvartal() }
+            )
 
         private val eksport_Forrige_Kvartal_For_Virksomhet = JsonMelding(
-                kategori = Kategori.VIRKSOMHET,
-                kode = "999999999",
-                kvartal = gjeldendePeriode.forrigePeriode().tilKvartal(),
-                sistePubliserteKvartal = sistePubliserteKvartal_Forrige_Periode,
-                siste4Kvartal = siste4Kvartal_Forrige_Periode
+            kategori = Kategori.VIRKSOMHET,
+            kode = "999999999",
+            kvartal = gjeldendePeriode.forrigePeriode().tilKvartal(),
+            sistePubliserteKvartal = sistePubliserteKvartal_Forrige_Periode,
+            siste4Kvartal = siste4Kvartal_Forrige_Periode
         )
         private val eksport_Siste_Kvartal_For_Virksomhet = JsonMelding(
-                kategori = Kategori.VIRKSOMHET,
-                kode = "999999999",
-                kvartal = gjeldendePeriode.tilKvartal(),
-                sistePubliserteKvartal = sistePubliserteKvartal,
-                siste4Kvartal = siste4Kvartal
+            kategori = Kategori.VIRKSOMHET,
+            kode = "999999999",
+            kvartal = gjeldendePeriode.tilKvartal(),
+            sistePubliserteKvartal = sistePubliserteKvartal,
+            siste4Kvartal = siste4Kvartal
         )
     }
 }

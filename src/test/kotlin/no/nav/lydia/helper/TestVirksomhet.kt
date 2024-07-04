@@ -106,7 +106,7 @@ data class TestVirksomhet(
             var orgnr: Int
             do {
                 // tilfeldige virksomheter har orgnummer som starter på 8
-                orgnr = (800000000 .. 899999999).random()
+                orgnr = (800000000..899999999).random()
             } while (!brukteOrnummere.add(orgnr))
             return orgnr.toString()
         }

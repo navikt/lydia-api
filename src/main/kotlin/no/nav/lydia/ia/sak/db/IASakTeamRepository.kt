@@ -12,12 +12,13 @@ import javax.sql.DataSource
 import no.nav.lydia.ia.sak.domene.IASak
 
 @Serializable
-data class BrukerITeamDto (
+data class BrukerITeamDto(
     val ident: String,
     val saksnummer: String
 )
+
 @Serializable
-data class MineSakerDto (
+data class MineSakerDto(
     val saksnummer: String,
     val status: IAProsessStatus,
     val orgnr: String,
@@ -28,7 +29,7 @@ data class MineSakerDto (
 
 class IASakTeamRepository(val dataSource: DataSource) {
 
-    fun leggBrukerTilTeam(iaSak: IASak, navAnsatt: NavAnsatt ) =
+    fun leggBrukerTilTeam(iaSak: IASak, navAnsatt: NavAnsatt) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(

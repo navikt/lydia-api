@@ -14,20 +14,20 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.fail
 
 fun IASakDto.nyttNavnPåProsess(
-	iaProsessDto: IAProsessDto,
-	nyttNavn: String,
-	token: String = oauth2ServerContainer.saksbehandler1.token
+    iaProsessDto: IAProsessDto,
+    nyttNavn: String,
+    token: String = oauth2ServerContainer.saksbehandler1.token
 ) = nyHendelse(
-		hendelsestype = IASakshendelseType.ENDRE_PROSESS,
-		payload = Json.encodeToString(iaProsessDto.copy(navn = nyttNavn)),
-		token = token
-	)
+    hendelsestype = IASakshendelseType.ENDRE_PROSESS,
+    payload = Json.encodeToString(iaProsessDto.copy(navn = nyttNavn)),
+    token = token
+)
 
 
 fun IASakDto.hentIAProsesser(
-	token: String = oauth2ServerContainer.saksbehandler1.token,
+    token: String = oauth2ServerContainer.saksbehandler1.token,
 ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/prosesser")
-		.authentication().bearer(token = token)
-		.tilListeRespons<IAProsessDto>().third.fold(
-			success = { it },
-			failure = { fail(it.message) } )
+    .authentication().bearer(token = token)
+    .tilListeRespons<IAProsessDto>().third.fold(
+        success = { it },
+        failure = { fail(it.message) })

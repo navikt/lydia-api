@@ -98,7 +98,8 @@ class SykefraværsstatistikkVirksomhetImportTest {
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
-        val gjeldendeKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
+        val gjeldendeKvartal =
+            hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
 
         gjeldendeKvartal.graderingSistePubliserteKvartal.erMaskert shouldBe true
         gjeldendeKvartal.graderingSistePubliserteKvartal.prosent shouldBe 0.0
@@ -109,16 +110,16 @@ class SykefraværsstatistikkVirksomhetImportTest {
     @Test
     fun `vi tar hensyn til maskering på gradering siste 4 kvartal`() {
         val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
-                kategori = "VIRKSOMHET_GRADERT",
-                kode = "999999997",
-                kvartal = KVARTAL_2023_1,
-                siste4Kvartal = graderingSiste4Kvartal.copy(
-                        tapteDagsverkGradert = 10.0,
-                        tapteDagsverk = 100.0,
-                        prosent = 10.0,
-                        erMaskert = true
-                ),
-                sistePubliserteKvartal = graderingSistePubliserteKvartal
+            kategori = "VIRKSOMHET_GRADERT",
+            kode = "999999997",
+            kvartal = KVARTAL_2023_1,
+            siste4Kvartal = graderingSiste4Kvartal.copy(
+                tapteDagsverkGradert = 10.0,
+                tapteDagsverk = 100.0,
+                prosent = 10.0,
+                erMaskert = true
+            ),
+            sistePubliserteKvartal = graderingSistePubliserteKvartal
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
@@ -126,7 +127,8 @@ class SykefraværsstatistikkVirksomhetImportTest {
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
-        val siste4Kvartaler = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
+        val siste4Kvartaler =
+            hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
 
         siste4Kvartaler.graderingSiste4Kvartal.erMaskert shouldBe true
         siste4Kvartaler.graderingSiste4Kvartal.prosent shouldBe 0.0
@@ -191,8 +193,10 @@ class SykefraværsstatistikkVirksomhetImportTest {
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
-        val graderingGjeldendeKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999998", kvartal = KVARTAL_2023_1)
-        val graderingSiste4Kvartal = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999998", kvartal = KVARTAL_2023_1)
+        val graderingGjeldendeKvartal =
+            hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999998", kvartal = KVARTAL_2023_1)
+        val graderingSiste4Kvartal =
+            hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999998", kvartal = KVARTAL_2023_1)
 
         graderingGjeldendeKvartal.graderingSistePubliserteKvartal.prosent shouldBe null
         graderingSiste4Kvartal.graderingSiste4Kvartal.prosent shouldBe null
@@ -317,7 +321,8 @@ class SykefraværsstatistikkVirksomhetImportTest {
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
         )
 
-        val resultatSistePubliserteKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
+        val resultatSistePubliserteKvartal =
+            hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
         resultatSistePubliserteKvartal.orgnr shouldBe "999999999"
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.årstall shouldBe graderingSistePubliserteKvartal.årstall
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.kvartal shouldBe graderingSistePubliserteKvartal.kvartal
@@ -327,8 +332,9 @@ class SykefraværsstatistikkVirksomhetImportTest {
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.tapteDagsverk shouldBe 56.0
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.antallPersoner shouldBe 200
 
-        val resultatSiste4Kvartal = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
-        resultatSiste4Kvartal.orgnr shouldBe  "999999999"
+        val resultatSiste4Kvartal =
+            hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
+        resultatSiste4Kvartal.orgnr shouldBe "999999999"
         resultatSiste4Kvartal.publisertÅrstall shouldBe graderingSistePubliserteKvartal.årstall
         resultatSiste4Kvartal.publisertKvartal shouldBe graderingSistePubliserteKvartal.kvartal
         resultatSiste4Kvartal.graderingSiste4Kvartal.erMaskert shouldBe false

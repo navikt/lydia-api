@@ -24,7 +24,11 @@ class IASakStatusProdusent(
                 .lastOrNull { it.status != IAProsessStatus.SLETTET }
                 ?.let { aktivSak ->
                     val aktivKafkaMelding = aktivSak.tilKafkaMelding()
-                    produsent.sendMelding(Topic.IA_SAK_STATUS_TOPIC.navn, aktivKafkaMelding.first, aktivKafkaMelding.second)
+                    produsent.sendMelding(
+                        Topic.IA_SAK_STATUS_TOPIC.navn,
+                        aktivKafkaMelding.first,
+                        aktivKafkaMelding.second
+                    )
                 }
         }
     }

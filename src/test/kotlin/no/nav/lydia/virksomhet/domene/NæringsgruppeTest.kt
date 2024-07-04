@@ -8,7 +8,7 @@ import no.nav.lydia.virksomhet.domene.Næringsgruppe.Companion.UOPPGITT
 class NæringsgruppeTest {
 
     @Test
-    fun `utledder bransje ut i fra næringsundergruppe` () {
+    fun `utledder bransje ut i fra næringsundergruppe`() {
         Næringsgruppe(navn = "Kanskje Barnehager", kode = "88911").tilBransje() shouldBe Bransje.BARNEHAGER
         Næringsgruppe(navn = "Kanskje Sykehus", kode = "86105").tilBransje() shouldBe Bransje.SYKEHUS
         Næringsgruppe(navn = "Ukjent", kode = "99999").tilBransje() shouldBe null
@@ -18,7 +18,10 @@ class NæringsgruppeTest {
     @Test
     fun `utledder bransje ut i fra næringskode`() {
         Næringsgruppe(navn = "Kanskje Bygg", kode = "41").tilBransje() shouldBe Bransje.BYGG
-        Næringsgruppe(navn = "Kanskje Næringsmiddelindustri", kode = "10").tilBransje() shouldBe Bransje.NÆRINGSMIDDELINDUSTRI
+        Næringsgruppe(
+            navn = "Kanskje Næringsmiddelindustri",
+            kode = "10"
+        ).tilBransje() shouldBe Bransje.NÆRINGSMIDDELINDUSTRI
         Næringsgruppe(navn = "Ukjent", kode = "00").tilBransje() shouldBe null
     }
 

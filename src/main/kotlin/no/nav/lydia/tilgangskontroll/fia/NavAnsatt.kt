@@ -23,7 +23,8 @@ sealed class NavAnsatt private constructor(
             is Superbruker -> Rolle.SUPERBRUKER
         }
 
-    class Lesebruker private constructor(navIdent: String, navn: String, token: String, ansattesGrupper: Set<String>) : NavAnsatt(navIdent, navn, token, ansattesGrupper) {
+    class Lesebruker private constructor(navIdent: String, navn: String, token: String, ansattesGrupper: Set<String>) :
+        NavAnsatt(navIdent, navn, token, ansattesGrupper) {
         companion object {
             fun ApplicationCall.lesebruker(adGrupper: ADGrupper): Either<Feil, Lesebruker> {
                 val navIdent = this.innloggetNavIdent() ?: return TilgangskontrollFeil.FantIkkeNavIdent.left()
@@ -37,16 +38,23 @@ sealed class NavAnsatt private constructor(
                         adGrupper.saksbehandlerGruppe,
                         adGrupper.superbrukerGruppe
                     ).any { ansattesGrupper.contains(it) }) {
-                    Lesebruker(navIdent = navIdent,
+                    Lesebruker(
+                        navIdent = navIdent,
                         navn = navn,
                         token = token,
-                        ansattesGrupper = ansattesGrupper.toSet())
+                        ansattesGrupper = ansattesGrupper.toSet()
+                    )
                 }
             }
         }
     }
 
-    sealed class NavAnsattMedSaksbehandlerRolle private constructor(navIdent: String, navn: String, token: String, ansattesGrupper: Set<String>) : NavAnsatt(navIdent, navn, token, ansattesGrupper) {
+    sealed class NavAnsattMedSaksbehandlerRolle private constructor(
+        navIdent: String,
+        navn: String,
+        token: String,
+        ansattesGrupper: Set<String>
+    ) : NavAnsatt(navIdent, navn, token, ansattesGrupper) {
         companion object {
             fun ApplicationCall.navAnsattMedSaksbehandlerRolle(adGrupper: ADGrupper): Either<Feil, NavAnsattMedSaksbehandlerRolle> {
                 val navIdent = this.innloggetNavIdent() ?: return TilgangskontrollFeil.FantIkkeNavIdent.left()
@@ -54,24 +62,40 @@ sealed class NavAnsatt private constructor(
                 val ansattesGrupper = this.azureADGrupper() ?: return TilgangskontrollFeil.FantIngenADGrupper.left()
                 val token = this.accessToken() ?: return TilgangskontrollFeil.FantIkkeToken.left()
 
-                return if(ansattesGrupper.contains(adGrupper.superbrukerGruppe))
+                return if (ansattesGrupper.contains(adGrupper.superbrukerGruppe))
                     validert(true) {
-                        Superbruker(navIdent = navIdent,
+                        Superbruker(
+                            navIdent = navIdent,
                             navn = navn,
                             token = token,
-                            ansattesGrupper = ansattesGrupper.toSet())
+                            ansattesGrupper = ansattesGrupper.toSet()
+                        )
                     }
                 else
                     validert(ansattesGrupper.contains(adGrupper.saksbehandlerGruppe)) {
-                        Saksbehandler(navIdent = navIdent,
+                        Saksbehandler(
+                            navIdent = navIdent,
                             navn = navn,
                             token = token,
-                            ansattesGrupper = ansattesGrupper.toSet())
+                            ansattesGrupper = ansattesGrupper.toSet()
+                        )
                     }
             }
         }
-        class Saksbehandler internal constructor(navIdent: String, navn: String, token: String, ansattesGrupper: Set<String>) : NavAnsattMedSaksbehandlerRolle(navIdent, navn, token, ansattesGrupper)
-        class Superbruker internal constructor(navIdent: String, navn: String, token: String, ansattesGrupper: Set<String>) : NavAnsattMedSaksbehandlerRolle(navIdent, navn, token, ansattesGrupper)
+
+        class Saksbehandler internal constructor(
+            navIdent: String,
+            navn: String,
+            token: String,
+            ansattesGrupper: Set<String>
+        ) : NavAnsattMedSaksbehandlerRolle(navIdent, navn, token, ansattesGrupper)
+
+        class Superbruker internal constructor(
+            navIdent: String,
+            navn: String,
+            token: String,
+            ansattesGrupper: Set<String>
+        ) : NavAnsattMedSaksbehandlerRolle(navIdent, navn, token, ansattesGrupper)
     }
 
 }

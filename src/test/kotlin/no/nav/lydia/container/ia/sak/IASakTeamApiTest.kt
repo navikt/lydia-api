@@ -86,10 +86,10 @@ class IASakTeamApiTest {
     //MineSakerTester
     private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) =
         orgnr == minsak.orgnr &&
-            saksnummer == minsak.saksnummer &&
-            status == minsak.status &&
-            eidAv == minsak.eidAv &&
-            endretTidspunkt == minsak.endretTidspunkt
+                saksnummer == minsak.saksnummer &&
+                status == minsak.status &&
+                eidAv == minsak.eidAv &&
+                endretTidspunkt == minsak.endretTidspunkt
 
     @Test
     fun `skal få alle saker man er eier av`() {
@@ -109,7 +109,7 @@ class IASakTeamApiTest {
                 success = { respons -> respons },
                 failure = { fail(it.message) })
 
-        iaSakListe.all{ sak ->
+        iaSakListe.all { sak ->
             res.any { sak.sammenlignMedMineSaker(it) }
         } shouldBe true
     }

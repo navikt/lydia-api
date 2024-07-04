@@ -59,13 +59,17 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 sykefraværsstatistikkService.lagreStatistikkMetadataVirksomhet(
-                                    records.toSykefraværsstatistikkMetadataVirksomhetImportDto().tilBehandletImportMetadataVirksomhet()
+                                    records.toSykefraværsstatistikkMetadataVirksomhetImportDto()
+                                        .tilBehandletImportMetadataVirksomhet()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger om i StatistikkMetadataVirksomhetConsumer")
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
-                            logger.warn("Had a retriable exception in StatistikkMetadataVirksomhetConsumer, retrying", e)
+                            logger.warn(
+                                "Had a retriable exception in StatistikkMetadataVirksomhetConsumer, retrying",
+                                e
+                            )
                         }
                         delay(kafka.consumerLoopDelay)
                     }

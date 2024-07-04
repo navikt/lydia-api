@@ -18,30 +18,30 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
 fun Route.iaProsessApi(
-	iaProsessService: IAProsessService,
-	iaSakService: IASakService,
-	adGrupper: ADGrupper,
-	auditLog: AuditLog,
+    iaProsessService: IAProsessService,
+    iaSakService: IASakService,
+    adGrupper: ADGrupper,
+    auditLog: AuditLog,
 ) {
-	get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/prosesser") {
-		val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-		val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-		call.somLesebruker(adGrupper) {
-			iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-				iaProsessService.hentIAProsesser(sak = iaSak)
-			}
-		}.also {
-			auditLog.auditloggEither(
-				call = call,
-				either = it,
-				orgnummer = orgnummer,
-				auditType = AuditType.access,
-				saksnummer = saksnummer
-			)
-		}.map {
-			call.respond(it.tilDto())
-		}.mapLeft {
-			call.respond(message = it.feilmelding, status = it.httpStatusCode)
-		}
-	}
+    get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/prosesser") {
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        call.somLesebruker(adGrupper) {
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                iaProsessService.hentIAProsesser(sak = iaSak)
+            }
+        }.also {
+            auditLog.auditloggEither(
+                call = call,
+                either = it,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                saksnummer = saksnummer
+            )
+        }.map {
+            call.respond(it.tilDto())
+        }.mapLeft {
+            call.respond(message = it.feilmelding, status = it.httpStatusCode)
+        }
+    }
 }

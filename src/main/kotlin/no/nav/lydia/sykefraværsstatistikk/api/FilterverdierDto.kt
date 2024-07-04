@@ -24,11 +24,12 @@ enum class SnittFilter {
     BRANSJE_NÆRING_OVER,
     BRANSJE_NÆRING_UNDER_ELLER_LIK,
 }
-@Serializable
-data class FylkeOgKommuner (val fylke: Fylke, val kommuner: List<Kommune>)
 
 @Serializable
-data class EierDTO (val navIdent: String, val navn: String)
+data class FylkeOgKommuner(val fylke: Fylke, val kommuner: List<Kommune>)
+
+@Serializable
+data class EierDTO(val navIdent: String, val navn: String)
 
 @Serializable
 data class SektorDto(val kode: String, val beskrivelse: String)

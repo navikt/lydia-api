@@ -16,10 +16,10 @@ class PeriodeTest {
 
         perioder.size shouldBe 4
         perioder shouldBe listOf(
-                Periode(3, 2022),
-                Periode(2, 2022),
-                Periode(1, 2022),
-                Periode(4, 2021)
+            Periode(3, 2022),
+            Periode(2, 2022),
+            Periode(1, 2022),
+            Periode(4, 2021)
         )
 
         gjeldendePeriode.lagPerioder(30).size shouldBe 30

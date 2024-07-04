@@ -136,11 +136,15 @@ class IASakService(
                         sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
                         årsakService.lagreÅrsak(sakshendelse)
                         iaSakProsessRepository.oppdaterProsess(sakshendelse)
-                        when(sakshendelse.hendelsesType) {
-                            IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(sakshendelse, saksbehandler)
+                        when (sakshendelse.hendelsesType) {
+                            IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
+                                sakshendelse,
+                                saksbehandler
+                            )
                                 .onLeft {
                                     log.error("Feil ved journalføring av hendelseid: '${sakshendelse.id}'. Feil: ${it.feilmelding}")
                                 }
+
                             else -> {}
                         }
                         return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)

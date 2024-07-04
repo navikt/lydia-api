@@ -5,12 +5,12 @@ import io.ktor.server.response.respond
 import no.nav.lydia.ia.sak.api.Feil
 
 val ApplicationCall.orgnummer
-	get() = parameters["orgnummer"]
+    get() = parameters["orgnummer"]
 val ApplicationCall.saksnummer
-	get() = parameters["saksnummer"]
+    get() = parameters["saksnummer"]
 val ApplicationCall.kartleggingId
-	get() = parameters["kartleggingId"]
+    get() = parameters["kartleggingId"]
 val ApplicationCall.iaSakLeveranseId
-	get() = parameters["iaSakLeveranseId"]
+    get() = parameters["iaSakLeveranseId"]
 
 suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)

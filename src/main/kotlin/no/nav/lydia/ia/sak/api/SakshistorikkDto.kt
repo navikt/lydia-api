@@ -24,7 +24,7 @@ class SakSnapshotDto(
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
     val eier: String?
-){
+) {
     companion object {
         fun from(iaSakshendelse: IASakshendelse, iaSak: IASak) =
             SakSnapshotDto(
@@ -43,7 +43,8 @@ class SakSnapshotDto(
 fun IASak.tilSakshistorikk() = SakshistorikkDto(
     saksnummer = this.saksnummer,
     opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
-    sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime() ?: this.opprettetTidspunkt.toKotlinLocalDateTime(), // TODO sistEndret på IASak burde ikkje vere optional, den burde vere opprettetTidspunkt frå start.
+    sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime()
+        ?: this.opprettetTidspunkt.toKotlinLocalDateTime(), // TODO sistEndret på IASak burde ikkje vere optional, den burde vere opprettetTidspunkt frå start.
     sakshendelser = hendelser.mapIndexed { index, hendelse ->
         SakSnapshotDto.from(hendelse, IASak.fraHendelser(hendelser.subList(0, index + 1)))
     }.toList()

@@ -119,7 +119,7 @@ fun startLydiaBackend() {
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
-    val iaSakTeamRepository = IASakTeamRepository(dataSource= dataSource)
+    val iaSakTeamRepository = IASakTeamRepository(dataSource = dataSource)
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
     val prosessRepository = ProsessRepository(dataSource = dataSource)
 
@@ -183,7 +183,11 @@ fun startLydiaBackend() {
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaProsessService = iaProsessService,
-        behovsvurderingObservers = listOf(spørreundersøkelseProdusent, behovsvurderingMetrikkObserver, fullførtBehovsvurderingProdusent),
+        behovsvurderingObservers = listOf(
+            spørreundersøkelseProdusent,
+            behovsvurderingMetrikkObserver,
+            fullførtBehovsvurderingProdusent
+        ),
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
             produsent = kafkaProdusent
         )
@@ -268,8 +272,8 @@ fun startLydiaBackend() {
             sistePubliseringService = sistePubliseringService,
             virksomhetRepository = virksomhetRepository,
             iaSakService = iaSakService,
-	        iaSakTeamService = iaSakTeamService,
-	        iaProsessService = iaProsessService,
+            iaSakTeamService = iaSakTeamService,
+            iaProsessService = iaProsessService,
             spørreundersøkelseService = spørreundersøkelseService
         )
     }.also {

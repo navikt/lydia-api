@@ -11,8 +11,10 @@ import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.NÆRING_BARNEHAGE
 
 class IASakStatistikkEksportererUnitTest {
-    private val næringsgruppeIkkeIBransjeprogram = Næringsgruppe("Denne næringen finnes ikke i et bransjeprogram", "99999")
+    private val næringsgruppeIkkeIBransjeprogram =
+        Næringsgruppe("Denne næringen finnes ikke i et bransjeprogram", "99999")
     private val næringsgruppeBygg = BOLIGBYGGELAG
+
     @Test
     fun `skal finne riktig bransje fra næringskoder i bygg (2 siffet kode)`() {
         finnBransje(listOf(næringsgruppeBygg)) shouldBe Bransje.BYGG
@@ -35,10 +37,12 @@ class IASakStatistikkEksportererUnitTest {
 
     @Test
     fun `skal kunne finne bransje basert på flere næringsgrupper`() {
-        finnBransje(listOf(
-            næringsgruppeIkkeIBransjeprogram,
-            næringsgruppeBygg
-        )) shouldBe Bransje.BYGG
+        finnBransje(
+            listOf(
+                næringsgruppeIkkeIBransjeprogram,
+                næringsgruppeBygg
+            )
+        ) shouldBe Bransje.BYGG
 
         finnBransje(
             listOf(

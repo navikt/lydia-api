@@ -12,7 +12,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 private const val NAMESPACE = "pia"
 
 class Metrics {
-    companion object{
+    companion object {
         val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
         val behovsvurderingerOpprettet = Counter.builder()
@@ -59,7 +59,7 @@ class Metrics {
         }
 
         fun loggBehovsvurdering(status: KartleggingStatus) {
-            when(status){
+            when (status) {
                 KartleggingStatus.OPPRETTET -> behovsvurderingerOpprettet.inc()
                 KartleggingStatus.PÅBEGYNT -> behovsvurderingerStartet.inc()
                 KartleggingStatus.AVSLUTTET -> behovsvurderingerFullført.inc()

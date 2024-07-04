@@ -21,7 +21,8 @@ class NaisEnvironment(
         }
 
         fun hentMiljø(cluster: String) =
-            Environment.entries.find { it.name.lowercase() == cluster } ?: throw IllegalStateException("Ukjent miljø $cluster")
+            Environment.entries.find { it.name.lowercase() == cluster }
+                ?: throw IllegalStateException("Ukjent miljø $cluster")
     }
 
     val miljø = hentMiljø(cluster)
@@ -130,7 +131,7 @@ class Kafka(
 
 }
 
-class Salesforce (
+class Salesforce(
     val tokenHost: String = getEnvVar("SALESFORCE_TOKEN_HOST"),
     val clientId: String = getEnvVar("SALESFORCE_CLIENT_ID"),
     val clientSecret: String = getEnvVar("SALESFORCE_CLIENT_SECRET"),
@@ -158,18 +159,36 @@ enum class Topic(val navn: String, private val consumerGroupId: String? = null) 
     @Deprecated("Bruk SPORREUNDERSOKELSE_HENDELSE_TOPIC")
     SPORREUNDERSOKELSE_SVAR_TOPIC("pia.sporreundersokelse-svar-v1", "lydia-api-sporreundersokelse-svar-consumer"),
 
-    SPORREUNDERSOKELSE_HENDELSE_TOPIC("pia.sporreundersokelse-hendelse-v1", "lydia-api-sporreundersokelse-hendelse-consumer"),
-    SPORREUNDERSOKELSE_OPPDATERING_TOPIC("pia.sporreundersokelse-oppdatering-v1", "lydia-api-sporreundersokelse-oppdatering-consumer"),
+    SPORREUNDERSOKELSE_HENDELSE_TOPIC(
+        "pia.sporreundersokelse-hendelse-v1",
+        "lydia-api-sporreundersokelse-hendelse-consumer"
+    ),
+    SPORREUNDERSOKELSE_OPPDATERING_TOPIC(
+        "pia.sporreundersokelse-oppdatering-v1",
+        "lydia-api-sporreundersokelse-oppdatering-consumer"
+    ),
     BRREG_OPPDATERING_TOPIC("pia.brreg-oppdatering", "lydia-api-brreg-oppdatering-consumer"),
     BRREG_ALLE_VIRKSOMHETER_TOPIC("pia.brreg-alle-virksomheter", "lydia-api-brreg-alle-virksomheter-consumer"),
-    STATISTIKK_METADATA_VIRKSOMHET_TOPIC("arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1", "lydia-api-statistikk-metadata-virksomhet-consumer"),
+    STATISTIKK_METADATA_VIRKSOMHET_TOPIC(
+        "arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1",
+        "lydia-api-statistikk-metadata-virksomhet-consumer"
+    ),
     STATISTIKK_LAND_TOPIC("arbeidsgiver.sykefravarsstatistikk-land-v1", "lydia-api-statistikk-land-consumer"),
     STATISTIKK_SEKTOR_TOPIC("arbeidsgiver.sykefravarsstatistikk-sektor-v1", "lydia-api-statistikk-sektor-consumer"),
     STATISTIKK_BRANSJE_TOPIC("arbeidsgiver.sykefravarsstatistikk-bransje-v1", "lydia-api-statistikk-bransje-consumer"),
     STATISTIKK_NARING_TOPIC("arbeidsgiver.sykefravarsstatistikk-naring-v1", "lydia-api-statistikk-naring-consumer"),
-    STATISTIKK_NARINGSKODE_TOPIC("arbeidsgiver.sykefravarsstatistikk-naringskode-v1", "lydia-api-statistikk-naringskode-consumer"),
-    STATISTIKK_VIRKSOMHET_TOPIC("arbeidsgiver.sykefravarsstatistikk-virksomhet-v1", "lydia-api-statistikk-virksomhet-consumer"),
-    STATISTIKK_VIRKSOMHET_GRADERING_TOPIC("arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1", "lydia-api-statistikk-virksomhet-gradering-consumer"),
+    STATISTIKK_NARINGSKODE_TOPIC(
+        "arbeidsgiver.sykefravarsstatistikk-naringskode-v1",
+        "lydia-api-statistikk-naringskode-consumer"
+    ),
+    STATISTIKK_VIRKSOMHET_TOPIC(
+        "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1",
+        "lydia-api-statistikk-virksomhet-consumer"
+    ),
+    STATISTIKK_VIRKSOMHET_GRADERING_TOPIC(
+        "arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1",
+        "lydia-api-statistikk-virksomhet-gradering-consumer"
+    ),
     JOBBLYTTER_TOPIC("pia.jobblytter-v1", "lydia-api-jobblytter-consumer");
 
     val konsumentGruppe

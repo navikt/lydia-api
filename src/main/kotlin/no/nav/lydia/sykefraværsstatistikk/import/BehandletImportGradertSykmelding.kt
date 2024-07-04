@@ -2,7 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.import
 
 import no.nav.lydia.sykefraværsstatistikk.import.BehandletKvartalsvisSykefraværsstatistikk.Companion.MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER
 
-data class BehandletImportGradertSykmelding (
+data class BehandletImportGradertSykmelding(
     val årstall: Int,
     val kvartal: Int,
     val kode: String,

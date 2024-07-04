@@ -28,9 +28,11 @@ fun Route.virksomhet(
     adGrupper: ADGrupper,
 ) {
     get("$VIRKSOMHET_PATH/{orgnummer}") {
-        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+        val orgnummer =
+            call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto().rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
+            virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto()
+                .rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map {
@@ -41,7 +43,8 @@ fun Route.virksomhet(
     }
 
     get("$VIRKSOMHET_PATH/finn") {
-        val søkestreng = call.request.queryParameters["q"] ?: return@get call.respond(VirksomhetFeil.`mangler søkestreng`)
+        val søkestreng =
+            call.request.queryParameters["q"] ?: return@get call.respond(VirksomhetFeil.`mangler søkestreng`)
         call.somLesebruker(adGrupper = adGrupper) {
             virksomhetService.finnVirksomheter(søkestreng = søkestreng).right()
         }.map {
@@ -53,7 +56,8 @@ fun Route.virksomhet(
 
     get("$SALESFORCE_INFO_PATH/{orgnummer}") {
         val nå = Clock.System.now()
-        val orgnummer = call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+        val orgnummer =
+            call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
         salesforceClient.hentSalesforceInfo(orgnr = orgnummer).map { salesforceUrlResponse ->
             call.application.log.info("Hentet salesforce lenke for virksomhet på ${Clock.System.now() - nå} ms")
@@ -65,6 +69,7 @@ fun Route.virksomhet(
 }
 
 object VirksomhetFeil {
-    val `fant ikke virksomhet` = Feil(feilmelding = "Fant ingen virksomheter med gitt orgnummer", httpStatusCode = HttpStatusCode.NotFound)
+    val `fant ikke virksomhet` =
+        Feil(feilmelding = "Fant ingen virksomheter med gitt orgnummer", httpStatusCode = HttpStatusCode.NotFound)
     val `mangler søkestreng` = Feil(feilmelding = "Mangler søkestreng", httpStatusCode = HttpStatusCode.BadRequest)
 }

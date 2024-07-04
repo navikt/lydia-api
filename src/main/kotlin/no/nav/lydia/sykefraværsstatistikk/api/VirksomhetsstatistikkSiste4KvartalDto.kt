@@ -18,7 +18,7 @@ data class VirksomhetsstatistikkSiste4KvartalDto(
 ) {
 
     companion object {
-        fun VirksomhetsstatistikkSiste4Kvartal.toDto() : VirksomhetsstatistikkSiste4KvartalDto =
+        fun VirksomhetsstatistikkSiste4Kvartal.toDto(): VirksomhetsstatistikkSiste4KvartalDto =
             VirksomhetsstatistikkSiste4KvartalDto(
                 orgnr = this.orgnr,
                 sykefraværsprosent = this.sykefraværsprosent,

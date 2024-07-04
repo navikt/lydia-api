@@ -26,7 +26,10 @@ class SistePubliseringService(
             sistePubliseringRepository.hentPubliseringsinfo()
         } catch (e: Exception) {
             logger.warn(e.message, e)
-            return Feil(e.message ?: "Ukjent feil under henting av publiseringsinfo", HttpStatusCode.InternalServerError).left()
+            return Feil(
+                e.message ?: "Ukjent feil under henting av publiseringsinfo",
+                HttpStatusCode.InternalServerError
+            ).left()
         }
         return publiseringsinfo.toPubliseringsinfo().right()
     }
@@ -48,7 +51,10 @@ data class PubliseringsinfoDto(
     companion object {
         fun Row.tilPubliseringsinfo(): PubliseringsinfoDto =
             PubliseringsinfoDto(
-                gjeldendePeriode = PeriodeDto(årstall = this.int("gjeldende_arstall"), kvartal = this.int("gjeldende_kvartal")),
+                gjeldendePeriode = PeriodeDto(
+                    årstall = this.int("gjeldende_arstall"),
+                    kvartal = this.int("gjeldende_kvartal")
+                ),
                 sistePubliseringsdato = this.localDate("siste_publiseringsdato").toKotlinLocalDate(),
                 nestePubliseringsdato = this.localDate("neste_publiseringsdato").toKotlinLocalDate()
             )
@@ -65,6 +71,7 @@ data class PubliseringsinfoDto(
         )
 
 }
+
 @Serializable
 data class Publiseringsinfo(
     val sistePubliseringsdato: kotlinx.datetime.LocalDate,
@@ -77,7 +84,7 @@ data class PeriodeDto(
     val årstall: Int,
     val kvartal: Int,
 ) {
-    fun tilPeriode() : Periode {
+    fun tilPeriode(): Periode {
         return Periode(årstall = årstall, kvartal = kvartal)
     }
 }

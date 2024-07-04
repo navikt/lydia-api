@@ -18,20 +18,23 @@ fun <T> ApplicationCall.somLesebruker(adGrupper: ADGrupper, block: (Lesebruker) 
     this.lesebruker(adGrupper)
         .flatMap { block(it) }
 
-fun <T> ApplicationCall.somSaksbehandler(adGrupper: ADGrupper, block: (NavAnsattMedSaksbehandlerRolle) -> Either<Feil, T>) =
+fun <T> ApplicationCall.somSaksbehandler(
+    adGrupper: ADGrupper,
+    block: (NavAnsattMedSaksbehandlerRolle) -> Either<Feil, T>
+) =
     this.navAnsattMedSaksbehandlerRolle(adGrupper)
         .flatMap { block(it) }
 
 fun ApplicationCall.superbruker(adGrupper: ADGrupper) =
     navAnsattMedSaksbehandlerRolle(adGrupper).flatMap {
-        when(it) {
+        when (it) {
             is Superbruker -> it.right()
             else -> TilgangskontrollFeil.IkkeAutorisert.left()
         }
     }
+
 fun <T> ApplicationCall.somSuperbruker(adGrupper: ADGrupper, block: (Superbruker) -> Either<Feil, T>) =
     superbruker(adGrupper).flatMap { block(it) }
-
 
 
 fun <T> ApplicationCall.somHøyestTilgang(adGrupper: ADGrupper, block: (NavAnsatt) -> Either<Feil, T>): Either<Feil, T> {
@@ -39,7 +42,7 @@ fun <T> ApplicationCall.somHøyestTilgang(adGrupper: ADGrupper, block: (NavAnsat
     val erLesebruker = lesebruker(adGrupper)
 
     return if (harSaksbehandlerRolle.isRight())
-        harSaksbehandlerRolle.flatMap{ block(it) }
+        harSaksbehandlerRolle.flatMap { block(it) }
     else
         erLesebruker.flatMap { block(it) }
 }

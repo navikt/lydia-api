@@ -161,18 +161,18 @@ class SpørreundersøkelseService(
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         iaSak: IASak,
     ): Either<Feil, Spørreundersøkelse> =
-	    iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
-		    spørreundersøkelseRepository.opprettSpørreundersøkelse(
-			    orgnummer = orgnummer,
-			    prosessId = prosess.id,
-			    saksbehandler = saksbehandler,
-			    spørreundersøkelseId = UUID.randomUUID(),
-			    vertId = UUID.randomUUID(),
-			    temaer = spørreundersøkelseRepository.hentAktiveTema(),
-		    )
-	    }.onRight { behovsvurdering ->
-		    behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
-	    }
+        iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
+            spørreundersøkelseRepository.opprettSpørreundersøkelse(
+                orgnummer = orgnummer,
+                prosessId = prosess.id,
+                saksbehandler = saksbehandler,
+                spørreundersøkelseId = UUID.randomUUID(),
+                vertId = UUID.randomUUID(),
+                temaer = spørreundersøkelseRepository.hentAktiveTema(),
+            )
+        }.onRight { behovsvurdering ->
+            behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
+        }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, Spørreundersøkelse> {
         val kartlegging = spørreundersøkelseRepository.hentSpørreundersøkelse(kartleggingId)

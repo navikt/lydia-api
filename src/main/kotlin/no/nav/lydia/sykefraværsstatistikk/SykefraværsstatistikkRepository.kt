@@ -28,12 +28,12 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
     """.trimIndent()
 
     fun hentBransjeSykefraværsstatistikk(
-            bransje: String,
-            gjeldendePeriode: Periode
+        bransje: String,
+        gjeldendePeriode: Periode
     ): BransjeSykefraværsstatistikk? =
-            using(sessionOf(dataSource)) { session ->
-                val query = queryOf(
-                        statement = """
+        using(sessionOf(dataSource)) { session ->
+            val query = queryOf(
+                statement = """
                     SELECT
                         siste_kvartal.bransje as siste_kvartal_bransje,
                         siste_kvartal.arstall as siste_kvartal_arstall,
@@ -54,20 +54,20 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
                         AND siste_kvartal.kvartal = ${gjeldendePeriode.kvartal}
                         AND siste_kvartal.arstall = ${gjeldendePeriode.årstall}
                 """.trimIndent(),
-                        paramMap = mapOf(
-                                "bransje" to bransje
-                        )
-                ).map { mapRowToBransjeSykefraværsstatistikk(it) }.asSingle
-                session.run(query)
-            }
+                paramMap = mapOf(
+                    "bransje" to bransje
+                )
+            ).map { mapRowToBransjeSykefraværsstatistikk(it) }.asSingle
+            session.run(query)
+        }
 
     fun hentNæringSykefraværsstatistikk(
-            næringskode: String,
-            gjeldendePeriode: Periode
+        næringskode: String,
+        gjeldendePeriode: Periode
     ): NæringSykefraværsstatistikk? =
-            using(sessionOf(dataSource)) { session ->
-                val query = queryOf(
-                        statement = """
+        using(sessionOf(dataSource)) { session ->
+            val query = queryOf(
+                statement = """
                     SELECT
                         siste_kvartal.naring as siste_kvartal_naring,
                         siste_kvartal.arstall as siste_kvartal_arstall,
@@ -90,12 +90,12 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
                         AND siste_kvartal.kvartal = ${gjeldendePeriode.kvartal}
                         AND siste_kvartal.arstall = ${gjeldendePeriode.årstall}
                 """.trimIndent(),
-                        paramMap = mapOf(
-                                "naring" to næringskode
-                        )
-                ).map { mapRowToNæringSykefraværsstatistikk(it) }.asSingle
-                session.run(query)
-            }
+                paramMap = mapOf(
+                    "naring" to næringskode
+                )
+            ).map { mapRowToNæringSykefraværsstatistikk(it) }.asSingle
+            session.run(query)
+        }
 
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
         sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
@@ -124,7 +124,7 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
     fun insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(
         sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>
     ) {
-        using(sessionOf(dataSource)) {session ->
+        using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertBehandletBransjeStatistikk(
                     behandletBransjeSykefraværsstatistikk = sykefraværsstatistikk.tilBehandletBransjeSykefraværsstatistikk()
@@ -232,8 +232,8 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
         session.transaction { tx ->
             gradertSykemeldingImportDtoList.tilBehandletImportGradertSykmelding().forEach {
                 tx.run(
-                        queryOf(
-                                """
+                    queryOf(
+                        """
                             INSERT INTO sykefravar_statistikk_virksomhet_gradering (
                                 orgnr,
                                 arstall,
@@ -262,17 +262,17 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
                                 maskert = :maskert,
                                 endret = now()
                         """.trimIndent(),
-                                mapOf(
-                                        "orgnr" to it.kode,
-                                        "arstall" to it.årstall,
-                                        "kvartal" to it.kvartal,
-                                        "antall_personer" to it.antallPersoner,
-                                        "tapte_dagsverk_gradert" to it.tapteDagsverkGradert,
-                                        "tapte_dagsverk" to it.tapteDagsverk,
-                                        "prosent" to it.prosent,
-                                        "maskert" to it.erMaskert
-                                )
-                        ).asUpdate
+                        mapOf(
+                            "orgnr" to it.kode,
+                            "arstall" to it.årstall,
+                            "kvartal" to it.kvartal,
+                            "antall_personer" to it.antallPersoner,
+                            "tapte_dagsverk_gradert" to it.tapteDagsverkGradert,
+                            "tapte_dagsverk" to it.tapteDagsverk,
+                            "prosent" to it.prosent,
+                            "maskert" to it.erMaskert
+                        )
+                    ).asUpdate
                 )
             }
         }
@@ -347,7 +347,9 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
         }
     }
 
-    private fun TransactionalSession.insertVirksomhetsstatistikkSiste4Kvartal(behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe: List<BehandletVirksomhetSykefraværsstatistikkSiste4Kvartal>) =
+    private fun TransactionalSession.insertVirksomhetsstatistikkSiste4Kvartal(
+        behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe: List<BehandletVirksomhetSykefraværsstatistikkSiste4Kvartal>
+    ) =
         behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe.forEach { sykefraværsstatistikk ->
             run(
                 queryOf(
@@ -577,32 +579,32 @@ class SykefraværsstatistikkRepository(val dataSource: DataSource) {
 
     private val kvartalListeType = object : TypeToken<List<Kvartal>>() {}.type
     private fun mapRowToSiste4Kvartal(row: Row) = Siste4Kvartal(
-            prosent = row.double("siste4_prosent"),
-            tapteDagsverk = row.double("siste4_tapte_dagsverk"),
-            muligeDagsverk = row.double("siste4_mulige_dagsverk"),
-            erMaskert = row.boolean("siste4_maskert"),
-            kvartaler = gson.fromJson(row.string("siste4_kvartaler"), kvartalListeType)
+        prosent = row.double("siste4_prosent"),
+        tapteDagsverk = row.double("siste4_tapte_dagsverk"),
+        muligeDagsverk = row.double("siste4_mulige_dagsverk"),
+        erMaskert = row.boolean("siste4_maskert"),
+        kvartaler = gson.fromJson(row.string("siste4_kvartaler"), kvartalListeType)
     )
 
     private fun mapRowToSistePubliserteKvartal(row: Row) = SistePubliserteKvartal(
-            årstall = row.int("siste_kvartal_arstall"),
-            kvartal = row.int("siste_kvartal_kvartal"),
-            prosent = row.double("siste_kvartal_prosent"),
-            tapteDagsverk = row.double("siste_kvartal_tapte_dagsverk"),
-            muligeDagsverk = row.double("siste_kvartal_mulige_dagsverk"),
-            antallPersoner = row.int("siste_kvartal_antall_personer"),
-            erMaskert = row.boolean("siste_kvartal_maskert")
+        årstall = row.int("siste_kvartal_arstall"),
+        kvartal = row.int("siste_kvartal_kvartal"),
+        prosent = row.double("siste_kvartal_prosent"),
+        tapteDagsverk = row.double("siste_kvartal_tapte_dagsverk"),
+        muligeDagsverk = row.double("siste_kvartal_mulige_dagsverk"),
+        antallPersoner = row.int("siste_kvartal_antall_personer"),
+        erMaskert = row.boolean("siste_kvartal_maskert")
     )
 
     private fun mapRowToNæringSykefraværsstatistikk(row: Row) = NæringSykefraværsstatistikk(
-            næring = row.string("siste_kvartal_naring"),
-            sisteGjeldendeKvartal = mapRowToSistePubliserteKvartal(row),
-            siste4Kvartal = mapRowToSiste4Kvartal(row)
+        næring = row.string("siste_kvartal_naring"),
+        sisteGjeldendeKvartal = mapRowToSistePubliserteKvartal(row),
+        siste4Kvartal = mapRowToSiste4Kvartal(row)
     )
 
     private fun mapRowToBransjeSykefraværsstatistikk(row: Row) = BransjeSykefraværsstatistikk(
-            bransje = row.string("siste_kvartal_bransje"),
-            sisteGjeldendeKvartal = mapRowToSistePubliserteKvartal(row),
-            siste4Kvartal = mapRowToSiste4Kvartal(row)
+        bransje = row.string("siste_kvartal_bransje"),
+        sisteGjeldendeKvartal = mapRowToSistePubliserteKvartal(row),
+        siste4Kvartal = mapRowToSiste4Kvartal(row)
     )
 }

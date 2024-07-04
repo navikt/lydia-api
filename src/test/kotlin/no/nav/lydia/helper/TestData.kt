@@ -27,11 +27,15 @@ class TestData(
         const val NÆRINGSKODE_BARNEHAGER = "88911"
         val NÆRING_BARNEHAGE = Næringsgruppe(kode = "88", navn = "Omsorg uten botilbud, barnehager mv.")
 
-        val NÆRINGSMIDLER_IKKE_NEVNT = Næringsgruppe(kode = "10.890", navn = "Produksjon av næringsmidler ikke nevnt annet sted")
+        val NÆRINGSMIDLER_IKKE_NEVNT =
+            Næringsgruppe(kode = "10.890", navn = "Produksjon av næringsmidler ikke nevnt annet sted")
         val BARNEHAGER = Næringsgruppe(kode = "88.911", navn = "Barnehager")
         val NÆRING_MED_BINDESTREK = Næringsgruppe(kode = "91.012", navn = "Drift av fag- og forskningsbiblioteker")
         val BOLIGBYGGELAG = Næringsgruppe(kode = "41.101", navn = "Boligbyggelag")
-        val DYRKING_AV_KORN = Næringsgruppe(kode = "$NÆRING_JORDBRUK.110", navn = "Dyrking av korn (unntatt ris), belgvekster og oljeholdige vekster")
+        val DYRKING_AV_KORN = Næringsgruppe(
+            kode = "$NÆRING_JORDBRUK.110",
+            navn = "Dyrking av korn (unntatt ris), belgvekster og oljeholdige vekster"
+        )
         val DYRKING_AV_RIS = Næringsgruppe(kode = "$NÆRING_JORDBRUK.120", navn = "Dyrking av ris")
 
         val SKOGSKJØTSEL = Næringsgruppe(kode = "$NÆRING_SKOGBRUK.100", navn = "Skogskjøtsel")
@@ -69,12 +73,12 @@ class TestData(
             return rekursivtLagPerioder(antall, mutableListOf(), this)
         }
 
-        fun datoSentIGjeldendePeriode() = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal*3), 30)
+        fun datoSentIGjeldendePeriode() = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal * 3), 30)
 
         private fun rekursivtLagPerioder(
-                perioderIgjen: Int,
-                perioder: MutableList<Periode>,
-                periode: Periode
+            perioderIgjen: Int,
+            perioder: MutableList<Periode>,
+            periode: Periode
         ): List<Periode> {
             return if (perioderIgjen == 0) {
                 perioder
@@ -88,7 +92,7 @@ class TestData(
     private val sykefraværsstatistikkVirksomhetKafkaMeldinger =
         mutableSetOf<SykefraværsstatistikkPerKategoriImportDto>()
     private val graderingStatistikkVirksomhetKafkaMeldinger =
-            mutableSetOf<GradertSykemeldingImportDto>()
+        mutableSetOf<GradertSykemeldingImportDto>()
     private val sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger =
         mutableSetOf<SykefraværsstatistikkMetadataVirksomhetImportDto>()
     val brregVirksomheter = mutableSetOf<TestVirksomhet>()
@@ -165,7 +169,8 @@ class TestData(
     ): TestData {
         perioder.forEach { periode ->
             val graderingsProsent = graderingsprosent ?: (1..MAX_GRADERINGSPROSENT).random().toDouble()
-            val tapteDagsverkGradert = (tapteDagsverk * graderingsProsent/100).toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
+            val tapteDagsverkGradert =
+                (tapteDagsverk * graderingsProsent / 100).toBigDecimal().setScale(1, RoundingMode.UP).toDouble()
             sykefraværsstatistikkVirksomhetKafkaMeldinger.add(
                 lagSykefraværsstatistikkPerKategoriImportDto(
                     kategori = Kategori.VIRKSOMHET,
@@ -177,26 +182,29 @@ class TestData(
                 )
             )
             graderingStatistikkVirksomhetKafkaMeldinger.add(
-                    GradertSykemeldingImportDto(
-                            kategori = "VIRKSOMHET_GRADERT",
-                            kode = virksomhet.orgnr,
-                            sistePubliserteKvartal = GraderingSistePubliserteKvartal(
-                                    årstall = periode.årstall,
-                                    kvartal = periode.kvartal,
-                                    prosent = graderingsProsent,
-                                    tapteDagsverkGradert = tapteDagsverkGradert,
-                                    tapteDagsverk = tapteDagsverk,
-                                    antallPersoner = antallPersoner.toInt(),
-                                    erMaskert = false
-                            ),
-                            siste4Kvartal = GraderingSiste4Kvartal(
-                                    prosent = graderingsProsent,
-                                    tapteDagsverkGradert = tapteDagsverkGradert,
-                                    tapteDagsverk = tapteDagsverk,
-                                    erMaskert = false,
-                                    kvartaler = listOf(gjeldendePeriode.tilKvartal(), gjeldendePeriode.forrigePeriode().tilKvartal())
-                            )
+                GradertSykemeldingImportDto(
+                    kategori = "VIRKSOMHET_GRADERT",
+                    kode = virksomhet.orgnr,
+                    sistePubliserteKvartal = GraderingSistePubliserteKvartal(
+                        årstall = periode.årstall,
+                        kvartal = periode.kvartal,
+                        prosent = graderingsProsent,
+                        tapteDagsverkGradert = tapteDagsverkGradert,
+                        tapteDagsverk = tapteDagsverk,
+                        antallPersoner = antallPersoner.toInt(),
+                        erMaskert = false
+                    ),
+                    siste4Kvartal = GraderingSiste4Kvartal(
+                        prosent = graderingsProsent,
+                        tapteDagsverkGradert = tapteDagsverkGradert,
+                        tapteDagsverk = tapteDagsverk,
+                        erMaskert = false,
+                        kvartaler = listOf(
+                            gjeldendePeriode.tilKvartal(),
+                            gjeldendePeriode.forrigePeriode().tilKvartal()
+                        )
                     )
+                )
             )
             sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger.add(
                 SykefraværsstatistikkMetadataVirksomhetImportDto(
@@ -252,6 +260,9 @@ fun lagSykefraværsstatistikkPerKategoriImportDto(
             tapteDagsverk = tapteDagsverk * 4,
             muligeDagsverk = muligeDagsverk * 4,
             erMaskert = maskert,
-            kvartaler = listOf(TestData.gjeldendePeriode.tilKvartal(), TestData.gjeldendePeriode.forrigePeriode().tilKvartal())
+            kvartaler = listOf(
+                TestData.gjeldendePeriode.tilKvartal(),
+                TestData.gjeldendePeriode.forrigePeriode().tilKvartal()
+            )
         )
     )

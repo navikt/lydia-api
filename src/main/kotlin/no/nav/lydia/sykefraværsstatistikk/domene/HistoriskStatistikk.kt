@@ -13,7 +13,7 @@ data class HistoriskStatistikk(
 )
 
 @Serializable
-data class KategoriStatistikk (
+data class KategoriStatistikk(
     val kategori: Kategori,
     val kode: String,
     val beskrivelse: String,
@@ -21,9 +21,9 @@ data class KategoriStatistikk (
 )
 
 @Serializable
-data class Statistikkdata (
-    val kvartal : Int,
-    val årstall : Int,
-    val sykefraværsprosent : Double,
-    val maskert : Boolean
+data class Statistikkdata(
+    val kvartal: Int,
+    val årstall: Int,
+    val sykefraværsprosent: Double,
+    val maskert: Boolean
 )

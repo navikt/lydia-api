@@ -77,19 +77,21 @@ class IASak private constructor(
 
     fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) = tilstand.gyldigeNesteHendelser(navAnsatt)
 
-    private fun kanUtføreHendelse(hendelse: IASakshendelse, navAnsatt: NavAnsattMedSaksbehandlerRolle) = when (hendelse) {
-        is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(navAnsatt)
-            .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
-            .filter { it.type == hendelse.valgtÅrsak.type }
-            .any {
-                hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
-                    .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
-            }
-        else ->
-            gyldigeNesteHendelser(navAnsatt)
-                .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
-                .contains(hendelse.hendelsesType)
-    }
+    private fun kanUtføreHendelse(hendelse: IASakshendelse, navAnsatt: NavAnsattMedSaksbehandlerRolle) =
+        when (hendelse) {
+            is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(navAnsatt)
+                .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
+                .filter { it.type == hendelse.valgtÅrsak.type }
+                .any {
+                    hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
+                        .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
+                }
+
+            else ->
+                gyldigeNesteHendelser(navAnsatt)
+                    .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
+                    .contains(hendelse.hendelsesType)
+        }
 
     private fun erEierAvSak(navAnsatt: NavAnsattMedSaksbehandlerRolle) = eidAv == navAnsatt.navIdent
 
@@ -154,12 +156,12 @@ class IASak private constructor(
         abstract fun behandleHendelse(hendelse: IASakshendelse): Either<TilstandsmaskinFeil, ProsessTilstand>
 
         protected fun finnForrigeTilstand(): ProsessTilstand {
-            return when(finnForrigeTilstandBasertPåHendelsesrekke(hendelser.map { it.hendelsesType })) {
+            return when (finnForrigeTilstandBasertPåHendelsesrekke(hendelser.map { it.hendelsesType })) {
                 VIRKSOMHET_VURDERES -> VurderesTilstand()
                 VIRKSOMHET_SKAL_KONTAKTES -> KontaktesTilstand()
                 VIRKSOMHET_KARTLEGGES -> KartleggesTilstand()
                 VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand()
-                else -> throw IllegalStateException("Ugyldig forrige tilstand for hendelsesrekke ${hendelser.map { it.hendelsesType } }}")
+                else -> throw IllegalStateException("Ugyldig forrige tilstand for hendelsesrekke ${hendelser.map { it.hendelsesType }}}")
             }
         }
 
@@ -176,10 +178,11 @@ class IASak private constructor(
                 else -> generellFeil()
             }
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> = when (navAnsatt) {
-            is Superbruker -> listOf(GyldigHendelse(VIRKSOMHET_VURDERES))
-            is Saksbehandler -> emptyList()
-        }
+        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
+            when (navAnsatt) {
+                is Superbruker -> listOf(GyldigHendelse(VIRKSOMHET_VURDERES))
+                is Saksbehandler -> emptyList()
+            }
     }
 
     private inner class VurderesTilstand : ProsessTilstand(
@@ -204,6 +207,7 @@ class IASak private constructor(
                         GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
                     )
                 }
+
                 is Superbruker -> {
                     if (eidAv == null) listOf(
                         GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
@@ -308,7 +312,8 @@ class IASak private constructor(
         override fun behandleHendelse(hendelse: IASakshendelse) =
             feil("Kan ikke utføre noen hendelser i en slettet tilstand")
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> = emptyList()
+        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
+            emptyList()
     }
 
     companion object {
@@ -316,7 +321,7 @@ class IASak private constructor(
             sak.utførHendelseSomRådgiver(this, hendelse)
 
         fun tilbakeførSak(iaSak: IASak, hendelse: IASakshendelse) =
-            when(hendelse) {
+            when (hendelse) {
                 is VirksomhetIkkeAktuellHendelse -> iaSak.behandleHendelse(hendelse)
                 else -> throw IllegalStateException("Kan ikke tilbakeføre sak med hendelsestype ${hendelse.hendelsesType.name}")
             }
@@ -325,7 +330,8 @@ class IASak private constructor(
         fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
             val hendelserSomEndrerStatus = hendelser.filter { it != TA_EIERSKAP_I_SAK }
 
-            val hendelsesRekkeMedHåndterteTilbakeHendelser = hendelsesRekkeMedHåndterteEldreTilbakeHendelser(hendelserSomEndrerStatus)
+            val hendelsesRekkeMedHåndterteTilbakeHendelser =
+                hendelsesRekkeMedHåndterteEldreTilbakeHendelser(hendelserSomEndrerStatus)
 
             return hendelsesRekkeMedHåndterteTilbakeHendelser.nestSiste()
         }

@@ -24,14 +24,14 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 
 open class IASakshendelse(
-	val id: String,
-	val opprettetTidspunkt: LocalDateTime,
-	val saksnummer: String,
-	val hendelsesType: IASakshendelseType,
-	val orgnummer: String,
-	val opprettetAv: String,
-	val opprettetAvRolle: Rolle?,
-	val navEnhet: NavEnhet,
+    val id: String,
+    val opprettetTidspunkt: LocalDateTime,
+    val saksnummer: String,
+    val hendelsesType: IASakshendelseType,
+    val orgnummer: String,
+    val opprettetAv: String,
+    val opprettetAvRolle: Rolle?,
+    val navEnhet: NavEnhet,
 ) {
     companion object {
         fun fromDto(dto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet) =
@@ -50,7 +50,7 @@ open class IASakshendelse(
                 ).right()
             }
 
-        fun nyFørsteHendelse(orgnummer : String, superbruker: Superbruker, navEnhet: NavEnhet): IASakshendelse {
+        fun nyFørsteHendelse(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet): IASakshendelse {
             val saksnummer = ULID.random()
             return IASakshendelse(
                 id = saksnummer,
@@ -64,7 +64,11 @@ open class IASakshendelse(
             )
         }
 
-        fun IASak.nyHendelseBasertPåSak(hendelsestype: IASakshendelseType, superbruker: Superbruker, navEnhet: NavEnhet) =
+        fun IASak.nyHendelseBasertPåSak(
+            hendelsestype: IASakshendelseType,
+            superbruker: Superbruker,
+            navEnhet: NavEnhet
+        ) =
             IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -78,7 +82,14 @@ open class IASakshendelse(
     }
 
     @Serializable
-    private data class Value(val id: String, val opprettetTidspunkt: String, val orgnummer: String, val saksnummer: String, val hendelsesType: IASakshendelseType, val opprettetAv: String)
+    private data class Value(
+        val id: String,
+        val opprettetTidspunkt: String,
+        val orgnummer: String,
+        val saksnummer: String,
+        val hendelsesType: IASakshendelseType,
+        val opprettetAv: String
+    )
 
     internal open fun tilKeyValueJsonPair(): Pair<String, String> {
         val key = saksnummer
@@ -95,14 +106,14 @@ open class IASakshendelse(
 }
 
 class VirksomhetIkkeAktuellHendelse(
-	id: String,
-	opprettetTidspunkt: LocalDateTime,
-	saksnummer: String,
-	orgnummer: String,
-	opprettetAv: String,
-	opprettetAvRolle: Rolle?,
-	navEnhet: NavEnhet,
-	val valgtÅrsak: ValgtÅrsak
+    id: String,
+    opprettetTidspunkt: LocalDateTime,
+    saksnummer: String,
+    orgnummer: String,
+    opprettetAv: String,
+    opprettetAvRolle: Rolle?,
+    navEnhet: NavEnhet,
+    val valgtÅrsak: ValgtÅrsak
 ) : IASakshendelse(
     id,
     opprettetTidspunkt = opprettetTidspunkt,
@@ -114,7 +125,11 @@ class VirksomhetIkkeAktuellHendelse(
     navEnhet = navEnhet,
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, navAnsatt: NavAnsatt, navEnhet: NavEnhet): Either<Feil, VirksomhetIkkeAktuellHendelse> =
+        fun fromDto(
+            dto: IASakshendelseDto,
+            navAnsatt: NavAnsatt,
+            navEnhet: NavEnhet
+        ): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
 
                 try {
@@ -220,7 +235,7 @@ enum class IASakshendelseType {
     VIRKSOMHET_SKAL_BISTÅS,
     VIRKSOMHET_ER_IKKE_AKTUELL,
 
-//    NY_PROSESS,
+    //    NY_PROSESS,
     ENDRE_PROSESS,
 //    SLETT_PROSESS,
 

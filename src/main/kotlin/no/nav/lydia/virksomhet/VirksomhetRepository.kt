@@ -261,15 +261,15 @@ class VirksomhetRepository(val dataSource: DataSource) {
                         oppdateringsdato = now()
                 """.trimIndent()
                 tx.run(
-                        queryOf(
-                                insertSql,
-                                mapOf(
-                                        "orgnr" to virksomhet.orgnr,
-                                        "naringsundergruppe1" to virksomhet.næringsgrupper["naeringskode1"],
-                                        "naringsundergruppe2" to virksomhet.næringsgrupper["naeringskode2"],
-                                        "naringsundergruppe3" to virksomhet.næringsgrupper["naeringskode3"],
-                                )
-                        ).asUpdate
+                    queryOf(
+                        insertSql,
+                        mapOf(
+                            "orgnr" to virksomhet.orgnr,
+                            "naringsundergruppe1" to virksomhet.næringsgrupper["naeringskode1"],
+                            "naringsundergruppe2" to virksomhet.næringsgrupper["naeringskode2"],
+                            "naringsundergruppe3" to virksomhet.næringsgrupper["naeringskode3"],
+                        )
+                    ).asUpdate
                 )
             }
         }

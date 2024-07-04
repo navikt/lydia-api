@@ -37,7 +37,7 @@ class BehandletLandSykefraværsstatistikk(
 
 class BehandletBransjeSykefraværsstatistikk(
     override val statistikk: BransjeSykefravær
-): BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
+) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val bransje
         get() = statistikk.kode
 }

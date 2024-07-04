@@ -78,7 +78,8 @@ class AzureService(
         navIdent: String?,
     ): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
-        val url = "${security.azureConfig.graphDatabaseUrl}/users?\$search=\"onPremisesSamAccountName:$navIdent\"&\$select=$azureAdProps"
+        val url =
+            "${security.azureConfig.graphDatabaseUrl}/users?\$search=\"onPremisesSamAccountName:$navIdent\"&\$select=$azureAdProps"
         return hentFraAzure(url, accessToken, AzureType.NAVENHET_FRA_NAVIDENT)
             .map { json -> deserializer.decodeFromString<AzureResponse>(json) }
             .map { azureResponse -> azureResponse.value.firstOrNull() }
@@ -125,7 +126,8 @@ class AzureService(
     ): List<AzureAdBruker> {
         val antallVeilederePerSide = 800
         val alleRådgivere = mutableListOf<AzureAdBruker>()
-        var url = "${azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=$azureAdProps&\$top=$antallVeilederePerSide"
+        var url =
+            "${azureConfig.graphDatabaseUrl}/groups/$gruppeId/members?\$select=$azureAdProps&\$top=$antallVeilederePerSide"
 
         do {
             hentFraAzure(url, accessToken, AzureType.BRUKERE_I_GRUPPE)
@@ -170,7 +172,11 @@ class AzureService(
                 it.toString(Charsets.UTF_8).right()
             }, failure = {
                 Feil(
-                    feilmelding = "Feilet under henting fra Azure (${typeSpørring.name}): ${it.message} ${it.errorData.toString(Charsets.UTF_8)}",
+                    feilmelding = "Feilet under henting fra Azure (${typeSpørring.name}): ${it.message} ${
+                        it.errorData.toString(
+                            Charsets.UTF_8
+                        )
+                    }",
                     httpStatusCode = HttpStatusCode.InternalServerError
                 ).left()
             })

@@ -49,8 +49,10 @@ class StatusoversiktApiTest {
 
     @Test
     fun `skal kunne filtrere på sektor`() {
-        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet(),
-            sektor = Sektor.KOMMUNAL)
+        val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
+            nyVirksomhet = TestVirksomhet.nyVirksomhet(),
+            sektor = Sektor.KOMMUNAL
+        )
 
         nySakIViBistår(orgnummer = virksomhet.orgnr)
             .leggTilLeveranseOgFullførSak()

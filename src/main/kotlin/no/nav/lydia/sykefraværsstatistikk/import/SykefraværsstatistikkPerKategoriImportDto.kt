@@ -71,7 +71,8 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     tapteDagsverk = this.sistePubliserteKvartal.tapteDagsverk ?: 0.0,
                     maskert = this.sistePubliserteKvartal.erMaskert,
                     kategori = this.kategori.name,
-                    kode = this.kode.tilSektor()?.kode ?: throw IllegalArgumentException("Ukjent sektor"), // Dette skal aldri skje, DTO er allerede filtrert
+                    kode = this.kode.tilSektor()?.kode
+                        ?: throw IllegalArgumentException("Ukjent sektor"), // Dette skal aldri skje, DTO er allerede filtrert
                 )
             )
 
@@ -161,6 +162,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                         sistePubliserteKvartal = it.sistePubliserteKvartal,
                         siste4Kvartal = it.siste4Kvartal
                     )
+
                     else -> it
                 }
             }

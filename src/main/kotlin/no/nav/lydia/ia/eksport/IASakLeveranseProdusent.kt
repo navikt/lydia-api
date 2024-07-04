@@ -55,21 +55,21 @@ class IASakLeveranseProdusent(
 
     @Serializable
     data class IASakLeveranseValue(
-	    val id: Int,
-	    val saksnummer: String,
-	    val iaTjenesteId: Int,
-	    val iaTjenesteNavn: String,
-	    val iaModulId: Int,
-	    val iaModulNavn: String,
-	    val frist: LocalDate,
-	    val status: IASakLeveranseStatus,
-	    val opprettetAv: String,
-	    val sistEndret: LocalDateTime,
-	    val sistEndretAv: String,
-	    val sistEndretAvRolle: Rolle?,
-	    val fullført: LocalDateTime?,
-	    val enhetsnummer: String,
-	    val enhetsnavn: String,
-	    val opprettetTidspunkt: LocalDateTime?
+        val id: Int,
+        val saksnummer: String,
+        val iaTjenesteId: Int,
+        val iaTjenesteNavn: String,
+        val iaModulId: Int,
+        val iaModulNavn: String,
+        val frist: LocalDate,
+        val status: IASakLeveranseStatus,
+        val opprettetAv: String,
+        val sistEndret: LocalDateTime,
+        val sistEndretAv: String,
+        val sistEndretAvRolle: Rolle?,
+        val fullført: LocalDateTime?,
+        val enhetsnummer: String,
+        val enhetsnavn: String,
+        val opprettetTidspunkt: LocalDateTime?
     )
 }

@@ -9,6 +9,7 @@ class WiremockContainerHelper {
     private val salesforceMock: WireMockServer
     private val naringMock: WireMockServer
     private val journalpostMock: WireMockServer
+
     init {
         azureMock = lagMockServer("azure")
         salesforceMock = lagMockServer("salesforce")

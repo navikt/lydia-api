@@ -149,7 +149,7 @@ class IASakTest {
     }
 
     @Test
-    fun `en sak skal inneholde alle sine hendelser`(){
+    fun `en sak skal inneholde alle sine hendelser`() {
         val h1_ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val h2_vurderes = nyHendelse(
             VIRKSOMHET_VURDERES,
@@ -170,7 +170,7 @@ class IASakTest {
 
 
     @Test
-    fun `det skal gå an å angre på en sak`(){
+    fun `det skal gå an å angre på en sak`() {
         val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
@@ -178,7 +178,8 @@ class IASakTest {
         val tilbakeMidtI = kontaktes.nesteHendelse(TILBAKE)
         val kontaktesAllikevel = tilbakeMidtI.nesteHendelse(VIRKSOMHET_SKAL_KONTAKTES)
         val ikkeAktuell = kontaktesAllikevel.nesteHendelse(VIRKSOMHET_ER_IKKE_AKTUELL)
-        val hendelserPåSak = listOf(ny_sak, vurderes, eierskap, kontaktes, tilbakeMidtI, kontaktesAllikevel,  ikkeAktuell)
+        val hendelserPåSak =
+            listOf(ny_sak, vurderes, eierskap, kontaktes, tilbakeMidtI, kontaktesAllikevel, ikkeAktuell)
         val sak = IASak.fraHendelser(hendelserPåSak)
         sak.status shouldBe IKKE_AKTUELL
 
@@ -206,15 +207,17 @@ class IASakTest {
         val viBistår = kartlegges.nesteHendelse(VIRKSOMHET_SKAL_BISTÅS)
         val fullfør = viBistår.nesteHendelse(FULLFØR_BISTAND)
 
-        val sak = IASak.fraHendelser(listOf(
-            ny_sak,
-            vurderes,
-            eierskap,
-            kontaktes,
-            kartlegges,
-            viBistår,
-            fullfør,
-        ))
+        val sak = IASak.fraHendelser(
+            listOf(
+                ny_sak,
+                vurderes,
+                eierskap,
+                kontaktes,
+                kartlegges,
+                viBistår,
+                fullfør,
+            )
+        )
 
         sak.status shouldBe FULLFØRT
         sak.hendelser shouldContainInOrder listOf(
@@ -242,6 +245,7 @@ class IASakTest {
         )
         IASak.finnForrigeTilstandBasertPåHendelsesrekke(utenTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
     }
+
     @Test
     fun `teste utenTilbakeMedIkkeAktuell finnforrigetilstand`() {
         val utenTilbakeMedIkkeAktuell = listOf(
@@ -253,6 +257,7 @@ class IASakTest {
         )
         IASak.finnForrigeTilstandBasertPåHendelsesrekke(utenTilbakeMedIkkeAktuell) shouldBe VIRKSOMHET_SKAL_KONTAKTES
     }
+
     @Test
     fun `teste medIrrelevantTilbake finnforrigetilstand`() {
         val medIrrelevantTilbake = listOf(
@@ -266,6 +271,7 @@ class IASakTest {
         )
         IASak.finnForrigeTilstandBasertPåHendelsesrekke(medIrrelevantTilbake) shouldBe VIRKSOMHET_SKAL_KONTAKTES
     }
+
     @Test
     fun `teste medEnRelevantTilbake finnforrigetilstand`() {
         val medEnRelevantTilbake = listOf(
@@ -372,7 +378,8 @@ class IASakTest {
         val førsteNavngivning = kartlegges.nesteHendelse(ENDRE_PROSESS)
         val andreNavngivning = førsteNavngivning.nesteHendelse(ENDRE_PROSESS)
 
-        val hendelsesRekke = listOf(ny_sak,vurderes,medEier,kontaktes,kartlegges,førsteNavngivning,andreNavngivning)
+        val hendelsesRekke =
+            listOf(ny_sak, vurderes, medEier, kontaktes, kartlegges, førsteNavngivning, andreNavngivning)
         val sak = IASak.fraHendelser(hendelsesRekke)
         sak.status shouldBe KARTLEGGES
     }
@@ -434,7 +441,13 @@ class IASakTest {
         IASak.fraHendelser(liste).status shouldBe KARTLEGGES
     }
 
-    private fun nyHendelse(type: IASakshendelseType, saksnummer: String, orgnummer: String, navAnsatt: NavAnsatt, navEnhet: NavEnhet = IASakTest.navEnhet) =
+    private fun nyHendelse(
+        type: IASakshendelseType,
+        saksnummer: String,
+        orgnummer: String,
+        navAnsatt: NavAnsatt,
+        navEnhet: NavEnhet = IASakTest.navEnhet
+    ) =
         IASakshendelse(
             id = ULID.random(),
             opprettetTidspunkt = LocalDateTime.now(),
@@ -455,9 +468,13 @@ class IASakTest {
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
-                valgtÅrsak = ValgtÅrsak(type =  NAV_IGANGSETTER_IKKE_TILTAK, begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK)),
+                valgtÅrsak = ValgtÅrsak(
+                    type = NAV_IGANGSETTER_IKKE_TILTAK,
+                    begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK)
+                ),
                 navEnhet = navEnhet
             )
+
             ENDRE_PROSESS -> ProsessHendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
@@ -468,6 +485,7 @@ class IASakTest {
                 prosessDto = IAProsessDto(1, saksnummer, "Navn", "Aktiv"),
                 navEnhet = navEnhet
             )
+
             else -> IASakshendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),

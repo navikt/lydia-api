@@ -32,7 +32,11 @@ class GeografiService {
 
     fun hentFylkerOgKommuner(): List<FylkeOgKommuner> {
         return alleFylker
-            .map { fylke -> FylkeOgKommuner(fylke, alleKommuner.filter { kommune -> kommune.nummer.take(2) == fylke.nummer }) }
+            .map { fylke ->
+                FylkeOgKommuner(
+                    fylke,
+                    alleKommuner.filter { kommune -> kommune.nummer.take(2) == fylke.nummer })
+            }
             .toMutableList()
     }
 

@@ -149,17 +149,21 @@ class AuditLogTest {
     fun `auditlogger uthenting av hendelser på IA-sak på et gyldig saksnummer`() {
         val orgnummer = nyttOrgnummer()
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
-        SakHelper.hentSamarbeidshistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
-            lydiaApiContainer shouldContainLog auditLog(
-                request = it.first,
-                navIdent = mockOAuth2Server.superbruker1.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-                tillat = Tillat.Ja,
-                saksnummer = sak.saksnummer
-            )
-        }
-        SakHelper.hentSamarbeidshistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.brukerUtenTilgangsrolle.token)
+        SakHelper.hentSamarbeidshistorikkRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+            .also {
+                lydiaApiContainer shouldContainLog auditLog(
+                    request = it.first,
+                    navIdent = mockOAuth2Server.superbruker1.navIdent,
+                    orgnummer = orgnummer,
+                    auditType = AuditType.access,
+                    tillat = Tillat.Ja,
+                    saksnummer = sak.saksnummer
+                )
+            }
+        SakHelper.hentSamarbeidshistorikkRespons(
+            orgnummer = orgnummer,
+            token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+        )
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
@@ -175,7 +179,10 @@ class AuditLogTest {
     @Test
     fun `auditlogger uthenting av sykefraværsstatistikk på en enkelt virksomhet`() {
         val orgnummer = "917482498"
-        StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).also {
+        StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(
+            orgnummer = orgnummer,
+            token = mockOAuth2Server.lesebruker.token
+        ).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
                 navIdent = mockOAuth2Server.lesebruker.navIdent,
@@ -201,7 +208,10 @@ class AuditLogTest {
     @Test
     fun `auditlogger uthenting av sykefraværsstatistikk med feilkode på en ikke eksisterende virksomhet`() {
         val orgnummer = "ikke_org_nr"
-        StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).also {
+        StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(
+            orgnummer = orgnummer,
+            token = mockOAuth2Server.lesebruker.token
+        ).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
                 navIdent = mockOAuth2Server.lesebruker.navIdent,
@@ -248,16 +258,19 @@ class AuditLogTest {
     fun `auditlogger søk med få parametere`() {
         val saksbehandler = mockOAuth2Server.saksbehandler1
         StatistikkHelper.hentSykefravær()
-        .also {
-            lydiaApiContainer shouldContainLog auditLog(
-                path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?$KOMMUNER=&$FYLKER=&$NÆRINGSGRUPPER=&$SORTERINGSNØKKEL".substring(0, 70),
-                method = "GET",
-                navIdent = saksbehandler.navIdent,
-                auditType = AuditType.access,
-                tillat = Tillat.Ja,
-                melding = "Søk med parametere: sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
-            )
-        }
+            .also {
+                lydiaApiContainer shouldContainLog auditLog(
+                    path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?$KOMMUNER=&$FYLKER=&$NÆRINGSGRUPPER=&$SORTERINGSNØKKEL".substring(
+                        0,
+                        70
+                    ),
+                    method = "GET",
+                    navIdent = saksbehandler.navIdent,
+                    auditType = AuditType.access,
+                    tillat = Tillat.Ja,
+                    melding = "Søk med parametere: sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
+                )
+            }
     }
 
     @Test
@@ -364,6 +377,6 @@ class AuditLogTest {
                 "flexString1=${tillat.tillat}" +
                 (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
                 (feilkode?.let { " flexString3Label=feilkode flexString3=$it" } ?: "") +
-                (melding?.let { " msg=${it.replace("[","\\[").replace("]","\\]")}" } ?: "")
+                (melding?.let { " msg=${it.replace("[", "\\[").replace("]", "\\]")}" } ?: "")
                 ).replace("|", "\\|").replace("?", "\\?").toRegex()
 }

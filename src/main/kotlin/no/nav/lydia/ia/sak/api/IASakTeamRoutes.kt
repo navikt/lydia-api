@@ -29,8 +29,8 @@ fun Route.iaSakTeam(
     post("$IA_SAK_TEAM_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val iaSak = iaSakService.hentIASak(saksnummer).fold(
-            {feil -> return@post call.sendFeil(feil)},
-            {iaSak -> iaSak}
+            { feil -> return@post call.sendFeil(feil) },
+            { iaSak -> iaSak }
         )
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->

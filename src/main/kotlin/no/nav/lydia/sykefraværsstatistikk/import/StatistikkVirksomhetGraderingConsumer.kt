@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 
-object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
+object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private lateinit var job: Job
     private lateinit var kafka: Kafka
@@ -59,20 +59,26 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 sykefraværsstatistikkService.lagreStatistikkVirksomhetGradering(
-                                   records.tilGradertSykemeldingImportDto()
+                                    records.tilGradertSykemeldingImportDto()
                                 )
                                 logger.info("Lagret ${records.count()} meldinger i StatistikkVirksomhetGraderingConsumer (topic '$topicNavn') ")
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
-                            logger.warn("Had a retriable exception in StatistikkVirksomhetGraderingConsumer (topic '$topicNavn'), retrying", e)
+                            logger.warn(
+                                "Had a retriable exception in StatistikkVirksomhetGraderingConsumer (topic '$topicNavn'), retrying",
+                                e
+                            )
                         }
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
                     logger.info("StatistikkVirksomhetGraderingConsumer (topic '$topicNavn')  is shutting down...")
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner i StatistikkVirksomhetGraderingConsumer (topic '$topicNavn')", e)
+                    logger.error(
+                        "Exception is shutting down kafka listner i StatistikkVirksomhetGraderingConsumer (topic '$topicNavn')",
+                        e
+                    )
                     throw e
                 }
             }
@@ -108,7 +114,11 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk  {
         return if (key.kategori == "VIRKSOMHET_GRADERT" && key.kode.isNotEmpty()) {
             true
         } else {
-            logger.warn("Feil formatert Kafka melding i topic ${consumerRecord.topic()} for key ${consumerRecord.key().trim()}")
+            logger.warn(
+                "Feil formatert Kafka melding i topic ${consumerRecord.topic()} for key ${
+                    consumerRecord.key().trim()
+                }"
+            )
             false
         }
     }

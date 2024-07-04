@@ -45,7 +45,10 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 url("${gyldigToken.instanceUrl}$QUERY_PATH")
                 header("Accept", "application/json")
                 header("Authorization", "Bearer ${gyldigToken.accessToken}")
-                parameter("q", "SELECT Id, INT_OrganizationNumber__c, TAG_Partner_Status__c FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'")
+                parameter(
+                    "q",
+                    "SELECT Id, INT_OrganizationNumber__c, TAG_Partner_Status__c FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'"
+                )
             }
 
             if (!response.status.isSuccess()) {
@@ -81,7 +84,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
 
     private suspend fun hentNyttTokenFraSalesforce(): Either<Feil, SalesforceAccessToken> {
         val tokenUrl = "${salesforce.tokenHost}/services/oauth2/token"
-        val response = httpClient.submitForm (
+        val response = httpClient.submitForm(
             url = tokenUrl,
             formParameters = parameters {
                 append("grant_type", "password")

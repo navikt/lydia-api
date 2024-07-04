@@ -46,8 +46,10 @@ fun Route.sykefraværsstatistikk(
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             call.request.søkeparametere(geografiService, navAnsatt = navAnsatt)
         }.also {
-            auditLog.auditloggEither(call = call, either = it, orgnummer = null, auditType = AuditType.access,
-                melding = it.getOrNull()?.toLogString(), severity = "INFO")
+            auditLog.auditloggEither(
+                call = call, either = it, orgnummer = null, auditType = AuditType.access,
+                melding = it.getOrNull()?.toLogString(), severity = "INFO"
+            )
         }.map { søkeparametere ->
             sykefraværsstatistikkService.søkEtterVirksomheter(søkeparametere = søkeparametere)
         }.map { sykefraværsstatistikkVirksomheter ->
@@ -67,7 +69,7 @@ fun Route.sykefraværsstatistikk(
         }
     }
 
-     get("$SYKEFRAVÆRSSTATISTIKK_PATH/{orgnummer}/$SISTE_4_KVARTALER") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/{orgnummer}/$SISTE_4_KVARTALER") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
@@ -98,7 +100,7 @@ fun Route.sykefraværsstatistikk(
 
     get("$SYKEFRAVÆRSSTATISTIKK_PATH/{orgnummer}/$HISTORISK_STATISTIKK") {
         val orgnummer =
-                call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
+            call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentHistoriskStatistikk(orgnummer)
@@ -112,7 +114,8 @@ fun Route.sykefraværsstatistikk(
     }
 
     get("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/{næring}") {
-        val næringskode = call.parameters["næring"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig næring`)
+        val næringskode =
+            call.parameters["næring"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig næring`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentNæringsstatistikk(næringskode)
         }.map { sykefraværsstatistikk ->
@@ -123,7 +126,8 @@ fun Route.sykefraværsstatistikk(
     }
 
     get("$SYKEFRAVÆRSSTATISTIKK_PATH/bransje/{bransje}") {
-        val bransje = call.parameters["bransje"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig bransje`)
+        val bransje =
+            call.parameters["bransje"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig bransje`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sykefraværsstatistikkService.hentBransjestatistikk(bransje)
         }.map { sykefraværsstatistikk ->
@@ -133,7 +137,7 @@ fun Route.sykefraværsstatistikk(
         }
     }
 
-    get ("$SYKEFRAVÆRSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
+    get("$SYKEFRAVÆRSSTATISTIKK_PATH/$PUBLISERINGSINFO") {
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             sistePubliseringService.hentPubliseringsinfo()
         }.map { publiseringsinfo ->

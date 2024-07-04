@@ -31,7 +31,8 @@ class VirksomhetApiTest {
 
     @Test
     fun `sanity sjekk, test at vi har fått lastet inn virksomheter og næringer`() {
-        val id = postgres.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${TestVirksomhet.BERGEN.orgnr}'")
+        val id =
+            postgres.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${TestVirksomhet.BERGEN.orgnr}'")
         val næringsKode =
             postgres.hentEnkelKolonne<String>("select naringsundergruppe1 from virksomhet_naringsundergrupper where virksomhet = '$id'")
         næringsKode shouldBe TestData.BEDRIFTSRÅDGIVNING.kode
@@ -46,8 +47,8 @@ class VirksomhetApiTest {
     @Test
     fun `skal kunne hente ut opplysninger om en virksomhet`() {
         val virksomhet = hentVirksomhetsinformasjon(
-                OSLO_FLERE_ADRESSER.orgnr,
-                token = mockOAuthContainer.saksbehandler1.token
+            OSLO_FLERE_ADRESSER.orgnr,
+            token = mockOAuthContainer.saksbehandler1.token
         )
         virksomhet.orgnr shouldBe OSLO_FLERE_ADRESSER.orgnr
         virksomhet.navn shouldBe OSLO_FLERE_ADRESSER.navn
@@ -61,17 +62,17 @@ class VirksomhetApiTest {
     @Test
     fun `skal kunne vise næringer med bindestrek`() {
         val orgnummer = VirksomhetHelper.lastInnNyVirksomhet(
-                nyVirksomhet = nyVirksomhet(
-                        næringer = listOf(
-                                BARNEHAGER,
-                                NÆRING_MED_BINDESTREK
-                        )
+            nyVirksomhet = nyVirksomhet(
+                næringer = listOf(
+                    BARNEHAGER,
+                    NÆRING_MED_BINDESTREK
                 )
+            )
         ).orgnr
 
         val virksomhet = hentVirksomhetsinformasjon(
-                orgnummer = orgnummer,
-                token = mockOAuthContainer.saksbehandler1.token
+            orgnummer = orgnummer,
+            token = mockOAuthContainer.saksbehandler1.token
         )
 
         virksomhet.orgnr shouldBe orgnummer
@@ -193,7 +194,8 @@ class VirksomhetApiTest {
         val virksomhetBarnehageDto = hentVirksomhetsinformasjon(orgnummer = virksomhetBarnehage.orgnr)
         virksomhetBarnehageDto.bransje shouldBe Bransje.BARNEHAGER
 
-        val virksomhetNæringsmiddel = VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(NÆRINGSMIDLER_IKKE_NEVNT)))
+        val virksomhetNæringsmiddel =
+            VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet(næringer = listOf(NÆRINGSMIDLER_IKKE_NEVNT)))
         val virksomhetNæringsmiddelDto = hentVirksomhetsinformasjon(orgnummer = virksomhetNæringsmiddel.orgnr)
         virksomhetNæringsmiddelDto.bransje shouldBe Bransje.NÆRINGSMIDDELINDUSTRI
     }

@@ -10,24 +10,27 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 class KartleggingSvarConsumerUnitTest {
     @Test
     fun `tom verdi er ikke gyldig`() {
-        erSpørreundersøkelseSvarMeldingenGyldig(ConsumerRecord(
-            "",
-            1,
-            0L,
-            "{}",
-            "{" +
-                    "}"
-        )) shouldBe false
+        erSpørreundersøkelseSvarMeldingenGyldig(
+            ConsumerRecord(
+                "",
+                1,
+                0L,
+                "{}",
+                "{" +
+                        "}"
+            )
+        ) shouldBe false
     }
 
     @Test
     fun `riktig verdi er gyldig`() {
-        erSpørreundersøkelseSvarMeldingenGyldig(ConsumerRecord(
-            "",
-            1,
-            0L,
-            "${UUID.randomUUID()}_${UUID.randomUUID()}",
-            """
+        erSpørreundersøkelseSvarMeldingenGyldig(
+            ConsumerRecord(
+                "",
+                1,
+                0L,
+                "${UUID.randomUUID()}_${UUID.randomUUID()}",
+                """
                 {
                 "spørreundersøkelseId": "${UUID.randomUUID()}", 
                 "sesjonId": "${UUID.randomUUID()}", 
@@ -36,17 +39,19 @@ class KartleggingSvarConsumerUnitTest {
                 }
                 
             """.trimIndent()
-        )) shouldBe true
+            )
+        ) shouldBe true
     }
 
     @Test
     fun `verdi med null Ider er IKKE gyldig`() {
-        erSpørreundersøkelseSvarMeldingenGyldig(ConsumerRecord(
-            "",
-            1,
-            0L,
-            "${UUID.randomUUID()}_${UUID.randomUUID()}",
-            """
+        erSpørreundersøkelseSvarMeldingenGyldig(
+            ConsumerRecord(
+                "",
+                1,
+                0L,
+                "${UUID.randomUUID()}_${UUID.randomUUID()}",
+                """
                 {
                 "spørreundersøkelseId": null, 
                 "sesjonId": "${UUID.randomUUID()}", 
@@ -55,17 +60,19 @@ class KartleggingSvarConsumerUnitTest {
                 }
                 
             """.trimIndent()
-        )) shouldBe false
+            )
+        ) shouldBe false
     }
 
     @Test
     fun `verdi med manglende Ider er IKKE gyldig`() {
-        erSpørreundersøkelseSvarMeldingenGyldig(ConsumerRecord(
-            "",
-            1,
-            0L,
-            "${UUID.randomUUID()}_${UUID.randomUUID()}",
-            """
+        erSpørreundersøkelseSvarMeldingenGyldig(
+            ConsumerRecord(
+                "",
+                1,
+                0L,
+                "${UUID.randomUUID()}_${UUID.randomUUID()}",
+                """
                 {
                 "sesjonId": "${UUID.randomUUID()}", 
                 "spørsmålId": "${UUID.randomUUID()}", 
@@ -73,6 +80,7 @@ class KartleggingSvarConsumerUnitTest {
                 }
                 
             """.trimIndent()
-        )) shouldBe false
+            )
+        ) shouldBe false
     }
 }

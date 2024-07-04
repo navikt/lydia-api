@@ -122,11 +122,11 @@ class SykefraværsstatistikkKategoriImportTest {
             )
 
             shouldFail {
-                 SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
-                     Kategori.SEKTOR,
-                     "0",
-                     TestData.gjeldendePeriode.tilKvartal()
-                 )
+                SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(
+                    Kategori.SEKTOR,
+                    "0",
+                    TestData.gjeldendePeriode.tilKvartal()
+                )
             }
             shouldFail {
                 SykefraværsstatistikkImportTestUtils.hentStatistikkGjeldendeKvartal(

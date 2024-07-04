@@ -113,24 +113,27 @@ class SykefraværsstatistikkApiTest {
     fun `skal kunne filtrere på sykefraværsprosent UNDER eller lik BRANSJE`() {
         val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 8.0
         val BRANSJE_SYKEHJEM_PROSENT = 6.0
-        settSykefraværsprosentNæring(NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON, NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT)
+        settSykefraværsprosentNæring(
+            NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON,
+            NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT
+        )
         settSykefraværsprosentBransje(Bransje.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
-                5.0
+            Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
+            5.0
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Somatiske sykehjem", "87.102"),
-                6.0
+            Næringsgruppe("Somatiske sykehjem", "87.102"),
+            6.0
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Somatiske sykehjem", "87.102"),
-                7.0
+            Næringsgruppe("Somatiske sykehjem", "87.102"),
+            7.0
         )
 
         val results = hentSykefravær(
-                snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-                bransjeProgram = Bransje.SYKEHJEM.name
+            snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
+            bransjeProgram = Bransje.SYKEHJEM.name
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
@@ -141,24 +144,27 @@ class SykefraværsstatistikkApiTest {
     fun `skal kunne filtrere på sykefraværsprosent OVER BRANSJE`() {
         val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 4.0
         val BRANSJE_SYKEHJEM_PROSENT = 6.0
-        settSykefraværsprosentNæring(NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON, NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT)
+        settSykefraværsprosentNæring(
+            NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON,
+            NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT
+        )
         settSykefraværsprosentBransje(Bransje.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
-                5.0
+            Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
+            5.0
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Somatiske sykehjem", "87.102"),
-                6.0
+            Næringsgruppe("Somatiske sykehjem", "87.102"),
+            6.0
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Somatiske sykehjem", "87.102"),
-                7.0
+            Næringsgruppe("Somatiske sykehjem", "87.102"),
+            7.0
         )
 
         val results = hentSykefravær(
-                snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-                bransjeProgram = Bransje.SYKEHJEM.name
+            snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
+            bransjeProgram = Bransje.SYKEHJEM.name
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
@@ -170,17 +176,17 @@ class SykefraværsstatistikkApiTest {
         val NÆRING_JORDBRUK_PROSENT = 6.0
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Dyrking av ris", "01.120"),
-                4.0
+            Næringsgruppe("Dyrking av ris", "01.120"),
+            4.0
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Planteformering", "01.300"),
-                15.0
+            Næringsgruppe("Planteformering", "01.300"),
+            15.0
         )
 
         val results = hentSykefravær(
-                snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-                næringsgrupper = NÆRING_JORDBRUK
+            snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
+            næringsgrupper = NÆRING_JORDBRUK
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
@@ -194,32 +200,34 @@ class SykefraværsstatistikkApiTest {
 
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         val virksomhetLikSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Dyrking av ris", "01.120"),
-                6.0
+            Næringsgruppe("Dyrking av ris", "01.120"),
+            6.0
         )
         val virksomhetOverSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Planteformering", "01.300"),
-                15.0
+            Næringsgruppe("Planteformering", "01.300"),
+            15.0
         )
         settSykefraværsprosentNæring(NÆRING_SKOGBRUK, NÆRING_SKOGBRUK_PROSENT)
         val virksomhetUnderSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
-                8.4
+            Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
+            8.4
         )
         val virksomhetOverSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Avvirkning", "02.200"),
-                8.6
+            Næringsgruppe("Avvirkning", "02.200"),
+            8.6
         )
 
         val results = hentSykefravær(
-                snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-                næringsgrupper = listOf( NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
+            snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
+            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
-        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraværsprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
-        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraværsprosent shouldBeLessThanOrEqual NÆRING_SKOGBRUK_PROSENT }
-        results.map { it.orgnr} shouldNotContain listOf(virksomhetLikSnittJordbruk, virksomhetUnderSnittSkogbruk)
+        results.filter { it.orgnr == virksomhetOverSnittJordbruk }
+            .forAll { it.sykefraværsprosent shouldBeLessThanOrEqual NÆRING_JORDBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }
+            .forAll { it.sykefraværsprosent shouldBeLessThanOrEqual NÆRING_SKOGBRUK_PROSENT }
+        results.map { it.orgnr } shouldNotContain listOf(virksomhetLikSnittJordbruk, virksomhetUnderSnittSkogbruk)
     }
 
     @Test
@@ -227,17 +235,17 @@ class SykefraværsstatistikkApiTest {
         val NÆRING_JORDBRUK_PROSENT = 6.0
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Dyrking av ris", "01.120"),
-                4.0
+            Næringsgruppe("Dyrking av ris", "01.120"),
+            4.0
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Planteformering", "01.300"),
-                15.0
+            Næringsgruppe("Planteformering", "01.300"),
+            15.0
         )
 
         val results = hentSykefravær(
-                snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-                næringsgrupper = NÆRING_JORDBRUK
+            snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
+            næringsgrupper = NÆRING_JORDBRUK
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
@@ -251,32 +259,34 @@ class SykefraværsstatistikkApiTest {
 
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         val virksomhetUnderSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Dyrking av ris", "01.120"),
-                4.0
+            Næringsgruppe("Dyrking av ris", "01.120"),
+            4.0
         )
         val virksomhetOverSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Planteformering", "01.300"),
-                15.0
+            Næringsgruppe("Planteformering", "01.300"),
+            15.0
         )
         settSykefraværsprosentNæring(NÆRING_SKOGBRUK, NÆRING_SKOGBRUK_PROSENT)
         val virksomhetUnderSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
-                8.4
+            Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
+            8.4
         )
         val virksomhetOverSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
-                Næringsgruppe("Avvirkning", "02.200"),
-                8.6
+            Næringsgruppe("Avvirkning", "02.200"),
+            8.6
         )
 
         val results = hentSykefravær(
-                snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-                næringsgrupper = listOf( NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
+            snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
+            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
-        results.filter { it.orgnr == virksomhetOverSnittJordbruk }.forAll { it.sykefraværsprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
-        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }.forAll { it.sykefraværsprosent shouldBeGreaterThan NÆRING_SKOGBRUK_PROSENT }
-        results.map { it.orgnr} shouldNotContain listOf(virksomhetUnderSnittJordbruk, virksomhetUnderSnittSkogbruk)
+        results.filter { it.orgnr == virksomhetOverSnittJordbruk }
+            .forAll { it.sykefraværsprosent shouldBeGreaterThan NÆRING_JORDBRUK_PROSENT }
+        results.filter { it.orgnr == virksomhetOverSnittSkogbruk }
+            .forAll { it.sykefraværsprosent shouldBeGreaterThan NÆRING_SKOGBRUK_PROSENT }
+        results.map { it.orgnr } shouldNotContain listOf(virksomhetUnderSnittJordbruk, virksomhetUnderSnittSkogbruk)
     }
 
     @Test
@@ -355,13 +365,13 @@ class SykefraværsstatistikkApiTest {
     fun `skal kunne sortere sykefraværsstatistikk etter sist endret-dato`() {
         val testKommune = Kommune(navn = "Jimmyyy", nummer = "0555")
         val virksomhet1 =
-                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         val virksomhet2 =
-                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         val virksomhet3 =
-                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         val virksomhet4 =
-                lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
+            lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
 
         opprettSakForVirksomhet(orgnummer = virksomhet1.orgnr)
         opprettSakForVirksomhet(orgnummer = virksomhet2.orgnr).oppdaterHendelsesTidspunkter(antallDagerTilbake = 5)
@@ -373,7 +383,7 @@ class SykefraværsstatistikkApiTest {
         hentSykefravær(
             success = { response ->
                 val sistEndret = response.data.map { it.sistEndret }
-                sistEndret shouldContainInOrder sistEndret.sortedByDescending { it?.toEpochDays()}
+                sistEndret shouldContainInOrder sistEndret.sortedByDescending { it?.toEpochDays() }
             },
             kommuner = testKommune.nummer,
             sorteringsnokkel = sorteringsnøkkel,
@@ -381,13 +391,14 @@ class SykefraværsstatistikkApiTest {
         )
 
         hentSykefravær(
-                success = { response ->
-                    val sistEndret = response.data.map { it.sistEndret }
-                    sistEndret shouldContainInOrder sistEndret.sortedBy { it?.toEpochDays() }
-                },
-                kommuner = testKommune.nummer,
-                sorteringsnokkel = sorteringsnøkkel,
-                sorteringsretning = "asc")
+            success = { response ->
+                val sistEndret = response.data.map { it.sistEndret }
+                sistEndret shouldContainInOrder sistEndret.sortedBy { it?.toEpochDays() }
+            },
+            kommuner = testKommune.nummer,
+            sorteringsnokkel = sorteringsnøkkel,
+            sorteringsretning = "asc"
+        )
     }
 
     @Test
@@ -630,9 +641,9 @@ class SykefraværsstatistikkApiTest {
         val perioder = gjeldendePeriode.lagPerioder(12)
 
         val nyVirksomhet = lastInnNyVirksomhet(
-                nyVirksomhet = nyVirksomhet(næringer = listOf(næring)),
-                perioder = perioder,
-                sykefraværsProsent = 78.9,
+            nyVirksomhet = nyVirksomhet(næringer = listOf(næring)),
+            perioder = perioder,
+            sykefraværsProsent = 78.9,
         )
         settSykefraværsprosentNæring(
             næring = næring.tilTosifret(),
@@ -640,18 +651,18 @@ class SykefraværsstatistikkApiTest {
             prosentSistePubliserteKvartal = 75.0,
         )
         settSykefraværsprosentBransje(
-                bransje = Bransje.BARNEHAGER,
-                prosentSiste4Kvartal = 5.0,
-                prosentSistePubliserteKvartal = 77.7,
+            bransje = Bransje.BARNEHAGER,
+            prosentSiste4Kvartal = 5.0,
+            prosentSistePubliserteKvartal = 77.7,
         )
         settSykefraværsprosentSektor(
-                sektor = Sektor.STATLIG,
-                prosentSiste4Kvartal = 5.0,
-                prosentSistePubliserteKvartal = 79.9,
+            sektor = Sektor.STATLIG,
+            prosentSiste4Kvartal = 5.0,
+            prosentSistePubliserteKvartal = 79.9,
         )
         settSykefraværsprosentLand(
-                prosentSiste4Kvartal = 5.0,
-                prosentSistePubliserteKvartal = 99.9,
+            prosentSiste4Kvartal = 5.0,
+            prosentSistePubliserteKvartal = 99.9,
         )
 
         val resultat = hentStatistikkHistorikk(orgnr = nyVirksomhet.orgnr)
@@ -664,7 +675,7 @@ class SykefraværsstatistikkApiTest {
 
         resultat.virksomhetsstatistikk.statistikk.map {
             Periode(kvartal = it.kvartal, årstall = it.årstall)
-        }   shouldContainAll perioder
+        } shouldContainAll perioder
 
         resultat.virksomhetsstatistikk.statistikk.forAll { it.sykefraværsprosent shouldBe 78.9 }
         resultat.næringsstatistikk.statistikk.forAtLeastOne { it.sykefraværsprosent shouldBe 75.0 }
@@ -674,11 +685,11 @@ class SykefraværsstatistikkApiTest {
     }
 
     @Test
-    fun `skal ikke krasje dersom virksomheten ikke har bransje` () {
+    fun `skal ikke krasje dersom virksomheten ikke har bransje`() {
         val nyVirksomhet = lastInnNyVirksomhet(
-                nyVirksomhet = nyVirksomhet(næringer = listOf(SKOGSKJØTSEL)),
-                perioder = gjeldendePeriode.lagPerioder(12),
-                sykefraværsProsent = 68.9,
+            nyVirksomhet = nyVirksomhet(næringer = listOf(SKOGSKJØTSEL)),
+            perioder = gjeldendePeriode.lagPerioder(12),
+            sykefraværsProsent = 68.9,
         )
 
         val resultat = hentStatistikkHistorikk(orgnr = nyVirksomhet.orgnr)
@@ -697,9 +708,10 @@ class SykefraværsstatistikkApiTest {
         val virksomhet = lastInnNyVirksomhet(
             nyVirksomhet = nyVirksomhet(
                 næringer = listOf(næring),
-                navn = navn),
+                navn = navn
+            ),
             sektor = Sektor.PRIVAT,
-            )
+        )
 
         val resultat = hentStatistikkHistorikk(orgnr = virksomhet.orgnr)
 
@@ -1123,25 +1135,28 @@ class SykefraværsstatistikkApiTest {
 
     companion object {
         private val sistePubliserteKvartal: SistePubliserteKvartal =
-                SistePubliserteKvartal(
-                        årstall = gjeldendePeriode.årstall,
-                        kvartal = gjeldendePeriode.kvartal,
-                        tapteDagsverk = 504339.8,
-                        muligeDagsverk = 10104849.1,
-                        prosent = 6.0,
-                        erMaskert = false,
-                        antallPersoner = 3000001
-                )
+            SistePubliserteKvartal(
+                årstall = gjeldendePeriode.årstall,
+                kvartal = gjeldendePeriode.kvartal,
+                tapteDagsverk = 504339.8,
+                muligeDagsverk = 10104849.1,
+                prosent = 6.0,
+                erMaskert = false,
+                antallPersoner = 3000001
+            )
         private val siste4Kvartal: Siste4Kvartal =
-                Siste4Kvartal(
-                        tapteDagsverk = 31505774.2,
-                        muligeDagsverk = 578099000.3,
-                        prosent = 5.4,
-                        erMaskert = false,
-                        kvartaler = listOf(gjeldendePeriode.tilKvartal())
-                )
+            Siste4Kvartal(
+                tapteDagsverk = 31505774.2,
+                muligeDagsverk = 578099000.3,
+                prosent = 5.4,
+                erMaskert = false,
+                kvartaler = listOf(gjeldendePeriode.tilKvartal())
+            )
 
-        fun lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(næringsundergruppe: Næringsgruppe, prosent: Double): String {
+        fun lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
+            næringsundergruppe: Næringsgruppe,
+            prosent: Double
+        ): String {
             val virksomhet = lastInnNyVirksomhet(
                 nyVirksomhet = nyVirksomhet(næringer = listOf(næringsundergruppe)),
                 sykefraværsProsent = prosent
@@ -1150,81 +1165,81 @@ class SykefraværsstatistikkApiTest {
         }
 
         fun settSykefraværsprosentNæring(
-                næring: String,
-                prosentSiste4Kvartal: Double,
-                prosentSistePubliserteKvartal: Double = 2.0
+            næring: String,
+            prosentSiste4Kvartal: Double,
+            prosentSistePubliserteKvartal: Double = 2.0
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
-                    kategori = Kategori.NÆRING,
-                    kode = næring,
-                    kvartal = gjeldendePeriode.tilKvartal(),
-                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                kategori = Kategori.NÆRING,
+                kode = næring,
+                kvartal = gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-                    kafkaMelding.toJsonKey(),
-                    kafkaMelding.toJsonValue(),
-                    Topic.STATISTIKK_NARING_TOPIC
+                kafkaMelding.toJsonKey(),
+                kafkaMelding.toJsonValue(),
+                Topic.STATISTIKK_NARING_TOPIC
             )
         }
 
         fun settSykefraværsprosentBransje(
-                bransje: Bransje,
-                prosentSiste4Kvartal: Double,
-                prosentSistePubliserteKvartal: Double = 2.0
+            bransje: Bransje,
+            prosentSiste4Kvartal: Double,
+            prosentSistePubliserteKvartal: Double = 2.0
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
-                    kategori = Kategori.BRANSJE,
-                    kode = bransje.name.uppercase(),
-                    kvartal = gjeldendePeriode.tilKvartal(),
-                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                kategori = Kategori.BRANSJE,
+                kode = bransje.name.uppercase(),
+                kvartal = gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-                    kafkaMelding.toJsonKey(),
-                    kafkaMelding.toJsonValue(),
-                    Topic.STATISTIKK_BRANSJE_TOPIC
+                kafkaMelding.toJsonKey(),
+                kafkaMelding.toJsonValue(),
+                Topic.STATISTIKK_BRANSJE_TOPIC
             )
         }
 
         fun settSykefraværsprosentSektor(
-                sektor: Sektor,
-                prosentSiste4Kvartal: Double,
-                prosentSistePubliserteKvartal: Double = 2.0
+            sektor: Sektor,
+            prosentSiste4Kvartal: Double,
+            prosentSistePubliserteKvartal: Double = 2.0
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
-                    kategori = Kategori.SEKTOR,
-                    kode = sektor.kode,
-                    kvartal = gjeldendePeriode.tilKvartal(),
-                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                kategori = Kategori.SEKTOR,
+                kode = sektor.kode,
+                kvartal = gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-                    kafkaMelding.toJsonKey(),
-                    kafkaMelding.toJsonValue(),
-                    Topic.STATISTIKK_SEKTOR_TOPIC
+                kafkaMelding.toJsonKey(),
+                kafkaMelding.toJsonValue(),
+                Topic.STATISTIKK_SEKTOR_TOPIC
             )
         }
 
         fun settSykefraværsprosentLand(
-                prosentSiste4Kvartal: Double,
-                prosentSistePubliserteKvartal: Double = 2.0
+            prosentSiste4Kvartal: Double,
+            prosentSistePubliserteKvartal: Double = 2.0
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
-                    kategori = Kategori.LAND,
-                    kode = LANDKODE_NO,
-                    kvartal = gjeldendePeriode.tilKvartal(),
-                    sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                    siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                kategori = Kategori.LAND,
+                kode = LANDKODE_NO,
+                kvartal = gjeldendePeriode.tilKvartal(),
+                sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
-                    kafkaMelding.toJsonKey(),
-                    kafkaMelding.toJsonValue(),
-                    Topic.STATISTIKK_LAND_TOPIC
+                kafkaMelding.toJsonKey(),
+                kafkaMelding.toJsonValue(),
+                Topic.STATISTIKK_LAND_TOPIC
             )
         }
     }

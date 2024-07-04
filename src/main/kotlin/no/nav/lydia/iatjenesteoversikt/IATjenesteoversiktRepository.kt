@@ -34,7 +34,9 @@ class IATjenesteoversiktRepository(val dataSource: DataSource) {
                            join modul on iasak_leveranse.modul = modul.id
                            join ia_tjeneste on modul.ia_tjeneste = ia_tjeneste.id
                     where eid_av = :navident
-                    and ia_sak.status in (${IAProsessStatus.entries.filter { !it.regnesSomAvsluttet() }.joinToString { "'${it.name}'" }})
+                    and ia_sak.status in (${
+                        IAProsessStatus.entries.filter { !it.regnesSomAvsluttet() }.joinToString { "'${it.name}'" }
+                    })
                     and iasak_leveranse.status = :leveransestatus; 
                 """.trimIndent(),
                     mapOf(

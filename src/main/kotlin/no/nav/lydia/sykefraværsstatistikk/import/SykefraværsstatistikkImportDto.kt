@@ -25,7 +25,7 @@ data class BransjeSykefravær(
     override val maskert: Boolean,
     override val kategori: String,
     override val kode: String,
-): AggregertSykefraværsstatistikk()
+) : AggregertSykefraværsstatistikk()
 
 data class NæringSykefravær(
     override val kvartal: Int,

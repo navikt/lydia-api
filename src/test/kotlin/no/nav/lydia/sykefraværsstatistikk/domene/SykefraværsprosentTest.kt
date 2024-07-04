@@ -7,7 +7,7 @@ import kotlin.test.Test
 
 class SykefraværsprosentTest {
     @Test
-    fun  `gyldig sykefraværsprosent skal validere`() {
+    fun `gyldig sykefraværsprosent skal validere`() {
         listOf(
             "0", "7.5", "40.0", "100", "100.0000"
         ).forAll { it.tilSykefraværsProsent().isRight() shouldBe true }
@@ -24,7 +24,7 @@ class SykefraværsprosentTest {
     fun `null og tomme skal validere og være null`() {
         listOf("", null).forAll { inputstring ->
             inputstring.tilSykefraværsProsent().isRight() shouldBe true
-            inputstring.tilSykefraværsProsent().map {sykefraværsprosent ->
+            inputstring.tilSykefraværsProsent().map { sykefraværsprosent ->
                 sykefraværsprosent shouldBe null
             }
         }

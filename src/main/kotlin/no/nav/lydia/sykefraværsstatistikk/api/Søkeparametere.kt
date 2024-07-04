@@ -100,7 +100,7 @@ data class Søkeparametere(
             }
 
         fun filtrerPåSektor(søkeparametere: Søkeparametere) =
-            if(søkeparametere.sektor.isEmpty()) ""
+            if (søkeparametere.sektor.isEmpty()) ""
             else " AND sektor in (select unnest(:sektorer)) "
 
         fun filtrerPåEiere(søkeparametere: Søkeparametere) =
@@ -127,15 +127,23 @@ data class Søkeparametere(
             else " AND kommunenummer in (select unnest(:kommuner)) "
 
         fun filtrerPåSnitt(søkeparametere: Søkeparametere) =
-                søkeparametere.snittFilter?.let { snittFilter ->
-                        """
+            søkeparametere.snittFilter?.let { snittFilter ->
+                """
                             AND (
-                              (statistikk.bransje_prosent is null AND statistikk.prosent ${snittFilterTilSammenligningstegn(snittFilter)} statistikk.naring_prosent) 
+                              (statistikk.bransje_prosent is null AND statistikk.prosent ${
+                    snittFilterTilSammenligningstegn(
+                        snittFilter
+                    )
+                } statistikk.naring_prosent) 
                                 OR 
-                              (statistikk.bransje_prosent is not null AND statistikk.prosent ${snittFilterTilSammenligningstegn(snittFilter)} statistikk.bransje_prosent)
+                              (statistikk.bransje_prosent is not null AND statistikk.prosent ${
+                    snittFilterTilSammenligningstegn(
+                        snittFilter
+                    )
+                } statistikk.bransje_prosent)
                             ) 
                         """.trimIndent()
-                } ?: ""
+            } ?: ""
 
         private fun snittFilterTilSammenligningstegn(snittFilter: SnittFilter) =
             when (snittFilter) {
@@ -159,10 +167,10 @@ data class Søkeparametere(
                             it.length
                         }
                         val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
-                        femsifrede?.let { 
-                            "OR (naringsundergruppe1 in (select (unnest(:naringer))))" + 
-                            "OR (naringsundergruppe2 in (select (unnest(:naringer))))" +
-                            "OR (naringsundergruppe3 in (select (unnest(:naringer))))" 
+                        femsifrede?.let {
+                            "OR (naringsundergruppe1 in (select (unnest(:naringer))))" +
+                                    "OR (naringsundergruppe2 in (select (unnest(:naringer))))" +
+                                    "OR (naringsundergruppe3 in (select (unnest(:naringer))))"
                         } ?: ""
                     } else ""
                 }
@@ -225,7 +233,8 @@ data class Søkeparametere(
 
 data class Periode(val kvartal: Int, val årstall: Int) {
     companion object {
-        fun fraDato(dato: LocalDateTime) = Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
+        fun fraDato(dato: LocalDateTime) =
+            Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
     }
 
     fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)

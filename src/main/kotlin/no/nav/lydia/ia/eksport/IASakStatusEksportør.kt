@@ -22,7 +22,7 @@ class IASakStatusEksportør(
         try {
 
             alleSaker.forEach { nåværendeIaSak ->
-                    iaSakStatusProdusent.receive(nåværendeIaSak)
+                iaSakStatusProdusent.receive(nåværendeIaSak)
             }
         } catch (e: Exception) {
             KJØRER_STATUS_EKSPORT.set(false)
