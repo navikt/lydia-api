@@ -46,14 +46,41 @@ class IASakTeamApiTest {
     }
 
     @Test
-    fun `skal kunne bli med i team`() {
+    fun `skal hente alle brukere i team på en sak`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
 
-        val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+        lydiaApiContainer.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
-            .tilSingelRespons<BrukerITeamDto>().third.fold(
+            .tilListeRespons<BrukerITeamDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) })
+            .shouldHaveSize(0)
+
+        val userList = listOf(
+            mockOAuth2Server.superbruker1,
+            mockOAuth2Server.superbruker2,
+            mockOAuth2Server.saksbehandler1,
+            mockOAuth2Server.saksbehandler2,
+        )
+        userList.forEach {
+            bliMedITeam(token = it.token, saksnummer = sak.saksnummer)
+        }
+
+        val teamList = lydiaApiContainer.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+            .tilListeRespons<BrukerITeamDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) })
+            .shouldHaveSize(userList.size)
+
+        teamList.map { it.ident }
+            .shouldContainAll(userList.map { it.navIdent })
+
+    }
+
+    @Test
+    fun `skal kunne bli med i team`() {
+        val (sak, res) = opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token)
 
         res.saksnummer shouldBe sak.saksnummer
         res.ident shouldBe mockOAuth2Server.superbruker1.navIdent
@@ -66,14 +93,23 @@ class IASakTeamApiTest {
     }
 
     @Test
-    fun `skal ikke kunne dobbeltregistrere knytning`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
-            .tilSingelRespons<BrukerITeamDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) })
+    fun `skal kunne bli med i flere team`() {
+        val resList = listOf(
+            opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token).second,
+            opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token).second,
+            opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token).second,
+        )
 
+        mockOAuth2Server.superbruker1.navIdent.let { ident ->
+            resList.all {
+                it.ident == ident
+            }
+        }
+    }
+
+    @Test
+    fun `skal ikke kunne dobbeltregistrere knytning`() {
+        val (sak, _) = opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token)
 
         val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)

@@ -13,6 +13,14 @@ import org.slf4j.LoggerFactory
 class IATeamService(val iaSakTeamRepository: IASakTeamRepository) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
+    fun hentBrukereITeam(iaSak: IASak, navAnsatt: NavAnsatt) =
+        try {
+            iaSakTeamRepository.brukereITeam(iaSak = iaSak, navAnsatt = navAnsatt).right()
+        } catch (e: Exception) {
+            log.error("Feil ved henting av en brukers saker. Feilmelding: ${e.message}", e)
+            Feil("Feil ved henting av en brukers saker", httpStatusCode = HttpStatusCode.InternalServerError).left()
+        }
+
     fun knyttBrukerTilSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
         iaSakTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
             ?: IASakError.`ugyldig saksnummer`.left()
