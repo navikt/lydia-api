@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.team
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
@@ -8,6 +9,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
@@ -26,6 +28,22 @@ import kotlin.test.fail
 class IASakTeamApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
+
+    private fun bliMedITeam(token: String, saksnummer: String) =
+        lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${saksnummer}")
+            .authentication().bearer(token)
+            .tilSingelRespons<BrukerITeamDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) })
+            .also { it.saksnummer shouldBe saksnummer }
+
+    private fun opprettSakBliOgMedITeam(
+        token: String,
+        orgnummer: String = nyttOrgnummer()
+    ): Pair<IASakDto, BrukerITeamDto> {
+        val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
+        return Pair(sak, bliMedITeam(token = token, saksnummer = sak.saksnummer))
+    }
 
     @Test
     fun `skal kunne bli med i team`() {
@@ -81,6 +99,51 @@ class IASakTeamApiTest {
             .tilSingelRespons<BrukerITeamDto>().second
 
         res.statusCode shouldBe HttpStatusCode.Forbidden.value
+    }
+
+    @Test
+    fun `skal kunne fjernes fra team`() {
+        val (sak, _) = opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token)
+
+        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+            """select saksnummer from ia_sak_team
+                    where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+                    and saksnummer = '${sak.saksnummer}'""".trimIndent()
+        ) shouldHaveSize 1
+
+        val deleteRes = lydiaApiContainer.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+            .tilSingelRespons<BrukerITeamDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) })
+
+        deleteRes.saksnummer shouldBe sak.saksnummer
+        deleteRes.ident shouldBe mockOAuth2Server.superbruker1.navIdent
+
+        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+            """select saksnummer from ia_sak_team
+                    where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+                    and saksnummer = '${sak.saksnummer}'""".trimIndent()
+        ) shouldHaveSize 0
+    }
+
+    @Test
+    fun `skal ikke kunne fjernes fra team uten sak`() {
+        val res = lydiaApiContainer.performDelete("$IA_SAK_TEAM_PATH/ikkeetsaksnummer")
+            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+            .tilSingelRespons<BrukerITeamDto>().second
+
+        res.statusCode shouldBe HttpStatusCode.BadRequest.value
+    }
+
+    @Test
+    fun `skal ikke kunne fjernes fra team uten å være i teamet`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+        val res = lydiaApiContainer.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+            .tilSingelRespons<BrukerITeamDto>().second
+
+        res.statusCode shouldBe HttpStatusCode.BadRequest.value
     }
 
     //MineSakerTester

@@ -40,6 +40,28 @@ class IASakTeamRepository(val dataSource: DataSource) {
             )
         }
 
+    fun slettBrukerFraTeam(iaSak: IASak, navAnsatt: NavAnsatt) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        DELETE FROM ia_sak_team
+                        WHERE saksnummer = :saksnummer AND ident = :ident
+                        returning *                            
+                    """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to iaSak.saksnummer,
+                        "ident" to navAnsatt.navIdent
+                    )
+                ).map { row ->
+                    BrukerITeamDto(
+                        ident = row.string("ident"),
+                        saksnummer = row.string("saksnummer")
+                    )
+                }.asSingle
+            )
+        }
+
     fun hentSakerTilBruker(navAnsatt: NavAnsatt) =
         using(sessionOf(dataSource)) { session ->
             session.run(
