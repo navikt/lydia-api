@@ -17,6 +17,11 @@ class IATeamService(val iaSakTeamRepository: IASakTeamRepository) {
         iaSakTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
             ?: IASakError.`ugyldig saksnummer`.left()
 
+    fun fjernBrukerFraSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
+        iaSakTeamRepository.slettBrukerFraTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
+            ?: IASakError.`ugyldig saksnummer`.left()
+
+
     fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<MineSakerDto>> {
         return try {
             iaSakTeamRepository.hentSakerTilBruker(navAnsatt = navAnsatt).right()
