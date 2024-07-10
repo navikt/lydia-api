@@ -27,6 +27,23 @@ fun Route.iaSakTeam(
     auditLog: AuditLog,
     azureService: AzureService,
 ) {
+    get("$IA_SAK_TEAM_PATH/{saksnummer}") {
+        val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val iaSak = iaSakService.hentIASak(saksnummer).fold(
+            { feil -> return@get call.sendFeil(feil) },
+            { iaSak -> iaSak }
+        )
+
+        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
+            iaTeamService.hentBrukereITeam(iaSak, saksbehandler)
+        }.onLeft {
+            call.application.log.error(it.feilmelding)
+            call.sendFeil(it)
+        }.onRight {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }
+    }
+
     post("$IA_SAK_TEAM_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val iaSak = iaSakService.hentIASak(saksnummer).fold(

@@ -10,6 +10,27 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 
 class IASakTeamRepository(val dataSource: DataSource) {
+    fun brukereITeam(iaSak: IASak, navAnsatt: NavAnsatt) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT saksnummer, ident 
+                        FROM ia_sak_team
+                        WHERE saksnummer = :saksnummer 
+                    """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to iaSak.saksnummer,
+                        "ident" to navAnsatt.navIdent
+                    )
+                ).map { row ->
+                    BrukerITeamDto(
+                        ident = row.string("ident"),
+                        saksnummer = row.string("saksnummer")
+                    )
+                }.asList
+            )
+        }
 
     fun leggBrukerTilTeam(iaSak: IASak, navAnsatt: NavAnsatt) =
         using(sessionOf(dataSource)) { session ->
