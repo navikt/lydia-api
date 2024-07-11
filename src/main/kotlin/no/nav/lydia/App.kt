@@ -60,7 +60,7 @@ import no.nav.lydia.ia.sak.api.prosess.iaProsessApi
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
-import no.nav.lydia.ia.team.IASakTeamRepository
+import no.nav.lydia.ia.team.IATeamRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
@@ -119,7 +119,7 @@ fun startLydiaBackend() {
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
     val iaSakRepository = IASakRepository(dataSource = dataSource)
-    val iaSakTeamRepository = IASakTeamRepository(dataSource = dataSource)
+    val iaTeamRepository = IATeamRepository(dataSource = dataSource)
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
     val prosessRepository = ProsessRepository(dataSource = dataSource)
 
@@ -174,7 +174,7 @@ fun startLydiaBackend() {
         iaSakProsessRepository = prosessRepository,
     )
 
-    val iaTeamService = IATeamService(iaSakTeamRepository = iaSakTeamRepository)
+    val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
 
     val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(produsent = kafkaProdusent)
     val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()

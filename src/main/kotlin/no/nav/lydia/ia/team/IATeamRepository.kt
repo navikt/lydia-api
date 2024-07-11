@@ -9,7 +9,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 
-class IASakTeamRepository(val dataSource: DataSource) {
+class IATeamRepository(val dataSource: DataSource) {
     fun brukereITeam(iaSak: IASak, navAnsatt: NavAnsatt) =
         using(sessionOf(dataSource)) { session ->
             session.run(
