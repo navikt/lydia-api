@@ -23,11 +23,11 @@ class IATeamService(val iaTeamRepository: IATeamRepository) {
 
     fun knyttBrukerTilSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
         iaTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
-            ?: IASakError.`ugyldig saksnummer`.left()
+            ?:Feil("Feil ved knytting av bruker til sak", HttpStatusCode.BadRequest).left()
 
     fun fjernBrukerFraSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
         iaTeamRepository.slettBrukerFraTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
-            ?: IASakError.`ugyldig saksnummer`.left()
+            ?: Feil("Feil ved fjerning av bruker som følger sak", HttpStatusCode.BadRequest).left()
 
 
     fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<MineSakerDto>> {
