@@ -10,29 +10,29 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.LoggerFactory
 
-class IATeamService(val iaSakTeamRepository: IASakTeamRepository) {
+class IATeamService(val iaTeamRepository: IATeamRepository) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
     fun hentBrukereITeam(iaSak: IASak, navAnsatt: NavAnsatt) =
         try {
-            iaSakTeamRepository.brukereITeam(iaSak = iaSak, navAnsatt = navAnsatt).right()
+            iaTeamRepository.brukereITeam(iaSak = iaSak, navAnsatt = navAnsatt).right()
         } catch (e: Exception) {
-            log.error("Feil ved henting av en brukers saker. Feilmelding: ${e.message}", e)
-            Feil("Feil ved henting av en brukers saker", httpStatusCode = HttpStatusCode.InternalServerError).left()
+            log.error("Feil ved henting av en saks brukere. Feilmelding: ${e.message}", e)
+            Feil("Feil ved henting av brukere i team", httpStatusCode = HttpStatusCode.InternalServerError).left()
         }
 
     fun knyttBrukerTilSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
-        iaSakTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
+        iaTeamRepository.leggBrukerTilTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
             ?: IASakError.`ugyldig saksnummer`.left()
 
     fun fjernBrukerFraSak(iaSak: IASak, navAnsatt: NavAnsatt): Either<Feil, BrukerITeamDto> =
-        iaSakTeamRepository.slettBrukerFraTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
+        iaTeamRepository.slettBrukerFraTeam(iaSak = iaSak, navAnsatt = navAnsatt)?.right()
             ?: IASakError.`ugyldig saksnummer`.left()
 
 
     fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<MineSakerDto>> {
         return try {
-            iaSakTeamRepository.hentSakerTilBruker(navAnsatt = navAnsatt).right()
+            iaTeamRepository.hentSakerTilBruker(navAnsatt = navAnsatt).right()
         } catch (e: Exception) {
             log.error("Feil ved henting av en brukers saker. Feilmelding: ${e.message}", e)
             Feil("Feil ved henting av en brukers saker", httpStatusCode = HttpStatusCode.InternalServerError).left()
