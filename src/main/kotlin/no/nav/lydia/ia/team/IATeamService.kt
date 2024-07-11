@@ -5,7 +5,6 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.LoggerFactory
