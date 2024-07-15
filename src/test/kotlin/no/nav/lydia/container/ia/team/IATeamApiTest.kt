@@ -37,6 +37,8 @@ class IASakTeamApiTest {
                 failure = { fail(it.message) })
             .also { it.saksnummer shouldBe saksnummer }
 
+    private fun IASakDto.leggTilFolger(token: String) = also { bliMedITeam(token = token, saksnummer) }
+
     private fun opprettSakBliOgMedITeam(
         token: String,
         orgnummer: String = nyttOrgnummer()
@@ -94,17 +96,17 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal kunne bli med i flere team`() {
+        val bruker = mockOAuth2Server.superbruker1
         val resList = listOf(
-            opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token).second,
-            opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token).second,
-            opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token).second,
+            opprettSakBliOgMedITeam(token = bruker.token).second,
+            opprettSakBliOgMedITeam(token = bruker.token).second,
+            opprettSakBliOgMedITeam(token = bruker.token).second,
         )
 
-        mockOAuth2Server.superbruker1.navIdent.let { ident ->
-            resList.all {
-                it.ident == ident
-            }
+        resList.all {
+            it.ident == bruker.navIdent
         }
+
     }
 
     @Test
@@ -214,9 +216,48 @@ class IASakTeamApiTest {
     }
 
     @Test
-    fun `skal ikke få saker man ikke eier av`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+    fun `skal få alle saker man følger eller eier`() {
+        val bruker = mockOAuth2Server.superbruker1.token
+        val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+        val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+            .leggTilFolger(token = bruker)
+        val sak2 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .leggTilFolger(token = bruker)
+        val sak3 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .leggTilFolger(token = bruker)
+
+
+        val sak4 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+
+        val iaSakListe = listOf(sak0, sak1, sak2, sak3)
+
+        val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
+            .authentication().bearer(bruker)
+            .tilListeRespons<MineSakerDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) })
+
+        iaSakListe.all { sak ->
+            res.any { sak.sammenlignMedMineSaker(it) }
+        } shouldBe true
+
+        res.any { sak4.sammenlignMedMineSaker(it) } shouldBe false
+
+    }
+
+    @Test
+    fun `skal ikke få saker man ikke eier eller følger`() {
+        val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+        val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token)
+            .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
+
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token)
 
@@ -227,7 +268,7 @@ class IASakTeamApiTest {
                 failure = { fail(it.message) })
 
         res.none {
-            sak.sammenlignMedMineSaker(it)
+            sak0.sammenlignMedMineSaker(it) || sak1.sammenlignMedMineSaker(it)
         } shouldBe true
     }
 }

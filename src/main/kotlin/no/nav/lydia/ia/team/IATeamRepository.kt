@@ -83,7 +83,7 @@ class IATeamRepository(val dataSource: DataSource) {
             )
         }
 
-    fun hentSakerTilBruker(navAnsatt: NavAnsatt) =
+    fun hentSakerBrukerEierEllerFølger(navAnsatt: NavAnsatt) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -91,7 +91,9 @@ class IATeamRepository(val dataSource: DataSource) {
                       SELECT sak.saksnummer, sak.status, sak.eid_av, sak.endret, v.orgnr, v.navn
                       FROM ia_sak AS sak
                       JOIN virksomhet AS v using (orgnr)
-                      WHERE sak.eid_av = :navident                              
+                      FULL JOIN ia_sak_team AS iat using (saksnummer)
+                      WHERE sak.eid_av = :navident
+                         OR iat.ident  = :navident
                     """.trimMargin(),
                     mapOf(
                         "navident" to navAnsatt.navIdent
