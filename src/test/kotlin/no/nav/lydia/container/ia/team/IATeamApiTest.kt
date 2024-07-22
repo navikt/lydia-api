@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.team
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import io.kotest.matchers.collections.shouldBeUnique
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -223,12 +224,16 @@ class IASakTeamApiTest {
         val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
             .leggTilFolger(token = bruker)
+            .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
+            .leggTilFolger(token = mockOAuth2Server.saksbehandler1.token)
         val sak2 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
             .leggTilFolger(token = bruker)
         val sak3 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
             .leggTilFolger(token = bruker)
+            .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
+            .leggTilFolger(token = mockOAuth2Server.saksbehandler1.token)
 
 
         val sak4 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
@@ -247,6 +252,8 @@ class IASakTeamApiTest {
         } shouldBe true
 
         res.any { sak4.sammenlignMedMineSaker(it) } shouldBe false
+
+        res.map { it.saksnummer }.shouldBeUnique()
 
     }
 

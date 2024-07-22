@@ -88,12 +88,16 @@ class IATeamRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                      SELECT sak.saksnummer, sak.status, sak.eid_av, sak.endret, v.orgnr, v.navn
-                      FROM ia_sak AS sak
-                      JOIN virksomhet AS v using (orgnr)
-                      FULL JOIN ia_sak_team AS iat using (saksnummer)
-                      WHERE sak.eid_av = :navident
-                         OR iat.ident  = :navident
+                        SELECT sak.saksnummer, sak.status, sak.eid_av, sak.endret, v.orgnr, v.navn
+                        FROM ia_sak AS sak
+                            JOIN virksomhet AS v USING (orgnr)
+                            LEFT JOIN (
+                                SELECT saksnummer, ident
+                                FROM ia_sak_team
+                                WHERE ident = :navident
+                            ) AS iat USING (saksnummer) 
+                        WHERE sak.eid_av = :navident 
+                           OR iat.ident  = :navident
                     """.trimMargin(),
                     mapOf(
                         "navident" to navAnsatt.navIdent
