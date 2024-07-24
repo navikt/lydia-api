@@ -113,6 +113,7 @@ class SpørreundersøkelseService(
     ) =
         TemaResultatDto(
             temaId = tema.tema.id,
+            navn = tema.tema.beskrivelse,
             tema = tema.tema.navn.name,
             beskrivelse = tema.tema.beskrivelse,
             spørsmålMedSvar = tema.spørsmål.map { spørsmål ->

@@ -1,26 +1,30 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
+import ia.felles.integrasjoner.kafkameldinger.oppdatering.SpørsmålResultatMelding
+import ia.felles.integrasjoner.kafkameldinger.oppdatering.SvarResultatMelding
+import ia.felles.integrasjoner.kafkameldinger.oppdatering.TemaResultatMelding
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class TemaResultatDto(
-    val temaId: Int,
-    val tema: String,
-    val beskrivelse: String,
-    val spørsmålMedSvar: List<SpørsmålResultatDto>,
-)
+    override val temaId: Int,
+    override val navn: String?,
+    override val tema: String?,
+    override val beskrivelse: String?,
+    override val spørsmålMedSvar: List<SpørsmålResultatDto>,
+) : TemaResultatMelding
 
 @Serializable
 data class SpørsmålResultatDto(
-    val spørsmålId: String,
-    val tekst: String,
-    val flervalg: Boolean,
-    val svarListe: List<SvarResultatDto>,
-)
+    override val spørsmålId: String,
+    override val tekst: String,
+    override val flervalg: Boolean,
+    override val svarListe: List<SvarResultatDto>,
+) : SpørsmålResultatMelding
 
 @Serializable
 data class SvarResultatDto(
-    val svarId: String,
-    val tekst: String,
-    val antallSvar: Int,
-)
+    override val svarId: String,
+    override val tekst: String,
+    override val antallSvar: Int,
+) : SvarResultatMelding

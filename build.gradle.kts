@@ -1,3 +1,9 @@
+val ktorVersion = "2.3.11"
+val fuelVersion = "2.3.1"
+val iaFellesVersion = "1.2.0-RC4"
+val kotestVerstion = "5.9.1"
+val testcontainersVersion = "1.19.8"
+
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     kotlin("jvm") version "2.0.0"
@@ -16,10 +22,6 @@ repositories {
 }
 
 dependencies {
-    val ktorVersion = "2.3.11"
-    val fuelVersion = "2.3.1"
-    val iaFellesVersion = "1.1.0"
-
     implementation(kotlin("stdlib"))
 
     // Align versions of all Kotlin components
@@ -80,12 +82,10 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
     // Enklere assertions
-    val kotestVerstion = "5.9.1"
     testImplementation("io.kotest:kotest-assertions-core:$kotestVerstion")
     testImplementation("io.kotest:kotest-assertions-json:$kotestVerstion")
 
     // Testcontainers
-    val testcontainersVersion = "1.19.8"
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
     testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
