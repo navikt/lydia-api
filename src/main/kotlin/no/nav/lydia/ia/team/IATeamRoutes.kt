@@ -11,6 +11,7 @@ import io.ktor.server.routing.Route
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.appstatus.Metrics.Companion.loggFølging
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
@@ -65,6 +66,7 @@ fun Route.iaSakTeam(
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
         }.onRight {
+            loggFølging(true)
             call.respond(status = HttpStatusCode.Created, message = it)
         }
     }
@@ -90,6 +92,7 @@ fun Route.iaSakTeam(
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
         }.onRight {
+            loggFølging(false)
             call.respond(status = HttpStatusCode.Created, message = it)
         }
     }

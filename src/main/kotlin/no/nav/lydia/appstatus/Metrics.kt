@@ -50,6 +50,16 @@ class Metrics {
             .help("Antall virksomheter som har fullført ia-samarbeid")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
+        private val iaSakFulgt = Counter.builder()
+            .name("${NAMESPACE}_ia_saker_fulgt")
+            .help("Antall saker som har blitt fulgt")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
+        private val iaSakSluttetÅFølge = Counter.builder()
+            .name("${NAMESPACE}_ia_saker_sluttet_å_følge")
+            .help("Antall saker som har blitt unfollowed")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
         fun loggHendelse(hendelsesType: IASakshendelseType) {
             when (hendelsesType) {
                 IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
@@ -66,6 +76,14 @@ class Metrics {
                 KartleggingStatus.SLETTET -> behovsvurderingerSlettet.inc()
             }
         }
+
+        fun loggFølging(begyntÅFølge: Boolean) {
+            if (begyntÅFølge)
+                iaSakFulgt.inc()
+            else
+                iaSakSluttetÅFølge.inc()
+        }
+
     }
 }
 
