@@ -44,7 +44,7 @@ fun IASak.tilSakshistorikk() = SakshistorikkDto(
     saksnummer = this.saksnummer,
     opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
     sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime()
-        ?: this.opprettetTidspunkt.toKotlinLocalDateTime(), // TODO sistEndret på IASak burde ikkje vere optional, den burde vere opprettetTidspunkt frå start.
+        ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
     sakshendelser = hendelser.mapIndexed { index, hendelse ->
         SakSnapshotDto.from(hendelse, IASak.fraHendelser(hendelser.subList(0, index + 1)))
     }.toList()

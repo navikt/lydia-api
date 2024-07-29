@@ -68,7 +68,6 @@ data class Beliggenhetsadresse(
     val kommune: String? = null,
     val kommunenummer: String? = null
 ) {
-    // TODO: hva definerer en relevant virksomhet i kontekst av beliggenhet
     fun erRelevant() =
         listOf(land, landkode, postnummer, poststed, kommune, kommunenummer).all { !it.isNullOrBlank() }
 

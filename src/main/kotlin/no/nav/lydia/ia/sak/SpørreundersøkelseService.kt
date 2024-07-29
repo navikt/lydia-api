@@ -199,7 +199,6 @@ class SpørreundersøkelseService(
             val prosess = iaProsessService.hentIAProsesser(sak).getOrNull()?.firstOrNull()
                 ?: return emptyList<SpørreundersøkelseUtenInnhold>().right()
             val kartlegginger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosessId = prosess.id)
-            //TODO: legg til deltakereSomHarFullført
             kartlegginger.right()
         } catch (e: Exception) {
             log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
