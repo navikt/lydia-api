@@ -68,6 +68,8 @@ class AppContainerTest {
                 metrikker shouldContain "ia_behovsvurdering_startet_total"
                 metrikker shouldContain "ia_behovsvurdering_fullfort_total"
                 metrikker shouldContain "ia_behovsvurdering_slettet_total"
+                metrikker shouldContain "ia_saker_fulgt_total"
+                metrikker shouldContain "ia_saker_sluttet_a_folge_total"
             },
             failure = {
                 fail("")

@@ -56,7 +56,7 @@ class Metrics {
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
         private val iaSakSluttetÅFølge = Counter.builder()
-            .name("${NAMESPACE}_ia_saker_sluttet_å_følge")
+            .name("${NAMESPACE}_ia_saker_sluttet_a_folge")
             .help("Antall saker som har blitt unfollowed")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
