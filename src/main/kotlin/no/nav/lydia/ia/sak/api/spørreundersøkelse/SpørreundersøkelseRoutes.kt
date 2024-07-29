@@ -3,6 +3,8 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -27,7 +29,6 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -109,7 +110,6 @@ fun Route.iaSakSpørreundersøkelse(
     }
 
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/avslutt") {
-        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
@@ -117,13 +117,13 @@ fun Route.iaSakSpørreundersøkelse(
             val kartlegging = spørreundersøkelseService.hentKartlegginger(sak = iaSak)
 
             if (kartlegging.getOrNull()
-                    ?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != KartleggingStatus.PÅBEGYNT
+                    ?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != PÅBEGYNT
             )
                 return@somEierAvSakIProsess IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
 
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
-                status = KartleggingStatus.AVSLUTTET
+                status = AVSLUTTET
             )
         }.also { kartlegging ->
             auditLog.auditloggEither(
@@ -170,7 +170,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
-                status = KartleggingStatus.PÅBEGYNT
+                status = PÅBEGYNT
             )
         }.also { kartlegging ->
             auditLog.auditloggEither(

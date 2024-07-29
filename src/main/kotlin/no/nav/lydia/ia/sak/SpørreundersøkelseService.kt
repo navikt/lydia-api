@@ -4,6 +4,10 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
 import java.time.LocalDateTime
 import java.util.*
 import no.nav.lydia.Observer
@@ -18,7 +22,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -47,7 +50,7 @@ class SpørreundersøkelseService(
                 log.error("Fant ikke kartlegging på denne iden: ${svar.spørreundersøkelseId}, hopper over")
                 return@forEach
             }
-            if (spørreundersøkelse.status != KartleggingStatus.PÅBEGYNT) {
+            if (spørreundersøkelse.status != PÅBEGYNT) {
                 log.warn("Kan ikke svare på en kartlegging i status ${spørreundersøkelse.status}, hopper over")
                 return@forEach
             }
@@ -91,7 +94,7 @@ class SpørreundersøkelseService(
             spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                 ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
 
-        if (spørreundersøkelse.status != KartleggingStatus.AVSLUTTET)
+        if (spørreundersøkelse.status != AVSLUTTET)
             return IASakKartleggingError.`kartlegging er ikke avsluttet`.left()
 
         val (alleSvar, antallUnikeDeltakereMedMinstEttSvar, antallUnikeDeltakereSomHarSvartPåAlt) = spørreundersøkelse.beregnAlleSvar()
@@ -182,7 +185,7 @@ class SpørreundersøkelseService(
         spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = kartleggingId)
 
         val oppdatertKartlegging =
-            kartlegging.copy(status = KartleggingStatus.SLETTET, endretTidspunkt = LocalDateTime.now())
+            kartlegging.copy(status = SLETTET, endretTidspunkt = LocalDateTime.now())
 
         behovsvurderingObservers.forEach { it.receive(oppdatertKartlegging) }
 
@@ -206,7 +209,7 @@ class SpørreundersøkelseService(
 
     fun endreKartleggingStatus(
         spørreundersøkelseId: String,
-        status: KartleggingStatus,
+        status: SpørreundersøkelseStatus,
     ): Either<Feil, Spørreundersøkelse> {
         spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)
             ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()

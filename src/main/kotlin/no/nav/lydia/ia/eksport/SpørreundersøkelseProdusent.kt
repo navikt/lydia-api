@@ -1,5 +1,11 @@
 package no.nav.lydia.ia.eksport
 
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseMelding
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.SpørsmålMelding
+import ia.felles.integrasjoner.kafkameldinger.SvaralternativMelding
+import ia.felles.integrasjoner.kafkameldinger.TemaMelding
+import ia.felles.integrasjoner.kafkameldinger.Temanavn
 import java.time.LocalDate.now
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -8,12 +14,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 
 class SpørreundersøkelseProdusent(
     private val produsent: KafkaProdusent,
@@ -34,7 +38,7 @@ class SpørreundersøkelseProdusent(
     companion object {
         fun Spørreundersøkelse.tilKafkaMelding(): Pair<String, String> {
             val nøkkel = this.id.toString()
-            val verdi = SpørreundersøkelseKafkaDto(
+            val verdi = SerializableSpørreundersøkelse(
                 spørreundersøkelseId = this.id.toString(),
                 vertId = this.vertId?.toString() ?: "",
                 orgnummer = orgnummer,
@@ -48,16 +52,17 @@ class SpørreundersøkelseProdusent(
         }
 
         private fun Tema.tilKafkaMelding() =
-            TemaKafkaDto(
+            SerializableTema(
                 temaId = this.tema.id,
                 temanavn = this.tema.navn,
                 beskrivelse = this.tema.beskrivelse,
                 introtekst = this.tema.introtekst,
+                navn = this.tema.beskrivelse,
                 spørsmålOgSvaralternativer = this.spørsmål.map { it.tilKafkaMelding() }
             )
 
         private fun Spørsmål.tilKafkaMelding() =
-            SpørsmålKafkaDto(
+            SerializableSpørsmål(
                 id = spørsmålId.toString(),
                 spørsmål = spørsmåltekst,
                 svaralternativer = svaralternativer.map { it.tilKafkaMelding() },
@@ -65,44 +70,45 @@ class SpørreundersøkelseProdusent(
             )
 
         private fun Svaralternativ.tilKafkaMelding() =
-            SvaralternativKafkaDto(
+            SerializableSvaralternativ(
                 svarId = svarId.toString(),
                 svartekst = svartekst,
             )
     }
 
     @Serializable
-    data class SpørreundersøkelseKafkaDto(
-        val spørreundersøkelseId: String,
-        val vertId: String,
-        val orgnummer: String,
-        val virksomhetsNavn: String,
-        val status: KartleggingStatus,
-        val type: String,
-        val temaMedSpørsmålOgSvaralternativer: List<TemaKafkaDto>,
-        val avslutningsdato: LocalDate,
-    )
+    data class SerializableSpørreundersøkelse(
+        override val spørreundersøkelseId: String,
+        override val vertId: String,
+        override val orgnummer: String,
+        override val virksomhetsNavn: String,
+        override val status: SpørreundersøkelseStatus,
+        override val type: String,
+        override val temaMedSpørsmålOgSvaralternativer: List<SerializableTema>,
+        override val avslutningsdato: LocalDate,
+    ) : SpørreundersøkelseMelding
 
     @Serializable
-    data class TemaKafkaDto(
-        val temaId: Int,
-        val temanavn: Temanavn,
-        val beskrivelse: String,
-        val introtekst: String,
-        val spørsmålOgSvaralternativer: List<SpørsmålKafkaDto>,
-    )
+    data class SerializableTema(
+        override val temaId: Int,
+        override val temanavn: Temanavn?,
+        override val beskrivelse: String,
+        override val introtekst: String,
+        override val spørsmålOgSvaralternativer: List<SerializableSpørsmål>,
+        override val navn: String?
+    ) : TemaMelding
 
     @Serializable
-    data class SpørsmålKafkaDto(
-        val id: String,
-        val spørsmål: String,
-        val svaralternativer: List<SvaralternativKafkaDto>,
-        val flervalg: Boolean,
-    )
+    data class SerializableSpørsmål(
+        override val id: String,
+        override val spørsmål: String,
+        override val svaralternativer: List<SerializableSvaralternativ>,
+        override val flervalg: Boolean,
+    ) : SpørsmålMelding
 
     @Serializable
-    data class SvaralternativKafkaDto(
-        val svarId: String,
-        val svartekst: String,
-    )
+    data class SerializableSvaralternativ(
+        override val svarId: String,
+        override val svartekst: String,
+    ) : SvaralternativMelding
 }

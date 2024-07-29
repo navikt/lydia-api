@@ -6,6 +6,9 @@ import arrow.core.right
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.*
+import ia.felles.integrasjoner.kafkameldinger.Temanavn
 import io.ktor.http.HttpStatusCode
 import java.time.LocalDateTime
 import java.util.*
@@ -17,7 +20,6 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
@@ -26,7 +28,6 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
 class SpørreundersøkelseRepository(val dataSource: DataSource) {
@@ -77,7 +78,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                     SELECT *
                     FROM ia_sak_kartlegging
                     WHERE ia_prosess = :prosessId
-                    AND status != '${KartleggingStatus.SLETTET}'
+                    AND status != '$SLETTET'
                 """.trimMargin(),
                     mapOf(
                         "prosessId" to prosessId,
@@ -187,7 +188,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         return SpørreundersøkelseUtenInnhold(
             kartleggingId = spørreundersøkelseId,
             vertId = vertId,
-            status = KartleggingStatus.valueOf(this.string("status")),
+            status = SpørreundersøkelseStatus.valueOf(this.string("status")),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
             endretTidspunkt = this.localDateTimeOrNull("endret"),
@@ -207,7 +208,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             saksnummer = this.string("saksnummer"),
             orgnummer = this.string("orgnr"),
             virksomhetsNavn = this.string("navn"),
-            status = KartleggingStatus.valueOf(this.string("status")),
+            status = SpørreundersøkelseStatus.valueOf(this.string("status")),
             tema = hentTema(spørreundersøkelseId),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
@@ -384,7 +385,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                     queryOf(
                         """
                         UPDATE ia_sak_kartlegging SET
-                            status = '${KartleggingStatus.SLETTET}',
+                            status = '$SLETTET',
                             endret = :sistEndret
                         WHERE kartlegging_id = :kartleggingId
                     """.trimIndent(),
@@ -400,7 +401,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
 
     fun endreKartleggingStatus(
         spørreundersøkelseId: String,
-        status: KartleggingStatus,
+        status: SpørreundersøkelseStatus,
         sistEndret: LocalDateTime = LocalDateTime.now(),
     ) =
         using(sessionOf(dataSource)) { session ->

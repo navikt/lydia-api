@@ -1,16 +1,16 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 
 @Serializable
 data class SpørreundersøkelseDto(
     val kartleggingId: String,
     val vertId: String,
-    val status: KartleggingStatus,
+    val status: SpørreundersøkelseStatus,
     val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,

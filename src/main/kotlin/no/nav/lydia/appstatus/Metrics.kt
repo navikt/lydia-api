@@ -1,5 +1,10 @@
 package no.nav.lydia.appstatus
 
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -7,7 +12,8 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.core.metrics.Counter
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
 
 private const val NAMESPACE = "pia"
 
@@ -62,18 +68,18 @@ class Metrics {
 
         fun loggHendelse(hendelsesType: IASakshendelseType) {
             when (hendelsesType) {
-                IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
-                IASakshendelseType.FULLFØR_BISTAND -> virksomheterFulført.inc()
+                VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
+                FULLFØR_BISTAND -> virksomheterFulført.inc()
                 else -> {}
             }
         }
 
-        fun loggBehovsvurdering(status: KartleggingStatus) {
+        fun loggBehovsvurdering(status: SpørreundersøkelseStatus) {
             when (status) {
-                KartleggingStatus.OPPRETTET -> behovsvurderingerOpprettet.inc()
-                KartleggingStatus.PÅBEGYNT -> behovsvurderingerStartet.inc()
-                KartleggingStatus.AVSLUTTET -> behovsvurderingerFullført.inc()
-                KartleggingStatus.SLETTET -> behovsvurderingerSlettet.inc()
+                OPPRETTET -> behovsvurderingerOpprettet.inc()
+                PÅBEGYNT -> behovsvurderingerStartet.inc()
+                AVSLUTTET -> behovsvurderingerFullført.inc()
+                SLETTET -> behovsvurderingerSlettet.inc()
             }
         }
 

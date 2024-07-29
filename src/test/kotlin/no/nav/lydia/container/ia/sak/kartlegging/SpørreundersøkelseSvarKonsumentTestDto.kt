@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.*
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -27,10 +28,9 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.ANTALL_SVAR
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import org.junit.After
 import org.junit.Before
 import org.postgresql.util.PGobject
@@ -279,8 +279,8 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.status shouldBe PÅBEGYNT
                 }
             }
         }

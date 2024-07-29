@@ -1,12 +1,12 @@
 package no.nav.lydia.ia.sak.domene
 
+import ia.felles.integrasjoner.kafkameldinger.Temanavn.*
 import io.kotest.matchers.collections.shouldContainInOrder
 import java.time.LocalDateTime.now
 import kotlin.test.Test
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus.*
 
 
 class TemaTest {
@@ -16,19 +16,19 @@ class TemaTest {
         val tema2 = TemaInfo(
             2,
             2,
-            Temanavn.UTVIKLE_PARTSSAMARBEID,
+            UTVIKLE_PARTSSAMARBEID,
             "",
             "",
-            TemaStatus.AKTIV,
+            AKTIV,
             sistEndret = now().toKotlinLocalDateTime()
         )
         val tema3 = TemaInfo(
             3,
             1,
-            Temanavn.REDUSERE_SYKEFRAVÆR,
+            REDUSERE_SYKEFRAVÆR,
             "",
             "",
-            TemaStatus.AKTIV,
+            AKTIV,
             sistEndret = now().toKotlinLocalDateTime()
         )
 

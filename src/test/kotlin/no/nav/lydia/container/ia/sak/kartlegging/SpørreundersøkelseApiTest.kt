@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.*
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
@@ -38,10 +39,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.KartleggingStatus
 import org.junit.After
 import org.junit.Before
 
@@ -116,7 +116,7 @@ class SpørreundersøkelseApiTest {
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
                         it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -175,12 +175,12 @@ class SpørreundersøkelseApiTest {
             ) { liste ->
                 liste.map { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
                     spørreundersøkelse.spørreundersøkelseId shouldBe id
                     spørreundersøkelse.vertId shouldHaveLength 36
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
-                    spørreundersøkelse.status shouldBe KartleggingStatus.OPPRETTET
+                    spørreundersøkelse.status shouldBe OPPRETTET
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
                         tema.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -298,7 +298,7 @@ class SpørreundersøkelseApiTest {
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
                 .tilSingelRespons<SpørreundersøkelseDto>().third.get()
-        kartlegging.status shouldBe KartleggingStatus.OPPRETTET
+        kartlegging.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -322,7 +322,7 @@ class SpørreundersøkelseApiTest {
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
                 .tilSingelRespons<SpørreundersøkelseDto>().third.get()
-        kartlegging.status shouldBe KartleggingStatus.OPPRETTET
+        kartlegging.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -359,7 +359,7 @@ class SpørreundersøkelseApiTest {
         val kartlegging =
             IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
                 .tilSingelRespons<SpørreundersøkelseDto>().third.get()
-        kartlegging.status shouldBe KartleggingStatus.OPPRETTET
+        kartlegging.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -420,16 +420,16 @@ class SpørreundersøkelseApiTest {
     fun `skal kunne starte kartlegging`() {
         val sak = nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
-        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+        kartleggingDto.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        pågåendeKartlegging.status shouldBe KartleggingStatus.PÅBEGYNT
+        pågåendeKartlegging.status shouldBe PÅBEGYNT
 
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
         ).forExactlyOne {
-            it.status shouldBe KartleggingStatus.PÅBEGYNT
+            it.status shouldBe PÅBEGYNT
             it.endretTidspunkt shouldNotBe null
         }
 
@@ -440,8 +440,8 @@ class SpørreundersøkelseApiTest {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe KartleggingStatus.PÅBEGYNT
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.status shouldBe PÅBEGYNT
                 }
             }
         }
@@ -452,16 +452,16 @@ class SpørreundersøkelseApiTest {
         val sak = nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        påbegyntKartlegging.status shouldBe KartleggingStatus.PÅBEGYNT
+        påbegyntKartlegging.status shouldBe PÅBEGYNT
 
         val avsluttetKartlegging = påbegyntKartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        avsluttetKartlegging.status shouldBe KartleggingStatus.AVSLUTTET
+        avsluttetKartlegging.status shouldBe AVSLUTTET
 
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
         ).forExactlyOne {
-            it.status shouldBe KartleggingStatus.AVSLUTTET
+            it.status shouldBe AVSLUTTET
             it.endretTidspunkt shouldNotBe null
         }
 
@@ -472,8 +472,8 @@ class SpørreundersøkelseApiTest {
                 konsument = kartleggingKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe KartleggingStatus.AVSLUTTET
+                    val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.status shouldBe AVSLUTTET
                 }
             }
 
@@ -494,7 +494,7 @@ class SpørreundersøkelseApiTest {
     fun `skal ikke kunne avslutte kartlegging med status OPPRETTET`() {
         val sak = nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
-        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+        kartleggingDto.status shouldBe OPPRETTET
 
         val response =
             lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
@@ -510,7 +510,7 @@ class SpørreundersøkelseApiTest {
     fun `skal kunne slette en kartlegging`() {
         val sak = nySakIKartlegges()
         val kartleggingDto = sak.opprettKartlegging()
-        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+        kartleggingDto.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -540,8 +540,8 @@ class SpørreundersøkelseApiTest {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe KartleggingStatus.SLETTET
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.status shouldBe SLETTET
                 }
             }
         }
@@ -565,7 +565,7 @@ class SpørreundersøkelseApiTest {
     fun `skal kunne slette en kartlegging i status VI_BISTÅR`() {
         val sak = nySakIViBistår()
         val kartleggingDto = sak.opprettKartlegging()
-        kartleggingDto.status shouldBe KartleggingStatus.OPPRETTET
+        kartleggingDto.status shouldBe OPPRETTET
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val response =

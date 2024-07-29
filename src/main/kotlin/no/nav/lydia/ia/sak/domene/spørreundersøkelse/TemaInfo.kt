@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
+import ia.felles.integrasjoner.kafkameldinger.Temanavn
 import kotlinx.datetime.LocalDateTime
 
 
@@ -13,10 +14,3 @@ data class TemaInfo(
     val sistEndret: LocalDateTime,
 )
 
-enum class Temanavn {
-    UTVIKLE_PARTSSAMARBEID, REDUSERE_SYKEFRAVÆR, ARBEIDSMILJØ
-}
-
-enum class TemaStatus {
-    AKTIV, INAKTIV
-}

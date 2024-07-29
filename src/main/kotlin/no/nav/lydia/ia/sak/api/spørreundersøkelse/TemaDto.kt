@@ -1,8 +1,8 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
+import ia.felles.integrasjoner.kafkameldinger.Temanavn
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Temanavn
 
 @Serializable
 data class TemaDto(
