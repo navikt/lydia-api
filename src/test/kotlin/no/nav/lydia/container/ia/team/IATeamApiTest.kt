@@ -54,7 +54,7 @@ class IASakTeamApiTest {
 
         lydiaApiContainer.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
-            .tilListeRespons<BrukerITeamDto>().third.fold(
+            .tilListeRespons<String>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) })
             .shouldHaveSize(0)
@@ -71,12 +71,12 @@ class IASakTeamApiTest {
 
         val teamList = lydiaApiContainer.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
-            .tilListeRespons<BrukerITeamDto>().third.fold(
+            .tilListeRespons<String>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) })
             .shouldHaveSize(userList.size)
 
-        teamList.map { it.ident }
+        teamList
             .shouldContainAll(userList.map { it.navIdent })
 
     }
@@ -187,11 +187,7 @@ class IASakTeamApiTest {
 
     //MineSakerTester
     private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) =
-        orgnr == minsak.orgnr &&
-                saksnummer == minsak.saksnummer &&
-                status == minsak.status &&
-                eidAv == minsak.eidAv &&
-                endretTidspunkt == minsak.endretTidspunkt
+        minsak.iaSakDto.copy(gyldigeNesteHendelser = emptyList()) == this.copy(gyldigeNesteHendelser = emptyList())
 
     @Test
     fun `skal få alle saker man er eier av`() {
@@ -253,7 +249,7 @@ class IASakTeamApiTest {
 
         res.any { sak4.sammenlignMedMineSaker(it) } shouldBe false
 
-        res.map { it.saksnummer }.shouldBeUnique()
+        res.map { it.iaSakDto.saksnummer }.shouldBeUnique()
 
     }
 

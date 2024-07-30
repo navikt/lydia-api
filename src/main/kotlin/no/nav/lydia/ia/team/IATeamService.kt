@@ -29,7 +29,7 @@ class IATeamService(val iaTeamRepository: IATeamRepository) {
             ?: Feil("Feil ved fjerning av bruker som følger sak", HttpStatusCode.BadRequest).left()
 
 
-    fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<MineSakerDto>> {
+    fun hentSakerTilBruker(navAnsatt: NavAnsatt): Either<Feil, List<Pair<IASak, String>>> {
         return try {
             iaTeamRepository.hentSakerBrukerEierEllerFølger(navAnsatt = navAnsatt).right()
         } catch (e: Exception) {
