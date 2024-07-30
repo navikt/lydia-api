@@ -6,9 +6,7 @@ import ia.felles.integrasjoner.kafkameldinger.SpørsmålMelding
 import ia.felles.integrasjoner.kafkameldinger.SvaralternativMelding
 import ia.felles.integrasjoner.kafkameldinger.TemaMelding
 import ia.felles.integrasjoner.kafkameldinger.Temanavn
-import java.time.LocalDate.now
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -40,13 +38,10 @@ class SpørreundersøkelseProdusent(
             val nøkkel = this.id.toString()
             val verdi = SerializableSpørreundersøkelse(
                 spørreundersøkelseId = this.id.toString(),
-                vertId = this.vertId?.toString() ?: "",
                 orgnummer = orgnummer,
                 virksomhetsNavn = virksomhetsNavn,
                 status = this.status,
-                type = "kartlegging",
                 temaMedSpørsmålOgSvaralternativer = tema.map { it.tilKafkaMelding() },
-                avslutningsdato = now().toKotlinLocalDate(),
             )
             return nøkkel to Json.encodeToString(verdi)
         }
@@ -54,10 +49,7 @@ class SpørreundersøkelseProdusent(
         private fun Tema.tilKafkaMelding() =
             SerializableTema(
                 temaId = this.tema.id,
-                temanavn = this.tema.navn,
-                beskrivelse = this.tema.beskrivelse,
-                introtekst = this.tema.introtekst,
-                navn = this.tema.beskrivelse,
+                navn = this.tema.navn,
                 spørsmålOgSvaralternativer = this.spørsmål.map { it.tilKafkaMelding() }
             )
 
@@ -79,31 +71,31 @@ class SpørreundersøkelseProdusent(
     @Serializable
     data class SerializableSpørreundersøkelse(
         override val spørreundersøkelseId: String,
-        override val vertId: String,
         override val orgnummer: String,
         override val virksomhetsNavn: String,
         override val status: SpørreundersøkelseStatus,
-        override val type: String,
         override val temaMedSpørsmålOgSvaralternativer: List<SerializableTema>,
-        override val avslutningsdato: LocalDate,
+        override val type: String? = null,
+        override val vertId: String? = null,
+        override val avslutningsdato: LocalDate? = null,
     ) : SpørreundersøkelseMelding
 
     @Serializable
     data class SerializableTema(
         override val temaId: Int,
-        override val temanavn: Temanavn?,
-        override val beskrivelse: String,
-        override val introtekst: String,
+        override val navn: String,
         override val spørsmålOgSvaralternativer: List<SerializableSpørsmål>,
-        override val navn: String?
+        override val beskrivelse: String? = null,
+        override val introtekst: String? = null,
+        override val temanavn: Temanavn? = null,
     ) : TemaMelding
 
     @Serializable
     data class SerializableSpørsmål(
         override val id: String,
         override val spørsmål: String,
-        override val svaralternativer: List<SerializableSvaralternativ>,
         override val flervalg: Boolean,
+        override val svaralternativer: List<SerializableSvaralternativ>,
     ) : SpørsmålMelding
 
     @Serializable

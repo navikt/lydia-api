@@ -120,7 +120,7 @@ class SpørreundersøkelseApiTest {
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
                         it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
-                        it.beskrivelse.shouldNotBeEmpty()
+                        it.navn.shouldNotBeEmpty()
                     }
                 }
             }
@@ -177,7 +177,6 @@ class SpørreundersøkelseApiTest {
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
                     spørreundersøkelse.spørreundersøkelseId shouldBe id
-                    spørreundersøkelse.vertId shouldHaveLength 36
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
                     spørreundersøkelse.status shouldBe OPPRETTET
@@ -223,7 +222,7 @@ class SpørreundersøkelseApiTest {
         behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
                 postgresContainer.hentEnkelKolonne(
-                    "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.temanavn}' and status = 'AKTIV'"
+                    "select tema_id from ia_sak_kartlegging_tema where beskrivelse = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV'"
                 )
             val spørsmålIderForEtTema: List<String> =
                 postgresContainer.hentAlleRaderTilEnkelKolonne(
@@ -384,8 +383,9 @@ class SpørreundersøkelseApiTest {
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forExactlyOne { temaMedSpørsmålOgSvar ->
-            temaMedSpørsmålOgSvar.tema shouldNotBe null
-            temaMedSpørsmålOgSvar.beskrivelse shouldNotBe null
+            temaMedSpørsmålOgSvar.navn shouldNotBe null
+            temaMedSpørsmålOgSvar.tema shouldBe null
+            temaMedSpørsmålOgSvar.beskrivelse shouldBe null
             temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->
                 spørsmålMedSvar.svarListe.forExactlyOne { svar ->
                     svar.antallSvar shouldBe 3

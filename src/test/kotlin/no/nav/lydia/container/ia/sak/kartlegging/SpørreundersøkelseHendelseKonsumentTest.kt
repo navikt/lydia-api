@@ -83,7 +83,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
             ) { meldinger ->
                 meldinger.forEach { melding ->
                     val resultaterForTema = Json.decodeFromString<TemaResultatDto>(melding)
-                    resultaterForTema.tema shouldBe tema.temanavn.name
+                    resultaterForTema.navn shouldBe tema.navn
                     resultaterForTema.spørsmålMedSvar.forExactlyOne { spørsmål ->
                         spørsmål.spørsmålId shouldBe førsteSpørsmål.id
                         spørsmål.svarListe.forEach { svar ->

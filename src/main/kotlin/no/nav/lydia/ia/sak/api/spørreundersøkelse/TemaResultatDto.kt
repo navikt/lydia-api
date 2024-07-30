@@ -8,9 +8,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class TemaResultatDto(
     override val temaId: Int,
-    override val navn: String?,
-    override val tema: String?,
-    override val beskrivelse: String?,
+    override val navn: String,
+    override val tema: String?=null,
+    override val beskrivelse: String?=null,
     override val spørsmålMedSvar: List<SpørsmålResultatDto>,
 ) : TemaResultatMelding
 

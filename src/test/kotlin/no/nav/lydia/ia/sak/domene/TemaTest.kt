@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.sak.domene
 
-import ia.felles.integrasjoner.kafkameldinger.Temanavn.*
 import io.kotest.matchers.collections.shouldContainInOrder
 import java.time.LocalDateTime.now
 import kotlin.test.Test
@@ -14,21 +13,17 @@ class TemaTest {
     @Test
     fun `skal kunne sortere temaer på 'rekkefølge'`() {
         val tema2 = TemaInfo(
-            2,
-            2,
-            UTVIKLE_PARTSSAMARBEID,
-            "",
-            "",
-            AKTIV,
+            id = 2,
+            navn = "tema 2",
+            status = AKTIV,
+            rekkefølge = 2,
             sistEndret = now().toKotlinLocalDateTime()
         )
         val tema3 = TemaInfo(
-            3,
-            1,
-            REDUSERE_SYKEFRAVÆR,
-            "",
-            "",
-            AKTIV,
+            id= 3,
+            rekkefølge = 1,
+            navn = "tema 3",
+            status = AKTIV,
             sistEndret = now().toKotlinLocalDateTime()
         )
 

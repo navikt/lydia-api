@@ -6,13 +6,12 @@ import java.util.UUID
 
 data class Spørreundersøkelse(
     val id: UUID,
-    val vertId: UUID?,
     val saksnummer: String,
     val orgnummer: String,
     val virksomhetsNavn: String,
     val status: SpørreundersøkelseStatus,
-    val tema: List<Tema>,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
+    val tema: List<Tema>,
 )

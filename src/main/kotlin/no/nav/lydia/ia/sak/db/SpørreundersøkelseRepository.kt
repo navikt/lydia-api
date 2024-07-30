@@ -8,7 +8,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.*
-import ia.felles.integrasjoner.kafkameldinger.Temanavn
 import io.ktor.http.HttpStatusCode
 import java.time.LocalDateTime
 import java.util.*
@@ -201,10 +200,8 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
 
     private fun Row.tilIASakKartleggingMedSpørsmålOgSvaralternativer(): Spørreundersøkelse {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
-        val vertId = this.stringOrNull("vert_id")?.let { UUID.fromString(it) }
         return Spørreundersøkelse(
             id = spørreundersøkelseId,
-            vertId = vertId,
             saksnummer = this.string("saksnummer"),
             orgnummer = this.string("orgnr"),
             virksomhetsNavn = this.string("navn"),
@@ -426,9 +423,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         TemaInfo(
             id = row.int("tema_id"),
             rekkefølge = row.int("rekkefolge"),
-            navn = Temanavn.valueOf(row.string("navn")),
-            beskrivelse = row.string("beskrivelse"),
-            introtekst = row.string("introtekst"),
+            navn = row.string("beskrivelse"),
             status = TemaStatus.valueOf(row.string("status")),
             sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
         )
