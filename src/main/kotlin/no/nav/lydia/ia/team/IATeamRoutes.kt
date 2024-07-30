@@ -13,6 +13,7 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.appstatus.Metrics.Companion.loggFølging
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
@@ -100,7 +101,14 @@ fun Route.iaSakTeam(
 
     get(MINE_SAKER_PATH) {
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaTeamService.hentSakerTilBruker(saksbehandler)
+            iaTeamService.hentSakerTilBruker(saksbehandler).map {
+                it.map { (iasak, orgnavn) ->
+                    MineSakerDto(
+                        iaSakDto = iasak.toDto(saksbehandler),
+                        orgnavn = orgnavn
+                    )
+                }
+            }
         }.onLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)

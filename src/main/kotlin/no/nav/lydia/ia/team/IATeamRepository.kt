@@ -1,11 +1,10 @@
 package no.nav.lydia.ia.team
 
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 
@@ -24,10 +23,7 @@ class IATeamRepository(val dataSource: DataSource) {
                         "ident" to navAnsatt.navIdent
                     )
                 ).map { row ->
-                    BrukerITeamDto(
-                        ident = row.string("ident"),
-                        saksnummer = row.string("saksnummer")
-                    )
+                    row.string("ident")
                 }.asList
             )
         }
@@ -88,7 +84,7 @@ class IATeamRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        SELECT sak.saksnummer, sak.status, sak.eid_av, sak.endret, v.orgnr, v.navn
+                        SELECT sak.*, v.navn
                         FROM ia_sak AS sak
                             JOIN virksomhet AS v USING (orgnr)
                             LEFT JOIN (
@@ -103,14 +99,7 @@ class IATeamRepository(val dataSource: DataSource) {
                         "navident" to navAnsatt.navIdent
                     )
                 ).map { row ->
-                    MineSakerDto(
-                        saksnummer = row.string("saksnummer"),
-                        status = IAProsessStatus.valueOf(row.string("status")),
-                        orgnr = row.string("orgnr"),
-                        orgnavn = row.string("navn"),
-                        endretTidspunkt = row.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
-                        eidAv = row.stringOrNull("eid_av")
-                    )
+                    Pair(row.tilIASak(), row.string("navn"))
                 }.asList
             )
         }
