@@ -188,7 +188,7 @@ fun Route.iaSakSpørreundersøkelse(
     }
 }
 
-private fun <T> ApplicationCall.somEierAvSakIProsess(
+fun <T> ApplicationCall.somEierAvSakIProsess(
     iaSakService: IASakService,
     adGrupper: ADGrupper,
     block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>,

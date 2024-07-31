@@ -105,6 +105,9 @@ import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import no.nav.lydia.ia.sak.PlanService
+import no.nav.lydia.ia.sak.api.plan.iaSakPlan
+import no.nav.lydia.ia.sak.db.PlanRepository
 
 fun main() {
     startLydiaBackend()
@@ -122,6 +125,7 @@ fun startLydiaBackend() {
     val iaTeamRepository = IATeamRepository(dataSource = dataSource)
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
     val prosessRepository = ProsessRepository(dataSource = dataSource)
+    val planRepository = PlanRepository(dataSource = dataSource)
 
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
@@ -191,6 +195,11 @@ fun startLydiaBackend() {
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
             produsent = kafkaProdusent
         )
+    )
+    val planService = PlanService(
+        iaProsessService = iaProsessService,
+        planRepository = planRepository,
+        planObserverers = emptyList(),
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
@@ -274,7 +283,8 @@ fun startLydiaBackend() {
             iaSakService = iaSakService,
             iaTeamService = iaTeamService,
             iaProsessService = iaProsessService,
-            spørreundersøkelseService = spørreundersøkelseService
+            spørreundersøkelseService = spørreundersøkelseService,
+            planService = planService
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -342,6 +352,7 @@ private fun Application.lydiaRestApi(
     iaProsessService: IAProsessService,
     spørreundersøkelseService: SpørreundersøkelseService,
     iaTeamService: IATeamService,
+    planService: PlanService,
 ) {
     install(ContentNegotiation) {
         json()
@@ -443,6 +454,12 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 spørreundersøkelseService = spørreundersøkelseService,
+            )
+            iaSakPlan(
+                adGrupper = naisEnv.security.adGrupper,
+                auditLog = auditLog,
+                planService = planService,
+                iaSakService = iaSakService
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
