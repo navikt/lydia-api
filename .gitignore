@@ -31,3 +31,6 @@ build
 /scripts/tenor/input/
 /scripts/tenor/output/
 /scripts/tenor/tmp/
+
+# DS_Store for mac
+.DS_Store
