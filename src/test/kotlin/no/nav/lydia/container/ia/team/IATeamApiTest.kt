@@ -187,7 +187,7 @@ class IASakTeamApiTest {
 
     //MineSakerTester
     private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) =
-        minsak.iaSakDto.copy(gyldigeNesteHendelser = emptyList()) == this.copy(gyldigeNesteHendelser = emptyList())
+        minsak.iaSak.copy(gyldigeNesteHendelser = emptyList()) == this.copy(gyldigeNesteHendelser = emptyList())
 
     @Test
     fun `skal få alle saker man er eier av`() {
@@ -249,7 +249,7 @@ class IASakTeamApiTest {
 
         res.any { sak4.sammenlignMedMineSaker(it) } shouldBe false
 
-        res.map { it.iaSakDto.saksnummer }.shouldBeUnique()
+        res.map { it.iaSak.saksnummer }.shouldBeUnique()
 
     }
 

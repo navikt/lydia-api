@@ -5,6 +5,6 @@ import no.nav.lydia.ia.sak.api.IASakDto
 
 @Serializable
 data class MineSakerDto(
-    val iaSakDto: IASakDto,
+    val iaSak: IASakDto,
     val orgnavn: String,
 )

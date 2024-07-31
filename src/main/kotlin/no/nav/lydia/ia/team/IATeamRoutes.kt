@@ -104,7 +104,7 @@ fun Route.iaSakTeam(
             iaTeamService.hentSakerTilBruker(saksbehandler).map {
                 it.map { (iasak, orgnavn) ->
                     MineSakerDto(
-                        iaSakDto = iasak.toDto(saksbehandler),
+                        iaSak = iasak.toDto(saksbehandler),
                         orgnavn = orgnavn
                     )
                 }
