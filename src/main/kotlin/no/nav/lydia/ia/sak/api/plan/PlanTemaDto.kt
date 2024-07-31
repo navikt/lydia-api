@@ -8,7 +8,7 @@ data class PlanTemaDto(
     val id: Int,
     val navn: String,
     val planlagt: Boolean,
-    val temaer: List<PlanUndertemaDto>,
+    val undertemaer: List<PlanUndertemaDto>,
     val ressurser: List<PlanRessursDto>,
 )
 
@@ -19,7 +19,7 @@ fun PlanTema.tilDto(): PlanTemaDto {
         id = id,
         navn = navn,
         planlagt = planlagt,
-        temaer = undertemaer.tilDtoer(),
+        undertemaer = undertemaer.tilDtoer(),
         ressurser = ressurser.tilDtoer()
     )
 }
