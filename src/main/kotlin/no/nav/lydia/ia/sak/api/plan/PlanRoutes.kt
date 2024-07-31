@@ -17,13 +17,15 @@ import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
 
+const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
+
 fun Route.iaSakPlan(
     planService: PlanService,
     iaSakService: IASakService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
-    post("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/opprett") {
+    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
