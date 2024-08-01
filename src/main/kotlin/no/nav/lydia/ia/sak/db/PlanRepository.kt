@@ -4,15 +4,16 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import java.util.*
-import javax.sql.DataSource
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.getHardkodetPlan
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import java.util.UUID
+import javax.sql.DataSource
 
-
-class PlanRepository(val dataSource: DataSource) {
+class PlanRepository(
+    val dataSource: DataSource,
+) {
     fun opprettPlan(
         planId: UUID,
         prosessId: Int,
@@ -45,14 +46,14 @@ class PlanRepository(val dataSource: DataSource) {
 //            }
 //        }
 
-        return hentPlan(planId = planId)?.right()
+        return hentPlan(prosessId = prosessId)?.right()
             ?: Feil(
                 feilmelding = "Kunne ikke opprette plan",
-                httpStatusCode = HttpStatusCode.InternalServerError
+                httpStatusCode = HttpStatusCode.InternalServerError,
             ).left()
     }
 
-    fun hentPlan(planId: UUID): Plan? {
+    fun hentPlan(prosessId: Int): Plan? {
 //        TODO: Les plan fra database
 //        using(sessionOf(dataSource)) { session ->
 //            session.run(
@@ -60,10 +61,10 @@ class PlanRepository(val dataSource: DataSource) {
 //                    """
 //                        SELECT *
 //                        FROM ia_sak_plan
-//                        WHERE plan_id = :planId
+//                        WHERE prosess_id = :prosessId
 //                    """.trimMargin(),
 //                    mapOf(
-//                        "planId" to planId,
+//                        "prosessId" to prosessId,
 //                    )
 //                ).map { row ->
 //                    Plan(

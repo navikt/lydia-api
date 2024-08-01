@@ -4,6 +4,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
@@ -39,12 +40,34 @@ fun Route.iaSakPlan(
                 either = planEither,
                 orgnummer = orgnummer,
                 auditType = AuditType.create,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it.tilDto())
+            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
         }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
+            planService.hentPlan(
+                iaSak = iaSak,
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
 }
