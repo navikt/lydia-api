@@ -6,6 +6,8 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.plan.Plan
+import no.nav.lydia.ia.sak.domene.plan.PlanTema
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.getHardkodetPlan
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
@@ -79,5 +81,15 @@ class PlanRepository(
 //        }
 
         return getHardkodetPlan()
+    }
+
+    fun oppdaterTema(
+        temaId: Int,
+        undertemaer: List<PlanUndertema>,
+    ): PlanTema {
+        // TODO: oppdater tema i database
+        return getHardkodetPlan().temaer.first { it.id == temaId }.copy(
+            undertemaer = undertemaer,
+        )
     }
 }
