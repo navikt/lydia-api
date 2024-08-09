@@ -20,6 +20,7 @@ import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
+import org.slf4j.LoggerFactory
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
 
@@ -29,6 +30,8 @@ fun Route.iaSakPlan(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
+    val log = LoggerFactory.getLogger(this.javaClass)
+
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/{temaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -65,7 +68,9 @@ fun Route.iaSakPlan(
 
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val saksnummer =
+            call.saksnummer
+                ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`).also { log.error("Ugyldig saksnummer fra parameter") }
 
         val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
 

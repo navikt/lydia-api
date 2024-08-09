@@ -32,6 +32,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import org.slf4j.LoggerFactory
 
 const val KARTLEGGING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
@@ -56,7 +57,7 @@ fun Route.iaSakSpørreundersøkelse(
                 either = kartleggingEither,
                 orgnummer = orgnummer,
                 auditType = AuditType.create,
-                saksnummer = kartleggingEither.getOrNull()?.saksnummer
+                saksnummer = kartleggingEither.getOrNull()?.saksnummer,
             )
         }.map {
             call.respond(HttpStatusCode.Created, it.tilDto(true))
@@ -79,7 +80,7 @@ fun Route.iaSakSpørreundersøkelse(
                 either = kartleggingerEither,
                 orgnummer = orgnummer,
                 auditType = AuditType.access,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(HttpStatusCode.OK, it.tilDto())
@@ -100,7 +101,7 @@ fun Route.iaSakSpørreundersøkelse(
                 either = kartlegging,
                 orgnummer = call.orgnummer,
                 auditType = AuditType.access,
-                saksnummer = call.saksnummer
+                saksnummer = call.saksnummer,
             )
         }.map {
             call.respond(HttpStatusCode.OK, it)
@@ -118,12 +119,13 @@ fun Route.iaSakSpørreundersøkelse(
 
             if (kartlegging.getOrNull()
                     ?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != PÅBEGYNT
-            )
+            ) {
                 return@somEierAvSakIProsess IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
+            }
 
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
-                status = AVSLUTTET
+                status = AVSLUTTET,
             )
         }.also { kartlegging ->
             auditLog.auditloggEither(
@@ -131,7 +133,7 @@ fun Route.iaSakSpørreundersøkelse(
                 either = kartlegging,
                 orgnummer = call.orgnummer,
                 auditType = AuditType.access,
-                saksnummer = call.saksnummer
+                saksnummer = call.saksnummer,
             )
         }.map {
             call.respond(it.tilDto(true))
@@ -153,7 +155,7 @@ fun Route.iaSakSpørreundersøkelse(
                 either = kartlegging,
                 orgnummer = call.orgnummer,
                 auditType = AuditType.delete,
-                saksnummer = call.saksnummer
+                saksnummer = call.saksnummer,
             )
         }.map {
             call.respond(it.tilDto(erEier = false))
@@ -170,7 +172,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
-                status = PÅBEGYNT
+                status = PÅBEGYNT,
             )
         }.also { kartlegging ->
             auditLog.auditloggEither(
@@ -178,7 +180,7 @@ fun Route.iaSakSpørreundersøkelse(
                 either = kartlegging,
                 orgnummer = call.orgnummer,
                 auditType = AuditType.access,
-                saksnummer = call.saksnummer
+                saksnummer = call.saksnummer,
             )
         }.map {
             call.respond(it.tilDto(true))
@@ -192,21 +194,26 @@ fun <T> ApplicationCall.somEierAvSakIProsess(
     iaSakService: IASakService,
     adGrupper: ADGrupper,
     block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>,
-) =
-    somSaksbehandler(adGrupper) { saksbehandler ->
-        val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-        val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
-        val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
-            ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-        if (iaSak.orgnr != orgnummer)
-            IASakError.`ugyldig orgnummer`.left()
-        else if (iaSak.eidAv != saksbehandler.navIdent)
-            IASakError.`ikke eier av sak`.left()
-        else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR)
-            IASakKartleggingError.`sak er ikke i kartleggingsstatus`.left()
-        else
-            block(saksbehandler, iaSak)
+) = somSaksbehandler(adGrupper) { saksbehandler ->
+
+    val log = LoggerFactory.getLogger(this.javaClass)
+
+    val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+        .also { log.error("Ugyldig saksnummer i somEierAvSakIProsess") }
+    val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
+    val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
+        ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+            .also { log.error("Kunne ikke hente IA sak pga ugyldig saksnummer") }
+    if (iaSak.orgnr != orgnummer) {
+        IASakError.`ugyldig orgnummer`.left()
+    } else if (iaSak.eidAv != saksbehandler.navIdent) {
+        IASakError.`ikke eier av sak`.left()
+    } else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR) {
+        IASakKartleggingError.`sak er ikke i kartleggingsstatus`.left()
+    } else {
+        block(saksbehandler, iaSak)
     }
+}
 
 object IASakKartleggingError {
     val `kartlegging er ikke i påbegynt` =
