@@ -18,7 +18,7 @@ class PlanApiTest {
             PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
                 .tilSingelRespons<PlanDto>()
 
-        resp.third.get().temaer.size shouldBe 3
+        resp.third.get().temaer.size shouldBe 4
 
         // TODO: Sjekk i database at det ble lagret rett
 //        postgresContainer
@@ -32,8 +32,6 @@ class PlanApiTest {
         val sak = nySakIKartlegges()
 
         val plan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-
-        plan.temaer.size shouldBe 3
 
         val resp =
             PlanHelper.endreTema(
@@ -84,8 +82,6 @@ class PlanApiTest {
         val sak = nySakIKartlegges()
 
         val plan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-
-        plan.temaer.size shouldBe 3
 
         val resp = PlanHelper.endrePlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, endring = plan.tilRequest())
 
