@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.domene.plan
 
 import kotlinx.datetime.toKotlinLocalDate
-import java.util.*
+import java.util.UUID
 
 val hardkodetPlanId: UUID = UUID.fromString("92ee8fcd-330d-4c64-b954-b6757924b70d")
 
@@ -11,29 +11,36 @@ fun getHardkodetPlan(): Plan =
         publisert = false,
         sistEndret = java.time.LocalDate.now().minusMonths(1).toKotlinLocalDate(),
         sistPublisert = null,
-        temaer = ettPåbegyntTema(),
+        temaer = toAktiveTemaer(),
     )
 
-fun ettPåbegyntTema(): List<PlanTema> =
+fun toAktiveTemaer(): List<PlanTema> =
     listOf(
         PlanTema(
             id = 1,
-            navn = "Sykefraværsarbeid",
-            undertemaer = sykefraværsarbeidPåbegynt,
-            ressurser = hardkodedeRessurser,
+            navn = "Partssamarbeid",
+            undertemaer = `Undertemaer Partssamarbeid Planlagt`,
+            ressurser = emptyList(),
             planlagt = true,
         ),
         PlanTema(
             id = 2,
-            navn = "Partssamarbeid",
-            undertemaer = partssamarbeidIkkeValgt,
-            ressurser = emptyList(),
-            planlagt = false,
+            navn = "Sykefraværsarbeid",
+            undertemaer = `Undertemaer Sykefraværsarbeid Pågår`,
+            ressurser = hardkodedeRessurser,
+            planlagt = true,
         ),
         PlanTema(
             id = 3,
             navn = "Arbeidsmiljø",
-            undertemaer = arbeidsmiljøIkkeValgt,
+            undertemaer = `Undertemaer Arbeidsmiljø Inaktiv`,
+            ressurser = emptyList(),
+            planlagt = false,
+        ),
+        PlanTema(
+            id = 4,
+            navn = "HelseIArbeid",
+            undertemaer = `Undertemaer HelseIArbeid Inaktiv`,
             ressurser = emptyList(),
             planlagt = false,
         ),
@@ -59,26 +66,37 @@ val hardkodedeRessurser: List<PlanRessurs>
             ),
         )
 
-val sykefraværsarbeidPåbegynt: List<PlanUndertema>
+val `Undertemaer Partssamarbeid Planlagt`: List<PlanUndertema>
     get() =
         listOf(
-            sykefraværsrutinerInaktiv.planlegg(minusMonths = 2, plusMonths = 0, status = PlanUndertema.Status.FULLFØRT),
-            oppfølgingssamtalerInaktiv.planlegg(plusMonths = 2, status = PlanUndertema.Status.PÅGÅR),
-            tilretteleggingOgMedvirkningspliktInaktiv.planlegg(plusMonths = 3),
-            gjentagendeSykefraværInaktiv,
+            `Utvikle partssamarbeidet Inaktiv`.planlegg(
+                minusMonths = 2,
+                plusMonths = 0,
+            ),
         )
 
-val partssamarbeidIkkeValgt: List<PlanUndertema>
+val `Undertemaer Sykefraværsarbeid Pågår`: List<PlanUndertema>
     get() =
         listOf(
-            UtviklePartssamarbeidetInaktiv,
+            `Sykefraværsrutiner Inaktiv`.planlegg(minusMonths = 2, plusMonths = 0, status = PlanUndertema.Status.FULLFØRT),
+            `Oppfølgingssamtaler Inaktiv`.planlegg(plusMonths = 2, status = PlanUndertema.Status.PÅGÅR),
+            `Tilretteleggings- og medvirkningsplikt Inaktiv`.planlegg(plusMonths = 3),
+            `Sykefravær - enkeltsaker Inaktiv`,
         )
-val arbeidsmiljøIkkeValgt: List<PlanUndertema>
+val `Undertemaer Arbeidsmiljø Inaktiv`: List<PlanUndertema>
     get() =
         listOf(
-            arbeidsmiljølovenInaktiv,
-            medbestemmelseInaktiv,
-            medvirkningInaktiv,
+            `Utvikle arbeidsmiljøet Inaktiv`,
+            `Endring og omstilling Inaktiv`,
+            `Oppfølging av arbeidsmiljøundersøkelser Inaktiv`,
+            `Livsfaseorientert personlapolitikk Inaktiv`,
+            `Psykisk helse Inaktiv`,
+        )
+
+val `Undertemaer HelseIArbeid Inaktiv`: List<PlanUndertema>
+    get() =
+        listOf(
+            `HelseIArbeid Inaktiv`,
         )
 
 fun PlanUndertema.planlegg(
@@ -98,53 +116,7 @@ const val DUMMY_MÅLSETNING =
 const val DUMMY_BESKRIVELSE =
     "Maecenas pulvinar dapibus venenatis. Sed a magna tortor. Sed ac cursus tortor, in molestie libero. Praesent elementum pharetra commodo. Pellentesque non ultrices orci. Sed justo risus, aliquet ac vehicula et, ultrices et nunc. Duis fermentum semper dolor in aliquam. In erat elit, commodo vitae lorem quis, rutrum placerat nisl. Ut sed posuere leo, id tristique quam."
 
-val sykefraværsrutinerInaktiv =
-    PlanUndertema(
-        id = 1,
-        navn = "Sykefraværsrutiner",
-        målsetning = DUMMY_MÅLSETNING,
-        beskrivelse = DUMMY_BESKRIVELSE,
-        planlagt = false,
-        startDato = null,
-        sluttDato = null,
-        status = null,
-    )
-
-val oppfølgingssamtalerInaktiv =
-    PlanUndertema(
-        id = 2,
-        navn = "Oppfølgingssamtaler",
-        målsetning = DUMMY_MÅLSETNING,
-        beskrivelse = DUMMY_BESKRIVELSE,
-        planlagt = false,
-        startDato = null,
-        sluttDato = null,
-        status = null,
-    )
-val tilretteleggingOgMedvirkningspliktInaktiv =
-    PlanUndertema(
-        id = 3,
-        navn = "Tilretteleggings- og medvirkningsplikt",
-        målsetning = DUMMY_MÅLSETNING,
-        beskrivelse = DUMMY_BESKRIVELSE,
-        planlagt = false,
-        startDato = null,
-        sluttDato = null,
-        status = null,
-    )
-val gjentagendeSykefraværInaktiv =
-    PlanUndertema(
-        id = 4,
-        navn = "Gjentagende sykefravær",
-        målsetning = DUMMY_MÅLSETNING,
-        beskrivelse = DUMMY_BESKRIVELSE,
-        planlagt = false,
-        startDato = null,
-        sluttDato = null,
-        status = null,
-    )
-
-val UtviklePartssamarbeidetInaktiv =
+val `Utvikle partssamarbeidet Inaktiv` =
     PlanUndertema(
         id = 5,
         navn = "Utvikle partssamarbeidet",
@@ -156,10 +128,56 @@ val UtviklePartssamarbeidetInaktiv =
         status = null,
     )
 
-val arbeidsmiljølovenInaktiv =
+val `Sykefraværsrutiner Inaktiv` =
+    PlanUndertema(
+        id = 1,
+        navn = "Sykefraværsrutiner",
+        målsetning = DUMMY_MÅLSETNING,
+        beskrivelse = DUMMY_BESKRIVELSE,
+        planlagt = false,
+        startDato = null,
+        sluttDato = null,
+        status = null,
+    )
+val `Oppfølgingssamtaler Inaktiv` =
+    PlanUndertema(
+        id = 2,
+        navn = "Oppfølgingssamtaler",
+        målsetning = DUMMY_MÅLSETNING,
+        beskrivelse = DUMMY_BESKRIVELSE,
+        planlagt = false,
+        startDato = null,
+        sluttDato = null,
+        status = null,
+    )
+val `Tilretteleggings- og medvirkningsplikt Inaktiv` =
+    PlanUndertema(
+        id = 3,
+        navn = "Tilretteleggings- og medvirkningsplikt",
+        målsetning = DUMMY_MÅLSETNING,
+        beskrivelse = DUMMY_BESKRIVELSE,
+        planlagt = false,
+        startDato = null,
+        sluttDato = null,
+        status = null,
+    )
+
+val `Sykefravær - enkeltsaker Inaktiv` =
+    PlanUndertema(
+        id = 4,
+        navn = "Sykefravær - enkeltsaker",
+        målsetning = DUMMY_MÅLSETNING,
+        beskrivelse = DUMMY_BESKRIVELSE,
+        planlagt = false,
+        startDato = null,
+        sluttDato = null,
+        status = null,
+    )
+
+val `Utvikle arbeidsmiljøet Inaktiv` =
     PlanUndertema(
         id = 6,
-        navn = "Arbeidsmiljøloven",
+        navn = "Utvikle arbeidsmiljøet",
         målsetning = DUMMY_MÅLSETNING,
         beskrivelse = DUMMY_BESKRIVELSE,
         planlagt = false,
@@ -168,10 +186,10 @@ val arbeidsmiljølovenInaktiv =
         status = null,
     )
 
-val medbestemmelseInaktiv =
+val `Endring og omstilling Inaktiv` =
     PlanUndertema(
         id = 7,
-        navn = "Medbestemmelse",
+        navn = "Endring og omstilling",
         målsetning = DUMMY_MÅLSETNING,
         beskrivelse = DUMMY_BESKRIVELSE,
         planlagt = false,
@@ -180,10 +198,46 @@ val medbestemmelseInaktiv =
         status = null,
     )
 
-val medvirkningInaktiv =
+val `Oppfølging av arbeidsmiljøundersøkelser Inaktiv` =
     PlanUndertema(
         id = 8,
-        navn = "Medvirkning",
+        navn = "Oppfølging av arbeidsmiljøundersøkelser",
+        målsetning = DUMMY_MÅLSETNING,
+        beskrivelse = DUMMY_BESKRIVELSE,
+        planlagt = false,
+        startDato = null,
+        sluttDato = null,
+        status = null,
+    )
+
+val `Livsfaseorientert personlapolitikk Inaktiv` =
+    PlanUndertema(
+        id = 9,
+        navn = "Livsfaseorientert personlapolitikk",
+        målsetning = DUMMY_MÅLSETNING,
+        beskrivelse = DUMMY_BESKRIVELSE,
+        planlagt = false,
+        startDato = null,
+        sluttDato = null,
+        status = null,
+    )
+
+val `Psykisk helse Inaktiv` =
+    PlanUndertema(
+        id = 10,
+        navn = "Psykisk helse",
+        målsetning = DUMMY_MÅLSETNING,
+        beskrivelse = DUMMY_BESKRIVELSE,
+        planlagt = false,
+        startDato = null,
+        sluttDato = null,
+        status = null,
+    )
+
+val `HelseIArbeid Inaktiv` =
+    PlanUndertema(
+        id = 11,
+        navn = "HelseIArbeid",
         målsetning = DUMMY_MÅLSETNING,
         beskrivelse = DUMMY_BESKRIVELSE,
         planlagt = false,
