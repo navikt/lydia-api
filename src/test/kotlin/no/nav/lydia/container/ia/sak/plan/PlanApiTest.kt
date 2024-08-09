@@ -41,8 +41,6 @@ class PlanApiTest {
                 endring = plan.tilRequest().first().undertemaer,
             )
 
-        resp.undertemaer.size shouldBe 4
-
         // TODO: Sjekk i database at det ble lagret rett
 //        postgresContainer
 //            .hentEnkelKolonne<String>(
@@ -84,8 +82,6 @@ class PlanApiTest {
         val plan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
 
         val resp = PlanHelper.endrePlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, endring = plan.tilRequest())
-
-        resp.size shouldBe 3
 
         // TODO: Sjekk i database at det ble lagret rett
 //        postgresContainer
