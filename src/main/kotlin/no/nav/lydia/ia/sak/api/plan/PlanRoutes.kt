@@ -8,7 +8,6 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
-import kotlinx.datetime.LocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -23,19 +22,6 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
-
-data class EndreUndertemaRequest(
-    val id: Int,
-    val planlagt: Boolean,
-    val startDato: LocalDate?,
-    val sluttDato: LocalDate?,
-)
-
-data class EndreTemaRequest(
-    val id: Int,
-    val planlagt: Boolean,
-    val undertemaer: List<EndreUndertemaRequest>,
-)
 
 fun Route.iaSakPlan(
     planService: PlanService,
@@ -103,7 +89,7 @@ fun Route.iaSakPlan(
         }
     }
 
-    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
+    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->

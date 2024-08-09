@@ -46,6 +46,11 @@ import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
+import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
+import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -94,7 +99,7 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.util.*
+import java.util.UUID
 import kotlin.io.path.Path
 import kotlin.test.fail
 
@@ -125,7 +130,7 @@ class TestContainerHelper {
                     kafkaContainerHelper.kafkaContainer,
                     postgresContainer.postgresContainer,
                     oauth2ServerContainer.mockOath2Server,
-                    piaPdfgenContainer.piaPdfgenContainer
+                    piaPdfgenContainer.piaPdfgenContainer,
                 )
                 .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
                 .withNetwork(network)
@@ -141,10 +146,10 @@ class TestContainerHelper {
                                     mapOf(
                                         "CONSUMER_LOOP_DELAY" to "1",
                                         "NAIS_CLUSTER_NAME" to "lokal",
-                                    )
-                                )
+                                    ),
+                                ),
                         )
-                        .plus(piaPdfgenContainer.envVars())
+                        .plus(piaPdfgenContainer.envVars()),
                 )
                 .waitingFor(HttpWaitStrategy().forPath("/internal/isready")).apply {
                     start()
@@ -167,7 +172,7 @@ class TestContainerHelper {
                         tapteDagsverk = 12_500.0,
                     )
                 },
-                topic = Topic.STATISTIKK_LAND_TOPIC
+                topic = Topic.STATISTIKK_LAND_TOPIC,
             )
 
             // -- Last inn alle næringer
@@ -188,7 +193,7 @@ class TestContainerHelper {
                         )
                     }
                 },
-                topic = Topic.STATISTIKK_NARING_TOPIC
+                topic = Topic.STATISTIKK_NARING_TOPIC,
             )
             // -- generer statistikk for bransjer
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
@@ -205,7 +210,7 @@ class TestContainerHelper {
                         )
                     }
                 },
-                topic = Topic.STATISTIKK_BRANSJE_TOPIC
+                topic = Topic.STATISTIKK_BRANSJE_TOPIC,
             )
             // -- generer statistikk for sektorer
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
@@ -222,7 +227,7 @@ class TestContainerHelper {
                         )
                     }
                 },
-                topic = Topic.STATISTIKK_SEKTOR_TOPIC
+                topic = Topic.STATISTIKK_SEKTOR_TOPIC,
             )
 
             // -- laster inn standard virksomheter (med statistikk)
@@ -230,35 +235,44 @@ class TestContainerHelper {
         }
 
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
+
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()
+
         fun GenericContainer<*>.performPost(url: String) = buildUrl(url = url).httpPost()
+
         fun GenericContainer<*>.performDelete(url: String) = buildUrl(url = url).httpDelete()
+
         fun GenericContainer<*>.performPut(url: String) = buildUrl(url = url).httpPut()
 
         infix fun GenericContainer<*>.shouldContainLog(regex: Regex) = logs shouldContain regex
+
         infix fun GenericContainer<*>.shouldNotContainLog(regex: Regex) = logs shouldNotContain regex
     }
 }
 
 class SakHelper {
-
     companion object {
-        fun hentSaker(orgnummer: String, token: String = oauth2ServerContainer.saksbehandler1.token) =
-            hentSakerRespons(orgnummer = orgnummer, token = token).third.fold(
-                success = { respons -> respons },
-                failure = {
-                    fail(it.stackTraceToString())
-                })
+        fun hentSaker(
+            orgnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = hentSakerRespons(orgnummer = orgnummer, token = token).third.fold(
+            success = { respons -> respons },
+            failure = {
+                fail(it.stackTraceToString())
+            },
+        )
 
         fun hentSakerRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
-                .authentication().bearer(token = token)
-                .tilListeRespons<IASakDto>()
+        ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
+            .authentication().bearer(token = token)
+            .tilListeRespons<IASakDto>()
 
-        fun hentAktivSak(orgnummer: String, token: String = oauth2ServerContainer.saksbehandler1.token): IASakDto {
+        fun hentAktivSak(
+            orgnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ): IASakDto {
             val triple = hentAktivSakRespons(orgnummer = orgnummer, token = token)
 
             if (triple.statuskode() == 200) {
@@ -273,23 +287,22 @@ class SakHelper {
         fun hentAktivSakRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer/aktiv")
-                .authentication().bearer(token = token)
-                .responseObject(IASakDto.serializer())
+        ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer/aktiv")
+            .authentication().bearer(token = token)
+            .responseObject(IASakDto.serializer())
 
         fun hentIASakLeveranser(
             orgnr: String,
             saksnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
-                .authentication().bearer(token = token)
-                .tilListeRespons<IASakLeveranserPerTjenesteDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = {
-                        fail(it.stackTraceToString())
-                    })
+        ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
+            .authentication().bearer(token = token)
+            .tilListeRespons<IASakLeveranserPerTjenesteDto>().third.fold(
+                success = { respons -> respons },
+                failure = {
+                    fail(it.stackTraceToString())
+                },
+            )
 
         fun hentIATjenester(token: String = oauth2ServerContainer.saksbehandler1.token) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH")
@@ -298,7 +311,8 @@ class SakHelper {
                     success = { respons -> respons },
                     failure = {
                         fail(it.stackTraceToString())
-                    })
+                    },
+                )
 
         fun hentModuler(token: String = oauth2ServerContainer.saksbehandler1.token) =
             lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH")
@@ -307,33 +321,30 @@ class SakHelper {
                     success = { respons -> respons },
                     failure = {
                         fail(it.stackTraceToString())
-                    })
+                    },
+                )
 
         fun hentSamarbeidshistorikk(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            hentSamarbeidshistorikkRespons(orgnummer, token).third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.stackTraceToString()) }
-            )
+        ) = hentSamarbeidshistorikkRespons(orgnummer, token).third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.stackTraceToString()) },
+        )
 
         fun hentSamarbeidshistorikkRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnummer")
-                .authentication().bearer(token = token)
-                .tilListeRespons<SakshistorikkDto>()
-
+        ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnummer")
+            .authentication().bearer(token = token)
+            .tilListeRespons<SakshistorikkDto>()
 
         fun hentSamarbeidshistorikkForOrgnrRespons(
             orgnr: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnr")
-                .authentication().bearer(token = token)
-                .tilListeRespons<SakshistorikkDto>()
+        ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$SAMARBEIDSHISTORIKK_PATH/$orgnr")
+            .authentication().bearer(token = token)
+            .tilListeRespons<SakshistorikkDto>()
 
         fun opprettSakForVirksomhetRespons(
             orgnummer: String,
@@ -345,10 +356,11 @@ class SakHelper {
         fun opprettSakForVirksomhet(
             orgnummer: String,
             token: String = oauth2ServerContainer.superbruker1.token,
-        ): IASakDto = opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = token).third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) }
-        )
+        ): IASakDto =
+            opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = token).third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
 
         fun nySakIKontaktes(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
@@ -386,15 +398,15 @@ class SakHelper {
         fun nyHendelse(
             sakshendelse: IASakshendelseDto,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
-                .authentication().bearer(token)
-                .jsonBody(Json.encodeToString(sakshendelse))
-                .tilSingelRespons<IASakDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = {
-                        fail(it.message)
-                    })
+        ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+            .authentication().bearer(token)
+            .jsonBody(Json.encodeToString(sakshendelse))
+            .tilSingelRespons<IASakDto>().third.fold(
+                success = { respons -> respons },
+                failure = {
+                    fail(it.message)
+                },
+            )
 
         fun nyHendelsePåSakMedRespons(
             sak: IASakDto,
@@ -411,8 +423,8 @@ class SakHelper {
             sak: IASakDto,
             hendelsestype: IASakshendelseType,
             payload: String?,
-        ): Request {
-            return lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
+        ): Request =
+            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$SAK_HENDELSE_SUB_PATH")
                 .authentication().bearer(token)
                 .jsonBody(
                     Json.encodeToString(
@@ -421,11 +433,10 @@ class SakHelper {
                             saksnummer = sak.saksnummer,
                             hendelsesType = hendelsestype,
                             endretAvHendelseId = sak.endretAvHendelseId,
-                            payload = payload
-                        )
-                    )
+                            payload = payload,
+                        ),
+                    ),
                 )
-        }
 
         fun oppdaterIASakLeveranse(
             orgnr: String,
@@ -433,16 +444,15 @@ class SakHelper {
             iaSakLeveranseId: Int,
             status: IASakLeveranseStatus,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performPut("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
-                .authentication().bearer(token)
-                .jsonBody(
-                    Json.encodeToString(
-                        IASakLeveranseOppdateringsDto(
-                            status = status
-                        )
-                    )
-                )
+        ) = lydiaApiContainer.performPut("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(
+                    IASakLeveranseOppdateringsDto(
+                        status = status,
+                    ),
+                ),
+            )
 
         fun IASakLeveranseDto.oppdaterIASakLeveranse(
             orgnr: String,
@@ -458,48 +468,48 @@ class SakHelper {
             success = { it },
             failure = {
                 fail("${it.message} ${it.response.body().asString("text/plain")}")
-            })
+            },
+        )
 
         fun slettIASakLeveranse(
             orgnr: String,
             saksnummer: String,
             iaSakLeveranseId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performDelete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
-                .authentication().bearer(token)
+        ) = lydiaApiContainer.performDelete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer/$iaSakLeveranseId")
+            .authentication().bearer(token)
 
         fun IASakLeveranseDto.slettIASakLeveranse(
             orgnr: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            slettIASakLeveranse(
-                orgnr = orgnr,
-                saksnummer = saksnummer,
-                iaSakLeveranseId = id,
-                token = token
-            ).tilSingelRespons<Int>().third.fold(
-                success = { it },
-                failure = {
-                    fail("${it.message} ${it.response.body().asString("text/plain")}")
-                })
+        ) = slettIASakLeveranse(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            iaSakLeveranseId = id,
+            token = token,
+        ).tilSingelRespons<Int>().third.fold(
+            success = { it },
+            failure = {
+                fail("${it.message} ${it.response.body().asString("text/plain")}")
+            },
+        )
 
         fun IASakDto.opprettIASakLeveranse(
             frist: LocalDate = java.time.LocalDate.now().toKotlinLocalDate(),
             modulId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            opprettIASakLeveranse(
-                orgnr = orgnr,
-                saksnummer = saksnummer,
-                frist = frist,
-                modulId = modulId,
-                token = token
-            ).tilSingelRespons<IASakLeveranseDto>().third.fold(
-                success = { it },
-                failure = {
-                    fail("${it.message} ${it.response.body().asString("text/plain")}")
-                })
+        ) = opprettIASakLeveranse(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            frist = frist,
+            modulId = modulId,
+            token = token,
+        ).tilSingelRespons<IASakLeveranseDto>().third.fold(
+            success = { it },
+            failure = {
+                fail("${it.message} ${it.response.body().asString("text/plain")}")
+            },
+        )
 
         fun opprettIASakLeveranse(
             orgnr: String,
@@ -507,30 +517,27 @@ class SakHelper {
             frist: LocalDate,
             modulId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
-                .authentication().bearer(token)
-                .jsonBody(
-                    Json.encodeToString(
-                        IASakLeveranseOpprettelsesDto(
-                            saksnummer = saksnummer,
-                            modulId = modulId,
-                            frist = frist
-                        )
-                    )
-                )
-
+        ) = lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$orgnr/$saksnummer")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(
+                    IASakLeveranseOpprettelsesDto(
+                        saksnummer = saksnummer,
+                        modulId = modulId,
+                        frist = frist,
+                    ),
+                ),
+            )
 
         fun nyHendelsePåSak(
             sak: IASakDto,
             hendelsestype: IASakshendelseType,
             token: String = oauth2ServerContainer.saksbehandler1.token,
             payload: String? = null,
-        ) =
-            nyHendelsePåSakMedRespons(sak = sak, hendelsestype = hendelsestype, payload = payload, token = token)
-                .third.fold(success = { respons -> respons }, failure = {
-                    fail("${it.message} ${it.response.body().asString("text/plain; charset=UTF-8")}")
-                })
+        ) = nyHendelsePåSakMedRespons(sak = sak, hendelsestype = hendelsestype, payload = payload, token = token)
+            .third.fold(success = { respons -> respons }, failure = {
+                fail("${it.message} ${it.response.body().asString("text/plain; charset=UTF-8")}")
+            })
 
         fun IASakDto.slettSak(token: String = oauth2ServerContainer.superbruker1.token) =
             nyHendelsePåSak(sak = this, hendelsestype = IASakshendelseType.SLETT_SAK, token = token)
@@ -539,26 +546,23 @@ class SakHelper {
             hendelsestype: IASakshendelseType,
             token: String = oauth2ServerContainer.saksbehandler1.token,
             payload: String? = null,
-        ) =
-            nyHendelsePåSak(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
+        ) = nyHendelsePåSak(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
         fun IASakDto.nyHendelseRespons(
             hendelsestype: IASakshendelseType,
             token: String = oauth2ServerContainer.saksbehandler1.token,
             payload: String? = null,
-        ) =
-            nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
+        ) = nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
-        fun IASakDto.nyIkkeAktuellHendelse(
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = this.nyHendelse(
-            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-            token = token,
-            payload = ValgtÅrsak(
-                type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-            ).toJson()
-        )
+        fun IASakDto.nyIkkeAktuellHendelse(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            this.nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                token = token,
+                payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
+                ).toJson(),
+            )
 
         fun IASakDto.oppdaterHendelsesTidspunkter(
             antallDagerTilbake: Long,
@@ -566,17 +570,17 @@ class SakHelper {
         ): IASakDto {
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-                    update ia_sak_hendelse 
-                        set opprettet=(opprettet - interval '$antallDagerTilbake' day)
-                        where saksnummer='${this.saksnummer}';
-                """.trimIndent()
+                update ia_sak_hendelse 
+                    set opprettet=(opprettet - interval '$antallDagerTilbake' day)
+                    where saksnummer='${this.saksnummer}';
+                """.trimIndent(),
             )
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-                    update ia_sak 
-                        set endret=(opprettet - interval '$antallDagerTilbake' day)
-                        where saksnummer='${this.saksnummer}';
-                """.trimIndent()
+                update ia_sak 
+                    set endret=(opprettet - interval '$antallDagerTilbake' day)
+                    where saksnummer='${this.saksnummer}';
+                """.trimIndent(),
             )
             return requireNotNull(hentSaker(this.orgnr, token = token).find { it.saksnummer == this.saksnummer })
         }
@@ -605,56 +609,51 @@ class IASakKartleggingHelper {
             orgnr: String,
             saksnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/opprett")
-                .authentication().bearer(token)
+        ) = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/opprett")
+            .authentication().bearer(token)
 
         fun hentIASakKartlegginger(
             orgnr: String,
             saksnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
-                .authentication().bearer(token)
-                .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
-                    success = { it },
-                    failure = { fail(it.message) }
-                )
+        ) = lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
+            .authentication().bearer(token)
+            .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
 
-        fun IASakDto.opprettKartlegging(
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = opprettIASakKartlegging(
-            orgnr = orgnr,
-            saksnummer = saksnummer,
-            token = token,
-        ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) }
-        )
+        fun IASakDto.opprettKartlegging(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            opprettIASakKartlegging(
+                orgnr = orgnr,
+                saksnummer = saksnummer,
+                token = token,
+            ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
 
         fun SpørreundersøkelseDto.start(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ) =
-            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/start")
-                .authentication().bearer(token)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                    success = { it },
-                    failure = { fail(it.message) }
-                )
+        ) = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/start")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
 
         fun SpørreundersøkelseDto.avslutt(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ) =
-            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/avslutt")
-                .authentication().bearer(token)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                    success = { it },
-                    failure = { fail(it.message) }
-                )
+        ) = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/avslutt")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
 
         fun SpørreundersøkelseDto.svarAlternativerTilEtFlervalgSpørsmål(): List<String> =
             this.svarAlternativerTilEtSpørsmål(ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER).map { it.svarId }
@@ -671,33 +670,32 @@ class IASakKartleggingHelper {
             kartleggingId = kartleggingId,
             spørsmålId = ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER,
             sesjonId = sesjonId,
-            svarIder = svarIder
+            svarIder = svarIder,
         )
 
         fun SpørreundersøkelseDto.sendKartleggingSvarTilKafka(
             spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
             sesjonId: String = UUID.randomUUID().toString(),
-            svarIder: List<String> = listOf(temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
+            svarIder: List<String> =
+                listOf(temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
         ) = sendKartleggingSvarTilKafka(
             kartleggingId = kartleggingId,
             spørsmålId = spørsmålId,
             sesjonId = sesjonId,
-            svarIder = svarIder
+            svarIder = svarIder,
         )
 
-        fun SpørreundersøkelseDto.stengTema(
-            temaId: Int,
-        ) {
+        fun SpørreundersøkelseDto.stengTema(temaId: Int) {
             temaMedSpørsmålOgSvaralternativer.filter { it.temaId == temaId } shouldHaveSize 1
             kafkaContainerHelper.sendOgVentTilKonsumert(
                 nøkkel = Json.encodeToString(
                     SpørreundersøkelseHendeleseNøkkel(
                         this.kartleggingId,
-                        HendelsType.STENG_TEMA
-                    )
+                        HendelsType.STENG_TEMA,
+                    ),
                 ),
                 melding = Json.encodeToString(temaId),
-                topic = Topic.SPORREUNDERSOKELSE_HENDELSE_TOPIC
+                topic = Topic.SPORREUNDERSOKELSE_HENDELSE_TOPIC,
             )
         }
 
@@ -707,19 +705,18 @@ class IASakKartleggingHelper {
             sesjonId: String = UUID.randomUUID().toString(),
             svarIder: List<String> = listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()),
         ): SpørreundersøkelseSvarDto {
-
             val spørreundersøkelseSvarDto = SpørreundersøkelseSvarDto(
                 spørreundersøkelseId = kartleggingId,
                 spørsmålId = spørsmålId,
                 sesjonId = sesjonId,
-                svarIder = svarIder
+                svarIder = svarIder,
             )
             kafkaContainerHelper.sendOgVentTilKonsumert(
-                nøkkel = "${sesjonId}_${spørsmålId}",
+                nøkkel = "${sesjonId}_$spørsmålId",
                 melding = Json.encodeToString(
-                    spørreundersøkelseSvarDto
+                    spørreundersøkelseSvarDto,
                 ),
-                topic = Topic.SPORREUNDERSOKELSE_SVAR_TOPIC
+                topic = Topic.SPORREUNDERSOKELSE_SVAR_TOPIC,
             )
             return spørreundersøkelseSvarDto
         }
@@ -729,25 +726,94 @@ class IASakKartleggingHelper {
             orgnr: String,
             saksnummer: String,
             kartleggingId: String,
-        ) =
-            lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
-                .authentication().bearer(token)
-                .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = { fail(it.message) }
+        ) = lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+    }
+}
+
+class PlanHelper {
+    companion object {
+        fun opprettPlan(
+            orgnr: String,
+            saksnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer")
+            .authentication().bearer(token)
+
+        fun hentPlan(
+            orgnr: String,
+            saksnummer: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer")
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        fun endreTema(
+            orgnr: String,
+            saksnummer: String,
+            temaId: Int,
+            endring: List<EndreUndertemaRequest>,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/$temaId")
+            .jsonBody(
+                Json.encodeToString(
+                    endring,
+                ),
+            )
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanTemaDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        fun endrePlan(
+            orgnr: String,
+            saksnummer: String,
+            endring: List<EndreTemaRequest>,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer")
+            .jsonBody(
+                Json.encodeToString(
+                    endring,
+                ),
+            )
+            .authentication().bearer(token)
+            .tilListeRespons<PlanTemaDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        fun PlanDto.tilRequest(): List<EndreTemaRequest> =
+            this.temaer.map { tema ->
+                EndreTemaRequest(
+                    tema.id,
+                    tema.planlagt,
+                    tema.undertemaer.map { undertema ->
+                        EndreUndertemaRequest(
+                            undertema.id,
+                            undertema.planlagt,
+                            undertema.startDato,
+                            undertema.sluttDato,
+                        )
+                    },
                 )
+            }
     }
 }
 
 class IATjenesteoversiktHelper {
     companion object {
-        fun hentMineIATjenester(
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
+        fun hentMineIATjenester(token: String = oauth2ServerContainer.saksbehandler1.token) =
             lydiaApiContainer.performGet("$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH")
                 .authentication().bearer(token)
                 .tilListeRespons<IATjenesteoversiktDto>()
-
     }
 }
 
@@ -765,7 +831,7 @@ class LeveranseHelper {
                     '${modul.navn}',
                     ${modul.deaktivert}
                 )
-            """.trimIndent()
+                """.trimIndent(),
             )
 
         fun leggTilIATjeneste(iaTjeneste: IATjenesteDto) =
@@ -776,21 +842,21 @@ class LeveranseHelper {
                     '${iaTjeneste.navn}',
                     ${iaTjeneste.deaktivert}
                 )
-            """.trimIndent()
+                """.trimIndent(),
             )
 
         fun deaktiverModul(modul: ModulDto) =
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-            update modul set deaktivert = true where id = ${modul.id}
-        """.trimIndent()
+                update modul set deaktivert = true where id = ${modul.id}
+                """.trimIndent(),
             )
 
         fun deaktiverIATjeneste(iaTjeneste: IATjenesteDto) =
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-            update ia_tjeneste set deaktivert = true where id = ${iaTjeneste.id}
-        """.trimIndent()
+                update ia_tjeneste set deaktivert = true where id = ${iaTjeneste.id}
+                """.trimIndent(),
             )
     }
 }
@@ -822,7 +888,7 @@ class StatusoversiktHelper {
             snittFilter = snittFilter,
             eiere = eiere,
             sektor = sektor,
-            token = token
+            token = token,
         )
 
         private fun hentStatusoversiktRespons(
@@ -838,23 +904,22 @@ class StatusoversiktHelper {
             eiere: String = "",
             sektor: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet(
-                STATUSOVERSIKT_PATH +
-                        "?${Søkeparametere.KOMMUNER}=$kommuner" +
-                        "&${Søkeparametere.FYLKER}=$fylker" +
-                        "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
-                        "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
-                        "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
-                        "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
-                        "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
-                        "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
-                        "&${Søkeparametere.SNITT_FILTER}=$snittFilter" +
-                        "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
-                        "&${Søkeparametere.SEKTOR}=$sektor"
-            )
-                .authentication().bearer(token)
-                .tilSingelRespons<StatusoversiktResponsDto>()
+        ) = lydiaApiContainer.performGet(
+            STATUSOVERSIKT_PATH +
+                "?${Søkeparametere.KOMMUNER}=$kommuner" +
+                "&${Søkeparametere.FYLKER}=$fylker" +
+                "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
+                "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
+                "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
+                "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
+                "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
+                "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
+                "&${Søkeparametere.SNITT_FILTER}=$snittFilter" +
+                "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
+                "&${Søkeparametere.SEKTOR}=$sektor",
+        )
+            .authentication().bearer(token)
+            .tilSingelRespons<StatusoversiktResponsDto>()
     }
 }
 
@@ -876,26 +941,25 @@ class StatistikkHelper {
             bransjeProgram: String = "",
             eiere: String = "",
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            hentSykefraværRespons(
-                kommuner = kommuner,
-                fylker = fylker,
-                næringsgrupper = næringsgrupper,
-                sorteringsnokkel = sorteringsnokkel,
-                sorteringsretning = sorteringsretning,
-                sykefraværsprosentFra = sykefraværsprosentFra,
-                sykefraværsprosentTil = sykefraværsprosentTil,
-                ansatteFra = ansatteFra,
-                ansatteTil = ansatteTil,
-                iaStatus = iaStatus,
-                side = side,
-                bransjeProgram = bransjeProgram,
-                eiere = eiere,
-                token = token
-            ).third
-                .fold(success = { response -> success.invoke(response) }, failure = {
-                    fail("${it.message} - ${it.response.body().asString("text/plain")}")
-                })
+        ) = hentSykefraværRespons(
+            kommuner = kommuner,
+            fylker = fylker,
+            næringsgrupper = næringsgrupper,
+            sorteringsnokkel = sorteringsnokkel,
+            sorteringsretning = sorteringsretning,
+            sykefraværsprosentFra = sykefraværsprosentFra,
+            sykefraværsprosentTil = sykefraværsprosentTil,
+            ansatteFra = ansatteFra,
+            ansatteTil = ansatteTil,
+            iaStatus = iaStatus,
+            side = side,
+            bransjeProgram = bransjeProgram,
+            eiere = eiere,
+            token = token,
+        ).third
+            .fold(success = { response -> success.invoke(response) }, failure = {
+                fail("${it.message} - ${it.response.body().asString("text/plain")}")
+            })
 
         fun hentSykefravær(
             kommuner: String = "",
@@ -914,25 +978,24 @@ class StatistikkHelper {
             eiere: String = "",
             sektor: List<Sektor> = listOf(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            hentSykefraværRespons(
-                kommuner = kommuner,
-                fylker = fylker,
-                næringsgrupper = næringsgrupper,
-                sorteringsnokkel = sorteringsnokkel,
-                sorteringsretning = sorteringsretning,
-                sykefraværsprosentFra = sykefraværsprosentFra,
-                sykefraværsprosentTil = sykefraværsprosentTil,
-                snittFilter = snittFilter,
-                ansatteFra = ansatteFra,
-                ansatteTil = ansatteTil,
-                iaStatus = iaStatus,
-                side = side,
-                bransjeProgram = bransjeProgram,
-                eiere = eiere,
-                sektor = sektor,
-                token = token
-            ).third.get()
+        ) = hentSykefraværRespons(
+            kommuner = kommuner,
+            fylker = fylker,
+            næringsgrupper = næringsgrupper,
+            sorteringsnokkel = sorteringsnokkel,
+            sorteringsretning = sorteringsretning,
+            sykefraværsprosentFra = sykefraværsprosentFra,
+            sykefraværsprosentTil = sykefraværsprosentTil,
+            snittFilter = snittFilter,
+            ansatteFra = ansatteFra,
+            ansatteTil = ansatteTil,
+            iaStatus = iaStatus,
+            side = side,
+            bransjeProgram = bransjeProgram,
+            eiere = eiere,
+            sektor = sektor,
+            token = token,
+        ).third.get()
 
         fun hentSykefraværRespons(
             kommuner: String = "",
@@ -951,51 +1014,46 @@ class StatistikkHelper {
             eiere: String = "",
             sektor: List<Sektor> = listOf(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet(
-                SYKEFRAVÆRSSTATISTIKK_PATH +
-                        "?${Søkeparametere.KOMMUNER}=$kommuner" +
-                        "&${Søkeparametere.FYLKER}=$fylker" +
-                        "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
-                        "&${Søkeparametere.SORTERINGSNØKKEL}=$sorteringsnokkel" +
-                        "&${Søkeparametere.SORTERINGSRETNING}=$sorteringsretning" +
-                        "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
-                        "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
-                        "&${Søkeparametere.SNITT_FILTER}=$snittFilter" +
-                        "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
-                        "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
-                        "&${Søkeparametere.IA_STATUS}=$iaStatus" +
-                        "&${Søkeparametere.SIDE}=$side" +
-                        "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
-                        "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
-                        "&${Søkeparametere.SEKTOR}=${sektor.joinToString(separator = ",") { it.kode }}"
-            )
-                .authentication().bearer(token)
-                .tilSingelRespons<VirksomhetsoversiktResponsDto>()
+        ) = lydiaApiContainer.performGet(
+            SYKEFRAVÆRSSTATISTIKK_PATH +
+                "?${Søkeparametere.KOMMUNER}=$kommuner" +
+                "&${Søkeparametere.FYLKER}=$fylker" +
+                "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
+                "&${Søkeparametere.SORTERINGSNØKKEL}=$sorteringsnokkel" +
+                "&${Søkeparametere.SORTERINGSRETNING}=$sorteringsretning" +
+                "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
+                "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
+                "&${Søkeparametere.SNITT_FILTER}=$snittFilter" +
+                "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
+                "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
+                "&${Søkeparametere.IA_STATUS}=$iaStatus" +
+                "&${Søkeparametere.SIDE}=$side" +
+                "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
+                "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
+                "&${Søkeparametere.SEKTOR}=${sektor.joinToString(separator = ",") { it.kode }}",
+        )
+            .authentication().bearer(token)
+            .tilSingelRespons<VirksomhetsoversiktResponsDto>()
 
         fun hentStatistikkHistorikk(orgnr: String) = hentStatistikkHistorikkRespons(orgnr).third.get()
+
         private fun hentStatistikkHistorikkRespons(
             orgnr: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet(
-                "$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnr/$HISTORISK_STATISTIKK"
-            )
-                .authentication().bearer(token)
-                .tilSingelRespons<HistoriskStatistikk>()
-
+        ) = lydiaApiContainer.performGet(
+            "$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnr/$HISTORISK_STATISTIKK",
+        )
+            .authentication().bearer(token)
+            .tilSingelRespons<HistoriskStatistikk>()
 
         fun hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnummer/$SISTE_4_KVARTALER")
-                .authentication().bearer(token)
-                .tilSingelRespons<VirksomhetsstatistikkSiste4KvartalDto>()
+        ) = lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnummer/$SISTE_4_KVARTALER")
+            .authentication().bearer(token)
+            .tilSingelRespons<VirksomhetsstatistikkSiste4KvartalDto>()
 
-        private fun hentPubliseringsinfoRespons(
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
+        private fun hentPubliseringsinfoRespons(token: String = oauth2ServerContainer.saksbehandler1.token) =
             lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$PUBLISERINGSINFO")
                 .authentication().bearer(token)
                 .tilSingelRespons<Publiseringsinfo>()
@@ -1003,30 +1061,25 @@ class StatistikkHelper {
         fun hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnummer/$SISTE_TILGJENGELIGE_KVARTAL")
-                .authentication().bearer(token)
-                .tilSingelRespons<VirksomhetsstatistikkSisteKvartal>()
+        ) = lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$orgnummer/$SISTE_TILGJENGELIGE_KVARTAL")
+            .authentication().bearer(token)
+            .tilSingelRespons<VirksomhetsstatistikkSisteKvartal>()
 
         fun hentSykefraværForVirksomhetSiste4Kvartaler(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            hentSykefraværForVirksomhetSiste4KvartalerRespons(orgnummer = orgnummer, token = token).third
-                .fold(success = { response -> response }, failure = { fail(it.message) })
+        ) = hentSykefraværForVirksomhetSiste4KvartalerRespons(orgnummer = orgnummer, token = token).third
+            .fold(success = { response -> response }, failure = { fail(it.message) })
 
-        fun hentPubliseringsinfo(
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
+        fun hentPubliseringsinfo(token: String = oauth2ServerContainer.saksbehandler1.token) =
             hentPubliseringsinfoRespons(token).third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
 
         fun hentSykefraværForVirksomhetSisteTilgjengeligKvartal(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) =
-            hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(orgnummer = orgnummer, token = token).third
-                .fold(success = { response -> response }, failure = { fail(it.message) })
+        ) = hentSykefraværForVirksomhetSisteTilgjengeligKvartalRespons(orgnummer = orgnummer, token = token).third
+            .fold(success = { response -> response }, failure = { fail(it.message) })
 
         fun hentSykefraværForAlleVirksomheter(): List<VirksomhetsoversiktDto> {
             var side = 1
@@ -1103,30 +1156,28 @@ class StatistikkHelper {
             eiere: String = "",
             sektor: List<Sektor> = listOf(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ): Int {
-            return lydiaApiContainer.performGet(
+        ): Int =
+            lydiaApiContainer.performGet(
                 "$SYKEFRAVÆRSSTATISTIKK_PATH/$ANTALL_TREFF" +
-                        "?${Søkeparametere.KOMMUNER}=$kommuner" +
-                        "&${Søkeparametere.FYLKER}=$fylker" +
-                        "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
-                        "&${Søkeparametere.SORTERINGSNØKKEL}=$sorteringsnokkel" +
-                        "&${Søkeparametere.SORTERINGSRETNING}=$sorteringsretning" +
-                        "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
-                        "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
-                        "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
-                        "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
-                        "&${Søkeparametere.IA_STATUS}=$iaStatus" +
-                        "&${Søkeparametere.SIDE}=$side" +
-                        "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
-                        "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
-                        "&${Søkeparametere.SEKTOR}=${sektor.joinToString(separator = ",") { it.kode }}"
+                    "?${Søkeparametere.KOMMUNER}=$kommuner" +
+                    "&${Søkeparametere.FYLKER}=$fylker" +
+                    "&${Søkeparametere.NÆRINGSGRUPPER}=$næringsgrupper" +
+                    "&${Søkeparametere.SORTERINGSNØKKEL}=$sorteringsnokkel" +
+                    "&${Søkeparametere.SORTERINGSRETNING}=$sorteringsretning" +
+                    "&${Søkeparametere.SYKEFRAVÆRSPROSENT_FRA}=$sykefraværsprosentFra" +
+                    "&${Søkeparametere.SYKEFRAVÆRSPROSENT_TIL}=$sykefraværsprosentTil" +
+                    "&${Søkeparametere.ANSATTE_FRA}=$ansatteFra" +
+                    "&${Søkeparametere.ANSATTE_TIL}=$ansatteTil" +
+                    "&${Søkeparametere.IA_STATUS}=$iaStatus" +
+                    "&${Søkeparametere.SIDE}=$side" +
+                    "&${Søkeparametere.BRANSJEPROGRAM}=$bransjeProgram" +
+                    "&${Søkeparametere.IA_SAK_EIERE}=$eiere" +
+                    "&${Søkeparametere.SEKTOR}=${sektor.joinToString(separator = ",") { it.kode }}",
             )
                 .authentication().bearer(token)
                 .tilSingelRespons<Int>()
                 .third
                 .fold(success = { response -> response }, failure = { fail(it.message) })
-        }
-
 
         fun hentFilterverdier(token: String = oauth2ServerContainer.saksbehandler1.token) =
             lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
@@ -1142,6 +1193,4 @@ inline fun <reified T : Any> Request.tilListeRespons() =
     this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json.Default)
 
 @OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> Request.tilSingelRespons() =
-    this.responseObject(loader = T::class.serializer(), json = Json.Default)
-
+inline fun <reified T : Any> Request.tilSingelRespons() = this.responseObject(loader = T::class.serializer(), json = Json.Default)
