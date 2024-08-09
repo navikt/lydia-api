@@ -32,7 +32,6 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
-import org.slf4j.LoggerFactory
 
 const val KARTLEGGING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
@@ -195,15 +194,10 @@ fun <T> ApplicationCall.somEierAvSakIProsess(
     adGrupper: ADGrupper,
     block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>,
 ) = somSaksbehandler(adGrupper) { saksbehandler ->
-
-    val log = LoggerFactory.getLogger(this.javaClass)
-
     val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-        .also { log.error("Ugyldig saksnummer i somEierAvSakIProsess") }
     val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
     val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
         ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-            .also { log.error("Kunne ikke hente IA sak pga ugyldig saksnummer") }
     if (iaSak.orgnr != orgnummer) {
         IASakError.`ugyldig orgnummer`.left()
     } else if (iaSak.eidAv != saksbehandler.navIdent) {

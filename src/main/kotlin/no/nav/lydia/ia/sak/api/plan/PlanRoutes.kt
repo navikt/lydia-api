@@ -19,8 +19,9 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
+import no.nav.lydia.ia.sak.api.extensions.temaId
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
-import org.slf4j.LoggerFactory
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
 
@@ -30,18 +31,15 @@ fun Route.iaSakPlan(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
-    val log = LoggerFactory.getLogger(this.javaClass)
-
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/{temaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val temaId =
-            call.parameters["temaId"]?.toIntOrNull() ?: return@put call.sendFeil(
-                Feil(
-                    feilmelding = "Ugyldig temaId",
-                    httpStatusCode = HttpStatusCode.BadRequest,
-                ),
-            )
+        val temaId = call.temaId ?: return@put call.sendFeil(
+            Feil(
+                feilmelding = "Ugyldig temaId",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ),
+        )
 
         val undertemaEndring = call.receive<List<EndreUndertemaRequest>>()
 
@@ -66,11 +64,49 @@ fun Route.iaSakPlan(
         }
     }
 
+    put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/{temaId}/{undertemaId}") {
+        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val temaId = call.temaId ?: return@put call.sendFeil(
+            Feil(
+                feilmelding = "Ugyldig temaId",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ),
+        )
+        val undertemaId = call.parameters["undertemaId"]?.toIntOrNull() ?: return@put call.sendFeil(
+            Feil(
+                feilmelding = "Ugyldig undertemaId",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ),
+        )
+
+        val nyStatus = call.receive<PlanUndertema.Status>()
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
+            planService.endreStatus(
+                temaId = temaId,
+                undertemaId = undertemaId,
+                iaSak = iaSak,
+                nyStatus = nyStatus,
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer =
-            call.saksnummer
-                ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`).also { log.error("Ugyldig saksnummer fra parameter") }
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
 
         val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
 

@@ -92,4 +92,15 @@ class PlanRepository(
             undertemaer = undertemaer,
         )
     }
+
+    fun oppdaterUndertema(
+        temaId: Int,
+        undertemaId: Int,
+        endretUndertema: PlanUndertema,
+    ): PlanUndertema {
+        // TODO: oppdater undertema i database
+        return getHardkodetPlan().temaer.first { it.id == temaId }.undertemaer.first { it.id == undertemaId }.copy(
+            status = endretUndertema.status,
+        )
+    }
 }

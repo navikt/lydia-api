@@ -89,4 +89,31 @@ class PlanService(
                 endredeUndertemaer = tema.undertemaer,
             )
         }.let { l -> either { l.bindAll() } }
+
+    fun endreStatus(
+        temaId: Int,
+        undertemaId: Int,
+        iaSak: IASak,
+        nyStatus: PlanUndertema.Status,
+    ): Either<Feil, PlanUndertema> {
+        return hentPlan(iaSak = iaSak).flatMap { plan ->
+            val lagredeUndertemaer =
+                plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return Feil(
+                    feilmelding = "Fant ikke tema",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                ).left()
+
+            val oppdatertUndertema: PlanUndertema =
+                lagredeUndertemaer.firstOrNull { it.id == undertemaId }?.copy(status = nyStatus) ?: return Feil(
+                    feilmelding = "Fant ikke undertema",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                ).left()
+
+            planRepository.oppdaterUndertema(
+                temaId = temaId,
+                undertemaId = undertemaId,
+                endretUndertema = oppdatertUndertema,
+            ).right()
+        }
+    }
 }

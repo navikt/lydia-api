@@ -6,6 +6,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import kotlin.test.Test
 
 class PlanApiTest {
@@ -43,6 +44,33 @@ class PlanApiTest {
             )
 
         resp.undertemaer.size shouldBe 4
+
+        // TODO: Sjekk i database at det ble lagret rett
+//        postgresContainer
+//            .hentEnkelKolonne<String>(
+//                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().kartleggingId}'",
+//            ) shouldNotBe null
+    }
+
+    @Test
+    fun `kan endre status på undertema`() {
+        val sak = nySakIKartlegges()
+
+        val førsteTema = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer).temaer.first()
+        val førsteUndertema = førsteTema.undertemaer.first()
+
+        val nyStatus = PlanUndertema.Status.FULLFØRT
+
+        val resp =
+            PlanHelper.endreStatus(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                temaId = førsteTema.id,
+                undertemaId = førsteUndertema.id,
+                status = nyStatus,
+            )
+
+        resp.status shouldBe nyStatus
 
         // TODO: Sjekk i database at det ble lagret rett
 //        postgresContainer

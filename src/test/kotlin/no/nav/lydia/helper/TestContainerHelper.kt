@@ -51,6 +51,7 @@ import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
+import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -61,6 +62,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -789,6 +791,26 @@ class PlanHelper {
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
+
+        fun endreStatus(
+            orgnr: String,
+            saksnummer: String,
+            status: PlanUndertema.Status,
+            temaId: Int,
+            undertemaId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ): PlanUndertemaDto =
+            lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/$temaId/$undertemaId")
+                .jsonBody(
+                    Json.encodeToString(
+                        status,
+                    ),
+                )
+                .authentication().bearer(token)
+                .tilSingelRespons<PlanUndertemaDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail(it.message) },
+                )
 
         fun PlanDto.tilRequest(): List<EndreTemaRequest> =
             this.temaer.map { tema ->
