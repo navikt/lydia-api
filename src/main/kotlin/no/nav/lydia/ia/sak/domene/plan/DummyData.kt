@@ -8,7 +8,6 @@ val hardkodetPlanId: UUID = UUID.fromString("92ee8fcd-330d-4c64-b954-b6757924b70
 fun getHardkodetPlan(): Plan =
     Plan(
         id = hardkodetPlanId,
-        publisert = false,
         sistEndret = java.time.LocalDate.now().minusMonths(1).toKotlinLocalDate(),
         sistPublisert = null,
         temaer = toAktiveTemaer(),

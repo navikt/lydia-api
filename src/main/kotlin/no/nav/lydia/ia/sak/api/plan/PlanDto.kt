@@ -8,17 +8,14 @@ import no.nav.lydia.ia.sak.domene.plan.Plan
 data class PlanDto(
     val id: String,
     val sistEndret: LocalDate,
-    val publisert: Boolean,
     val sistPublisert: LocalDate?,
     val temaer: List<PlanTemaDto>,
 )
 
-fun Plan.tilDto(): PlanDto {
-    return PlanDto(
+fun Plan.tilDto(): PlanDto =
+    PlanDto(
         id = id.toString(),
         sistEndret = sistEndret,
-        publisert = publisert,
         sistPublisert = sistPublisert,
         temaer = temaer.tilDtoer(),
     )
-}
