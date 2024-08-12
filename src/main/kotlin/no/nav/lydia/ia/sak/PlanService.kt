@@ -41,30 +41,31 @@ class PlanService(
         iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
             planRepository.hentPlan(prosessId = prosess.id)?.right() ?: Feil(
                 feilmelding = "Fant ikke plan",
-                httpStatusCode = HttpStatusCode.NotFound,
+                httpStatusCode = HttpStatusCode.BadRequest,
             ).left()
         }
 
-    fun endreTema(
+    fun endreUndertemaerTilTema(
         temaId: Int,
         iaSak: IASak,
+        planlagt: Boolean? = null,
         endredeUndertemaer: List<EndreUndertemaRequest>,
     ): Either<Feil, PlanTema> =
         hentPlan(iaSak = iaSak).flatMap { plan ->
-            val lagredeUndertemaer =
-                plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return Feil(
-                    feilmelding = "Fant ikke tema",
-                    httpStatusCode = HttpStatusCode.BadRequest,
-                ).left()
+
+            val tema = plan.temaer.firstOrNull { it.id == temaId } ?: return Feil(
+                feilmelding = "Fant ikke tema",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ).left()
 
             val oppdaterteUndertemaer: List<PlanUndertema> =
-                lagredeUndertemaer.map { lagretUndertema ->
+                tema.undertemaer.map { lagretUndertema ->
                     endredeUndertemaer.firstOrNull { redigert -> redigert.id == lagretUndertema.id }?.let { redigert ->
                         lagretUndertema.copy(
                             planlagt = redigert.planlagt,
+                            status = if (redigert.planlagt) PlanUndertema.Status.PLANLAGT else null,
                             startDato = if (redigert.planlagt) redigert.startDato else null,
                             sluttDato = if (redigert.planlagt) redigert.sluttDato else null,
-                            status = if (redigert.planlagt) PlanUndertema.Status.PLANLAGT else null,
                         )
                     } ?: return Feil(
                         feilmelding = "Fikk ikke undertema fra forespørsel",
@@ -73,19 +74,25 @@ class PlanService(
                 }
 
             planRepository.oppdaterTema(
+                planId = plan.id,
                 temaId = temaId,
+                planlagt = planlagt ?: tema.planlagt,
                 undertemaer = oppdaterteUndertemaer,
-            ).right()
+            )?.right() ?: Feil(
+                feilmelding = "Kunne ikke oppdatere tema",
+                httpStatusCode = HttpStatusCode.InternalServerError,
+            ).left()
         }
 
-    fun endreTemaer(
+    fun endreFlereTema(
         iaSak: IASak,
         endredeTema: List<EndreTemaRequest>,
     ): Either<Feil, List<PlanTema>> =
         endredeTema.map { tema ->
-            endreTema(
-                temaId = tema.id,
+            endreUndertemaerTilTema(
                 iaSak = iaSak,
+                temaId = tema.id,
+                planlagt = tema.planlagt,
                 endredeUndertemaer = tema.undertemaer,
             )
         }.let { l -> either { l.bindAll() } }
@@ -110,10 +117,13 @@ class PlanService(
                 ).left()
 
             planRepository.oppdaterUndertema(
+                planId = plan.id,
                 temaId = temaId,
-                undertemaId = undertemaId,
-                endretUndertema = oppdatertUndertema,
-            ).right()
+                undertema = oppdatertUndertema,
+            )?.right() ?: return Feil(
+                feilmelding = "Feil ved oppdatering av undertema",
+                httpStatusCode = HttpStatusCode.InternalServerError,
+            ).left()
         }
     }
 }

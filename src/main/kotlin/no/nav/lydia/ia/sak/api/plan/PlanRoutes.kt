@@ -44,7 +44,7 @@ fun Route.iaSakPlan(
         val undertemaEndring = call.receive<List<EndreUndertemaRequest>>()
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
-            planService.endreTema(
+            planService.endreUndertemaerTilTema(
                 temaId = temaId,
                 iaSak = iaSak,
                 endredeUndertemaer = undertemaEndring,
@@ -111,7 +111,7 @@ fun Route.iaSakPlan(
         val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
-            planService.endreTemaer(
+            planService.endreFlereTema(
                 iaSak = iaSak,
                 endredeTema = endreTemaRequests,
             )
