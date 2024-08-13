@@ -39,10 +39,7 @@ class PlanService(
 
     fun hentPlan(iaSak: IASak): Either<Feil, Plan> =
         iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
-            planRepository.hentPlan(prosessId = prosess.id)?.right() ?: Feil(
-                feilmelding = "Fant ikke plan",
-                httpStatusCode = HttpStatusCode.BadRequest,
-            ).left()
+            planRepository.hentPlan(prosessId = prosess.id)?.right() ?: PlanFeil.`fant ikke plan`.left()
         }
 
     fun endreUndertemaerTilTema(
@@ -53,10 +50,7 @@ class PlanService(
     ): Either<Feil, PlanTema> =
         hentPlan(iaSak = iaSak).flatMap { plan ->
 
-            val tema = plan.temaer.firstOrNull { it.id == temaId } ?: return Feil(
-                feilmelding = "Fant ikke tema",
-                httpStatusCode = HttpStatusCode.BadRequest,
-            ).left()
+            val tema = plan.temaer.firstOrNull { it.id == temaId } ?: return PlanFeil.`fant ikke tema`.left()
 
             val oppdaterteUndertemaer: List<PlanUndertema> =
                 tema.undertemaer.map { lagretUndertema ->
@@ -67,10 +61,7 @@ class PlanService(
                             startDato = if (redigert.planlagt) redigert.startDato else null,
                             sluttDato = if (redigert.planlagt) redigert.sluttDato else null,
                         )
-                    } ?: return Feil(
-                        feilmelding = "Fikk ikke undertema fra forespørsel",
-                        httpStatusCode = HttpStatusCode.BadRequest,
-                    ).left()
+                    } ?: return PlanFeil.`feil inndata i forespørsel`.left()
                 }
 
             planRepository.oppdaterTema(
@@ -78,10 +69,7 @@ class PlanService(
                 temaId = temaId,
                 planlagt = planlagt ?: tema.planlagt,
                 undertemaer = oppdaterteUndertemaer,
-            )?.right() ?: Feil(
-                feilmelding = "Kunne ikke oppdatere tema",
-                httpStatusCode = HttpStatusCode.InternalServerError,
-            ).left()
+            )?.right() ?: PlanFeil.`fikk ikke oppdatert tema`.left()
         }
 
     fun endreFlereTema(
@@ -105,25 +93,43 @@ class PlanService(
     ): Either<Feil, PlanUndertema> {
         return hentPlan(iaSak = iaSak).flatMap { plan ->
             val lagredeUndertemaer =
-                plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return Feil(
-                    feilmelding = "Fant ikke tema",
-                    httpStatusCode = HttpStatusCode.BadRequest,
-                ).left()
+                plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return PlanFeil.`fant ikke tema`.left()
 
             val oppdatertUndertema: PlanUndertema =
-                lagredeUndertemaer.firstOrNull { it.id == undertemaId }?.copy(status = nyStatus) ?: return Feil(
-                    feilmelding = "Fant ikke undertema",
-                    httpStatusCode = HttpStatusCode.BadRequest,
-                ).left()
+                lagredeUndertemaer.firstOrNull { it.id == undertemaId }?.copy(status = nyStatus) ?: return PlanFeil.`fant ikke undertema`.left()
 
             planRepository.oppdaterUndertema(
                 planId = plan.id,
                 temaId = temaId,
                 undertema = oppdatertUndertema,
-            )?.right() ?: return Feil(
-                feilmelding = "Feil ved oppdatering av undertema",
-                httpStatusCode = HttpStatusCode.InternalServerError,
-            ).left()
+            )?.right() ?: return PlanFeil.`fikk ikke oppdatert undertema`.left()
         }
     }
+}
+
+object PlanFeil {
+    val `fant ikke plan` = Feil(
+        feilmelding = "Fant ikke plan",
+        httpStatusCode = HttpStatusCode.BadRequest,
+    )
+    val `fant ikke tema` = Feil(
+        feilmelding = "Fant ikke tema",
+        httpStatusCode = HttpStatusCode.BadRequest,
+    )
+    val `fant ikke undertema` = Feil(
+        feilmelding = "Fant ikke undertema",
+        httpStatusCode = HttpStatusCode.BadRequest,
+    )
+    val `feil inndata i forespørsel` = Feil(
+        feilmelding = "Feil inndata i forespørsel",
+        httpStatusCode = HttpStatusCode.BadRequest,
+    )
+    val `fikk ikke oppdatert tema` = Feil(
+        feilmelding = "Feil ved oppdatering av tema",
+        httpStatusCode = HttpStatusCode.InternalServerError,
+    )
+    val `fikk ikke oppdatert undertema` = Feil(
+        feilmelding = "Feil ved oppdatering av undertema",
+        httpStatusCode = HttpStatusCode.InternalServerError,
+    )
 }
