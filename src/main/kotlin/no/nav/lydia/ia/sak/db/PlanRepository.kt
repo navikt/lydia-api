@@ -358,6 +358,7 @@ class PlanRepository(
         temaId: Int,
         undertema: PlanUndertema,
     ) = using(sessionOf(dataSource)) { session ->
+        // TODO oppdater Plan sist endret dato
         session.transaction { tx ->
             tx.run(
                 queryOf(
@@ -377,8 +378,8 @@ class PlanRepository(
                         "undertemaId" to undertema.id,
                         "planlagt" to undertema.planlagt,
                         "status" to undertema.status?.name,
-                        "startDato" to undertema.startDato,
-                        "sluttDato" to undertema.sluttDato,
+                        "startDato" to undertema.startDato?.toJavaLocalDate(),
+                        "sluttDato" to undertema.sluttDato?.toJavaLocalDate(),
                     ),
                 ).asUpdate,
             )
