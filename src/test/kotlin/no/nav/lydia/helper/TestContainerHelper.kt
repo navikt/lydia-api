@@ -745,6 +745,10 @@ class PlanHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer")
             .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
 
         fun hentPlan(
             orgnr: String,

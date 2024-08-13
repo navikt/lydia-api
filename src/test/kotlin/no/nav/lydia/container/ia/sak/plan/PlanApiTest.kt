@@ -1,15 +1,16 @@
 package no.nav.lydia.container.ia.sak.plan
 
+import io.kotest.assertions.shouldFail
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import java.time.LocalDateTime.now
 import kotlin.test.Test
@@ -22,11 +23,9 @@ class PlanApiTest {
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
 
-        val resp =
+        val planDto =
             PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<PlanDto>()
-
-        resp.third.get().temaer.size shouldBe 3
+        planDto.temaer.size shouldBe 3
     }
 
     @Test
@@ -35,11 +34,8 @@ class PlanApiTest {
         sak.opprettKartlegging()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
-        val opprettetPlan = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<PlanDto>()
-        opprettetPlan.third.get().temaer.size shouldBe 3
-        val plan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-        val førsteTema = plan.temaer.first()
+        val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val førsteTema = planDto.temaer.first()
 
         val førsteUndertema = førsteTema.undertemaer.first()
 
@@ -63,14 +59,10 @@ class PlanApiTest {
         sak.opprettKartlegging()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
-        val opprettetPlan = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<PlanDto>()
-        opprettetPlan.third.get().temaer.size shouldBe 3
+        val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-
-        val endretPlan = lagretPlan.copy(
-            temaer = lagretPlan.temaer.map { temaDto ->
+        val endretPlan = planDto.copy(
+            temaer = planDto.temaer.map { temaDto ->
                 temaDto.copy(
                     planlagt = true,
                     undertemaer = temaDto.undertemaer.map { undertemaDto ->
@@ -105,14 +97,10 @@ class PlanApiTest {
         sak.opprettKartlegging()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
-        val opprettetPlan = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<PlanDto>()
-        opprettetPlan.third.get().temaer.size shouldBe 3
+        val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-
-        val endretPlan = lagretPlan.copy(
-            temaer = lagretPlan.temaer.map { temaDto ->
+        val endretPlan = planDto.copy(
+            temaer = planDto.temaer.map { temaDto ->
                 temaDto.copy(
                     undertemaer = temaDto.undertemaer.map { undertemaDto ->
                         undertemaDto.copy(
@@ -139,5 +127,33 @@ class PlanApiTest {
         resp.undertemaer.first().beskrivelse shouldBe endretPlan.temaer.first().undertemaer.first().beskrivelse
         resp.undertemaer.first().målsetning shouldBe endretPlan.temaer.first().undertemaer.first().målsetning
         resp.undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
+    }
+
+    @Test
+    fun `skal få feil når man henter plan uten å ha opprettet en plan`() {
+        val sak = nySakIKartlegges()
+        shouldFail {
+            PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        }
+
+        // lag prosess (dette bør bort på sikt)
+        sak.opprettKartlegging()
+
+        shouldFail {
+            PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        }
+    }
+
+    @Test
+    fun `skal kunne hente plan uten å være eier som lesebruker`() {
+        val sak = nySakIKartlegges()
+
+        // lag prosess (dette bør bort på sikt)
+        sak.opprettKartlegging()
+
+        val opprettetPlan = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val hentetPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, token = TestContainerHelper.oauth2ServerContainer.lesebruker.token)
+
+        opprettetPlan shouldBeEqual hentetPlan
     }
 }

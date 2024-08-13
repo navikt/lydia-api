@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.api.plan
 
+import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -22,6 +23,7 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.temaId
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
 
@@ -156,10 +158,12 @@ fun Route.iaSakPlan(
     get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
-            planService.hentPlan(
-                iaSak = iaSak,
-            )
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                planService.hentPlan(
+                    iaSak = iaSak,
+                )
+            }
         }.also { planEither ->
             auditLog.auditloggEither(
                 call = call,
