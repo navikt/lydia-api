@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.Row
 import kotliquery.Session
@@ -294,7 +295,6 @@ class PlanRepository(
         planlagt: Boolean,
     ): PlanTema? {
         using(sessionOf(dataSource)) { session ->
-
             session.transaction { tx ->
                 tx.run(
                     queryOf(
@@ -345,8 +345,8 @@ class PlanRepository(
                         "undertemaId" to endretUndertema.id,
                         "planlagt" to endretUndertema.planlagt,
                         "status" to endretUndertema.status?.name,
-                        "startDato" to endretUndertema.startDato,
-                        "sluttDato" to endretUndertema.sluttDato,
+                        "startDato" to endretUndertema.startDato?.toJavaLocalDate(),
+                        "sluttDato" to endretUndertema.sluttDato?.toJavaLocalDate(),
                     ),
                 ).asUpdate,
             )
