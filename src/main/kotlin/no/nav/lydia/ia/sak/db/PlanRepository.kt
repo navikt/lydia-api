@@ -43,9 +43,6 @@ class PlanRepository(
                 "Oppfølging av arbeidsmiljøundersøkelser",
                 "Livsfaseorientert personlapolitikk",
                 "Psykisk helse",
-            ),
-        "HelseIArbeid" to
-            listOf(
                 "HelseIArbeid",
             ),
     )
