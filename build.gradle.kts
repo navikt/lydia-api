@@ -2,7 +2,7 @@ val ktorVersion = "2.3.12"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.2.0"
 val kotestVerstion = "5.9.1"
-val testcontainersVersion = "1.19.8"
+val testcontainersVersion = "1.20.1"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -37,7 +37,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:1.5.6")
-    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+    implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
@@ -47,12 +47,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.13.3")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.3")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.15.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.17.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -60,7 +60,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.7.0")
+    implementation("org.apache.kafka:kafka-clients:3.8.0")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -93,13 +93,13 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.6.0")
+    testImplementation("org.wiremock:wiremock-standalone:3.9.1")
 
     // -- validere pdfa
     testImplementation("org.verapdf:validation-model:1.26.1")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.6")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.8")
 
     constraints {
         implementation("net.minidev:json-smart") {
@@ -110,7 +110,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.111.Final")
+                require("4.1.112.Final")
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
@@ -122,7 +122,7 @@ dependencies {
         }
         testImplementation("org.apache.commons:commons-compress") {
             version {
-                require("1.26.2")
+                require("1.27.0")
             }
             because("testcontainers har sårbar versjon")
         }
