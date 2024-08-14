@@ -12,8 +12,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.plan.DUMMY_BESKRIVELSE
-import no.nav.lydia.ia.sak.domene.plan.DUMMY_MÅLSETNING
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanRessurs
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
@@ -25,34 +23,11 @@ import javax.sql.DataSource
 class PlanRepository(
     val dataSource: DataSource,
 ) {
-    private val hardkodetPlanMal: List<Pair<String, List<String>>> = listOf(
-        "Partssamarbeid" to
-            listOf(
-                "Utvikle partssamarbeidet",
-            ),
-        "Sykefraværsarbeid" to
-            listOf(
-                "Sykefraværsrutiner",
-                "Oppfølgingssamtaler",
-                "Tilretteleggings- og medvirkningsplikt",
-                "Sykefravær - enkeltsaker",
-            ),
-        "Arbeidsmiljø" to
-            listOf(
-                "Utvikle arbeidsmiljøet",
-                "Endring og omstilling",
-                "Oppfølging av arbeidsmiljøundersøkelser",
-                "Livsfaseorientert personlapolitikk",
-                "Psykisk helse",
-                "HelseIArbeid",
-            ),
-    )
-
     fun opprettPlan(
         planId: UUID,
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        mal: List<Pair<String, List<String>>> = hardkodetPlanMal,
+        mal: List<TemaMal> = hardkodetPlan,
     ): Either<Feil, Plan> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -78,7 +53,7 @@ class PlanRepository(
                     ).asUpdate,
                 )
             }
-            mal.forEach { (temanavn, undertema) ->
+            mal.forEach { tema ->
                 session.transaction { tx ->
                     val temaId = tx.run(
                         queryOf(
@@ -96,7 +71,7 @@ class PlanRepository(
                             RETURNING *
                             """.trimMargin(),
                             mapOf(
-                                "navn" to temanavn,
+                                "navn" to tema.navn,
                                 "planlagt" to false,
                                 "plan_id" to planId.toString(),
                             ),
@@ -105,7 +80,7 @@ class PlanRepository(
                         }.asSingle,
                     )!!
 
-                    undertema.forEach { undertemanavn ->
+                    tema.undertema.forEach { undertema ->
                         tx.run(
                             queryOf(
                                 """
@@ -130,7 +105,7 @@ class PlanRepository(
                             )
                                 """.trimMargin(),
                                 mapOf(
-                                    "navn" to undertemanavn,
+                                    "navn" to undertema.navn,
                                     "planlagt" to false,
                                     "status" to null,
                                     "start_dato" to null,
@@ -249,11 +224,12 @@ class PlanRepository(
                     "temaId" to temaId,
                 ),
             ).map { row: Row ->
+                val navn = row.string("navn")
                 PlanUndertema(
                     id = row.int("undertema_id"),
-                    navn = row.string("navn"),
-                    målsetning = DUMMY_MÅLSETNING,
-                    beskrivelse = DUMMY_BESKRIVELSE,
+                    navn = navn,
+                    målsetning = hardkodetPlan.hentUndertema(navn)?.målsetning ?: "",
+                    beskrivelse = hardkodetPlan.hentUndertema(navn)?.beskrivelse ?: "",
                     planlagt = row.boolean("planlagt"),
                     status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
@@ -387,4 +363,96 @@ class PlanRepository(
 
         hentUndertema(planId = planId, temaId = temaId, session = session).firstOrNull { it.id == undertema.id }
     }
+
+    data class TemaMal(
+        val navn: String,
+        val undertema: List<UndertemaMal>,
+    )
+
+    data class UndertemaMal(
+        val navn: String,
+        val målsetning: String,
+        val beskrivelse: String,
+    )
+
+    private fun List<TemaMal>.hentUndertema(navn: String) = this.flatMap { it.undertema }.firstOrNull { it.navn == navn }
+
+    private val sykefraværsarbeid = TemaMal(
+        navn = "Partssamarbeid",
+        undertema = listOf(
+            UndertemaMal(
+                navn = "Sykefraværsrutiner",
+                målsetning = "Jobbe systematisk og forebyggende med sykefravær, samt forbedre rutiner og oppfølging av ansatte som er sykmeldte eller står i fare for å bli det.",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "Oppfølgingssamtaler",
+                målsetning = "Øke kompetansen for hvordan man gjennomfører gode oppfølgingssamtaler, både gjennom teori og praksis.",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "Tilretteleggings- og medvirkningsplikt",
+                målsetning = "Utvikle kultur og rutiner for tilrettelegging og medvirkning, samt kartlegging av tilretteleggingsmuligheter på arbeidsplassen. ",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "Sykefravær - enkeltsaker",
+                målsetning = "Øke kompetansen for hvordan man tar tak i, følger opp og løser enkeltsaker. ",
+                beskrivelse = "",
+            ),
+        ),
+    )
+
+    private val partssamarbeid = TemaMal(
+        navn = "Partssamarbeid",
+        undertema = listOf(
+            UndertemaMal(
+                navn = "Utvikle partssamarbeidet",
+                målsetning = "Styrke samarbeidet mellom leder, tillitsvalgt og verneombud, samt øke kunnskap og ferdigheter for å jobbe systematisk og forebyggende med sykefravær og arbeidsmiljø.",
+                beskrivelse = "",
+            ),
+        ),
+    )
+
+    private val arbeidsmiljø = TemaMal(
+        navn = "Arbeidsmiljø",
+        undertema = listOf(
+            UndertemaMal(
+                navn = "Utvikle arbeidsmiljøet",
+                målsetning = "Kartlegge hvilke forhold ved arbeidsmiljøet som påvirker sykefravær og frafall, samt heve kompetansen for videreutvikling av arbeidsmiljøet.",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "Endring og omstilling",
+                målsetning = "Forebygge fravær ved endringer og omstillingsprosesser og sette gode rammer for medvirkning, kommunikasjon og støtte til ansatte.",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "Oppfølging av arbeidsmiljøundersøkelser",
+                målsetning = "Gi støtte til å identifisere og gjennomføre tiltak basert på behov og ressurser i virksomheten.",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "Livsfaseorientert personalpolitikk",
+                målsetning = "Utvikle personalpolitikk som ivaretar medarbeideres ulike behov, krav, begrensninger og muligheter i  ulike livsfaser.",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "Psykisk helse",
+                målsetning = "Øke kompetansen om psykisk helse og hvordan møte medarbeidere som har psykiske helseproblemer.",
+                beskrivelse = "",
+            ),
+            UndertemaMal(
+                navn = "HelseIArbeid",
+                målsetning = "Få ansatte til å mestre jobb, selv med muskel/skjelett- og psykiske helseplager",
+                beskrivelse = "",
+            ),
+        ),
+    )
+
+    private val hardkodetPlan: List<TemaMal> = listOf(
+        partssamarbeid,
+        sykefraværsarbeid,
+        arbeidsmiljø,
+    )
 }
