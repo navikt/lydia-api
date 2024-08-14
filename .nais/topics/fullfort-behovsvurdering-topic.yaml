@@ -21,3 +21,6 @@ spec:
     - team: pia
       application: pia-devops
       access: read
+    - team: team-dialog
+      application: sf-ia-behovsvurdering
+      access: read
