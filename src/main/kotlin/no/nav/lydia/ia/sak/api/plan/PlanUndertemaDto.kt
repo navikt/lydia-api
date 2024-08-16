@@ -10,26 +10,21 @@ data class PlanUndertemaDto(
     val id: Int,
     val navn: String,
     val målsetning: String,
-    val beskrivelse: String,
     val planlagt: Boolean,
     val status: Status?,
     val startDato: LocalDate?,
     val sluttDato: LocalDate?,
 )
 
-fun List<PlanUndertema>.tilDtoer(): List<PlanUndertemaDto> {
-    return map { it.tilDto() }
-}
+fun List<PlanUndertema>.tilDtoer(): List<PlanUndertemaDto> = map { it.tilDto() }
 
-fun PlanUndertema.tilDto(): PlanUndertemaDto {
-    return PlanUndertemaDto(
+fun PlanUndertema.tilDto(): PlanUndertemaDto =
+    PlanUndertemaDto(
         id = id,
         navn = navn,
         målsetning = målsetning,
-        beskrivelse = beskrivelse,
         planlagt = planlagt,
         status = status,
         startDato = startDato,
         sluttDato = sluttDato,
     )
-}

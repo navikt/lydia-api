@@ -229,7 +229,6 @@ class PlanRepository(
                     id = row.int("undertema_id"),
                     navn = navn,
                     målsetning = hardkodetPlan.hentUndertema(navn)?.målsetning ?: "",
-                    beskrivelse = hardkodetPlan.hentUndertema(navn)?.beskrivelse ?: "",
                     planlagt = row.boolean("planlagt"),
                     status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
@@ -372,33 +371,28 @@ class PlanRepository(
     data class UndertemaMal(
         val navn: String,
         val målsetning: String,
-        val beskrivelse: String,
     )
 
     private fun List<TemaMal>.hentUndertema(navn: String) = this.flatMap { it.undertema }.firstOrNull { it.navn == navn }
 
     private val sykefraværsarbeid = TemaMal(
-        navn = "Partssamarbeid",
+        navn = "Sykefraværsarbeid",
         undertema = listOf(
             UndertemaMal(
                 navn = "Sykefraværsrutiner",
                 målsetning = "Jobbe systematisk og forebyggende med sykefravær, samt forbedre rutiner og oppfølging av ansatte som er sykmeldte eller står i fare for å bli det.",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "Oppfølgingssamtaler",
                 målsetning = "Øke kompetansen for hvordan man gjennomfører gode oppfølgingssamtaler, både gjennom teori og praksis.",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "Tilretteleggings- og medvirkningsplikt",
                 målsetning = "Utvikle kultur og rutiner for tilrettelegging og medvirkning, samt kartlegging av tilretteleggingsmuligheter på arbeidsplassen. ",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "Sykefravær - enkeltsaker",
                 målsetning = "Øke kompetansen for hvordan man tar tak i, følger opp og løser enkeltsaker. ",
-                beskrivelse = "",
             ),
         ),
     )
@@ -409,7 +403,6 @@ class PlanRepository(
             UndertemaMal(
                 navn = "Utvikle partssamarbeidet",
                 målsetning = "Styrke samarbeidet mellom leder, tillitsvalgt og verneombud, samt øke kunnskap og ferdigheter for å jobbe systematisk og forebyggende med sykefravær og arbeidsmiljø.",
-                beskrivelse = "",
             ),
         ),
     )
@@ -420,32 +413,26 @@ class PlanRepository(
             UndertemaMal(
                 navn = "Utvikle arbeidsmiljøet",
                 målsetning = "Kartlegge hvilke forhold ved arbeidsmiljøet som påvirker sykefravær og frafall, samt heve kompetansen for videreutvikling av arbeidsmiljøet.",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "Endring og omstilling",
                 målsetning = "Forebygge fravær ved endringer og omstillingsprosesser og sette gode rammer for medvirkning, kommunikasjon og støtte til ansatte.",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "Oppfølging av arbeidsmiljøundersøkelser",
                 målsetning = "Gi støtte til å identifisere og gjennomføre tiltak basert på behov og ressurser i virksomheten.",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "Livsfaseorientert personalpolitikk",
                 målsetning = "Utvikle personalpolitikk som ivaretar medarbeideres ulike behov, krav, begrensninger og muligheter i  ulike livsfaser.",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "Psykisk helse",
                 målsetning = "Øke kompetansen om psykisk helse og hvordan møte medarbeidere som har psykiske helseproblemer.",
-                beskrivelse = "",
             ),
             UndertemaMal(
                 navn = "HelseIArbeid",
                 målsetning = "Få ansatte til å mestre jobb, selv med muskel/skjelett- og psykiske helseplager",
-                beskrivelse = "",
             ),
         ),
     )

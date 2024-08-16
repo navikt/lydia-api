@@ -84,7 +84,6 @@ class PlanApiTest {
         resp.first().undertemaer.first().id shouldBe endretPlan.temaer.first().undertemaer.first().id
         resp.first().undertemaer.first().planlagt shouldBe endretPlan.temaer.first().undertemaer.first().planlagt
         resp.first().undertemaer.first().navn shouldBe endretPlan.temaer.first().undertemaer.first().navn
-        resp.first().undertemaer.first().beskrivelse shouldBe endretPlan.temaer.first().undertemaer.first().beskrivelse
         resp.first().undertemaer.first().målsetning shouldBe endretPlan.temaer.first().undertemaer.first().målsetning
         resp.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
         resp.first().undertemaer.first().startDato shouldBe endretPlan.temaer.first().undertemaer.first().startDato
@@ -124,7 +123,6 @@ class PlanApiTest {
         resp.undertemaer.first().id shouldBe endretPlan.temaer.first().undertemaer.first().id
         resp.undertemaer.first().planlagt shouldBe endretPlan.temaer.first().undertemaer.first().planlagt
         resp.undertemaer.first().navn shouldBe endretPlan.temaer.first().undertemaer.first().navn
-        resp.undertemaer.first().beskrivelse shouldBe endretPlan.temaer.first().undertemaer.first().beskrivelse
         resp.undertemaer.first().målsetning shouldBe endretPlan.temaer.first().undertemaer.first().målsetning
         resp.undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
     }
