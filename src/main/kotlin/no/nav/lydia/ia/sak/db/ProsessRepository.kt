@@ -6,6 +6,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.domene.IASakshendelse
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 
@@ -62,7 +63,12 @@ class ProsessRepository(val dataSource: DataSource) {
                 }
             }
 
-            else -> {}
+            else -> {
+                when (sakshendelse.hendelsesType) {
+                    IASakshendelseType.VIRKSOMHET_KARTLEGGES -> hentProsess(saksnummer = sakshendelse.saksnummer) ?: opprettNyProsess(saksnummer = sakshendelse.saksnummer)
+                    else -> {}
+                }
+            }
         }
     }
 
