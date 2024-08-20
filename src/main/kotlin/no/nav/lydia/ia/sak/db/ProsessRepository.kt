@@ -12,7 +12,7 @@ import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 
 class ProsessRepository(val dataSource: DataSource) {
 
-    fun hentProsess(saksnummer: String) =
+    fun hentProsesser(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -24,7 +24,7 @@ class ProsessRepository(val dataSource: DataSource) {
                     mapOf(
                         "saksnummer" to saksnummer
                     )
-                ).map(this::mapRowToIaProsessDto).asSingle
+                ).map(this::mapRowToIaProsessDto).asList
             )
         }
 
@@ -65,7 +65,9 @@ class ProsessRepository(val dataSource: DataSource) {
 
             else -> {
                 when (sakshendelse.hendelsesType) {
-                    IASakshendelseType.VIRKSOMHET_KARTLEGGES -> hentProsess(saksnummer = sakshendelse.saksnummer) ?: opprettNyProsess(saksnummer = sakshendelse.saksnummer)
+                    IASakshendelseType.VIRKSOMHET_KARTLEGGES -> hentProsesser(saksnummer = sakshendelse.saksnummer)
+                        .ifEmpty { opprettNyProsess(saksnummer = sakshendelse.saksnummer) }
+                    IASakshendelseType.NY_PROSESS -> opprettNyProsess(saksnummer = sakshendelse.saksnummer)
                     else -> {}
                 }
             }

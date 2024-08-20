@@ -235,9 +235,11 @@ enum class IASakshendelseType {
     VIRKSOMHET_SKAL_BISTÅS,
     VIRKSOMHET_ER_IKKE_AKTUELL,
 
-    //    NY_PROSESS,
+    // -- Prosesser
+    NY_PROSESS,
     ENDRE_PROSESS,
 //    SLETT_PROSESS,
+    // --
 
     TILBAKE,
     FULLFØR_BISTAND,

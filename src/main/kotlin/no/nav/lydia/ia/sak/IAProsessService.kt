@@ -9,19 +9,18 @@ import no.nav.lydia.ia.sak.domene.IASak
 class IAProsessService(
     val prosessRepository: ProsessRepository
 ) {
-    fun hentEllerOpprettIAProsess(sak: IASak) =
+    fun hentEllerOpprettIAProsesser(sak: IASak) =
         Either.catch {
-            prosessRepository.hentProsess(saksnummer = sak.saksnummer)
-                ?: prosessRepository.opprettNyProsess(saksnummer = sak.saksnummer)
+            prosessRepository.hentProsesser(saksnummer = sak.saksnummer).ifEmpty {
+                listOf(prosessRepository.opprettNyProsess(saksnummer = sak.saksnummer))
+            }
         }.mapLeft {
             IAProsessFeil.`feil ved henting av prosess`
         }
 
     fun hentIAProsesser(sak: IASak) =
         Either.catch {
-            prosessRepository.hentProsess(saksnummer = sak.saksnummer)?.let {
-                listOf(it)
-            } ?: emptyList()
+            prosessRepository.hentProsesser(saksnummer = sak.saksnummer)
         }.mapLeft {
             IAProsessFeil.`feil ved henting av prosess`
         }

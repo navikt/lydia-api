@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.sak.prosess
 
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
@@ -38,6 +39,26 @@ class IASakProsessTest {
         prosesserEtterTilbakeOgFrem shouldHaveSize 1
 
         prosesserEtterTilbakeOgFrem[0] shouldBe tildeltProsess
+    }
+
+    @Test
+    fun `skal kunne opprette flere prosesser på samme sak`() {
+        val sakIKartlegges = nySakIKartlegges()
+        sakIKartlegges.hentIAProsesser() shouldHaveSize 1
+
+        sakIKartlegges.nyHendelse(IASakshendelseType.NY_PROSESS).hentIAProsesser() shouldHaveSize 2
+    }
+
+    @Test
+    fun `skal kunne opprette kartlegginger på saker der det er flere prosesser`() {
+        val sakIKartlegges = nySakIKartlegges()
+        sakIKartlegges.hentIAProsesser() shouldHaveSize 1
+
+        val sakMedFlereProsesser = sakIKartlegges.nyHendelse(IASakshendelseType.NY_PROSESS)
+        sakMedFlereProsesser.hentIAProsesser() shouldHaveSize 2
+
+        val kartlegging = sakMedFlereProsesser.opprettKartlegging()
+        kartlegging.status shouldBe SpørreundersøkelseStatus.OPPRETTET
     }
 
     @Test

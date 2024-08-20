@@ -162,11 +162,12 @@ class SpørreundersøkelseService(
         orgnummer: String,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         iaSak: IASak,
+        prosessId: Int? = null,
     ): Either<Feil, Spørreundersøkelse> =
-        iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
+        iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
             spørreundersøkelseRepository.opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
-                prosessId = prosess.id,
+                prosessId = prosessId ?: prosesser.first().id,
                 saksbehandler = saksbehandler,
                 spørreundersøkelseId = UUID.randomUUID(),
                 vertId = UUID.randomUUID(),

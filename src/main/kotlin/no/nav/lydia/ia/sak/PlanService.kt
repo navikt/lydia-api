@@ -26,20 +26,26 @@ class PlanService(
     fun opprettPlan(
         iaSak: IASak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+        prosessId: Int? = null,
     ): Either<Feil, Plan> =
-        iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
+        iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
             planRepository.opprettPlan(
                 planId = UUID.randomUUID(),
-                prosessId = prosess.id,
+                prosessId = prosessId ?: prosesser.first().id,
                 saksbehandler = saksbehandler,
             )
         }.onRight { plan ->
             planObserverers.forEach { it.receive(plan) }
         }
 
-    fun hentPlan(iaSak: IASak): Either<Feil, Plan> =
-        iaProsessService.hentEllerOpprettIAProsess(iaSak).flatMap { prosess ->
-            planRepository.hentPlan(prosessId = prosess.id)?.right() ?: PlanFeil.`fant ikke plan`.left()
+    fun hentPlan(
+        iaSak: IASak,
+        prosessId: Int? = null
+    ): Either<Feil, Plan> =
+        iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
+            planRepository.hentPlan(
+                prosessId = prosessId ?: prosesser.first().id
+            )?.right() ?: PlanFeil.`fant ikke plan`.left()
         }
 
     fun endreUndertemaerTilTema(

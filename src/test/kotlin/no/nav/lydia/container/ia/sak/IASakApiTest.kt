@@ -60,6 +60,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
@@ -167,6 +168,7 @@ class IASakApiTest {
                     sak.leggTilLeveranseOgFullførSak()
 
                 ENDRE_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
+                NY_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
 
                 else ->
                     sak.nyHendelse(it)

@@ -13,7 +13,9 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.SLETTET
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
@@ -23,7 +25,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.feil
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil.Companion.generellFeil
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -110,7 +111,9 @@ class IASak private constructor(
             VIRKSOMHET_ER_IKKE_AKTUELL,
             TILBAKE,
             SLETT_SAK,
-            FULLFØR_BISTAND -> {
+            FULLFØR_BISTAND,
+            ENDRE_PROSESS,
+            NY_PROSESS, -> {
                 tilstand.behandleHendelse(hendelse)
                     .map { nyTilstand -> tilstand = nyTilstand }
                     .mapLeft { feil ->
@@ -119,7 +122,6 @@ class IASak private constructor(
                     }
             }
 
-            ENDRE_PROSESS -> {}
             TA_EIERSKAP_I_SAK -> {
                 eidAv = hendelse.opprettetAv
             }
@@ -253,6 +255,7 @@ class IASak private constructor(
                 VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand().right()
                 TILBAKE -> finnForrigeTilstand().right()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
+                ENDRE_PROSESS, NY_PROSESS -> this.right()
                 else -> generellFeil()
             }
 
@@ -261,7 +264,8 @@ class IASak private constructor(
                 GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
                 GyldigHendelse(saksHendelsestype = TILBAKE),
                 GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS)
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = NY_PROSESS)
             )
             else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
     }
@@ -274,7 +278,8 @@ class IASak private constructor(
                 GyldigHendelse(saksHendelsestype = TILBAKE),
                 GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND),
                 GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS)
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = NY_PROSESS)
             )
             else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
 
@@ -283,6 +288,7 @@ class IASak private constructor(
                 TILBAKE -> finnForrigeTilstand().right()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
                 FULLFØR_BISTAND -> FullførtTilstand().right()
+                ENDRE_PROSESS, NY_PROSESS -> this.right()
                 else -> generellFeil()
             }
     }
