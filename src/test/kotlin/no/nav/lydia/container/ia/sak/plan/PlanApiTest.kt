@@ -1,16 +1,13 @@
 package no.nav.lydia.container.ia.sak.plan
 
 import io.kotest.assertions.shouldFail
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import java.time.LocalDateTime.now
 import kotlin.test.Test
@@ -19,9 +16,6 @@ class PlanApiTest {
     @Test
     fun `oppretter en ny plan`() {
         val sak = nySakIKartlegges()
-        sak.opprettKartlegging()
-        val prosesser = sak.hentIAProsesser()
-        prosesser shouldHaveSize 1
 
         val planDto =
             PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
@@ -31,9 +25,7 @@ class PlanApiTest {
     @Test
     fun `kan endre status på undertema`() {
         val sak = nySakIKartlegges()
-        sak.opprettKartlegging()
-        val prosesser = sak.hentIAProsesser()
-        prosesser shouldHaveSize 1
+
         val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         val førsteTema = planDto.temaer.first()
 
@@ -56,9 +48,6 @@ class PlanApiTest {
     @Test
     fun `kan sette alle tema og alle undertema til planlagt`() {
         val sak = nySakIKartlegges()
-        sak.opprettKartlegging()
-        val prosesser = sak.hentIAProsesser()
-        prosesser shouldHaveSize 1
         val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
 
         val endretPlan = planDto.copy(
@@ -93,9 +82,6 @@ class PlanApiTest {
     @Test
     fun `kan sette alle undertemaer til planlagt`() {
         val sak = nySakIKartlegges()
-        sak.opprettKartlegging()
-        val prosesser = sak.hentIAProsesser()
-        prosesser shouldHaveSize 1
         val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
 
         val endretPlan = planDto.copy(
@@ -134,9 +120,6 @@ class PlanApiTest {
             PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         }
 
-        // lag prosess (dette bør bort på sikt)
-        sak.opprettKartlegging()
-
         shouldFail {
             PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         }
@@ -145,9 +128,6 @@ class PlanApiTest {
     @Test
     fun `skal kunne hente plan uten å være eier som lesebruker`() {
         val sak = nySakIKartlegges()
-
-        // lag prosess (dette bør bort på sikt)
-        sak.opprettKartlegging()
 
         val opprettetPlan = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         val hentetPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, token = TestContainerHelper.oauth2ServerContainer.lesebruker.token)

@@ -64,8 +64,6 @@ class IASakProsessTest {
     @Test
     fun `skal kunne endre navn på en prosess`() {
         val sak = nySakIKartlegges()
-        sak.opprettKartlegging() // dette burde opprette en prosess
-
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
 
@@ -77,7 +75,6 @@ class IASakProsessTest {
     @Test
     fun `skal kunne hente ut alle aktive prosesser i en sak`() {
         val sak = nySakIKartlegges()
-        sak.opprettKartlegging() // dette burde opprette en prosess
 
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
@@ -87,7 +84,6 @@ class IASakProsessTest {
     @Test
     fun `skal ikke få feil i historikken dersom man endrer navn på prosess flere ganger`() {
         val sak = nySakIKartlegges()
-        sak.opprettKartlegging() // dette burde opprette en prosess
 
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
