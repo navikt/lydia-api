@@ -91,7 +91,11 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        SELECT ia_sak_kartlegging.*, ia_sak.saksnummer, virksomhet.orgnr, virksomhet.navn
+                        SELECT ia_sak_kartlegging.*,
+                         ia_sak.saksnummer,
+                         virksomhet.orgnr,
+                         virksomhet.navn,
+                         ia_prosess.id AS prosessId
                         FROM ia_sak_kartlegging
                         JOIN ia_prosess on (ia_sak_kartlegging.ia_prosess = ia_prosess.id)
                         JOIN ia_sak using (saksnummer, orgnr)
@@ -203,6 +207,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         return Spørreundersøkelse(
             id = spørreundersøkelseId,
             saksnummer = this.string("saksnummer"),
+            prosessId = this.int("prosessId"),
             orgnummer = this.string("orgnr"),
             virksomhetsNavn = this.string("navn"),
             status = SpørreundersøkelseStatus.valueOf(this.string("status")),

@@ -38,7 +38,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
@@ -47,9 +46,6 @@ import org.junit.Before
 
 class SpørreundersøkelseApiTest {
     private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
-    private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe
-    )
 
     companion object {
         const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018f4e25-6a40-713f-b769-267afa134896"
@@ -58,15 +54,12 @@ class SpørreundersøkelseApiTest {
     @Before
     fun setUp() {
         kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-        fullførtBehovsvurderingKonsument.subscribe(listOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
     }
 
     @After
     fun tearDown() {
         kartleggingKonsument.unsubscribe()
         kartleggingKonsument.close()
-        fullførtBehovsvurderingKonsument.unsubscribe()
-        fullførtBehovsvurderingKonsument.close()
     }
 
     @Test
@@ -474,17 +467,6 @@ class SpørreundersøkelseApiTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
                     spørreundersøkelse.status shouldBe AVSLUTTET
-                }
-            }
-
-            // -- topic for salesforce
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.kartleggingId,
-                konsument = fullførtBehovsvurderingKonsument
-            ) {
-                it.forExactlyOne { melding ->
-                    val behovsvurdering = Json.decodeFromString<FullførtBehovsvurdering>(melding)
-                    behovsvurdering.behovsvurderingId shouldBe avsluttetKartlegging.kartleggingId
                 }
             }
         }

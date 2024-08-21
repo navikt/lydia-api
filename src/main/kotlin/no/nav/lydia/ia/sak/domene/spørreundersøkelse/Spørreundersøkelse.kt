@@ -7,6 +7,7 @@ import java.util.UUID
 data class Spørreundersøkelse(
     val id: UUID,
     val saksnummer: String,
+    val prosessId: Int,
     val orgnummer: String,
     val virksomhetsNavn: String,
     val status: SpørreundersøkelseStatus,
