@@ -22,7 +22,9 @@ import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.temaId
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
@@ -38,6 +40,59 @@ fun Route.iaSakPlan(
             iaSakService.hentMal()
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // TODO: Deprecate
+    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
+        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+            planService.opprettPlan(
+                iaSak = iaSak,
+                saksbehandler = saksbehandler,
+                mal = PlanMalDto().tilRedigertPlanMalDto(),
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
+        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
+
+        val planMalDto = call.receive<RedigertPlanMalDto>()
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+            planService.opprettPlan(
+                iaSak = iaSak,
+                saksbehandler = saksbehandler,
+                mal = planMalDto,
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -137,29 +192,6 @@ fun Route.iaSakPlan(
             )
         }.map {
             call.respond(status = HttpStatusCode.OK, message = it.tilDtoer())
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
-        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            planService.opprettPlan(
-                iaSak = iaSak,
-                saksbehandler = saksbehandler,
-            )
-        }.also { planEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = planEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

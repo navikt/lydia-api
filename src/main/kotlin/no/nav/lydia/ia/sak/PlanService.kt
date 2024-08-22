@@ -15,6 +15,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 
@@ -27,12 +28,14 @@ class PlanService(
         iaSak: IASak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         prosessId: Int? = null,
+        mal: RedigertPlanMalDto,
     ): Either<Feil, Plan> =
         iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
             planRepository.opprettPlan(
                 planId = UUID.randomUUID(),
                 prosessId = prosessId ?: prosesser.first().id,
                 saksbehandler = saksbehandler,
+                mal = mal,
             )
         }.onRight { plan ->
             planObserverers.forEach { it.receive(plan) }
@@ -40,11 +43,11 @@ class PlanService(
 
     fun hentPlan(
         iaSak: IASak,
-        prosessId: Int? = null
+        prosessId: Int? = null,
     ): Either<Feil, Plan> =
         iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
             planRepository.hentPlan(
-                prosessId = prosessId ?: prosesser.first().id
+                prosessId = prosessId ?: prosesser.first().id,
             )?.right() ?: PlanFeil.`fant ikke plan`.left()
         }
 
@@ -102,7 +105,8 @@ class PlanService(
                 plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return PlanFeil.`fant ikke tema`.left()
 
             val oppdatertUndertema: PlanUndertema =
-                lagredeUndertemaer.firstOrNull { it.id == undertemaId }?.copy(status = nyStatus) ?: return PlanFeil.`fant ikke undertema`.left()
+                lagredeUndertemaer.firstOrNull { it.id == undertemaId }?.copy(status = nyStatus)
+                    ?: return PlanFeil.`fant ikke undertema`.left()
 
             planRepository.oppdaterUndertema(
                 planId = plan.id,

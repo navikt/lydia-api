@@ -8,25 +8,82 @@ import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.RedigertInnholdMalDto
+import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.RedigertTemaMalDto
 import java.time.LocalDateTime.now
 import kotlin.test.Test
 
 class PlanApiTest {
     @Test
-    fun `oppretter en ny plan`() {
+    fun `oppretter en ny plan uten mal`() {
         val sak = nySakIKartlegges()
 
-        val planDto =
-            PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planDto = PlanHelper.opprettEnTomPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         planDto.temaer.size shouldBe 3
+
+        planDto.temaer.any { it.planlagt } shouldBe false
+        planDto.temaer.forEach { tema ->
+            tema.undertemaer.any { it.planlagt } shouldBe false
+        }
+    }
+
+    @Test
+    fun `oppretter en tom ny plan med mal`() {
+        val sak = nySakIKartlegges()
+
+        val endretPlan = PlanMalDto().tilRedigertPlanMalDto()
+
+        val planDto =
+            PlanHelper.opprettEnEndretPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = endretPlan)
+
+        planDto.temaer.any { it.planlagt } shouldBe false
+        planDto.temaer.forEach { tema ->
+            tema.undertemaer.any { it.planlagt } shouldBe false
+        }
+    }
+
+    @Test
+    fun `oppretter en ny plan med alle temaer og innhold planlagt med mal`() {
+        val sak = nySakIKartlegges()
+
+        val planMal = PlanMalDto()
+
+        val endretPlan = RedigertPlanMalDto(
+            tema = planMal.tema.map { temaMalDto ->
+                RedigertTemaMalDto(
+                    rekkefølge = temaMalDto.rekkefølge,
+                    navn = temaMalDto.navn,
+                    planlagt = true,
+                    innhold = temaMalDto.innhold.map { innholdMalDto ->
+                        RedigertInnholdMalDto(
+                            rekkefølge = innholdMalDto.rekkefølge,
+                            navn = innholdMalDto.navn,
+                            planlagt = true,
+                            startDato = now().toKotlinLocalDateTime().date,
+                            sluttDato = now().toKotlinLocalDateTime().date,
+                        )
+                    },
+                )
+            },
+        )
+
+        val planDto =
+            PlanHelper.opprettEnEndretPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = endretPlan)
+
+        planDto.temaer.all { it.planlagt } shouldBe true
+        planDto.temaer.forEach { tema ->
+            tema.undertemaer.all { it.planlagt } shouldBe true
+        }
     }
 
     @Test
     fun `kan endre status på undertema`() {
         val sak = nySakIKartlegges()
 
-        val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planDto = PlanHelper.opprettEnTomPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         val førsteTema = planDto.temaer.first()
 
         val førsteUndertema = førsteTema.undertemaer.first()
@@ -48,7 +105,7 @@ class PlanApiTest {
     @Test
     fun `kan sette alle tema og alle undertema til planlagt`() {
         val sak = nySakIKartlegges()
-        val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planDto = PlanHelper.opprettEnTomPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
 
         val endretPlan = planDto.copy(
             temaer = planDto.temaer.map { temaDto ->
@@ -82,7 +139,7 @@ class PlanApiTest {
     @Test
     fun `kan sette alle undertemaer til planlagt`() {
         val sak = nySakIKartlegges()
-        val planDto = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planDto = PlanHelper.opprettEnTomPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
 
         val endretPlan = planDto.copy(
             temaer = planDto.temaer.map { temaDto ->
@@ -129,7 +186,7 @@ class PlanApiTest {
     fun `skal kunne hente plan uten å være eier som lesebruker`() {
         val sak = nySakIKartlegges()
 
-        val opprettetPlan = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val opprettetPlan = PlanHelper.opprettEnTomPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         val hentetPlan = PlanHelper.hentPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,

@@ -13,10 +13,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.plan.Plan
-import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanRessurs
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
@@ -29,7 +29,7 @@ class PlanRepository(
         planId: UUID,
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        mal: PlanMalDto = PlanMalDto(),
+        mal: RedigertPlanMalDto,
     ): Either<Feil, Plan> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -74,7 +74,7 @@ class PlanRepository(
                             """.trimMargin(),
                             mapOf(
                                 "navn" to tema.navn,
-                                "planlagt" to false,
+                                "planlagt" to tema.planlagt,
                                 "plan_id" to planId.toString(),
                             ),
                         ).map { row: Row ->
@@ -108,10 +108,10 @@ class PlanRepository(
                                 """.trimMargin(),
                                 mapOf(
                                     "navn" to innhold.navn,
-                                    "planlagt" to false,
-                                    "status" to null,
-                                    "start_dato" to null,
-                                    "slutt_dato" to null,
+                                    "planlagt" to innhold.planlagt,
+                                    "status" to if (innhold.planlagt) PlanUndertema.Status.PLANLAGT.name else null,
+                                    "start_dato" to innhold.startDato?.toJavaLocalDate(),
+                                    "slutt_dato" to innhold.sluttDato?.toJavaLocalDate(),
                                     "tema_id" to temaId,
                                     "plan_id" to planId.toString(),
                                 ),
