@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanRessurs
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 import javax.sql.DataSource
@@ -225,11 +226,11 @@ class PlanRepository(
                     "temaId" to temaId,
                 ),
             ).map { row: Row ->
-                val navn = row.string("navn")
+                val innholdsNavn = row.string("navn")
                 PlanUndertema(
                     id = row.int("undertema_id"),
-                    navn = navn,
-                    målsetning = PlanMalDto().hentMålsetning(navn),
+                    navn = innholdsNavn,
+                    målsetning = hentInnholdsMålsetning(innholdsNavn) ?: "",
                     planlagt = row.boolean("planlagt"),
                     status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
