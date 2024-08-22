@@ -62,6 +62,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -613,7 +614,7 @@ class IASakKartleggingHelper {
             prosessId: String? = null,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPost(
-            "$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it" } ?: "opprett"}"
+            "$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it" } ?: "opprett"}",
         ).authentication().bearer(token)
 
         fun hentIASakKartlegginger(
@@ -630,17 +631,16 @@ class IASakKartleggingHelper {
 
         fun IASakDto.opprettKartlegging(
             prosessId: String? = null,
-            token: String = oauth2ServerContainer.saksbehandler1.token
-        ) =
-            opprettIASakKartlegging(
-                orgnr = orgnr,
-                saksnummer = saksnummer,
-                prosessId = prosessId,
-                token = token,
-            ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
-            )
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = opprettIASakKartlegging(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            prosessId = prosessId,
+            token = token,
+        ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
 
         fun SpørreundersøkelseDto.start(
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -838,6 +838,14 @@ class PlanHelper {
                     },
                 )
             }
+
+        fun hentPlanMal(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/mal")
+                .authentication().bearer(token)
+                .tilSingelRespons<PlanMalDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail(it.message) },
+                )
     }
 }
 

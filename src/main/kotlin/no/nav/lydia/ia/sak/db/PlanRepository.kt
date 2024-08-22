@@ -13,7 +13,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.plan.Plan
-import no.nav.lydia.ia.sak.domene.plan.PlanMal
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanRessurs
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -28,7 +28,7 @@ class PlanRepository(
         planId: UUID,
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        mal: PlanMal = PlanMal(),
+        mal: PlanMalDto = PlanMalDto(),
     ): Either<Feil, Plan> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -229,7 +229,7 @@ class PlanRepository(
                 PlanUndertema(
                     id = row.int("undertema_id"),
                     navn = navn,
-                    målsetning = PlanMal().hentMålsetning(navn),
+                    målsetning = PlanMalDto().hentMålsetning(navn),
                     planlagt = row.boolean("planlagt"),
                     status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),

@@ -33,6 +33,16 @@ fun Route.iaSakPlan(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
+    get("$PLAN_BASE_ROUTE/mal") {
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            iaSakService.hentMal()
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/{temaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)

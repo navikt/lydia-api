@@ -1,7 +1,10 @@
 package no.nav.lydia.ia.sak.domene.plan
 
-data class PlanMal(
-    val tema: List<TemaMal> = listOf(
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class PlanMalDto(
+    val tema: List<TemaMalDto> = listOf(
         partssamarbeid,
         sykefraværsarbeid,
         arbeidsmiljø,
@@ -12,72 +15,74 @@ data class PlanMal(
             ?: ""
 }
 
-data class TemaMal(
+@Serializable
+data class TemaMalDto(
     val navn: String,
-    val innhold: List<InnholdsMal>,
+    val innhold: List<InnholdsMalDto>,
 )
 
-data class InnholdsMal(
+@Serializable
+data class InnholdsMalDto(
     val navn: String,
     val målsetning: String,
 )
 
-private val sykefraværsarbeid = TemaMal(
+private val sykefraværsarbeid = TemaMalDto(
     navn = "Sykefraværsarbeid",
     innhold = listOf(
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Sykefraværsrutiner",
             målsetning = "Jobbe systematisk og forebyggende med sykefravær, samt forbedre rutiner og oppfølging av ansatte som er sykmeldte eller står i fare for å bli det.",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Oppfølgingssamtaler",
             målsetning = "Øke kompetansen for hvordan man gjennomfører gode oppfølgingssamtaler, både gjennom teori og praksis.",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Tilretteleggings- og medvirkningsplikt",
             målsetning = "Utvikle kultur og rutiner for tilrettelegging og medvirkning, samt kartlegging av tilretteleggingsmuligheter på arbeidsplassen. ",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Sykefravær - enkeltsaker",
             målsetning = "Øke kompetansen for hvordan man tar tak i, følger opp og løser enkeltsaker. ",
         ),
     ),
 )
 
-private val partssamarbeid = TemaMal(
+private val partssamarbeid = TemaMalDto(
     navn = "Partssamarbeid",
     innhold = listOf(
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Utvikle partssamarbeidet",
             målsetning = "Styrke samarbeidet mellom leder, tillitsvalgt og verneombud, samt øke kunnskap og ferdigheter for å jobbe systematisk og forebyggende med sykefravær og arbeidsmiljø.",
         ),
     ),
 )
 
-private val arbeidsmiljø = TemaMal(
+private val arbeidsmiljø = TemaMalDto(
     navn = "Arbeidsmiljø",
     innhold = listOf(
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Utvikle arbeidsmiljøet",
             målsetning = "Kartlegge hvilke forhold ved arbeidsmiljøet som påvirker sykefravær og frafall, samt heve kompetansen for videreutvikling av arbeidsmiljøet.",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Endring og omstilling",
             målsetning = "Forebygge fravær ved endringer og omstillingsprosesser og sette gode rammer for medvirkning, kommunikasjon og støtte til ansatte.",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Oppfølging av arbeidsmiljøundersøkelser",
             målsetning = "Gi støtte til å identifisere og gjennomføre tiltak basert på behov og ressurser i virksomheten.",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Livsfaseorientert personalpolitikk",
             målsetning = "Utvikle personalpolitikk som ivaretar medarbeideres ulike behov, krav, begrensninger og muligheter i  ulike livsfaser.",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "Psykisk helse",
             målsetning = "Øke kompetansen om psykisk helse og hvordan møte medarbeidere som har psykiske helseproblemer.",
         ),
-        InnholdsMal(
+        InnholdsMalDto(
             navn = "HelseIArbeid",
             målsetning = "Få ansatte til å mestre jobb, selv med muskel/skjelett- og psykiske helseplager",
         ),

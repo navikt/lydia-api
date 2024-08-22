@@ -130,8 +130,20 @@ class PlanApiTest {
         val sak = nySakIKartlegges()
 
         val opprettetPlan = PlanHelper.opprettPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-        val hentetPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, token = TestContainerHelper.oauth2ServerContainer.lesebruker.token)
+        val hentetPlan = PlanHelper.hentPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            token = TestContainerHelper.oauth2ServerContainer.lesebruker.token,
+        )
 
         opprettetPlan shouldBeEqual hentetPlan
+    }
+
+    @Test
+    fun `skal kunne hente plan-mal som eier`() {
+        val planMal = PlanHelper.hentPlanMal()
+
+        planMal.tema.size shouldBe 3
+        planMal.tema.first().navn shouldBe "Partssamarbeid"
     }
 }
