@@ -24,7 +24,6 @@ import no.nav.lydia.ia.sak.api.extensions.temaId
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
@@ -54,7 +53,7 @@ fun Route.iaSakPlan(
             planService.opprettPlan(
                 iaSak = iaSak,
                 saksbehandler = saksbehandler,
-                mal = PlanMalDto().tilRedigertPlanMalDto(),
+                mal = PlanMalDto(),
             )
         }.also { planEither ->
             auditLog.auditloggEither(
@@ -75,7 +74,7 @@ fun Route.iaSakPlan(
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
 
-        val planMalDto = call.receive<RedigertPlanMalDto>()
+        val planMalDto = call.receive<PlanMalDto>()
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             planService.opprettPlan(

@@ -13,9 +13,9 @@ import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.plan.Plan
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 
@@ -28,7 +28,7 @@ class PlanService(
         iaSak: IASak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         prosessId: Int? = null,
-        mal: RedigertPlanMalDto,
+        mal: PlanMalDto,
     ): Either<Feil, Plan> =
         iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
             planRepository.opprettPlan(

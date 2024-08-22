@@ -64,7 +64,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -761,7 +760,7 @@ class PlanHelper {
         fun opprettEnEndretPlan(
             orgnr: String,
             saksnummer: String,
-            redigertPlan: RedigertPlanMalDto,
+            redigertPlan: PlanMalDto,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/opprett")
             .jsonBody(Json.encodeToString(redigertPlan))

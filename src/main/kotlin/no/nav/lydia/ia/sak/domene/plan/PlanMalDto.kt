@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.domene.plan
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -8,99 +9,120 @@ data class PlanMalDto(
         TemaMalDto(
             rekkefølge = 1,
             navn = "Partssamarbeid",
+            planlagt = false,
             innhold = listOf(
                 InnholdMalDto(
                     rekkefølge = 1,
                     navn = "Utvikle partssamarbeidet",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
             ),
         ),
         TemaMalDto(
             rekkefølge = 2,
             navn = "Sykefraværsarbeid",
+            planlagt = false,
             innhold = listOf(
                 InnholdMalDto(
                     rekkefølge = 1,
                     navn = "Sykefraværsrutiner",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 2,
                     navn = "Oppfølgingssamtaler",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 3,
                     navn = "Tilretteleggings- og medvirkningsplikt",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 4,
                     navn = "Sykefravær - enkeltsaker",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
             ),
         ),
         TemaMalDto(
             rekkefølge = 3,
             navn = "Arbeidsmiljø",
+            planlagt = false,
             innhold = listOf(
                 InnholdMalDto(
                     rekkefølge = 1,
                     navn = "Utvikle arbeidsmiljøet",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 2,
                     navn = "Endring og omstilling",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 3,
                     navn = "Oppfølging av arbeidsmiljøundersøkelser",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 4,
                     navn = "Livsfaseorientert personalpolitikk",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 5,
                     navn = "Psykisk helse",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 6,
                     navn = "HelseIArbeid",
+                    planlagt = false,
+                    startDato = null,
+                    sluttDato = null,
                 ),
             ),
         ),
     ),
-) {
-    fun tilRedigertPlanMalDto(): RedigertPlanMalDto = RedigertPlanMalDto(tema = tema.map { it.tilRedigertTemaMalDto() })
-}
+)
 
 @Serializable
 data class TemaMalDto(
     val rekkefølge: Int,
     val navn: String,
+    val planlagt: Boolean,
     val innhold: List<InnholdMalDto>,
-) {
-    fun tilRedigertTemaMalDto(): RedigertTemaMalDto =
-        RedigertTemaMalDto(
-            rekkefølge = rekkefølge,
-            navn = navn,
-            planlagt = false,
-            innhold = innhold.map { it.tilRedigertInnholdMalDto() },
-        )
-}
+)
 
 @Serializable
 data class InnholdMalDto(
     val rekkefølge: Int,
     val navn: String,
-) {
-    fun tilRedigertInnholdMalDto(): RedigertInnholdMalDto =
-        RedigertInnholdMalDto(
-            rekkefølge = rekkefølge,
-            navn = navn,
-            planlagt = false,
-            startDato = null,
-            sluttDato = null,
-        )
-}
+    val planlagt: Boolean,
+    val startDato: LocalDate?,
+    val sluttDato: LocalDate?,
+)
 
 fun hentInnholdsMålsetning(innholdsNavn: String): String? =
     when (innholdsNavn) {

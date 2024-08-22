@@ -8,11 +8,10 @@ import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.plan.RedigertInnholdMalDto
-import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
-import no.nav.lydia.ia.sak.domene.plan.RedigertTemaMalDto
+import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import java.time.LocalDateTime.now
 import kotlin.test.Test
 
@@ -34,7 +33,7 @@ class PlanApiTest {
     fun `oppretter en tom ny plan med mal`() {
         val sak = nySakIKartlegges()
 
-        val endretPlan = PlanMalDto().tilRedigertPlanMalDto()
+        val endretPlan = PlanMalDto()
 
         val planDto =
             PlanHelper.opprettEnEndretPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = endretPlan)
@@ -49,16 +48,16 @@ class PlanApiTest {
     fun `oppretter en ny plan med alle temaer og innhold planlagt med mal`() {
         val sak = nySakIKartlegges()
 
-        val planMal = PlanMalDto()
+        val standardPlan = PlanMalDto()
 
-        val endretPlan = RedigertPlanMalDto(
-            tema = planMal.tema.map { temaMalDto ->
-                RedigertTemaMalDto(
+        val redigertPlan = PlanMalDto(
+            tema = standardPlan.tema.map { temaMalDto ->
+                TemaMalDto(
                     rekkefølge = temaMalDto.rekkefølge,
                     navn = temaMalDto.navn,
                     planlagt = true,
                     innhold = temaMalDto.innhold.map { innholdMalDto ->
-                        RedigertInnholdMalDto(
+                        InnholdMalDto(
                             rekkefølge = innholdMalDto.rekkefølge,
                             navn = innholdMalDto.navn,
                             planlagt = true,
@@ -71,7 +70,7 @@ class PlanApiTest {
         )
 
         val planDto =
-            PlanHelper.opprettEnEndretPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = endretPlan)
+            PlanHelper.opprettEnEndretPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = redigertPlan)
 
         planDto.temaer.all { it.planlagt } shouldBe true
         planDto.temaer.forEach { tema ->

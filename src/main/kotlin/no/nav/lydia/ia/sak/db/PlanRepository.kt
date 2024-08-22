@@ -13,10 +13,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.plan.Plan
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanRessurs
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.plan.RedigertPlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
@@ -29,7 +29,7 @@ class PlanRepository(
         planId: UUID,
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        mal: RedigertPlanMalDto,
+        mal: PlanMalDto,
     ): Either<Feil, Plan> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
