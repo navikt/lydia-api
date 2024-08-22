@@ -17,6 +17,7 @@ import io.ktor.server.routing.post
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.ia.sak.IAProsessFeil
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
@@ -24,6 +25,7 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.extensions.kartleggingId
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
@@ -41,6 +43,33 @@ fun Route.iaSakSpørreundersøkelse(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
+    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+            spørreundersøkelseService.opprettSpørreundersøkelse(
+                orgnummer = orgnummer,
+                saksbehandler = saksbehandler,
+                iaSak = iaSak,
+                prosessId = prosessId
+            )
+        }.also { kartleggingEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartleggingEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = kartleggingEither.getOrNull()?.saksnummer,
+            )
+        }.map {
+            call.respond(HttpStatusCode.Created, it.tilDto(true))
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
+    // -- Skal fjernes
     post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
 
@@ -64,7 +93,33 @@ fun Route.iaSakSpørreundersøkelse(
             call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
+    // --
 
+    get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                spørreundersøkelseService.hentKartlegginger(sak = iaSak, prosessId = prosessId)
+            }
+        }.also { kartleggingerEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartleggingerEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(HttpStatusCode.OK, it.tilDto())
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
+    // -- Skal fjernes
     get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)

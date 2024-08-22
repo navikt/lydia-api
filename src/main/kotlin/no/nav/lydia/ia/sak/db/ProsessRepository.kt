@@ -12,6 +12,24 @@ import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 
 class ProsessRepository(val dataSource: DataSource) {
 
+    fun hentProsess(saksnummer: String, prosessId: Int) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT *
+                        FROM ia_prosess
+                        WHERE saksnummer = :saksnummer
+                        AND id = :prosessId
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                        "prosessId" to prosessId
+                    )
+                ).map(this::mapRowToIaProsessDto).asSingle
+            )
+        }
+
     fun hentProsesser(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(

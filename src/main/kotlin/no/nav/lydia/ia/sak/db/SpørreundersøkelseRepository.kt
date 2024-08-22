@@ -19,6 +19,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
@@ -69,7 +70,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
             )
         }
 
-    fun hentSpørreundersøkelser(prosessId: Int) =
+    fun hentSpørreundersøkelser(prosess: IAProsess) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -80,7 +81,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                     AND status != '$SLETTET'
                 """.trimMargin(),
                     mapOf(
-                        "prosessId" to prosessId,
+                        "prosessId" to prosess.id,
                     )
                 ).map(this::mapRowToIASakKartleggingOversikt).asList
             )

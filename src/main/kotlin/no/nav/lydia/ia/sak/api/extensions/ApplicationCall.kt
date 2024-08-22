@@ -14,5 +14,7 @@ val ApplicationCall.iaSakLeveranseId
     get() = parameters["iaSakLeveranseId"]
 val ApplicationCall.temaId
     get() = parameters["temaId"]?.toIntOrNull()
+val ApplicationCall.prosessId
+    get() = parameters["prosessId"]?.toIntOrNull()
 
 suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)

@@ -1,6 +1,8 @@
 package no.nav.lydia.ia.sak
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.db.ProsessRepository
@@ -24,8 +26,13 @@ class IAProsessService(
         }.mapLeft {
             IAProsessFeil.`feil ved henting av prosess`
         }
+
+    fun hentIAProsess(sak: IASak, prosessId: Int) =
+        prosessRepository.hentProsess(saksnummer = sak.saksnummer, prosessId = prosessId)?.right()
+            ?: IAProsessFeil.`ugyldig prosessId`.left()
 }
 
 object IAProsessFeil {
     val `feil ved henting av prosess` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
+    val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
 }

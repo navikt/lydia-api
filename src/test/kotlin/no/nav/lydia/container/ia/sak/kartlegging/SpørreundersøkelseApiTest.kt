@@ -26,6 +26,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSv
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKontaktes
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -37,10 +38,12 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.After
 import org.junit.Before
 
@@ -570,6 +573,24 @@ class SpørreundersøkelseApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
         ) shouldHaveSize 0
+    }
+
+    @Test
+    fun `skal kunne opprette behovsvurdering for to forskjellige prosesser`() {
+        val sak = nySakIKartlegges()
+        sak.nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+
+        val iaProsesser = sak.hentIAProsesser()
+        iaProsesser shouldHaveSize 2
+        iaProsesser.forEach {
+            sak.opprettKartlegging(prosessId = it.id.toString())
+
+            hentIASakKartlegginger(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = it.id.toString()
+            ) shouldHaveSize 1
+        }
     }
 
     fun enDeltakerSvarerPåALLESpørsmål(

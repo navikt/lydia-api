@@ -610,25 +610,32 @@ class IASakKartleggingHelper {
         fun opprettIASakKartlegging(
             orgnr: String,
             saksnummer: String,
+            prosessId: String? = null,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/opprett")
-            .authentication().bearer(token)
+        ) = lydiaApiContainer.performPost(
+            "$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it" } ?: "opprett"}"
+        ).authentication().bearer(token)
 
         fun hentIASakKartlegginger(
             orgnr: String,
             saksnummer: String,
+            prosessId: String? = null,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer")
+        ) = lydiaApiContainer.performGet("$KARTLEGGING_BASE_ROUTE/$orgnr/$saksnummer${prosessId?.let { "/prosess/$it" } ?: ""}")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
                 success = { it },
                 failure = { fail(it.message) },
             )
 
-        fun IASakDto.opprettKartlegging(token: String = oauth2ServerContainer.saksbehandler1.token) =
+        fun IASakDto.opprettKartlegging(
+            prosessId: String? = null,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
             opprettIASakKartlegging(
                 orgnr = orgnr,
                 saksnummer = saksnummer,
+                prosessId = prosessId,
                 token = token,
             ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                 success = { respons -> respons },
