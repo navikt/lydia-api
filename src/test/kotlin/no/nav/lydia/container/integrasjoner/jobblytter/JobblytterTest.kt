@@ -64,6 +64,6 @@ class JobblytterTest {
     @Test
     fun `skal ignorere irrelevante jobber`() {
         kafkaContainer.sendJobbMelding(alleKategorierSykefraværsstatistikkDvhImport)
-        lydiaApiContainer shouldContainLog "Jobb 'importSykefraværKvartalsstatistikk' ignorert".toRegex()
+        lydiaApiContainer shouldContainLog "Jobb 'alleKategorierSykefraværsstatistikkDvhImport' ignorert".toRegex()
     }
 }
