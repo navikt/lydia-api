@@ -1,10 +1,10 @@
 package no.nav.lydia.container.integrasjoner.jobblytter
 
+import ia.felles.integrasjoner.jobbsender.Jobb.alleKategorierSykefraværsstatistikkDvhImport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
-import ia.felles.integrasjoner.jobbsender.Jobb.importSykefraværKvartalsstatistikk
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
@@ -63,7 +63,7 @@ class JobblytterTest {
 
     @Test
     fun `skal ignorere irrelevante jobber`() {
-        kafkaContainer.sendJobbMelding(importSykefraværKvartalsstatistikk)
+        kafkaContainer.sendJobbMelding(alleKategorierSykefraværsstatistikkDvhImport)
         lydiaApiContainer shouldContainLog "Jobb 'importSykefraværKvartalsstatistikk' ignorert".toRegex()
     }
 }

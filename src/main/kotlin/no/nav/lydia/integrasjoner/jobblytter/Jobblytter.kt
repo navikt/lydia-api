@@ -129,7 +129,14 @@ object Jobblytter : CoroutineScope {
                                         statistikkViewOppdaterer.oppdaterStatistikkView()
                                     }
 
-                                    importSykefraværKvartalsstatistikk -> logger.info("Jobb '${jobInfo.jobb}' ignorert")
+                                    alleKategorierSykefraværsstatistikkDvhImport,
+                                    landSykefraværsstatistikkDvhImport,
+                                    sektorSykefraværsstatistikkDvhImport,
+                                    næringSykefraværsstatistikkDvhImport,
+                                    næringskodeSykefraværsstatistikkDvhImport,
+                                    virksomhetSykefraværsstatistikkDvhImport,
+                                    virksomhetMetadataSykefraværsstatistikkDvhImport,
+                                    publiseringsdatoDvhImport -> logger.info("Jobb '${jobInfo.jobb}' ignorert")
                                 }
                                 logger.info("Jobb '${jobInfo.jobb}' ferdig")
                             }
