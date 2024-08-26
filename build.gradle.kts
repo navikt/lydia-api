@@ -1,14 +1,14 @@
 val ktorVersion = "2.3.12"
 val fuelVersion = "2.3.1"
-val iaFellesVersion = "1.2.0"
+val iaFellesVersion = "1.4.0"
 val kotestVerstion = "5.9.1"
 val testcontainersVersion = "1.20.1"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.0.10"
+    kotlin("jvm") version "2.0.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.0.10"
+    kotlin("plugin.serialization") version "2.0.20"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
