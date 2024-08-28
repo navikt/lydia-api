@@ -51,7 +51,7 @@ fun Route.iaSakRådgiver(
                 iaSakService.opprettSakOgMerkSomVurdert(
                     orgnummer = orgnummer,
                     superbruker = superbruker,
-                    navEnhet = navEnhet
+                    navEnhet = navEnhet,
                 ).map { it.toDto(superbruker) }
             }
         }.also { iaSakEither ->
@@ -60,7 +60,7 @@ fun Route.iaSakRådgiver(
                 either = iaSakEither,
                 orgnummer = orgnummer,
                 auditType = AuditType.create,
-                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull()
+                saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
             )
         }.map {
             call.respond(HttpStatusCode.Created, it)
@@ -137,7 +137,7 @@ fun Route.iaSakRådgiver(
                         either = either,
                         orgnummer = orgnummer,
                         auditType = AuditType.access,
-                        saksnummer = iaSak.saksnummer
+                        saksnummer = iaSak.saksnummer,
                     )
                 }
             }
@@ -162,7 +162,7 @@ fun Route.iaSakRådgiver(
                 either = it,
                 orgnummer = hendelseDto.orgnummer,
                 auditType = AuditType.update,
-                saksnummer = hendelseDto.saksnummer
+                saksnummer = hendelseDto.saksnummer,
             )
         }.map {
             call.respond(HttpStatusCode.Created, it)
@@ -182,7 +182,7 @@ fun Route.iaSakRådgiver(
                 either = it,
                 orgnummer = orgnr,
                 auditType = AuditType.access,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(it.tilIASakLeveranserPerTjenesteDto().sorted())
@@ -204,7 +204,7 @@ fun Route.iaSakRådgiver(
                 either = it,
                 orgnummer = orgnr,
                 auditType = AuditType.update,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(status = HttpStatusCode.Created, message = it.tilDto())
@@ -224,7 +224,7 @@ fun Route.iaSakRådgiver(
             iaSakService.oppdaterIASakLeveranse(
                 iaSakLeveranseId = iaSakLeveranseId.toInt(),
                 oppdateringsDto = oppdateringsDto,
-                saksbehandler = saksbehandler
+                saksbehandler = saksbehandler,
             )
         }.also {
             auditLog.auditloggEither(
@@ -232,7 +232,7 @@ fun Route.iaSakRådgiver(
                 either = it,
                 orgnummer = orgnr,
                 auditType = AuditType.update,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(it.tilDto())
@@ -255,7 +255,7 @@ fun Route.iaSakRådgiver(
                 either = it,
                 orgnummer = orgnr,
                 auditType = AuditType.delete,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(it)
@@ -285,7 +285,10 @@ fun Route.iaSakRådgiver(
     }
 }
 
-class Feil(val feilmelding: String, val httpStatusCode: HttpStatusCode) {
+class Feil(
+    val feilmelding: String,
+    val httpStatusCode: HttpStatusCode,
+) {
     companion object {
         fun TilstandsmaskinFeil.tilFeilMedHttpFeilkode() = Feil(this.feilmelding, HttpStatusCode.UnprocessableEntity)
     }
@@ -295,7 +298,8 @@ object IASakError {
     val `prøvde å legge til en hendelse på en tom sak` =
         Feil("Prøvde å legge til en hendelse på en tom sak", HttpStatusCode.Conflict)
     val `prøvde å legge til en hendelse på en gammel sak` = Feil(
-        "Prøvde å legge til hendelse på gammel sak", HttpStatusCode.Conflict
+        "Prøvde å legge til hendelse på gammel sak",
+        HttpStatusCode.Conflict,
     )
     val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
     val `fikk ikke oppdatert leveranse` = Feil("Fikk ikke oppdatert leveranse", HttpStatusCode.Conflict)
@@ -305,8 +309,10 @@ object IASakError {
     val `ugyldig iaSakLeveranseId` = Feil("Ugyldig leveranseId", HttpStatusCode.BadRequest)
     val `ugyldig modul` = Feil("Ugyldig modul", HttpStatusCode.BadRequest)
     val `ikke eier av sak` = Feil("Ikke eier av sak", HttpStatusCode.BadRequest)
+    val `ugyldig plan` = Feil("Plan er ikke gyldig", HttpStatusCode.BadRequest)
     val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` = Feil(
-        "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet", HttpStatusCode.NotImplemented
+        "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet",
+        HttpStatusCode.NotImplemented,
     )
     val `generell feil under uthenting` = Feil("Generell feil under uthenting", HttpStatusCode.InternalServerError)
 

@@ -2,13 +2,16 @@ package no.nav.lydia.ia.sak.api.plan
 
 import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.application
 import io.ktor.server.application.call
+import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
+import kotlinx.datetime.LocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -49,6 +52,11 @@ fun Route.iaSakPlan(
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val planMalDto = call.receive<PlanMalDto>()
 
+        if (!planMalDto.erPlanGyldig()) {
+            application.log.info("Plan er ikke gyldig")
+            return@post call.sendFeil(IASakError.`ugyldig plan`)
+        }
+
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             planService.opprettPlan(
                 iaSak = iaSak,
@@ -81,6 +89,11 @@ fun Route.iaSakPlan(
         )
 
         val undertemaEndring = call.receive<List<EndreUndertemaRequest>>()
+
+        if (!undertemaEndring.erDatoGyldigForInnhold()) {
+            application.log.info("Plan er ikke gyldig")
+            return@put call.sendFeil(IASakError.`ugyldig plan`)
+        }
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
             planService.endreUndertemaerTilTema(
@@ -149,6 +162,11 @@ fun Route.iaSakPlan(
 
         val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
 
+        if (!endreTemaRequests.erEndretTemaGyldig()) {
+            application.log.info("Plan er ikke gyldig")
+            return@put call.sendFeil(IASakError.`ugyldig plan`)
+        }
+
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
             planService.endreFlereTema(
                 iaSak = iaSak,
@@ -192,4 +210,41 @@ fun Route.iaSakPlan(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+}
+
+private fun PlanMalDto.erPlanGyldig(): Boolean =
+    tema.all {
+        it.innhold.all { innhold -> erDatoerIGyldigPeriode(sluttDato = innhold.sluttDato, startDato = innhold.startDato) }
+    } &&
+        tema.all {
+            it.planlagt ||
+                it.innhold.all { innhold ->
+                    innhold.sluttDato == null && innhold.startDato == null && !innhold.planlagt
+                }
+        }
+
+private fun List<EndreUndertemaRequest>.erDatoGyldigForInnhold(): Boolean =
+    this.all { innhold ->
+        erDatoerIGyldigPeriode(sluttDato = innhold.sluttDato, startDato = innhold.startDato)
+    }
+
+private fun List<EndreTemaRequest>.erEndretTemaGyldig(): Boolean =
+    this.all { it.undertemaer.erDatoGyldigForInnhold() } &&
+        this.all { tema ->
+            if (tema.planlagt) {
+                true
+            } else {
+                tema.undertemaer.all { innhold ->
+                    innhold.sluttDato == null && innhold.startDato == null && !innhold.planlagt
+                }
+            }
+        }
+
+private fun erDatoerIGyldigPeriode(
+    sluttDato: LocalDate?,
+    startDato: LocalDate?,
+) = if (sluttDato == null || startDato == null) {
+    true
+} else {
+    sluttDato > startDato
 }

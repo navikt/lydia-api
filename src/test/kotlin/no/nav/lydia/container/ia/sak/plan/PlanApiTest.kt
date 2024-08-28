@@ -4,17 +4,17 @@ import io.kotest.assertions.shouldFail
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
-import java.time.LocalDateTime.now
 import kotlin.test.Test
 
 class PlanApiTest {
@@ -49,8 +49,8 @@ class PlanApiTest {
                             rekkefølge = innholdMalDto.rekkefølge,
                             navn = innholdMalDto.navn,
                             planlagt = true,
-                            startDato = now().toKotlinLocalDateTime().date,
-                            sluttDato = now().toKotlinLocalDateTime().date,
+                            startDato = LocalDate(2021, 1, 1),
+                            sluttDato = LocalDate(2021, 1, 2),
                         )
                     },
                 )
@@ -101,8 +101,8 @@ class PlanApiTest {
                     undertemaer = temaDto.undertemaer.map { undertemaDto ->
                         undertemaDto.copy(
                             planlagt = true,
-                            startDato = now().toKotlinLocalDateTime().date,
-                            sluttDato = now().toKotlinLocalDateTime().date,
+                            startDato = LocalDate(2021, 1, 1),
+                            sluttDato = LocalDate(2021, 1, 2),
                         )
                     },
                 )
@@ -277,6 +277,198 @@ class PlanApiTest {
         planMedNyttTema.temaer[2].undertemaer.forEach { it.status shouldBe null }
         planMedNyttTema.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
         planMedNyttTema.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
+    }
+
+    @Test
+    fun `kan ikke opprette plan med periode som er negativ - start dato etter slutt dato`() {
+        val sak = nySakIKartlegges()
+        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+
+        val startDato = LocalDate(2025, 1, 1)
+        val sluttDato = LocalDate(2010, 2, 2)
+
+        val planMedEttTema = planMal.copy(
+            tema = planMal.tema.map { tema ->
+                if (tema.rekkefølge == 2) {
+                    tema.copy(
+                        planlagt = true,
+                        innhold = tema.innhold.map { innhold ->
+                            innhold.copy(
+                                planlagt = true,
+                                startDato = startDato,
+                                sluttDato = sluttDato,
+                            )
+                        },
+                    )
+                } else {
+                    tema
+                }
+            },
+        )
+
+        shouldFail {
+            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+        }
+
+        lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
+    }
+
+    @Test
+    fun `kan ikke endre plan med periode som er negativ - start dato etter slutt dato`() {
+        val sak = nySakIKartlegges()
+        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+
+        val startDato = LocalDate(2010, 1, 1)
+        val sluttDato = LocalDate(2025, 2, 2)
+
+        val planMedEttTema = planMal.copy(
+            tema = planMal.tema.map { tema ->
+                if (tema.rekkefølge == 2) {
+                    tema.copy(
+                        planlagt = true,
+                        innhold = tema.innhold.map { innhold ->
+                            innhold.copy(
+                                planlagt = true,
+                                startDato = startDato,
+                                sluttDato = sluttDato,
+                            )
+                        },
+                    )
+                } else {
+                    tema
+                }
+            },
+        )
+
+        val opprettetPlan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+
+        opprettetPlan.temaer[0].planlagt shouldBe false
+        opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
+        opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
+        opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
+
+        opprettetPlan.temaer[1].planlagt shouldBe true
+        opprettetPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
+        opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
+        opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
+
+        opprettetPlan.temaer[2].planlagt shouldBe false
+        opprettetPlan.temaer[2].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
+        opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
+        opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
+
+        val endretPlan = opprettetPlan.copy(
+            temaer = listOf(
+                opprettetPlan.temaer[0].copy(
+                    planlagt = true,
+                    undertemaer = opprettetPlan.temaer[0].undertemaer.map { undertema ->
+                        undertema.copy(
+                            planlagt = true,
+                            startDato = sluttDato,
+                            sluttDato = startDato,
+                        )
+                    },
+                ),
+                opprettetPlan.temaer[1],
+                opprettetPlan.temaer[2],
+            ),
+        )
+
+        shouldFail {
+            PlanHelper.endrePlan(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                endring = endretPlan.tilRequest(),
+            )
+        }
+        lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
+
+        val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+
+        opprettetPlan shouldBeEqual lagretPlan
+    }
+
+    @Test
+    fun `kan ikke endre tema med periode som er negativ - start dato etter slutt dato`() {
+        val sak = nySakIKartlegges()
+        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+
+        val startDato = LocalDate(2010, 1, 1)
+        val sluttDato = LocalDate(2025, 2, 2)
+
+        val planMedEttTema = planMal.copy(
+            tema = planMal.tema.map { tema ->
+                if (tema.rekkefølge == 2) {
+                    tema.copy(
+                        planlagt = true,
+                        innhold = tema.innhold.map { innhold ->
+                            innhold.copy(
+                                planlagt = true,
+                                startDato = startDato,
+                                sluttDato = sluttDato,
+                            )
+                        },
+                    )
+                } else {
+                    tema
+                }
+            },
+        )
+
+        val opprettetPlan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+
+        opprettetPlan.temaer[0].planlagt shouldBe false
+        opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
+        opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
+        opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
+
+        opprettetPlan.temaer[1].planlagt shouldBe true
+        opprettetPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
+        opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
+        opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
+
+        opprettetPlan.temaer[2].planlagt shouldBe false
+        opprettetPlan.temaer[2].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
+        opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
+        opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
+
+        val endretPlan = opprettetPlan.copy(
+            temaer = listOf(
+                opprettetPlan.temaer[0].copy(
+                    planlagt = true,
+                    undertemaer = opprettetPlan.temaer[0].undertemaer.map { undertema ->
+                        undertema.copy(
+                            planlagt = true,
+                            startDato = sluttDato,
+                            sluttDato = startDato,
+                        )
+                    },
+                ),
+                opprettetPlan.temaer[1],
+                opprettetPlan.temaer[2],
+            ),
+        )
+
+        shouldFail {
+            PlanHelper.endreTema(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                temaId = endretPlan.temaer.first().id,
+                endring = endretPlan.tilRequest().first().undertemaer,
+            )
+        }
+
+        lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
+
+        val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+
+        opprettetPlan shouldBeEqual lagretPlan
     }
 
     @Test
