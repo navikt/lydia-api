@@ -44,36 +44,9 @@ fun Route.iaSakPlan(
         }
     }
 
-    // TODO: Deprecate
-    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
-        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
-
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            planService.opprettPlan(
-                iaSak = iaSak,
-                saksbehandler = saksbehandler,
-                mal = PlanMalDto(),
-            )
-        }.also { planEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = planEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
     post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
-
         val planMalDto = call.receive<PlanMalDto>()
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->

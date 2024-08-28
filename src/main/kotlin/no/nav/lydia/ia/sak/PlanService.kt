@@ -66,7 +66,7 @@ class PlanService(
                     endredeUndertemaer.firstOrNull { redigert -> redigert.id == lagretUndertema.id }?.let { redigert ->
                         lagretUndertema.copy(
                             planlagt = redigert.planlagt,
-                            status = if (redigert.planlagt) PlanUndertema.Status.PLANLAGT else null,
+                            status = if (redigert.planlagt) lagretUndertema.status ?: PlanUndertema.Status.PLANLAGT else null,
                             startDato = if (redigert.planlagt) redigert.startDato else null,
                             sluttDato = if (redigert.planlagt) redigert.sluttDato else null,
                         )

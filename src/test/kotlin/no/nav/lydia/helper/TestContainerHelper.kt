@@ -746,21 +746,10 @@ class IASakKartleggingHelper {
 
 class PlanHelper {
     companion object {
-        fun opprettEnTomPlan(
+        fun opprettEnPlan(
             orgnr: String,
             saksnummer: String,
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer")
-            .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
-            )
-
-        fun opprettEnEndretPlan(
-            orgnr: String,
-            saksnummer: String,
-            redigertPlan: PlanMalDto,
+            redigertPlan: PlanMalDto = hentPlanMal(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/opprett")
             .jsonBody(Json.encodeToString(redigertPlan))
