@@ -15,12 +15,14 @@ import kotlinx.datetime.LocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.ia.sak.IAProsessFeil
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
+import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.temaId
@@ -47,6 +49,41 @@ fun Route.iaSakPlan(
         }
     }
 
+    post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/opprett") {
+        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val planMalDto = call.receive<PlanMalDto>()
+
+        if (!planMalDto.erPlanGyldig()) {
+            application.log.info("Plan er ikke gyldig")
+            return@post call.sendFeil(IASakError.`ugyldig plan`)
+        }
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+            planService.opprettPlan(
+                iaSak = iaSak,
+                saksbehandler = saksbehandler,
+                prosessId = prosessId,
+                mal = planMalDto,
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+
+    }
+
+    // -- TODO: fjern
     post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -77,6 +114,7 @@ fun Route.iaSakPlan(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+    // --
 
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/{temaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)

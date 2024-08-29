@@ -749,9 +749,10 @@ class PlanHelper {
         fun opprettEnPlan(
             orgnr: String,
             saksnummer: String,
+            prosessId: Int? = null,
             redigertPlan: PlanMalDto = hentPlanMal(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/opprett")
+        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it/" } ?: ""}opprett")
             .jsonBody(Json.encodeToString(redigertPlan))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(

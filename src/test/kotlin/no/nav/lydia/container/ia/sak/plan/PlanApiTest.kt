@@ -11,6 +11,7 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -503,5 +504,16 @@ class PlanApiTest {
 
         planMal.tema.size shouldBe 3
         planMal.tema.first().navn shouldBe "Partssamarbeid"
+    }
+
+    @Test
+    fun `skal kunne opprette plan knyttet til en gitt prosess`() {
+        val sak = nySakIKartlegges()
+        val prosessId = sak.hentIAProsesser().first().id
+        PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = prosessId,
+        )
     }
 }
