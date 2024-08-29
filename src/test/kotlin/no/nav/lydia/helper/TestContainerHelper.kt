@@ -763,8 +763,9 @@ class PlanHelper {
         fun hentPlan(
             orgnr: String,
             saksnummer: String,
+            prosessId: Int? = null,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer")
+        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer${prosessId?.let { "/prosess/$it" } ?: ""}")
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },

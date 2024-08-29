@@ -225,6 +225,33 @@ fun Route.iaSakPlan(
         }
     }
 
+    get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                planService.hentPlan(
+                    iaSak = iaSak,
+                    prosessId = prosessId
+                )
+            }
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // TODO: fjern
     get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -248,6 +275,7 @@ fun Route.iaSakPlan(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+    // --
 }
 
 private fun PlanMalDto.erPlanGyldig(): Boolean =

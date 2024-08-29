@@ -1,17 +1,20 @@
 package no.nav.lydia.container.ia.sak.plan
 
 import io.kotest.assertions.shouldFail
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -515,5 +518,27 @@ class PlanApiTest {
             saksnummer = sak.saksnummer,
             prosessId = prosessId,
         )
+    }
+
+    @Test
+    fun `skal kunne opprette og hente en plan knyttet til en prosess`() {
+        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val prosesser = sak.hentIAProsesser()
+        prosesser shouldHaveSize 2
+
+        prosesser.forEach { prosess ->
+            val opprettetPlan = PlanHelper.opprettEnPlan(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = prosess.id,
+            )
+
+            val hentetPlan = PlanHelper.hentPlan(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = prosess.id
+            )
+            opprettetPlan.id shouldBe hentetPlan.id
+        }
     }
 }
