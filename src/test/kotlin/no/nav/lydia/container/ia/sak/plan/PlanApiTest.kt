@@ -76,7 +76,6 @@ class PlanApiTest {
 
         val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         val førsteTema = planDto.temaer.first()
-
         val førsteUndertema = førsteTema.undertemaer.first()
 
         val nyStatus = PlanUndertema.Status.FULLFØRT
@@ -513,11 +512,12 @@ class PlanApiTest {
     fun `skal kunne opprette plan knyttet til en gitt prosess`() {
         val sak = nySakIKartlegges()
         val prosessId = sak.hentIAProsesser().first().id
-        PlanHelper.opprettEnPlan(
+        val opprettetPlan = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = prosessId,
         )
+        opprettetPlan shouldBeEqual PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosessId)
     }
 
     @Test
@@ -539,6 +539,102 @@ class PlanApiTest {
                 prosessId = prosess.id
             )
             opprettetPlan.id shouldBe hentetPlan.id
+        }
+    }
+
+    @Test
+    fun `skal kunne endre status på et undertema i en plan knyttet til en prosess`() {
+        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val prosesser = sak.hentIAProsesser()
+        prosesser shouldHaveSize 2
+
+        prosesser.forEach { prosess ->
+            val planDto = PlanHelper.opprettEnPlan(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = prosess.id,
+            )
+            val førsteTema = planDto.temaer.first()
+            val førsteUndertema = førsteTema.undertemaer.first()
+
+            val nyStatus = PlanUndertema.Status.FULLFØRT
+
+            val resp =
+                PlanHelper.endreStatus(
+                    orgnr = sak.orgnr,
+                    saksnummer = sak.saksnummer,
+                    prosessId = prosess.id,
+                    temaId = førsteTema.id,
+                    undertemaId = førsteUndertema.id,
+                    status = nyStatus,
+                )
+
+            resp.status shouldBe nyStatus
+            val hentetPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = prosess.id)
+            hentetPlan.temaer
+                .first { it.id == førsteTema.id }.undertemaer
+                .first { it.id == førsteUndertema.id }.status shouldBe nyStatus
+        }
+    }
+
+    @Test
+    fun `kan sette alle undertemaer til planlagt i en plan knyttet til en prosess`() {
+        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val prosesser = sak.hentIAProsesser()
+        prosesser shouldHaveSize 2
+
+        prosesser.forEach { prosess ->
+            val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = prosess.id)
+            val endretPlan = planDto.copy(
+                temaer = listOf(
+                    planDto.temaer[0].copy(
+                        undertemaer = planDto.temaer.first().undertemaer.map { undertemaDto ->
+                            undertemaDto.copy(
+                                status = PlanUndertema.Status.PLANLAGT,
+                                planlagt = true,
+                            )
+                        },
+                    ),
+                    planDto.temaer[1],
+                    planDto.temaer[2]
+                )
+            )
+
+            PlanHelper.endreTema(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = prosess.id,
+                temaId = endretPlan.temaer.first().id,
+                endring = endretPlan.tilRequest().first().undertemaer,
+            ) shouldBeEqual endretPlan.temaer.first()
+            // TODO: bør inn igjen når rekkefølge er lagt til fra API
+//            PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id) shouldBeEqualToComparingFields  endretPlan
+        }
+    }
+
+    @Test
+    fun `skal kunne endre en plan knyttet til en prosess`() {
+        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val prosesser = sak.hentIAProsesser()
+        prosesser shouldHaveSize 2
+
+        prosesser.forEach { prosess ->
+            val opprettetPlan = PlanHelper.opprettEnPlan(sak.orgnr, sak.saksnummer, prosess.id)
+            val endretPlan = opprettetPlan.copy(
+                temaer = opprettetPlan.temaer.map {
+                    it.copy(
+                        planlagt = true,
+                        undertemaer = it.undertemaer.map {
+                            it.copy(
+                                planlagt = true,
+                                status = PlanUndertema.Status.PLANLAGT
+                            )
+                        }
+                    )
+                }
+            )
+            PlanHelper.endrePlan(sak.orgnr, sak.saksnummer, prosess.id, endretPlan.tilRequest())
+            PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id) shouldBeEqual endretPlan
         }
     }
 }

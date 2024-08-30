@@ -116,6 +116,47 @@ fun Route.iaSakPlan(
     }
     // --
 
+    put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}") {
+        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val temaId = call.temaId ?: return@put call.sendFeil(
+            Feil(
+                feilmelding = "Ugyldig temaId",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ),
+        )
+
+        val undertemaEndring = call.receive<List<EndreUndertemaRequest>>()
+
+        if (!undertemaEndring.erDatoGyldigForInnhold()) {
+            application.log.info("Plan er ikke gyldig")
+            return@put call.sendFeil(IASakError.`ugyldig plan`)
+        }
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
+            planService.endreUndertemaerTilTema(
+                temaId = temaId,
+                iaSak = iaSak,
+                prosessId = prosessId,
+                endredeUndertemaer = undertemaEndring,
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // -- TODO: fjern
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/{temaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -153,7 +194,51 @@ fun Route.iaSakPlan(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+    // --
 
+    put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}/{undertemaId}") {
+        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val temaId = call.temaId ?: return@put call.sendFeil(
+            Feil(
+                feilmelding = "Ugyldig temaId",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ),
+        )
+        val undertemaId = call.parameters["undertemaId"]?.toIntOrNull() ?: return@put call.sendFeil(
+            Feil(
+                feilmelding = "Ugyldig undertemaId",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ),
+        )
+
+        val nyStatus = call.receive<PlanUndertema.Status>()
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
+            planService.endreStatus(
+                temaId = temaId,
+                undertemaId = undertemaId,
+                iaSak = iaSak,
+                prosessId = prosessId,
+                nyStatus = nyStatus,
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // -- TODO: fjern
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/{temaId}/{undertemaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -193,7 +278,42 @@ fun Route.iaSakPlan(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+    // --
 
+    put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+
+        val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
+
+        if (!endreTemaRequests.erEndretTemaGyldig()) {
+            application.log.info("Plan er ikke gyldig")
+            return@put call.sendFeil(IASakError.`ugyldig plan`)
+        }
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
+            planService.endreFlereTema(
+                iaSak = iaSak,
+                prosessId = prosessId,
+                endredeTema = endreTemaRequests,
+            )
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDtoer())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    // -- TODO: fjern
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -224,6 +344,7 @@ fun Route.iaSakPlan(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
+    // --
 
     get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)

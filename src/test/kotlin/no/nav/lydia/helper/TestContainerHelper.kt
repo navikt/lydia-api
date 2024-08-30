@@ -775,10 +775,11 @@ class PlanHelper {
         fun endreTema(
             orgnr: String,
             saksnummer: String,
+            prosessId: Int? = null,
             temaId: Int,
             endring: List<EndreUndertemaRequest>,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/$temaId")
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it/" } ?: ""}$temaId")
             .jsonBody(
                 Json.encodeToString(
                     endring,
@@ -793,9 +794,10 @@ class PlanHelper {
         fun endrePlan(
             orgnr: String,
             saksnummer: String,
+            prosessId: Int? = null,
             endring: List<EndreTemaRequest>,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer")
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer${prosessId?.let { "/prosess/$it" } ?: ""}")
             .jsonBody(
                 Json.encodeToString(
                     endring,
@@ -810,12 +812,13 @@ class PlanHelper {
         fun endreStatus(
             orgnr: String,
             saksnummer: String,
+            prosessId: Int? = null,
             status: PlanUndertema.Status,
             temaId: Int,
             undertemaId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ): PlanUndertemaDto =
-            lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/$temaId/$undertemaId")
+            lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it/" } ?: ""}$temaId/$undertemaId")
                 .jsonBody(
                     Json.encodeToString(
                         status,

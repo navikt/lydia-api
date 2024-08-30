@@ -244,6 +244,7 @@ fun Route.iaSakSpørreundersøkelse(
     }
 }
 
+// TODO: bør endres til å returnere IASak og IAProsess i call-block?
 fun <T> ApplicationCall.somEierAvSakIProsess(
     iaSakService: IASakService,
     adGrupper: ADGrupper,

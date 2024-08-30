@@ -54,11 +54,11 @@ class PlanService(
     fun endreUndertemaerTilTema(
         temaId: Int,
         iaSak: IASak,
+        prosessId: Int? = null,
         planlagt: Boolean? = null,
         endredeUndertemaer: List<EndreUndertemaRequest>,
     ): Either<Feil, PlanTema> =
-        hentPlan(iaSak = iaSak).flatMap { plan ->
-
+        hentPlan(iaSak = iaSak, prosessId = prosessId).flatMap { plan ->
             val tema = plan.temaer.firstOrNull { it.id == temaId } ?: return PlanFeil.`fant ikke tema`.left()
 
             val oppdaterteUndertemaer: List<PlanUndertema> =
@@ -83,11 +83,13 @@ class PlanService(
 
     fun endreFlereTema(
         iaSak: IASak,
+        prosessId: Int? = null,
         endredeTema: List<EndreTemaRequest>,
     ): Either<Feil, List<PlanTema>> =
         endredeTema.map { tema ->
             endreUndertemaerTilTema(
                 iaSak = iaSak,
+                prosessId = prosessId,
                 temaId = tema.id,
                 planlagt = tema.planlagt,
                 endredeUndertemaer = tema.undertemaer,
@@ -98,9 +100,10 @@ class PlanService(
         temaId: Int,
         undertemaId: Int,
         iaSak: IASak,
+        prosessId: Int? = null,
         nyStatus: PlanUndertema.Status,
     ): Either<Feil, PlanUndertema> {
-        return hentPlan(iaSak = iaSak).flatMap { plan ->
+        return hentPlan(iaSak = iaSak, prosessId = prosessId).flatMap { plan ->
             val lagredeUndertemaer =
                 plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return PlanFeil.`fant ikke tema`.left()
 
