@@ -10,12 +10,12 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKontaktes
 import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.nyttNavnPåProsess
+import no.nav.lydia.helper.opprettNyProsses
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
 
 class IASakProsessTest {
-
     @Test
     fun `skal få tildelt en prosess ved overgang fra KONTAKTES til KARTLEGGES`() {
         val sakIKontaktes = nySakIKontaktes()
@@ -95,7 +95,7 @@ class IASakProsessTest {
             .hentIAProsesser().first().navn shouldBe "Tredje"
 
         val samarbeidshistorikk = hentSamarbeidshistorikk(
-            sak.orgnr
+            sak.orgnr,
         )
         samarbeidshistorikk shouldHaveSize 1
         val sakshendelser = samarbeidshistorikk.first().sakshendelser
@@ -108,7 +108,41 @@ class IASakProsessTest {
             IASakshendelseType.VIRKSOMHET_KARTLEGGES,
             IASakshendelseType.ENDRE_PROSESS,
             IASakshendelseType.ENDRE_PROSESS,
-            IASakshendelseType.ENDRE_PROSESS
+            IASakshendelseType.ENDRE_PROSESS,
+        )
+        sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
+    }
+
+    @Test
+    fun `skal ikke få feil i historikken dersom man oppretter flere prosesser på rad`() {
+        val sak = nySakIKartlegges()
+
+        val prosesser = sak.hentIAProsesser()
+        prosesser shouldHaveSize 1
+
+        sak.opprettNyProsses()
+            .opprettNyProsses()
+            .opprettNyProsses()
+            .hentIAProsesser() shouldHaveSize 4
+
+        val flereProsesser = sak.hentIAProsesser()
+        flereProsesser shouldHaveSize 4
+
+        val samarbeidshistorikk = hentSamarbeidshistorikk(
+            sak.orgnr,
+        )
+        samarbeidshistorikk shouldHaveSize 1
+        val sakshendelser = samarbeidshistorikk.first().sakshendelser
+        sakshendelser shouldHaveSize 8
+        sakshendelser.map { it.hendelsestype } shouldBe listOf(
+            IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
+            IASakshendelseType.VIRKSOMHET_VURDERES,
+            IASakshendelseType.TA_EIERSKAP_I_SAK,
+            IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
+            IASakshendelseType.VIRKSOMHET_KARTLEGGES,
+            IASakshendelseType.NY_PROSESS,
+            IASakshendelseType.NY_PROSESS,
+            IASakshendelseType.NY_PROSESS,
         )
         sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
     }

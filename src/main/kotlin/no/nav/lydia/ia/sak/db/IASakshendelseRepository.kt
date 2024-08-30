@@ -17,8 +17,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
-class IASakshendelseRepository(val dataSource: DataSource) {
-
+class IASakshendelseRepository(
+    val dataSource: DataSource,
+) {
     fun hentHendelserForSaksnummer(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -43,10 +44,9 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     ORDER BY opprettet ASC
                     """.trimIndent(),
                     mapOf(
-                        "saksnummer" to saksnummer
-                    )
-                )
-                    .map(this::mapRow).asList
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map(this::mapRow).asList,
             )
         }.verifiserAtViIkkeHarDuplikater()
 
@@ -75,21 +75,22 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     ORDER BY opprettet ASC
                     """.trimIndent(),
                     mapOf(
-                        orgnrKolonneNavn to orgnr
-                    )
-                )
-                    .map(this::mapRow).asList
+                        orgnrKolonneNavn to orgnr,
+                    ),
+                ).map(this::mapRow).asList,
             )
         }.verifiserAtViIkkeHarDuplikater()
     }
 
-    fun lagreHendelse(hendelse: IASakshendelse, sistEndretAvHendelseId: String?) =
-        using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.validerAtSakHarRiktigEndretAvHendelse(hendelse.saksnummer, sistEndretAvHendelseId)
-                tx.run(
-                    queryOf(
-                        """
+    fun lagreHendelse(
+        hendelse: IASakshendelse,
+        sistEndretAvHendelseId: String?,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            tx.validerAtSakHarRiktigEndretAvHendelse(hendelse.saksnummer, sistEndretAvHendelseId)
+            tx.run(
+                queryOf(
+                    """
                             INSERT INTO ia_sak_hendelse (
                                 id,
                                 saksnummer,
@@ -112,23 +113,23 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                                 :enhetsnummer,
                                 :enhetsnavn
                             ) 
-                        """.trimMargin(),
-                        mapOf(
-                            "id" to hendelse.id,
-                            "saksnummer" to hendelse.saksnummer,
-                            "orgnr" to hendelse.orgnummer,
-                            "type" to hendelse.hendelsesType.name,
-                            "opprettet_av" to hendelse.opprettetAv,
-                            "opprettet_av_rolle" to hendelse.opprettetAvRolle?.toString(),
-                            "opprettet" to hendelse.opprettetTidspunkt,
-                            "enhetsnummer" to hendelse.navEnhet.enhetsnummer,
-                            "enhetsnavn" to hendelse.navEnhet.enhetsnavn,
-                        )
-                    ).asUpdate
-                )
-            }
-            hendelse
+                    """.trimMargin(),
+                    mapOf(
+                        "id" to hendelse.id,
+                        "saksnummer" to hendelse.saksnummer,
+                        "orgnr" to hendelse.orgnummer,
+                        "type" to hendelse.hendelsesType.name,
+                        "opprettet_av" to hendelse.opprettetAv,
+                        "opprettet_av_rolle" to hendelse.opprettetAvRolle?.toString(),
+                        "opprettet" to hendelse.opprettetTidspunkt,
+                        "enhetsnummer" to hendelse.navEnhet.enhetsnummer,
+                        "enhetsnavn" to hendelse.navEnhet.enhetsnavn,
+                    ),
+                ).asUpdate,
+            )
         }
+        hendelse
+    }
 
     fun hentHendelse(hendelseId: String): IASakshendelse? {
         val idKolonneNavn = "id"
@@ -153,11 +154,8 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                     WHERE $idKolonneNavn = :$idKolonneNavn
                     GROUP BY id, aarsak_enum
                     """.trimIndent(),
-                    mapOf(
-                        idKolonneNavn to hendelseId
-                    )
-                )
-                    .map(this::mapRow).asSingle
+                    mapOf(idKolonneNavn to hendelseId),
+                ).map(this::mapRow).asSingle,
             )
         }
     }
@@ -192,12 +190,14 @@ class IASakshendelseRepository(val dataSource: DataSource) {
         )
     }
 
-    private fun årsakFraDatabase(årsak: String?, begrunnelser: Array<String?>) =
-        årsak?.let {
-            val valgtÅrsak = ÅrsakType.valueOf(it)
-            val valgtBegrunnelser = begrunnelser.filterNotNull().map(BegrunnelseType::valueOf)
-            ValgtÅrsak(type = valgtÅrsak, begrunnelser = valgtBegrunnelser)
-        }
+    private fun årsakFraDatabase(
+        årsak: String?,
+        begrunnelser: Array<String?>,
+    ) = årsak?.let {
+        val valgtÅrsak = ÅrsakType.valueOf(it)
+        val valgtBegrunnelser = begrunnelser.filterNotNull().map(BegrunnelseType::valueOf)
+        ValgtÅrsak(type = valgtÅrsak, begrunnelser = valgtBegrunnelser)
+    }
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -208,13 +208,18 @@ class IASakshendelseRepository(val dataSource: DataSource) {
                 val nestSiste = this[listSize - 2]
                 val siste = this.last()
                 if (
-                    siste.hendelsesType != IASakshendelseType.TILBAKE
-                    && siste.hendelsesType != IASakshendelseType.TA_EIERSKAP_I_SAK
-                    && siste.hendelsesType != IASakshendelseType.ENDRE_PROSESS
-                    && siste.hendelsesType == nestSiste.hendelsesType
+                    siste.hendelsesType != IASakshendelseType.TILBAKE &&
+                    siste.hendelsesType != IASakshendelseType.TA_EIERSKAP_I_SAK &&
+                    siste.hendelsesType != IASakshendelseType.ENDRE_PROSESS &&
+                    siste.hendelsesType != IASakshendelseType.NY_PROSESS &&
+                    siste.hendelsesType == nestSiste.hendelsesType
                 ) {
-                    logger.warn("Feil! IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}")
-                    throw IllegalStateException("IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}")
+                    logger.warn(
+                        "Feil! IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}",
+                    )
+                    throw IllegalStateException(
+                        "IASak ${siste.saksnummer} har doble hendelser i databasen med følgende ider: ${nestSiste.id} ${siste.id}",
+                    )
                 }
             }
             return this
