@@ -126,27 +126,27 @@ data class InnholdMalDto(
 
 fun hentInnholdsMålsetning(innholdsNavn: String): String? =
     when (innholdsNavn) {
+        "Utvikle partssamarbeidet" ->
+            "Styrke og strukturere samarbeidet mellom leder, tillitsvalgt og verneombud, samt øke kunnskap og ferdigheter for å jobbe systematisk og forebyggende med sykefravær og arbeidsmiljø."
         "Sykefraværsrutiner" ->
             "Jobbe systematisk og forebyggende med sykefravær, samt forbedre rutiner og oppfølging av ansatte som er sykmeldte eller står i fare for å bli det."
         "Oppfølgingssamtaler" ->
-            "Øke kompetansen for hvordan man gjennomfører gode oppfølgingssamtaler, både gjennom teori og praksis."
+            "Øke kompetanse og ferdigheter for hvordan man gjennomfører gode oppfølgingssamtaler, både gjennom teori og praksis."
         "Tilretteleggings- og medvirkningsplikt" ->
-            "Utvikle kultur og rutiner for tilrettelegging og medvirkning, samt kartlegging av tilretteleggingsmuligheter på arbeidsplassen."
+            "Utvikle rutiner og kultur for tilrettelegging og medvirkning, samt kartlegging av tilretteleggingsmuligheter på arbeidsplassen."
         "Sykefravær - enkeltsaker" ->
-            "Øke kompetansen for hvordan man tar tak i, følger opp og løser enkeltsaker."
-        "Utvikle partssamarbeidet" ->
-            "Styrke samarbeidet mellom leder, tillitsvalgt og verneombud, samt øke kunnskap og ferdigheter for å jobbe systematisk og forebyggende med sykefravær og arbeidsmiljø."
+            "Øke kompetanse og ferdigheter for hvordan man tar tak i, følger opp og løser enkeltsaker."
         "Utvikle arbeidsmiljøet" ->
-            "Kartlegge hvilke forhold ved arbeidsmiljøet som påvirker sykefravær og frafall, samt heve kompetansen for videreutvikling av arbeidsmiljøet."
+            "Øke anvendelse og kompetanse innen verktøy og bransjerettet kunnskap for å jobbe målrettet og kunnskapsbasert med eget arbeidsmiljø."
         "Endring og omstilling" ->
-            "Forebygge fravær ved endringer og omstillingsprosesser og sette gode rammer for medvirkning, kommunikasjon og støtte til ansatte."
+            "Øke kunnskap om hvordan ivareta arbeidsmiljø og forebygge sykefravær under endring og omstilling."
         "Oppfølging av arbeidsmiljøundersøkelser" ->
-            "Gi støtte til å identifisere og gjennomføre tiltak basert på behov og ressurser i virksomheten."
+            "Øke ferdigheter og gi støtte til hvordan man kan jobbe med forhold på arbeidsplassen som belyses i egne arbeidsmiljøundersøkelser."
         "Livsfaseorientert personalpolitikk" ->
-            "Utvikle personalpolitikk som ivaretar medarbeideres ulike behov, krav, begrensninger og muligheter i  ulike livsfaser."
+            "Utvikle kultur og personalpolitikk som ivaretar medarbeideres ulike behov, krav, begrensninger og muligheter i ulike livsfaser."
         "Psykisk helse" ->
-            "Øke kompetansen om psykisk helse og hvordan møte medarbeidere som har psykiske helseproblemer."
+            "Gi innsikt i hvordan psykiske utfordringer kan komme til uttrykk i arbeidshverdagen og øke ferdigheter for hvordan man møter medarbeidere med psykiske helseutfordringer."
         "HelseIArbeid" ->
-            "Få ansatte til å mestre jobb, selv med muskel/skjelett- og psykiske helseplager"
+            "Øke kompetansen og få ansatte til å mestre jobb, selv med muskel/skjelett- og psykiske helseplager."
         else -> null
     }
