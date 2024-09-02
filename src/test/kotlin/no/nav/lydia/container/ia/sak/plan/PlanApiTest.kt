@@ -1,7 +1,9 @@
 package no.nav.lydia.container.ia.sak.plan
 
 import io.kotest.assertions.shouldFail
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
@@ -14,6 +16,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -390,8 +393,13 @@ class PlanApiTest {
         lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
 
         val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        // TODO: her burde det vel gå ann å sjekke på sistEndret
+        lagretPlan.temaer[1].planlagt shouldBe true
+        lagretPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
+        lagretPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
+        lagretPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
 
-        opprettetPlan shouldBeEqual lagretPlan
     }
 
     @Test
@@ -470,8 +478,12 @@ class PlanApiTest {
         lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
 
         val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-
-        opprettetPlan shouldBeEqual lagretPlan
+        // -- TODO: Her burde det gå ann å sjekke på sistEndret
+        lagretPlan.temaer[1].planlagt shouldBe true
+        lagretPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
+        lagretPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
+        lagretPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
     }
 
     @Test
@@ -497,7 +509,7 @@ class PlanApiTest {
             token = TestContainerHelper.oauth2ServerContainer.lesebruker.token,
         )
 
-        opprettetPlan shouldBeEqual hentetPlan
+        opprettetPlan.id shouldBeEqual hentetPlan.id
     }
 
     @Test
@@ -517,7 +529,7 @@ class PlanApiTest {
             saksnummer = sak.saksnummer,
             prosessId = prosessId,
         )
-        opprettetPlan shouldBeEqual PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosessId)
+        opprettetPlan.id shouldBeEqual PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosessId).id
     }
 
     @Test
@@ -585,30 +597,29 @@ class PlanApiTest {
 
         prosesser.forEach { prosess ->
             val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = prosess.id)
-            val endretPlan = planDto.copy(
-                temaer = listOf(
-                    planDto.temaer[0].copy(
-                        undertemaer = planDto.temaer.first().undertemaer.map { undertemaDto ->
-                            undertemaDto.copy(
-                                status = PlanUndertema.Status.PLANLAGT,
-                                planlagt = true,
-                            )
-                        },
-                    ),
-                    planDto.temaer[1],
-                    planDto.temaer[2]
+            val tema = planDto.temaer.first()
+            val endreTemaRequest = tema.undertemaer.map { undertemaDto ->
+                EndreUndertemaRequest(
+                    id = undertemaDto.id,
+                    planlagt = true,
+                    startDato = undertemaDto.startDato,
+                    sluttDato = undertemaDto.sluttDato
                 )
-            )
+            }
 
             PlanHelper.endreTema(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
                 prosessId = prosess.id,
-                temaId = endretPlan.temaer.first().id,
-                endring = endretPlan.tilRequest().first().undertemaer,
-            ) shouldBeEqual endretPlan.temaer.first()
-            // TODO: bør inn igjen når rekkefølge er lagt til fra API
-//            PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id) shouldBeEqualToComparingFields  endretPlan
+                temaId = tema.id,
+                endring = endreTemaRequest,
+            )
+            PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id)
+                .temaer.first { it.id == tema.id }.undertemaer
+                .forAll {
+                    it.planlagt shouldBe true
+                    it.status shouldBe PlanUndertema.Status.PLANLAGT
+                }
         }
     }
 
@@ -634,7 +645,34 @@ class PlanApiTest {
                 }
             )
             PlanHelper.endrePlan(sak.orgnr, sak.saksnummer, prosess.id, endretPlan.tilRequest())
-            PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id) shouldBeEqual endretPlan
+            val hentetPlan = PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id)
+            hentetPlan.id shouldBe opprettetPlan.id
+            hentetPlan.temaer.forAll { tema ->
+                tema.planlagt shouldBe true
+                tema.undertemaer.forAll { undertema ->
+                    undertema.planlagt shouldBe true
+                    undertema.status shouldBe PlanUndertema.Status.PLANLAGT
+                }
+            }
         }
+    }
+
+    @Test
+    fun `skal oppdatere plan sin sist_endret ved endringer av plan`() {
+        val sak = nySakIKartlegges()
+        val prosessId = sak.hentIAProsesser().first().id
+        val opprettetPlan = PlanHelper.opprettEnPlan(sak.orgnr, sak.saksnummer, prosessId)
+        val førsteTema = opprettetPlan.temaer.first()
+        val førsteUndertema = førsteTema.undertemaer.first()
+        PlanHelper.endreStatus(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = prosessId,
+            status = PlanUndertema.Status.PÅGÅR,
+            temaId = førsteTema.id,
+            undertemaId = førsteUndertema.id
+        )
+        val endretPlan = PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosessId)
+        endretPlan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
     }
 }

@@ -6,6 +6,7 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
@@ -145,7 +146,7 @@ class PlanRepository(
                     val planId = UUID.fromString(row.string("plan_id"))
                     Plan(
                         id = planId,
-                        sistEndret = row.localDate("sist_endret").toKotlinLocalDate(),
+                        sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
                         sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
                         temaer = hentTema(planId, session),
                     )
@@ -335,7 +336,6 @@ class PlanRepository(
         temaId: Int,
         undertema: PlanUndertema,
     ) = using(sessionOf(dataSource)) { session ->
-        // TODO oppdater Plan sist endret dato
         session.transaction { tx ->
             tx.run(
                 queryOf(
@@ -364,4 +364,19 @@ class PlanRepository(
 
         hentUndertema(planId = planId, temaId = temaId, session = session).firstOrNull { it.id == undertema.id }
     }
+
+    fun oppdaterSistEndret(plan: Plan) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("""
+                    UPDATE ia_sak_plan SET
+                      sist_endret = now()
+                    WHERE plan_id = :planId
+                """.trimIndent(),
+                    mapOf(
+                        "planId" to plan.id.toString()
+                    )
+                ).asUpdate
+            )
+        }
 }

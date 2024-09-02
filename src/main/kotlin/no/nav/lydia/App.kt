@@ -51,6 +51,7 @@ import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
 import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -196,10 +197,11 @@ fun startLydiaBackend() {
             produsent = kafkaProdusent
         )
     )
+    val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(planRepository = planRepository)
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObserverers = emptyList(),
+        planObserverers = listOf(oppdaterSistEndretPlanObserver)
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))

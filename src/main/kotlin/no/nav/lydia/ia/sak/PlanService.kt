@@ -73,12 +73,16 @@ class PlanService(
                     } ?: return PlanFeil.`feil inndata i forespørsel`.left()
                 }
 
-            planRepository.oppdaterTema(
+            val ret = planRepository.oppdaterTema(
                 planId = plan.id,
                 temaId = temaId,
                 planlagt = planlagt ?: tema.planlagt,
                 undertemaer = oppdaterteUndertemaer,
             )?.right() ?: PlanFeil.`fikk ikke oppdatert tema`.left()
+
+            ret.onRight {
+                planObserverers.forEach { it.receive(plan) }
+            }
         }
 
     fun endreFlereTema(
@@ -111,11 +115,15 @@ class PlanService(
                 lagredeUndertemaer.firstOrNull { it.id == undertemaId }?.copy(status = nyStatus)
                     ?: return PlanFeil.`fant ikke undertema`.left()
 
-            planRepository.oppdaterUndertema(
+            val ret = planRepository.oppdaterUndertema(
                 planId = plan.id,
                 temaId = temaId,
                 undertema = oppdatertUndertema,
             )?.right() ?: return PlanFeil.`fikk ikke oppdatert undertema`.left()
+
+            ret.onRight {
+                planObserverers.forEach { it.receive(plan) }
+            }
         }
     }
 }
