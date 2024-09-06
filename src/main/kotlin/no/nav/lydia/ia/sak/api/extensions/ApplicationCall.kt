@@ -10,6 +10,8 @@ val ApplicationCall.saksnummer
     get() = parameters["saksnummer"]
 val ApplicationCall.kartleggingId
     get() = parameters["kartleggingId"]
+val ApplicationCall.behovsvurderingId
+    get() = parameters["behovsvurderingId"]
 val ApplicationCall.iaSakLeveranseId
     get() = parameters["iaSakLeveranseId"]
 val ApplicationCall.temaId

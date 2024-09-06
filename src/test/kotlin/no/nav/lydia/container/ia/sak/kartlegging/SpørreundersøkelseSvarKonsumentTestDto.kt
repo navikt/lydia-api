@@ -29,7 +29,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Oppdater
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
@@ -97,14 +97,14 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             ) shouldHaveSize 1
 
         //AVSLUTTET
-        TestContainerHelper.lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}/avslutt")
+        TestContainerHelper.lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}/avslutt")
             .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
         kartlegging.sendKartleggingSvarTilKafka()
         TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke svare på en kartlegging i status AVSLUTTET".toRegex())
 
         //SLETTET
-        TestContainerHelper.lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}")
+        TestContainerHelper.lydiaApiContainer.performDelete("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.kartleggingId}")
             .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
         kartlegging.sendKartleggingSvarTilKafka()

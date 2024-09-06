@@ -187,6 +187,7 @@ fun startLydiaBackend() {
     val iaProsessService = IAProsessService(prosessRepository = prosessRepository)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
+        iaSakService = iaSakService,
         iaProsessService = iaProsessService,
         behovsvurderingObservers = listOf(
             spørreundersøkelseProdusent,

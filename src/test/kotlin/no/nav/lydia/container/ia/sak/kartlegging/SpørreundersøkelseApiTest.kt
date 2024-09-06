@@ -23,6 +23,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
@@ -41,7 +42,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.KARTLEGGING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.After
@@ -482,7 +483,7 @@ class SpørreundersøkelseApiTest {
         kartleggingDto.status shouldBe OPPRETTET
 
         val response =
-            lydiaApiContainer.performPost("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
+            lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -512,7 +513,7 @@ class SpørreundersøkelseApiTest {
             ) shouldHaveSize 1
 
         val response =
-            lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
+            lydiaApiContainer.performDelete("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -554,7 +555,7 @@ class SpørreundersøkelseApiTest {
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val response =
-            lydiaApiContainer.performDelete("$KARTLEGGING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
+            lydiaApiContainer.performDelete("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -583,13 +584,58 @@ class SpørreundersøkelseApiTest {
         val iaProsesser = sak.hentIAProsesser()
         iaProsesser shouldHaveSize 2
         iaProsesser.forEach {
-            sak.opprettKartlegging(prosessId = it.id.toString())
+            sak.opprettKartlegging(prosessId = it.id)
 
             hentIASakKartlegginger(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                prosessId = it.id.toString()
+                prosessId = it.id
             ) shouldHaveSize 1
+        }
+    }
+
+    @Test
+    fun `skal kunne flytte en behhovsvurdering fra en prosess til en annen`() {
+        val sak = nySakIKartlegges().nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+        val iaProsesser = sak.hentIAProsesser()
+        iaProsesser shouldHaveSize 2
+        val fraProsess = iaProsesser.first()
+        val tilProsess = iaProsesser.last()
+
+        val behovsvurdering = sak.opprettKartlegging(prosessId = fraProsess.id)
+        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, fraProsess.id)
+            .map { it.kartleggingId } shouldBe listOf(behovsvurdering.kartleggingId)
+
+        oppdaterBehovsvurdering(behovsvurdering, sak, tilProsess.id)
+        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, fraProsess.id)
+            .map { it.kartleggingId } shouldBe emptyList()
+        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, tilProsess.id)
+            .map { it.kartleggingId } shouldBe listOf(behovsvurdering.kartleggingId)
+    }
+
+    @Test
+    fun `skal ikke kunne flytte kartlegging en ugyldig prosess eller som lesebruker`() {
+        val sak = nySakIKartlegges()
+        val behovsvurdering = sak.opprettKartlegging(sak.hentIAProsesser().first().id)
+
+        // -- skal ikke kunne flytte til ikke eksisterende prosess
+        shouldFail {
+            oppdaterBehovsvurdering(behovsvurdering, sak, 100000)
+        }
+
+        // -- Lesebruker skal ikke kunne flytte saker
+        shouldFail {
+            oppdaterBehovsvurdering(
+                behovsvurdering,
+                sak,
+                sak.hentIAProsesser().first().id,
+                oauth2ServerContainer.lesebruker.token)
+        }
+
+        // -- skal ikke kunne flytte til prosess i en annen sak
+        shouldFail {
+            val nysak = nySakIKartlegges()
+            oppdaterBehovsvurdering(behovsvurdering, sak, nysak.hentIAProsesser().first().id)
         }
     }
 

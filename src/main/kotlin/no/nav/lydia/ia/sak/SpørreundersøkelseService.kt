@@ -15,6 +15,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
@@ -37,6 +38,7 @@ const val MINIMUM_ANTALL_DELTAKERE = 3
 class SpørreundersøkelseService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     val iaProsessService: IAProsessService,
+    val iaSakService: IASakService,
     val behovsvurderingObservers: List<Observer<Spørreundersøkelse>>,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
@@ -247,6 +249,29 @@ class SpørreundersøkelseService(
             spørreundersøkelseId = UUID.fromString(hendelse.spørreundersøkelseId),
             temaId = hendelse.temaId
         )
+    }
+
+    fun oppdaterBehovsvurdering(
+        behovsvurderingId: String,
+        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto
+    ): Either<Feil, Spørreundersøkelse> {
+        val behovsvurdering = spørreundersøkelseRepository.hentSpørreundersøkelse(behovsvurderingId)
+            ?: return IASakKartleggingError.`generell feil under uthenting`.left()
+        if (behovsvurdering.orgnummer != oppdaterBehovsvurderingDto.orgnummer)
+            return IASakKartleggingError.`feil under oppdatering`.left()
+        if (behovsvurdering.saksnummer != oppdaterBehovsvurderingDto.saksnummer)
+            return IASakKartleggingError.`feil under oppdatering`.left()
+
+        return iaSakService.hentIASak(behovsvurdering.saksnummer).flatMap {
+            iaProsessService.hentIAProsesser(it)
+        }.map { prosess ->
+            prosess.map { it.id }
+        }.flatMap { prosesserISak ->
+            if (prosesserISak.contains(oppdaterBehovsvurderingDto.prosessId))
+                spørreundersøkelseRepository.oppdaterBehovsvurdering(behovsvurderingId, oppdaterBehovsvurderingDto)
+            else
+                IASakKartleggingError.`feil under oppdatering`.left()
+        }
     }
 
     private fun sendResultaterForTemaPåKafka(

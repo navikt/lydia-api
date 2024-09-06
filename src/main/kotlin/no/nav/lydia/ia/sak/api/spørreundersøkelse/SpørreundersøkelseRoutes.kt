@@ -9,11 +9,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.log
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -23,6 +25,7 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.extensions.behovsvurderingId
 import no.nav.lydia.ia.sak.api.extensions.kartleggingId
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
@@ -35,7 +38,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
-const val KARTLEGGING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
+const val BEHOVSVURDERING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
 fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
@@ -43,7 +46,7 @@ fun Route.iaSakSpørreundersøkelse(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
-    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+    post("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
 
@@ -70,7 +73,7 @@ fun Route.iaSakSpørreundersøkelse(
     }
 
     // -- Skal fjernes
-    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
+    post("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
@@ -95,7 +98,7 @@ fun Route.iaSakSpørreundersøkelse(
     }
     // --
 
-    get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+    get("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
@@ -120,7 +123,7 @@ fun Route.iaSakSpørreundersøkelse(
     }
 
     // -- Skal fjernes
-    get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}") {
+    get("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
 
@@ -143,7 +146,7 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    get("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
+    get("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
         val kartleggingId =
             call.kartleggingId ?: return@get call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
@@ -164,7 +167,7 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/avslutt") {
+    post("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/avslutt") {
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
@@ -197,7 +200,7 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    delete("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
+    delete("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}") {
         val kartleggingId =
             call.kartleggingId ?: return@delete call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
@@ -219,7 +222,7 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    post("$KARTLEGGING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/start") {
+    post("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/{kartleggingId}/start") {
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
@@ -235,6 +238,28 @@ fun Route.iaSakSpørreundersøkelse(
                 orgnummer = call.orgnummer,
                 auditType = AuditType.access,
                 saksnummer = call.saksnummer,
+            )
+        }.map {
+            call.respond(it.tilDto(true))
+        }.mapLeft {
+            call.sendFeil(it)
+        }
+    }
+
+    put("$BEHOVSVURDERING_BASE_ROUTE/{behovsvurderingId}") {
+        val behovsvurderingId = call.behovsvurderingId
+            ?: return@put call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
+        val input = call.receive<OppdaterBehovsvurderingDto>()
+
+        call.somSaksbehandler(adGrupper) {
+            spørreundersøkelseService.oppdaterBehovsvurdering(behovsvurderingId, input)
+        }.also { kartlegging ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartlegging,
+                orgnummer = input.orgnummer,
+                auditType = AuditType.update,
+                saksnummer = input.saksnummer,
             )
         }.map {
             call.respond(it.tilDto(true))

@@ -18,6 +18,8 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -464,4 +466,27 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
                 ).map(this::mapTilTema).asList
             )
         }
+
+    fun oppdaterBehovsvurdering(
+        behovsvurderingId: String,
+        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto
+    ): Either<Feil, Spørreundersøkelse> {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        UPDATE ia_sak_kartlegging
+                        SET ia_prosess = :prosessId
+                        WHERE kartlegging_id = :behovsvurderingId
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to oppdaterBehovsvurderingDto.prosessId,
+                        "behovsvurderingId" to behovsvurderingId
+                    )
+                ).asUpdate
+            )
+        }
+        return hentSpørreundersøkelse(behovsvurderingId)?.right()
+            ?: IASakKartleggingError.`feil under oppdatering`.left()
+    }
 }
