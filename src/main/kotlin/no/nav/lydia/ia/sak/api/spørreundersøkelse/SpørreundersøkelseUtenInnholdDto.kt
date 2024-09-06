@@ -9,6 +9,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenI
 @Serializable
 data class SpørreundersøkelseUtenInnholdDto(
     val kartleggingId: String,
+    val prosessId: Int,
     val vertId: String,
     val status: SpørreundersøkelseStatus,
     val opprettetAv: String,
@@ -21,6 +22,7 @@ fun List<SpørreundersøkelseUtenInnhold>.tilDto() = map { it.tilDto() }
 fun SpørreundersøkelseUtenInnhold.tilDto() =
     SpørreundersøkelseUtenInnholdDto(
         kartleggingId = kartleggingId.toString(),
+        prosessId = prosessId,
         vertId = vertId?.toString() ?: "",
         status = status,
         opprettetAv = opprettetAv,
