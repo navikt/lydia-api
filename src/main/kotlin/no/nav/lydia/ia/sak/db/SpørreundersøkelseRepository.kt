@@ -193,6 +193,7 @@ class SpørreundersøkelseRepository(val dataSource: DataSource) {
         val vertId = this.stringOrNull("vert_id")?.let { UUID.fromString(it) }
         return SpørreundersøkelseUtenInnhold(
             kartleggingId = spørreundersøkelseId,
+            prosessId = this.int("ia_prosess"),
             vertId = vertId,
             status = SpørreundersøkelseStatus.valueOf(this.string("status")),
             opprettetAv = this.string("opprettet_av"),
