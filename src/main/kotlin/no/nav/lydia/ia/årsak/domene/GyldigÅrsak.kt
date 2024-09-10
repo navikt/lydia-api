@@ -12,6 +12,7 @@ class GyldigÅrsak(val type: ÅrsakType, val navn: String = type.navn, val begru
                 begrunnelser = listOf(
                     BegrunnelseType.IKKE_DIALOG_MELLOM_PARTENE,
                     BegrunnelseType.FOR_FÅ_TAPTE_DAGSVERK,
+                    BegrunnelseType.SAKEN_ER_FEILREGISTRERT,
                 ).somGyldigeBegrunnelser()
             ),
             GyldigÅrsak(
@@ -46,6 +47,8 @@ enum class ÅrsakType(val navn: String) {
 enum class BegrunnelseType(val navn: String) {
     IKKE_DIALOG_MELLOM_PARTENE(navn = "Det er ikke dokumentert dialog mellom partene på arbeidsplassen"),
     FOR_FÅ_TAPTE_DAGSVERK(navn = "Virksomheten har for få tapte dagsverk"),
+    SAKEN_ER_FEILREGISTRERT(navn = "Saken er feilregistrert"),
+
 
     VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID(navn = "Virksomheten ønsker ikke forpliktende samarbeid med NAV om IA"),
     VIRKSOMHETEN_HAR_IKKE_RESPONDERT(navn = "Virksomheten har ikke respondert på forespørsel om forpliktende samarbeid"),

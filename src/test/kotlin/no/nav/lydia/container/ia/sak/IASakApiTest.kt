@@ -82,6 +82,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.SAKEN_ER_FEILREGISTRERT
 
 class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
@@ -738,6 +739,7 @@ class IASakApiTest {
                             årsak.begrunnelser.somBegrunnelseType().shouldContainExactly(
                                 IKKE_DIALOG_MELLOM_PARTENE,
                                 FOR_FÅ_TAPTE_DAGSVERK,
+                                SAKEN_ER_FEILREGISTRERT,
                             )
                         }
                         hendelse.gyldigeÅrsaker.shouldForAtLeastOne { årsak ->
