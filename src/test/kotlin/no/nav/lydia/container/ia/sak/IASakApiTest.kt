@@ -82,6 +82,10 @@ import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.helper.nyttNavnPåProsess
+import no.nav.lydia.helper.opprettNyProsses
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.SAKEN_ER_FEILREGISTRERT
 
 class IASakApiTest {
@@ -380,6 +384,19 @@ class IASakApiTest {
         val resultat = response.third.get()
         resultat.size shouldBe 1
         resultat[0].sakshendelser.size shouldBe 8
+    }
+
+    @Test
+    fun `skal takle endre eller opprett prosess (samarbeid) event`() {
+        val orgnummer = nyttOrgnummer()
+        val sak = nySakIKartlegges(orgnummer = orgnummer).opprettNyProsses()
+        val prosess = sak.hentIAProsesser().first()
+        sak.nyttNavnPåProsess(prosess, "Nytt navn")
+        sak.status shouldBe KARTLEGGES
+
+        val oppdatertSak = hentAktivSak(orgnummer).nyHendelse(VIRKSOMHET_SKAL_BISTÅS).nyHendelse(TILBAKE)
+
+        oppdatertSak.status shouldBe KARTLEGGES
     }
 
     @Test

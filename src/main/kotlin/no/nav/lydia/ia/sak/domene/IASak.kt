@@ -334,7 +334,9 @@ class IASak private constructor(
 
 
         fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
-            val hendelserSomEndrerStatus = hendelser.filter { it != TA_EIERSKAP_I_SAK }
+            val hendelserSomEndrerStatus = hendelser.filter {
+                !listOf(TA_EIERSKAP_I_SAK, NY_PROSESS, ENDRE_PROSESS).contains(it)
+            }
 
             val hendelsesRekkeMedHåndterteTilbakeHendelser =
                 hendelsesRekkeMedHåndterteEldreTilbakeHendelser(hendelserSomEndrerStatus)
