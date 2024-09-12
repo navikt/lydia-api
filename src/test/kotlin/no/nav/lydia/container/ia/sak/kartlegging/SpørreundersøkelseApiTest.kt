@@ -579,7 +579,8 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal kunne opprette behovsvurdering for to forskjellige prosesser`() {
         val sak = nySakIKartlegges()
-        sak.nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
 
         val iaProsesser = sak.hentIAProsesser()
         iaProsesser shouldHaveSize 2
@@ -596,7 +597,9 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne flytte en behhovsvurdering fra en prosess til en annen`() {
-        val sak = nySakIKartlegges().nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+        val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
         val iaProsesser = sak.hentIAProsesser()
         iaProsesser shouldHaveSize 2
         val fraProsess = iaProsesser.first()
@@ -616,7 +619,10 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal ikke kunne flytte kartlegging en ugyldig prosess eller som lesebruker`() {
         val sak = nySakIKartlegges()
-        val behovsvurdering = sak.opprettKartlegging(sak.hentIAProsesser().first().id)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+        val prosesser = sak.hentIAProsesser()
+        prosesser shouldHaveSize 1
+        val behovsvurdering = sak.opprettKartlegging(prosesser.first().id)
 
         // -- skal ikke kunne flytte til ikke eksisterende prosess
         shouldFail {
@@ -635,6 +641,7 @@ class SpørreundersøkelseApiTest {
         // -- skal ikke kunne flytte til prosess i en annen sak
         shouldFail {
             val nysak = nySakIKartlegges()
+                .nyHendelse(IASakshendelseType.NY_PROSESS)
             oppdaterBehovsvurdering(behovsvurdering, sak, nysak.hentIAProsesser().first().id)
         }
     }

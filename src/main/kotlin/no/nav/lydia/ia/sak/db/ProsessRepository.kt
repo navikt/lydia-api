@@ -83,8 +83,6 @@ class ProsessRepository(val dataSource: DataSource) {
 
             else -> {
                 when (sakshendelse.hendelsesType) {
-                    IASakshendelseType.VIRKSOMHET_KARTLEGGES -> hentProsesser(saksnummer = sakshendelse.saksnummer)
-                        .ifEmpty { opprettNyProsess(saksnummer = sakshendelse.saksnummer) }
                     IASakshendelseType.NY_PROSESS -> opprettNyProsess(saksnummer = sakshendelse.saksnummer)
                     else -> {}
                 }

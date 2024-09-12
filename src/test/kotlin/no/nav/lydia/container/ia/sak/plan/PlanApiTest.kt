@@ -523,6 +523,7 @@ class PlanApiTest {
     @Test
     fun `skal kunne opprette plan knyttet til en gitt prosess`() {
         val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
         val prosessId = sak.hentIAProsesser().first().id
         val opprettetPlan = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
@@ -534,7 +535,9 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne opprette og hente en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -556,7 +559,9 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne endre status på et undertema i en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -591,7 +596,9 @@ class PlanApiTest {
 
     @Test
     fun `kan sette alle undertemaer til planlagt i en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -625,7 +632,9 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne endre en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -660,6 +669,7 @@ class PlanApiTest {
     @Test
     fun `skal oppdatere plan sin sist_endret ved endringer av plan`() {
         val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
         val prosessId = sak.hentIAProsesser().first().id
         val opprettetPlan = PlanHelper.opprettEnPlan(sak.orgnr, sak.saksnummer, prosessId)
         val førsteTema = opprettetPlan.temaer.first()
