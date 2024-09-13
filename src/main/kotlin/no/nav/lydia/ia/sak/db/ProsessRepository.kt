@@ -1,14 +1,13 @@
 package no.nav.lydia.ia.sak.db
 
-import javax.sql.DataSource
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
+import javax.sql.DataSource
 
 class ProsessRepository(val dataSource: DataSource) {
 
@@ -21,6 +20,7 @@ class ProsessRepository(val dataSource: DataSource) {
                         FROM ia_prosess
                         WHERE saksnummer = :saksnummer
                         AND id = :prosessId
+                        AND status = 'AKTIV'
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer,
@@ -38,6 +38,7 @@ class ProsessRepository(val dataSource: DataSource) {
                         SELECT *
                         FROM ia_prosess
                         WHERE saksnummer = :saksnummer
+                        AND status = 'AKTIV'
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer
@@ -63,30 +64,19 @@ class ProsessRepository(val dataSource: DataSource) {
         }
 
 
-    fun oppdaterProsess(sakshendelse: IASakshendelse) {
-        when (sakshendelse) {
-            is ProsessHendelse -> {
-                using(sessionOf(dataSource)) { session ->
-                    session.run(
-                        queryOf(
-                            """
+    fun oppdaterNavnPåProsess(prosessDto: IAProsessDto) {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
                                 UPDATE ia_prosess SET navn = :navn WHERE id = :prosessId
                             """.trimIndent(),
-                            mapOf(
-                                "navn" to sakshendelse.prosessDto.navn,
-                                "prosessId" to sakshendelse.prosessDto.id
-                            )
-                        ).asUpdate
+                    mapOf(
+                        "navn" to prosessDto.navn,
+                        "prosessId" to prosessDto.id
                     )
-                }
-            }
-
-            else -> {
-                when (sakshendelse.hendelsesType) {
-                    IASakshendelseType.NY_PROSESS -> opprettNyProsess(saksnummer = sakshendelse.saksnummer)
-                    else -> {}
-                }
-            }
+                ).asUpdate
+            )
         }
     }
 
@@ -96,4 +86,23 @@ class ProsessRepository(val dataSource: DataSource) {
             saksnummer = row.string("saksnummer"),
             navn = row.stringOrNull("navn")
         )
+
+    fun oppdaterTilSlettetStatus(prosessHendelse: ProsessHendelse) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_prosess
+                     SET status = 'SLETTET'
+                     WHERE id = :prosessId
+                     AND saksnummer = :saksnummer
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to prosessHendelse.prosessDto.id,
+                        "saksnummer" to prosessHendelse.saksnummer
+                    )
+                ).asUpdate
+            )
+        }
+
 }

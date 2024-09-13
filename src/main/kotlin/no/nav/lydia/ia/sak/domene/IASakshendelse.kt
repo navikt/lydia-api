@@ -12,6 +12,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -37,7 +38,10 @@ open class IASakshendelse(
         fun fromDto(dto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet) =
             when (dto.hendelsesType) {
                 VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
-                ENDRE_PROSESS -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
+
+                ENDRE_PROSESS,
+                SLETT_PROSESS -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
+
                 else -> IASakshendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
@@ -186,7 +190,7 @@ class ProsessHendelse(
     id: String,
     opprettetTidspunkt: LocalDateTime,
     saksnummer: String,
-    hendelsesType: IASakshendelseType = ENDRE_PROSESS,
+    hendelsesType: IASakshendelseType,
     orgnummer: String,
     opprettetAv: String,
     opprettetAvRolle: Rolle?,
@@ -209,6 +213,7 @@ class ProsessHendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
                     saksnummer = dto.saksnummer,
+                    hendelsesType = dto.hendelsesType,
                     orgnummer = dto.orgnummer,
                     opprettetAv = navAnsatt.navIdent,
                     opprettetAvRolle = navAnsatt.rolle,
@@ -238,7 +243,7 @@ enum class IASakshendelseType {
     // -- Prosesser
     NY_PROSESS,
     ENDRE_PROSESS,
-//    SLETT_PROSESS,
+    SLETT_PROSESS,
     // --
 
     TILBAKE,

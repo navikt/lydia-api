@@ -475,10 +475,11 @@ class IASakTest {
                 navEnhet = navEnhet
             )
 
-            ENDRE_PROSESS -> ProsessHendelse(
+            ENDRE_PROSESS, SLETT_PROSESS -> ProsessHendelse(
                 id = ULID.random(),
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = saksnummer,
+                hendelsesType = iaSakshendelseType,
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,

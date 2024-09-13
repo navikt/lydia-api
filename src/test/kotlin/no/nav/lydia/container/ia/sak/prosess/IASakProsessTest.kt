@@ -1,15 +1,20 @@
 package no.nav.lydia.container.ia.sak.prosess
 
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import io.kotest.assertions.shouldFail
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.nyttNavnPåProsess
 import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
@@ -145,5 +150,71 @@ class IASakProsessTest {
             IASakshendelseType.NY_PROSESS,
         )
         sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
+    }
+
+    @Test
+    fun `skal kunne slette tomme prosesser`() {
+        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val prosesserFørSletting = sak.hentIAProsesser()
+        prosesserFørSletting shouldHaveSize 1
+
+        val prosessSomSkalSlettes = prosesserFørSletting.first()
+        sak.nyHendelse(
+            hendelsestype = IASakshendelseType.SLETT_PROSESS,
+            payload = Json.encodeToString(prosessSomSkalSlettes)
+        )
+
+        val prosesserEtterSletting = sak.hentIAProsesser()
+        prosesserEtterSletting shouldBe emptyList()
+    }
+
+    @Test
+    fun `skal ikke kunne slette prosesser som har en behovsvurdering knyttet til seg`() {
+        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val prosesserFørSletting = sak.hentIAProsesser()
+        val prosessSomSkalForsøkesSlettes = prosesserFørSletting.first()
+        sak.opprettKartlegging(prosessId = prosessSomSkalForsøkesSlettes.id)
+        shouldFail {
+            sak.nyHendelse(
+                hendelsestype = IASakshendelseType.SLETT_PROSESS,
+                payload = Json.encodeToString(prosessSomSkalForsøkesSlettes)
+            )
+        }
+        sak.hentIAProsesser() shouldBe prosesserFørSletting
+    }
+
+    @Test
+    fun `skal ikke kunne slette prosesser som har en plan knyttet til seg`() {
+        val sak = nySakIKartlegges().nyHendelse(IASakshendelseType.NY_PROSESS)
+        val prosesserFørSletting = sak.hentIAProsesser()
+        val prosessSomSkalForsøkesSlettes = prosesserFørSletting.first()
+        PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = prosessSomSkalForsøkesSlettes.id
+        )
+
+        shouldFail {
+            sak.nyHendelse(
+                hendelsestype = IASakshendelseType.SLETT_PROSESS,
+                payload = Json.encodeToString(prosessSomSkalForsøkesSlettes)
+            )
+        }
+        sak.hentIAProsesser() shouldBe prosesserFørSletting
+    }
+
+    @Test
+    fun `skal få feilmelding dersom man sender inn feil data ved sletting`() {
+        val sak = nySakIKartlegges()
+
+        shouldFail {
+            sak.nyHendelse(
+                hendelsestype = IASakshendelseType.SLETT_PROSESS,
+                payload = Json.encodeToString(IAProsessDto(
+                    id = 1010000,
+                    saksnummer = sak.saksnummer,
+                ))
+            )
+        }
     }
 }

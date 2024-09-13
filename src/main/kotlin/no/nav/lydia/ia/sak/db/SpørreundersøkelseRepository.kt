@@ -32,7 +32,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
-class SpørreundersøkelseRepository(val dataSource: DataSource) {
+class SpørreundersøkelseRepository(private val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
 
     fun hentSvarForTema(spørreundersøkelseId: UUID, temaId: Int) =

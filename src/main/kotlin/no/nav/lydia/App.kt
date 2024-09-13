@@ -162,7 +162,11 @@ fun startLydiaBackend() {
         azureService = azureService
     )
     val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
-
+    val iaProsessService = IAProsessService(
+        prosessRepository = prosessRepository,
+        spørreundersøkelseRepository = spørreundersøkelseRepository,
+        planRepository = planRepository
+    )
     val iaSakService = IASakService(
         iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
@@ -176,7 +180,7 @@ fun startLydiaBackend() {
         ),
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
         iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver),
-        iaSakProsessRepository = prosessRepository,
+        iaProsessService = iaProsessService
     )
 
     val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
@@ -184,7 +188,6 @@ fun startLydiaBackend() {
     val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(produsent = kafkaProdusent)
     val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()
     val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(produsent = kafkaProdusent)
-    val iaProsessService = IAProsessService(prosessRepository = prosessRepository)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,

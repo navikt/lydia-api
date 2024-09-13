@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
@@ -113,7 +114,8 @@ class IASak private constructor(
             SLETT_SAK,
             FULLFØR_BISTAND,
             ENDRE_PROSESS,
-            NY_PROSESS, -> {
+            NY_PROSESS,
+            SLETT_PROSESS, -> {
                 tilstand.behandleHendelse(hendelse)
                     .map { nyTilstand -> tilstand = nyTilstand }
                     .mapLeft { feil ->
@@ -255,7 +257,7 @@ class IASak private constructor(
                 VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand().right()
                 TILBAKE -> finnForrigeTilstand().right()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
-                ENDRE_PROSESS, NY_PROSESS -> this.right()
+                ENDRE_PROSESS, NY_PROSESS, SLETT_PROSESS -> this.right()
                 else -> generellFeil()
             }
 
@@ -265,6 +267,7 @@ class IASak private constructor(
                 GyldigHendelse(saksHendelsestype = TILBAKE),
                 GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
                 GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
                 GyldigHendelse(saksHendelsestype = NY_PROSESS)
             )
             else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
@@ -279,6 +282,7 @@ class IASak private constructor(
                 GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND),
                 GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
                 GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
                 GyldigHendelse(saksHendelsestype = NY_PROSESS)
             )
             else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
@@ -288,7 +292,7 @@ class IASak private constructor(
                 TILBAKE -> finnForrigeTilstand().right()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
                 FULLFØR_BISTAND -> FullførtTilstand().right()
-                ENDRE_PROSESS, NY_PROSESS -> this.right()
+                ENDRE_PROSESS, NY_PROSESS, SLETT_PROSESS -> this.right()
                 else -> generellFeil()
             }
     }

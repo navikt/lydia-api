@@ -86,6 +86,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.nyttNavnPåProsess
 import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.SAKEN_ER_FEILREGISTRERT
 
 class IASakApiTest {
@@ -174,6 +175,7 @@ class IASakApiTest {
 
                 ENDRE_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
                 NY_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
+                SLETT_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
 
                 else ->
                     sak.nyHendelse(it)
