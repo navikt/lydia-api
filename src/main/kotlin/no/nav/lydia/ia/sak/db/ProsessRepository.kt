@@ -8,6 +8,7 @@ import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import javax.sql.DataSource
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 
 class ProsessRepository(val dataSource: DataSource) {
 
@@ -84,7 +85,8 @@ class ProsessRepository(val dataSource: DataSource) {
         IAProsess(
             id = row.int("id"),
             saksnummer = row.string("saksnummer"),
-            navn = row.stringOrNull("navn")
+            navn = row.stringOrNull("navn"),
+            status = IAProsessStatus.valueOf(row.string("status")),
         )
 
     fun oppdaterTilSlettetStatus(prosessHendelse: ProsessHendelse) =
