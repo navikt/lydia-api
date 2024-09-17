@@ -171,18 +171,10 @@ fun Route.iaSakSpørreundersøkelse(
         val kartleggingId =
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
-            val kartlegging = spørreundersøkelseService.hentKartlegginger(sak = iaSak)
-
-            if (kartlegging.getOrNull()
-                    ?.firstOrNull { it.kartleggingId.toString() == kartleggingId }?.status != PÅBEGYNT
-            ) {
-                return@somEierAvSakIProsess IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
-            }
-
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
-                status = AVSLUTTET,
+                statusViSkalEndreTil = AVSLUTTET,
             )
         }.also { kartlegging ->
             auditLog.auditloggEither(
@@ -229,7 +221,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
             spørreundersøkelseService.endreKartleggingStatus(
                 spørreundersøkelseId = kartleggingId,
-                status = PÅBEGYNT,
+                statusViSkalEndreTil = PÅBEGYNT,
             )
         }.also { kartlegging ->
             auditLog.auditloggEither(
@@ -291,8 +283,12 @@ fun <T> ApplicationCall.somEierAvSakIProsess(
 }
 
 object IASakKartleggingError {
+    val `ikke støttet statusendring` =
+        Feil("Ikke en støttet statusendring", HttpStatusCode.Forbidden)
     val `kartlegging er ikke i påbegynt` =
         Feil("Kartlegging er ikke i påbegynt status", HttpStatusCode.Forbidden)
+    val `kan ikke starte kartlegging` =
+        Feil("Kan ikke starte kartlegging", HttpStatusCode.Forbidden)
     val `kartlegging er ikke avsluttet` =
         Feil("Kartlegging er ikke avsluttet", HttpStatusCode.Forbidden)
     val `generell feil under uthenting` =

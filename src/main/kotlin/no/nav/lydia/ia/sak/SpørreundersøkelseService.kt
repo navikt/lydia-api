@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
 import java.time.LocalDateTime
@@ -224,13 +225,24 @@ class SpørreundersøkelseService(
 
     fun endreKartleggingStatus(
         spørreundersøkelseId: String,
-        status: SpørreundersøkelseStatus,
+        statusViSkalEndreTil: SpørreundersøkelseStatus,
     ): Either<Feil, Spørreundersøkelse> {
-        spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)
-            ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
+        val spørreundersøkelseUtenInnhold = spørreundersøkelseRepository.hentEnSpørreundersøkelseUtenInnhold(
+            spørreundersøkelseId = spørreundersøkelseId
+        ) ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
+
+        when(statusViSkalEndreTil) {
+            PÅBEGYNT -> if (spørreundersøkelseUtenInnhold.status != OPPRETTET)
+                            return IASakKartleggingError.`kan ikke starte kartlegging`.left()
+            AVSLUTTET -> if (spørreundersøkelseUtenInnhold.status != PÅBEGYNT)
+                            return IASakKartleggingError.`kartlegging er ikke i påbegynt`.left()
+            OPPRETTET -> return IASakKartleggingError.`ikke støttet statusendring`.left()
+            SLETTET -> return IASakKartleggingError.`ikke støttet statusendring`.left()
+        }
+
         val oppdatertKartlegging = spørreundersøkelseRepository.endreKartleggingStatus(
             spørreundersøkelseId = spørreundersøkelseId,
-            status = status
+            status = statusViSkalEndreTil
         )
             ?: return IASakKartleggingError.`feil under oppdatering`.left()
 

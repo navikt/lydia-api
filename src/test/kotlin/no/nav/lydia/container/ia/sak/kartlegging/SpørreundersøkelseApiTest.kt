@@ -646,6 +646,33 @@ class SpørreundersøkelseApiTest {
         }
     }
 
+    @Test
+    fun `skal kunne avslutte en flyttet behovsvurdering`() {
+        val sak = nySakIKartlegges()
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+
+        val samarbeid = sak.hentIAProsesser()
+        samarbeid shouldHaveSize 2
+
+        val førsteSamarbeid = samarbeid.first()
+        val andreSamarbeid = samarbeid.last()
+
+        val behovsvurdering = sak.opprettKartlegging(prosessId = førsteSamarbeid.id)
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val flyttetBehovsvurdering = oppdaterBehovsvurdering(behovsvurdering, sak, andreSamarbeid.id)
+        flyttetBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = andreSamarbeid.id)
+            .forExactlyOne {
+                it.status shouldBe AVSLUTTET
+                it.prosessId shouldBe andreSamarbeid.id
+            }
+
+        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id) shouldHaveSize 0
+    }
+
     fun enDeltakerSvarerPåALLESpørsmål(
         kartleggingDto: SpørreundersøkelseDto,
         sesjonId: String = UUID.randomUUID().toString(),

@@ -72,6 +72,23 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
             )
         }
 
+    fun hentEnSpørreundersøkelseUtenInnhold(spørreundersøkelseId: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak_kartlegging
+                    WHERE kartlegging_id = :sporreundersokelseId
+                    AND status != '$SLETTET'
+                """.trimMargin(),
+                    mapOf(
+                        "sporreundersokelseId" to spørreundersøkelseId,
+                    )
+                ).map(this::mapRowToIASakKartleggingOversikt).asSingle
+            )
+        }
+
     fun hentSpørreundersøkelser(prosess: IAProsess) =
         using(sessionOf(dataSource)) { session ->
             session.run(
