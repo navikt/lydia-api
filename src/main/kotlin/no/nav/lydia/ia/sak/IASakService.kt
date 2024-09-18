@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.Feil
@@ -14,6 +15,7 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
@@ -26,6 +28,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -110,7 +113,8 @@ class IASakService(
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer) {
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
-        val sistEndretAvHendelseId = aktiveSaker.firstOrNull()?.endretAvHendelseId
+        val førsteAktivSak = aktiveSaker.firstOrNull()
+        val sistEndretAvHendelseId = førsteAktivSak?.endretAvHendelseId
 
         val alleLeveranserPåEnSak = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = hendelseDto.saksnummer)
         val aktiveLeveranserPåEnSak = alleLeveranserPåEnSak.filter { it.status == IASakLeveranseStatus.UNDER_ARBEID }
@@ -121,6 +125,17 @@ class IASakService(
 
         if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND && alleLeveranserPåEnSak.isEmpty()) {
             return IASakError.`kan ikke fullføre da ingen leveranser står på saken`.left()
+        }
+
+        when (hendelseDto.hendelsesType) {
+            SLETT_PROSESS -> {
+                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
+                if (!iaProsessService.kanSletteProsess(sak = aktivSak, iaProsess = prosessDto)) {
+                    return IAProsessFeil.`kan ikke slette prosess som ikke er tom`.left()
+                }
+            }
+            else -> {}
         }
 
         return IASakshendelse.fromDto(hendelseDto, saksbehandler, navEnhet)

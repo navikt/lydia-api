@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
@@ -59,25 +60,25 @@ class IAProsessService(
         }
     }
 
+    fun kanSletteProsess(sak: IASak, iaProsess: IAProsessDto): Boolean {
+        val prosess = hentIAProsess(sak, iaProsess.id).getOrNull() ?: return false
+
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess).isNotEmpty())
+            return false
+        if (planRepository.hentPlan(prosessId = prosess.id) != null)
+            return false
+
+        return true
+    }
+
     private fun slettProsess(sakshendelse: ProsessHendelse, sak: IASak) {
-        val prosess = hentIAProsess(sak, sakshendelse.prosessDto.id).getOrNull()
-            ?: throw IllegalStateException("Fant ikke prosess")
-
-        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(
-            prosess
-        )
-        if (behovsvurderinger.isNotEmpty())
-            throw IllegalStateException("Kan ikke slette prosess som har tilknyttede behovsvurderinger")
-
-        val plan = planRepository.hentPlan(prosessId = prosess.id)
-        if (plan != null)
-            throw IllegalStateException("Kan ikke slette prosess som har tilknyttet plan")
-
-        prosessRepository.oppdaterTilSlettetStatus(sakshendelse)
+        if(kanSletteProsess(sak = sak, iaProsess = sakshendelse.prosessDto))
+            prosessRepository.oppdaterTilSlettetStatus(sakshendelse)
     }
 }
 
 object IAProsessFeil {
     val `feil ved henting av prosess` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
     val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
+    val `kan ikke slette prosess som ikke er tom` = Feil("kan ikke slette prosess som ikke er tom", HttpStatusCode.BadRequest)
 }

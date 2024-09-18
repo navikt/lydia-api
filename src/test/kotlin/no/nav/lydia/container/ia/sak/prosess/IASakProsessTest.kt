@@ -11,6 +11,7 @@ import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.nyttNavnPåProsess
 import no.nav.lydia.helper.opprettNyProsses
@@ -254,5 +255,32 @@ class IASakProsessTest {
                 ))
             )
         }
+    }
+
+    @Test
+    fun `skal ikke lagre SLETT_PROSESS hendelse dersom sletting ikke er lov`() {
+        val sak = nySakIKartlegges().opprettNyProsses()
+        val samarbeid = sak.hentIAProsesser()
+        samarbeid shouldHaveSize 1
+
+        sak.opprettKartlegging()
+
+        shouldFail {
+            sak.nyHendelse(
+                hendelsestype = IASakshendelseType.SLETT_PROSESS,
+                payload = Json.encodeToString(IAProsessDto(
+                    id = 1010000,
+                    saksnummer = sak.saksnummer,
+                ))
+            )
+        }
+
+        val samarbeidEtterSlett = sak.hentIAProsesser()
+        samarbeidEtterSlett shouldHaveSize 1
+
+        val sisteHendelse = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>("""
+            select id from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by  opprettet desc limit 1
+        """.trimIndent())
+        sisteHendelse shouldBe sak.endretAvHendelseId
     }
 }
