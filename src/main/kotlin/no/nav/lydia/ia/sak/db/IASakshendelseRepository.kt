@@ -212,6 +212,7 @@ class IASakshendelseRepository(
                     siste.hendelsesType != IASakshendelseType.TA_EIERSKAP_I_SAK &&
                     siste.hendelsesType != IASakshendelseType.ENDRE_PROSESS &&
                     siste.hendelsesType != IASakshendelseType.NY_PROSESS &&
+                    siste.hendelsesType != IASakshendelseType.SLETT_PROSESS &&
                     siste.hendelsesType == nestSiste.hendelsesType
                 ) {
                     logger.warn(

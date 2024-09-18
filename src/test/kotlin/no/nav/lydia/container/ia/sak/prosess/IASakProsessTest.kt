@@ -117,6 +117,44 @@ class IASakProsessTest {
     }
 
     @Test
+    fun `skal ikke få feil i sakshistorikk dersom man sletter flere samarbeid på rad`() {
+        val sak = nySakIKartlegges()
+            .opprettNyProsses()
+            .opprettNyProsses()
+
+        val samarbeid = sak.hentIAProsesser()
+        samarbeid shouldHaveSize 2
+
+        sak.nyHendelse(
+            hendelsestype = IASakshendelseType.SLETT_PROSESS,
+            payload = Json.encodeToString(samarbeid.first())
+        ).nyHendelse(
+            hendelsestype = IASakshendelseType.SLETT_PROSESS,
+            payload = Json.encodeToString(samarbeid.last())
+        )
+        sak.hentIAProsesser() shouldHaveSize 0
+
+        val samarbeidshistorikk = hentSamarbeidshistorikk(
+            sak.orgnr,
+        )
+        samarbeidshistorikk shouldHaveSize 1
+        val sakshendelser = samarbeidshistorikk.first().sakshendelser
+        sakshendelser shouldHaveSize 9
+        sakshendelser.map { it.hendelsestype } shouldBe listOf(
+            IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
+            IASakshendelseType.VIRKSOMHET_VURDERES,
+            IASakshendelseType.TA_EIERSKAP_I_SAK,
+            IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
+            IASakshendelseType.VIRKSOMHET_KARTLEGGES,
+            IASakshendelseType.NY_PROSESS,
+            IASakshendelseType.NY_PROSESS,
+            IASakshendelseType.SLETT_PROSESS,
+            IASakshendelseType.SLETT_PROSESS,
+        )
+        sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
+    }
+
+    @Test
     fun `skal ikke få feil i historikken dersom man oppretter flere prosesser på rad`() {
         val sak = nySakIKartlegges()
             .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
