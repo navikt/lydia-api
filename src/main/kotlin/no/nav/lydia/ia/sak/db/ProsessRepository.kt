@@ -48,17 +48,18 @@ class ProsessRepository(val dataSource: DataSource) {
             )
         }
 
-    fun opprettNyProsess(saksnummer: String): IAProsess =
+    fun opprettNyProsess(saksnummer: String, navn: String? = "Samarbeid uten navn"): IAProsess =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                        INSERT INTO ia_prosess (saksnummer) 
-                        values (:saksnummer)
+                        INSERT INTO ia_prosess (saksnummer, navn) 
+                        values (:saksnummer, :navn)
                          returning *
                     """.trimIndent(),
                     mapOf(
-                        "saksnummer" to saksnummer
+                        "saksnummer" to saksnummer,
+                        "navn" to navn,
                     )
                 ).map(this::mapRowToIaProsessDto).asSingle
             )!!

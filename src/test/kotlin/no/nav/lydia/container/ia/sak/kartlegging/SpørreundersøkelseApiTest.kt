@@ -40,6 +40,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.helper.opprettNyProsses
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
@@ -579,8 +580,8 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal kunne opprette behovsvurdering for to forskjellige prosesser`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
+            .opprettNyProsses()
 
         val iaProsesser = sak.hentIAProsesser()
         iaProsesser shouldHaveSize 2
@@ -598,8 +599,8 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal kunne flytte en behhovsvurdering fra en prosess til en annen`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
+            .opprettNyProsses()
         val iaProsesser = sak.hentIAProsesser()
         iaProsesser shouldHaveSize 2
         val fraProsess = iaProsesser.first()
@@ -619,7 +620,7 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal ikke kunne flytte kartlegging en ugyldig prosess eller som lesebruker`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
         val behovsvurdering = sak.opprettKartlegging(prosesser.first().id)
@@ -649,8 +650,8 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal kunne avslutte en flyttet behovsvurdering`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
+            .opprettNyProsses()
 
         val samarbeid = sak.hentIAProsesser()
         samarbeid shouldHaveSize 2

@@ -9,15 +9,14 @@ import io.kotest.matchers.shouldBe
 import kotlinx.datetime.LocalDate
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.helper.opprettNyProsses
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -523,7 +522,7 @@ class PlanApiTest {
     @Test
     fun `skal kunne opprette plan knyttet til en gitt prosess`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
         val prosessId = sak.hentIAProsesser().first().id
         val opprettetPlan = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
@@ -536,8 +535,8 @@ class PlanApiTest {
     @Test
     fun `skal kunne opprette og hente en plan knyttet til en prosess`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
+            .opprettNyProsses()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -560,8 +559,8 @@ class PlanApiTest {
     @Test
     fun `skal kunne endre status på et undertema i en plan knyttet til en prosess`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
+            .opprettNyProsses()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -597,8 +596,8 @@ class PlanApiTest {
     @Test
     fun `kan sette alle undertemaer til planlagt i en plan knyttet til en prosess`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
+            .opprettNyProsses()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -633,8 +632,8 @@ class PlanApiTest {
     @Test
     fun `skal kunne endre en plan knyttet til en prosess`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
+            .opprettNyProsses()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 2
 
@@ -669,7 +668,7 @@ class PlanApiTest {
     @Test
     fun `skal oppdatere plan sin sist_endret ved endringer av plan`() {
         val sak = nySakIKartlegges()
-            .nyHendelse(hendelsestype = IASakshendelseType.NY_PROSESS)
+            .opprettNyProsses()
         val prosessId = sak.hentIAProsesser().first().id
         val opprettetPlan = PlanHelper.opprettEnPlan(sak.orgnr, sak.saksnummer, prosessId)
         val førsteTema = opprettetPlan.temaer.first()

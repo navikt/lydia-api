@@ -11,9 +11,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
@@ -39,6 +37,7 @@ open class IASakshendelse(
             when (dto.hendelsesType) {
                 VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
 
+                NY_PROSESS,
                 ENDRE_PROSESS,
                 SLETT_PROSESS -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
 
@@ -60,7 +59,7 @@ open class IASakshendelse(
                 id = saksnummer,
                 opprettetTidspunkt = LocalDateTime.now(),
                 saksnummer = saksnummer,
-                hendelsesType = IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET,
+                hendelsesType = OPPRETT_SAK_FOR_VIRKSOMHET,
                 orgnummer = orgnummer,
                 opprettetAv = superbruker.navIdent,
                 opprettetAvRolle = superbruker.rolle,
@@ -208,7 +207,7 @@ class ProsessHendelse(
 ) {
     companion object {
         fun fromDto(dto: IASakshendelseDto, navAnsatt: NavAnsatt, navEnhet: NavEnhet): Either<Feil, ProsessHendelse> =
-            dto.payload?.let {
+            dto.payload?.let { payload ->
                 ProsessHendelse(
                     id = ULID.random(),
                     opprettetTidspunkt = LocalDateTime.now(),
@@ -217,7 +216,7 @@ class ProsessHendelse(
                     orgnummer = dto.orgnummer,
                     opprettetAv = navAnsatt.navIdent,
                     opprettetAvRolle = navAnsatt.rolle,
-                    prosessDto = Json.decodeFromString<IAProsessDto>(it),
+                    prosessDto = Json.decodeFromString<IAProsessDto>(payload),
                     navEnhet = navEnhet,
                 ).right()
             } ?: SaksHendelseFeil.`kunne ikke deserialisere payload`.left()

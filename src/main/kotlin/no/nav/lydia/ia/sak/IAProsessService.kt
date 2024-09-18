@@ -47,16 +47,15 @@ class IAProsessService(
                 when (sakshendelse.hendelsesType) {
                     ENDRE_PROSESS -> prosessRepository.oppdaterNavnPåProsess(sakshendelse.prosessDto)
                     SLETT_PROSESS -> slettProsess(sakshendelse, sak)
+                    NY_PROSESS -> prosessRepository.opprettNyProsess(
+                        saksnummer = sakshendelse.saksnummer,
+                        navn = sakshendelse.prosessDto.navn
+                    )
                     else -> {}
                 }
 
             }
-            else -> {
-                when (sakshendelse.hendelsesType) {
-                    NY_PROSESS -> prosessRepository.opprettNyProsess(saksnummer = sakshendelse.saksnummer)
-                    else -> {}
-                }
-            }
+            else -> {}
         }
     }
 

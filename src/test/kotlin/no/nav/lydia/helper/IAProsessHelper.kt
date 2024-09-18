@@ -23,10 +23,18 @@ fun IASakDto.nyttNavnPåProsess(
     token = token,
 )
 
-fun IASakDto.opprettNyProsses(token: String = oauth2ServerContainer.saksbehandler1.token) =
+fun IASakDto.opprettNyProsses(
+    navn: String? = "Samarbeid uten navn",
+    token: String = oauth2ServerContainer.saksbehandler1.token,
+) =
     nyHendelse(
         hendelsestype = IASakshendelseType.NY_PROSESS,
         token = token,
+        payload = Json.encodeToString(IAProsessDto(
+            id = 0,
+            saksnummer = saksnummer,
+            navn = navn
+        ))
     )
 
 fun IASakDto.hentIAProsesser(token: String = oauth2ServerContainer.saksbehandler1.token) =
