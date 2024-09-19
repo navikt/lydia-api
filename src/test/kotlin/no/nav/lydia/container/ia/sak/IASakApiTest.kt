@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
+import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -83,15 +84,27 @@ import no.nav.lydia.tilgangskontroll.fia.Rolle
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.nyttNavnPåProsess
 import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.SAKEN_ER_FEILREGISTRERT
 
 class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
+
+    @Test
+    fun `har et endepunkt som kan svare på om en sak kan fullføres`() {
+        val sak = nySakIKartlegges()
+        sak.hentIAProsesser()
+        lydiaApiContainer
+            .performGet("$IA_SAK_RADGIVER_PATH/${sak.orgnr}/${sak.saksnummer}/status")
+            .authentication().bearer(token = oauth2ServerContainer.superbruker1.token)
+            .response().second.statusCode shouldBe HttpStatusCode.OK.value
+    }
 
     @Test
     fun `skal ikke få feil ved journalføring av hendelser`() {
