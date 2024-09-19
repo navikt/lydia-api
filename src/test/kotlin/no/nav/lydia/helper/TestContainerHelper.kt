@@ -45,6 +45,7 @@ import no.nav.lydia.ia.sak.api.IA_TJENESTER_PATH
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
+import no.nav.lydia.ia.sak.api.SaksStatusDto
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
@@ -256,6 +257,20 @@ class TestContainerHelper {
 
 class SakHelper {
     companion object {
+        fun IASakDto.hentSaksStatus(
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) = lydiaApiContainer
+            .performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/status")
+            .authentication().bearer(token = token)
+            .tilSingelRespons<SaksStatusDto>().third
+            .fold(
+                success = { it },
+                failure = {
+                    fail(it.response.body().asString("text/plain"))
+                }
+            )
+
+
         fun hentSaker(
             orgnummer: String,
             token: String = oauth2ServerContainer.saksbehandler1.token,

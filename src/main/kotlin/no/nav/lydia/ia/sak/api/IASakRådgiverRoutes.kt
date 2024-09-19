@@ -89,8 +89,12 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/status") {
-        call.respond(HttpStatusCode.OK, "OK")
+        call.respond(SaksStatusDto(
+            kanFullføres = true,
+            årsaker = emptyList()
+        ))
     }
+
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/aktiv") {
         val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)

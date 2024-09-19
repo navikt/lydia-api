@@ -1,7 +1,6 @@
 package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -22,6 +21,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
+import no.nav.lydia.helper.SakHelper.Companion.hentSaksStatus
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
@@ -30,6 +30,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
@@ -46,6 +47,9 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.helper.nyttNavnPåProsess
+import no.nav.lydia.helper.opprettNyProsses
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
@@ -63,6 +67,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
@@ -73,6 +78,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.FOR_FÅ_TAPTE_DAGSVERK
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.IKKE_DIALOG_MELLOM_PARTENE
+import no.nav.lydia.ia.årsak.domene.BegrunnelseType.SAKEN_ER_FEILREGISTRERT
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_HAR_IKKE_RESPONDERT
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.GyldigBegrunnelse.Companion.somBegrunnelseType
@@ -83,27 +89,17 @@ import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
-import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.helper.nyttNavnPåProsess
-import no.nav.lydia.helper.opprettNyProsses
-import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
-import no.nav.lydia.ia.årsak.domene.BegrunnelseType.SAKEN_ER_FEILREGISTRERT
 
 class IASakApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
 
     @Test
-    fun `har et endepunkt som kan svare på om en sak kan fullføres`() {
+    fun `har et endepunkt som returnerer et saksstatus objekt på om en sak kan fullføres`() {
         val sak = nySakIKartlegges()
-        sak.hentIAProsesser()
-        lydiaApiContainer
-            .performGet("$IA_SAK_RADGIVER_PATH/${sak.orgnr}/${sak.saksnummer}/status")
-            .authentication().bearer(token = oauth2ServerContainer.superbruker1.token)
-            .response().second.statusCode shouldBe HttpStatusCode.OK.value
+        val saksStatus = sak.hentSaksStatus()
+        saksStatus.kanFullføres shouldBe true
+        saksStatus.årsaker shouldBe emptyList()
     }
 
     @Test
