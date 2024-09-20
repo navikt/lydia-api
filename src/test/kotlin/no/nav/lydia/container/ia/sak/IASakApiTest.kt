@@ -17,6 +17,11 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.PlanHelper.Companion.fullførPlan
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
@@ -53,6 +58,8 @@ import no.nav.lydia.helper.opprettNyProsses
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
+import no.nav.lydia.ia.sak.api.ÅrsaksType
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
@@ -95,11 +102,57 @@ class IASakApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
 
     @Test
-    fun `har et endepunkt som returnerer et saksstatus objekt på om en sak kan fullføres`() {
-        val sak = nySakIKartlegges()
-        val saksStatus = sak.hentSaksStatus()
-        saksStatus.kanFullføres shouldBe true
-        saksStatus.årsaker shouldBe emptyList()
+    fun `returnerer riktig saksstatus`() {
+        val sak = nySakIKartlegges().opprettNyProsses(navn = "Nytt samarbeid")
+        val samarbeid = sak.hentIAProsesser()
+        samarbeid shouldHaveSize 1
+
+        val saksStatusUtenNoe = sak.hentSaksStatus()
+        saksStatusUtenNoe.kanFullføres shouldBe false
+        saksStatusUtenNoe.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
+            ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
+            ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING
+        )
+
+        val førsteSamarbeid = samarbeid.first()
+        val kartlegging = sak.opprettKartlegging(prosessId = førsteSamarbeid.id)
+        val saksStatusMedEnKartlegging = sak.hentSaksStatus()
+        saksStatusMedEnKartlegging.kanFullføres shouldBe false
+        saksStatusMedEnKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
+            ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
+            ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT
+        )
+        saksStatusMedEnKartlegging.årsaker.forExactlyOne {
+            it shouldBe ÅrsakTilAtSakIkkeKanAvsluttes(
+                samarbeidsId = førsteSamarbeid.id,
+                samarbeidsNavn = førsteSamarbeid.navn,
+                type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
+                id = kartlegging.kartleggingId
+            )
+        }
+
+        val plan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id)
+        val saksStatusMedPlanOgKartlegging = sak.hentSaksStatus()
+        saksStatusMedPlanOgKartlegging.kanFullføres shouldBe false
+        saksStatusMedPlanOgKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
+            ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
+            ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT
+        )
+        saksStatusMedPlanOgKartlegging.årsaker.forExactlyOne {
+            it shouldBe ÅrsakTilAtSakIkkeKanAvsluttes(
+                samarbeidsId = førsteSamarbeid.id,
+                samarbeidsNavn = førsteSamarbeid.navn,
+                type = ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
+                id = plan.id
+            )
+        }
+
+        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        plan.fullførPlan(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, førsteSamarbeid.id)
+        val sakstatusFullførtBehovsvurderingOgPlan = sak.hentSaksStatus()
+        sakstatusFullførtBehovsvurderingOgPlan.kanFullføres shouldBe true
+        sakstatusFullførtBehovsvurderingOgPlan.årsaker shouldHaveSize 0
     }
 
     @Test

@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -176,6 +177,23 @@ class IASakRepository(val dataSource: DataSource) {
                      AND endret < (now() - INTERVAL '6 MONTH')
                     """.trimIndent()
                 ).map(this::mapRowToIASak).asList
+            )
+        }
+
+    fun hentStatusForBehovsvurderinger(prosessId: Int) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                      select kartlegging_id, status from ia_sak_kartlegging
+                        where ia_prosess = :prosessId
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to prosessId
+                    )
+                ).map {
+                    it.string("kartlegging_id") to SpørreundersøkelseStatus.valueOf(it.string("status"))
+                }.asList
             )
         }
 

@@ -89,10 +89,15 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/status") {
-        call.respond(SaksStatusDto(
-            kanFullføres = true,
-            årsaker = emptyList()
-        ))
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        call.somLesebruker(adGrupper = adGrupper) { navAnsatt ->
+            iaSakService.hentSaksStatus(saksnummer)
+        }
+        .map{
+            call.respond(it)
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
     }
 
 

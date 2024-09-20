@@ -889,6 +889,32 @@ class PlanHelper {
                     success = { respons -> respons },
                     failure = { fail(it.message) },
                 )
+
+        fun PlanDto.fullførPlan(
+            orgnummer: String,
+            saksnummer: String,
+            prosessId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token
+        ) =
+            temaer.forEach { tema ->
+                tema.undertemaer.forEach { undertema ->
+                    endreStatus(
+                        token = token,
+                        orgnr = orgnummer,
+                        saksnummer = saksnummer,
+                        prosessId = prosessId,
+                        status = PlanUndertema.Status.FULLFØRT,
+                        temaId = tema.id,
+                        undertemaId = undertema.id
+                    )
+                }
+            }.let {
+                hentPlan(
+                    orgnr = orgnummer,
+                    saksnummer = saksnummer,
+                    prosessId = prosessId
+                )
+            }
     }
 }
 

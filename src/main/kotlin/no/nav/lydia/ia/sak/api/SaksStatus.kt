@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ÅrsakTilAtSakIkkeKanAvsluttes(
     val samarbeidsId: Int,
-    val samarbeidsNavn: String,
+    val samarbeidsNavn: String?,
     val type: ÅrsaksType,
-    val id: String
+    val id: String? = null
 )
 
 
@@ -20,6 +20,6 @@ enum class ÅrsaksType {
 
 @Serializable
 data class SaksStatusDto(
-    val kanFullføres: Boolean,
-    val årsaker: List<ÅrsakTilAtSakIkkeKanAvsluttes>
+    val årsaker: List<ÅrsakTilAtSakIkkeKanAvsluttes>,
+    val kanFullføres: Boolean = årsaker.isEmpty(),
 )

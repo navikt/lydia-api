@@ -5,6 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
@@ -15,10 +16,14 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
+import no.nav.lydia.ia.sak.api.SaksStatusDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
+import no.nav.lydia.ia.sak.api.ÅrsaksType
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
@@ -32,6 +37,8 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -55,6 +62,7 @@ class IASakService(
     private val iaProsessService: IAProsessService,
     private val iaSakObservers: List<Observer<IASak>>,
     private val iaSaksLeveranseObservers: List<Observer<IASakLeveranse>>,
+    private val planRepository: PlanRepository,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -332,4 +340,73 @@ class IASakService(
     }
 
     fun hentMal(): Either<Feil, PlanMalDto> = PlanMalDto().right()
+
+    fun hentSaksStatus(saksnummer: String): Either<Feil, SaksStatusDto> {
+        val årsaker = mutableListOf<ÅrsakTilAtSakIkkeKanAvsluttes>()
+        val sak = hentIASak(saksnummer).getOrNull()
+            ?: return IASakError.`generell feil under uthenting`.left()
+        val samarbeid = iaProsessService.hentIAProsesser(sak).getOrNull()
+            ?: return IAProsessFeil.`feil ved henting av prosess`.left()
+
+        samarbeid.forEach { prosess ->
+            årsaker.addAll(sjekkBehovsvurderinger(prosess))
+            sjekkPlan(prosess)?.let { årsaker.add(it) }
+        }
+
+        return SaksStatusDto(
+            årsaker = årsaker.toList()
+        ).right()
+    }
+
+    private fun sjekkPlan(prosess: IAProsess): ÅrsakTilAtSakIkkeKanAvsluttes? {
+        val plan = planRepository.hentPlan(prosessId = prosess.id) ?: return ÅrsakTilAtSakIkkeKanAvsluttes(
+            samarbeidsId = prosess.id,
+            samarbeidsNavn = prosess.navn,
+            type = ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN
+        )
+
+        val erPlanFullført = plan.temaer.map { tema ->
+            tema.undertemaer.all { undertema -> undertema.status == PlanUndertema.Status.FULLFØRT }
+        }.all { it }
+
+        return when (erPlanFullført) {
+            true -> null
+            false -> ÅrsakTilAtSakIkkeKanAvsluttes(
+                samarbeidsId = prosess.id,
+                samarbeidsNavn = prosess.navn,
+                type = ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
+                id = plan.id.toString()
+            )
+        }
+    }
+
+    private fun sjekkBehovsvurderinger(
+        prosess: IAProsess,
+    ): List<ÅrsakTilAtSakIkkeKanAvsluttes> {
+        val årsaker = mutableListOf<ÅrsakTilAtSakIkkeKanAvsluttes>()
+        val statusForBehovsvurderinger =
+            iaSakRepository.hentStatusForBehovsvurderinger(prosess.id)
+        if (statusForBehovsvurderinger.isEmpty())
+            årsaker.add(
+                ÅrsakTilAtSakIkkeKanAvsluttes(
+                    samarbeidsId = prosess.id,
+                    samarbeidsNavn = prosess.navn,
+                    type = ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING,
+                )
+            )
+        statusForBehovsvurderinger.forEach {
+            when (it.second) {
+                SpørreundersøkelseStatus.AVSLUTTET -> {}
+                else -> årsaker.add(
+                    ÅrsakTilAtSakIkkeKanAvsluttes(
+                        samarbeidsId = prosess.id,
+                        samarbeidsNavn = prosess.navn,
+                        id = it.first,
+                        type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT
+                    )
+                )
+            }
+        }
+        return årsaker
+    }
 }

@@ -180,7 +180,8 @@ fun startLydiaBackend() {
         ),
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
         iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver),
-        iaProsessService = iaProsessService
+        iaProsessService = iaProsessService,
+        planRepository = planRepository
     )
 
     val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
