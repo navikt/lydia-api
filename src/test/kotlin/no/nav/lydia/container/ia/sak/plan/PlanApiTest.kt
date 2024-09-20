@@ -22,6 +22,12 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import kotlin.test.Test
+import java.time.LocalDate.now
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toKotlinLocalDate
+
 
 class PlanApiTest {
     @Test
@@ -30,7 +36,8 @@ class PlanApiTest {
 
         val endretPlan = PlanMalDto()
 
-        val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = endretPlan)
+        val planDto =
+            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = endretPlan)
 
         planDto.temaer.any { it.planlagt } shouldBe false
         planDto.temaer.forEach { tema ->
@@ -114,7 +121,8 @@ class PlanApiTest {
             },
         )
 
-        val resp = PlanHelper.endrePlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, endring = endretPlan.tilRequest())
+        val resp =
+            PlanHelper.endrePlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, endring = endretPlan.tilRequest())
 
         resp.first().id shouldBe endretPlan.temaer.first().id
         resp.first().navn shouldBe endretPlan.temaer.first().navn
@@ -126,6 +134,147 @@ class PlanApiTest {
         resp.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
         resp.first().undertemaer.first().startDato shouldBe endretPlan.temaer.first().undertemaer.first().startDato
         resp.first().undertemaer.first().sluttDato shouldBe endretPlan.temaer.first().undertemaer.first().sluttDato
+    }
+
+    @Test
+    fun `endre status til avbrutt setter sluttdato til datoen endringen på status er mottatt`() {
+        val iDag = now().toKotlinLocalDate()
+        val sak = nySakIKartlegges()
+        val enNyPlan = PlanMalDto(
+            tema = listOf(
+                TemaMalDto(
+                    rekkefølge = 1,
+                    navn = "Et tema til test",
+                    planlagt = true,
+                    innhold = listOf(
+                        InnholdMalDto(
+                            rekkefølge = 1,
+                            navn = "Et undertema til test",
+                            planlagt = true,
+                            startDato = iDag.minus(6, DateTimeUnit.MONTH),
+                            sluttDato = iDag.plus(6, DateTimeUnit.MONTH)
+                        )
+                    )
+                )
+            )
+        )
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            redigertPlan = enNyPlan
+        )
+        val førsteTema = planDto.temaer.first()
+        val førsteUndertema = planDto.temaer.first().undertemaer.first()
+
+        val resp =
+            PlanHelper.endreStatus(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                temaId = førsteTema.id,
+                undertemaId = førsteUndertema.id,
+                status = PlanUndertema.Status.AVBRUTT,
+            )
+        resp.status shouldBe PlanUndertema.Status.AVBRUTT
+        resp.sluttDato shouldBe iDag
+
+        val planMedNyStatus = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
+        planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe iDag
+    }
+
+    @Test
+    fun `endre status til avbrutt endrer ikke sluttdato dersom undertemaet er i fortiden`() {
+        val iDag = now().toKotlinLocalDate()
+        val for6MånedereSiden = iDag.minus(6, DateTimeUnit.MONTH)
+        val iGår = iDag.minus(1, DateTimeUnit.DAY)
+        val sak = nySakIKartlegges()
+        val enNyPlan = PlanMalDto(
+            tema = listOf(
+                TemaMalDto(
+                    rekkefølge = 1,
+                    navn = "Et tema til test",
+                    planlagt = true,
+                    innhold = listOf(
+                        InnholdMalDto(
+                            rekkefølge = 1,
+                            navn = "Et undertema til test",
+                            planlagt = true,
+                            startDato = for6MånedereSiden,
+                            sluttDato = iGår
+                        )
+                    )
+                )
+            )
+        )
+
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            redigertPlan = enNyPlan
+        )
+        planDto.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
+        planDto.temaer.first().undertemaer.first().sluttDato shouldBe iGår
+
+        val resp =
+            PlanHelper.endreStatus(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                temaId = 1,
+                undertemaId = 1,
+                status = PlanUndertema.Status.AVBRUTT,
+            )
+        resp.status shouldBe PlanUndertema.Status.AVBRUTT
+        resp.sluttDato shouldBe iGår
+
+        val planMedNyStatus = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
+        planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe iGår
+    }
+
+    @Test
+    fun `det er ikke mulig å endre status til avbrutt dersom undertemaet er i fremtiden`() {
+        val iDag = now().toKotlinLocalDate()
+        val om6Måneder = iDag.plus(6, DateTimeUnit.MONTH)
+        val iMorgen = iDag.plus(1, DateTimeUnit.DAY)
+        val sak = nySakIKartlegges()
+        val enNyPlan = PlanMalDto(
+            tema = listOf(
+                TemaMalDto(
+                    rekkefølge = 1,
+                    navn = "Et tema til test",
+                    planlagt = true,
+                    innhold = listOf(
+                        InnholdMalDto(
+                            rekkefølge = 1,
+                            navn = "Et undertema til test",
+                            planlagt = true,
+                            startDato = iMorgen,
+                            sluttDato = om6Måneder
+                        )
+                    )
+                )
+            )
+        )
+
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            redigertPlan = enNyPlan
+        )
+        planDto.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
+        planDto.temaer.first().undertemaer.first().sluttDato shouldBe om6Måneder
+        planDto.temaer.first().undertemaer.first().startDato shouldBe iMorgen
+
+        val result = shouldFail {
+            PlanHelper.endreStatus(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                temaId = 1,
+                undertemaId = 1,
+                status = PlanUndertema.Status.AVBRUTT,
+            )
+        }
+        result.message shouldBe "HTTP Exception 400 Bad Request"
     }
 
     @Test
@@ -190,7 +339,8 @@ class PlanApiTest {
             },
         )
 
-        val opprettetPlan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+        val opprettetPlan =
+            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
 
         opprettetPlan.temaer[0].planlagt shouldBe false
         opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
@@ -345,7 +495,8 @@ class PlanApiTest {
             },
         )
 
-        val opprettetPlan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+        val opprettetPlan =
+            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
 
         opprettetPlan.temaer[0].planlagt shouldBe false
         opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
@@ -428,7 +579,8 @@ class PlanApiTest {
             },
         )
 
-        val opprettetPlan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+        val opprettetPlan =
+            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
 
         opprettetPlan.temaer[0].planlagt shouldBe false
         opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
@@ -602,7 +754,8 @@ class PlanApiTest {
         prosesser shouldHaveSize 2
 
         prosesser.forEach { prosess ->
-            val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = prosess.id)
+            val planDto =
+                PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = prosess.id)
             val tema = planDto.temaer.first()
             val endreTemaRequest = tema.undertemaer.map { undertemaDto ->
                 EndreUndertemaRequest(
