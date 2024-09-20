@@ -148,7 +148,7 @@ object PlanFeil {
         httpStatusCode = HttpStatusCode.BadRequest,
     )
     val `kan ikke endre status til AVBRUTT` = Feil(
-        feilmelding = "Fant ikke tema",
+        feilmelding = "Kan ikke endre status til AVBRUTT",
         httpStatusCode = HttpStatusCode.BadRequest,
     )
     val `feil inndata i forespørsel` = Feil(
