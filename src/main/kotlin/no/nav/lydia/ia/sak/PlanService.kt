@@ -6,6 +6,7 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import java.util.UUID
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
@@ -16,8 +17,8 @@ import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.AVBRUTT
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
-import java.util.UUID
 
 class PlanService(
     val iaProsessService: IAProsessService,
@@ -66,7 +67,8 @@ class PlanService(
                     endredeUndertemaer.firstOrNull { redigert -> redigert.id == lagretUndertema.id }?.let { redigert ->
                         lagretUndertema.copy(
                             planlagt = redigert.planlagt,
-                            status = if (redigert.planlagt) lagretUndertema.status ?: PlanUndertema.Status.PLANLAGT else null,
+                            status = if (redigert.planlagt) lagretUndertema.status
+                                ?: PlanUndertema.Status.PLANLAGT else null,
                             startDato = if (redigert.planlagt) redigert.startDato else null,
                             sluttDato = if (redigert.planlagt) redigert.sluttDato else null,
                         )
@@ -110,9 +112,13 @@ class PlanService(
         return hentPlan(iaSak = iaSak, prosessId = prosessId).flatMap { plan ->
             val lagredeUndertemaer =
                 plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return PlanFeil.`fant ikke tema`.left()
+            val lagretUndertema = lagredeUndertemaer.firstOrNull { it.id == undertemaId }
+
+            if (nyStatus == AVBRUTT && lagretUndertema != null && lagretUndertema.starterIFremtiden())
+                return PlanFeil.`kan ikke endre status til AVBRUTT`.left()
 
             val oppdatertUndertema: PlanUndertema =
-                lagredeUndertemaer.firstOrNull { it.id == undertemaId }?.copy(status = nyStatus)
+                lagretUndertema?.copyMedNyStatus(nyStatus = nyStatus)
                     ?: return PlanFeil.`fant ikke undertema`.left()
 
             val ret = planRepository.oppdaterUndertema(
@@ -139,6 +145,10 @@ object PlanFeil {
     )
     val `fant ikke undertema` = Feil(
         feilmelding = "Fant ikke undertema",
+        httpStatusCode = HttpStatusCode.BadRequest,
+    )
+    val `kan ikke endre status til AVBRUTT` = Feil(
+        feilmelding = "Fant ikke tema",
         httpStatusCode = HttpStatusCode.BadRequest,
     )
     val `feil inndata i forespørsel` = Feil(
