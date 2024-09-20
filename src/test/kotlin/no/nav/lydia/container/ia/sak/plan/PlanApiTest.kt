@@ -212,6 +212,8 @@ class PlanApiTest {
             saksnummer = sak.saksnummer,
             redigertPlan = enNyPlan
         )
+        val førsteTema = planDto.temaer.first()
+        val førsteUndertema = planDto.temaer.first().undertemaer.first()
         planDto.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
         planDto.temaer.first().undertemaer.first().sluttDato shouldBe iGår
 
@@ -219,8 +221,8 @@ class PlanApiTest {
             PlanHelper.endreStatus(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                temaId = 1,
-                undertemaId = 1,
+                temaId = førsteTema.id,
+                undertemaId = førsteUndertema.id,
                 status = PlanUndertema.Status.AVBRUTT,
             )
         resp.status shouldBe PlanUndertema.Status.AVBRUTT
@@ -261,6 +263,8 @@ class PlanApiTest {
             saksnummer = sak.saksnummer,
             redigertPlan = enNyPlan
         )
+        val førsteTema = planDto.temaer.first()
+        val førsteUndertema = planDto.temaer.first().undertemaer.first()
         planDto.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
         planDto.temaer.first().undertemaer.first().sluttDato shouldBe om6Måneder
         planDto.temaer.first().undertemaer.first().startDato shouldBe iMorgen
@@ -269,9 +273,8 @@ class PlanApiTest {
             PlanHelper.endreStatus(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                temaId = 1,
-                undertemaId = 1,
-                status = PlanUndertema.Status.AVBRUTT,
+                temaId = førsteTema.id,
+                undertemaId = førsteUndertema.id,                status = PlanUndertema.Status.AVBRUTT,
             )
         }
         result.message shouldBe "HTTP Exception 400 Bad Request"
