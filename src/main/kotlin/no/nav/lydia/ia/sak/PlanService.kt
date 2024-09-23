@@ -115,10 +115,14 @@ class PlanService(
             val lagretUndertema = lagredeUndertemaer.firstOrNull { it.id == undertemaId }
 
             if (nyStatus == AVBRUTT && lagretUndertema != null && lagretUndertema.starterIFremtiden())
-                return PlanFeil.`kan ikke endre status til AVBRUTT`.left()
+                return Feil(
+                    feilmelding = "Kan ikke endre status til '${nyStatus.name}' " +
+                            "fordi '${lagretUndertema.navn}' ikke har startet enda",
+                    httpStatusCode = HttpStatusCode.BadRequest
+                ).left()
 
             val oppdatertUndertema: PlanUndertema =
-                lagretUndertema?.copyMedNyStatus(nyStatus = nyStatus)
+                lagretUndertema?.copy(status = nyStatus)
                     ?: return PlanFeil.`fant ikke undertema`.left()
 
             val ret = planRepository.oppdaterUndertema(
@@ -145,10 +149,6 @@ object PlanFeil {
     )
     val `fant ikke undertema` = Feil(
         feilmelding = "Fant ikke undertema",
-        httpStatusCode = HttpStatusCode.BadRequest,
-    )
-    val `kan ikke endre status til AVBRUTT` = Feil(
-        feilmelding = "Kan ikke endre status til AVBRUTT",
         httpStatusCode = HttpStatusCode.BadRequest,
     )
     val `feil inndata i forespørsel` = Feil(

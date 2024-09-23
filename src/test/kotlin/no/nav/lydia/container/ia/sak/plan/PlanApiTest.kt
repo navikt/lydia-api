@@ -137,8 +137,10 @@ class PlanApiTest {
     }
 
     @Test
-    fun `endre status til avbrutt setter sluttdato til datoen endringen på status er mottatt`() {
+    fun `endre status til avbrutt dersom undertema har startet eller er passert`() {
         val iDag = now().toKotlinLocalDate()
+        val forEnMånedSiden = iDag.minus(6, DateTimeUnit.MONTH)
+        val omEnMåned = iDag.plus(6, DateTimeUnit.MONTH)
         val sak = nySakIKartlegges()
         val enNyPlan = PlanMalDto(
             tema = listOf(
@@ -151,8 +153,8 @@ class PlanApiTest {
                             rekkefølge = 1,
                             navn = "Et undertema til test",
                             planlagt = true,
-                            startDato = iDag.minus(6, DateTimeUnit.MONTH),
-                            sluttDato = iDag.plus(6, DateTimeUnit.MONTH)
+                            startDato = forEnMånedSiden,
+                            sluttDato = omEnMåned
                         )
                     )
                 )
@@ -175,11 +177,11 @@ class PlanApiTest {
                 status = PlanUndertema.Status.AVBRUTT,
             )
         resp.status shouldBe PlanUndertema.Status.AVBRUTT
-        resp.sluttDato shouldBe iDag
+        resp.sluttDato shouldBe omEnMåned
 
         val planMedNyStatus = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
         planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
-        planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe iDag
+        planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe omEnMåned
     }
 
     @Test
