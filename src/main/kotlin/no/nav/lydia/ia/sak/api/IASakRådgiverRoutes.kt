@@ -92,8 +92,7 @@ fun Route.iaSakRådgiver(
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper = adGrupper) { navAnsatt ->
             iaSakService.hentSaksStatus(saksnummer)
-        }
-        .map{
+        }.map{
             call.respond(it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)

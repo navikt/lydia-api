@@ -890,31 +890,48 @@ class PlanHelper {
                     failure = { fail(it.message) },
                 )
 
-        fun PlanDto.fullførPlan(
+        fun PlanDto.planleggOgFullførAlleUndertemaer(
             orgnummer: String,
             saksnummer: String,
             prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token
-        ) =
-            temaer.forEach { tema ->
-                tema.undertemaer.forEach { undertema ->
-                    endreStatus(
-                        token = token,
-                        orgnr = orgnummer,
-                        saksnummer = saksnummer,
-                        prosessId = prosessId,
-                        status = PlanUndertema.Status.FULLFØRT,
-                        temaId = tema.id,
-                        undertemaId = undertema.id
-                    )
-                }
-            }.let {
-                hentPlan(
-                    orgnr = orgnummer,
-                    saksnummer = saksnummer,
-                    prosessId = prosessId
+        ) = this.copy(
+            temaer = temaer.map { tema ->
+                tema.copy(
+                    planlagt = true,
+                    undertemaer = tema.undertemaer.map {
+                        it.copy(
+                            planlagt = true,
+                        )
+                    }
                 )
             }
+        ).tilRequest().forEach { tema ->
+            endreTema(
+                orgnr = orgnummer,
+                saksnummer = saksnummer,
+                prosessId = prosessId,
+                temaId = tema.id,
+                endring = tema.undertemaer
+            )
+            tema.undertemaer.forEach {
+                endreStatus(
+                    orgnr = orgnummer,
+                    saksnummer = saksnummer,
+                    prosessId = prosessId,
+                    status = PlanUndertema.Status.FULLFØRT,
+                    temaId = tema.id,
+                    undertemaId = it.id
+                )
+            }
+        }.let {
+            hentPlan(
+                orgnr = orgnummer,
+                saksnummer = saksnummer,
+                prosessId = prosessId,
+                token = token
+            )
+        }
     }
 }
 

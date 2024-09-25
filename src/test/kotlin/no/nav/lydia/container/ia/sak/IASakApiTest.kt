@@ -21,7 +21,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper
-import no.nav.lydia.helper.PlanHelper.Companion.fullførPlan
+import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaker
@@ -149,7 +149,7 @@ class IASakApiTest {
 
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        plan.fullførPlan(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, førsteSamarbeid.id)
+        plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, førsteSamarbeid.id)
         val sakstatusFullførtBehovsvurderingOgPlan = sak.hentSaksStatus()
         sakstatusFullførtBehovsvurderingOgPlan.kanFullføres shouldBe true
         sakstatusFullførtBehovsvurderingOgPlan.årsaker shouldHaveSize 0

@@ -365,8 +365,22 @@ class IASakService(
             type = ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN
         )
 
+        val ingenPlanlagteUndertemaer = plan.temaer.map { tema ->
+            tema.undertemaer.all { undertema -> !undertema.planlagt }
+        }.all { it }
+
+        if (ingenPlanlagteUndertemaer)
+            return ÅrsakTilAtSakIkkeKanAvsluttes(
+                samarbeidsId = prosess.id,
+                samarbeidsNavn = prosess.navn,
+                type = ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
+                id = plan.id.toString()
+            )
+
         val erPlanFullført = plan.temaer.map { tema ->
-            tema.undertemaer.all { undertema -> undertema.status == PlanUndertema.Status.FULLFØRT }
+            tema.undertemaer.filter { it.planlagt }.all { undertema ->
+                undertema.status == PlanUndertema.Status.FULLFØRT
+            }
         }.all { it }
 
         return when (erPlanFullført) {
