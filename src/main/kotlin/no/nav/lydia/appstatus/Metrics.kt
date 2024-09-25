@@ -14,6 +14,7 @@ import io.prometheus.metrics.core.metrics.Counter
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
+import no.nav.lydia.ia.sak.domene.plan.Plan
 
 private const val NAMESPACE = "pia"
 
@@ -66,6 +67,12 @@ class Metrics {
             .help("Antall saker som har blitt unfollowed")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
+        val samarbeidsplanOpprettet = Counter.builder()
+            .name("${NAMESPACE}_ia_samarbeidsplan_opprettet")
+            .help("Antall samarbeidsplan opprettet")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
+
         fun loggHendelse(hendelsesType: IASakshendelseType) {
             when (hendelsesType) {
                 VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
@@ -90,6 +97,11 @@ class Metrics {
                 iaSakSluttetÅFølge.inc()
         }
 
+        fun loggOpprettSamarbeidsplan(plan: Plan) {
+            if (plan.temaer.isNotEmpty()) {
+                samarbeidsplanOpprettet.inc()
+            }
+        }
     }
 }
 

@@ -107,6 +107,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 import no.nav.lydia.ia.sak.PlanService
+import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.db.PlanRepository
 
@@ -203,10 +204,11 @@ fun startLydiaBackend() {
         )
     )
     val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(planRepository = planRepository)
+    val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObserverers = listOf(oppdaterSistEndretPlanObserver)
+        planObserverers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver)
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
