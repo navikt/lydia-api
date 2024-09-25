@@ -79,5 +79,5 @@ class IAProsessService(
 object IAProsessFeil {
     val `feil ved henting av prosess` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
     val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
-    val `kan ikke slette prosess som ikke er tom` = Feil("kan ikke slette prosess som ikke er tom", HttpStatusCode.BadRequest)
+    val `kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan` = Feil("kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan", HttpStatusCode.BadRequest)
 }
