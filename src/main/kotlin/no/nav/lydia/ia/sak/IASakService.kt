@@ -410,7 +410,8 @@ class IASakService(
             )
         statusForBehovsvurderinger.forEach {
             when (it.second) {
-                SpørreundersøkelseStatus.AVSLUTTET -> {}
+                SpørreundersøkelseStatus.AVSLUTTET,
+                SpørreundersøkelseStatus.SLETTET -> {}
                 else -> årsaker.add(
                     ÅrsakTilAtSakIkkeKanAvsluttes(
                         samarbeidsId = prosess.id,
