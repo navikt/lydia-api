@@ -8,6 +8,8 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import java.util.UUID
 import no.nav.lydia.Observer
+import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.appstatus.PlanMetric
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
@@ -22,7 +24,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 
 class PlanService(
     val iaProsessService: IAProsessService,
-    val planObserverers: List<Observer<Plan>>,
+    val planObservers: List<Observer<PlanMetric>>,
     val planRepository: PlanRepository,
 ) {
     fun opprettPlan(
@@ -39,7 +41,7 @@ class PlanService(
                 mal = mal,
             )
         }.onRight { plan ->
-            planObserverers.forEach { it.receive(plan) }
+            planObservers.forEach { it.receive(PlanMetric(hendelsesType = PlanHendelseType.OPPRETT, plan = plan)) }
         }
 
     fun hentPlan(
@@ -83,7 +85,7 @@ class PlanService(
             )?.right() ?: PlanFeil.`fikk ikke oppdatert tema`.left()
 
             ret.onRight {
-                planObserverers.forEach { it.receive(plan) }
+                planObservers.forEach { it.receive(PlanMetric(hendelsesType = PlanHendelseType.OPPDATER, plan = plan)) }
             }
         }
 
@@ -132,7 +134,7 @@ class PlanService(
             )?.right() ?: return PlanFeil.`fikk ikke oppdatert undertema`.left()
 
             ret.onRight {
-                planObserverers.forEach { it.receive(plan) }
+                planObservers.forEach { it.receive(PlanMetric(hendelsesType = PlanHendelseType.OPPDATER, plan = plan)) }
             }
         }
     }

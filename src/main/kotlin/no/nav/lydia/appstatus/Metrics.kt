@@ -68,7 +68,7 @@ class Metrics {
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
         val samarbeidsplanOpprettet = Counter.builder()
-            .name("${NAMESPACE}_ia_samarbeidsplan_opprettet")
+            .name("${NAMESPACE}_samarbeidsplan_opprettet")
             .help("Antall samarbeidsplan opprettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
@@ -103,6 +103,16 @@ class Metrics {
             }
         }
     }
+}
+
+data class PlanMetric (
+    val plan: Plan,
+    val hendelsesType: PlanHendelseType
+
+)
+
+enum class PlanHendelseType {
+    OPPRETT, OPPDATER
 }
 
 fun Routing.metrics() {

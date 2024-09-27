@@ -208,7 +208,7 @@ fun startLydiaBackend() {
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObserverers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver)
+        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver)
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))

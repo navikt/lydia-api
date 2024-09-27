@@ -2,10 +2,13 @@ package no.nav.lydia.ia.sak
 
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.ia.sak.domene.plan.Plan
+import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.appstatus.PlanMetric
 
-class SamarbeidplanMetrikkObserver : Observer<Plan> {
-    override fun receive(input: Plan) {
-        Metrics.loggOpprettSamarbeidsplan(input)
+class SamarbeidplanMetrikkObserver : Observer<PlanMetric> {
+    override fun receive(input: PlanMetric) {
+        if (input.hendelsesType == PlanHendelseType.OPPRETT) {
+            Metrics.loggOpprettSamarbeidsplan(input.plan)
+        }
     }
 }
