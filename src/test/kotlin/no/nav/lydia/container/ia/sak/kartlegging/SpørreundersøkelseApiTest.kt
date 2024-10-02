@@ -1,7 +1,10 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.*
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
@@ -14,8 +17,6 @@ import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
-import java.util.*
-import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
@@ -29,7 +30,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarT
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKontaktes
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
@@ -48,6 +49,8 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.After
 import org.junit.Before
+import java.util.UUID
+import kotlin.test.Test
 
 class SpørreundersøkelseApiTest {
     private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
@@ -69,16 +72,14 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `oppretter en ny kartlegging`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<SpørreundersøkelseDto>()
-
-        resp.third.get().kartleggingId.length shouldBe 36
+        val behovsvurdering = sak.opprettKartlegging()
+        behovsvurdering.kartleggingId.length shouldBe 36
 
         postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'"
             ) shouldNotBe null
     }
 
@@ -86,20 +87,18 @@ class SpørreundersøkelseApiTest {
     fun `skal også kunne opprette en behovsvurdering i status VI_BISTÅR`() {
         val sak = nySakIViBistår()
 
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<SpørreundersøkelseDto>()
-
-        resp.third.get().kartleggingId.length shouldBe 36
+        val behovsvurdering = sak.opprettKartlegging()
+        behovsvurdering.kartleggingId.length shouldBe 36
 
         postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${resp.third.get().kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'"
             ) shouldNotBe null
     }
 
     @Test
     fun `skal kunne opprette en kartlegging med flere temaer`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
 
         kartleggingDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
@@ -127,8 +126,11 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal få feil når saksnummer er ukjent`() {
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = "123456789", saksnummer = "ukjent")
-            .tilSingelRespons<SpørreundersøkelseDto>()
+        val resp = IASakKartleggingHelper.opprettIASakKartlegging(
+            orgnr = "123456789",
+            saksnummer = "ukjent",
+            prosessId = 1
+        ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
         resp.second.body().asString("text/plain") shouldMatch "Ugyldig saksnummer"
@@ -136,35 +138,23 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal få feil når orgnummer er feil`() {
-        val sak = nySakIKartlegges()
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = "222233334", saksnummer = sak.saksnummer)
-            .tilSingelRespons<SpørreundersøkelseDto>()
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val resp = IASakKartleggingHelper.opprettIASakKartlegging(
+            orgnr = "222233334",
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
         resp.second.body().asString("text/plain") shouldMatch "Ugyldig orgnummer"
     }
 
     @Test
-    fun `skal få feil når sak ikke er i riktig status (kartlegges eller vi bistår)`() {
-        val sak = nySakIKontaktes()
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<SpørreundersøkelseDto>()
-
-        resp.second.statusCode shouldBe HttpStatusCode.Forbidden.value
-        resp.second.body()
-            .asString("text/plain") shouldMatch "Sak m.. v..re i kartleggingsstatus for .. starte kartlegging"
-    }
-
-    @Test
     fun `skal sende kartlegging på kafka`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-        ).tilSingelRespons<SpørreundersøkelseDto>()
-
-        val id = resp.third.get().kartleggingId
+        val behovsvurdering = sak.opprettKartlegging()
+        val id = behovsvurdering.kartleggingId
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -192,14 +182,14 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne hente ut liste over alle kartlegginger knyttet til en sak`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-            .tilSingelRespons<SpørreundersøkelseDto>()
+        sak.opprettKartlegging()
 
         val alleKartlegginger = hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
         )
         alleKartlegginger shouldHaveSize 1
         alleKartlegginger.first().vertId shouldHaveLength 36
@@ -210,12 +200,9 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `nylig opprettet kartlegging får alle spørsmål med riktige svaralternativer knyttet til seg`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val behovsvurdering =
-            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
-
+        val behovsvurdering = sak.opprettKartlegging()
         behovsvurdering.temaMedSpørsmålOgSvaralternativer.shouldNotBeEmpty()
         behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
@@ -245,11 +232,9 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal hente antall unike deltakere som har svart på minst ett spørsmål`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val kartleggingDto =
-            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
+        val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()).forAll { sesjonId ->
@@ -268,12 +253,10 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal hente antall unike deltakere som har svart på alle spørsmål`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val sesjonId = UUID.randomUUID().toString()
 
-        val kartleggingDto =
-            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
+        val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         enDeltakerSvarerPåEtSpørsmål(kartleggingDto = kartleggingDto, UUID.randomUUID().toString())
@@ -291,10 +274,8 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal ikke kunne hente resultat før kartlegging er avsluttet`() {
-        val sak = nySakIKartlegges()
-        val kartlegging =
-            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val kartlegging = sak.opprettKartlegging()
         kartlegging.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -315,10 +296,8 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal ikke kunne få antall svar dersom antall deltakere er færre enn 3`() {
-        val sak = nySakIKartlegges()
-        val kartlegging =
-            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val kartlegging = sak.opprettKartlegging()
         kartlegging.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -352,10 +331,8 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal få svardetaljer for et spørsmål dersom antall besvarelser er 3 eller flere`() {
-        val sak = nySakIKartlegges()
-        val kartlegging =
-            IASakKartleggingHelper.opprettIASakKartlegging(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-                .tilSingelRespons<SpørreundersøkelseDto>().third.get()
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val kartlegging = sak.opprettKartlegging()
         kartlegging.status shouldBe OPPRETTET
 
         val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -394,7 +371,7 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `alle med tilgang til fia skal kunne hente resultater av kartlegging`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val kartlegging = sak.opprettKartlegging()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -416,7 +393,7 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne starte kartlegging`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.status shouldBe OPPRETTET
 
@@ -426,6 +403,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
         ).forExactlyOne {
             it.status shouldBe PÅBEGYNT
             it.endretTidspunkt shouldNotBe null
@@ -447,7 +425,7 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne avslutte en påbegynt kartlegging`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         påbegyntKartlegging.status shouldBe PÅBEGYNT
@@ -458,6 +436,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
         ).forExactlyOne {
             it.status shouldBe AVSLUTTET
             it.endretTidspunkt shouldNotBe null
@@ -479,7 +458,7 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal ikke kunne avslutte kartlegging med status OPPRETTET`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.status shouldBe OPPRETTET
 
@@ -495,7 +474,7 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne slette en kartlegging`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.status shouldBe OPPRETTET
 
@@ -545,6 +524,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
         ) shouldHaveSize 0
     }
 
@@ -574,6 +554,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
         ) shouldHaveSize 0
     }
 

@@ -72,32 +72,6 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    // -- Skal fjernes
-    post("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/opprett") {
-        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            spørreundersøkelseService.opprettSpørreundersøkelse(
-                orgnummer = orgnummer,
-                iaSak = iaSak,
-                saksbehandler = saksbehandler,
-            )
-        }.also { kartleggingEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = kartleggingEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = kartleggingEither.getOrNull()?.saksnummer,
-            )
-        }.map {
-            call.respond(HttpStatusCode.Created, it.tilDto(true))
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-    // --
-
     get("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
@@ -106,30 +80,6 @@ fun Route.iaSakSpørreundersøkelse(
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
                 spørreundersøkelseService.hentKartlegginger(sak = iaSak, prosessId = prosessId)
-            }
-        }.also { kartleggingerEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = kartleggingerEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-
-    // -- Skal fjernes
-    get("$BEHOVSVURDERING_BASE_ROUTE/{orgnummer}/{saksnummer}") {
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-                spørreundersøkelseService.hentKartlegginger(sak = iaSak)
             }
         }.also { kartleggingerEither ->
             auditLog.auditloggEither(

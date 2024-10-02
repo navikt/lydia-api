@@ -10,7 +10,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
@@ -36,7 +36,7 @@ class FullførtBehovsvurderingProdusentTest {
 
     @Test
     fun `fullført behovsvurdering skal sendes til salesforce`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         påbegyntKartlegging.status shouldBe PÅBEGYNT

@@ -88,11 +88,11 @@ class IASakStatusEksportørTest {
                 .nyHendelse(IASakshendelseType.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger shouldHaveSize 18
+                meldinger shouldHaveSize 20
                 // -- Siste meldingen skal være den gamle fullførte saken
-                meldinger[17] shouldContain gammelSak.saksnummer
-                meldinger[17] shouldContain gammelSak.orgnr
-                meldinger[17] shouldContain FULLFØRT.name
+                meldinger[19] shouldContain gammelSak.saksnummer
+                meldinger[19] shouldContain gammelSak.orgnr
+                meldinger[19] shouldContain FULLFØRT.name
             }
         }
     }

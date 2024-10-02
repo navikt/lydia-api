@@ -21,15 +21,6 @@ class IAProsessService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     val planRepository: PlanRepository,
 ) {
-    fun hentEllerOpprettIAProsesser(sak: IASak) =
-        Either.catch {
-            prosessRepository.hentProsesser(saksnummer = sak.saksnummer).ifEmpty {
-                listOf(prosessRepository.opprettNyProsess(saksnummer = sak.saksnummer))
-            }
-        }.mapLeft {
-            IAProsessFeil.`feil ved henting av prosess`
-        }
-
     fun hentIAProsesser(sak: IASak) =
         Either.catch {
             prosessRepository.hentProsesser(saksnummer = sak.saksnummer)

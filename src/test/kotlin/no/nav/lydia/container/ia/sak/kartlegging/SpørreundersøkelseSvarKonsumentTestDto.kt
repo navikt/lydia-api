@@ -57,7 +57,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `skal lagre svar mottatt på Kafka topic`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartlegging = sak.opprettKartlegging()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val kartleggingSvarDto = kartlegging.sendKartleggingSvarTilKafka()
@@ -81,7 +81,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `Skal bare kunne svare på kartlegging dersom den er i pågående status`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartlegging = sak.opprettKartlegging()
 
         //OPRETTET
@@ -113,7 +113,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `Skal ikke lagre svar som ikke er et svaralternativ til spørsmål`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartlegging = sak.opprettKartlegging()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -137,7 +137,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `Skal ikke lagre svar dersom spørsmål ikke er funnet i kartlegging`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartlegging = sak.opprettKartlegging()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -157,7 +157,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `Skal ikke lagre svar med flere svarIder på et enkeltvalg spørsmål i en kartlegging`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartlegging = sak.opprettKartlegging()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val spørsmålSomIkkeErFlervalg =
@@ -179,7 +179,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `svar skal overskrives i DB ved nytt svar til et flervalg spørsmål mottatt på Kafka topic`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -223,7 +223,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `svar skal overskrives i DB ved nytt svar mottatt på Kafka topic`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         val førsteSvarId =
             kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
@@ -268,7 +268,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
     @Test
     fun `skal få oppdatert antall som har svart på et spørsmål i en kartlegging`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 

@@ -381,16 +381,6 @@ class SakHelper {
                 failure = { fail(it.message) },
             )
 
-        fun nySakIKontaktes(
-            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = opprettSakForVirksomhet(orgnummer)
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
-            .also {
-                it.status shouldBe IAProsessStatus.KONTAKTES
-            }
-
         fun nySakIKartlegges(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -402,6 +392,11 @@ class SakHelper {
                 it.status shouldBe IAProsessStatus.KARTLEGGES
             }
 
+        fun nySakIKartleggesMedEtSamarbeid(
+            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = nySakIKartlegges(orgnummer = orgnummer, token = token).opprettNyProsses()
+
         fun nySakIViBistår(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -409,6 +404,7 @@ class SakHelper {
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
+            .opprettNyProsses()
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
             .also {
                 it.status shouldBe IAProsessStatus.VI_BISTÅR
@@ -627,18 +623,18 @@ class IASakKartleggingHelper {
         fun opprettIASakKartlegging(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int? = null,
+            prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPost(
-            "$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it" } ?: "opprett"}",
+            "$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId",
         ).authentication().bearer(token)
 
         fun hentIASakKartlegginger(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int? = null,
+            prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performGet("$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer${prosessId?.let { "/prosess/$it" } ?: ""}")
+        ) = lydiaApiContainer.performGet("$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
                 success = { it },
@@ -666,7 +662,7 @@ class IASakKartleggingHelper {
             )
 
         fun IASakDto.opprettKartlegging(
-            prosessId: Int? = null,
+            prosessId: Int = hentIAProsesser().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = opprettIASakKartlegging(
             orgnr = orgnr,
@@ -785,10 +781,10 @@ class PlanHelper {
         fun opprettEnPlan(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int? = null,
+            prosessId: Int,
             redigertPlan: PlanMalDto = hentPlanMal(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it/" } ?: ""}opprett")
+        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/opprett")
             .jsonBody(Json.encodeToString(redigertPlan))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
@@ -799,9 +795,9 @@ class PlanHelper {
         fun hentPlan(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int? = null,
+            prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer${prosessId?.let { "/prosess/$it" } ?: ""}")
+        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
@@ -811,11 +807,11 @@ class PlanHelper {
         fun endreTema(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int? = null,
+            prosessId: Int,
             temaId: Int,
             endring: List<EndreUndertemaRequest>,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it/" } ?: ""}$temaId")
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/$temaId")
             .jsonBody(
                 Json.encodeToString(
                     endring,
@@ -830,10 +826,10 @@ class PlanHelper {
         fun endrePlan(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int? = null,
+            prosessId: Int,
             endring: List<EndreTemaRequest>,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer${prosessId?.let { "/prosess/$it" } ?: ""}")
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
             .jsonBody(
                 Json.encodeToString(
                     endring,
@@ -848,13 +844,13 @@ class PlanHelper {
         fun endreStatus(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int? = null,
+            prosessId: Int,
             status: PlanUndertema.Status,
             temaId: Int,
             undertemaId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ): PlanUndertemaDto =
-            lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/${prosessId?.let { "prosess/$it/" } ?: ""}$temaId/$undertemaId")
+            lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/$temaId/$undertemaId")
                 .jsonBody(
                     Json.encodeToString(
                         status,

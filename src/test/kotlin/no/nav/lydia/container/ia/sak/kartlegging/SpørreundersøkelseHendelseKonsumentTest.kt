@@ -38,7 +38,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
     @Test
     fun `skal oppdatere tema til stengt i databasen`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
@@ -54,7 +54,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
     @Test
     fun `skal sende resultater for stengt tema på kafka`() {
-        val sak = SakHelper.nySakIKartlegges()
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettKartlegging()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()

@@ -430,7 +430,7 @@ class IASakApiTest {
         response.statuskode() shouldBe HttpStatusCode.OK.value
         val resultat = response.third.get()
         resultat.size shouldBe 1
-        resultat[0].sakshendelser.size shouldBe 8
+        resultat[0].sakshendelser.size shouldBe 9
     }
 
     @Test
@@ -447,7 +447,7 @@ class IASakApiTest {
         response.statuskode() shouldBe HttpStatusCode.OK.value
         val resultat = response.third.get()
         resultat.size shouldBe 1
-        resultat[0].sakshendelser.size shouldBe 8
+        resultat[0].sakshendelser.size shouldBe 9
     }
 
     @Test

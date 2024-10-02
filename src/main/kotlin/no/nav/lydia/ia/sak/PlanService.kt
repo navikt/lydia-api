@@ -30,13 +30,13 @@ class PlanService(
     fun opprettPlan(
         iaSak: IASak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-        prosessId: Int? = null,
+        prosessId: Int,
         mal: PlanMalDto,
     ): Either<Feil, Plan> =
-        iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
+        iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
             planRepository.opprettPlan(
                 planId = UUID.randomUUID(),
-                prosessId = prosessId ?: prosesser.first().id,
+                prosessId = prosess.id,
                 saksbehandler = saksbehandler,
                 mal = mal,
             )
@@ -46,18 +46,18 @@ class PlanService(
 
     fun hentPlan(
         iaSak: IASak,
-        prosessId: Int? = null,
+        prosessId: Int,
     ): Either<Feil, Plan> =
-        iaProsessService.hentEllerOpprettIAProsesser(iaSak).flatMap { prosesser ->
+        iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
             planRepository.hentPlan(
-                prosessId = prosessId ?: prosesser.first().id,
+                prosessId = prosess.id,
             )?.right() ?: PlanFeil.`fant ikke plan`.left()
         }
 
     fun endreUndertemaerTilTema(
         temaId: Int,
         iaSak: IASak,
-        prosessId: Int? = null,
+        prosessId: Int,
         planlagt: Boolean? = null,
         endredeUndertemaer: List<EndreUndertemaRequest>,
     ): Either<Feil, PlanTema> =
@@ -91,7 +91,7 @@ class PlanService(
 
     fun endreFlereTema(
         iaSak: IASak,
-        prosessId: Int? = null,
+        prosessId: Int,
         endredeTema: List<EndreTemaRequest>,
     ): Either<Feil, List<PlanTema>> =
         endredeTema.map { tema ->
@@ -108,7 +108,7 @@ class PlanService(
         temaId: Int,
         undertemaId: Int,
         iaSak: IASak,
-        prosessId: Int? = null,
+        prosessId: Int,
         nyStatus: PlanUndertema.Status,
     ): Either<Feil, PlanUndertema> {
         return hentPlan(iaSak = iaSak, prosessId = prosessId).flatMap { plan ->

@@ -27,17 +27,22 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 
 
 class PlanApiTest {
     @Test
     fun `oppretter en tom ny plan med mal`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
         val endretPlan = PlanMalDto()
 
-        val planDto =
-            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = endretPlan)
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            redigertPlan = endretPlan,
+            prosessId = sak.hentIAProsesser().first().id
+        )
 
         planDto.temaer.any { it.planlagt } shouldBe false
         planDto.temaer.forEach { tema ->
@@ -47,7 +52,7 @@ class PlanApiTest {
 
     @Test
     fun `oppretter en ny plan med alle temaer og innhold planlagt med mal`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
         val standardPlan = PlanMalDto()
 
@@ -70,8 +75,12 @@ class PlanApiTest {
             },
         )
 
-        val planDto =
-            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = redigertPlan)
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            redigertPlan = redigertPlan,
+            prosessId = sak.hentIAProsesser().first().id
+        )
 
         planDto.temaer.all { it.planlagt } shouldBe true
         planDto.temaer.forEach { tema ->
@@ -81,9 +90,13 @@ class PlanApiTest {
 
     @Test
     fun `kan endre status på undertema`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        )
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
 
@@ -96,6 +109,7 @@ class PlanApiTest {
                 temaId = førsteTema.id,
                 undertemaId = førsteUndertema.id,
                 status = nyStatus,
+                prosessId = sak.hentIAProsesser().first().id
             )
 
         resp.status shouldBe nyStatus
@@ -103,8 +117,12 @@ class PlanApiTest {
 
     @Test
     fun `kan sette alle tema og alle undertema til planlagt`() {
-        val sak = nySakIKartlegges()
-        val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        )
 
         val endretPlan = planDto.copy(
             temaer = planDto.temaer.map { temaDto ->
@@ -121,8 +139,12 @@ class PlanApiTest {
             },
         )
 
-        val resp =
-            PlanHelper.endrePlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, endring = endretPlan.tilRequest())
+        val resp = PlanHelper.endrePlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+            endring = endretPlan.tilRequest()
+        )
 
         resp.first().id shouldBe endretPlan.temaer.first().id
         resp.first().navn shouldBe endretPlan.temaer.first().navn
@@ -141,7 +163,7 @@ class PlanApiTest {
         val iDag = now().toKotlinLocalDate()
         val forEnMånedSiden = iDag.minus(6, DateTimeUnit.MONTH)
         val omEnMåned = iDag.plus(6, DateTimeUnit.MONTH)
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val enNyPlan = PlanMalDto(
             tema = listOf(
                 TemaMalDto(
@@ -163,7 +185,8 @@ class PlanApiTest {
         val planDto = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            redigertPlan = enNyPlan
+            redigertPlan = enNyPlan,
+            prosessId = sak.hentIAProsesser().first().id
         )
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
@@ -172,6 +195,7 @@ class PlanApiTest {
             PlanHelper.endreStatus(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
                 temaId = førsteTema.id,
                 undertemaId = førsteUndertema.id,
                 status = PlanUndertema.Status.AVBRUTT,
@@ -179,7 +203,11 @@ class PlanApiTest {
         resp.status shouldBe PlanUndertema.Status.AVBRUTT
         resp.sluttDato shouldBe omEnMåned
 
-        val planMedNyStatus = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planMedNyStatus = PlanHelper.hentPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+        )
         planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
         planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe omEnMåned
     }
@@ -189,7 +217,7 @@ class PlanApiTest {
         val iDag = now().toKotlinLocalDate()
         val for6MånedereSiden = iDag.minus(6, DateTimeUnit.MONTH)
         val iGår = iDag.minus(1, DateTimeUnit.DAY)
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val enNyPlan = PlanMalDto(
             tema = listOf(
                 TemaMalDto(
@@ -212,6 +240,7 @@ class PlanApiTest {
         val planDto = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
             redigertPlan = enNyPlan
         )
         val førsteTema = planDto.temaer.first()
@@ -223,6 +252,7 @@ class PlanApiTest {
             PlanHelper.endreStatus(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
                 temaId = førsteTema.id,
                 undertemaId = førsteUndertema.id,
                 status = PlanUndertema.Status.AVBRUTT,
@@ -230,7 +260,11 @@ class PlanApiTest {
         resp.status shouldBe PlanUndertema.Status.AVBRUTT
         resp.sluttDato shouldBe iGår
 
-        val planMedNyStatus = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planMedNyStatus = PlanHelper.hentPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        )
         planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
         planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe iGår
     }
@@ -240,7 +274,7 @@ class PlanApiTest {
         val iDag = now().toKotlinLocalDate()
         val om6Måneder = iDag.plus(6, DateTimeUnit.MONTH)
         val iMorgen = iDag.plus(1, DateTimeUnit.DAY)
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val enNyPlan = PlanMalDto(
             tema = listOf(
                 TemaMalDto(
@@ -263,7 +297,8 @@ class PlanApiTest {
         val planDto = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            redigertPlan = enNyPlan
+            prosessId = sak.hentIAProsesser().first().id,
+            redigertPlan = enNyPlan,
         )
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
@@ -275,8 +310,10 @@ class PlanApiTest {
             PlanHelper.endreStatus(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
                 temaId = førsteTema.id,
-                undertemaId = førsteUndertema.id,                status = PlanUndertema.Status.AVBRUTT,
+                undertemaId = førsteUndertema.id,
+                status = PlanUndertema.Status.AVBRUTT,
             )
         }
         result.message shouldBe "HTTP Exception 400 Bad Request"
@@ -284,8 +321,12 @@ class PlanApiTest {
 
     @Test
     fun `kan sette alle undertemaer til planlagt`() {
-        val sak = nySakIKartlegges()
-        val planDto = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val planDto = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        )
 
         val endretPlan = planDto.copy(
             temaer = planDto.temaer.map { temaDto ->
@@ -303,6 +344,7 @@ class PlanApiTest {
             PlanHelper.endreTema(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
                 temaId = endretPlan.temaer.first().id,
                 endring = endretPlan.tilRequest().first().undertemaer,
             )
@@ -318,7 +360,7 @@ class PlanApiTest {
 
     @Test
     fun `kan legge til nytt tema i plan uten uventet bieffekter`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
 
@@ -344,8 +386,12 @@ class PlanApiTest {
             },
         )
 
-        val opprettetPlan =
-            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+        val opprettetPlan = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+            redigertPlan = planMedEttTema
+        )
 
         opprettetPlan.temaer[0].planlagt shouldBe false
         opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
@@ -370,12 +416,17 @@ class PlanApiTest {
         PlanHelper.endreStatus(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
             temaId = opprettetPlan.temaer[1].id,
             undertemaId = opprettetPlan.temaer[1].undertemaer.first().id,
             status = nyStatus,
         )
 
-        val planMedNyStatus = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planMedNyStatus = PlanHelper.hentPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        )
 
         planMedNyStatus.temaer[0].planlagt shouldBe false
         planMedNyStatus.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
@@ -415,10 +466,15 @@ class PlanApiTest {
         PlanHelper.endrePlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
             endring = endretPlan.tilRequest(),
         )
 
-        val planMedNyttTema = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val planMedNyttTema = PlanHelper.hentPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        )
 
         planMedNyttTema.temaer[0].planlagt shouldBe true
         planMedNyttTema.temaer[0].undertemaer.forEach { it.planlagt shouldBe true }
@@ -441,7 +497,7 @@ class PlanApiTest {
 
     @Test
     fun `kan ikke opprette plan med periode som er negativ - start dato etter slutt dato`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
 
         val startDato = LocalDate(2025, 1, 1)
@@ -467,7 +523,12 @@ class PlanApiTest {
         )
 
         shouldFail {
-            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+            PlanHelper.opprettEnPlan(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
+                redigertPlan = planMedEttTema,
+            )
         }
 
         lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
@@ -475,7 +536,7 @@ class PlanApiTest {
 
     @Test
     fun `kan ikke endre plan med periode som er negativ - start dato etter slutt dato`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
 
         val startDato = LocalDate(2010, 1, 1)
@@ -500,8 +561,12 @@ class PlanApiTest {
             },
         )
 
-        val opprettetPlan =
-            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+        val opprettetPlan = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+            redigertPlan = planMedEttTema,
+        )
 
         opprettetPlan.temaer[0].planlagt shouldBe false
         opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
@@ -542,13 +607,17 @@ class PlanApiTest {
             PlanHelper.endrePlan(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
                 endring = endretPlan.tilRequest(),
             )
         }
         lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
 
-        val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-        // TODO: her burde det vel gå ann å sjekke på sistEndret
+        val lagretPlan = PlanHelper.hentPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+        )
         lagretPlan.temaer[1].planlagt shouldBe true
         lagretPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
         lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
@@ -559,7 +628,7 @@ class PlanApiTest {
 
     @Test
     fun `kan ikke endre tema med periode som er negativ - start dato etter slutt dato`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
 
         val startDato = LocalDate(2010, 1, 1)
@@ -584,8 +653,12 @@ class PlanApiTest {
             },
         )
 
-        val opprettetPlan =
-            PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, redigertPlan = planMedEttTema)
+        val opprettetPlan = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+            redigertPlan = planMedEttTema
+        )
 
         opprettetPlan.temaer[0].planlagt shouldBe false
         opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
@@ -626,6 +699,7 @@ class PlanApiTest {
             PlanHelper.endreTema(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
                 temaId = endretPlan.temaer.first().id,
                 endring = endretPlan.tilRequest().first().undertemaer,
             )
@@ -633,8 +707,11 @@ class PlanApiTest {
 
         lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
 
-        val lagretPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-        // -- TODO: Her burde det gå ann å sjekke på sistEndret
+        val lagretPlan = PlanHelper.hentPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id
+        )
         lagretPlan.temaer[1].planlagt shouldBe true
         lagretPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
         lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
@@ -644,24 +721,29 @@ class PlanApiTest {
 
     @Test
     fun `skal få feil når man henter plan uten å ha opprettet en plan`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         shouldFail {
-            PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
-        }
-
-        shouldFail {
-            PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+            PlanHelper.hentPlan(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
+            )
         }
     }
 
     @Test
     fun `skal kunne hente plan uten å være eier som lesebruker`() {
-        val sak = nySakIKartlegges()
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val opprettetPlan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer)
+        val opprettetPlan = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+        )
         val hentetPlan = PlanHelper.hentPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
             token = TestContainerHelper.oauth2ServerContainer.lesebruker.token,
         )
 
@@ -678,8 +760,7 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne opprette plan knyttet til en gitt prosess`() {
-        val sak = nySakIKartlegges()
-            .opprettNyProsses()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val prosessId = sak.hentIAProsesser().first().id
         val opprettetPlan = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
