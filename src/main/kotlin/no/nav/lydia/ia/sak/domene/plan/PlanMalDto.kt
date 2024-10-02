@@ -139,7 +139,7 @@ fun hentInnholdsMålsetning(innholdsNavn: String): String? =
         "Utvikle arbeidsmiljøet" ->
             "Øke anvendelse og kompetanse innen verktøy og bransjerettet kunnskap for å jobbe målrettet og kunnskapsbasert med eget arbeidsmiljø."
         "Endring og omstilling" ->
-            "Øke kunnskap om hvordan ivareta arbeidsmiljø og forebygge sykefravær under endring og omstilling."
+            "Øke kompetansen for hvordan man ivaretar arbeidsmiljø og forebygger sykefravær under endring og omstilling."
         "Oppfølging av arbeidsmiljøundersøkelser" ->
             "Øke ferdigheter og gi støtte til hvordan man kan jobbe med forhold på arbeidsplassen som belyses i egne arbeidsmiljøundersøkelser."
         "Livsfaseorientert personalpolitikk" ->
