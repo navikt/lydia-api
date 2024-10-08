@@ -7,7 +7,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanTema
 data class PlanTemaDto(
     val id: Int,
     val navn: String,
-    val planlagt: Boolean,
+    val inkludert: Boolean,
     val undertemaer: List<PlanUndertemaDto>,
     val ressurser: List<PlanRessursDto>,
 )
@@ -18,7 +18,7 @@ fun PlanTema.tilDto(): PlanTemaDto {
     return PlanTemaDto(
         id = id,
         navn = navn,
-        planlagt = planlagt,
+        inkludert = inkludert,
         undertemaer = undertemaer.tilDtoer(),
         ressurser = ressurser.tilDtoer()
     )

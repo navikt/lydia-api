@@ -44,9 +44,9 @@ class PlanApiTest {
             prosessId = sak.hentIAProsesser().first().id
         )
 
-        planDto.temaer.any { it.planlagt } shouldBe false
+        planDto.temaer.any { it.inkludert } shouldBe false
         planDto.temaer.forEach { tema ->
-            tema.undertemaer.any { it.planlagt } shouldBe false
+            tema.undertemaer.any { it.inkludert } shouldBe false
         }
     }
 
@@ -61,12 +61,12 @@ class PlanApiTest {
                 TemaMalDto(
                     rekkefølge = temaMalDto.rekkefølge,
                     navn = temaMalDto.navn,
-                    planlagt = true,
+                    inkludert = true,
                     innhold = temaMalDto.innhold.map { innholdMalDto ->
                         InnholdMalDto(
                             rekkefølge = innholdMalDto.rekkefølge,
                             navn = innholdMalDto.navn,
-                            planlagt = true,
+                            inkludert = true,
                             startDato = LocalDate(2021, 1, 1),
                             sluttDato = LocalDate(2021, 1, 2),
                         )
@@ -82,9 +82,9 @@ class PlanApiTest {
             prosessId = sak.hentIAProsesser().first().id
         )
 
-        planDto.temaer.all { it.planlagt } shouldBe true
+        planDto.temaer.all { it.inkludert } shouldBe true
         planDto.temaer.forEach { tema ->
-            tema.undertemaer.all { it.planlagt } shouldBe true
+            tema.undertemaer.all { it.inkludert } shouldBe true
         }
     }
 
@@ -127,10 +127,10 @@ class PlanApiTest {
         val endretPlan = planDto.copy(
             temaer = planDto.temaer.map { temaDto ->
                 temaDto.copy(
-                    planlagt = true,
+                    inkludert = true,
                     undertemaer = temaDto.undertemaer.map { undertemaDto ->
                         undertemaDto.copy(
-                            planlagt = true,
+                            inkludert = true,
                             startDato = LocalDate(2021, 1, 1),
                             sluttDato = LocalDate(2021, 1, 2),
                         )
@@ -148,9 +148,9 @@ class PlanApiTest {
 
         resp.first().id shouldBe endretPlan.temaer.first().id
         resp.first().navn shouldBe endretPlan.temaer.first().navn
-        resp.first().planlagt shouldBe endretPlan.temaer.first().planlagt
+        resp.first().inkludert shouldBe endretPlan.temaer.first().inkludert
         resp.first().undertemaer.first().id shouldBe endretPlan.temaer.first().undertemaer.first().id
-        resp.first().undertemaer.first().planlagt shouldBe endretPlan.temaer.first().undertemaer.first().planlagt
+        resp.first().undertemaer.first().inkludert shouldBe endretPlan.temaer.first().undertemaer.first().inkludert
         resp.first().undertemaer.first().navn shouldBe endretPlan.temaer.first().undertemaer.first().navn
         resp.first().undertemaer.first().målsetning shouldBe endretPlan.temaer.first().undertemaer.first().målsetning
         resp.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
@@ -169,12 +169,12 @@ class PlanApiTest {
                 TemaMalDto(
                     rekkefølge = 1,
                     navn = "Et tema til test",
-                    planlagt = true,
+                    inkludert = true,
                     innhold = listOf(
                         InnholdMalDto(
                             rekkefølge = 1,
                             navn = "Et undertema til test",
-                            planlagt = true,
+                            inkludert = true,
                             startDato = forEnMånedSiden,
                             sluttDato = omEnMåned
                         )
@@ -223,12 +223,12 @@ class PlanApiTest {
                 TemaMalDto(
                     rekkefølge = 1,
                     navn = "Et tema til test",
-                    planlagt = true,
+                    inkludert = true,
                     innhold = listOf(
                         InnholdMalDto(
                             rekkefølge = 1,
                             navn = "Et undertema til test",
-                            planlagt = true,
+                            inkludert = true,
                             startDato = for6MånedereSiden,
                             sluttDato = iGår
                         )
@@ -280,12 +280,12 @@ class PlanApiTest {
                 TemaMalDto(
                     rekkefølge = 1,
                     navn = "Et tema til test",
-                    planlagt = true,
+                    inkludert = true,
                     innhold = listOf(
                         InnholdMalDto(
                             rekkefølge = 1,
                             navn = "Et undertema til test",
-                            planlagt = true,
+                            inkludert = true,
                             startDato = iMorgen,
                             sluttDato = om6Måneder
                         )
@@ -333,7 +333,7 @@ class PlanApiTest {
                 temaDto.copy(
                     undertemaer = temaDto.undertemaer.map { undertemaDto ->
                         undertemaDto.copy(
-                            planlagt = true,
+                            inkludert = true,
                         )
                     },
                 )
@@ -352,7 +352,7 @@ class PlanApiTest {
         resp.id shouldBe endretPlan.temaer.first().id
         resp.navn shouldBe endretPlan.temaer.first().navn
         resp.undertemaer.first().id shouldBe endretPlan.temaer.first().undertemaer.first().id
-        resp.undertemaer.first().planlagt shouldBe endretPlan.temaer.first().undertemaer.first().planlagt
+        resp.undertemaer.first().inkludert shouldBe endretPlan.temaer.first().undertemaer.first().inkludert
         resp.undertemaer.first().navn shouldBe endretPlan.temaer.first().undertemaer.first().navn
         resp.undertemaer.first().målsetning shouldBe endretPlan.temaer.first().undertemaer.first().målsetning
         resp.undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
@@ -371,10 +371,10 @@ class PlanApiTest {
             tema = planMal.tema.map { tema ->
                 if (tema.rekkefølge == 2) {
                     tema.copy(
-                        planlagt = true,
+                        inkludert = true,
                         innhold = tema.innhold.map { innhold ->
                             innhold.copy(
-                                planlagt = true,
+                                inkludert = true,
                                 startDato = startDato,
                                 sluttDato = sluttDato,
                             )
@@ -393,20 +393,20 @@ class PlanApiTest {
             redigertPlan = planMedEttTema
         )
 
-        opprettetPlan.temaer[0].planlagt shouldBe false
-        opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[0].inkludert shouldBe false
+        opprettetPlan.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
         opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
         opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
         opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
 
-        opprettetPlan.temaer[1].planlagt shouldBe true
-        opprettetPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        opprettetPlan.temaer[1].inkludert shouldBe true
+        opprettetPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
         opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
         opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
         opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
 
-        opprettetPlan.temaer[2].planlagt shouldBe false
-        opprettetPlan.temaer[2].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[2].inkludert shouldBe false
+        opprettetPlan.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
         opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
         opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
         opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
@@ -428,20 +428,20 @@ class PlanApiTest {
             prosessId = sak.hentIAProsesser().first().id
         )
 
-        planMedNyStatus.temaer[0].planlagt shouldBe false
-        planMedNyStatus.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
+        planMedNyStatus.temaer[0].inkludert shouldBe false
+        planMedNyStatus.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
         planMedNyStatus.temaer[0].undertemaer.forEach { it.status shouldBe null }
         planMedNyStatus.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
         planMedNyStatus.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
 
-        planMedNyStatus.temaer[1].planlagt shouldBe true
-        planMedNyStatus.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        planMedNyStatus.temaer[1].inkludert shouldBe true
+        planMedNyStatus.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
         planMedNyStatus.temaer[1].undertemaer.forExactlyOne { it.status shouldBe nyStatus }
         planMedNyStatus.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
         planMedNyStatus.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
 
-        planMedNyStatus.temaer[2].planlagt shouldBe false
-        planMedNyStatus.temaer[2].undertemaer.forEach { it.planlagt shouldBe false }
+        planMedNyStatus.temaer[2].inkludert shouldBe false
+        planMedNyStatus.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
         planMedNyStatus.temaer[2].undertemaer.forEach { it.status shouldBe null }
         planMedNyStatus.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
         planMedNyStatus.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
@@ -449,10 +449,10 @@ class PlanApiTest {
         val endretPlan = planMedNyStatus.copy(
             temaer = listOf(
                 planMedNyStatus.temaer[0].copy(
-                    planlagt = true,
+                    inkludert = true,
                     undertemaer = planMedNyStatus.temaer[0].undertemaer.map { undertema ->
                         undertema.copy(
-                            planlagt = true,
+                            inkludert = true,
                             startDato = startDato,
                             sluttDato = sluttDato,
                         )
@@ -476,20 +476,20 @@ class PlanApiTest {
             prosessId = sak.hentIAProsesser().first().id
         )
 
-        planMedNyttTema.temaer[0].planlagt shouldBe true
-        planMedNyttTema.temaer[0].undertemaer.forEach { it.planlagt shouldBe true }
+        planMedNyttTema.temaer[0].inkludert shouldBe true
+        planMedNyttTema.temaer[0].undertemaer.forEach { it.inkludert shouldBe true }
         planMedNyttTema.temaer[0].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
         planMedNyttTema.temaer[0].undertemaer.forEach { it.startDato shouldBe startDato }
         planMedNyttTema.temaer[0].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
 
-        planMedNyttTema.temaer[1].planlagt shouldBe true
-        planMedNyttTema.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        planMedNyttTema.temaer[1].inkludert shouldBe true
+        planMedNyttTema.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
         planMedNyttTema.temaer[1].undertemaer.forExactlyOne { it.status shouldBe nyStatus }
         planMedNyttTema.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
         planMedNyttTema.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
 
-        planMedNyttTema.temaer[2].planlagt shouldBe false
-        planMedNyttTema.temaer[2].undertemaer.forEach { it.planlagt shouldBe false }
+        planMedNyttTema.temaer[2].inkludert shouldBe false
+        planMedNyttTema.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
         planMedNyttTema.temaer[2].undertemaer.forEach { it.status shouldBe null }
         planMedNyttTema.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
         planMedNyttTema.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
@@ -507,10 +507,10 @@ class PlanApiTest {
             tema = planMal.tema.map { tema ->
                 if (tema.rekkefølge == 2) {
                     tema.copy(
-                        planlagt = true,
+                        inkludert = true,
                         innhold = tema.innhold.map { innhold ->
                             innhold.copy(
-                                planlagt = true,
+                                inkludert = true,
                                 startDato = startDato,
                                 sluttDato = sluttDato,
                             )
@@ -546,10 +546,10 @@ class PlanApiTest {
             tema = planMal.tema.map { tema ->
                 if (tema.rekkefølge == 2) {
                     tema.copy(
-                        planlagt = true,
+                        inkludert = true,
                         innhold = tema.innhold.map { innhold ->
                             innhold.copy(
-                                planlagt = true,
+                                inkludert = true,
                                 startDato = startDato,
                                 sluttDato = sluttDato,
                             )
@@ -568,20 +568,20 @@ class PlanApiTest {
             redigertPlan = planMedEttTema,
         )
 
-        opprettetPlan.temaer[0].planlagt shouldBe false
-        opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[0].inkludert shouldBe false
+        opprettetPlan.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
         opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
         opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
         opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
 
-        opprettetPlan.temaer[1].planlagt shouldBe true
-        opprettetPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        opprettetPlan.temaer[1].inkludert shouldBe true
+        opprettetPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
         opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
         opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
         opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
 
-        opprettetPlan.temaer[2].planlagt shouldBe false
-        opprettetPlan.temaer[2].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[2].inkludert shouldBe false
+        opprettetPlan.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
         opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
         opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
         opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
@@ -589,10 +589,10 @@ class PlanApiTest {
         val endretPlan = opprettetPlan.copy(
             temaer = listOf(
                 opprettetPlan.temaer[0].copy(
-                    planlagt = true,
+                    inkludert = true,
                     undertemaer = opprettetPlan.temaer[0].undertemaer.map { undertema ->
                         undertema.copy(
-                            planlagt = true,
+                            inkludert = true,
                             startDato = sluttDato,
                             sluttDato = startDato,
                         )
@@ -618,8 +618,8 @@ class PlanApiTest {
             saksnummer = sak.saksnummer,
             prosessId = sak.hentIAProsesser().first().id,
         )
-        lagretPlan.temaer[1].planlagt shouldBe true
-        lagretPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        lagretPlan.temaer[1].inkludert shouldBe true
+        lagretPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
         lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
         lagretPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
         lagretPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
@@ -638,10 +638,10 @@ class PlanApiTest {
             tema = planMal.tema.map { tema ->
                 if (tema.rekkefølge == 2) {
                     tema.copy(
-                        planlagt = true,
+                        inkludert = true,
                         innhold = tema.innhold.map { innhold ->
                             innhold.copy(
-                                planlagt = true,
+                                inkludert = true,
                                 startDato = startDato,
                                 sluttDato = sluttDato,
                             )
@@ -660,20 +660,20 @@ class PlanApiTest {
             redigertPlan = planMedEttTema
         )
 
-        opprettetPlan.temaer[0].planlagt shouldBe false
-        opprettetPlan.temaer[0].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[0].inkludert shouldBe false
+        opprettetPlan.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
         opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
         opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
         opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
 
-        opprettetPlan.temaer[1].planlagt shouldBe true
-        opprettetPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        opprettetPlan.temaer[1].inkludert shouldBe true
+        opprettetPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
         opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
         opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
         opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
 
-        opprettetPlan.temaer[2].planlagt shouldBe false
-        opprettetPlan.temaer[2].undertemaer.forEach { it.planlagt shouldBe false }
+        opprettetPlan.temaer[2].inkludert shouldBe false
+        opprettetPlan.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
         opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
         opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
         opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
@@ -681,10 +681,10 @@ class PlanApiTest {
         val endretPlan = opprettetPlan.copy(
             temaer = listOf(
                 opprettetPlan.temaer[0].copy(
-                    planlagt = true,
+                    inkludert = true,
                     undertemaer = opprettetPlan.temaer[0].undertemaer.map { undertema ->
                         undertema.copy(
-                            planlagt = true,
+                            inkludert = true,
                             startDato = sluttDato,
                             sluttDato = startDato,
                         )
@@ -712,8 +712,8 @@ class PlanApiTest {
             saksnummer = sak.saksnummer,
             prosessId = sak.hentIAProsesser().first().id
         )
-        lagretPlan.temaer[1].planlagt shouldBe true
-        lagretPlan.temaer[1].undertemaer.forEach { it.planlagt shouldBe true }
+        lagretPlan.temaer[1].inkludert shouldBe true
+        lagretPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
         lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
         lagretPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
         lagretPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
@@ -846,7 +846,7 @@ class PlanApiTest {
             val endreTemaRequest = tema.undertemaer.map { undertemaDto ->
                 EndreUndertemaRequest(
                     id = undertemaDto.id,
-                    planlagt = true,
+                    inkludert = true,
                     startDato = undertemaDto.startDato,
                     sluttDato = undertemaDto.sluttDato
                 )
@@ -862,7 +862,7 @@ class PlanApiTest {
             PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id)
                 .temaer.first { it.id == tema.id }.undertemaer
                 .forAll {
-                    it.planlagt shouldBe true
+                    it.inkludert shouldBe true
                     it.status shouldBe PlanUndertema.Status.PLANLAGT
                 }
         }
@@ -881,10 +881,10 @@ class PlanApiTest {
             val endretPlan = opprettetPlan.copy(
                 temaer = opprettetPlan.temaer.map {
                     it.copy(
-                        planlagt = true,
+                        inkludert = true,
                         undertemaer = it.undertemaer.map {
                             it.copy(
-                                planlagt = true,
+                                inkludert = true,
                                 status = PlanUndertema.Status.PLANLAGT
                             )
                         }
@@ -895,9 +895,9 @@ class PlanApiTest {
             val hentetPlan = PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosess.id)
             hentetPlan.id shouldBe opprettetPlan.id
             hentetPlan.temaer.forAll { tema ->
-                tema.planlagt shouldBe true
+                tema.inkludert shouldBe true
                 tema.undertemaer.forAll { undertema ->
-                    undertema.planlagt shouldBe true
+                    undertema.inkludert shouldBe true
                     undertema.status shouldBe PlanUndertema.Status.PLANLAGT
                 }
             }

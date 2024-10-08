@@ -7,7 +7,7 @@ data class PlanUndertema(
     val id: Int,
     val navn: String,
     val målsetning: String,
-    val planlagt: Boolean,
+    val inkludert: Boolean,
     val status: Status?,
     val startDato: LocalDate?,
     val sluttDato: LocalDate?,

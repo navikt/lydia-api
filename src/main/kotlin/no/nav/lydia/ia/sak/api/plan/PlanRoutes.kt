@@ -230,9 +230,9 @@ private fun PlanMalDto.erPlanGyldig(): Boolean =
         it.innhold.all { innhold -> erDatoerIGyldigPeriode(sluttDato = innhold.sluttDato, startDato = innhold.startDato) }
     } &&
         tema.all {
-            it.planlagt ||
+            it.inkludert ||
                 it.innhold.all { innhold ->
-                    innhold.sluttDato == null && innhold.startDato == null && !innhold.planlagt
+                    innhold.sluttDato == null && innhold.startDato == null && !innhold.inkludert
                 }
         }
 
@@ -244,11 +244,11 @@ private fun List<EndreUndertemaRequest>.erDatoGyldigForInnhold(): Boolean =
 private fun List<EndreTemaRequest>.erEndretTemaGyldig(): Boolean =
     this.all { it.undertemaer.erDatoGyldigForInnhold() } &&
         this.all { tema ->
-            if (tema.planlagt) {
+            if (tema.inkludert) {
                 true
             } else {
                 tema.undertemaer.all { innhold ->
-                    innhold.sluttDato == null && innhold.startDato == null && !innhold.planlagt
+                    innhold.sluttDato == null && innhold.startDato == null && !innhold.inkludert
                 }
             }
         }

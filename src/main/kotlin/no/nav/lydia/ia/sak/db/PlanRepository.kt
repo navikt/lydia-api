@@ -63,19 +63,19 @@ class PlanRepository(
                             """
                             INSERT INTO ia_sak_plan_tema (
                                 navn,
-                                planlagt,
+                                inkludert,
                                 plan_id
                             )
                             VALUES (
                                 :navn,
-                                :planlagt,
+                                :inkludert,
                                 :plan_id
                             )
                             RETURNING *
                             """.trimMargin(),
                             mapOf(
                                 "navn" to tema.navn,
-                                "planlagt" to tema.planlagt,
+                                "inkludert" to tema.inkludert,
                                 "plan_id" to planId.toString(),
                             ),
                         ).map { row: Row ->
@@ -89,7 +89,7 @@ class PlanRepository(
                                 """
                             INSERT INTO ia_sak_plan_undertema (
                                 navn,
-                                planlagt,
+                                inkludert,
                                 status,
                                 start_dato, 
                                 slutt_dato,
@@ -99,7 +99,7 @@ class PlanRepository(
                             )
                             VALUES (
                                 :navn,
-                                :planlagt,
+                                :inkludert,
                                 :status,
                                 :start_dato, 
                                 :slutt_dato,
@@ -109,8 +109,8 @@ class PlanRepository(
                                 """.trimMargin(),
                                 mapOf(
                                     "navn" to innhold.navn,
-                                    "planlagt" to innhold.planlagt,
-                                    "status" to if (innhold.planlagt) PlanUndertema.Status.PLANLAGT.name else null,
+                                    "inkludert" to innhold.inkludert,
+                                    "status" to if (innhold.inkludert) PlanUndertema.Status.PLANLAGT.name else null,
                                     "start_dato" to innhold.startDato?.toJavaLocalDate(),
                                     "slutt_dato" to innhold.sluttDato?.toJavaLocalDate(),
                                     "tema_id" to temaId,
@@ -173,7 +173,7 @@ class PlanRepository(
                 PlanTema(
                     id = temaId,
                     navn = row.string("navn"),
-                    planlagt = row.boolean("planlagt"),
+                    inkludert = row.boolean("inkludert"),
                     undertemaer = hentUndertema(planId, temaId, session),
                     ressurser = hentRessurser(planId, temaId, session),
                 )
@@ -201,7 +201,7 @@ class PlanRepository(
                     PlanTema(
                         id = temaId,
                         navn = row.string("navn"),
-                        planlagt = row.boolean("planlagt"),
+                        inkludert = row.boolean("inkludert"),
                         undertemaer = hentUndertema(planId, temaId, session),
                         ressurser = hentRessurser(planId, temaId, session),
                     )
@@ -232,7 +232,7 @@ class PlanRepository(
                     id = row.int("undertema_id"),
                     navn = innholdsNavn,
                     målsetning = hentInnholdsMålsetning(innholdsNavn) ?: "",
-                    planlagt = row.boolean("planlagt"),
+                    inkludert = row.boolean("inkludert"),
                     status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
                     sluttDato = row.localDateOrNull("slutt_dato")?.toKotlinLocalDate(),
@@ -270,7 +270,7 @@ class PlanRepository(
         planId: UUID,
         temaId: Int,
         undertemaer: List<PlanUndertema>,
-        planlagt: Boolean,
+        inkludert: Boolean,
     ): PlanTema? {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -278,14 +278,14 @@ class PlanRepository(
                     queryOf(
                         """
                         UPDATE ia_sak_plan_tema SET 
-                            planlagt = :planlagt
+                            inkludert = :inkludert
                         WHERE plan_id = :planId
                         AND tema_id = :temaId
                         """.trimMargin(),
                         mapOf(
                             "planId" to planId.toString(),
                             "temaId" to temaId,
-                            "planlagt" to planlagt,
+                            "inkludert" to inkludert,
                         ),
                     ).asUpdate,
                 )
@@ -309,7 +309,7 @@ class PlanRepository(
                 queryOf(
                     """
                         UPDATE ia_sak_plan_undertema SET 
-                            planlagt = :planlagt,
+                            inkludert = :inkludert,
                             status = :status,
                             start_dato = :startDato,
                             slutt_dato = :sluttDato
@@ -321,7 +321,7 @@ class PlanRepository(
                         "planId" to planId.toString(),
                         "temaId" to temaId,
                         "undertemaId" to endretUndertema.id,
-                        "planlagt" to endretUndertema.planlagt,
+                        "inkludert" to endretUndertema.inkludert,
                         "status" to endretUndertema.status?.name,
                         "startDato" to endretUndertema.startDato?.toJavaLocalDate(),
                         "sluttDato" to endretUndertema.sluttDato?.toJavaLocalDate(),
@@ -341,7 +341,7 @@ class PlanRepository(
                 queryOf(
                     """
                     UPDATE ia_sak_plan_undertema SET 
-                        planlagt = :planlagt,
+                        inkludert = :inkludert,
                         status = :status,
                         start_dato = :startDato,
                         slutt_dato = :sluttDato
@@ -353,7 +353,7 @@ class PlanRepository(
                         "planId" to planId.toString(),
                         "temaId" to temaId,
                         "undertemaId" to undertema.id,
-                        "planlagt" to undertema.planlagt,
+                        "inkludert" to undertema.inkludert,
                         "status" to undertema.status?.name,
                         "startDato" to undertema.startDato?.toJavaLocalDate(),
                         "sluttDato" to undertema.sluttDato?.toJavaLocalDate(),

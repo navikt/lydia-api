@@ -866,11 +866,11 @@ class PlanHelper {
             this.temaer.map { tema ->
                 EndreTemaRequest(
                     tema.id,
-                    tema.planlagt,
+                    tema.inkludert,
                     tema.undertemaer.map { undertema ->
                         EndreUndertemaRequest(
                             undertema.id,
-                            undertema.planlagt,
+                            undertema.inkludert,
                             undertema.startDato,
                             undertema.sluttDato,
                         )
@@ -894,10 +894,10 @@ class PlanHelper {
         ) = this.copy(
             temaer = temaer.map { tema ->
                 tema.copy(
-                    planlagt = true,
+                    inkludert = true,
                     undertemaer = tema.undertemaer.map {
                         it.copy(
-                            planlagt = true,
+                            inkludert = true,
                         )
                     }
                 )

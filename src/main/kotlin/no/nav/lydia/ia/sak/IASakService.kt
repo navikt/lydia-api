@@ -366,7 +366,7 @@ class IASakService(
         )
 
         val ingenPlanlagteUndertemaer = plan.temaer.map { tema ->
-            tema.undertemaer.all { undertema -> !undertema.planlagt }
+            tema.undertemaer.all { undertema -> !undertema.inkludert }
         }.all { it }
 
         if (ingenPlanlagteUndertemaer)
@@ -378,7 +378,7 @@ class IASakService(
             )
 
         val erPlanFullført = plan.temaer.map { tema ->
-            tema.undertemaer.filter { it.planlagt }.all { undertema ->
+            tema.undertemaer.filter { it.inkludert }.all { undertema ->
                 undertema.status == PlanUndertema.Status.FULLFØRT
             }
         }.all { it }

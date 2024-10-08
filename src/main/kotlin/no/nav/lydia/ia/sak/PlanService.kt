@@ -58,7 +58,7 @@ class PlanService(
         temaId: Int,
         iaSak: IASak,
         prosessId: Int,
-        planlagt: Boolean? = null,
+        inkludert: Boolean? = null,
         endredeUndertemaer: List<EndreUndertemaRequest>,
     ): Either<Feil, PlanTema> =
         hentPlan(iaSak = iaSak, prosessId = prosessId).flatMap { plan ->
@@ -68,11 +68,11 @@ class PlanService(
                 tema.undertemaer.map { lagretUndertema ->
                     endredeUndertemaer.firstOrNull { redigert -> redigert.id == lagretUndertema.id }?.let { redigert ->
                         lagretUndertema.copy(
-                            planlagt = redigert.planlagt,
-                            status = if (redigert.planlagt) lagretUndertema.status
+                            inkludert = redigert.inkludert,
+                            status = if (redigert.inkludert) lagretUndertema.status
                                 ?: PlanUndertema.Status.PLANLAGT else null,
-                            startDato = if (redigert.planlagt) redigert.startDato else null,
-                            sluttDato = if (redigert.planlagt) redigert.sluttDato else null,
+                            startDato = if (redigert.inkludert) redigert.startDato else null,
+                            sluttDato = if (redigert.inkludert) redigert.sluttDato else null,
                         )
                     } ?: return PlanFeil.`feil inndata i forespørsel`.left()
                 }
@@ -80,7 +80,7 @@ class PlanService(
             val ret = planRepository.oppdaterTema(
                 planId = plan.id,
                 temaId = temaId,
-                planlagt = planlagt ?: tema.planlagt,
+                inkludert = inkludert ?: tema.inkludert,
                 undertemaer = oppdaterteUndertemaer,
             )?.right() ?: PlanFeil.`fikk ikke oppdatert tema`.left()
 
@@ -99,7 +99,7 @@ class PlanService(
                 iaSak = iaSak,
                 prosessId = prosessId,
                 temaId = tema.id,
-                planlagt = tema.planlagt,
+                inkludert = tema.inkludert,
                 endredeUndertemaer = tema.undertemaer,
             )
         }.let { l -> either { l.bindAll() } }

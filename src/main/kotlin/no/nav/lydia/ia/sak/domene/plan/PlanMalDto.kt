@@ -9,12 +9,12 @@ data class PlanMalDto(
         TemaMalDto(
             rekkefølge = 1,
             navn = "Partssamarbeid",
-            planlagt = false,
+            inkludert = false,
             innhold = listOf(
                 InnholdMalDto(
                     rekkefølge = 1,
                     navn = "Utvikle partssamarbeidet",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
@@ -23,33 +23,33 @@ data class PlanMalDto(
         TemaMalDto(
             rekkefølge = 2,
             navn = "Sykefraværsarbeid",
-            planlagt = false,
+            inkludert = false,
             innhold = listOf(
                 InnholdMalDto(
                     rekkefølge = 1,
                     navn = "Sykefraværsrutiner",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 2,
                     navn = "Oppfølgingssamtaler",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 3,
                     navn = "Tilretteleggings- og medvirkningsplikt",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 4,
                     navn = "Sykefravær - enkeltsaker",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
@@ -58,47 +58,47 @@ data class PlanMalDto(
         TemaMalDto(
             rekkefølge = 3,
             navn = "Arbeidsmiljø",
-            planlagt = false,
+            inkludert = false,
             innhold = listOf(
                 InnholdMalDto(
                     rekkefølge = 1,
                     navn = "Utvikle arbeidsmiljøet",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 2,
                     navn = "Endring og omstilling",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 3,
                     navn = "Oppfølging av arbeidsmiljøundersøkelser",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 4,
                     navn = "Livsfaseorientert personalpolitikk",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 5,
                     navn = "Psykisk helse",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
                 InnholdMalDto(
                     rekkefølge = 6,
                     navn = "HelseIArbeid",
-                    planlagt = false,
+                    inkludert = false,
                     startDato = null,
                     sluttDato = null,
                 ),
@@ -111,7 +111,7 @@ data class PlanMalDto(
 data class TemaMalDto(
     val rekkefølge: Int,
     val navn: String,
-    val planlagt: Boolean,
+    val inkludert: Boolean,
     val innhold: List<InnholdMalDto>,
 )
 
@@ -119,7 +119,7 @@ data class TemaMalDto(
 data class InnholdMalDto(
     val rekkefølge: Int,
     val navn: String,
-    val planlagt: Boolean,
+    val inkludert: Boolean,
     val startDato: LocalDate?,
     val sluttDato: LocalDate?,
 )
