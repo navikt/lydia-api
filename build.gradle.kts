@@ -2,7 +2,7 @@ val ktorVersion = "2.3.12"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.4.0"
 val kotestVerstion = "5.9.1"
-val testcontainersVersion = "1.20.1"
+val testcontainersVersion = "1.20.2"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -36,7 +36,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("ch.qos.logback:logback-classic:1.5.8")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -47,12 +47,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.3")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.13.5")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.3")
-    implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.17.1")
+    implementation("org.postgresql:postgresql:42.7.4")
+    implementation("com.zaxxer:HikariCP:6.0.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.19.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -74,9 +74,9 @@ dependencies {
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:$iaFellesVersion")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.40")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.41.2")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -99,7 +99,7 @@ dependencies {
     testImplementation("org.verapdf:validation-model:1.26.1")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.8")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.9")
 
     constraints {
         implementation("net.minidev:json-smart") {
@@ -110,19 +110,19 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.112.Final")
+                require("4.1.114.Final")
             }
             because("Affected versions < 4.1.101.Final are vulnerable to HTTP/2 Rapid Reset Attack")
         }
         implementation("joda-time:joda-time") {
             version {
-                require("2.12.7")
+                require("2.13.0")
             }
             because("kotliquery har sårbar versjon på v2.11.0")
         }
         testImplementation("org.apache.commons:commons-compress") {
             version {
-                require("1.27.0")
+                require("1.27.1")
             }
             because("testcontainers har sårbar versjon")
         }
