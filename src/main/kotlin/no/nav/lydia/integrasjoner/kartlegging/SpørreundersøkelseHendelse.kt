@@ -9,10 +9,10 @@ class StengTema(
     spørreundersøkelseId: String,
     temaId: Int,
 ) : SpørreundersøkelseHendelse<Int>(
-    spørreundersøkelseId = spørreundersøkelseId,
-    hendelsesType = HendelsType.STENG_TEMA,
-    data = temaId
-) {
+        spørreundersøkelseId = spørreundersøkelseId,
+        hendelsesType = HendelsType.STENG_TEMA,
+        data = temaId,
+    ) {
     val temaId
         get() = data
 }
@@ -21,10 +21,10 @@ class SvarPåSpørsmål(
     spørreundersøkelseId: String,
     svarPåSpørsmål: SpørreundersøkelseSvarDto,
 ) : SpørreundersøkelseHendelse<SpørreundersøkelseSvarDto>(
-    spørreundersøkelseId = spørreundersøkelseId,
-    hendelsesType = HendelsType.SVAR_PÅ_SPØRSMÅL,
-    data = svarPåSpørsmål
-)
+        spørreundersøkelseId = spørreundersøkelseId,
+        hendelsesType = HendelsType.SVAR_PÅ_SPØRSMÅL,
+        data = svarPåSpørsmål,
+    )
 
 @Serializable
 sealed class SpørreundersøkelseHendelse<T>(
@@ -38,12 +38,12 @@ sealed class SpørreundersøkelseHendelse<T>(
                 when (nøkkel.hendelsesType) {
                     HendelsType.STENG_TEMA -> StengTema(
                         spørreundersøkelseId = nøkkel.spørreundersøkelseId,
-                        temaId = Json.decodeFromString(record.value())
+                        temaId = Json.decodeFromString(record.value()),
                     )
 
                     HendelsType.SVAR_PÅ_SPØRSMÅL -> SvarPåSpørsmål(
                         spørreundersøkelseId = nøkkel.spørreundersøkelseId,
-                        svarPåSpørsmål = Json.decodeFromString(record.value())
+                        svarPåSpørsmål = Json.decodeFromString(record.value()),
                     )
                 }
             }
@@ -58,5 +58,5 @@ data class SpørreundersøkelseHendeleseNøkkel(
 
 enum class HendelsType {
     STENG_TEMA,
-    SVAR_PÅ_SPØRSMÅL
+    SVAR_PÅ_SPØRSMÅL,
 }

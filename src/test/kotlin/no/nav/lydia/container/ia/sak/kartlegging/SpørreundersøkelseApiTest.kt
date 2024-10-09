@@ -79,7 +79,7 @@ class SpørreundersøkelseApiTest {
 
         postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
             ) shouldNotBe null
     }
 
@@ -92,7 +92,7 @@ class SpørreundersøkelseApiTest {
 
         postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
             ) shouldNotBe null
     }
 
@@ -129,7 +129,7 @@ class SpørreundersøkelseApiTest {
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(
             orgnr = "123456789",
             saksnummer = "ukjent",
-            prosessId = 1
+            prosessId = 1,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -142,7 +142,7 @@ class SpørreundersøkelseApiTest {
         val resp = IASakKartleggingHelper.opprettIASakKartlegging(
             orgnr = "222233334",
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id
+            prosessId = sak.hentIAProsesser().first().id,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -159,7 +159,7 @@ class SpørreundersøkelseApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = id,
-                konsument = kartleggingKonsument
+                konsument = kartleggingKonsument,
             ) { liste ->
                 liste.map { melding ->
                     val spørreundersøkelse =
@@ -189,7 +189,7 @@ class SpørreundersøkelseApiTest {
         val alleKartlegginger = hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id
+            prosessId = sak.hentIAProsesser().first().id,
         )
         alleKartlegginger shouldHaveSize 1
         alleKartlegginger.first().vertId shouldHaveLength 36
@@ -207,11 +207,11 @@ class SpørreundersøkelseApiTest {
         behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
                 postgresContainer.hentEnkelKolonne(
-                    "select tema_id from ia_sak_kartlegging_tema where beskrivelse = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV'"
+                    "select tema_id from ia_sak_kartlegging_tema where beskrivelse = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV'",
                 )
             val spørsmålIderForEtTema: List<String> =
                 postgresContainer.hentAlleRaderTilEnkelKolonne(
-                    "select sporsmal_id from ia_sak_kartlegging_tema_til_spørsmål where tema_id = $temaId"
+                    "select sporsmal_id from ia_sak_kartlegging_tema_til_spørsmål where tema_id = $temaId",
                 )
             spørsmålOgSvarPerTema.spørsmålOgSvaralternativer.map { spørsmålMedSvar ->
                 spørsmålMedSvar.id
@@ -222,12 +222,11 @@ class SpørreundersøkelseApiTest {
             spørsmålMedSvarPerTema.spørsmålOgSvaralternativer.forEach { spørsmålMedSvar ->
                 val svarIderForEtSpørsmål: List<String> =
                     postgresContainer.hentAlleRaderTilEnkelKolonne(
-                        "select svaralternativ_id from ia_sak_kartlegging_svaralternativer where sporsmal_id = '${spørsmålMedSvar.id}'"
+                        "select svaralternativ_id from ia_sak_kartlegging_svaralternativer where sporsmal_id = '${spørsmålMedSvar.id}'",
                     )
                 spørsmålMedSvar.svaralternativer.map { it.svarId }.toList() shouldContainAll svarIderForEtSpørsmål
             }
         }
-
     }
 
     @Test
@@ -245,7 +244,7 @@ class SpørreundersøkelseApiTest {
         val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingDto.kartleggingId
+            kartleggingId = kartleggingDto.kartleggingId,
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
@@ -266,7 +265,7 @@ class SpørreundersøkelseApiTest {
         val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingDto.kartleggingId
+            kartleggingId = kartleggingDto.kartleggingId,
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
@@ -288,10 +287,9 @@ class SpørreundersøkelseApiTest {
             hentKartleggingMedSvar(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                kartleggingId = pågåendeKartlegging.kartleggingId
+                kartleggingId = pågåendeKartlegging.kartleggingId,
             )
         }
-
     }
 
     @Test
@@ -308,7 +306,7 @@ class SpørreundersøkelseApiTest {
                     kartleggingId = pågåendeKartlegging.kartleggingId,
                     spørsmålId = spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().id,
                     sesjonId = sesjonId.toString(),
-                    svarIder = listOf(spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
+                    svarIder = listOf(spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
                 )
             }
         }
@@ -317,7 +315,7 @@ class SpørreundersøkelseApiTest {
         val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = pågåendeKartlegging.kartleggingId
+            kartleggingId = pågåendeKartlegging.kartleggingId,
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
@@ -345,7 +343,7 @@ class SpørreundersøkelseApiTest {
                 kartleggingId = pågåendeKartlegging.kartleggingId,
                 spørsmålId = spørsmålOgSvaralternativ.id,
                 sesjonId = sesjonId.toString(),
-                svarIder = listOf(svaralternativ.svarId)
+                svarIder = listOf(svaralternativ.svarId),
             )
         }
         kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -353,14 +351,12 @@ class SpørreundersøkelseApiTest {
         val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = pågåendeKartlegging.kartleggingId
+            kartleggingId = pågåendeKartlegging.kartleggingId,
         )
         oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
         oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
         oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forExactlyOne { temaMedSpørsmålOgSvar ->
             temaMedSpørsmålOgSvar.navn shouldNotBe null
-            temaMedSpørsmålOgSvar.tema shouldBe null
-            temaMedSpørsmålOgSvar.beskrivelse shouldBe null
             temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->
                 spørsmålMedSvar.svarListe.forExactlyOne { svar ->
                     svar.antallSvar shouldBe 3
@@ -378,7 +374,7 @@ class SpørreundersøkelseApiTest {
         val resultater = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartlegging.kartleggingId
+            kartleggingId = kartlegging.kartleggingId,
         )
         resultater.kartleggingId shouldBe kartlegging.kartleggingId
 
@@ -386,7 +382,7 @@ class SpørreundersøkelseApiTest {
             token = oauth2ServerContainer.saksbehandler2.token,
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartlegging.kartleggingId
+            kartleggingId = kartlegging.kartleggingId,
         )
         kartleggingMedSvar.kartleggingId shouldBe kartlegging.kartleggingId
     }
@@ -403,7 +399,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id
+            prosessId = sak.hentIAProsesser().first().id,
         ).forExactlyOne {
             it.status shouldBe PÅBEGYNT
             it.endretTidspunkt shouldNotBe null
@@ -412,7 +408,7 @@ class SpørreundersøkelseApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = kartleggingDto.kartleggingId,
-                konsument = kartleggingKonsument
+                konsument = kartleggingKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -436,7 +432,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id
+            prosessId = sak.hentIAProsesser().first().id,
         ).forExactlyOne {
             it.status shouldBe AVSLUTTET
             it.endretTidspunkt shouldNotBe null
@@ -446,7 +442,7 @@ class SpørreundersøkelseApiTest {
             // -- topic for fia-arbeidsgiver
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = kartleggingDto.kartleggingId,
-                konsument = kartleggingKonsument
+                konsument = kartleggingKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
@@ -463,7 +459,9 @@ class SpørreundersøkelseApiTest {
         kartleggingDto.status shouldBe OPPRETTET
 
         val response =
-            lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt")
+            lydiaApiContainer.performPost(
+                "$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt",
+            )
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -484,12 +482,14 @@ class SpørreundersøkelseApiTest {
             kartleggingId = pågåendeKartlegging.kartleggingId,
             spørsmålId = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
             sesjonId = UUID.randomUUID().toString(),
-            svarIder = listOf(pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
+            svarIder = listOf(
+                pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId,
+            ),
         )
 
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'",
             ) shouldHaveSize 1
 
         val response =
@@ -502,7 +502,7 @@ class SpørreundersøkelseApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = kartleggingDto.kartleggingId,
-                konsument = kartleggingKonsument
+                konsument = kartleggingKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -514,17 +514,17 @@ class SpørreundersøkelseApiTest {
 
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'",
             ) shouldHaveSize 0
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'",
             ).forAll { it shouldBe "SLETTET" }
 
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id
+            prosessId = sak.hentIAProsesser().first().id,
         ) shouldHaveSize 0
     }
 
@@ -544,17 +544,17 @@ class SpørreundersøkelseApiTest {
 
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'",
             ) shouldHaveSize 0
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'"
+                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'",
             ).forAll { it shouldBe "SLETTET" }
 
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id
+            prosessId = sak.hentIAProsesser().first().id,
         ) shouldHaveSize 0
     }
 
@@ -572,7 +572,7 @@ class SpørreundersøkelseApiTest {
             hentIASakKartlegginger(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                prosessId = it.id
+                prosessId = it.id,
             ) shouldHaveSize 1
         }
     }
@@ -617,7 +617,8 @@ class SpørreundersøkelseApiTest {
                 behovsvurdering,
                 sak,
                 sak.hentIAProsesser().first().id,
-                oauth2ServerContainer.lesebruker.token)
+                oauth2ServerContainer.lesebruker.token,
+            )
         }
 
         // -- skal ikke kunne flytte til prosess i en annen sak
@@ -666,7 +667,7 @@ class SpørreundersøkelseApiTest {
                         kartleggingId = kartleggingDto.kartleggingId,
                         spørsmålId = spørsmålMedSvarAlternativer.id,
                         sesjonId = sesjonId,
-                        svarIder = listOf(svar.svarId)
+                        svarIder = listOf(svar.svarId),
                     )
                 }
             }
@@ -684,7 +685,7 @@ class SpørreundersøkelseApiTest {
             kartleggingId = kartleggingDto.kartleggingId,
             spørsmålId = førsteSpørsmålId,
             sesjonId = sesjonId,
-            svarIder = listOf(førsteSvarId)
+            svarIder = listOf(førsteSvarId),
         )
     }
 }
