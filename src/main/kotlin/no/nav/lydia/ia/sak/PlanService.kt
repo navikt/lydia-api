@@ -8,8 +8,8 @@ import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import java.util.UUID
 import no.nav.lydia.Observer
+import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
-import no.nav.lydia.appstatus.PlanMetric
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
@@ -21,12 +21,16 @@ import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.AVBRUTT
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class PlanService(
     val iaProsessService: IAProsessService,
-    val planObservers: List<Observer<PlanMetric>>,
+    val planObservers: List<Observer<ObservedPlan>>,
     val planRepository: PlanRepository,
 ) {
+    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
+
     fun opprettPlan(
         iaSak: IASak,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
@@ -41,7 +45,8 @@ class PlanService(
                 mal = mal,
             )
         }.onRight { plan ->
-            planObservers.forEach { it.receive(PlanMetric(hendelsesType = PlanHendelseType.OPPRETT, plan = plan)) }
+            planObservers.forEach { it.receive(ObservedPlan(hendelsesType = PlanHendelseType.OPPRETT, plan = plan)) }
+            logger.info("Opprettet plan med Id '${plan.id}'")
         }
 
     fun hentPlan(
@@ -85,7 +90,14 @@ class PlanService(
             )?.right() ?: PlanFeil.`fikk ikke oppdatert tema`.left()
 
             ret.onRight {
-                planObservers.forEach { it.receive(PlanMetric(hendelsesType = PlanHendelseType.OPPDATER, plan = plan)) }
+                planObservers.forEach {
+                    it.receive(
+                        ObservedPlan(
+                            hendelsesType = PlanHendelseType.OPPDATER,
+                            plan = plan
+                        )
+                    )
+                }
             }
         }
 
@@ -134,7 +146,14 @@ class PlanService(
             )?.right() ?: return PlanFeil.`fikk ikke oppdatert undertema`.left()
 
             ret.onRight {
-                planObservers.forEach { it.receive(PlanMetric(hendelsesType = PlanHendelseType.OPPDATER, plan = plan)) }
+                planObservers.forEach {
+                    it.receive(
+                        ObservedPlan(
+                            hendelsesType = PlanHendelseType.OPPDATER,
+                            plan = plan
+                        )
+                    )
+                }
             }
         }
     }

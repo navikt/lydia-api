@@ -154,6 +154,30 @@ class PlanRepository(
             )
         }
 
+    fun hentPlan(planId: UUID): Plan? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT *
+                        FROM ia_sak_plan
+                        WHERE plan_id = :planId
+                    """.trimMargin(),
+                    mapOf(
+                        "planId" to planId.toString(),
+                    ),
+                ).map { row: Row ->
+                    val planIdLestFraDB = UUID.fromString(row.string("plan_id"))
+                    Plan(
+                        id = planIdLestFraDB,
+                        sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
+                        sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
+                        temaer = hentTema(planIdLestFraDB, session),
+                    )
+                }.asSingle,
+            )
+        }
+
     private fun hentTema(
         planId: UUID,
         session: Session,
