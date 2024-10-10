@@ -35,6 +35,7 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
+import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryProdusent
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
@@ -52,19 +53,23 @@ import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
-import no.nav.lydia.ia.team.IATeamService
+import no.nav.lydia.ia.sak.PlanService
+import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
-import no.nav.lydia.ia.team.iaSakTeam
+import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.api.prosess.iaProsessApi
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
-import no.nav.lydia.ia.team.IATeamRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
+import no.nav.lydia.ia.team.IATeamRepository
+import no.nav.lydia.ia.team.IATeamService
+import no.nav.lydia.ia.team.iaSakTeam
 import no.nav.lydia.ia.årsak.db.ÅrsakRepository
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.iatjenesteoversikt.IATjenesteoversiktRepository
@@ -103,13 +108,9 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.virksomhet
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
-import no.nav.lydia.ia.sak.PlanService
-import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
-import no.nav.lydia.ia.sak.api.plan.iaSakPlan
-import no.nav.lydia.ia.sak.db.PlanRepository
 
 fun main() {
     startLydiaBackend()
@@ -150,23 +151,27 @@ fun startLydiaBackend() {
         geografiService = GeografiService(),
         sistePubliseringService = sistePubliseringService,
     )
+    val behovsvurderingBigqueryProdusent = BehovsvurderingBigqueryProdusent(
+        produsent = kafkaProdusent,
+    )
     val iaSakStatusProdusent = IASakStatusProdusent(
         produsent = kafkaProdusent,
         iaSakRepository = iaSakRepository,
     )
     val azureService = AzureService(
         tokenFetcher = AzureTokenFetcher(naisEnvironment = naisEnv),
-        security = naisEnv.security
+        security = naisEnv.security,
     )
     val iaSakLeveranseProdusent = IASakLeveranseProdusent(
         produsent = kafkaProdusent,
-        azureService = azureService
+        azureService = azureService,
     )
     val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
     val iaProsessService = IAProsessService(
         prosessRepository = prosessRepository,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
-        planRepository = planRepository
+        planRepository = planRepository,
+        // TODO: legg til flere observatører (produsent for samarbeid)
     )
     val iaSakService = IASakService(
         iaSakRepository = iaSakRepository,
@@ -177,12 +182,12 @@ fun startLydiaBackend() {
             naisEnvironment = naisEnv,
             pdfgenService = PiaPdfgenService(naisEnvironment = naisEnv),
             oboTokenUtveksler = OboTokenUtveksler(naisEnvironment = naisEnv),
-            virksomhetRepository = virksomhetRepository
+            virksomhetRepository = virksomhetRepository,
         ),
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
         iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver),
         iaProsessService = iaProsessService,
-        planRepository = planRepository
+        planRepository = planRepository,
     )
 
     val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
@@ -197,18 +202,19 @@ fun startLydiaBackend() {
         behovsvurderingObservers = listOf(
             spørreundersøkelseProdusent,
             behovsvurderingMetrikkObserver,
-            fullførtBehovsvurderingProdusent
+            fullførtBehovsvurderingProdusent,
+            behovsvurderingBigqueryProdusent,
         ),
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
-            produsent = kafkaProdusent
-        )
+            produsent = kafkaProdusent,
+        ),
     )
     val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(planRepository = planRepository)
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver)
+        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver),
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
@@ -221,7 +227,7 @@ fun startLydiaBackend() {
         iaSakStatusOppdaterer = IASakStatusOppdaterer(iaSakService = iaSakService),
         iaSakEksporterer = IASakEksporterer(
             iaSakRepository = iaSakRepository,
-            iaSakProdusent = iaSakProdusent
+            iaSakProdusent = iaSakProdusent,
         ),
         iaSakStatistikkEksporterer = IASakStatistikkEksporterer(
             iaSakRepository = iaSakRepository,
@@ -238,10 +244,10 @@ fun startLydiaBackend() {
         ),
         næringsDownloader = NæringsDownloader(
             url = naisEnv.integrasjoner.ssbNæringsUrl,
-            næringsRepository = næringsRepository
+            næringsRepository = næringsRepository,
         ),
         statistikkViewOppdaterer = StatistikkViewOppdaterer(
-            dataSource = dataSource
+            dataSource = dataSource,
         ),
     )
 
@@ -293,7 +299,7 @@ fun startLydiaBackend() {
             iaTeamService = iaTeamService,
             iaProsessService = iaProsessService,
             spørreundersøkelseService = spørreundersøkelseService,
-            planService = planService
+            planService = planService,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -303,21 +309,27 @@ fun startLydiaBackend() {
     }.start(wait = true)
 }
 
-private fun brregConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
+private fun brregConsumer(
+    naisEnv: NaisEnvironment,
+    dataSource: DataSource,
+) {
     BrregOppdateringConsumer.apply {
         create(
             kafka = naisEnv.kafka,
-            repository = VirksomhetRepository(dataSource)
+            repository = VirksomhetRepository(dataSource),
         )
         run()
     }
 }
 
-private fun brregAlleVirksomheterConsumer(naisEnv: NaisEnvironment, dataSource: DataSource) {
+private fun brregAlleVirksomheterConsumer(
+    naisEnv: NaisEnvironment,
+    dataSource: DataSource,
+) {
     BrregAlleVirksomheterConsumer.apply {
         create(
             kafka = naisEnv.kafka,
-            repository = VirksomhetRepository(dataSource)
+            repository = VirksomhetRepository(dataSource),
         )
         run()
     }
@@ -342,7 +354,7 @@ private fun jobblytter(
             iaSakLeveranseEksportør = iaSakLeveranseEksportør,
             iaSakStatusExportør = iaSakStatusExportør,
             næringsDownloader = næringsDownloader,
-            statistikkViewOppdaterer = statistikkViewOppdaterer
+            statistikkViewOppdaterer = statistikkViewOppdaterer,
         )
         run()
     }
@@ -456,7 +468,7 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 iaProsessService = iaProsessService,
                 iaSakService = iaSakService,
-                auditLog = auditLog
+                auditLog = auditLog,
             )
             iaSakSpørreundersøkelse(
                 iaSakService = iaSakService,
@@ -468,7 +480,7 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 planService = planService,
-                iaSakService = iaSakService
+                iaSakService = iaSakService,
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
@@ -478,7 +490,7 @@ private fun Application.lydiaRestApi(
             )
             iaTjenesteoversikt(
                 iaTjenesteoversiktService = IATjenesteoversiktService(
-                    iaTjenesteoversiktRepository = IATjenesteoversiktRepository(dataSource)
+                    iaTjenesteoversiktRepository = IATjenesteoversiktRepository(dataSource),
                 ),
                 auditLog = auditLog,
                 naisEnvironment = naisEnv,
@@ -486,10 +498,10 @@ private fun Application.lydiaRestApi(
             statusoversikt(
                 geografiService = GeografiService(),
                 statusoversiktService = StatusoversiktService(
-                    statusoversiktRepository = StatusoversiktRepository(dataSource = dataSource)
+                    statusoversiktRepository = StatusoversiktRepository(dataSource = dataSource),
                 ),
                 auditLog = auditLog,
-                naisEnvironment = naisEnv
+                naisEnvironment = naisEnv,
             )
         }
     }
