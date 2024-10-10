@@ -1,12 +1,13 @@
 package no.nav.lydia.ia.eksport
 
+import ia.felles.integrasjoner.kafkameldinger.oppdatering.SpørsmålResultatMelding
+import ia.felles.integrasjoner.kafkameldinger.oppdatering.SvarResultatMelding
+import ia.felles.integrasjoner.kafkameldinger.oppdatering.TemaResultatMelding
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
-
 
 class SpørreundersøkelseOppdateringProdusent(
     private val produsent: KafkaProdusent,
@@ -25,28 +26,27 @@ class SpørreundersøkelseOppdateringProdusent(
             SpørreundersøkelseAntallSvarDto(
                 spørreundersøkelseId = spørreundersøkelseId.toString(),
                 spørsmålId = spørsmålId.toString(),
-                antallSvar = antallSvar
+                antallSvar = antallSvar,
             )
     }
 
     class ResultaterForTema(
         spørreundersøkelseId: String,
-        resultaterForTema: TemaResultatDto,
-    ) : SpørreundersøkelseOppdatering<TemaResultatDto>(
-        spørreundersøkelseId = spørreundersøkelseId,
-        oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA,
-        data = resultaterForTema
-    )
+        resultaterForTema: SerializableTemaResultat,
+    ) : SpørreundersøkelseOppdatering<SerializableTemaResultat>(
+            spørreundersøkelseId = spørreundersøkelseId,
+            oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA,
+            data = resultaterForTema,
+        )
 
     class AntallSvar(
         spørreundersøkelseId: String,
         antallSvar: SpørreundersøkelseAntallSvarDto,
     ) : SpørreundersøkelseOppdatering<SpørreundersøkelseAntallSvarDto>(
-        spørreundersøkelseId = spørreundersøkelseId,
-        oppdateringsType = OppdateringsType.ANTALL_SVAR,
-        data = antallSvar
-    )
-
+            spørreundersøkelseId = spørreundersøkelseId,
+            oppdateringsType = OppdateringsType.ANTALL_SVAR,
+            data = antallSvar,
+        )
 
     @Serializable
     sealed class SpørreundersøkelseOppdatering<T>(
@@ -59,12 +59,36 @@ class SpørreundersøkelseOppdateringProdusent(
                 Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(spørreundersøkelseId, oppdateringsType))
 
             val verdi = when (this) {
-                is ResultaterForTema -> Json.encodeToString<TemaResultatDto>(data)
+                is ResultaterForTema -> Json.encodeToString<SerializableTemaResultat>(data)
                 is AntallSvar -> Json.encodeToString<SpørreundersøkelseAntallSvarDto>(data)
             }
             return nøkkel to verdi
         }
     }
+
+    @Serializable
+    data class SerializableTemaResultat(
+        override val temaId: Int,
+        override val navn: String,
+        override val tema: String? = null,
+        override val beskrivelse: String? = null,
+        override val spørsmålMedSvar: List<SerializableSpørsmålResultat>,
+    ) : TemaResultatMelding
+
+    @Serializable
+    data class SerializableSpørsmålResultat(
+        override val spørsmålId: String,
+        override val tekst: String,
+        override val flervalg: Boolean,
+        override val svarListe: List<SerializableSvarResultat>,
+    ) : SpørsmålResultatMelding
+
+    @Serializable
+    data class SerializableSvarResultat(
+        override val svarId: String,
+        override val tekst: String,
+        override val antallSvar: Int,
+    ) : SvarResultatMelding
 
     @Serializable
     data class SpørreundersøkelseAntallSvarDto(
@@ -81,6 +105,6 @@ class SpørreundersøkelseOppdateringProdusent(
 
     enum class OppdateringsType {
         RESULTATER_FOR_TEMA,
-        ANTALL_SVAR
+        ANTALL_SVAR,
     }
 }
