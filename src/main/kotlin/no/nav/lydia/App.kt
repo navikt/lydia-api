@@ -51,7 +51,7 @@ import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
 import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
+import no.nav.lydia.ia.sak.OppdaterSistEndretPlanOgSendPåKafkaObserver
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
@@ -106,6 +106,7 @@ import no.nav.lydia.virksomhet.api.virksomhet
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import no.nav.lydia.ia.eksport.SamarbeidsplanProdusent
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
@@ -120,6 +121,7 @@ fun startLydiaBackend() {
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
+    val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
 
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
@@ -128,6 +130,7 @@ fun startLydiaBackend() {
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
     val prosessRepository = ProsessRepository(dataSource = dataSource)
     val planRepository = PlanRepository(dataSource = dataSource)
+    val samarbeidsplanProdusent = SamarbeidsplanProdusent(produsent = kafkaProdusent)
 
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
@@ -140,7 +143,6 @@ fun startLydiaBackend() {
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnv.miljø)
     val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
-    val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
     val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent)
     val iaSakStatistikkProdusent = IASakStatistikkProdusent(
         produsent = kafkaProdusent,
@@ -203,12 +205,15 @@ fun startLydiaBackend() {
             produsent = kafkaProdusent
         )
     )
-    val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(planRepository = planRepository)
+    val oppdaterSistEndretPlanOgSendPåKafkaObserver = OppdaterSistEndretPlanOgSendPåKafkaObserver(
+        planRepository = planRepository,
+        samarbeidsplanProdusent = samarbeidsplanProdusent
+    )
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver)
+        planObservers = listOf(oppdaterSistEndretPlanOgSendPåKafkaObserver, samarbeidplanMetrikkObserver)
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
