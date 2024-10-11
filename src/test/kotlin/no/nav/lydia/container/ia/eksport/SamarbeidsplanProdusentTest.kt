@@ -13,7 +13,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.PlanTilSalesforceDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.After
 import org.junit.Before
@@ -37,6 +37,7 @@ class SamarbeidsplanProdusentTest {
     @Test
     fun `Nyopprettet samarbeidsplan skal sendes til salesforce`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentIAProsesser().first()
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
 
         val startDato = LocalDate(2010, 1, 1)
@@ -70,14 +71,19 @@ class SamarbeidsplanProdusentTest {
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = opprettetPlan.id,
+                key = "${sak.saksnummer}-${samarbeid.id}-${opprettetPlan.id}",
                 konsument = samarbeidsplanKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val plan = Json.decodeFromString<PlanDto>(melding)
-                    plan.id shouldBe opprettetPlan.id
-                    plan.temaer.size shouldBeExactly opprettetPlan.temaer.size
-                    plan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
+                    val planTilSalesforce = Json.decodeFromString<PlanTilSalesforceDto>(melding)
+                    planTilSalesforce.orgnr shouldBe  sak.orgnr
+                    planTilSalesforce.saksnummer shouldBe sak.saksnummer
+                    planTilSalesforce.samarbeid.id shouldBe samarbeid.id
+                    planTilSalesforce.samarbeid.navn shouldBe samarbeid.navn
+                    planTilSalesforce.samarbeid.status shouldBe samarbeid.status
+                    planTilSalesforce.plan.id shouldBe opprettetPlan.id
+                    planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size
+                    planTilSalesforce.plan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
                 }
             }
         }

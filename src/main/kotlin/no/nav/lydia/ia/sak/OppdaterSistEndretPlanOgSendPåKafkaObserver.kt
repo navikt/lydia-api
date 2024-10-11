@@ -13,10 +13,10 @@ class OppdaterSistEndretPlanOgSendPåKafkaObserver(
 
     override fun receive(input: ObservedPlan) {
         planRepository.oppdaterSistEndret(plan = input.plan)
-        val oppdatertPlan = planRepository.hentPlan(input.plan.id)
+        val oppdatertPlan = planRepository.hentPlanTilSalesforce(input.plan.id)
 
         // send til Kafka
-        if (input.hendelsesType == PlanHendelseType.OPPRETT && oppdatertPlan != null) {
+        if (oppdatertPlan != null) {
             samarbeidsplanProdusent.sendPåKafka(oppdatertPlan)
         }
     }
