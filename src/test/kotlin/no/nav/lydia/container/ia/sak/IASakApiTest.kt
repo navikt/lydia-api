@@ -692,7 +692,8 @@ class IASakApiTest {
     @Test
     fun `skal kunne hente en oppsummering av alle hendelsene som har skjedd på en sak`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer).also { sak ->
+        val superbruker = oauth2ServerContainer.superbruker1
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = superbruker.token).also { sak ->
             val valgtÅrsak = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
                 begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID, VIRKSOMHETEN_HAR_IKKE_RESPONDERT)
@@ -718,6 +719,7 @@ class IASakApiTest {
                 historikkForSak.sakshendelser.forAtLeastOne {
                     it.hendelsestype shouldBe OPPRETT_SAK_FOR_VIRKSOMHET
                     it.tidspunktForSnapshot shouldBe sakIkkeAktuell.opprettetTidspunkt
+                    it.hendelseOpprettetAv shouldBe superbruker.navIdent
                 }
             }
         }

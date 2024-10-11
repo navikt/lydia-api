@@ -23,7 +23,8 @@ class SakSnapshotDto(
     val hendelsestype: IASakshendelseType,
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
-    val eier: String?
+    val eier: String?,
+    val hendelseOpprettetAv: String?,
 ) {
     companion object {
         fun from(iaSakshendelse: IASakshendelse, iaSak: IASak) =
@@ -35,6 +36,10 @@ class SakSnapshotDto(
                 begrunnelser = when (iaSakshendelse) {
                     is VirksomhetIkkeAktuellHendelse -> iaSakshendelse.valgtÅrsak.begrunnelser.map { it.navn }
                     else -> emptyList()
+                },
+                hendelseOpprettetAv = when (iaSakshendelse.hendelsesType) {
+                    IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET -> iaSakshendelse.opprettetAv
+                    else -> null
                 }
             )
     }
