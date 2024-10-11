@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - sende-plan-til-salesforce
     paths:
       - .nais/topics/** # Deploy topics ved endringer i topics-mappen
       - .github/workflows/topics.yaml # Deploy topics ved endringer i topics.yaml
@@ -14,9 +15,9 @@ jobs:
   deploy:
     strategy:
       matrix:
-        cluster: [dev, prod]
+        cluster: [dev]
     name: Deploy app to ${{ matrix.cluster }}
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/sende-plan-til-salesforce'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
