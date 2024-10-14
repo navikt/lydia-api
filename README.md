@@ -50,12 +50,11 @@ Vi har gitt tilgang til en k8s-ressurs som heter `pia-devops` som har lese- og s
 Det er denne man bruker som utvikler om man vil koble seg opp mot topicet lokalt. Det gjør man slik: 
 
 0. `logg på gcloud og sett cluster med kubectx`
-1. `nais aiven create kafka pia-devops pia` (lager en [AivenApplication](https://doc.nais.io/cli/commands/aiven/#aiven-command))
-2. `kubectl get AivenApplication -c <cluster> -n pia` for å finne ut hva den genererte secreten til `pia-devops` heter
-3. `nais aiven get kafka <navn på secret> pia` (lager en lokal config i under `/var/` basert på k8s-secreten)
-4. `KAFKA_CONFIG=<path til der config ble lagret i forrige steg>`
-5. `source $KAFKA_CONFIG/kafka-secret.env`
-6. Nå skal man klar for å koble seg opp mot topicet i miljøet man har valgt. Bruk de ulike kommandoene i `kafka-cli` for å gjøre det du har tenkt å gjøre. For å f.eks. konsumere meldinger på `ia-sak-v1`-topicet kan man kjøre kommandoen:
+1. `nais aiven create kafka pia-devops pia` (lager en [AivenApplication](https://doc.nais.io/cli/commands/aiven/#aiven-command) og gir neste kommando i output)
+2. Output fra forrige steg gir neste kommando, noe som: `nais aiven get kafka pia-devops-pia-<id> pia` denne lager lage secrets
+3. Output fra forrige steg gir path til der config ble lagret `KAFKA_CONFIG=<path-til-config>`
+4. `source $KAFKA_CONFIG/kafka-secret.env`
+5. Nå skal man klar for å koble seg opp mot topicet i miljøet man har valgt. Bruk de ulike kommandoene i `kafka-cli` for å gjøre det du har tenkt å gjøre. For å f.eks. konsumere meldinger på `ia-sak-v1`-topicet kan man kjøre kommandoen:
 `kafka-console-consumer --bootstrap-server $KAFKA_BROKERS --consumer.config $KAFKA_CONFIG/kafka.properties --topic "pia.ia-sak-v1"`
 
 ## Oppdater testdata til lokal kjøring etter endringer i db skjema
