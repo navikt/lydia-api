@@ -14,9 +14,10 @@ import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
+import no.nav.lydia.ia.eksport.SamarbeidDto
+import no.nav.lydia.ia.eksport.tilPlanKafkaMeldingDto
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.plan.PlanTilSalesforceDto
-import no.nav.lydia.ia.sak.api.plan.SamarbeidDto
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
@@ -158,7 +159,7 @@ class PlanRepository(
             )
         }
 
-    fun hentPlanTilSalesforce(planId: UUID): PlanTilSalesforceDto? =
+    fun hentSamarbeidsplanKafkaMelding(planId: UUID): SamarbeidsplanKafkaMelding? =
         using(sessionOf(dataSource)) { session: Session ->
             session.run(
                 queryOf(
@@ -178,7 +179,7 @@ class PlanRepository(
                         "planId" to planId.toString(),
                     ),
                 ).map { row: Row ->
-                    PlanTilSalesforceDto(
+                    SamarbeidsplanKafkaMelding(
                         orgnr = row.string("orgnr"),
                         saksnummer = row.string("saksnummer"),
                         samarbeid = SamarbeidDto(
@@ -186,7 +187,7 @@ class PlanRepository(
                             navn = row.string("navn"),
                             status = IAProsessStatus.valueOf(row.string("status"))
                         ),
-                        plan = hentPlan(planId = planId, session = session)?.tilDto()
+                        plan = hentPlan(planId = planId, session = session)?.tilDto()?.tilPlanKafkaMeldingDto()
                             ?: throw Exception("Plan ikke funnet")
                     )
                 }.asSingle,

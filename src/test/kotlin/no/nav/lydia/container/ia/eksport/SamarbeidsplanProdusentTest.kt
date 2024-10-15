@@ -13,7 +13,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.ia.sak.api.plan.PlanTilSalesforceDto
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.After
 import org.junit.Before
@@ -75,7 +75,7 @@ class SamarbeidsplanProdusentTest {
                 konsument = samarbeidsplanKonsument
             ) {
                 it.forExactlyOne { melding ->
-                    val planTilSalesforce = Json.decodeFromString<PlanTilSalesforceDto>(melding)
+                    val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
                     planTilSalesforce.orgnr shouldBe  sak.orgnr
                     planTilSalesforce.saksnummer shouldBe sak.saksnummer
                     planTilSalesforce.samarbeid.id shouldBe samarbeid.id
