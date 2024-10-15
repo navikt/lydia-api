@@ -29,6 +29,9 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import javax.sql.DataSource
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
@@ -54,9 +57,10 @@ import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
 import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
-import no.nav.lydia.ia.sak.OppdaterSistEndretPlanOgSendPåKafkaObserver
+import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
+import no.nav.lydia.ia.sak.SendPlanPåKafkaObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
@@ -110,9 +114,6 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.virksomhet
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import javax.sql.DataSource
 
 fun main() {
     startLydiaBackend()
@@ -173,11 +174,16 @@ fun startLydiaBackend() {
         azureService = azureService,
     )
     val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
+    val sendPlanPåKafkaObserver = SendPlanPåKafkaObserver(
+        planRepository = planRepository,
+        samarbeidsplanProdusent = samarbeidsplanProdusent,
+    )
     val iaProsessService = IAProsessService(
         prosessRepository = prosessRepository,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         planRepository = planRepository,
         samarbeidObservers = listOf(samarbeidBigqueryProdusent),
+        sendPlanPåKafkaObserver = sendPlanPåKafkaObserver,
     )
     val iaSakService = IASakService(
         iaSakRepository = iaSakRepository,
@@ -215,15 +221,14 @@ fun startLydiaBackend() {
             produsent = kafkaProdusent,
         ),
     )
-    val oppdaterSistEndretPlanOgSendPåKafkaObserver = OppdaterSistEndretPlanOgSendPåKafkaObserver(
+    val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(
         planRepository = planRepository,
-        samarbeidsplanProdusent = samarbeidsplanProdusent,
     )
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObservers = listOf(oppdaterSistEndretPlanOgSendPåKafkaObserver, samarbeidplanMetrikkObserver),
+        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver, sendPlanPåKafkaObserver)
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))

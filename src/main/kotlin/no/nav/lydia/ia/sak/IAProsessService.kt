@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.appstatus.ObservedPlan
+import no.nav.lydia.appstatus.PlanHendelseType
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
@@ -23,6 +25,7 @@ class IAProsessService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     val samarbeidObservers: List<Observer<IAProsess>>,
     val planRepository: PlanRepository,
+    val sendPlanPåKafkaObserver: SendPlanPåKafkaObserver,
 ) {
     fun hentIAProsesser(sak: IASak) =
         Either.catch {
@@ -44,7 +47,7 @@ class IAProsessService(
         when (sakshendelse) {
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
-                    ENDRE_PROSESS -> prosessRepository.oppdaterNavnPåProsess(sakshendelse.prosessDto) // TODO: returner samarbeid eller feil så send til observers
+                    ENDRE_PROSESS -> oppdaterNavnPåProsess(sakshendelse.prosessDto)
                     SLETT_PROSESS -> slettProsess(sakshendelse, sak) //  TODO: returner samarbeid eller feil så send til observers
                     NY_PROSESS -> prosessRepository.opprettNyProsess(
                         saksnummer = sakshendelse.saksnummer,
@@ -56,6 +59,18 @@ class IAProsessService(
                 }
             }
             else -> {}
+        }
+    }
+
+    private fun oppdaterNavnPåProsess(iaProsess: IAProsessDto) {
+        prosessRepository.oppdaterNavnPåProsess(iaProsess)
+        planRepository.hentPlan(prosessId = iaProsess.id)?.let { plan ->
+            sendPlanPåKafkaObserver.receive(
+                ObservedPlan(
+                    plan= plan,
+                    hendelsesType = PlanHendelseType.OPPDATER
+                )
+            )
         }
     }
 
