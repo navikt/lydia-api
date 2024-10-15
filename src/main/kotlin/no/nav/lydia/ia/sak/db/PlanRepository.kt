@@ -4,6 +4,8 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import java.util.UUID
+import javax.sql.DataSource
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -12,16 +14,19 @@ import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
+import no.nav.lydia.ia.eksport.SamarbeidDto
+import no.nav.lydia.ia.eksport.tilPlanKafkaMeldingDto
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanRessurs
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
-import java.util.UUID
-import javax.sql.DataSource
 
 class PlanRepository(
     val dataSource: DataSource,
@@ -153,6 +158,64 @@ class PlanRepository(
                 }.asSingle,
             )
         }
+
+    fun hentSamarbeidsplanKafkaMelding(planId: UUID): SamarbeidsplanKafkaMelding? =
+        using(sessionOf(dataSource)) { session: Session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT 
+                          ia_prosess.id as ia_prosess_id,
+                          ia_prosess.navn as navn,
+                          ia_prosess.status as status,
+                          ia_sak.saksnummer as saksnummer,
+                          ia_sak.orgnr as orgnr
+                          from ia_sak_plan 
+                        JOIN ia_prosess on ia_sak_plan.ia_prosess = ia_prosess.id 
+                        JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
+                        WHERE plan_id = :planId
+                    """.trimMargin(),
+                    mapOf(
+                        "planId" to planId.toString(),
+                    ),
+                ).map { row: Row ->
+                    SamarbeidsplanKafkaMelding(
+                        orgnr = row.string("orgnr"),
+                        saksnummer = row.string("saksnummer"),
+                        samarbeid = SamarbeidDto(
+                            id = row.int("ia_prosess_id"),
+                            navn = row.string("navn"),
+                            status = IAProsessStatus.valueOf(row.string("status"))
+                        ),
+                        plan = hentPlan(planId = planId, session = session)?.tilDto()?.tilPlanKafkaMeldingDto()
+                            ?: throw Exception("Plan ikke funnet")
+                    )
+                }.asSingle,
+            )
+        }
+
+
+    private fun hentPlan(planId: UUID, session: Session): Plan? =
+        session.run(
+            queryOf(
+                """
+                        SELECT *
+                        FROM ia_sak_plan
+                        WHERE plan_id = :planId
+                    """.trimMargin(),
+                mapOf(
+                    "planId" to planId.toString(),
+                ),
+            ).map { row: Row ->
+                val planIdLestFraDB = UUID.fromString(row.string("plan_id"))
+                Plan(
+                    id = planIdLestFraDB,
+                    sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
+                    sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
+                    temaer = hentTema(planIdLestFraDB, session),
+                )
+            }.asSingle,
+        )
 
     private fun hentTema(
         planId: UUID,
@@ -368,7 +431,8 @@ class PlanRepository(
     fun oppdaterSistEndret(plan: Plan) =
         using(sessionOf(dataSource)) { session ->
             session.run(
-                queryOf("""
+                queryOf(
+                    """
                     UPDATE ia_sak_plan SET
                       sist_endret = now()
                     WHERE plan_id = :planId
