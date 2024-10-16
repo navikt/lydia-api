@@ -129,14 +129,9 @@ object Jobblytter : CoroutineScope {
                                         statistikkViewOppdaterer.oppdaterStatistikkView()
                                     }
 
-                                    alleKategorierSykefraværsstatistikkDvhImport,
-                                    landSykefraværsstatistikkDvhImport,
-                                    sektorSykefraværsstatistikkDvhImport,
-                                    næringSykefraværsstatistikkDvhImport,
-                                    næringskodeSykefraværsstatistikkDvhImport,
-                                    virksomhetSykefraværsstatistikkDvhImport,
-                                    virksomhetMetadataSykefraværsstatistikkDvhImport,
-                                    publiseringsdatoDvhImport -> logger.info("Jobb '${jobInfo.jobb}' ignorert")
+                                    else -> {
+                                        logger.info("Jobb '${jobInfo.jobb}' ignorert")
+                                    }
                                 }
                                 logger.info("Jobb '${jobInfo.jobb}' ferdig")
                             }

@@ -157,6 +157,8 @@ enum class Topic(
     SPORREUNDERSOKELSE_TOPIC("pia.sporreundersokelse-v1", consumerGroupId = "lydia-api-sporreundersokelse-comsumer"),
     FULLFØRT_BEHOVSVURDERING_TOPIC("pia.fullfort-behovsvurdering-v1", "lydia-api-fullfort-behovsvurdering"),
     BEHOVSVURDERING_BIGQUERY_TOPIC("pia.behovsvurdering-bigquery-v1"),
+    SAMARBEID_BIGQUERY_TOPIC("pia.samarbeid-bigquery-v1"),
+    SAMARBEIDSPLAN_TOPIC("pia.samarbeidsplan-v1", "lydia-api-samarbeidsplan"),
 
     @Deprecated("Bruk SPORREUNDERSOKELSE_HENDELSE_TOPIC")
     SPORREUNDERSOKELSE_SVAR_TOPIC("pia.sporreundersokelse-svar-v1", "lydia-api-sporreundersokelse-svar-consumer"),

@@ -16,8 +16,6 @@ class BehovsvurderingBigqueryProdusent(
         sendTilKafka(spørreundersøkelse = input)
     }
 
-    // TODO: Lag en Behovsvurdering Eksporterer som kan brukes til å eksportere alle behovsvurderinger på nytt
-    // kopier IASakStatistikkEksporterer og tilpass til Behovsvurdering
     fun reEksporter(input: Spørreundersøkelse) {
         sendTilKafka(input)
     }

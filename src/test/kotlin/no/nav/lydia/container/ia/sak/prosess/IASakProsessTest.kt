@@ -3,6 +3,8 @@ package no.nav.lydia.container.ia.sak.prosess
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -20,8 +22,29 @@ import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
+import kotlinx.coroutines.runBlocking
+import no.nav.lydia.Topic
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
+import org.junit.After
+import org.junit.Before
 
 class IASakProsessTest {
+    private val samarbeidsplanKonsument = kafkaContainerHelper.nyKonsument(
+        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe
+    )
+
+    @Before
+    fun setUp() {
+        samarbeidsplanKonsument.subscribe(listOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
+    }
+
+    @After
+    fun tearDown() {
+        samarbeidsplanKonsument.unsubscribe()
+        samarbeidsplanKonsument.close()
+    }
+
     @Test
     fun `skal beholde tildelt prosess selvom man går frem og TILBAKE i saksgang`() {
         val sakIKartlegges = nySakIKartlegges()
@@ -63,15 +86,61 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal kunne endre navn på en prosess`() {
+    fun `skal kunne endre navn på en prosess og sende oppdatert plan på kafka`() {
         val sak = nySakIKartlegges()
             .opprettNyProsses()
         val prosesser = sak.hentIAProsesser()
         prosesser shouldHaveSize 1
 
         val prosess = prosesser.first()
+
+        val opprettetPlan = PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = prosess.id,
+        )
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = "${sak.saksnummer}-${prosess.id}-${opprettetPlan.id}",
+                konsument = samarbeidsplanKonsument
+            ) {
+                it.forExactlyOne { melding ->
+                    val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
+                    planTilSalesforce.orgnr shouldBe  sak.orgnr
+                    planTilSalesforce.saksnummer shouldBe sak.saksnummer
+                    planTilSalesforce.samarbeid.id shouldBe prosess.id
+                    planTilSalesforce.samarbeid.navn shouldBe prosess.navn
+                    planTilSalesforce.samarbeid.status shouldBe prosess.status
+                    planTilSalesforce.plan.id shouldBe opprettetPlan.id
+                    planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size
+                    planTilSalesforce.plan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
+                }
+            }
+        }
+
         val nyttNavn = "Nytt navn"
-        sak.nyttNavnPåProsess(prosess, nyttNavn).hentIAProsesser().first().navn shouldBe nyttNavn
+        val oppdatertProsess = sak.nyttNavnPåProsess(prosess, nyttNavn).hentIAProsesser().first()
+        oppdatertProsess.navn shouldBe nyttNavn
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = "${sak.saksnummer}-${prosess.id}-${opprettetPlan.id}",
+                konsument = samarbeidsplanKonsument
+            ) {
+                it.forExactlyOne { melding ->
+                    val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
+                    planTilSalesforce.orgnr shouldBe  sak.orgnr
+                    planTilSalesforce.saksnummer shouldBe sak.saksnummer
+                    planTilSalesforce.samarbeid.id shouldBe oppdatertProsess.id
+                    planTilSalesforce.samarbeid.navn shouldBe oppdatertProsess.navn
+                    planTilSalesforce.samarbeid.status shouldBe oppdatertProsess.status
+                    planTilSalesforce.plan.id shouldBe opprettetPlan.id
+                    planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size
+                    planTilSalesforce.plan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
+                }
+            }
+        }
     }
 
     @Test

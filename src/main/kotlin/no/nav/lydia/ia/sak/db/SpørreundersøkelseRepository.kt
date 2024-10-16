@@ -7,11 +7,8 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.*
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
 import io.ktor.http.HttpStatusCode
-import java.time.LocalDateTime
-import java.util.*
-import javax.sql.DataSource
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
@@ -31,6 +28,9 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import java.time.LocalDateTime
+import java.util.UUID
+import javax.sql.DataSource
 
 class SpørreundersøkelseRepository(private val dataSource: DataSource) {
     private val gson: Gson = GsonBuilder().create()
@@ -507,4 +507,16 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
         return hentSpørreundersøkelse(behovsvurderingId)?.right()
             ?: IASakKartleggingError.`feil under oppdatering`.left()
     }
+
+    fun hentAlleSpørreundersøkelser(): List<Spørreundersøkelse> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_sak_kartlegging
+                    """.trimMargin(),
+                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asList,
+            )
+        }
 }

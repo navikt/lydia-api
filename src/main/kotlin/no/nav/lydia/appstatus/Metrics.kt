@@ -105,7 +105,7 @@ class Metrics {
     }
 }
 
-data class PlanMetric (
+data class ObservedPlan (
     val plan: Plan,
     val hendelsesType: PlanHendelseType
 
