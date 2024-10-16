@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.db.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
@@ -85,6 +86,7 @@ class IASakshendelseRepository(
     fun lagreHendelse(
         hendelse: IASakshendelse,
         sistEndretAvHendelseId: String?,
+        resulterendeStatus: IAProsessStatus,
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
             tx.validerAtSakHarRiktigEndretAvHendelse(hendelse.saksnummer, sistEndretAvHendelseId)
@@ -96,6 +98,7 @@ class IASakshendelseRepository(
                                 saksnummer,
                                 orgnr,
                                 type,
+                                resulterende_status,
                                 opprettet_av,
                                 opprettet_av_rolle,
                                 opprettet,
@@ -107,6 +110,7 @@ class IASakshendelseRepository(
                                 :saksnummer,
                                 :orgnr,
                                 :type,
+                                :resulterendeStatus,
                                 :opprettet_av,
                                 :opprettet_av_rolle,
                                 :opprettet,
@@ -119,6 +123,7 @@ class IASakshendelseRepository(
                         "saksnummer" to hendelse.saksnummer,
                         "orgnr" to hendelse.orgnummer,
                         "type" to hendelse.hendelsesType.name,
+                        "resulterendeStatus" to resulterendeStatus.name,
                         "opprettet_av" to hendelse.opprettetAv,
                         "opprettet_av_rolle" to hendelse.opprettetAvRolle?.toString(),
                         "opprettet" to hendelse.opprettetTidspunkt,

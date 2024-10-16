@@ -1,0 +1,1 @@
+alter table ia_sak_hendelse add column resulterende_status varchar default null;
