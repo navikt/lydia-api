@@ -66,7 +66,10 @@ class IASakService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    private fun IASakshendelse.lagre(sistEndretAvHendelseId: String?) = iaSakshendelseRepository.lagreHendelse(this, sistEndretAvHendelseId)
+    private fun IASakshendelse.lagre(
+        sistEndretAvHendelseId: String?,
+        resulterendeStatus: IAProsessStatus,
+    ) = iaSakshendelseRepository.lagreHendelse(this, sistEndretAvHendelseId, resulterendeStatus)
 
     private fun IASak.lagre() = iaSakRepository.opprettSak(this).also(::varsleIASakObservers)
 
@@ -95,7 +98,7 @@ class IASakService(
         }
         val sak = IASak.fraFørsteHendelse(
             IASakshendelse.nyFørsteHendelse(orgnummer = orgnummer, superbruker = superbruker, navEnhet = navEnhet)
-                .lagre(null),
+                .lagre(null, IAProsessStatus.NY),
         ).lagre()
         val sistEndretAvHendelseId = sak.endretAvHendelseId
 
@@ -103,7 +106,7 @@ class IASakService(
             hendelsestype = VIRKSOMHET_VURDERES,
             superbruker = superbruker,
             navEnhet = navEnhet,
-        ).lagre(null)
+        ).lagre(null, IAProsessStatus.VURDERES)
             .let { vurderesHendelse -> superbruker.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
@@ -158,7 +161,8 @@ class IASakService(
                 val sak = IASak.fraHendelser(hendelser)
                 saksbehandler.utførHendelsePåSak(sak = sak, hendelse = sakshendelse)
                     .map { oppdatertSak ->
-                        sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
+                        val nyStatus = oppdatertSak.status
+                        sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, nyStatus)
                         årsakService.lagreÅrsak(sakshendelse)
                         iaProsessService.oppdaterProsess(sakshendelse, sak)
                         when (sakshendelse.hendelsesType) {
@@ -184,7 +188,7 @@ class IASakService(
             val sistEndretAvHendelseId = it.endretAvHendelseId
             val endretTidspunkt = it.endretTidspunkt
             if (!tørrKjør) {
-                tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId)
+                tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, IAProsessStatus.IKKE_AKTUELL)
                 val oppdatertSak = tilbakeførSak(it, tilbakeføringsHendelse)
                 årsakService.lagreÅrsak(tilbakeføringsHendelse)
                 oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)

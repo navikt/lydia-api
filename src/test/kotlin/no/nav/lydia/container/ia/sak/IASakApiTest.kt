@@ -102,6 +102,24 @@ class IASakApiTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
 
     @Test
+    fun `skal lagre resulterende status i ia_sak_hendelse`() {
+        val sak = nySakIKartlegges()
+
+        val resulterendeStatuser = postgresContainer.hentAlleRaderTilEnkelKolonne<String>("""
+            select resulterende_status from ia_sak_hendelse where saksnummer = '${sak.saksnummer}'
+        """.trimIndent())
+
+        resulterendeStatuser shouldHaveSize 5
+        resulterendeStatuser shouldBe listOf(
+            NY.name,
+            VURDERES.name,
+            VURDERES.name,
+            KONTAKTES.name,
+            KARTLEGGES.name,
+        )
+    }
+
+    @Test
     fun `returnerer riktig saksstatus`() {
         val sak = nySakIKartlegges().opprettNyProsses(navn = "Nytt samarbeid")
         val samarbeid = sak.hentIAProsesser()
