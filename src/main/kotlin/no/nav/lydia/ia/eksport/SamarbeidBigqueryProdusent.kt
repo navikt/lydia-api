@@ -14,8 +14,6 @@ class SamarbeidBigqueryProdusent(
         sendTilKafka(samarbeid = input)
     }
 
-    // TODO: Lag en samarbeid eksporterer som kan brukes til å eksportere alle behovsvurderinger på nytt
-    // kopier IASakStatistikkEksporterer og tilpass til samarbeid
     fun reEksporter(input: IAProsess) {
         sendTilKafka(input)
     }

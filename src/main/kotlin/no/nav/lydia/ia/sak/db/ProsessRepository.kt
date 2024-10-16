@@ -7,77 +7,94 @@ import kotliquery.using
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
-import javax.sql.DataSource
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import javax.sql.DataSource
 
-class ProsessRepository(val dataSource: DataSource) {
-
-    fun hentProsess(saksnummer: String, prosessId: Int) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT *
-                        FROM ia_prosess
-                        WHERE saksnummer = :saksnummer
-                        AND id = :prosessId
-                        AND status = 'AKTIV'
-                    """.trimIndent(),
-                    mapOf(
-                        "saksnummer" to saksnummer,
-                        "prosessId" to prosessId
-                    )
-                ).map(this::mapRowToIaProsessDto).asSingle
-            )
-        }
+class ProsessRepository(
+    val dataSource: DataSource,
+) {
+    fun hentProsess(
+        saksnummer: String,
+        prosessId: Int,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                SELECT *
+                FROM ia_prosess
+                WHERE saksnummer = :saksnummer
+                AND id = :prosessId
+                AND status = 'AKTIV'
+                """.trimIndent(),
+                mapOf(
+                    "saksnummer" to saksnummer,
+                    "prosessId" to prosessId,
+                ),
+            ).map(this::mapRowToIaProsessDto).asSingle,
+        )
+    }
 
     fun hentProsesser(saksnummer: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                        SELECT *
-                        FROM ia_prosess
-                        WHERE saksnummer = :saksnummer
-                        AND status = 'AKTIV'
+                    SELECT *
+                    FROM ia_prosess
+                    WHERE saksnummer = :saksnummer
+                    AND status = 'AKTIV'
                     """.trimIndent(),
                     mapOf(
-                        "saksnummer" to saksnummer
-                    )
-                ).map(this::mapRowToIaProsessDto).asList
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map(this::mapRowToIaProsessDto).asList,
             )
         }
 
-    fun opprettNyProsess(saksnummer: String, navn: String? = "Samarbeid uten navn"): IAProsess =
+    fun hentAlleProsesser() =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                        INSERT INTO ia_prosess (saksnummer, navn) 
-                        values (:saksnummer, :navn)
-                         returning *
+                    SELECT *
+                    FROM ia_prosess
+                    """.trimIndent(),
+                ).map(this::mapRowToIaProsessDto).asList,
+            )
+        }
+
+    fun opprettNyProsess(
+        saksnummer: String,
+        navn: String? = "Samarbeid uten navn",
+    ): IAProsess =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    INSERT INTO ia_prosess (saksnummer, navn) 
+                    values (:saksnummer, :navn)
+                     returning *
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer,
                         "navn" to navn,
-                    )
-                ).map(this::mapRowToIaProsessDto).asSingle
+                    ),
+                ).map(this::mapRowToIaProsessDto).asSingle,
             )!!
         }
-
 
     fun oppdaterNavnPåProsess(prosessDto: IAProsessDto) {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                                UPDATE ia_prosess SET navn = :navn WHERE id = :prosessId
-                            """.trimIndent(),
+                    UPDATE ia_prosess SET navn = :navn WHERE id = :prosessId
+                    """.trimIndent(),
                     mapOf(
                         "navn" to prosessDto.navn,
-                        "prosessId" to prosessDto.id
-                    )
-                ).asUpdate
+                        "prosessId" to prosessDto.id,
+                    ),
+                ).asUpdate,
             )
         }
     }
@@ -102,10 +119,9 @@ class ProsessRepository(val dataSource: DataSource) {
                     """.trimIndent(),
                     mapOf(
                         "prosessId" to prosessHendelse.prosessDto.id,
-                        "saksnummer" to prosessHendelse.saksnummer
-                    )
-                ).asUpdate
+                        "saksnummer" to prosessHendelse.saksnummer,
+                    ),
+                ).asUpdate,
             )
         }
-
 }
