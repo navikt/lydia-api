@@ -19,7 +19,7 @@ spec:
       application: lydia-api
       access: readwrite   # read, write, readwrite
     - team: team-dialog
-      application: sf-ia-sak
+      application: sf-ia-samarbeidsplan
       access: read
     - team: pia
       application: pia-devops
