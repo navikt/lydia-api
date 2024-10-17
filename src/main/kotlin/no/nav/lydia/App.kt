@@ -50,6 +50,7 @@ import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
@@ -268,6 +269,10 @@ fun startLydiaBackend() {
         iaSakhendelseStatusJobb = IaSakhendelseStatusJobb(
             iaSakRepository = iaSakRepository,
             iaSakshendelseRepository = iaSakshendelseRepository,
+        ),
+        SamarbeidsplanKafkaEksporterer(
+            samarbeidsplanProdusent = samarbeidsplanProdusent,
+            planRepository = planRepository
         )
     )
 
@@ -365,6 +370,7 @@ private fun jobblytter(
     næringsDownloader: NæringsDownloader,
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
     iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
+    samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
 ) {
     Jobblytter.apply {
         create(
@@ -376,7 +382,8 @@ private fun jobblytter(
             iaSakStatusExportør = iaSakStatusExportør,
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
-            iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
+            iaSakhendelseStatusJobb = iaSakhendelseStatusJobb,
+            samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer
         )
         run()
     }

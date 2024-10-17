@@ -29,6 +29,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 
 object Jobblytter : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -44,6 +45,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var næringsDownloader: NæringsDownloader
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
     private lateinit var iaSakhendelseStatusJobb: IaSakhendelseStatusJobb
+    private lateinit var samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer
     private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
     private val konsumentGruppe = Topic.JOBBLYTTER_TOPIC.konsumentGruppe
 
@@ -64,6 +66,7 @@ object Jobblytter : CoroutineScope {
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
         iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
+        samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer
     ) {
         logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
@@ -82,6 +85,7 @@ object Jobblytter : CoroutineScope {
         this.næringsDownloader = næringsDownloader
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
         this.iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
+        this.samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer
 
         logger.info("Created kafka consumer job for $topicNavn")
     }
@@ -132,6 +136,10 @@ object Jobblytter : CoroutineScope {
 
                                     materializedViewOppdatering -> {
                                         statistikkViewOppdaterer.oppdaterStatistikkView()
+                                    }
+
+                                    iaSakSamarbeidsplanEksport -> {
+                                        samarbeidsplanKafkaEksporterer.eksporter()
                                     }
 
                                     else -> {

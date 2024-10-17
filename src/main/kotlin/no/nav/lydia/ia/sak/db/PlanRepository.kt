@@ -159,6 +159,39 @@ class PlanRepository(
             )
         }
 
+    fun hentAlleSamarbeidsplanKafkaMelding(): List<SamarbeidsplanKafkaMelding> =
+        using(sessionOf(dataSource)) { session: Session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT 
+                          ia_prosess.id as ia_prosess_id,
+                          ia_prosess.navn as navn,
+                          ia_prosess.status as status,
+                          ia_sak.saksnummer as saksnummer,
+                          ia_sak.orgnr as orgnr,
+                          ia_sak_plan.plan_id as plan_id
+                          from ia_sak_plan 
+                        JOIN ia_prosess on ia_sak_plan.ia_prosess = ia_prosess.id 
+                        JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
+                    """.trimMargin()
+                ).map { row: Row ->
+                    SamarbeidsplanKafkaMelding(
+                        orgnr = row.string("orgnr"),
+                        saksnummer = row.string("saksnummer"),
+                        samarbeid = SamarbeidDto(
+                            id = row.int("ia_prosess_id"),
+                            navn = row.string("navn"),
+                            status = IAProsessStatus.valueOf(row.string("status"))
+                        ),
+                        plan = hentPlan(planId = UUID.fromString(row.string("plan_id")), session = session)?.tilDto()
+                            ?.tilPlanKafkaMeldingDto()
+                            ?: throw Exception("Plan ikke funnet")
+                    )
+                }.asList,
+            )
+        }
+
     fun hentSamarbeidsplanKafkaMelding(planId: UUID): SamarbeidsplanKafkaMelding? =
         using(sessionOf(dataSource)) { session: Session ->
             session.run(
