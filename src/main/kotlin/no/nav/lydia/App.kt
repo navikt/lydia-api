@@ -109,6 +109,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
+import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -236,6 +237,7 @@ fun startLydiaBackend() {
     brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
+    val iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
     jobblytter(
         naisEnv = naisEnv,
         iaSakStatusOppdaterer = IASakStatusOppdaterer(iaSakService = iaSakService),
@@ -263,6 +265,10 @@ fun startLydiaBackend() {
         statistikkViewOppdaterer = StatistikkViewOppdaterer(
             dataSource = dataSource,
         ),
+        iaSakhendelseStatusJobb = IaSakhendelseStatusJobb(
+            iaSakRepository = iaSakRepository,
+            iaSakshendelseRepository = iaSakshendelseRepository,
+        )
     )
 
     listOf(
@@ -358,6 +364,7 @@ private fun jobblytter(
     iaSakStatusExportør: IASakStatusEksportør,
     næringsDownloader: NæringsDownloader,
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
+    iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
 ) {
     Jobblytter.apply {
         create(
@@ -369,6 +376,7 @@ private fun jobblytter(
             iaSakStatusExportør = iaSakStatusExportør,
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
+            iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
         )
         run()
     }
