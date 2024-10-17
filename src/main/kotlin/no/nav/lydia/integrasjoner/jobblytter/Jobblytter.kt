@@ -19,6 +19,7 @@ import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
+import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -42,6 +43,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var iaSakStatusExportør: IASakStatusEksportør
     private lateinit var næringsDownloader: NæringsDownloader
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
+    private lateinit var iaSakhendelseStatusJobb: IaSakhendelseStatusJobb
     private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
     private val konsumentGruppe = Topic.JOBBLYTTER_TOPIC.konsumentGruppe
 
@@ -61,6 +63,7 @@ object Jobblytter : CoroutineScope {
         iaSakStatusExportør: IASakStatusEksportør,
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
+        iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
     ) {
         logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
@@ -78,6 +81,7 @@ object Jobblytter : CoroutineScope {
         this.iaSakLeveranseEksportør = iaSakLeveranseEksportør
         this.næringsDownloader = næringsDownloader
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
+        this.iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
 
         logger.info("Created kafka consumer job for $topicNavn")
     }
@@ -102,7 +106,8 @@ object Jobblytter : CoroutineScope {
                                     }
 
                                     ryddeIUrørteSakerTørrKjør -> {
-                                        iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
+                                        iaSakhendelseStatusJobb.kjør() // TODO: RYDD OPP
+//                                        iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
                                     }
 
                                     iaSakEksport -> {
