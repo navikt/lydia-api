@@ -12,6 +12,7 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.fail
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 
 fun IASakDto.nyttNavnPåProsess(
     iaProsessDto: IAProsessDto,
@@ -24,7 +25,7 @@ fun IASakDto.nyttNavnPåProsess(
 )
 
 fun IASakDto.opprettNyProsses(
-    navn: String? = "Samarbeid uten navn",
+    navn: String? = DEFAULT_SAMARBEID_NAVN,
     token: String = oauth2ServerContainer.saksbehandler1.token,
 ) =
     nyHendelse(

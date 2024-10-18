@@ -17,6 +17,7 @@ import kotliquery.using
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.eksport.tilPlanKafkaMeldingDto
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
@@ -181,7 +182,7 @@ class PlanRepository(
                         saksnummer = row.string("saksnummer"),
                         samarbeid = SamarbeidDto(
                             id = row.int("ia_prosess_id"),
-                            navn = row.string("navn"),
+                            navn = row.stringOrNull("navn") ?: DEFAULT_SAMARBEID_NAVN,
                             status = IAProsessStatus.valueOf(row.string("status"))
                         ),
                         plan = hentPlan(planId = UUID.fromString(row.string("plan_id")), session = session)?.tilDto()
@@ -217,7 +218,7 @@ class PlanRepository(
                         saksnummer = row.string("saksnummer"),
                         samarbeid = SamarbeidDto(
                             id = row.int("ia_prosess_id"),
-                            navn = row.string("navn"),
+                            navn = row.stringOrNull("navn") ?: DEFAULT_SAMARBEID_NAVN,
                             status = IAProsessStatus.valueOf(row.string("status"))
                         ),
                         plan = hentPlan(planId = planId, session = session)?.tilDto()?.tilPlanKafkaMeldingDto()

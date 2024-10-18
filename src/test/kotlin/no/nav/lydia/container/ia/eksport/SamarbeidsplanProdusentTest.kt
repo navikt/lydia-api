@@ -10,13 +10,16 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
+import no.nav.lydia.helper.opprettNyProsses
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
@@ -41,7 +44,7 @@ class SamarbeidsplanProdusentTest {
     }
 
     @Test
-    fun `starter re-eksport av alle samarbeidsplaner til salesforce` () {
+    fun `starter re-eksport av alle samarbeidsplaner til salesforce`() {
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
         // Opprette noen saker med planer
         val sak1 = nySakIKartleggesMedEtSamarbeid()
@@ -88,6 +91,34 @@ class SamarbeidsplanProdusentTest {
             konsummerOgSjekkKafkaMelding(sak1, samarbeid1, opprettetPlan1)
         }
         lydiaApiContainer shouldContainLog "Ferdig med re-eksport av 2/2 samarbeidsplan".toRegex()
+    }
+
+    @Test
+    fun `re-eksport av samarbeidsplaner til salesforce hvor samarbeid har et tomt (null) navn`() {
+        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+        val sak1 = nySakIKartlegges().opprettNyProsses(navn = null)
+
+        val samarbeid1 = sak1.hentIAProsesser().first()
+        val opprettetPlan1 = PlanHelper.opprettEnPlan(
+            orgnr = sak1.orgnr,
+            saksnummer = sak1.saksnummer,
+            prosessId = samarbeid1.id,
+            redigertPlan = planMal
+        )
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
+                konsument = samarbeidsplanKonsument
+            ) {
+                println("Fikk en kafka melding for ${sak1.orgnr} ")
+            }
+        }
+
+        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakSamarbeidsplanEksport)
+
+        runBlocking {
+            konsummerOgSjekkKafkaMelding(sak1, samarbeid1, opprettetPlan1)
+        }
     }
 
     @Test
@@ -161,7 +192,11 @@ class SamarbeidsplanProdusentTest {
         planTilSalesforce.orgnr shouldBe sak.orgnr
         planTilSalesforce.saksnummer shouldBe sak.saksnummer
         planTilSalesforce.samarbeid.id shouldBe samarbeid.id
-        planTilSalesforce.samarbeid.navn shouldBe samarbeid.navn
+        if (samarbeid.navn == null) {
+            planTilSalesforce.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
+        } else {
+            planTilSalesforce.samarbeid.navn shouldBe samarbeid.navn
+        }
         planTilSalesforce.samarbeid.status shouldBe samarbeid.status
         planTilSalesforce.plan.id shouldBe opprettetPlan.id
         planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size

@@ -9,6 +9,7 @@ import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import javax.sql.DataSource
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 
 class ProsessRepository(
     val dataSource: DataSource,
@@ -65,7 +66,7 @@ class ProsessRepository(
 
     fun opprettNyProsess(
         saksnummer: String,
-        navn: String? = "Samarbeid uten navn",
+        navn: String? = DEFAULT_SAMARBEID_NAVN,
     ): IAProsess =
         using(sessionOf(dataSource)) { session ->
             session.run(

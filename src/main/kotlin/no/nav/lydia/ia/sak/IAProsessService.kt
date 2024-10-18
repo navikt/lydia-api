@@ -100,6 +100,8 @@ class IAProsessService(
     }
 }
 
+const val DEFAULT_SAMARBEID_NAVN = "Samarbeid uten navn"
+
 object IAProsessFeil {
     val `feil ved henting av prosess` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
     val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
