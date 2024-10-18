@@ -5,10 +5,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SpørreundersøkelseResultatDto(
     val kartleggingId: String,
-    @Deprecated("Skal erstattes av deltakere som har fullført tema")
-    val antallUnikeDeltakereMedMinstEttSvar: Int,
-    @Deprecated("Skal erstattes av deltakere som har fullført tema")
-    val antallUnikeDeltakereSomHarSvartPåAlt: Int,
     val spørsmålMedSvarPerTema: List<TemaResultatDto>,
 )
 
@@ -24,6 +20,7 @@ data class SpørsmålResultatDto(
     val spørsmålId: String,
     val tekst: String,
     val flervalg: Boolean,
+    val antallDeltakereSomHarSvart: Int,
     val svarListe: List<SvarResultatDto>,
 )
 

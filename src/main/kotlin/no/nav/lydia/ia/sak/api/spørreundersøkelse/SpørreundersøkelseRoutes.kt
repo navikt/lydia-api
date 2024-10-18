@@ -55,7 +55,7 @@ fun Route.iaSakSpørreundersøkelse(
                 orgnummer = orgnummer,
                 saksbehandler = saksbehandler,
                 iaSak = iaSak,
-                prosessId = prosessId
+                prosessId = prosessId,
             )
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
@@ -248,4 +248,5 @@ object IASakKartleggingError {
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
     val `ugyldig kartleggingId` = Feil("Ugyldig kartlegging", HttpStatusCode.BadRequest)
+    val `ugyldig temaId` = Feil("Ugyldig temaId", HttpStatusCode.BadRequest)
 }

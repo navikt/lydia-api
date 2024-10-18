@@ -230,64 +230,33 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal hente antall unike deltakere som har svart på minst ett spørsmål`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-
-        val kartleggingDto = sak.opprettKartlegging()
-        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        listOf(UUID.randomUUID().toString(), UUID.randomUUID().toString()).forAll { sesjonId ->
-            enDeltakerSvarerPåEtSpørsmål(kartleggingDto = kartleggingDto, sesjonId = sesjonId)
-        }
-
-        kartleggingDto.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingDto.kartleggingId,
-        )
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
-    }
-
-    @Test
-    fun `skal hente antall unike deltakere som har svart på alle spørsmål`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val sesjonId = UUID.randomUUID().toString()
-
-        val kartleggingDto = sak.opprettKartlegging()
-        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        enDeltakerSvarerPåEtSpørsmål(kartleggingDto = kartleggingDto, UUID.randomUUID().toString())
-        enDeltakerSvarerPåALLESpørsmål(kartleggingDto, sesjonId)
-
-        kartleggingDto.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            kartleggingId = kartleggingDto.kartleggingId,
-        )
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 1
-    }
-
-    @Test
     fun `skal ikke kunne hente resultat før kartlegging er avsluttet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettKartlegging()
-        kartlegging.status shouldBe OPPRETTET
-
-        val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val påbegyntBehovsvurdering = sak.opprettKartlegging().also {
+            it.status shouldBe OPPRETTET
+        }.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).also {
+            it.status shouldBe PÅBEGYNT
+        }
 
         listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
-            enDeltakerSvarerPåEtSpørsmål(kartleggingDto = kartlegging, UUID.randomUUID().toString())
+            enDeltakerSvarerPåEtSpørsmål(kartleggingDto = påbegyntBehovsvurdering, UUID.randomUUID().toString())
         }
+
+        val førsteSpørsmål = påbegyntBehovsvurdering.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
+        val sesjonId = UUID.randomUUID()
+        sendKartleggingSvarTilKafka(
+            kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+            spørsmålId = førsteSpørsmål.id,
+            sesjonId = sesjonId.toString(),
+            svarIder = listOf(førsteSvaralternativ.svarId),
+        )
 
         shouldFail {
             hentKartleggingMedSvar(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                kartleggingId = pågåendeKartlegging.kartleggingId,
+                kartleggingId = påbegyntBehovsvurdering.kartleggingId,
             )
         }
     }
@@ -295,32 +264,40 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal ikke kunne få antall svar dersom antall deltakere er færre enn 3`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettKartlegging()
-        kartlegging.status shouldBe OPPRETTET
-
-        val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        listOf(UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
-            pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvaralternativ ->
-                sendKartleggingSvarTilKafka(
-                    kartleggingId = pågåendeKartlegging.kartleggingId,
-                    spørsmålId = spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().id,
-                    sesjonId = sesjonId.toString(),
-                    svarIder = listOf(spørsmålOgSvaralternativ.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
-                )
-            }
+        val påbegyntBehovsvurdering = sak.opprettKartlegging().also {
+            it.status shouldBe OPPRETTET
+        }.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).also {
+            it.status shouldBe PÅBEGYNT
         }
-        kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
+        val førsteSpørsmål =
+            påbegyntBehovsvurdering.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
+
+        val antallSvar = 2
+
+        repeat(antallSvar) {
+            val sesjonId = UUID.randomUUID()
+            sendKartleggingSvarTilKafka(
+                kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+                spørsmålId = førsteSpørsmål.id,
+                sesjonId = sesjonId.toString(),
+                svarIder = listOf(førsteSvaralternativ.svarId),
+            )
+        }
+
+        påbegyntBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val spørreundersøkelseResultat = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = pågåendeKartlegging.kartleggingId,
+            kartleggingId = påbegyntBehovsvurdering.kartleggingId,
         )
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 2
-        oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forAll { temaMedSpørsmålOgSvar ->
-            temaMedSpørsmålOgSvar.spørsmålMedSvar.forAll { spørsmålMedSvar ->
-                spørsmålMedSvar.svarListe.forAll { svar ->
+
+        spørreundersøkelseResultat.spørsmålMedSvarPerTema.forAll { tema ->
+            tema.spørsmålMedSvar.forAll { spørsmål ->
+                spørsmål.antallDeltakereSomHarSvart shouldBe 0
+                spørsmål.svarListe.forAll { svar ->
                     svar.antallSvar shouldBe 0
                 }
             }
@@ -330,36 +307,46 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal få svardetaljer for et spørsmål dersom antall besvarelser er 3 eller flere`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettKartlegging()
-        kartlegging.status shouldBe OPPRETTET
+        val påbegyntBehovsvurdering = sak.opprettKartlegging().also {
+            it.status shouldBe OPPRETTET
+        }.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).also {
+            it.status shouldBe PÅBEGYNT
+        }
 
-        val pågåendeKartlegging = kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val førsteSpørsmål =
+            påbegyntBehovsvurdering.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
 
-        val spørsmålOgSvaralternativ =
-            pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
-        val svaralternativ = spørsmålOgSvaralternativ.svaralternativer.first()
-        listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
+        val antallSvar = 3
+
+        repeat(antallSvar) {
+            val sesjonId = UUID.randomUUID()
             sendKartleggingSvarTilKafka(
-                kartleggingId = pågåendeKartlegging.kartleggingId,
-                spørsmålId = spørsmålOgSvaralternativ.id,
+                kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+                spørsmålId = førsteSpørsmål.id,
                 sesjonId = sesjonId.toString(),
-                svarIder = listOf(svaralternativ.svarId),
+                svarIder = listOf(førsteSvaralternativ.svarId),
             )
         }
-        kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val oppdatertKartleggingMedSvar = hentKartleggingMedSvar(
+        påbegyntBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val spørreundersøkelseResultat = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = pågåendeKartlegging.kartleggingId,
+            kartleggingId = påbegyntBehovsvurdering.kartleggingId,
         )
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereMedMinstEttSvar shouldBe 3
-        oppdatertKartleggingMedSvar.antallUnikeDeltakereSomHarSvartPåAlt shouldBe 0
-        oppdatertKartleggingMedSvar.spørsmålMedSvarPerTema.forExactlyOne { temaMedSpørsmålOgSvar ->
-            temaMedSpørsmålOgSvar.navn shouldNotBe null
-            temaMedSpørsmålOgSvar.spørsmålMedSvar.forExactlyOne { spørsmålMedSvar ->
-                spørsmålMedSvar.svarListe.forExactlyOne { svar ->
-                    svar.antallSvar shouldBe 3
+
+        spørreundersøkelseResultat.spørsmålMedSvarPerTema.forAll { tema ->
+            tema.spørsmålMedSvar.forAll { spørsmål ->
+                if (spørsmål.spørsmålId == førsteSpørsmål.id) {
+                    spørsmål.antallDeltakereSomHarSvart shouldBe antallSvar
+                    spørsmål.svarListe.first().antallSvar shouldBe antallSvar
+                } else {
+                    spørsmål.antallDeltakereSomHarSvart shouldBe 0
+                    spørsmål.svarListe.forAll { svar ->
+                        svar.antallSvar shouldBe 0
+                    }
                 }
             }
         }
@@ -654,24 +641,6 @@ class SpørreundersøkelseApiTest {
             }
 
         hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id) shouldHaveSize 0
-    }
-
-    fun enDeltakerSvarerPåALLESpørsmål(
-        kartleggingDto: SpørreundersøkelseDto,
-        sesjonId: String = UUID.randomUUID().toString(),
-    ) {
-        kartleggingDto.temaMedSpørsmålOgSvaralternativer.forEach { temaMedSpørsmålOgSvaralternativer ->
-            temaMedSpørsmålOgSvaralternativer.spørsmålOgSvaralternativer.forEach { spørsmålMedSvarAlternativer ->
-                spørsmålMedSvarAlternativer.svaralternativer.first().let { svar ->
-                    sendKartleggingSvarTilKafka(
-                        kartleggingId = kartleggingDto.kartleggingId,
-                        spørsmålId = spørsmålMedSvarAlternativer.id,
-                        sesjonId = sesjonId,
-                        svarIder = listOf(svar.svarId),
-                    )
-                }
-            }
-        }
     }
 
     fun enDeltakerSvarerPåEtSpørsmål(

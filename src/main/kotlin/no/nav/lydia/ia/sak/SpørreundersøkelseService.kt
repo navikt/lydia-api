@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
@@ -12,21 +13,21 @@ import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.tilDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.tilKafkaMelding
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.tilResultat
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -93,96 +94,15 @@ class SpørreundersøkelseService(
     }
 
     fun hentSpørreundersøkelseResultat(spørreundersøkelseId: String): Either<Feil, SpørreundersøkelseResultatDto> {
-        val spørreundersøkelse =
-            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
-                ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
-
+        val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
+            ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
         if (spørreundersøkelse.status != AVSLUTTET) {
             return IASakKartleggingError.`kartlegging er ikke avsluttet`.left()
         }
 
-        val (alleSvar, antallUnikeDeltakereMedMinstEttSvar, antallUnikeDeltakereSomHarSvartPåAlt) = spørreundersøkelse.beregnAlleSvar()
+        val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
 
-        val spørsmålMedSvarPerTema: List<TemaResultatDto> = spørreundersøkelse.tema.map { svarTilTemaDto(alleSvar, it) }
-
-        return SpørreundersøkelseResultatDto(
-            kartleggingId = spørreundersøkelse.id.toString(),
-            antallUnikeDeltakereMedMinstEttSvar = antallUnikeDeltakereMedMinstEttSvar,
-            antallUnikeDeltakereSomHarSvartPåAlt = antallUnikeDeltakereSomHarSvartPåAlt,
-            spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
-        ).right()
-    }
-
-    private fun svarTilTema(
-        alleSvar: List<SpørreundersøkelseSvarDto>,
-        tema: Tema,
-    ) = SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat(
-        temaId = tema.tema.id,
-        navn = tema.tema.navn,
-        spørsmålMedSvar = tema.spørsmål.map { spørsmål ->
-            SpørreundersøkelseOppdateringProdusent.SerializableSpørsmålResultat(
-                spørsmålId = spørsmål.spørsmålId.toString(),
-                tekst = spørsmål.spørsmåltekst,
-                flervalg = spørsmål.flervalg,
-                svarListe = spørsmål.svaralternativer.map { svar ->
-                    SpørreundersøkelseOppdateringProdusent.SerializableSvarResultat(
-                        svarId = svar.svarId.toString(),
-                        tekst = svar.svartekst,
-                        antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
-                            it.spørsmålId == spørsmål.spørsmålId.toString() &&
-                                it.svarIder.contains(svar.svarId.toString())
-                        }.size,
-                    )
-                },
-            )
-        },
-    )
-
-    private fun svarTilTemaDto(
-        alleSvar: List<SpørreundersøkelseSvarDto>,
-        tema: Tema,
-    ) = TemaResultatDto(
-        temaId = tema.tema.id,
-        navn = tema.tema.navn,
-        spørsmålMedSvar = tema.spørsmål.map { spørsmål ->
-            SpørsmålResultatDto(
-                spørsmålId = spørsmål.spørsmålId.toString(),
-                tekst = spørsmål.spørsmåltekst,
-                flervalg = spørsmål.flervalg,
-                svarListe = spørsmål.svaralternativer.map { svar ->
-                    SvarResultatDto(
-                        svarId = svar.svarId.toString(),
-                        tekst = svar.svartekst,
-                        antallSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar).filter {
-                            it.spørsmålId == spørsmål.spørsmålId.toString() &&
-                                it.svarIder.contains(svar.svarId.toString())
-                        }.size,
-                    )
-                },
-            )
-        },
-    )
-
-    private fun filtrerVekkSvarMedForFåBesvarelser(alleSvar: List<SpørreundersøkelseSvarDto>): List<SpørreundersøkelseSvarDto> {
-        val spørsmålMedNokSvar = alleSvar.groupBy { it.spørsmålId }
-            .filter { it.value.size >= MINIMUM_ANTALL_DELTAKERE }
-            .map { it.key }
-        return alleSvar.filter { it.spørsmålId in spørsmålMedNokSvar }
-    }
-
-    private fun Spørreundersøkelse.beregnAlleSvar(): Triple<List<SpørreundersøkelseSvarDto>, Int, Int> {
-        val alleSvar: List<SpørreundersøkelseSvarDto> =
-            spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = this.id.toString())
-        val svarPerSesjonId: Map<String, List<SpørreundersøkelseSvarDto>> =
-            alleSvar.filter { it.svarIder.isNotEmpty() }.groupBy { it.sesjonId }
-        val antallUnikeDeltakereMedMinstEttSvar = svarPerSesjonId.size
-        val antallSpørsmål = this.tema.sumOf { spørsmålForTema ->
-            spørsmålForTema.spørsmål.size
-        }
-        val antallUnikeDeltakereSomHarSvartPåAlt = svarPerSesjonId.filter {
-            it.value.size == antallSpørsmål
-        }.size
-        return Triple(alleSvar, antallUnikeDeltakereMedMinstEttSvar, antallUnikeDeltakereSomHarSvartPåAlt)
+        return spørreundersøkelse.tilResultat(alleSvar).tilDto().right()
     }
 
     fun opprettSpørreundersøkelse(
@@ -321,28 +241,27 @@ class SpørreundersøkelseService(
             resultaterForTema = hentSvarForTema(
                 spørreundersøkelseId = spørreundersøkelseId,
                 temaId = temaId,
-            ),
+            ).getOrElse {
+                log.error("Kunne ikke hente resultat for tema")
+                return
+            },
         ),
     )
 
     private fun hentSvarForTema(
         spørreundersøkelseId: UUID,
         temaId: Int,
-    ): SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat {
-        val temaMedSpørsmålOgSvaralternativer = spørreundersøkelseRepository.hentTema(
-            spørreundersøkelseId = spørreundersøkelseId,
-        ).first {
-            it.tema.id == temaId
-        }
-        val svarITema = spørreundersøkelseRepository.hentSvarForTema(
-            spørreundersøkelseId = spørreundersøkelseId,
-            temaId = temaId,
-        )
+    ): Either<Feil, SerializableTemaResultat> {
+        val spørreundersøkelse =
+            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId.toString())
+                ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
+        val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
+        val spørreundersøkelseResultat = spørreundersøkelse.tilResultat(alleSvar)
 
-        return svarTilTema(
-            alleSvar = svarITema,
-            tema = temaMedSpørsmålOgSvaralternativer,
-        )
+        val temaResultat = spørreundersøkelseResultat.tema.firstOrNull { it.id == temaId }
+            ?: return IASakKartleggingError.`ugyldig temaId`.left()
+
+        return temaResultat.tilKafkaMelding().right()
     }
 
     private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? =
