@@ -110,8 +110,11 @@ object Jobblytter : CoroutineScope {
                                     }
 
                                     ryddeIUrørteSakerTørrKjør -> {
-                                        iaSakhendelseStatusJobb.kjør() // TODO: RYDD OPP
-//                                        iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
+                                        iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
+                                    }
+
+                                    kalkulerResulterendeStatusForHendelser -> {
+                                        iaSakhendelseStatusJobb.kjør()
                                     }
 
                                     iaSakEksport -> {
