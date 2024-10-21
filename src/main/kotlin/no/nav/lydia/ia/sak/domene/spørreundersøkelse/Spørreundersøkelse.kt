@@ -11,6 +11,7 @@ data class Spørreundersøkelse(
     val orgnummer: String,
     val virksomhetsNavn: String,
     val status: SpørreundersøkelseStatus,
+    val type: String,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,

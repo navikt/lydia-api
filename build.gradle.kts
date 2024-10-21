@@ -1,6 +1,6 @@
 val ktorVersion = "2.3.12"
 val fuelVersion = "2.3.1"
-val iaFellesVersion = "1.5.2"
+val iaFellesVersion = "1.6.0"
 val kotestVerstion = "5.9.1"
 val testcontainersVersion = "1.20.2"
 
@@ -43,7 +43,6 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-client-encoding:$ktorVersion")
-
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
@@ -106,7 +105,9 @@ dependencies {
             version {
                 require("2.5.1")
             }
-            because("From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.")
+            because(
+                "From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.",
+            )
         }
         implementation("io.netty:netty-codec-http2") {
             version {

@@ -5,8 +5,6 @@ import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import ia.felles.integrasjoner.kafkameldinger.SpørsmålMelding
 import ia.felles.integrasjoner.kafkameldinger.SvaralternativMelding
 import ia.felles.integrasjoner.kafkameldinger.TemaMelding
-import ia.felles.integrasjoner.kafkameldinger.Temanavn
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -41,6 +39,7 @@ class SpørreundersøkelseProdusent(
                 orgnummer = orgnummer,
                 virksomhetsNavn = virksomhetsNavn,
                 status = this.status,
+                type = this.type,
                 temaMedSpørsmålOgSvaralternativer = tema.map { it.tilKafkaMelding() },
             )
             return nøkkel to Json.encodeToString(verdi)
@@ -50,7 +49,7 @@ class SpørreundersøkelseProdusent(
             SerializableTema(
                 temaId = this.tema.id,
                 navn = this.tema.navn,
-                spørsmålOgSvaralternativer = this.spørsmål.map { it.tilKafkaMelding() }
+                spørsmålOgSvaralternativer = this.spørsmål.map { it.tilKafkaMelding() },
             )
 
         private fun Spørsmål.tilKafkaMelding() =
@@ -75,9 +74,7 @@ class SpørreundersøkelseProdusent(
         override val virksomhetsNavn: String,
         override val status: SpørreundersøkelseStatus,
         override val temaMedSpørsmålOgSvaralternativer: List<SerializableTema>,
-        override val type: String? = null,
-        override val vertId: String? = null,
-        override val avslutningsdato: LocalDate? = null,
+        override val type: String,
     ) : SpørreundersøkelseMelding
 
     @Serializable
@@ -85,9 +82,6 @@ class SpørreundersøkelseProdusent(
         override val temaId: Int,
         override val navn: String,
         override val spørsmålOgSvaralternativer: List<SerializableSpørsmål>,
-        override val beskrivelse: String? = null,
-        override val introtekst: String? = null,
-        override val temanavn: Temanavn? = null,
     ) : TemaMelding
 
     @Serializable

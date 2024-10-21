@@ -70,8 +70,6 @@ class SpørreundersøkelseOppdateringProdusent(
     data class SerializableTemaResultat(
         override val temaId: Int,
         override val navn: String,
-        override val tema: String? = null,
-        override val beskrivelse: String? = null,
         override val spørsmålMedSvar: List<SerializableSpørsmålResultat>,
     ) : TemaResultatMelding
 

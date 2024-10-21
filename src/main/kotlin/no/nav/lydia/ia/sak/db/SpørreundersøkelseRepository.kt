@@ -117,6 +117,7 @@ class SpørreundersøkelseRepository(
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         temaer: List<TemaInfo>,
+        type: String = "Behovsvurdering",
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -129,7 +130,8 @@ class SpørreundersøkelseRepository(
                                 orgnr,
                                 ia_prosess,
                                 status,
-                                opprettet_av
+                                opprettet_av,
+                                type
                             )
                             VALUES (
                                 :kartlegging_id,
@@ -137,7 +139,8 @@ class SpørreundersøkelseRepository(
                                 :orgnr,
                                 :prosessId,
                                 :status,
-                                :opprettet_av
+                                :opprettet_av,
+                                :sporreundersokelseType
                             )
                         """.trimMargin(),
                         mapOf(
@@ -147,6 +150,7 @@ class SpørreundersøkelseRepository(
                             "prosessId" to prosessId,
                             "status" to "OPPRETTET",
                             "opprettet_av" to saksbehandler.navIdent,
+                            "sporreundersokelseType" to type,
                         ),
                     ).asUpdate,
                 )
@@ -212,6 +216,7 @@ class SpørreundersøkelseRepository(
             tema = hentTema(spørreundersøkelseId),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
+            type = this.string("type"),
             endretTidspunkt = this.localDateTimeOrNull("endret"),
         )
     }
