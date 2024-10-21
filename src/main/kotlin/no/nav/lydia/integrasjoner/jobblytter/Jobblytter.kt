@@ -1,7 +1,18 @@
 package no.nav.lydia.integrasjoner.jobblytter
 
 import ia.felles.integrasjoner.jobbsender.Jobb
-import ia.felles.integrasjoner.jobbsender.Jobb.*
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakBehovsvurderingEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
+import ia.felles.integrasjoner.jobbsender.Jobb.kalkulerResulterendeStatusForHendelser
+import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
+import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
+import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
+import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSakerTørrKjør
 import ia.felles.integrasjoner.jobbsender.JobbInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,10 +24,13 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryEksporterer
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
+import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
@@ -29,7 +43,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
-import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 
 object Jobblytter : CoroutineScope {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -46,6 +59,8 @@ object Jobblytter : CoroutineScope {
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
     private lateinit var iaSakhendelseStatusJobb: IaSakhendelseStatusJobb
     private lateinit var samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer
+    private lateinit var samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer
+    private lateinit var behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer
     private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
     private val konsumentGruppe = Topic.JOBBLYTTER_TOPIC.konsumentGruppe
 
@@ -66,7 +81,9 @@ object Jobblytter : CoroutineScope {
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
         iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
-        samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer
+        samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
+        samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
+        behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
     ) {
         logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
@@ -75,7 +92,7 @@ object Jobblytter : CoroutineScope {
         kafkaConsumer = KafkaConsumer(
             Jobblytter.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
-            StringDeserializer()
+            StringDeserializer(),
         )
         this.iaSakStatusOppdaterer = iaSakStatusOppdaterer
         this.iaSakEksporterer = iaSakEksporterer
@@ -86,6 +103,8 @@ object Jobblytter : CoroutineScope {
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
         this.iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
         this.samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer
+        this.samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer
+        this.behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer
 
         logger.info("Created kafka consumer job for $topicNavn")
     }
@@ -100,9 +119,11 @@ object Jobblytter : CoroutineScope {
                         val records = consumer.poll(Duration.ofSeconds(1))
                         records.forEach {
                             val jobInfo = Json.decodeFromString<SerializableJobbInfo>(it.value())
-                            if (jobInfo.jobb.name != it.key())
-                                logger.warn("Received record with key ${it.key()} and value ${it.value()} from topic ${it.topic()} but jobInfo.job is ${jobInfo.jobb}")
-                            else {
+                            if (jobInfo.jobb.name != it.key()) {
+                                logger.warn(
+                                    "Received record with key ${it.key()} and value ${it.value()} from topic ${it.topic()} but jobInfo.job is ${jobInfo.jobb}",
+                                )
+                            } else {
                                 logger.info("Starter jobb $jobInfo")
                                 when (jobInfo.jobb) {
                                     ryddeIUrørteSaker -> {
@@ -145,6 +166,14 @@ object Jobblytter : CoroutineScope {
                                         samarbeidsplanKafkaEksporterer.eksporter()
                                     }
 
+                                    iaSakSamarbeidEksport -> {
+                                        samarbeidBigqueryEksporterer.eksporter()
+                                    }
+
+                                    iaSakBehovsvurderingEksport -> {
+                                        behovsvurderingBigqueryEksporterer.eksporter()
+                                    }
+
                                     else -> {
                                         logger.info("Jobb '${jobInfo.jobb}' ignorert")
                                     }
@@ -173,10 +202,11 @@ object Jobblytter : CoroutineScope {
         override val applikasjon: String,
     ) : JobbInfo
 
-    private fun cancel() = runBlocking {
-        logger.info("Cancelling kafka consumer job for $topicNavn")
-        kafkaConsumer.wakeup()
-        job.cancelAndJoin()
-        logger.info("Cancelled kafka consumer job for $topicNavn")
-    }
+    private fun cancel() =
+        runBlocking {
+            logger.info("Cancelling kafka consumer job for $topicNavn")
+            kafkaConsumer.wakeup()
+            job.cancelAndJoin()
+            logger.info("Cancelled kafka consumer job for $topicNavn")
+        }
 }

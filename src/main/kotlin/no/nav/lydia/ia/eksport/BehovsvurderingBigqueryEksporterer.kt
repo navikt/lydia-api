@@ -31,7 +31,7 @@ class BehovsvurderingBigqueryEksporterer(
             log.error("Klarte ikke å kjøre eksport av behovsvurderinger", e)
             throw e
         }
-        log.info("Ferdig med re-eksport av ${alleBehovsvurderinger.size} saker")
+        log.info("Ferdig med re-eksport av ${alleBehovsvurderinger.size} behovsvurderinger")
         KJØRER_STATISTIKK_EKSPORT.set(false)
     }
 }

@@ -31,7 +31,7 @@ class SamarbeidBigqueryEksporterer(
             log.error("Klarte ikke å kjøre eksport av samarbeid", e)
             throw e
         }
-        log.info("Ferdig med re-eksport av ${alleSamarbeid.size} saker")
+        log.info("Ferdig med re-eksport av ${alleSamarbeid.size} samarbeid")
         KJØRER_STATISTIKK_EKSPORT.set(false)
     }
 }

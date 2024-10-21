@@ -32,29 +32,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
-class SpørreundersøkelseRepository(private val dataSource: DataSource) {
+class SpørreundersøkelseRepository(
+    private val dataSource: DataSource,
+) {
     private val gson: Gson = GsonBuilder().create()
-
-    fun hentSvarForTema(spørreundersøkelseId: UUID, temaId: Int) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT ia_sak_kartlegging_svar.*
-                        FROM ia_sak_kartlegging_svar
-                        JOIN ia_sak_kartlegging_tema_til_spørsmål USING (sporsmal_id)
-                        JOIN ia_sak_kartlegging_kartlegging_til_tema USING (kartlegging_id, tema_id)
-                        WHERE ia_sak_kartlegging_svar.kartlegging_id = :kartleggingId
-                        AND ia_sak_kartlegging_kartlegging_til_tema.tema_id = :temaId
-                        AND ia_sak_kartlegging_kartlegging_til_tema.stengt = true
-                    """.trimIndent(),
-                    mapOf(
-                        "kartleggingId" to spørreundersøkelseId.toString(),
-                        "temaId" to temaId
-                    )
-                ).map(this::mapRowToSpørreundersøkelseSvarDto).asList
-            )
-        }
 
     fun hentAlleSvar(spørreundersøkelseId: String) =
         using(sessionOf(dataSource)) { session ->
@@ -67,8 +48,8 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                     """.trimMargin(),
                     mapOf(
                         "kartleggingId" to spørreundersøkelseId,
-                    )
-                ).map(this::mapRowToSpørreundersøkelseSvarDto).asList
+                    ),
+                ).map(this::mapRowToSpørreundersøkelseSvarDto).asList,
             )
         }
 
@@ -81,11 +62,11 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                     FROM ia_sak_kartlegging
                     WHERE kartlegging_id = :sporreundersokelseId
                     AND status != '$SLETTET'
-                """.trimMargin(),
+                    """.trimMargin(),
                     mapOf(
                         "sporreundersokelseId" to spørreundersøkelseId,
-                    )
-                ).map(this::mapRowToIASakKartleggingOversikt).asSingle
+                    ),
+                ).map(this::mapRowToIASakKartleggingOversikt).asSingle,
             )
         }
 
@@ -98,11 +79,11 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                     FROM ia_sak_kartlegging
                     WHERE ia_prosess = :prosessId
                     AND status != '$SLETTET'
-                """.trimMargin(),
+                    """.trimMargin(),
                     mapOf(
                         "prosessId" to prosess.id,
-                    )
-                ).map(this::mapRowToIASakKartleggingOversikt).asList
+                    ),
+                ).map(this::mapRowToIASakKartleggingOversikt).asList,
             )
         }
 
@@ -124,8 +105,8 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                     """.trimMargin(),
                     mapOf(
                         "kartleggingId" to spørreundersøkelseId,
-                    )
-                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle
+                    ),
+                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle,
             )
         }
 
@@ -165,9 +146,9 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                             "orgnr" to orgnummer,
                             "prosessId" to prosessId,
                             "status" to "OPPRETTET",
-                            "opprettet_av" to saksbehandler.navIdent
-                        )
-                    ).asUpdate
+                            "opprettet_av" to saksbehandler.navIdent,
+                        ),
+                    ).asUpdate,
                 )
 
                 temaer.sortedBy { it.rekkefølge }.forEach { tema ->
@@ -182,11 +163,11 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                         :kartlegging_id,
                         :tema_id
                     )
-                    """.trimMargin(),
+                            """.trimMargin(),
                             mapOf(
                                 "kartlegging_id" to spørreundersøkelseId,
                                 "tema_id" to tema.id,
-                            )
+                            ),
                         ).asUpdate,
                     )
                 }
@@ -196,14 +177,11 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
         return hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId.toString())?.right()
             ?: Feil(
                 feilmelding = "Kunne ikke opprette kartlegging",
-                httpStatusCode = HttpStatusCode.InternalServerError
+                httpStatusCode = HttpStatusCode.InternalServerError,
             ).left()
     }
 
-
-    private fun mapRowToIASakKartleggingOversikt(row: Row): SpørreundersøkelseUtenInnhold {
-        return row.tilIASakKartleggingOversikt()
-    }
+    private fun mapRowToIASakKartleggingOversikt(row: Row): SpørreundersøkelseUtenInnhold = row.tilIASakKartleggingOversikt()
 
     private fun Row.tilIASakKartleggingOversikt(): SpørreundersøkelseUtenInnhold {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
@@ -219,9 +197,8 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
         )
     }
 
-    private fun mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer(row: Row): Spørreundersøkelse {
-        return row.tilIASakKartleggingMedSpørsmålOgSvaralternativer()
-    }
+    private fun mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer(row: Row): Spørreundersøkelse =
+        row.tilIASakKartleggingMedSpørsmålOgSvaralternativer()
 
     private fun Row.tilIASakKartleggingMedSpørsmålOgSvaralternativer(): Spørreundersøkelse {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
@@ -244,18 +221,18 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        SELECT *
-                        FROM ia_sak_kartlegging_sporsmal
-                        JOIN ia_sak_kartlegging_tema_til_spørsmål USING (sporsmal_id)
-                        JOIN ia_sak_kartlegging_svaralternativer USING (sporsmal_id)
-                        JOIN ia_sak_kartlegging_tema USING (tema_id)
-                        JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
-                        WHERE kartlegging_id = :kartlegging_id
-                        ORDER BY ia_sak_kartlegging_tema.rekkefolge
+                    SELECT *
+                    FROM ia_sak_kartlegging_sporsmal
+                    JOIN ia_sak_kartlegging_tema_til_spørsmål USING (sporsmal_id)
+                    JOIN ia_sak_kartlegging_svaralternativer USING (sporsmal_id)
+                    JOIN ia_sak_kartlegging_tema USING (tema_id)
+                    JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
+                    WHERE kartlegging_id = :kartlegging_id
+                    ORDER BY ia_sak_kartlegging_tema.rekkefolge
                     """.trimIndent(),
                     mapOf(
-                        "kartlegging_id" to spørreundersøkelseId.toString()
-                    )
+                        "kartlegging_id" to spørreundersøkelseId.toString(),
+                    ),
                 ).map {
                     SpørsmålsRad(
                         spørreundersøkelseId = UUID.fromString(it.string("kartlegging_id")),
@@ -264,9 +241,9 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                         spørsmålId = UUID.fromString(it.string("sporsmal_id")),
                         spørsmåltekst = it.string("sporsmal_tekst"),
                         flervalg = it.boolean("flervalg"),
-                        svaralternativ = mapTilSvaralternativ(it)
+                        svaralternativ = mapTilSvaralternativ(it),
                     )
-                }.asList
+                }.asList,
             ).tilTemaMedSpørsmålOgSvaralternativer()
         }
 
@@ -280,71 +257,72 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
         val svaralternativ: Svaralternativ,
     )
 
-    private fun List<SpørsmålsRad>.tilTemaMedSpørsmålOgSvaralternativer() = this.groupBy {
-        it.tema
-    }.map {
-        val tema = it.key
-        val erTemaStengt = it.value.any { spørsmålsRad -> spørsmålsRad.erTemaStengt }
-        val spørsmål = it.value.groupBy { spørsmålsRad ->
-            spørsmålsRad.spørsmålId
+    private fun List<SpørsmålsRad>.tilTemaMedSpørsmålOgSvaralternativer() =
+        this.groupBy {
+            it.tema
         }.map {
-            val spørsmålId = it.key
-            val spørsmåltekst = it.value.first().spørsmåltekst
-            val flervalg = it.value.first().flervalg
-            val svaralternativer = it.value.map {
-                it.svaralternativ
+            val tema = it.key
+            val erTemaStengt = it.value.any { spørsmålsRad -> spørsmålsRad.erTemaStengt }
+            val spørsmål = it.value.groupBy { spørsmålsRad ->
+                spørsmålsRad.spørsmålId
+            }.map {
+                val spørsmålId = it.key
+                val spørsmåltekst = it.value.first().spørsmåltekst
+                val flervalg = it.value.first().flervalg
+                val svaralternativer = it.value.map {
+                    it.svaralternativ
+                }
+                Spørsmål(
+                    spørsmålId = spørsmålId,
+                    spørsmåltekst = spørsmåltekst,
+                    flervalg = flervalg,
+                    svaralternativer = svaralternativer,
+                )
             }
-            Spørsmål(
-                spørsmålId = spørsmålId,
-                spørsmåltekst = spørsmåltekst,
-                flervalg = flervalg,
-                svaralternativer = svaralternativer
+            Tema(
+                tema = tema,
+                stengtForSvar = erTemaStengt,
+                spørsmål = spørsmål,
             )
         }
-        Tema(
-            tema = tema,
-            stengtForSvar = erTemaStengt,
-            spørsmål = spørsmål
-        )
-    }
 
     private fun mapTilSvaralternativ(row: Row) =
         Svaralternativ(
             svarId = UUID.fromString(row.string("svaralternativ_id")),
-            svartekst = row.string("svaralternativ_tekst")
+            svartekst = row.string("svaralternativ_tekst"),
         )
 
-    fun hentAntallSvar(spørreundersøkelseId: UUID, spørsmålId: UUID) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
+    fun hentAntallSvar(
+        spørreundersøkelseId: UUID,
+        spørsmålId: UUID,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
                         SELECT COUNT(*) AS antallSvar
                         FROM ia_sak_kartlegging_svar
                         WHERE kartlegging_id = :kartleggingId
                         AND sporsmal_id = :sporsmalId
-                    """.trimMargin(),
-                    mapOf(
-                        "kartleggingId" to spørreundersøkelseId.toString(),
-                        "sporsmalId" to spørsmålId.toString()
-                    )
-                ).map { rad ->
-                    SpørreundersøkelseAntallSvar(
-                        spørreundersøkelseId = spørreundersøkelseId,
-                        spørsmålId = spørsmålId,
-                        antallSvar = rad.int("antallSvar")
-                    )
-                }.asSingle
-            )
-        } ?: SpørreundersøkelseAntallSvar(
-            spørreundersøkelseId = spørreundersøkelseId,
-            spørsmålId = spørsmålId,
-            antallSvar = 0
+                """.trimMargin(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId.toString(),
+                    "sporsmalId" to spørsmålId.toString(),
+                ),
+            ).map { rad ->
+                SpørreundersøkelseAntallSvar(
+                    spørreundersøkelseId = spørreundersøkelseId,
+                    spørsmålId = spørsmålId,
+                    antallSvar = rad.int("antallSvar"),
+                )
+            }.asSingle,
         )
+    } ?: SpørreundersøkelseAntallSvar(
+        spørreundersøkelseId = spørreundersøkelseId,
+        spørsmålId = spørsmålId,
+        antallSvar = 0,
+    )
 
-    private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvarDto {
-        return row.tilSpørreundersøkelseSvarDto()
-    }
+    private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvarDto = row.tilSpørreundersøkelseSvarDto()
 
     private val svarIderType = object : TypeToken<List<String>>() {}.type
 
@@ -353,7 +331,7 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
             spørreundersøkelseId = this.string("kartlegging_id"),
             sesjonId = this.string("sesjon_id"),
             spørsmålId = this.string("sporsmal_id"),
-            svarIder = gson.fromJson(this.string("svar_ider"), svarIderType)
+            svarIder = gson.fromJson(this.string("svar_ider"), svarIderType),
         )
 
     fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =
@@ -376,74 +354,72 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
                         ON CONFLICT ON CONSTRAINT ia_sak_kartlegging_svar_kartlegging_sesjon_spm DO UPDATE SET
                             svar_ider = :svar_ider::jsonb,
                             endret = now()
-                        """.trimMargin(),
+                    """.trimMargin(),
                     mapOf(
                         "kartleggingId" to karleggingSvarDto.spørreundersøkelseId,
                         "sesjonId" to karleggingSvarDto.sesjonId,
                         "sporsmalId" to karleggingSvarDto.spørsmålId,
-                        "svar_ider" to gson.toJson(karleggingSvarDto.svarIder)
-                    )
-                ).asUpdate
+                        "svar_ider" to gson.toJson(karleggingSvarDto.svarIder),
+                    ),
+                ).asUpdate,
             )
         }
 
     fun slettSpørreundersøkelse(
         spørreundersøkelseId: String,
         sistEndret: LocalDateTime = LocalDateTime.now(),
-    ) =
-        using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
+    ) = using(sessionOf(dataSource)) { session ->
+        session.transaction { tx ->
+            tx.run(
+                queryOf(
+                    """
                         DELETE FROM ia_sak_kartlegging_svar
                         WHERE kartlegging_id = :kartleggingId
                     """.trimMargin(),
-                        mapOf(
-                            "kartleggingId" to spørreundersøkelseId
-                        )
-                    ).asUpdate
-                )
-                tx.run(
-                    queryOf(
-                        """
-                        UPDATE ia_sak_kartlegging SET
-                            status = '$SLETTET',
-                            endret = :sistEndret
-                        WHERE kartlegging_id = :kartleggingId
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId,
+                    ),
+                ).asUpdate,
+            )
+            tx.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '$SLETTET',
+                        endret = :sistEndret
+                    WHERE kartlegging_id = :kartleggingId
                     """.trimIndent(),
-                        mapOf(
-                            "kartleggingId" to spørreundersøkelseId,
-                            "sistEndret" to sistEndret
-                        )
-                    ).asUpdate
-                )
-            }
-            hentSpørreundersøkelse(spørreundersøkelseId)
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId,
+                        "sistEndret" to sistEndret,
+                    ),
+                ).asUpdate,
+            )
         }
+        hentSpørreundersøkelse(spørreundersøkelseId)
+    }
 
     fun endreKartleggingStatus(
         spørreundersøkelseId: String,
         status: SpørreundersøkelseStatus,
         sistEndret: LocalDateTime = LocalDateTime.now(),
-    ) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        UPDATE ia_sak_kartlegging SET
-                            status = '${status.name}',
-                            endret = :sistEndret
-                        WHERE kartlegging_id = :kartleggingId
-                    """.trimIndent(),
-                    mapOf(
-                        "kartleggingId" to spørreundersøkelseId,
-                        "sistEndret" to sistEndret
-                    )
-                ).asUpdate
-            )
-            hentSpørreundersøkelse(spørreundersøkelseId)
-        }
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                UPDATE ia_sak_kartlegging SET
+                    status = '${status.name}',
+                    endret = :sistEndret
+                WHERE kartlegging_id = :kartleggingId
+                """.trimIndent(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId,
+                    "sistEndret" to sistEndret,
+                ),
+            ).asUpdate,
+        )
+        hentSpørreundersøkelse(spørreundersøkelseId)
+    }
 
     private fun mapTilTema(row: Row) =
         TemaInfo(
@@ -454,21 +430,24 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
             sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
         )
 
-    fun stengTema(spørreundersøkelseId: String, temaId: Int) {
+    fun stengTema(
+        spørreundersøkelseId: String,
+        temaId: Int,
+    ) {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                        UPDATE ia_sak_kartlegging_kartlegging_til_tema
-                          SET stengt = true 
-                          WHERE kartlegging_id = :kartleggingId
-                          AND tema_id = :temaId 
+                    UPDATE ia_sak_kartlegging_kartlegging_til_tema
+                      SET stengt = true 
+                      WHERE kartlegging_id = :kartleggingId
+                      AND tema_id = :temaId 
                     """.trimIndent(),
                     mapOf(
                         "kartleggingId" to spørreundersøkelseId,
-                        "temaId" to temaId
-                    )
-                ).asUpdate
+                        "temaId" to temaId,
+                    ),
+                ).asUpdate,
             )
         }
     }
@@ -478,30 +457,30 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                        SELECT * FROM ia_sak_kartlegging_tema
-                        WHERE status = '${TemaStatus.AKTIV}'
+                    SELECT * FROM ia_sak_kartlegging_tema
+                    WHERE status = '${TemaStatus.AKTIV}'
                     """.trimIndent(),
-                ).map(this::mapTilTema).asList
+                ).map(this::mapTilTema).asList,
             )
         }
 
     fun oppdaterBehovsvurdering(
         behovsvurderingId: String,
-        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto
+        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto,
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                        UPDATE ia_sak_kartlegging
-                        SET ia_prosess = :prosessId
-                        WHERE kartlegging_id = :behovsvurderingId
+                    UPDATE ia_sak_kartlegging
+                    SET ia_prosess = :prosessId
+                    WHERE kartlegging_id = :behovsvurderingId
                     """.trimIndent(),
                     mapOf(
                         "prosessId" to oppdaterBehovsvurderingDto.prosessId,
-                        "behovsvurderingId" to behovsvurderingId
-                    )
-                ).asUpdate
+                        "behovsvurderingId" to behovsvurderingId,
+                    ),
+                ).asUpdate,
             )
         }
         return hentSpørreundersøkelse(behovsvurderingId)?.right()
@@ -513,8 +492,15 @@ class SpørreundersøkelseRepository(private val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                    SELECT *
-                    FROM ia_sak_kartlegging
+                        SELECT ia_sak_kartlegging.*,
+                         ia_sak.saksnummer,
+                         virksomhet.orgnr,
+                         virksomhet.navn,
+                         ia_prosess.id AS prosessId
+                        FROM ia_sak_kartlegging
+                        JOIN ia_prosess on (ia_sak_kartlegging.ia_prosess = ia_prosess.id)
+                        JOIN ia_sak using (saksnummer, orgnr)
+                        JOIN virksomhet using (orgnr)
                     """.trimMargin(),
                 ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asList,
             )

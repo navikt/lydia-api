@@ -40,7 +40,6 @@ import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.util.TimeZone
 
-
 class KafkaContainerHelper(
     network: Network = Network.newNetwork(),
     log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java),
@@ -51,7 +50,7 @@ class KafkaContainerHelper(
     private var kafkaProducer: KafkaProducer<String, String>
 
     val kafkaContainer = KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.4.3")
+        DockerImageName.parse("confluentinc/cp-kafka:7.4.3"),
     )
         .withKraft()
         .withNetwork(network)
@@ -62,8 +61,8 @@ class KafkaContainerHelper(
                 "KAFKA_LOG4J_LOGGERS" to "org.apache.kafka.image.loader.MetadataLoader=WARN",
                 "KAFKA_AUTO_LEADER_REBALANCE_ENABLE" to "false",
                 "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS" to "1",
-                "TZ" to TimeZone.getDefault().id
-            )
+                "TZ" to TimeZone.getDefault().id,
+            ),
         )
         .withCreateContainerCmdModifier { cmd -> cmd.withName("$kafkaNetworkAlias-${System.currentTimeMillis()}") }
         .waitingFor(HostPortWaitStrategy())
@@ -80,25 +79,25 @@ class KafkaContainerHelper(
             consumerLoopDelay = 1,
             credstorePassword = "",
             keystoreLocation = "",
-            truststoreLocation = ""
+            truststoreLocation = "",
         ).consumerProperties(consumerGroupId = consumerGroupId)
             .let { config ->
                 KafkaConsumer(config, StringDeserializer(), StringDeserializer())
             }
 
-    fun envVars() = mapOf(
-        "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092",
-        "KAFKA_TRUSTSTORE_PATH" to "",
-        "KAFKA_KEYSTORE_PATH" to "",
-        "KAFKA_CREDSTORE_PASSWORD" to "",
-    )
+    fun envVars() =
+        mapOf(
+            "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9092,PLAINTEXT://$kafkaNetworkAlias:9092",
+            "KAFKA_TRUSTSTORE_PATH" to "",
+            "KAFKA_KEYSTORE_PATH" to "",
+            "KAFKA_CREDSTORE_PASSWORD" to "",
+        )
 
     private fun createTopics() {
         val newTopics = Topic.entries
             .map { topic -> NewTopic(topic.navn, 1, 1.toShort()) }
         adminClient.createTopics(newTopics)
     }
-
 
     private fun KafkaContainer.producer(): KafkaProducer<String, String> =
         KafkaProducer(
@@ -110,32 +109,34 @@ class KafkaContainerHelper(
                 ProducerConfig.LINGER_MS_CONFIG to "0",
                 ProducerConfig.RETRIES_CONFIG to "0",
                 ProducerConfig.BATCH_SIZE_CONFIG to "0",
-                SaslConfigs.SASL_MECHANISM to "PLAIN"
+                SaslConfigs.SASL_MECHANISM to "PLAIN",
             ),
             StringSerializer(),
-            StringSerializer()
+            StringSerializer(),
         )
 
-    fun sendOgVentTilKonsumert(nøkkel: String, melding: String, topic: Topic) {
+    fun sendOgVentTilKonsumert(
+        nøkkel: String,
+        melding: String,
+        topic: Topic,
+    ) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(ProducerRecord(topic.navn, nøkkel, melding)).get()
             ventTilKonsumert(
                 konsumentGruppeId = topic.konsumentGruppe,
-                recordMetadata = sendtMelding
+                recordMetadata = sendtMelding,
             )
         }
     }
 
-    fun sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
-        importDtoer: List<SykefraværsstatistikkMetadataVirksomhetImportDto>,
-    ) {
+    fun sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(importDtoer: List<SykefraværsstatistikkMetadataVirksomhetImportDto>) {
         runBlocking {
             val sendteMeldinger = importDtoer.map { melding ->
                 kafkaProducer.send(melding.tilProducerRecord()).get()
             }
             ventTilKonsumert(
                 konsumentGruppeId = Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC.konsumentGruppe,
-                recordMetadata = sendteMeldinger.last()
+                recordMetadata = sendteMeldinger.last(),
             )
         }
     }
@@ -156,16 +157,16 @@ class KafkaContainerHelper(
                                 kategori = melding.kategori.name,
                                 kode = melding.kode,
                                 årstall = melding.sistePubliserteKvartal.årstall,
-                                kvartal = melding.sistePubliserteKvartal.kvartal
+                                kvartal = melding.sistePubliserteKvartal.kvartal,
                             ),
                         ),
-                        gson.toJson(melding)
-                    )
+                        gson.toJson(melding),
+                    ),
                 ).get()
             }
             ventTilKonsumert(
                 konsumentGruppeId = topic.konsumentGruppe,
-                recordMetadata = sendteMeldinger.last()
+                recordMetadata = sendteMeldinger.last(),
             )
         }
     }
@@ -186,39 +187,40 @@ class KafkaContainerHelper(
                                 kategori = melding.kategori,
                                 kode = melding.kode,
                                 årstall = melding.sistePubliserteKvartal.årstall,
-                                kvartal = melding.sistePubliserteKvartal.kvartal
+                                kvartal = melding.sistePubliserteKvartal.kvartal,
                             ),
                         ),
-                        gson.toJson(melding)
-                    )
+                        gson.toJson(melding),
+                    ),
                 ).get()
             }
             ventTilKonsumert(
                 konsumentGruppeId = topic.konsumentGruppe,
-                recordMetadata = sendteMeldinger.last()
+                recordMetadata = sendteMeldinger.last(),
             )
         }
     }
 
-    fun sendBrregOppdateringer(virksomheter: List<OppdateringVirksomhet>) = runBlocking {
-        if (virksomheter.isEmpty()) return@runBlocking
+    fun sendBrregOppdateringer(virksomheter: List<OppdateringVirksomhet>) =
+        runBlocking {
+            if (virksomheter.isEmpty()) return@runBlocking
 
-        val sendteMeldinger = virksomheter.map {
-            kafkaProducer.send(it.tilProducerRecord()).get()
+            val sendteMeldinger = virksomheter.map {
+                kafkaProducer.send(it.tilProducerRecord()).get()
+            }
+
+            ventTilKonsumert(
+                konsumentGruppeId = Topic.BRREG_OPPDATERING_TOPIC.konsumentGruppe,
+                recordMetadata = sendteMeldinger.last(),
+            )
         }
-
-        ventTilKonsumert(
-            konsumentGruppeId = Topic.BRREG_OPPDATERING_TOPIC.konsumentGruppe,
-            recordMetadata = sendteMeldinger.last()
-        )
-    }
 
     fun sendBrregOppdatering(virksomhet: OppdateringVirksomhet) {
         runBlocking {
             val sendtMelding = kafkaProducer.send(virksomhet.tilProducerRecord()).get()
             ventTilKonsumert(
                 konsumentGruppeId = Topic.BRREG_OPPDATERING_TOPIC.konsumentGruppe,
-                recordMetadata = sendtMelding
+                recordMetadata = sendtMelding,
             )
         }
     }
@@ -226,22 +228,26 @@ class KafkaContainerHelper(
     fun sendJobbMelding(jobb: Jobb) {
         sendOgVentTilKonsumert(
             nøkkel = jobb.name,
-            melding = """{
-                "jobb": "${jobb.name}",
-                "tidspunkt": "2023-01-01T00:00:00.000Z",
-                "applikasjon": "lydia-api"
-            }""".trimIndent(),
+            melding =
+                """
+                {
+                    "jobb": "${jobb.name}",
+                    "tidspunkt": "2023-01-01T00:00:00.000Z",
+                    "applikasjon": "lydia-api"
+                }
+                """.trimIndent(),
             topic = Topic.JOBBLYTTER_TOPIC,
         )
     }
 
-    private fun OppdateringVirksomhet.tilProducerRecord() = ProducerRecord(
-        Topic.BRREG_OPPDATERING_TOPIC.navn,
-        this.orgnummer,
-        Json.encodeToString(
-            this
+    private fun OppdateringVirksomhet.tilProducerRecord() =
+        ProducerRecord(
+            Topic.BRREG_OPPDATERING_TOPIC.navn,
+            this.orgnummer,
+            Json.encodeToString(
+                this,
+            ),
         )
-    )
 
     private fun SykefraværsstatistikkMetadataVirksomhetImportDto.tilProducerRecord() =
         ProducerRecord(
@@ -250,25 +256,24 @@ class KafkaContainerHelper(
                 KeySykefraværsstatistikkMetadataVirksomhet(
                     orgnr = orgnr,
                     arstall = årstall,
-                    kvartal = kvartal
+                    kvartal = kvartal,
                 ),
             ),
-            gson.toJson(this)
+            gson.toJson(this),
         )
 
     private suspend fun ventTilKonsumert(
         konsumentGruppeId: String,
         recordMetadata: RecordMetadata,
-    ) =
-        withTimeoutOrNull(Duration.ofSeconds(5)) {
-            do {
-                delay(timeMillis = 1L)
-            } while (consumerSinOffset(
-                    consumerGroup = konsumentGruppeId,
-                    topic = recordMetadata.topic()
-                ) <= recordMetadata.offset()
-            )
-        }
+    ) = withTimeoutOrNull(Duration.ofSeconds(5)) {
+        do {
+            delay(timeMillis = 1L)
+        } while (consumerSinOffset(
+                consumerGroup = konsumentGruppeId,
+                topic = recordMetadata.topic(),
+            ) <= recordMetadata.offset()
+        )
+    }
 
     suspend fun ventOgKonsumerKafkaMeldinger(
         key: String,
@@ -291,10 +296,33 @@ class KafkaContainerHelper(
         }
     }
 
-    private fun consumerSinOffset(consumerGroup: String, topic: String): Long {
+    suspend fun ventOgKonsumerKafkaMeldinger(
+        keys: List<String>,
+        konsument: KafkaConsumer<String, String>,
+        block: (meldinger: List<String>) -> Unit,
+    ) {
+        withTimeout(Duration.ofSeconds(5)) {
+            launch {
+                while (this.isActive) {
+                    val records = konsument.poll(Duration.ofMillis(50))
+                    val meldinger = records
+                        .filter { keys.contains(it.key()) }
+                        .map { it.value() }
+                    if (meldinger.isNotEmpty()) {
+                        block(meldinger)
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+    private fun consumerSinOffset(
+        consumerGroup: String,
+        topic: String,
+    ): Long {
         val offsetMetadata = adminClient.listConsumerGroupOffsets(consumerGroup)
             .partitionsToOffsetAndMetadata().get()
         return offsetMetadata[offsetMetadata.keys.firstOrNull { it.topic().contains(topic) }]?.offset() ?: -1
     }
-
 }

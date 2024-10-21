@@ -29,15 +29,13 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.routing
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import javax.sql.DataSource
 import no.nav.lydia.appstatus.DatabaseHelsesjekk
 import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
+import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryEksporterer
 import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryProdusent
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
@@ -49,6 +47,7 @@ import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
+import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanProdusent
@@ -116,6 +115,9 @@ import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.api.VIRKSOMHET_PATH
 import no.nav.lydia.virksomhet.api.virksomhet
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import javax.sql.DataSource
 
 fun main() {
     startLydiaBackend()
@@ -230,7 +232,7 @@ fun startLydiaBackend() {
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver, sendPlanPåKafkaObserver)
+        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver, sendPlanPåKafkaObserver),
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
@@ -239,6 +241,7 @@ fun startLydiaBackend() {
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     val iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
+
     jobblytter(
         naisEnv = naisEnv,
         iaSakStatusOppdaterer = IASakStatusOppdaterer(iaSakService = iaSakService),
@@ -270,10 +273,18 @@ fun startLydiaBackend() {
             iaSakRepository = iaSakRepository,
             iaSakshendelseRepository = iaSakshendelseRepository,
         ),
-        SamarbeidsplanKafkaEksporterer(
+        samarbeidsplanKafkaEksporterer = SamarbeidsplanKafkaEksporterer(
             samarbeidsplanProdusent = samarbeidsplanProdusent,
-            planRepository = planRepository
-        )
+            planRepository = planRepository,
+        ),
+        samarbeidBigqueryEksporterer = SamarbeidBigqueryEksporterer(
+            samarbeidBigqueryProdusent = samarbeidBigqueryProdusent,
+            samarbeidRepository = prosessRepository,
+        ),
+        behovsvurderingBigqueryEksporterer = BehovsvurderingBigqueryEksporterer(
+            behovsvurderingBigqueryProdusent = behovsvurderingBigqueryProdusent,
+            behovsvurderingRepository = spørreundersøkelseRepository,
+        ),
     )
 
     listOf(
@@ -371,6 +382,8 @@ private fun jobblytter(
     statistikkViewOppdaterer: StatistikkViewOppdaterer,
     iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
     samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
+    samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
+    behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
 ) {
     Jobblytter.apply {
         create(
@@ -383,7 +396,9 @@ private fun jobblytter(
             næringsDownloader = næringsDownloader,
             statistikkViewOppdaterer = statistikkViewOppdaterer,
             iaSakhendelseStatusJobb = iaSakhendelseStatusJobb,
-            samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer
+            samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer,
+            samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer,
+            behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer,
         )
         run()
     }
