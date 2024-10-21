@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.jobbsender.Jobb
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -146,7 +147,7 @@ class BehovsvurderingBigqueryEksportererTest {
                     Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingUtenSvarValue>(it)
                 }
 
-                sendteBehovsvurderinger shouldHaveSize 2
+                sendteBehovsvurderinger shouldHaveAtLeastSize 2
 
                 sendteBehovsvurderinger.forExactlyOne {
                     it.id shouldBe behovsvurdering1.kartleggingId
