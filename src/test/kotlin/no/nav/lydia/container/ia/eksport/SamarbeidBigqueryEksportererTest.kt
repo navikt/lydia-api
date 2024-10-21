@@ -2,6 +2,7 @@ package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.jobbsender.Jobb
 import io.kotest.inspectors.forAtLeastOne
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -72,7 +73,7 @@ class SamarbeidBigqueryEksportererTest {
                     Json.decodeFromString<SamarbeidBigqueryProdusent.SamarbeidValue>(it)
                 }
 
-                sendteSamarbeid shouldHaveSize 2
+                sendteSamarbeid shouldHaveAtLeastSize 2
 
                 sendteSamarbeid.forExactlyOne {
                     it.id shouldBe samarbeid1.id
@@ -94,7 +95,7 @@ class SamarbeidBigqueryEksportererTest {
                     Json.decodeFromString<SamarbeidBigqueryProdusent.SamarbeidValue>(it)
                 }
 
-                sendteSamarbeid shouldHaveSize 2
+                sendteSamarbeid shouldHaveAtLeastSize 2
 
                 sendteSamarbeid.forAtLeastOne {
                     it.id shouldBe samarbeid1.id

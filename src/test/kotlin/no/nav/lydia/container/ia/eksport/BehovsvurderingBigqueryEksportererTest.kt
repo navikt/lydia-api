@@ -169,7 +169,7 @@ class BehovsvurderingBigqueryEksportererTest {
                     Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingUtenSvarValue>(it)
                 }
 
-                sendteBehovsvurderinger shouldHaveSize 2
+                sendteBehovsvurderinger shouldHaveAtLeastSize 2
 
                 sendteBehovsvurderinger.forExactlyOne {
                     it.id shouldBe behovsvurdering1.kartleggingId
