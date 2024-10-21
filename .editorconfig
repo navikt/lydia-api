@@ -1,0 +1,8 @@
+[*.{kt,kts}]
+ij_kotlin_imports_layout = *, java.**, javax.**, kotlin.**, ^ # support for IntelliJ import alias rule (Unngår konflikt mellom optimize imports og ktlint)
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+ktlint_code_style = ktlint_official
+ktlint_standard_chain-method-continuation = disabled # https://pinterest.github.io/ktlint/1.0.0/rules/experimental/#chain-method-continuation
+ktlint_standard_multiline-expression-wrapping = disabled # https://pinterest.github.io/ktlint/1.0.0/rules/standard/#multiline-expression-wrapping
