@@ -14,8 +14,8 @@ import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.eksport.SamarbeidDto
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.eksport.tilPlanKafkaMeldingDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.Feil
@@ -177,17 +177,12 @@ class PlanRepository(
                         JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
                     """.trimMargin()
                 ).map { row: Row ->
-                    SamarbeidsplanKafkaMelding(
-                        orgnr = row.string("orgnr"),
-                        saksnummer = row.string("saksnummer"),
-                        samarbeid = SamarbeidDto(
-                            id = row.int("ia_prosess_id"),
-                            navn = row.stringOrNull("navn") ?: DEFAULT_SAMARBEID_NAVN,
-                            status = IAProsessStatus.valueOf(row.string("status"))
-                        ),
-                        plan = hentPlan(planId = UUID.fromString(row.string("plan_id")), session = session)?.tilDto()
-                            ?.tilPlanKafkaMeldingDto()
-                            ?: throw Exception("Plan ikke funnet")
+                    val planId = UUID.fromString(row.string("plan_id"))
+
+                    hentSamarbeidsplanOgMapTilKafkaMld(
+                        planId = planId,
+                        session = session,
+                        row = row,
                     )
                 }.asList,
             )
@@ -213,21 +208,40 @@ class PlanRepository(
                         "planId" to planId.toString(),
                     ),
                 ).map { row: Row ->
-                    SamarbeidsplanKafkaMelding(
-                        orgnr = row.string("orgnr"),
-                        saksnummer = row.string("saksnummer"),
-                        samarbeid = SamarbeidDto(
-                            id = row.int("ia_prosess_id"),
-                            navn = row.stringOrNull("navn") ?: DEFAULT_SAMARBEID_NAVN,
-                            status = IAProsessStatus.valueOf(row.string("status"))
-                        ),
-                        plan = hentPlan(planId = planId, session = session)?.tilDto()?.tilPlanKafkaMeldingDto()
-                            ?: throw Exception("Plan ikke funnet")
+                    hentSamarbeidsplanOgMapTilKafkaMld(
+                        planId = planId,
+                        session = session,
+                        row = row,
                     )
                 }.asSingle,
             )
         }
 
+
+    private fun hentSamarbeidsplanOgMapTilKafkaMld(
+        planId: UUID,
+        session: Session,
+        row: Row
+    ): SamarbeidsplanKafkaMelding {
+        val plan = hentPlan(planId = planId, session = session)
+        val startDato = plan?.startDato()
+        val sluttDato = plan?.sluttDato()
+        val planDto = plan?.tilDto()
+            ?.tilPlanKafkaMeldingDto()
+            ?: throw Exception("Plan ikke funnet")
+        return SamarbeidsplanKafkaMelding(
+            orgnr = row.string("orgnr"),
+            saksnummer = row.string("saksnummer"),
+            samarbeid = SamarbeidDto(
+                id = row.int("ia_prosess_id"),
+                navn = row.stringOrNull("navn") ?: DEFAULT_SAMARBEID_NAVN,
+                status = IAProsessStatus.valueOf(row.string("status")),
+                startDato = startDato,
+                sluttDato = sluttDato,
+            ),
+            plan = planDto,
+        )
+    }
 
     private fun hentPlan(planId: UUID, session: Session): Plan? =
         session.run(

@@ -58,6 +58,8 @@ data class SamarbeidDto(
     val id: Int,
     val navn: String? = null,
     val status: IAProsessStatus? = null,
+    val startDato: LocalDate? = null,
+    val sluttDato: LocalDate? = null,
 )
 
 fun PlanDto.tilPlanKafkaMeldingDto() =

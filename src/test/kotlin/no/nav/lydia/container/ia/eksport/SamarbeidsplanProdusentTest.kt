@@ -157,7 +157,13 @@ class SamarbeidsplanProdusentTest {
         )
 
         runBlocking {
-            konsummerOgSjekkKafkaMelding(sak, samarbeid, opprettetPlan)
+            konsummerOgSjekkKafkaMelding(
+                sak1 = sak,
+                samarbeid1 = samarbeid,
+                opprettetPlan1 = opprettetPlan,
+                startDato = startDato,
+                sluttDato = sluttDato,
+            )
         }
     }
 
@@ -165,7 +171,9 @@ class SamarbeidsplanProdusentTest {
     private suspend fun konsummerOgSjekkKafkaMelding(
         sak1: IASakDto,
         samarbeid1: IAProsessDto,
-        opprettetPlan1: PlanDto
+        opprettetPlan1: PlanDto,
+        startDato: LocalDate? = null,
+        sluttDato: LocalDate? = null,
     ) {
         kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
             key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
@@ -177,7 +185,9 @@ class SamarbeidsplanProdusentTest {
                     planTilSalesforce = planTilSalesforce,
                     sak = sak1,
                     samarbeid = samarbeid1,
-                    opprettetPlan = opprettetPlan1
+                    opprettetPlan = opprettetPlan1,
+                    startDato = startDato,
+                    sluttDato = sluttDato,
                 )
             }
         }
@@ -187,11 +197,19 @@ class SamarbeidsplanProdusentTest {
         planTilSalesforce: SamarbeidsplanKafkaMelding,
         sak: IASakDto,
         samarbeid: IAProsessDto,
-        opprettetPlan: PlanDto
+        opprettetPlan: PlanDto,
+        startDato: LocalDate?,
+        sluttDato: LocalDate?
     ) {
         planTilSalesforce.orgnr shouldBe sak.orgnr
         planTilSalesforce.saksnummer shouldBe sak.saksnummer
         planTilSalesforce.samarbeid.id shouldBe samarbeid.id
+        if (startDato != null) {
+            planTilSalesforce.samarbeid.startDato shouldBe startDato
+        }
+        if (sluttDato != null) {
+            planTilSalesforce.samarbeid.sluttDato shouldBe sluttDato
+        }
         if (samarbeid.navn == null) {
             planTilSalesforce.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
         } else {
