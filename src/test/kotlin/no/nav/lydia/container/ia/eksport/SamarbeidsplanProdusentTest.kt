@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.jobbsender.Jobb
+import io.kotest.assertions.shouldFail
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
@@ -14,6 +15,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
@@ -165,6 +167,34 @@ class SamarbeidsplanProdusentTest {
                 sluttDato = sluttDato,
             )
         }
+    }
+
+    @Test
+    fun `Skal ikke kunne opprette duplisert plan`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentIAProsesser().first()
+        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+
+
+        PlanHelper.opprettEnPlan(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentIAProsesser().first().id,
+            redigertPlan = planMal,
+        )
+        shouldFail {
+            PlanHelper.opprettEnPlan(
+                orgnr = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                prosessId = sak.hentIAProsesser().first().id,
+                redigertPlan = planMal,
+            )
+        }
+        postgresContainer.hentEnkelKolonne<Int>(
+            """
+            SELECT COUNT(*) FROM ia_sak_plan WHERE ia_prosess = '${samarbeid.id}'
+        """.trimIndent()
+        ).toInt() shouldBe 1
     }
 
 

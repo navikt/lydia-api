@@ -38,6 +38,18 @@ class PlanService(
         mal: PlanMalDto,
     ): Either<Feil, Plan> =
         iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
+
+            val planEksistererAllerede = planRepository.hentPlan(
+                prosessId = prosess.id,
+            ) != null
+
+            if (planEksistererAllerede) {
+                return Feil(
+                    feilmelding = "Plan eksisterer allerede for dette samarbeidet: '$prosessId'",
+                    httpStatusCode = HttpStatusCode.BadRequest
+                ).left()
+            }
+
             planRepository.opprettPlan(
                 planId = UUID.randomUUID(),
                 prosessId = prosess.id,
