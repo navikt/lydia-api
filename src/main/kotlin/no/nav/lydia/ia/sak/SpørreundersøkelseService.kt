@@ -110,6 +110,7 @@ class SpørreundersøkelseService(
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         iaSak: IASak,
         prosessId: Int,
+        type: String,
     ): Either<Feil, Spørreundersøkelse> =
         iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
             spørreundersøkelseRepository.opprettSpørreundersøkelse(
@@ -119,6 +120,7 @@ class SpørreundersøkelseService(
                 spørreundersøkelseId = UUID.randomUUID(),
                 vertId = UUID.randomUUID(),
                 temaer = spørreundersøkelseRepository.hentAktiveTema(),
+                type = type,
             )
         }.onRight { behovsvurdering ->
             behovsvurderingObservers.forEach { it.receive(behovsvurdering) }

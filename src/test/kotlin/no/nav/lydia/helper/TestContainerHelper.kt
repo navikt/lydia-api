@@ -54,6 +54,7 @@ import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.EVALUERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -257,19 +258,17 @@ class TestContainerHelper {
 
 class SakHelper {
     companion object {
-        fun IASakDto.hentSaksStatus(
-            token: String = oauth2ServerContainer.saksbehandler1.token
-        ) = lydiaApiContainer
-            .performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/status")
-            .authentication().bearer(token = token)
-            .tilSingelRespons<SaksStatusDto>().third
-            .fold(
-                success = { it },
-                failure = {
-                    fail(it.response.body().asString("text/plain"))
-                }
-            )
-
+        fun IASakDto.hentSaksStatus(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer
+                .performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/status")
+                .authentication().bearer(token = token)
+                .tilSingelRespons<SaksStatusDto>().third
+                .fold(
+                    success = { it },
+                    failure = {
+                        fail(it.response.body().asString("text/plain"))
+                    },
+                )
 
         fun hentSaker(
             orgnummer: String,
@@ -620,13 +619,22 @@ class SakHelper {
 
 class IASakKartleggingHelper {
     companion object {
-        fun opprettIASakKartlegging(
+        fun opprettBehovsvurdering(
             orgnr: String,
             saksnummer: String,
             prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPost(
             "$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId",
+        ).authentication().bearer(token)
+
+        fun opprettEvaluering(
+            orgnr: String,
+            saksnummer: String,
+            prosessId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performPost(
+            "$EVALUERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId",
         ).authentication().bearer(token)
 
         fun hentIASakKartlegginger(
@@ -653,18 +661,31 @@ class IASakKartleggingHelper {
                     OppdaterBehovsvurderingDto(
                         orgnummer = sak.orgnr,
                         saksnummer = sak.saksnummer,
-                        prosessId = prosessId
-                    )
-                )
+                        prosessId = prosessId,
+                    ),
+                ),
             ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                 success = { it },
-                failure = { fail("${it.message}: ${it.response.body().asString("text/plain")}") }
+                failure = { fail("${it.message}: ${it.response.body().asString("text/plain")}") },
             )
 
         fun IASakDto.opprettKartlegging(
             prosessId: Int = hentIAProsesser().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = opprettIASakKartlegging(
+        ) = opprettBehovsvurdering(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            prosessId = prosessId,
+            token = token,
+        ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+
+        fun IASakDto.opprettEvaluering(
+            prosessId: Int = hentIAProsesser().first().id,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = opprettEvaluering(
             orgnr = orgnr,
             saksnummer = saksnummer,
             prosessId = prosessId,
@@ -890,7 +911,7 @@ class PlanHelper {
             orgnummer: String,
             saksnummer: String,
             prosessId: Int,
-            token: String = oauth2ServerContainer.saksbehandler1.token
+            token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = this.copy(
             temaer = temaer.map { tema ->
                 tema.copy(
@@ -899,16 +920,16 @@ class PlanHelper {
                         it.copy(
                             inkludert = true,
                         )
-                    }
+                    },
                 )
-            }
+            },
         ).tilRequest().forEach { tema ->
             endreTema(
                 orgnr = orgnummer,
                 saksnummer = saksnummer,
                 prosessId = prosessId,
                 temaId = tema.id,
-                endring = tema.undertemaer
+                endring = tema.undertemaer,
             )
             tema.undertemaer.forEach {
                 endreStatus(
@@ -917,7 +938,7 @@ class PlanHelper {
                     prosessId = prosessId,
                     status = PlanUndertema.Status.FULLFØRT,
                     temaId = tema.id,
-                    undertemaId = it.id
+                    undertemaId = it.id,
                 )
             }
         }.let {
@@ -925,7 +946,7 @@ class PlanHelper {
                 orgnr = orgnummer,
                 saksnummer = saksnummer,
                 prosessId = prosessId,
-                token = token
+                token = token,
             )
         }
     }

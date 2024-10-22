@@ -39,6 +39,7 @@ import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 const val BEHOVSVURDERING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
+const val EVALUERING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/evaluering"
 
 fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
@@ -56,6 +57,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksbehandler = saksbehandler,
                 iaSak = iaSak,
                 prosessId = prosessId,
+                type = "Behovsvurdering",
             )
         }.also { kartleggingEither ->
             auditLog.auditloggEither(
@@ -207,6 +209,33 @@ fun Route.iaSakSpørreundersøkelse(
             call.respond(it.tilDto(true))
         }.mapLeft {
             call.sendFeil(it)
+        }
+    }
+
+    post("$EVALUERING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+            spørreundersøkelseService.opprettSpørreundersøkelse(
+                orgnummer = orgnummer,
+                saksbehandler = saksbehandler,
+                iaSak = iaSak,
+                prosessId = prosessId,
+                type = "Evaluering",
+            )
+        }.also { kartleggingEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartleggingEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = kartleggingEither.getOrNull()?.saksnummer,
+            )
+        }.map {
+            call.respond(HttpStatusCode.Created, it.tilDto(true))
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
 }

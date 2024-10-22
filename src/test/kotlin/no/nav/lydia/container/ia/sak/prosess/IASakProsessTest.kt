@@ -6,32 +6,32 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentIAProsesser
 import no.nav.lydia.helper.nyttNavnPåProsess
 import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import kotlin.test.Test
-import kotlinx.coroutines.runBlocking
-import no.nav.lydia.Topic
-import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import org.junit.After
 import org.junit.Before
+import kotlin.test.Test
 
 class IASakProsessTest {
     private val samarbeidsplanKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe
+        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe,
     )
 
     @Before
@@ -103,11 +103,11 @@ class IASakProsessTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak.saksnummer}-${prosess.id}-${opprettetPlan.id}",
-                konsument = samarbeidsplanKonsument
+                konsument = samarbeidsplanKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
-                    planTilSalesforce.orgnr shouldBe  sak.orgnr
+                    planTilSalesforce.orgnr shouldBe sak.orgnr
                     planTilSalesforce.saksnummer shouldBe sak.saksnummer
                     planTilSalesforce.samarbeid.id shouldBe prosess.id
                     planTilSalesforce.samarbeid.navn shouldBe prosess.navn
@@ -126,11 +126,11 @@ class IASakProsessTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak.saksnummer}-${prosess.id}-${opprettetPlan.id}",
-                konsument = samarbeidsplanKonsument
+                konsument = samarbeidsplanKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
-                    planTilSalesforce.orgnr shouldBe  sak.orgnr
+                    planTilSalesforce.orgnr shouldBe sak.orgnr
                     planTilSalesforce.saksnummer shouldBe sak.saksnummer
                     planTilSalesforce.samarbeid.id shouldBe oppdatertProsess.id
                     planTilSalesforce.samarbeid.navn shouldBe oppdatertProsess.navn
@@ -198,10 +198,10 @@ class IASakProsessTest {
 
         sak.nyHendelse(
             hendelsestype = IASakshendelseType.SLETT_PROSESS,
-            payload = Json.encodeToString(samarbeid.first())
+            payload = Json.encodeToString(samarbeid.first()),
         ).nyHendelse(
             hendelsestype = IASakshendelseType.SLETT_PROSESS,
-            payload = Json.encodeToString(samarbeid.last())
+            payload = Json.encodeToString(samarbeid.last()),
         )
         sak.hentIAProsesser() shouldHaveSize 0
 
@@ -270,7 +270,7 @@ class IASakProsessTest {
         val prosessSomSkalSlettes = prosesserFørSletting.first()
         sak.nyHendelse(
             hendelsestype = IASakshendelseType.SLETT_PROSESS,
-            payload = Json.encodeToString(prosessSomSkalSlettes)
+            payload = Json.encodeToString(prosessSomSkalSlettes),
         )
 
         val prosesserEtterSletting = sak.hentIAProsesser()
@@ -286,7 +286,7 @@ class IASakProsessTest {
         shouldFail {
             sak.nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(prosessSomSkalForsøkesSlettes)
+                payload = Json.encodeToString(prosessSomSkalForsøkesSlettes),
             )
         }
         sak.hentIAProsesser() shouldBe prosesserFørSletting
@@ -300,13 +300,13 @@ class IASakProsessTest {
         PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = prosessSomSkalForsøkesSlettes.id
+            prosessId = prosessSomSkalForsøkesSlettes.id,
         )
 
         shouldFail {
             sak.nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(prosessSomSkalForsøkesSlettes)
+                payload = Json.encodeToString(prosessSomSkalForsøkesSlettes),
             )
         }
         sak.hentIAProsesser() shouldBe prosesserFørSletting
@@ -319,10 +319,12 @@ class IASakProsessTest {
         shouldFail {
             sak.nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(IAProsessDto(
-                    id = 1010000,
-                    saksnummer = sak.saksnummer,
-                ))
+                payload = Json.encodeToString(
+                    IAProsessDto(
+                        id = 1010000,
+                        saksnummer = sak.saksnummer,
+                    ),
+                ),
             )
         }
     }
@@ -338,19 +340,23 @@ class IASakProsessTest {
         shouldFail {
             sak.nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(IAProsessDto(
-                    id = 1010000,
-                    saksnummer = sak.saksnummer,
-                ))
+                payload = Json.encodeToString(
+                    IAProsessDto(
+                        id = 1010000,
+                        saksnummer = sak.saksnummer,
+                    ),
+                ),
             )
         }
 
         val samarbeidEtterSlett = sak.hentIAProsesser()
         samarbeidEtterSlett shouldHaveSize 1
 
-        val sisteHendelse = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>("""
+        val sisteHendelse = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
+            """
             select id from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by  opprettet desc limit 1
-        """.trimIndent())
+            """.trimIndent(),
+        )
         sisteHendelse shouldBe sak.endretAvHendelseId
     }
 

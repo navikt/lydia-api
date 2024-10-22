@@ -117,7 +117,7 @@ class SpørreundersøkelseRepository(
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         temaer: List<TemaInfo>,
-        type: String = "Behovsvurdering",
+        type: String,
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->

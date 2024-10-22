@@ -25,6 +25,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
@@ -98,9 +99,9 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne opprette en kartlegging med flere temaer`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettKartlegging()
+        val kartleggingDto = nySakIKartleggesMedEtSamarbeid().opprettKartlegging()
 
+        kartleggingDto.type shouldBe "Behovsvurdering"
         kartleggingDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
         kartleggingDto.temaMedSpørsmålOgSvaralternativer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -125,11 +126,40 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
+    fun `skal kunne opprette en evaluering og sende på kafka`() {
+        val evalueringDto = nySakIKartleggesMedEtSamarbeid().opprettEvaluering()
+
+        evalueringDto.type shouldBe "Evaluering"
+        evalueringDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
+        evalueringDto.temaMedSpørsmålOgSvaralternativer.forAll {
+            it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+        }
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = evalueringDto.kartleggingId,
+                konsument = kartleggingKonsument,
+            ) { meldinger ->
+                meldinger.forExactlyOne { melding ->
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
+                        it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+                        it.navn.shouldNotBeEmpty()
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     fun `skal få feil når saksnummer er ukjent`() {
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(
-            orgnr = "123456789",
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val resp = IASakKartleggingHelper.opprettBehovsvurdering(
+            orgnr = sak.orgnr,
             saksnummer = "ukjent",
-            prosessId = 1,
+            prosessId = sak.hentIAProsesser().first().id,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -139,7 +169,7 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal få feil når orgnummer er feil`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val resp = IASakKartleggingHelper.opprettIASakKartlegging(
+        val resp = IASakKartleggingHelper.opprettBehovsvurdering(
             orgnr = "222233334",
             saksnummer = sak.saksnummer,
             prosessId = sak.hentIAProsesser().first().id,
@@ -465,12 +495,13 @@ class SpørreundersøkelseApiTest {
 
         val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
+        val førsteSpørsmål = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
         sendKartleggingSvarTilKafka(
             kartleggingId = pågåendeKartlegging.kartleggingId,
-            spørsmålId = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
+            spørsmålId = førsteSpørsmål.id,
             sesjonId = UUID.randomUUID().toString(),
             svarIder = listOf(
-                pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId,
+                førsteSpørsmål.svaralternativer.first().svarId,
             ),
         )
 

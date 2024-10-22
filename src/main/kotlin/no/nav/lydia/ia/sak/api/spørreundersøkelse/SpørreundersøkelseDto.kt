@@ -13,6 +13,7 @@ data class SpørreundersøkelseDto(
     val status: SpørreundersøkelseStatus,
     val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
     val opprettetAv: String,
+    val type: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
 )
@@ -25,5 +26,6 @@ fun Spørreundersøkelse.tilDto(erEier: Boolean) =
         temaMedSpørsmålOgSvaralternativer = if (erEier) tema.map { it.toDto() } else emptyList(),
         opprettetAv = opprettetAv,
         opprettetTidspunkt = opprettetTidspunkt.toKotlinLocalDateTime(),
+        type = type,
         endretTidspunkt = endretTidspunkt?.toKotlinLocalDateTime(),
     )
