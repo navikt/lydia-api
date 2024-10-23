@@ -41,8 +41,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
@@ -159,7 +159,7 @@ class SpørreundersøkelseApiTest {
         val resp = IASakKartleggingHelper.opprettBehovsvurdering(
             orgnr = sak.orgnr,
             saksnummer = "ukjent",
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -172,7 +172,7 @@ class SpørreundersøkelseApiTest {
         val resp = IASakKartleggingHelper.opprettBehovsvurdering(
             orgnr = "222233334",
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -219,7 +219,7 @@ class SpørreundersøkelseApiTest {
         val alleKartlegginger = hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
         )
         alleKartlegginger shouldHaveSize 1
         alleKartlegginger.first().vertId shouldHaveLength 36
@@ -416,7 +416,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
         ).forExactlyOne {
             it.status shouldBe PÅBEGYNT
             it.endretTidspunkt shouldNotBe null
@@ -449,7 +449,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
         ).forExactlyOne {
             it.status shouldBe AVSLUTTET
             it.endretTidspunkt shouldNotBe null
@@ -542,7 +542,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
         ) shouldHaveSize 0
     }
 
@@ -572,25 +572,25 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
         ) shouldHaveSize 0
     }
 
     @Test
     fun `skal kunne opprette behovsvurdering for to forskjellige prosesser`() {
         val sak = nySakIKartlegges()
-            .opprettNyProsses()
-            .opprettNyProsses()
+            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid()
 
-        val iaProsesser = sak.hentIAProsesser()
-        iaProsesser shouldHaveSize 2
-        iaProsesser.forEach {
-            sak.opprettKartlegging(prosessId = it.id)
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+        alleSamarbeid shouldHaveSize 2
+        alleSamarbeid.forEach { samarbeid ->
+            sak.opprettKartlegging(prosessId = samarbeid.id)
 
             hentIASakKartlegginger(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                prosessId = it.id,
+                prosessId = samarbeid.id,
             ) shouldHaveSize 1
         }
     }
@@ -598,31 +598,31 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `skal kunne flytte en behhovsvurdering fra en prosess til en annen`() {
         val sak = nySakIKartlegges()
-            .opprettNyProsses()
-            .opprettNyProsses()
-        val iaProsesser = sak.hentIAProsesser()
-        iaProsesser shouldHaveSize 2
-        val fraProsess = iaProsesser.first()
-        val tilProsess = iaProsesser.last()
+            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid()
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+        alleSamarbeid shouldHaveSize 2
+        val førsteSamarbeid = alleSamarbeid.first()
+        val sisteSamarbeid = alleSamarbeid.last()
 
-        val behovsvurdering = sak.opprettKartlegging(prosessId = fraProsess.id)
-        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, fraProsess.id)
+        val behovsvurdering = sak.opprettKartlegging(prosessId = førsteSamarbeid.id)
+        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
             .map { it.kartleggingId } shouldBe listOf(behovsvurdering.kartleggingId)
 
-        oppdaterBehovsvurdering(behovsvurdering, sak, tilProsess.id)
-        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, fraProsess.id)
+        oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
+        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
             .map { it.kartleggingId } shouldBe emptyList()
-        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, tilProsess.id)
+        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, sisteSamarbeid.id)
             .map { it.kartleggingId } shouldBe listOf(behovsvurdering.kartleggingId)
     }
 
     @Test
     fun `skal ikke kunne flytte kartlegging en ugyldig prosess eller som lesebruker`() {
         val sak = nySakIKartlegges()
-            .opprettNyProsses()
-        val prosesser = sak.hentIAProsesser()
-        prosesser shouldHaveSize 1
-        val behovsvurdering = sak.opprettKartlegging(prosesser.first().id)
+            .opprettNyttSamarbeid()
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+        alleSamarbeid shouldHaveSize 1
+        val behovsvurdering = sak.opprettKartlegging(alleSamarbeid.first().id)
 
         // -- skal ikke kunne flytte til ikke eksisterende prosess
         shouldFail {
@@ -634,7 +634,7 @@ class SpørreundersøkelseApiTest {
             oppdaterBehovsvurdering(
                 behovsvurdering,
                 sak,
-                sak.hentIAProsesser().first().id,
+                sak.hentAlleSamarbeid().first().id,
                 oauth2ServerContainer.lesebruker.token,
             )
         }
@@ -643,21 +643,21 @@ class SpørreundersøkelseApiTest {
         shouldFail {
             val nysak = nySakIKartlegges()
                 .nyHendelse(IASakshendelseType.NY_PROSESS)
-            oppdaterBehovsvurdering(behovsvurdering, sak, nysak.hentIAProsesser().first().id)
+            oppdaterBehovsvurdering(behovsvurdering, sak, nysak.hentAlleSamarbeid().first().id)
         }
     }
 
     @Test
     fun `skal kunne avslutte en flyttet behovsvurdering`() {
         val sak = nySakIKartlegges()
-            .opprettNyProsses()
-            .opprettNyProsses()
+            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid()
 
-        val samarbeid = sak.hentIAProsesser()
-        samarbeid shouldHaveSize 2
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+        alleSamarbeid shouldHaveSize 2
 
-        val førsteSamarbeid = samarbeid.first()
-        val andreSamarbeid = samarbeid.last()
+        val førsteSamarbeid = alleSamarbeid.first()
+        val andreSamarbeid = alleSamarbeid.last()
 
         val behovsvurdering = sak.opprettKartlegging(prosessId = førsteSamarbeid.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)

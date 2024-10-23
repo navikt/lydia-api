@@ -52,9 +52,9 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.helper.nyttNavnPåProsess
-import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.nyttNavnPåSamarbeid
+import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
@@ -105,9 +105,11 @@ class IASakApiTest {
     fun `skal lagre resulterende status i ia_sak_hendelse`() {
         val sak = nySakIKartlegges()
 
-        val resulterendeStatuser = postgresContainer.hentAlleRaderTilEnkelKolonne<String>("""
+        val resulterendeStatuser = postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+            """
             select resulterende_status from ia_sak_hendelse where saksnummer = '${sak.saksnummer}'
-        """.trimIndent())
+            """.trimIndent(),
+        )
 
         resulterendeStatuser shouldHaveSize 5
         resulterendeStatuser shouldBe listOf(
@@ -121,31 +123,31 @@ class IASakApiTest {
 
     @Test
     fun `returnerer riktig saksstatus`() {
-        val sak = nySakIKartlegges().opprettNyProsses(navn = "Nytt samarbeid")
-        val samarbeid = sak.hentIAProsesser()
-        samarbeid shouldHaveSize 1
+        val sak = nySakIKartlegges().opprettNyttSamarbeid(navn = "Nytt samarbeid")
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+        alleSamarbeid shouldHaveSize 1
 
         val saksStatusUtenNoe = sak.hentSaksStatus()
         saksStatusUtenNoe.kanFullføres shouldBe false
         saksStatusUtenNoe.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
             ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
-            ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING
+            ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING,
         )
 
-        val førsteSamarbeid = samarbeid.first()
+        val førsteSamarbeid = alleSamarbeid.first()
         val kartlegging = sak.opprettKartlegging(prosessId = førsteSamarbeid.id)
         val saksStatusMedEnKartlegging = sak.hentSaksStatus()
         saksStatusMedEnKartlegging.kanFullføres shouldBe false
         saksStatusMedEnKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
             ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
-            ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT
+            ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
         )
         saksStatusMedEnKartlegging.årsaker.forExactlyOne {
             it shouldBe ÅrsakTilAtSakIkkeKanAvsluttes(
                 samarbeidsId = førsteSamarbeid.id,
                 samarbeidsNavn = førsteSamarbeid.navn,
                 type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
-                id = kartlegging.kartleggingId
+                id = kartlegging.kartleggingId,
             )
         }
 
@@ -154,14 +156,14 @@ class IASakApiTest {
         saksStatusMedPlanOgKartlegging.kanFullføres shouldBe false
         saksStatusMedPlanOgKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
             ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
-            ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT
+            ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
         )
         saksStatusMedPlanOgKartlegging.årsaker.forExactlyOne {
             it shouldBe ÅrsakTilAtSakIkkeKanAvsluttes(
                 samarbeidsId = førsteSamarbeid.id,
                 samarbeidsNavn = førsteSamarbeid.navn,
                 type = ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
-                id = plan.id
+                id = plan.id,
             )
         }
 
@@ -185,9 +187,9 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
         postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
             """
-                select nav_enhet_nummer from ia_sak_hendelse
-                  where saksnummer = '${sak.saksnummer}'
-            """.trimIndent()
+            select nav_enhet_nummer from ia_sak_hendelse
+              where saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
         ).forAll {
             it shouldBe "2900"
         }
@@ -198,10 +200,11 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelseRespons(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                payload = ValgtÅrsak(
                     type = NAV_IGANGSETTER_IKKE_TILTAK,
-                    begrunnelser = listOf(VIRKSOMHETEN_HAR_IKKE_RESPONDERT)
-                ).toJson()
+                    begrunnelser = listOf(VIRKSOMHETEN_HAR_IKKE_RESPONDERT),
+                ).toJson(),
             ).statuskode() shouldBe 400
     }
 
@@ -244,10 +247,11 @@ class IASakApiTest {
             sak = when (it) {
                 VIRKSOMHET_ER_IKKE_AKTUELL ->
                     sak.nyHendelse(
-                        it, payload = ValgtÅrsak(
+                        it,
+                        payload = ValgtÅrsak(
                             type = VIRKSOMHETEN_TAKKET_NEI,
-                            begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-                        ).toJson()
+                            begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
+                        ).toJson(),
                     )
 
                 FULLFØR_BISTAND ->
@@ -314,7 +318,6 @@ class IASakApiTest {
                 sykefraværsstatistikkVirksomhetDto.sistEndret shouldBe java.time.LocalDate.now().toKotlinLocalDate()
             }
         }, kommuner = utsiraKommune.nummer)
-
     }
 
     @Test
@@ -322,12 +325,12 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhetRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.superbruker1.token
+            token = mockOAuth2Server.superbruker1.token,
         ).statuskode() shouldBe 201
 
         opprettSakForVirksomhetRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.superbruker1.token
+            token = mockOAuth2Server.superbruker1.token,
         ).statuskode() shouldBe 501
     }
 
@@ -350,10 +353,11 @@ class IASakApiTest {
             .statuskode() shouldBe 501
 
         sak = sak.nyHendelse(
-            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+            payload = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-            ).toJson()
+                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
+            ).toJson(),
         )
         sak.status shouldBe IKKE_AKTUELL
 
@@ -370,25 +374,25 @@ class IASakApiTest {
 
         postgresContainer.performUpdate(
             """
-                    INSERT INTO ia_sak_hendelse (
-                        id,
-                        saksnummer,
-                        orgnr,
-                        type,
-                        opprettet_av,
-                        opprettet_av_rolle,
-                        opprettet
-                    )
-                    VALUES (
-                        '777',
-                        '${sak.saksnummer}',
-                        '${sak.orgnr}',
-                        '${VIRKSOMHET_SKAL_BISTÅS.name}',
-                        '${sak.eidAv}',
-                        '${Rolle.SUPERBRUKER}',
-                        '${sak.endretTidspunkt}'
-                    ) 
-                """.trimIndent()
+            INSERT INTO ia_sak_hendelse (
+                id,
+                saksnummer,
+                orgnr,
+                type,
+                opprettet_av,
+                opprettet_av_rolle,
+                opprettet
+            )
+            VALUES (
+                '777',
+                '${sak.saksnummer}',
+                '${sak.orgnr}',
+                '${VIRKSOMHET_SKAL_BISTÅS.name}',
+                '${sak.eidAv}',
+                '${Rolle.SUPERBRUKER}',
+                '${sak.endretTidspunkt}'
+            ) 
+            """.trimIndent(),
         )
         sak.status shouldBe VI_BISTÅR
 
@@ -407,25 +411,25 @@ class IASakApiTest {
 
         postgresContainer.performUpdate(
             """
-                    INSERT INTO ia_sak_hendelse (
-                        id,
-                        saksnummer,
-                        orgnr,
-                        type,
-                        opprettet_av,
-                        opprettet_av_rolle,
-                        opprettet
-                    )
-                    VALUES (
-                        '888',
-                        '${sak.saksnummer}',
-                        '${sak.orgnr}',
-                        '${VIRKSOMHET_SKAL_BISTÅS.name}',
-                        '${sak.eidAv}',
-                        '${Rolle.SUPERBRUKER}',
-                        '${sak.endretTidspunkt}'
-                    ) 
-                """.trimIndent()
+            INSERT INTO ia_sak_hendelse (
+                id,
+                saksnummer,
+                orgnr,
+                type,
+                opprettet_av,
+                opprettet_av_rolle,
+                opprettet
+            )
+            VALUES (
+                '888',
+                '${sak.saksnummer}',
+                '${sak.orgnr}',
+                '${VIRKSOMHET_SKAL_BISTÅS.name}',
+                '${sak.eidAv}',
+                '${Rolle.SUPERBRUKER}',
+                '${sak.endretTidspunkt}'
+            ) 
+            """.trimIndent(),
         )
         sak.status shouldBe VI_BISTÅR
         shouldFail { sak.nyHendelse(TILBAKE) }
@@ -471,9 +475,9 @@ class IASakApiTest {
     @Test
     fun `skal takle endre eller opprett prosess (samarbeid) event`() {
         val orgnummer = nyttOrgnummer()
-        val sak = nySakIKartlegges(orgnummer = orgnummer).opprettNyProsses()
-        val prosess = sak.hentIAProsesser().first()
-        sak.nyttNavnPåProsess(prosess, "Nytt navn")
+        val sak = nySakIKartlegges(orgnummer = orgnummer).opprettNyttSamarbeid()
+        val førsteSamarbeid = sak.hentAlleSamarbeid().first()
+        sak.nyttNavnPåSamarbeid(iaProsessDto = førsteSamarbeid, nyttNavn = "Nytt navn")
         sak.status shouldBe KARTLEGGES
 
         val oppdatertSak = hentAktivSak(orgnummer).nyHendelse(VIRKSOMHET_SKAL_BISTÅS).nyHendelse(TILBAKE)
@@ -519,15 +523,15 @@ class IASakApiTest {
         val orgnr = nyttOrgnummer()
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.lesebruker.token
+            token = mockOAuth2Server.lesebruker.token,
         ).statuskode() shouldBe 403
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.saksbehandler1.token
+            token = mockOAuth2Server.saksbehandler1.token,
         ).statuskode() shouldBe 403
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.superbruker1.token
+            token = mockOAuth2Server.superbruker1.token,
         ).statuskode() shouldBe 201
     }
 
@@ -535,19 +539,17 @@ class IASakApiTest {
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
-
             nyHendelsePåSakMedRespons(
                 sak = it,
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = mockOAuth2Server.lesebrukerAudit.token
+                token = mockOAuth2Server.lesebrukerAudit.token,
             ).statuskode() shouldBe 403
 
             nyHendelsePåSakMedRespons(
                 sak = it,
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = mockOAuth2Server.saksbehandler1.token
+                token = mockOAuth2Server.saksbehandler1.token,
             ).statuskode() shouldBe 201
-
         }
     }
 
@@ -557,18 +559,19 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
             nyHendelsePåSak(
                 sak = sak,
-                hendelsestype = TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = mockOAuth2Server.saksbehandler1.token,
             ).also { sakEtterTattEierskap ->
                 nyHendelsePåSakMedRespons(
                     sak = sakEtterTattEierskap,
                     hendelsestype = VIRKSOMHET_SKAL_KONTAKTES,
-                    token = mockOAuth2Server.saksbehandler2.token
+                    token = mockOAuth2Server.saksbehandler2.token,
                 )
                     .statuskode() shouldBe 422
                 nyHendelsePåSakMedRespons(
                     sak = sakEtterTattEierskap,
                     hendelsestype = VIRKSOMHET_SKAL_KONTAKTES,
-                    token = mockOAuth2Server.saksbehandler1.token
+                    token = mockOAuth2Server.saksbehandler1.token,
                 )
                     .statuskode() shouldBe 201
             }
@@ -582,32 +585,32 @@ class IASakApiTest {
             hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
             hentSakerRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.saksbehandler1.token
+                token = mockOAuth2Server.saksbehandler1.token,
             ).statuskode() shouldBe 200
             hentSakerRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.superbruker1.token
+                token = mockOAuth2Server.superbruker1.token,
             ).statuskode() shouldBe 200
             hentSakerRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+                token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
             ).statuskode() shouldBe 403
 
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.lesebruker.token
+                token = mockOAuth2Server.lesebruker.token,
             ).statuskode() shouldBe 200
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.saksbehandler1.token
+                token = mockOAuth2Server.saksbehandler1.token,
             ).statuskode() shouldBe 200
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.superbruker1.token
+                token = mockOAuth2Server.superbruker1.token,
             ).statuskode() shouldBe 200
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+                token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
             ).statuskode() shouldBe 403
         }
     }
@@ -619,36 +622,36 @@ class IASakApiTest {
             nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.lesebruker.token
+                    token = mockOAuth2Server.lesebruker.token,
                 ).statuskode() shouldBe 200
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.saksbehandler1.token
+                    token = mockOAuth2Server.saksbehandler1.token,
                 ).statuskode() shouldBe 200
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.superbruker1.token
+                    token = mockOAuth2Server.superbruker1.token,
                 ).statuskode() shouldBe 200
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+                    token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
                 ).statuskode() shouldBe 403
 
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.lesebruker.token
+                    token = mockOAuth2Server.lesebruker.token,
                 ).statuskode() shouldBe 200
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.saksbehandler1.token
+                    token = mockOAuth2Server.saksbehandler1.token,
                 ).statuskode() shouldBe 200
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.superbruker1.token
+                    token = mockOAuth2Server.superbruker1.token,
                 ).statuskode() shouldBe 200
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+                    token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
                 ).statuskode() shouldBe 403
             }
         }
@@ -661,11 +664,11 @@ class IASakApiTest {
                 .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
                     hentSakerRespons(
                         orgnummer = orgnummer,
-                        token = mockOAuth2Server.saksbehandler1.token
+                        token = mockOAuth2Server.saksbehandler1.token,
                     ).statuskode() shouldBe 200
                     hentSamarbeidshistorikkForOrgnrRespons(
                         orgnr = orgnummer,
-                        token = mockOAuth2Server.saksbehandler1.token
+                        token = mockOAuth2Server.saksbehandler1.token,
                     ).statuskode() shouldBe 200
                 }
         }
@@ -675,11 +678,11 @@ class IASakApiTest {
                 .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token).also {
                     hentSakerRespons(
                         orgnummer = orgnummer,
-                        token = mockOAuth2Server.superbruker1.token
+                        token = mockOAuth2Server.superbruker1.token,
                     ).statuskode() shouldBe 200
                     hentSamarbeidshistorikkForOrgnrRespons(
                         orgnr = orgnummer,
-                        token = mockOAuth2Server.superbruker1.token
+                        token = mockOAuth2Server.superbruker1.token,
                     ).statuskode() shouldBe 200
                 }
         }
@@ -714,21 +717,21 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = orgnummer, token = superbruker.token).also { sak ->
             val valgtÅrsak = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID, VIRKSOMHETEN_HAR_IKKE_RESPONDERT)
+                begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID, VIRKSOMHETEN_HAR_IKKE_RESPONDERT),
             )
             val sakIkkeAktuell = sak
                 .nyHendelse(TA_EIERSKAP_I_SAK)
                 .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-                    payload = valgtÅrsak.toJson()
+                    payload = valgtÅrsak.toJson(),
                 )
             val alleHendelsesTyper = listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
                 TA_EIERSKAP_I_SAK,
                 VIRKSOMHET_SKAL_KONTAKTES,
-                VIRKSOMHET_ER_IKKE_AKTUELL
+                VIRKSOMHET_ER_IKKE_AKTUELL,
             )
             hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).also { sakshistorikkForVirksomhet ->
                 val historikkForSak = sakshistorikkForVirksomhet.find { it.saksnummer == sakIkkeAktuell.saksnummer }
@@ -747,7 +750,7 @@ class IASakApiTest {
     fun `skal få samarbeidshistorikken til en virksomhet`() {
         val valgtÅrsak = ValgtÅrsak(
             type = NAV_IGANGSETTER_IKKE_TILTAK,
-            begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK, IKKE_DIALOG_MELLOM_PARTENE)
+            begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK, IKKE_DIALOG_MELLOM_PARTENE),
         )
         val orgnummer = nyttOrgnummer()
         val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
@@ -755,7 +758,7 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-                payload = valgtÅrsak.toJson()
+                payload = valgtÅrsak.toJson(),
             )
 
         hentSamarbeidshistorikk(orgnummer = orgnummer).also { samarbeidshistorikk ->
@@ -766,14 +769,14 @@ class IASakApiTest {
                 VURDERES,
                 VURDERES,
                 KONTAKTES,
-                IKKE_AKTUELL
+                IKKE_AKTUELL,
             )
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainExactly listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
                 VIRKSOMHET_VURDERES,
                 TA_EIERSKAP_I_SAK,
                 VIRKSOMHET_SKAL_KONTAKTES,
-                VIRKSOMHET_ER_IKKE_AKTUELL
+                VIRKSOMHET_ER_IKKE_AKTUELL,
             )
             sakshistorikk.sakshendelser.forExactlyOne { sakSnapshot ->
                 sakSnapshot.begrunnelser shouldBe valgtÅrsak.begrunnelser.map { it.navn }
@@ -792,11 +795,10 @@ class IASakApiTest {
 
             sakEtterTattEierskap.nyHendelse(
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = mockOAuth2Server.saksbehandler2.token
+                token = mockOAuth2Server.saksbehandler2.token,
             ).also {
                 it.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
             }
-
         }
     }
 
@@ -806,7 +808,7 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
             hentAktivSak(
                 sak.orgnr,
-                token = mockOAuth2Server.superbruker1.token
+                token = mockOAuth2Server.superbruker1.token,
             ).also { aktivSak ->
                 aktivSak.gyldigeNesteHendelser.map { it.saksHendelsestype }
                     .shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
@@ -814,7 +816,7 @@ class IASakApiTest {
 
             hentAktivSak(
                 sak.orgnr,
-                token = mockOAuth2Server.saksbehandler1.token
+                token = mockOAuth2Server.saksbehandler1.token,
             ).also { aktivSak ->
                 aktivSak.gyldigeNesteHendelser.forAll {
                     it.saksHendelsestype shouldBe TA_EIERSKAP_I_SAK
@@ -870,8 +872,8 @@ class IASakApiTest {
                     hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
                         type = VIRKSOMHETEN_TAKKET_NEI,
-                        begrunnelser = begrunnelser
-                    ).toJson()
+                        begrunnelser = begrunnelser,
+                    ).toJson(),
                 )
             hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
                 .forAtLeastOne { hendelseOppsummering ->
@@ -891,7 +893,7 @@ class IASakApiTest {
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
                 hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
-                endretAvHendelseId = "ugyldig ID"
+                endretAvHendelseId = "ugyldig ID",
             )
             shouldFail {
                 nyHendelse(gammelSakshendelse)
@@ -908,8 +910,8 @@ class IASakApiTest {
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                 payload = ValgtÅrsak(
                     type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = emptyList()
-                ).toJson()
+                    begrunnelser = emptyList(),
+                ).toJson(),
             ).statuskode() shouldBe HttpStatusCode.UnprocessableEntity.value
     }
 
@@ -921,9 +923,10 @@ class IASakApiTest {
         shouldFail {
             sak.nyHendelse(
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-                payload = """
+                payload =
+                    """
                     {"type":"VIRKSOMHETEN_TAKKET_NEI","begrunnelser":["IKKE_ET_FAKTISK_TILTAK"]}
-                """.trimIndent()
+                    """.trimIndent(),
             )
         }
     }
@@ -963,10 +966,11 @@ class IASakApiTest {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                payload = ValgtÅrsak(
                     type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-                ).toJson()
+                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
+                ).toJson(),
             )
             .nyHendelse(TILBAKE)
         sak.status shouldBe VURDERES
@@ -1017,7 +1021,7 @@ class IASakApiTest {
 
         sak.oppdaterHendelsesTidspunkter(
             antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1,
-            token = oauth2ServerContainer.superbruker1.token
+            token = oauth2ServerContainer.superbruker1.token,
         ).also { sakDto ->
             sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe emptyList()
         }
@@ -1087,7 +1091,7 @@ class IASakApiTest {
                 val response = nyHendelsePåSakMedRespons(
                     sak = sak,
                     hendelsestype = FULLFØR_BISTAND,
-                    token = mockOAuth2Server.saksbehandler1.token
+                    token = mockOAuth2Server.saksbehandler1.token,
                 )
                 response.statuskode() shouldBe HttpStatusCode.BadRequest.value
                 response.second.body()
@@ -1124,10 +1128,11 @@ class IASakApiTest {
 
         // Trykk på 'Ikke aktuell', med begrunnelse
         val sakIkkeAktuell = sakIStatusViBistår.nyHendelse(
-            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+            payload = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = begrunnelser
-            ).toJson()
+                begrunnelser = begrunnelser,
+            ).toJson(),
         ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
@@ -1144,7 +1149,6 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
 
-
         val sakIStatusKartlegges = opprettSakForVirksomhet(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
@@ -1156,10 +1160,11 @@ class IASakApiTest {
 
         // Trykk på 'Ikke aktuell', med begrunnelse
         val sakIkkeAktuell = sakIStatusKartlegges.nyHendelse(
-            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL, payload = ValgtÅrsak(
+            hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+            payload = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
-                begrunnelser = begrunnelser
-            ).toJson()
+                begrunnelser = begrunnelser,
+            ).toJson(),
         ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
@@ -1187,7 +1192,7 @@ class IASakApiTest {
                     token = superbruker,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe FULLFØRT }
-                    }
+                    },
                 )
 
                 sak.oppdaterHendelsesTidspunkter(ANTALL_DAGER_FØR_SAK_LÅSES + 1)
@@ -1195,7 +1200,7 @@ class IASakApiTest {
                     token = superbruker,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IKKE_AKTIV }
-                    }
+                    },
                 )
 
                 opprettSakForVirksomhet(orgnummer = org.orgnr)
@@ -1207,9 +1212,9 @@ class IASakApiTest {
                     token = superbruker,
                     success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe KARTLEGGES }
-                    }
+                    },
                 )
-            }
+            },
         )
     }
 
@@ -1227,8 +1232,8 @@ class IASakApiTest {
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                 payload = ValgtÅrsak(
                     type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
-                ).toJson()
+                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
+                ).toJson(),
             )
             .nyHendelse(TILBAKE)
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
@@ -1247,12 +1252,11 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
 
         postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
-            "select opprettet_av_rolle from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by opprettet"
+            "select opprettet_av_rolle from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by opprettet",
         ) shouldBe listOf(
             "SUPERBRUKER",
             "SUPERBRUKER",
-            "SAKSBEHANDLER"
+            "SAKSBEHANDLER",
         )
     }
-
 }

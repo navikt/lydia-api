@@ -8,14 +8,12 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
 import org.junit.After
 import org.junit.Before
@@ -37,8 +35,8 @@ class SamarbeidBigqueryEksportererTest {
 
     @Test
     fun `oppretting av samarbeid skal trigge kafka-eksport av samarbeid`() {
-        val sak = SakHelper.nySakIKartlegges()
-        val samarbeid = sak.opprettNyProsses().hentIAProsesser().first()
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val førsteSamarbeid = sak.hentAlleSamarbeid().first()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -51,18 +49,20 @@ class SamarbeidBigqueryEksportererTest {
                 }
                 samarbeidValues shouldHaveSize 1
                 val sisteSamarbeid = samarbeidValues.last()
-                sisteSamarbeid.id shouldBe samarbeid.id
-                sisteSamarbeid.saksnummer shouldBe sak.saksnummer
+                sisteSamarbeid.id shouldBe førsteSamarbeid.id
+                sisteSamarbeid.saksnummer shouldBe førsteSamarbeid.saksnummer
+                sisteSamarbeid.status shouldBe "AKTIV"
+                sisteSamarbeid.navn shouldBe "Samarbeid uten navn"
             }
         }
     }
 
     @Test
     fun `jobb starter re-eksport av alle samarbeid til bigquery`() {
-        val sak1 = nySakIKartlegges()
-        val samarbeid1 = sak1.opprettNyProsses().hentIAProsesser().first()
-        val sak2 = nySakIKartlegges()
-        val samarbeid2 = sak2.opprettNyProsses().hentIAProsesser().first()
+        val sak1 = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "NAVN PÅ SAMARBEID 1")
+        val samarbeid1 = sak1.hentAlleSamarbeid().first()
+        val sak2 = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "NAVN PÅ SAMARBEID 2")
+        val samarbeid2 = sak2.hentAlleSamarbeid().first()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -78,10 +78,15 @@ class SamarbeidBigqueryEksportererTest {
                 sendteSamarbeid.forExactlyOne {
                     it.id shouldBe samarbeid1.id
                     it.saksnummer shouldBe samarbeid1.saksnummer
+                    it.status shouldBe "AKTIV"
+                    it.navn shouldBe "NAVN PÅ SAMARBEID 1"
                 }
+
                 sendteSamarbeid.forExactlyOne {
                     it.id shouldBe samarbeid2.id
                     it.saksnummer shouldBe samarbeid2.saksnummer
+                    it.status shouldBe "AKTIV"
+                    it.navn shouldBe "NAVN PÅ SAMARBEID 2"
                 }
             }
 
@@ -100,10 +105,14 @@ class SamarbeidBigqueryEksportererTest {
                 sendteSamarbeid.forAtLeastOne {
                     it.id shouldBe samarbeid1.id
                     it.saksnummer shouldBe samarbeid1.saksnummer
+                    it.status shouldBe "AKTIV"
+                    it.navn shouldBe "NAVN PÅ SAMARBEID 1"
                 }
                 sendteSamarbeid.forAtLeastOne {
                     it.id shouldBe samarbeid2.id
                     it.saksnummer shouldBe samarbeid2.saksnummer
+                    it.status shouldBe "AKTIV"
+                    it.navn shouldBe "NAVN PÅ SAMARBEID 2"
                 }
             }
         }

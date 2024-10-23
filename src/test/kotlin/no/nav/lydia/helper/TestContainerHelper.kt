@@ -31,6 +31,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPut
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
@@ -53,6 +54,7 @@ import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.EVALUERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -394,7 +396,8 @@ class SakHelper {
         fun nySakIKartleggesMedEtSamarbeid(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = nySakIKartlegges(orgnummer = orgnummer, token = token).opprettNyProsses()
+            navnPåSamarbeid: String? = DEFAULT_SAMARBEID_NAVN,
+        ) = nySakIKartlegges(orgnummer = orgnummer, token = token).opprettNyttSamarbeid(navn = navnPåSamarbeid)
 
         fun nySakIViBistår(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
@@ -403,7 +406,7 @@ class SakHelper {
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .opprettNyProsses()
+            .opprettNyttSamarbeid()
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
             .also {
                 it.status shouldBe IAProsessStatus.VI_BISTÅR
@@ -568,8 +571,14 @@ class SakHelper {
             payload: String? = null,
         ) = nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
+        fun IASakDto.slettSamarbeid(samarbeid: IAProsessDto) =
+            nyHendelse(
+                hendelsestype = IASakshendelseType.SLETT_PROSESS,
+                payload = Json.encodeToString(samarbeid),
+            )
+
         fun IASakDto.nyIkkeAktuellHendelse(token: String = oauth2ServerContainer.saksbehandler1.token) =
-            this.nyHendelse(
+            nyHendelse(
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                 token = token,
                 payload = ValgtÅrsak(
@@ -670,7 +679,7 @@ class IASakKartleggingHelper {
             )
 
         fun IASakDto.opprettKartlegging(
-            prosessId: Int = hentIAProsesser().first().id,
+            prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = opprettBehovsvurdering(
             orgnr = orgnr,
@@ -683,7 +692,7 @@ class IASakKartleggingHelper {
         )
 
         fun IASakDto.opprettEvaluering(
-            prosessId: Int = hentIAProsesser().first().id,
+            prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = opprettEvaluering(
             orgnr = orgnr,

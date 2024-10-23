@@ -5,7 +5,6 @@ import io.kotest.assertions.shouldFail
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
-import kotlin.test.Test
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
@@ -18,8 +17,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
@@ -28,10 +27,11 @@ import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.After
 import org.junit.Before
+import kotlin.test.Test
 
 class SamarbeidsplanProdusentTest {
     private val samarbeidsplanKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe
+        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe,
     )
 
     @Before
@@ -50,36 +50,36 @@ class SamarbeidsplanProdusentTest {
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
         // Opprette noen saker med planer
         val sak1 = nySakIKartleggesMedEtSamarbeid()
-        val samarbeid1 = sak1.hentIAProsesser().first()
+        val samarbeid1 = sak1.hentAlleSamarbeid().first()
         val opprettetPlan1 = PlanHelper.opprettEnPlan(
             orgnr = sak1.orgnr,
             saksnummer = sak1.saksnummer,
             prosessId = samarbeid1.id,
-            redigertPlan = planMal
+            redigertPlan = planMal,
         )
         // lytte og konsummere kafka meldingen sendt til SF av "opprett plan funksjon"
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
-                konsument = samarbeidsplanKonsument
+                konsument = samarbeidsplanKonsument,
             ) {
                 println("Fikk en kafka melding for ${sak1.orgnr} ")
             }
         }
 
         val sak2 = nySakIKartleggesMedEtSamarbeid()
-        val samarbeid2 = sak2.hentIAProsesser().first()
+        val samarbeid2 = sak2.hentAlleSamarbeid().first()
         val opprettetPlan2 = PlanHelper.opprettEnPlan(
             orgnr = sak2.orgnr,
             saksnummer = sak2.saksnummer,
             prosessId = samarbeid2.id,
-            redigertPlan = planMal
+            redigertPlan = planMal,
         )
         // lytte og konsummere alle kafka meldingen sendt til SF av "opprett plan funksjon"
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak2.saksnummer}-${samarbeid2.id}-${opprettetPlan2.id}",
-                konsument = samarbeidsplanKonsument
+                konsument = samarbeidsplanKonsument,
             ) {
                 println("Fikk en kafka melding for ${sak2.orgnr} ")
             }
@@ -92,25 +92,25 @@ class SamarbeidsplanProdusentTest {
         runBlocking {
             konsummerOgSjekkKafkaMelding(sak1, samarbeid1, opprettetPlan1)
         }
-        lydiaApiContainer shouldContainLog "Ferdig med re-eksport av 2/2 samarbeidsplan".toRegex()
+        lydiaApiContainer shouldContainLog "Jobb '${Jobb.iaSakSamarbeidsplanEksport.name}' ferdig".toRegex()
     }
 
     @Test
     fun `re-eksport av samarbeidsplaner til salesforce hvor samarbeid har et tomt (null) navn`() {
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
-        val sak1 = nySakIKartlegges().opprettNyProsses(navn = null)
+        val sak1 = nySakIKartlegges().opprettNyttSamarbeid(navn = null)
 
-        val samarbeid1 = sak1.hentIAProsesser().first()
+        val samarbeid1 = sak1.hentAlleSamarbeid().first()
         val opprettetPlan1 = PlanHelper.opprettEnPlan(
             orgnr = sak1.orgnr,
             saksnummer = sak1.saksnummer,
             prosessId = samarbeid1.id,
-            redigertPlan = planMal
+            redigertPlan = planMal,
         )
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
-                konsument = samarbeidsplanKonsument
+                konsument = samarbeidsplanKonsument,
             ) {
                 println("Fikk en kafka melding for ${sak1.orgnr} ")
             }
@@ -126,7 +126,7 @@ class SamarbeidsplanProdusentTest {
     @Test
     fun `Nyopprettet samarbeidsplan skal sendes til salesforce`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val samarbeid = sak.hentIAProsesser().first()
+        val samarbeid = sak.hentAlleSamarbeid().first()
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
 
         val startDato = LocalDate(2010, 1, 1)
@@ -154,8 +154,8 @@ class SamarbeidsplanProdusentTest {
         val opprettetPlan = PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
-            redigertPlan = planMedEttTema
+            prosessId = sak.hentAlleSamarbeid().first().id,
+            redigertPlan = planMedEttTema,
         )
 
         runBlocking {
@@ -172,31 +172,29 @@ class SamarbeidsplanProdusentTest {
     @Test
     fun `Skal ikke kunne opprette duplisert plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val samarbeid = sak.hentIAProsesser().first()
+        val samarbeid = sak.hentAlleSamarbeid().first()
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
-
 
         PlanHelper.opprettEnPlan(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentIAProsesser().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             redigertPlan = planMal,
         )
         shouldFail {
             PlanHelper.opprettEnPlan(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                prosessId = sak.hentIAProsesser().first().id,
+                prosessId = sak.hentAlleSamarbeid().first().id,
                 redigertPlan = planMal,
             )
         }
         postgresContainer.hentEnkelKolonne<Int>(
             """
             SELECT COUNT(*) FROM ia_sak_plan WHERE ia_prosess = '${samarbeid.id}'
-        """.trimIndent()
+            """.trimIndent(),
         ).toInt() shouldBe 1
     }
-
 
     private suspend fun konsummerOgSjekkKafkaMelding(
         sak1: IASakDto,
@@ -207,7 +205,7 @@ class SamarbeidsplanProdusentTest {
     ) {
         kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
             key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
-            konsument = samarbeidsplanKonsument
+            konsument = samarbeidsplanKonsument,
         ) {
             it.forExactlyOne { melding ->
                 val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
@@ -229,7 +227,7 @@ class SamarbeidsplanProdusentTest {
         samarbeid: IAProsessDto,
         opprettetPlan: PlanDto,
         startDato: LocalDate?,
-        sluttDato: LocalDate?
+        sluttDato: LocalDate?,
     ) {
         planTilSalesforce.orgnr shouldBe sak.orgnr
         planTilSalesforce.saksnummer shouldBe sak.saksnummer

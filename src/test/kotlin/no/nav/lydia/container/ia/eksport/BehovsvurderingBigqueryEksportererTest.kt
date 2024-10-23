@@ -16,8 +16,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.helper.hentIAProsesser
-import no.nav.lydia.helper.opprettNyProsses
+import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryProdusent
 import org.junit.After
 import org.junit.Before
@@ -132,10 +132,10 @@ class BehovsvurderingBigqueryEksportererTest {
     @Test
     fun `jobb starter re-eksport av alle behovsvurderinger til bigquery`() {
         val sak1 = nySakIKartlegges()
-        val samarbeid1 = sak1.opprettNyProsses().hentIAProsesser().first()
+        val samarbeid1 = sak1.opprettNyttSamarbeid().hentAlleSamarbeid().first()
         val behovsvurdering1 = sak1.opprettKartlegging(prosessId = samarbeid1.id)
         val sak2 = nySakIKartlegges()
-        val samarbeid2 = sak2.opprettNyProsses().hentIAProsesser().first()
+        val samarbeid2 = sak2.opprettNyttSamarbeid().hentAlleSamarbeid().first()
         val behovsvurdering2 = sak2.opprettKartlegging(prosessId = samarbeid2.id)
 
         runBlocking {

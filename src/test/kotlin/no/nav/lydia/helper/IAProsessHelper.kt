@@ -7,14 +7,14 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.fail
-import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 
-fun IASakDto.nyttNavnPåProsess(
+fun IASakDto.nyttNavnPåSamarbeid(
     iaProsessDto: IAProsessDto,
     nyttNavn: String,
     token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -24,21 +24,22 @@ fun IASakDto.nyttNavnPåProsess(
     token = token,
 )
 
-fun IASakDto.opprettNyProsses(
+fun IASakDto.opprettNyttSamarbeid(
     navn: String? = DEFAULT_SAMARBEID_NAVN,
     token: String = oauth2ServerContainer.saksbehandler1.token,
-) =
-    nyHendelse(
-        hendelsestype = IASakshendelseType.NY_PROSESS,
-        token = token,
-        payload = Json.encodeToString(IAProsessDto(
+) = nyHendelse(
+    hendelsestype = IASakshendelseType.NY_PROSESS,
+    token = token,
+    payload = Json.encodeToString(
+        IAProsessDto(
             id = 0,
             saksnummer = saksnummer,
-            navn = navn
-        ))
-    )
+            navn = navn,
+        ),
+    ),
+)
 
-fun IASakDto.hentIAProsesser(token: String = oauth2ServerContainer.saksbehandler1.token) =
+fun IASakDto.hentAlleSamarbeid(token: String = oauth2ServerContainer.saksbehandler1.token) =
     lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/prosesser")
         .authentication().bearer(token = token)
         .tilListeRespons<IAProsessDto>().third.fold(

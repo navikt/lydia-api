@@ -29,6 +29,8 @@ class SamarbeidBigqueryProdusent(
             val value = SamarbeidValue(
                 id = this.id,
                 saksnummer = this.saksnummer,
+                navn = this.navn,
+                status = this.status?.name,
             )
             return key to Json.encodeToString(value)
         }
@@ -38,5 +40,7 @@ class SamarbeidBigqueryProdusent(
     data class SamarbeidValue(
         val id: Int,
         val saksnummer: String,
+        val navn: String? = null,
+        val status: String? = null,
     )
 }
