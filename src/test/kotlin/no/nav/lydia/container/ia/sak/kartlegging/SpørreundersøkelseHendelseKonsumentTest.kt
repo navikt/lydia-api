@@ -1,18 +1,22 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.stengTema
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.RESULTATER_FOR_TEMA
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
@@ -50,6 +54,55 @@ class SpørreundersøkelseHendelseKonsumentTest {
                 AND tema_id = ${tema.temaId}
             """.trimIndent(),
         ) shouldBe true
+    }
+
+    @Test
+    fun `skal oppdatere spørreundersøkelse til stengt i databasen om alle temaer har blitt stengt`() {
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val behovsvurdering = sak.opprettKartlegging(prosessId = samarbeid.id)
+
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { tema ->
+            behovsvurdering.stengTema(temaId = tema.temaId)
+        }
+
+        val fullførtBehovsvurdering = IASakKartleggingHelper.hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid.id,
+        ).first()
+
+        fullførtBehovsvurdering.status shouldBe SpørreundersøkelseStatus.AVSLUTTET
+
+        TestContainerHelper.lydiaApiContainer.shouldContainLog(
+            "Alle temaer i spørreundersøkelse '${behovsvurdering.kartleggingId}' er fullført, spørreundersøkelse er avsluttet".toRegex(),
+        )
+    }
+
+    @Test
+    fun `steng tema skal ikke avslutte spørreundersøkelse før alle temaer er stengt`() {
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val behovsvurdering = sak.opprettKartlegging(prosessId = samarbeid.id)
+
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val førsteTema = behovsvurdering.temaMedSpørsmålOgSvaralternativer.first()
+        behovsvurdering.stengTema(temaId = førsteTema.temaId)
+
+        val behovsvurderingMedEttStengtTema = IASakKartleggingHelper.hentIASakKartlegginger(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid.id,
+        ).first()
+
+        behovsvurderingMedEttStengtTema.status shouldBe SpørreundersøkelseStatus.PÅBEGYNT
+
+        TestContainerHelper.lydiaApiContainer.shouldContainLog(
+            "Mottok stenging av tema: ${førsteTema.temaId} i spørreundersøkelse ${behovsvurdering.kartleggingId}".toRegex(),
+        )
     }
 
     @Test

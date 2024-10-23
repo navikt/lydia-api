@@ -67,7 +67,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/legg_til_resulterende_status'
+    if: github.ref == 'refs/heads/avslutt-sporreundersokelse-ved-stengt-tema'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
