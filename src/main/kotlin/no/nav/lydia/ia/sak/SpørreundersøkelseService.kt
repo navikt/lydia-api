@@ -198,10 +198,38 @@ class SpørreundersøkelseService(
 
     fun stengTema(hendelse: StengTema) {
         log.info("Mottok stenging av tema: ${hendelse.temaId} i spørreundersøkelse ${hendelse.spørreundersøkelseId}")
+
+        val spørreundersøkelse =
+            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = hendelse.spørreundersøkelseId)
+
+        if (spørreundersøkelse == null) {
+            log.warn("Kunne ikke hente behovsvurdering med id ${hendelse.spørreundersøkelseId}")
+            return
+        }
+
         spørreundersøkelseRepository.stengTema(
             spørreundersøkelseId = hendelse.spørreundersøkelseId,
             temaId = hendelse.temaId,
         )
+
+        val oppdatertSpørreundersøkelse =
+            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = hendelse.spørreundersøkelseId)
+
+        if (oppdatertSpørreundersøkelse == null) {
+            log.warn("Kunne ikke hente oppdatert behovsvurdering med id ${hendelse.spørreundersøkelseId}")
+            return
+        }
+
+        val alleTemaErFullført = oppdatertSpørreundersøkelse.tema.all { it.stengtForSvar }
+
+        if (alleTemaErFullført) {
+            endreKartleggingStatus(
+                spørreundersøkelseId = hendelse.spørreundersøkelseId,
+                statusViSkalEndreTil = AVSLUTTET,
+            )
+            log.info("Alle temaer i spørreundersøkelse '${hendelse.spørreundersøkelseId}' er fullført, spørreundersøkelse er avsluttet")
+        }
+
         sendResultaterForTemaPåKafka(
             spørreundersøkelseId = UUID.fromString(hendelse.spørreundersøkelseId),
             temaId = hendelse.temaId,
