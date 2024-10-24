@@ -98,18 +98,18 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal kunne opprette en kartlegging med flere temaer`() {
-        val kartleggingDto = nySakIKartleggesMedEtSamarbeid().opprettKartlegging()
+    fun `skal kunne opprette en spørreundersøkelse av type behovsvurdering med flere temaer og sende på kafka`() {
+        val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettKartlegging()
 
-        kartleggingDto.type shouldBe "Behovsvurdering"
-        kartleggingDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-        kartleggingDto.temaMedSpørsmålOgSvaralternativer.forAll {
+        behovsvurdering.type shouldBe "Behovsvurdering"
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
         }
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.kartleggingId,
+                key = behovsvurdering.kartleggingId,
                 konsument = kartleggingKonsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
@@ -126,14 +126,11 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal kunne opprette en evaluering og sende på kafka`() {
+    fun `skal kunne opprette en tom spørreundersøkelse av type evaluering og sende på kafka`() {
         val evalueringDto = nySakIKartleggesMedEtSamarbeid().opprettEvaluering()
 
         evalueringDto.type shouldBe "Evaluering"
-        evalueringDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-        evalueringDto.temaMedSpørsmålOgSvaralternativer.forAll {
-            it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
-        }
+        evalueringDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 0
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -143,11 +140,7 @@ class SpørreundersøkelseApiTest {
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
-                        it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
-                        it.navn.shouldNotBeEmpty()
-                    }
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 0
                 }
             }
         }

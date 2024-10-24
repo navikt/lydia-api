@@ -119,7 +119,7 @@ class SpørreundersøkelseService(
                 saksbehandler = saksbehandler,
                 spørreundersøkelseId = UUID.randomUUID(),
                 vertId = UUID.randomUUID(),
-                temaer = spørreundersøkelseRepository.hentAktiveTema(),
+                temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
                 type = type,
             )
         }.onRight { behovsvurdering ->
