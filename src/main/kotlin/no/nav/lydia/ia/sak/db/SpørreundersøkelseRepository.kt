@@ -457,13 +457,14 @@ class SpørreundersøkelseRepository(
         }
     }
 
-    fun hentAktiveTema(): List<TemaInfo> =
+    fun hentAktiveTemaer(type: String): List<TemaInfo> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT * FROM ia_sak_kartlegging_tema
                     WHERE status = '${TemaStatus.AKTIV}'
+                    AND type = '$type'
                     """.trimIndent(),
                 ).map(this::mapTilTema).asList,
             )
