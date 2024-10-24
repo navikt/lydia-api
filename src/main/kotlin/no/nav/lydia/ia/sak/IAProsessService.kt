@@ -4,9 +4,9 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
-import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.db.PlanRepository
@@ -40,7 +40,7 @@ class IAProsessService(
     ) = prosessRepository.hentProsess(saksnummer = sak.saksnummer, prosessId = prosessId)?.right()
         ?: IAProsessFeil.`ugyldig prosessId`.left()
 
-    fun oppdaterProsess(
+    fun oppdaterSamarbeid(
         sakshendelse: IASakshendelse,
         sak: IASak,
     ) {
@@ -48,7 +48,9 @@ class IAProsessService(
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
                     ENDRE_PROSESS -> oppdaterNavnPåProsess(sakshendelse.prosessDto)
-                    SLETT_PROSESS -> slettProsess(sakshendelse, sak) //  TODO: returner samarbeid eller feil så send til observers
+                        ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
+                    SLETT_PROSESS -> slettProsess(sakshendelse, sak)
+                        ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
                     NY_PROSESS -> prosessRepository.opprettNyProsess(
                         saksnummer = sakshendelse.saksnummer,
                         navn = sakshendelse.prosessDto.navn,
@@ -62,16 +64,20 @@ class IAProsessService(
         }
     }
 
-    private fun oppdaterNavnPåProsess(iaProsess: IAProsessDto) {
-        prosessRepository.oppdaterNavnPåProsess(iaProsess)
-        planRepository.hentPlan(prosessId = iaProsess.id)?.let { plan ->
+    private fun oppdaterNavnPåProsess(samarbeid: IAProsessDto): IAProsess? {
+        prosessRepository.oppdaterNavnPåProsess(samarbeid)
+        planRepository.hentPlan(prosessId = samarbeid.id)?.let { plan ->
             sendPlanPåKafkaObserver.receive(
                 ObservedPlan(
-                    plan= plan,
-                    hendelsesType = PlanHendelseType.OPPDATER
-                )
+                    plan = plan,
+                    hendelsesType = PlanHendelseType.OPPDATER,
+                ),
             )
         }
+        return prosessRepository.hentProsess(
+            saksnummer = samarbeid.saksnummer,
+            prosessId = samarbeid.id,
+        )
     }
 
     fun kanSletteProsess(
@@ -93,9 +99,16 @@ class IAProsessService(
     private fun slettProsess(
         sakshendelse: ProsessHendelse,
         sak: IASak,
-    ) {
-        if (kanSletteProsess(sak = sak, iaProsess = sakshendelse.prosessDto)) {
+    ): IAProsess? {
+        val samarbeid = sakshendelse.prosessDto
+
+        return if (kanSletteProsess(sak = sak, iaProsess = samarbeid)) {
             prosessRepository.oppdaterTilSlettetStatus(sakshendelse)
+        } else {
+            prosessRepository.hentProsess(
+                saksnummer = samarbeid.saksnummer,
+                prosessId = samarbeid.id,
+            )
         }
     }
 }

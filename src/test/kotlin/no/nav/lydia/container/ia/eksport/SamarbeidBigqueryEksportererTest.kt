@@ -1,19 +1,19 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.jobbsender.Jobb
-import io.kotest.inspectors.forAtLeastOne
-import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
+import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
 import org.junit.After
 import org.junit.Before
@@ -59,60 +59,88 @@ class SamarbeidBigqueryEksportererTest {
 
     @Test
     fun `jobb starter re-eksport av alle samarbeid til bigquery`() {
-        val sak1 = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "NAVN PÅ SAMARBEID 1")
-        val samarbeid1 = sak1.hentAlleSamarbeid().first()
-        val sak2 = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "NAVN PÅ SAMARBEID 2")
-        val samarbeid2 = sak2.hentAlleSamarbeid().first()
+        val sakMedAktivtSamarbeid = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "ATIVT SAMARBEID")
+        val aktivtSamarbeid = sakMedAktivtSamarbeid.hentAlleSamarbeid().first()
+
+        val sakMedSamarbeidSomSkalSlettes = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "SLETTET SAMARBEID")
+        val samarbeidSomSkalSlettes = sakMedSamarbeidSomSkalSlettes.hentAlleSamarbeid().first()
+
+        sakMedSamarbeidSomSkalSlettes.slettSamarbeid(samarbeidSomSkalSlettes)
+
+        val sakMedNavngittSamarbeid = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "SAMARBEID UTEN NAVN")
+        val samarbeidUtenNavn = sakMedNavngittSamarbeid.hentAlleSamarbeid().first()
+
+        sakMedNavngittSamarbeid.nyttNavnPåSamarbeid(samarbeidUtenNavn, "NAVNGITT SAMARBEID")
+        val samarbeidMedNyttNavn = sakMedNavngittSamarbeid.hentAlleSamarbeid().first()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                keys = listOf(sak1.saksnummer, sak2.saksnummer),
+                keys = listOf(
+                    sakMedAktivtSamarbeid.saksnummer,
+                    sakMedSamarbeidSomSkalSlettes.saksnummer,
+                    sakMedNavngittSamarbeid.saksnummer,
+                ),
                 konsument = konsument,
             ) { meldinger ->
                 val sendteSamarbeid = meldinger.map {
                     Json.decodeFromString<SamarbeidBigqueryProdusent.SamarbeidValue>(it)
                 }
 
-                sendteSamarbeid shouldHaveAtLeastSize 2
-
                 sendteSamarbeid.forExactlyOne {
-                    it.id shouldBe samarbeid1.id
-                    it.saksnummer shouldBe samarbeid1.saksnummer
+                    it.id shouldBe aktivtSamarbeid.id
+                    it.saksnummer shouldBe aktivtSamarbeid.saksnummer
+                    it.navn shouldBe aktivtSamarbeid.navn
                     it.status shouldBe "AKTIV"
-                    it.navn shouldBe "NAVN PÅ SAMARBEID 1"
                 }
 
                 sendteSamarbeid.forExactlyOne {
-                    it.id shouldBe samarbeid2.id
-                    it.saksnummer shouldBe samarbeid2.saksnummer
+                    it.id shouldBe samarbeidSomSkalSlettes.id
+                    it.saksnummer shouldBe samarbeidSomSkalSlettes.saksnummer
+                    it.navn shouldBe samarbeidSomSkalSlettes.navn
+                    it.status shouldBe "SLETTET"
+                }
+
+                sendteSamarbeid.forExactlyOne {
+                    it.id shouldBe samarbeidMedNyttNavn.id
+                    it.saksnummer shouldBe samarbeidMedNyttNavn.saksnummer
+                    it.navn shouldBe samarbeidMedNyttNavn.navn
                     it.status shouldBe "AKTIV"
-                    it.navn shouldBe "NAVN PÅ SAMARBEID 2"
                 }
             }
 
             kafkaContainerHelper.sendJobbMelding(Jobb.iaSakSamarbeidEksport)
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                keys = listOf(sak1.saksnummer, sak2.saksnummer),
+                keys = listOf(
+                    sakMedAktivtSamarbeid.saksnummer,
+                    sakMedSamarbeidSomSkalSlettes.saksnummer,
+                    sakMedNavngittSamarbeid.saksnummer,
+                ),
                 konsument = konsument,
             ) { meldinger ->
                 val sendteSamarbeid = meldinger.map {
                     Json.decodeFromString<SamarbeidBigqueryProdusent.SamarbeidValue>(it)
                 }
 
-                sendteSamarbeid shouldHaveAtLeastSize 2
-
-                sendteSamarbeid.forAtLeastOne {
-                    it.id shouldBe samarbeid1.id
-                    it.saksnummer shouldBe samarbeid1.saksnummer
+                sendteSamarbeid.forExactlyOne {
+                    it.id shouldBe aktivtSamarbeid.id
+                    it.saksnummer shouldBe aktivtSamarbeid.saksnummer
+                    it.navn shouldBe aktivtSamarbeid.navn
                     it.status shouldBe "AKTIV"
-                    it.navn shouldBe "NAVN PÅ SAMARBEID 1"
                 }
-                sendteSamarbeid.forAtLeastOne {
-                    it.id shouldBe samarbeid2.id
-                    it.saksnummer shouldBe samarbeid2.saksnummer
+
+                sendteSamarbeid.forExactlyOne {
+                    it.id shouldBe samarbeidSomSkalSlettes.id
+                    it.saksnummer shouldBe samarbeidSomSkalSlettes.saksnummer
+                    it.navn shouldBe samarbeidSomSkalSlettes.navn
+                    it.status shouldBe "SLETTET"
+                }
+
+                sendteSamarbeid.forExactlyOne {
+                    it.id shouldBe samarbeidMedNyttNavn.id
+                    it.saksnummer shouldBe samarbeidMedNyttNavn.saksnummer
+                    it.navn shouldBe samarbeidMedNyttNavn.navn
                     it.status shouldBe "AKTIV"
-                    it.navn shouldBe "NAVN PÅ SAMARBEID 2"
                 }
             }
         }

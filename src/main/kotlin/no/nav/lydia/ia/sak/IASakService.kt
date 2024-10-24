@@ -164,7 +164,7 @@ class IASakService(
                         val nyStatus = oppdatertSak.status
                         sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, nyStatus)
                         årsakService.lagreÅrsak(sakshendelse)
-                        iaProsessService.oppdaterProsess(sakshendelse, sak)
+                        iaProsessService.oppdaterSamarbeid(sakshendelse, sak)
                         when (sakshendelse.hendelsesType) {
                             IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
                                 sakshendelse,
@@ -358,7 +358,7 @@ class IASakService(
         }
 
         return SaksStatusDto(
-            årsaker = årsaker.toList()
+            årsaker = årsaker.toList(),
         ).right()
     }
 
@@ -366,20 +366,21 @@ class IASakService(
         val plan = planRepository.hentPlan(prosessId = prosess.id) ?: return ÅrsakTilAtSakIkkeKanAvsluttes(
             samarbeidsId = prosess.id,
             samarbeidsNavn = prosess.navn,
-            type = ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN
+            type = ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
         )
 
         val ingenPlanlagteUndertemaer = plan.temaer.map { tema ->
             tema.undertemaer.all { undertema -> !undertema.inkludert }
         }.all { it }
 
-        if (ingenPlanlagteUndertemaer)
+        if (ingenPlanlagteUndertemaer) {
             return ÅrsakTilAtSakIkkeKanAvsluttes(
                 samarbeidsId = prosess.id,
                 samarbeidsNavn = prosess.navn,
                 type = ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
-                id = plan.id.toString()
+                id = plan.id.toString(),
             )
+        }
 
         val erPlanFullført = plan.temaer.map { tema ->
             tema.undertemaer.filter { it.inkludert }.all { undertema ->
@@ -393,36 +394,36 @@ class IASakService(
                 samarbeidsId = prosess.id,
                 samarbeidsNavn = prosess.navn,
                 type = ÅrsaksType.SAMARBEIDSPLAN_IKKE_FULLFØRT,
-                id = plan.id.toString()
+                id = plan.id.toString(),
             )
         }
     }
 
-    private fun sjekkBehovsvurderinger(
-        prosess: IAProsess,
-    ): List<ÅrsakTilAtSakIkkeKanAvsluttes> {
+    private fun sjekkBehovsvurderinger(prosess: IAProsess): List<ÅrsakTilAtSakIkkeKanAvsluttes> {
         val årsaker = mutableListOf<ÅrsakTilAtSakIkkeKanAvsluttes>()
         val statusForBehovsvurderinger =
             iaSakRepository.hentStatusForBehovsvurderinger(prosess.id)
-        if (statusForBehovsvurderinger.isEmpty())
+        if (statusForBehovsvurderinger.isEmpty()) {
             årsaker.add(
                 ÅrsakTilAtSakIkkeKanAvsluttes(
                     samarbeidsId = prosess.id,
                     samarbeidsNavn = prosess.navn,
                     type = ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING,
-                )
+                ),
             )
+        }
         statusForBehovsvurderinger.forEach {
             when (it.second) {
                 SpørreundersøkelseStatus.AVSLUTTET,
-                SpørreundersøkelseStatus.SLETTET -> {}
+                SpørreundersøkelseStatus.SLETTET,
+                -> {}
                 else -> årsaker.add(
                     ÅrsakTilAtSakIkkeKanAvsluttes(
                         samarbeidsId = prosess.id,
                         samarbeidsNavn = prosess.navn,
                         id = it.first,
-                        type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT
-                    )
+                        type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
+                    ),
                 )
             }
         }

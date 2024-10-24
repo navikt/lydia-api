@@ -4,12 +4,12 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import javax.sql.DataSource
-import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 
 class ProsessRepository(
     val dataSource: DataSource,
@@ -117,12 +117,13 @@ class ProsessRepository(
                      SET status = 'SLETTET'
                      WHERE id = :prosessId
                      AND saksnummer = :saksnummer
+                     returning *
                     """.trimIndent(),
                     mapOf(
                         "prosessId" to prosessHendelse.prosessDto.id,
                         "saksnummer" to prosessHendelse.saksnummer,
                     ),
-                ).asUpdate,
-            )
+                ).map(this::mapRowToIaProsessDto).asSingle,
+            )!!
         }
 }
