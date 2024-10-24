@@ -127,20 +127,28 @@ class SpørreundersøkelseApiTest {
 
     @Test
     fun `skal kunne opprette en tom spørreundersøkelse av type evaluering og sende på kafka`() {
-        val evalueringDto = nySakIKartleggesMedEtSamarbeid().opprettEvaluering()
+        val evaluering = nySakIKartleggesMedEtSamarbeid().opprettEvaluering()
 
-        evalueringDto.type shouldBe "Evaluering"
-        evalueringDto.temaMedSpørsmålOgSvaralternativer shouldHaveSize 0
+        evaluering.type shouldBe "Evaluering"
+        evaluering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
+        evaluering.temaMedSpørsmålOgSvaralternativer.forAll {
+            it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+            it.navn.shouldNotBeEmpty()
+        }
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = evalueringDto.kartleggingId,
+                key = evaluering.kartleggingId,
                 konsument = kartleggingKonsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 0
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
+                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
+                        it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+                        it.navn.shouldNotBeEmpty()
+                    }
                 }
             }
         }
