@@ -1,14 +1,18 @@
 package no.nav.lydia.sykefraværsstatistikk.api
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.NonEmptyList
+import arrow.core.flatMap
+import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.zipOrAccumulate
+import arrow.core.right
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
-import io.ktor.http.*
-import io.ktor.server.request.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
+import io.ktor.server.request.ApplicationRequest
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
@@ -17,7 +21,6 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.tilSektor
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class Søkeparametere(
@@ -111,12 +114,10 @@ data class Søkeparametere(
             søkeparametere.status?.let { status ->
                 when (status) {
                     IAProsessStatus.IKKE_AKTIV -> " AND (ia_sak.status IS NULL " +
-                            "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
-                            "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
+                            "OR (ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET')) "
 
                     IAProsessStatus.IKKE_AKTUELL, IAProsessStatus.FULLFØRT, IAProsessStatus.SLETTET ->
-                        " AND ia_sak.status = '$status' " +
-                                "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
+                        " AND ia_sak.status = '$status' "
 
                     else -> " AND ia_sak.status = '$status'"
                 }

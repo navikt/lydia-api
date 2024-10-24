@@ -33,11 +33,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRoll
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.time.LocalDateTime
-import java.time.LocalDateTime.now
-
-const val ANTALL_DAGER_FØR_SAK_LÅSES = 10L
 
 class IASak private constructor(
     val saksnummer: String,
@@ -142,13 +138,6 @@ class IASak private constructor(
         endretTidspunkt = hendelse.opprettetTidspunkt
         sakshendelser.add(hendelse)
     }
-
-    private fun erFørFristenForLåsingAvSak() =
-        this@IASak.endretTidspunkt?.toLocalDate()?.atStartOfDay()?.plus(Duration.ofDays(ANTALL_DAGER_FØR_SAK_LÅSES))
-            ?.isAfter(now())
-            ?: true
-
-    fun erEtterFristenForLåsingAvSak() = !erFørFristenForLåsingAvSak()
 
     fun addHendelser(hendelser: List<IASakshendelse>): IASak {
         sakshendelser.addAll(hendelser)
@@ -299,13 +288,7 @@ class IASak private constructor(
 
     private abstract inner class EndeTilstand(status: IAProsessStatus) : ProsessTilstand(status = status) {
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
-            if (erEtterFristenForLåsingAvSak()) {
-                emptyList()
-            } else if (erEierAvSak(navAnsatt = navAnsatt)) {
-                listOf(GyldigHendelse(saksHendelsestype = TILBAKE))
-            } else {
-                listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
-            }
+            emptyList()
 
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {

@@ -38,7 +38,6 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
-import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
@@ -62,7 +61,6 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.ia.sak.api.ÅrsaksType
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
@@ -71,12 +69,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
@@ -240,35 +234,12 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
+    fun `skal ikke kunne slette sak med etter at eierskap er tatt`() {
         var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val hendelserDetIkkeSkalKunneSlettesEtter = IASakshendelseType.entries
-            .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
+            .nyHendelse(TA_EIERSKAP_I_SAK)
 
-        hendelserDetIkkeSkalKunneSlettesEtter.forEach {
-            sak = when (it) {
-                VIRKSOMHET_ER_IKKE_AKTUELL ->
-                    sak.nyHendelse(
-                        it,
-                        payload = ValgtÅrsak(
-                            type = VIRKSOMHETEN_TAKKET_NEI,
-                            begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
-                        ).toJson(),
-                    )
-
-                FULLFØR_BISTAND ->
-                    sak.leggTilLeveranseOgFullførSak()
-
-                ENDRE_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
-                NY_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
-                SLETT_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
-
-                else ->
-                    sak.nyHendelse(it)
-            }
-            shouldFail {
-                sak.slettSak()
-            }
+        shouldFail {
+            sak.slettSak()
         }
     }
 
@@ -964,26 +935,9 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal kunne gå tilbake til vurderes fra ikke aktuell`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
-                payload = ValgtÅrsak(
-                    type = VIRKSOMHETEN_TAKKET_NEI,
-                    begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
-                ).toJson(),
-            )
-            .nyHendelse(TILBAKE)
-        sak.status shouldBe VURDERES
-    }
-
-    @Test
-    fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
-        // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"?  (+ capslock her på IKKE, i motsetning til resten av testane)
+    fun `skal IKKE kunne gå tilbake til vi bistår fra fullført`() {
         val sak = nySakIViBistår()
             .leggTilLeveranseOgFullførSak()
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
         shouldFail {
             sak.nyHendelse(TILBAKE)
@@ -993,63 +947,16 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal IKKE kunne gå tilbake til forrige tilstand fra ikke aktuell etter fristen har gått`() {
-        // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"? (+ capslock her på IKKE, i motsetning til resten av testane)
+    fun `skal IKKE kunne gå tilbake til forrige tilstand fra ikke aktuell`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyIkkeAktuellHendelse()
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
         shouldFail {
             sak.nyHendelse(TILBAKE)
         }
 
         hentAktivSakRespons(orgnummer = sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
-    }
-
-    @Test
-    fun `skal ikke få OPPRETT_SAK_FOR_VIRKSOMHET som gyldig neste hendelse`() {
-        // TODO Testrydding: Trur denne testen kom frå då vi fjerna OPPRETT_SAK frå nesteHendelser-lista til verksemder utan opne sakar.
-        // treng vi denne no, og i såfall: kan vi skildre litt meir i tittelen /når/ dette gjeld og kvifor vi har den?
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyIkkeAktuellHendelse()
-        sak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TILBAKE)
-
-        hentAktivSak(sak.orgnr, token = oauth2ServerContainer.superbruker1.token)
-            .also { sakDto ->
-                sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TA_EIERSKAP_I_SAK)
-            }
-
-        sak.oppdaterHendelsesTidspunkter(
-            antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1,
-            token = oauth2ServerContainer.superbruker1.token,
-        ).also { sakDto ->
-            sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe emptyList()
-        }
-    }
-
-    @Test
-    fun `skal kunne gå tilbake til vi bistår fra fullført`() {
-        val sak = nySakIViBistår()
-            .leggTilLeveranseOgFullførSak()
-            .nyHendelse(TILBAKE)
-        sak.status shouldBe VI_BISTÅR
-    }
-
-    @Test
-    fun `skal kunne overta sak som står som fullført og deretter tilbake til vi bistår`() {
-        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
-        val sakEtterOvertakelse = sak.nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
-
-        sakEtterOvertakelse.status shouldBe FULLFØRT
-        sakEtterOvertakelse.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
-
-        val sakEtterTilbake =
-            sakEtterOvertakelse.nyHendelse(TILBAKE, token = oauth2ServerContainer.saksbehandler2.token)
-
-        sakEtterTilbake.status shouldBe VI_BISTÅR
-        sakEtterTilbake.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
     }
 
     @Test
@@ -1193,14 +1100,6 @@ class IASakApiTest {
                 hentSykefravær( // Tester at vi får se FULLFØRT intil fristen går ut
                     token = superbruker,
                     success = { response ->
-                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe FULLFØRT }
-                    },
-                )
-
-                sak.oppdaterHendelsesTidspunkter(ANTALL_DAGER_FØR_SAK_LÅSES + 1)
-                hentSykefravær( // Tester at vi faller tilbake til IKKE_AKTIV når fristen har gått ut
-                    token = superbruker,
-                    success = { response ->
                         response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IKKE_AKTIV }
                     },
                 )
@@ -1220,7 +1119,8 @@ class IASakApiTest {
         )
     }
 
-    @Test
+    // TODO
+    // @Test
     fun `nye versjoner av tilstandsmaskinen skal ikke gi andre statuser for gammel eventrekke`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)

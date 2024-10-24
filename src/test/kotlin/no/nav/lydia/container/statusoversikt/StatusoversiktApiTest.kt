@@ -55,10 +55,6 @@ class StatusoversiktApiTest {
         )
 
         nySakIViBistår(orgnummer = virksomhet.orgnr)
-            .leggTilLeveranseOgFullførSak()
-
-        val aktivSak = hentAktivSak(orgnummer = virksomhet.orgnr)
-        aktivSak.status shouldBe IAProsessStatus.FULLFØRT
 
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
@@ -67,7 +63,7 @@ class StatusoversiktApiTest {
             ).third.get().data
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
         statusoversiktKommunalSektor.first { statusoversikt ->
-            statusoversikt.status == IAProsessStatus.FULLFØRT
+            statusoversikt.status == IAProsessStatus.VI_BISTÅR
         }.antall shouldBeGreaterThan 0
     }
 
@@ -79,9 +75,6 @@ class StatusoversiktApiTest {
             )
         )
         nySakIViBistår(orgnummer = virksomhet.orgnr)
-            .leggTilLeveranseOgFullførSak()
-        val aktivSak = hentAktivSak(orgnummer = virksomhet.orgnr)
-        aktivSak.status shouldBe IAProsessStatus.FULLFØRT
 
         VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
@@ -98,7 +91,7 @@ class StatusoversiktApiTest {
 
         statusoversiktResults.size shouldBeGreaterThan 1
         statusoversiktResults.first { statusoversikt ->
-            statusoversikt.status == IAProsessStatus.FULLFØRT
+            statusoversikt.status == IAProsessStatus.VI_BISTÅR
         }.antall shouldBeGreaterThan 0
         statusoversiktResults.first { statusoversikt ->
             statusoversikt.status == IAProsessStatus.IKKE_AKTIV

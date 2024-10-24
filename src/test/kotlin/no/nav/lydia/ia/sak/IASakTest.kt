@@ -3,18 +3,15 @@ package no.nav.lydia.ia.sak
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
-import java.time.LocalDateTime
-import kotlin.test.Test
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
@@ -46,6 +43,8 @@ import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Saksbehandler
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
+import java.time.LocalDateTime
+import kotlin.test.Test
 
 class IASakTest {
     companion object {
@@ -187,7 +186,7 @@ class IASakTest {
 
 
     @Test
-    fun `det skal gå an å angre på en sak`() {
+    fun `det skal IKKE gå an å angre på en sak som er i en endetilstand`() {
         val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
@@ -201,21 +200,16 @@ class IASakTest {
         sak.status shouldBe IKKE_AKTUELL
 
         val tilbakeTilKontaktes = ikkeAktuell.nesteHendelse(TILBAKE)
-        superbruker1.utførHendelsePåSak(sak, tilbakeTilKontaktes)
-        sak.endretAvHendelseId shouldBe tilbakeTilKontaktes.id
-        sak.status shouldBe KONTAKTES
-        sak.hendelser shouldContain tilbakeTilKontaktes
+        val resultat = superbruker1.utførHendelsePåSak(sak, tilbakeTilKontaktes)
+        resultat.isLeft() shouldBe true
 
-        val tilbakeTilVurderes = tilbakeTilKontaktes.nesteHendelse(TILBAKE)
-        superbruker1.utførHendelsePåSak(sak, tilbakeTilVurderes)
-        sak.endretAvHendelseId shouldBe tilbakeTilVurderes.id
-        sak.hendelser shouldContain tilbakeTilVurderes
-        sak.status shouldBe VURDERES
+        sak.endretAvHendelseId shouldBe ikkeAktuell.id
+        sak.status shouldBe IKKE_AKTUELL
+        sak.hendelser shouldNotContain tilbakeTilKontaktes
     }
 
     @Test
     fun `det skal gå ann å fullføre en sak`() {
-        // TODO Testrydding: Kva tester denne, eigentleg? Kan vi bruke sakIViBistår til å lage sak her, eller blir det feil?
         val ny_sak = nyFørsteHendelse(orgnummer = ORGNUMMER, superbruker = superbruker1, navEnhet = navEnhet)
         val vurderes = ny_sak.nesteHendelse(VIRKSOMHET_VURDERES)
         val eierskap = vurderes.nesteHendelse(TA_EIERSKAP_I_SAK)
@@ -247,8 +241,7 @@ class IASakTest {
             fullfør,
         )
         val gyldigeNesteHendelser = sak.gyldigeNesteHendelser(superbruker1)
-        gyldigeNesteHendelser.size shouldBe 1
-        gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
+        gyldigeNesteHendelser.size shouldBe 0
     }
 
     @Test

@@ -4,22 +4,26 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.tilgangskontroll.fia.Rolle
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 
 open class IASakshendelse(

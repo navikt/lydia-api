@@ -3,11 +3,8 @@ package no.nav.lydia.sykefraværsstatistikk
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import io.ktor.http.*
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.toKotlinLocalDate
+import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalerFraTilDto
@@ -20,13 +17,21 @@ import no.nav.lydia.sykefraværsstatistikk.domene.NæringSykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.domene.Virksomhetsoversikt
 import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSiste4Kvartal
 import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSisteKvartal
-import no.nav.lydia.sykefraværsstatistikk.import.*
-import no.nav.lydia.sykefraværsstatistikk.import.Kategori.*
+import no.nav.lydia.sykefraværsstatistikk.import.BehandletImportMetadataVirksomhet
+import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori.BRANSJE
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori.LAND
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori.NÆRING
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori.NÆRINGSKODE
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori.SEKTOR
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori.VIRKSOMHET
+import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.filterPåKategoriSektorOgGyldigSektor
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.mapSektorNavnTilSektorKode
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import org.slf4j.LoggerFactory
-import java.time.LocalDate.now
 import kotlin.system.measureTimeMillis
 
 const val LANDKODE_NO = "NO"
@@ -127,7 +132,7 @@ class SykefraværsstatistikkService(
 
         log.info("Brukte ${System.currentTimeMillis() - start} ms på å hente statistikk for virksomheter.")
         return sykefravær.map {
-            if (it.status.erAvsluttet() && it.sistEndret.erForeldet()) {
+            if (it.status.erAvsluttet()) {
                 it.copy(
                     status = IAProsessStatus.IKKE_AKTIV
                 )
@@ -147,13 +152,6 @@ class SykefraværsstatistikkService(
             log.info("Lagrer ${statistikkForKategori.size} rad(er) med statistikk for kategori ${kategori.name} i gjeldende kvartal")
         }
         return statistikkForKategori
-    }
-
-    private fun LocalDate?.erForeldet() = when (this) {
-        null -> false
-        else -> {
-            this < now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES).toKotlinLocalDate()
-        }
     }
 
     private fun IAProsessStatus?.erAvsluttet() = when (this) {
