@@ -1259,4 +1259,13 @@ class IASakApiTest {
             "SAKSBEHANDLER",
         )
     }
+
+    @Test
+    fun `skal kunne kjøre rekalkulering av resulterende hendelser`() {
+        val sak = nySakIViBistår()
+        kafkaContainerHelper.sendJobbMelding(Jobb.kalkulerResulterendeStatusForHendelser)
+        lydiaApiContainer shouldContainLog """
+            Hendelse ${VIRKSOMHET_SKAL_BISTÅS} med id '${sak.endretAvHendelseId}' i sak '${sak.saksnummer}' resulterer i status ${sak.status}
+        """.trimIndent().toRegex()
+    }
 }

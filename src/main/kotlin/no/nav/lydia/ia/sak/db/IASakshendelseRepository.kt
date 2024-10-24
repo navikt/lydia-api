@@ -231,4 +231,22 @@ class IASakshendelseRepository(
             return this
         }
     }
+
+    fun lagreResulterendeStatus(hendelse: IASakshendelse, resulterendeStatus: IAProsessStatus) =
+        using(sessionOf(dataSource)) { session ->
+              session.run(
+                  queryOf(
+                      """
+                        UPDATE ia_sak_hendelse SET
+                         resulterende_status = :resulterendeStatus
+                        WHERE id = :hendelseId
+                        AND resulterende_status is null
+                      """.trimIndent(),
+                      mapOf(
+                          "resulterendeStatus" to resulterendeStatus.name,
+                          "hendelseId" to hendelse.id,
+                      )
+                  ).asUpdate
+              )
+        }
 }
