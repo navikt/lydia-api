@@ -11,6 +11,7 @@ import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.nyttNavnPåSamarbeid
@@ -86,6 +87,9 @@ class SamarbeidBigqueryEksportererTest {
                     Json.decodeFromString<SamarbeidBigqueryProdusent.SamarbeidValue>(it)
                 }
 
+                // Om denne testen feiler sporadisk bare sjekk at logg ikke inneholder "Klarte ikke å kjøre eksport av samarbeid"
+                // og at fullført melding logges
+
                 sendteSamarbeid.forExactlyOne {
                     it.id shouldBe aktivtSamarbeid.id
                     it.saksnummer shouldBe aktivtSamarbeid.saksnummer
@@ -144,6 +148,8 @@ class SamarbeidBigqueryEksportererTest {
                 }
             }
         }
+
+        lydiaApiContainer.shouldNotContainLog("Klarte ikke å kjøre eksport av samarbeid".toRegex())
         lydiaApiContainer.shouldContainLog("Jobb 'iaSakSamarbeidEksport' ferdig".toRegex())
     }
 }
