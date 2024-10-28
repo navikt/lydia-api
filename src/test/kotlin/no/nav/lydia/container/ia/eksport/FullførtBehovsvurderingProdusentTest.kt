@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -20,7 +20,7 @@ import kotlin.test.Test
 
 class FullførtBehovsvurderingProdusentTest {
     private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe
+        Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe,
     )
 
     @Before
@@ -37,22 +37,21 @@ class FullførtBehovsvurderingProdusentTest {
     @Test
     fun `fullført behovsvurdering skal sendes til salesforce`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettKartlegging()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         påbegyntKartlegging.status shouldBe PÅBEGYNT
 
         val avsluttetKartlegging = påbegyntKartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         avsluttetKartlegging.status shouldBe AVSLUTTET
 
-
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.kartleggingId,
-                konsument = fullførtBehovsvurderingKonsument
+                key = kartleggingDto.id,
+                konsument = fullførtBehovsvurderingKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val behovsvurdering = Json.decodeFromString<FullførtBehovsvurdering>(melding)
-                    behovsvurdering.behovsvurderingId shouldBe avsluttetKartlegging.kartleggingId
+                    behovsvurdering.behovsvurderingId shouldBe avsluttetKartlegging.id
                     behovsvurdering.prosessId.shouldBeInteger()
                 }
             }

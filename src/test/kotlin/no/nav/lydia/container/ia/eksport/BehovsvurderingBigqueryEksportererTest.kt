@@ -7,7 +7,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -39,7 +39,7 @@ class BehovsvurderingBigqueryEksportererTest {
     @Test
     fun `oppretting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val opprettetBehovsvurdering = sak.opprettKartlegging()
+        val opprettetBehovsvurdering = sak.opprettBehovsvurdering()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -52,13 +52,13 @@ class BehovsvurderingBigqueryEksportererTest {
                 }
                 behovsvurderingerUtenSvar shouldHaveSize 1
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
-                sisteBehovsvurdering.id shouldBe opprettetBehovsvurdering.kartleggingId
+                sisteBehovsvurdering.id shouldBe opprettetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe opprettetBehovsvurdering.status.name
                 sisteBehovsvurdering.opprettetAv shouldBe opprettetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe opprettetBehovsvurdering.opprettetTidspunkt
                 sisteBehovsvurdering.endret shouldBe opprettetBehovsvurdering.opprettetTidspunkt
                 // For å unngå null i bigquery settes denne til opprettetTidspunkt ved startet kartlegging
-                sisteBehovsvurdering.samarbeidId shouldBe opprettetBehovsvurdering.prosessId
+                sisteBehovsvurdering.samarbeidId shouldBe opprettetBehovsvurdering.samarbeidId
             }
         }
     }
@@ -66,7 +66,7 @@ class BehovsvurderingBigqueryEksportererTest {
     @Test
     fun `starting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val startetBehovsvurdering = sak.opprettKartlegging()
+        val startetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
@@ -84,12 +84,12 @@ class BehovsvurderingBigqueryEksportererTest {
                 }
                 behovsvurderingerUtenSvar shouldHaveSize 2
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
-                sisteBehovsvurdering.id shouldBe startetBehovsvurdering.kartleggingId
+                sisteBehovsvurdering.id shouldBe startetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe startetBehovsvurdering.status.name
                 sisteBehovsvurdering.opprettetAv shouldBe startetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe startetBehovsvurdering.opprettetTidspunkt
                 sisteBehovsvurdering.endret shouldBe startetBehovsvurdering.endretTidspunkt
-                sisteBehovsvurdering.samarbeidId shouldBe startetBehovsvurdering.prosessId
+                sisteBehovsvurdering.samarbeidId shouldBe startetBehovsvurdering.samarbeidId
             }
         }
     }
@@ -97,7 +97,7 @@ class BehovsvurderingBigqueryEksportererTest {
     @Test
     fun `avslutting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val avsluttetBehovsvurdering = sak.opprettKartlegging()
+        val avsluttetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
@@ -118,12 +118,12 @@ class BehovsvurderingBigqueryEksportererTest {
                 }
                 behovsvurderingerUtenSvar shouldHaveSize 3
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
-                sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.kartleggingId
+                sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status.name
                 sisteBehovsvurdering.opprettetAv shouldBe avsluttetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe avsluttetBehovsvurdering.opprettetTidspunkt
                 sisteBehovsvurdering.endret shouldBe avsluttetBehovsvurdering.endretTidspunkt
-                sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.prosessId
+                sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.samarbeidId
             }
         }
     }
@@ -132,10 +132,10 @@ class BehovsvurderingBigqueryEksportererTest {
     fun `jobb starter re-eksport av alle behovsvurderinger til bigquery`() {
         val sak1 = nySakIKartlegges()
         val samarbeid1 = sak1.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak1.opprettKartlegging(prosessId = samarbeid1.id)
+        sak1.opprettBehovsvurdering(prosessId = samarbeid1.id)
         val sak2 = nySakIKartlegges()
         val samarbeid2 = sak2.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak2.opprettKartlegging(prosessId = samarbeid2.id)
+        sak2.opprettBehovsvurdering(prosessId = samarbeid2.id)
 
         runBlocking {
             kafkaContainerHelper.sendJobbMelding(Jobb.iaSakBehovsvurderingEksport)

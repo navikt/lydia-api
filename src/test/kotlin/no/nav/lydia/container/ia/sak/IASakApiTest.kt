@@ -19,7 +19,7 @@ import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
@@ -137,7 +137,7 @@ class IASakApiTest {
         )
 
         val førsteSamarbeid = alleSamarbeid.first()
-        val kartlegging = sak.opprettKartlegging(prosessId = førsteSamarbeid.id)
+        val kartlegging = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
         val saksStatusMedEnKartlegging = sak.hentSaksStatus()
         saksStatusMedEnKartlegging.kanFullføres shouldBe false
         saksStatusMedEnKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
@@ -149,7 +149,7 @@ class IASakApiTest {
                 samarbeidsId = førsteSamarbeid.id,
                 samarbeidsNavn = førsteSamarbeid.navn,
                 type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
-                id = kartlegging.kartleggingId,
+                id = kartlegging.id,
             )
         }
 
@@ -1266,8 +1266,9 @@ class IASakApiTest {
     fun `skal kunne kjøre rekalkulering av resulterende hendelser`() {
         val sak = nySakIViBistår()
         kafkaContainerHelper.sendJobbMelding(Jobb.kalkulerResulterendeStatusForHendelser)
-        lydiaApiContainer shouldContainLog """
+        lydiaApiContainer shouldContainLog
+            """
             Hendelse ${VIRKSOMHET_SKAL_BISTÅS} med id '${sak.endretAvHendelseId}' i sak '${sak.saksnummer}' resulterer i status ${sak.status}
-        """.trimIndent().toRegex()
+            """.trimIndent().toRegex()
     }
 }

@@ -675,7 +675,7 @@ class IASakKartleggingHelper {
             sak: IASakDto,
             prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPut("$BEHOVSVURDERING_BASE_ROUTE/${behovsvurdering.kartleggingId}")
+        ) = lydiaApiContainer.performPut("$BEHOVSVURDERING_BASE_ROUTE/${behovsvurdering.id}")
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
@@ -690,7 +690,7 @@ class IASakKartleggingHelper {
                 failure = { fail("${it.message}: ${it.response.body().asString("text/plain")}") },
             )
 
-        fun IASakDto.opprettKartlegging(
+        fun IASakDto.opprettBehovsvurdering(
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = opprettBehovsvurdering(
@@ -720,7 +720,7 @@ class IASakKartleggingHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ) = lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/start")
+        ) = lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/start")
             .authentication().bearer(token)
             .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                 success = { it },
@@ -731,7 +731,7 @@ class IASakKartleggingHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ) = lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$kartleggingId/avslutt")
+        ) = lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/avslutt")
             .authentication().bearer(token)
             .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                 success = { it },
@@ -750,7 +750,7 @@ class IASakKartleggingHelper {
             sesjonId: String = UUID.randomUUID().toString(),
             svarIder: List<String> = this.svarAlternativerTilEtFlervalgSpørsmål(),
         ) = sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingId,
+            kartleggingId = id,
             spørsmålId = ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER,
             sesjonId = sesjonId,
             svarIder = svarIder,
@@ -762,7 +762,7 @@ class IASakKartleggingHelper {
             svarIder: List<String> =
                 listOf(temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
         ) = sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingId,
+            kartleggingId = id,
             spørsmålId = spørsmålId,
             sesjonId = sesjonId,
             svarIder = svarIder,
@@ -773,7 +773,7 @@ class IASakKartleggingHelper {
             kafkaContainerHelper.sendOgVentTilKonsumert(
                 nøkkel = Json.encodeToString(
                     SpørreundersøkelseHendeleseNøkkel(
-                        this.kartleggingId,
+                        this.id,
                         HendelsType.STENG_TEMA,
                     ),
                 ),

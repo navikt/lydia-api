@@ -8,7 +8,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettKartlegging
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.stengTema
@@ -43,14 +43,14 @@ class SpørreundersøkelseHendelseKonsumentTest {
     @Test
     fun `skal oppdatere tema til stengt i databasen`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettKartlegging()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
         kartleggingDto.stengTema(temaId = tema.temaId)
         TestContainerHelper.postgresContainer.hentEnkelKolonne<Boolean>(
             """
             SELECT stengt from ia_sak_kartlegging_kartlegging_til_tema
-                WHERE kartlegging_id = '${kartleggingDto.kartleggingId}'
+                WHERE kartlegging_id = '${kartleggingDto.id}'
                 AND tema_id = ${tema.temaId}
             """.trimIndent(),
         ) shouldBe true
@@ -60,7 +60,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     fun `skal oppdatere spørreundersøkelse til stengt i databasen om alle temaer har blitt stengt`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettKartlegging(prosessId = samarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = samarbeid.id)
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -77,7 +77,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         fullførtBehovsvurdering.status shouldBe SpørreundersøkelseStatus.AVSLUTTET
 
         TestContainerHelper.lydiaApiContainer.shouldContainLog(
-            "Alle temaer i spørreundersøkelse '${behovsvurdering.kartleggingId}' er fullført, spørreundersøkelse er avsluttet".toRegex(),
+            "Alle temaer i spørreundersøkelse '${behovsvurdering.id}' er fullført, spørreundersøkelse er avsluttet".toRegex(),
         )
     }
 
@@ -85,7 +85,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     fun `steng tema skal ikke avslutte spørreundersøkelse før alle temaer er stengt`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettKartlegging(prosessId = samarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = samarbeid.id)
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -101,14 +101,14 @@ class SpørreundersøkelseHendelseKonsumentTest {
         behovsvurderingMedEttStengtTema.status shouldBe SpørreundersøkelseStatus.PÅBEGYNT
 
         TestContainerHelper.lydiaApiContainer.shouldContainLog(
-            "Mottok stenging av tema: ${førsteTema.temaId} i spørreundersøkelse ${behovsvurdering.kartleggingId}".toRegex(),
+            "Mottok stenging av tema: ${førsteTema.temaId} i spørreundersøkelse ${behovsvurdering.id}".toRegex(),
         )
     }
 
     @Test
     fun `skal sende resultater for stengt tema på kafka`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettKartlegging()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
         val førsteSpørsmål = tema.spørsmålOgSvaralternativer.first()
@@ -128,7 +128,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
-                        spørreundersøkelseId = kartleggingDto.kartleggingId,
+                        spørreundersøkelseId = kartleggingDto.id,
                         oppdateringsType = RESULTATER_FOR_TEMA,
                     ),
                 ),
