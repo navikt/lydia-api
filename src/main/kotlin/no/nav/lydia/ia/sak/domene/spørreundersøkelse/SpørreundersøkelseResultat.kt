@@ -37,19 +37,23 @@ fun Spørreundersøkelse.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>
 
 fun SpørreundersøkelseResultat.tilDto(): SpørreundersøkelseResultatDto =
     SpørreundersøkelseResultatDto(
+        id = this.id.toString(),
         kartleggingId = this.id.toString(),
         spørsmålMedSvarPerTema = this.tema.map { tema ->
             TemaResultatDto(
+                id = tema.id,
                 temaId = tema.id,
                 navn = tema.navn,
                 spørsmålMedSvar = tema.spørsmål.map { spørsmål ->
                     SpørsmålResultatDto(
+                        id = spørsmål.spørsmålId.toString(),
                         spørsmålId = spørsmål.spørsmålId.toString(),
                         tekst = spørsmål.spørsmåltekst,
                         flervalg = spørsmål.flervalg,
                         antallDeltakereSomHarSvart = spørsmål.antallDeltakereSomHarSvart,
                         svarListe = spørsmål.svaralternativer.map { svar ->
                             SvarResultatDto(
+                                id = svar.svarId.toString(),
                                 svarId = svar.svarId.toString(),
                                 tekst = svar.svartekst,
                                 antallSvar = svar.antallSvar,

@@ -8,7 +8,11 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 @Serializable
 data class SpørreundersøkelseDto(
+    val id: String,
+    @Deprecated("Bruk id")
     val kartleggingId: String,
+    val samarbeidId: Int,
+    @Deprecated("Bruk samarbeidId")
     val prosessId: Int,
     val status: SpørreundersøkelseStatus,
     val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
@@ -20,7 +24,9 @@ data class SpørreundersøkelseDto(
 
 fun Spørreundersøkelse.tilDto(erEier: Boolean) =
     SpørreundersøkelseDto(
+        id = if (erEier) id.toString() else "",
         kartleggingId = if (erEier) id.toString() else "",
+        samarbeidId = prosessId,
         prosessId = prosessId,
         status = status,
         temaMedSpørsmålOgSvaralternativer = if (erEier) tema.map { it.toDto() } else emptyList(),

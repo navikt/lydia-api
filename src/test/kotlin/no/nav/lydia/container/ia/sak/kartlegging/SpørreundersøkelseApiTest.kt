@@ -10,7 +10,6 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
-import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
@@ -54,7 +53,7 @@ import java.util.UUID
 import kotlin.test.Test
 
 class SpørreundersøkelseApiTest {
-    private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
+    private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     companion object {
         const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018f4e25-6a40-713f-b769-267afa134896"
@@ -62,13 +61,13 @@ class SpørreundersøkelseApiTest {
 
     @Before
     fun setUp() {
-        kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
+        spørreundersøkelseKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
     }
 
     @After
     fun tearDown() {
-        kartleggingKonsument.unsubscribe()
-        kartleggingKonsument.close()
+        spørreundersøkelseKonsument.unsubscribe()
+        spørreundersøkelseKonsument.close()
     }
 
     @Test
@@ -84,8 +83,8 @@ class SpørreundersøkelseApiTest {
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = evaluering.kartleggingId,
-                konsument = kartleggingKonsument,
+                key = evaluering.id,
+                konsument = spørreundersøkelseKonsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -103,7 +102,6 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `kan hente liste av alle spørreundersøkelser av typen Evaluering`() {
         val sak = nySakIViBistår()
-
         val evaluering = sak.opprettEvaluering()
 
         val alleEvalueringer = hentEvalueringer(
@@ -113,7 +111,8 @@ class SpørreundersøkelseApiTest {
         )
 
         alleEvalueringer shouldHaveSize 1
-        alleEvalueringer.first().kartleggingId shouldBe evaluering.kartleggingId
+        alleEvalueringer.first().id shouldBe evaluering.id
+        alleEvalueringer.first().samarbeidId shouldBe evaluering.samarbeidId
         alleEvalueringer.first().opprettetAv shouldBe evaluering.opprettetAv
         alleEvalueringer.first().opprettetTidspunkt shouldBe evaluering.opprettetTidspunkt
         alleEvalueringer.first().endretTidspunkt shouldBe null
@@ -125,11 +124,11 @@ class SpørreundersøkelseApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
         val behovsvurdering = sak.opprettKartlegging()
-        behovsvurdering.kartleggingId.length shouldBe 36
+        behovsvurdering.id.length shouldBe 36
 
         postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
             ) shouldNotBe null
     }
 
@@ -138,11 +137,11 @@ class SpørreundersøkelseApiTest {
         val sak = nySakIViBistår()
 
         val behovsvurdering = sak.opprettKartlegging()
-        behovsvurdering.kartleggingId.length shouldBe 36
+        behovsvurdering.id.length shouldBe 36
 
         postgresContainer
             .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
             ) shouldNotBe null
     }
 
@@ -158,8 +157,8 @@ class SpørreundersøkelseApiTest {
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = behovsvurdering.kartleggingId,
-                konsument = kartleggingKonsument,
+                key = behovsvurdering.id,
+                konsument = spørreundersøkelseKonsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -203,19 +202,17 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `kan opprette spørreundersøkelse av typen behovsvurdering og sende den på kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-
         val behovsvurdering = sak.opprettKartlegging()
-        val id = behovsvurdering.kartleggingId
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = id,
-                konsument = kartleggingKonsument,
+                key = behovsvurdering.id,
+                konsument = spørreundersøkelseKonsument,
             ) { liste ->
                 liste.map { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.spørreundersøkelseId shouldBe id
+                    spørreundersøkelse.spørreundersøkelseId shouldBe behovsvurdering.id
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
                     spørreundersøkelse.status shouldBe OPPRETTET
@@ -236,16 +233,20 @@ class SpørreundersøkelseApiTest {
     fun `kan hente liste av alle spørreundersøkelser av typen Behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
-        sak.opprettKartlegging()
+        val behvosvurdering = sak.opprettKartlegging()
 
         val alleKartlegginger = hentIASakKartlegginger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
         )
+
         alleKartlegginger shouldHaveSize 1
-        alleKartlegginger.first().opprettetAv shouldBeEqual oauth2ServerContainer.saksbehandler1.navIdent
-        alleKartlegginger.first().opprettetTidspunkt shouldNotBe null
+        alleKartlegginger.first().id shouldBe behvosvurdering.id
+        alleKartlegginger.first().samarbeidId shouldBe behvosvurdering.samarbeidId
+        alleKartlegginger.first().opprettetAv shouldBe behvosvurdering.opprettetAv
+        alleKartlegginger.first().opprettetTidspunkt shouldBe behvosvurdering.opprettetTidspunkt
+        alleKartlegginger.first().status shouldBe OPPRETTET
         alleKartlegginger.first().endretTidspunkt shouldBe null
     }
 
@@ -297,7 +298,7 @@ class SpørreundersøkelseApiTest {
         val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
         val sesjonId = UUID.randomUUID()
         sendKartleggingSvarTilKafka(
-            kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+            kartleggingId = påbegyntBehovsvurdering.id,
             spørsmålId = førsteSpørsmål.id,
             sesjonId = sesjonId.toString(),
             svarIder = listOf(førsteSvaralternativ.svarId),
@@ -307,7 +308,7 @@ class SpørreundersøkelseApiTest {
             hentKartleggingMedSvar(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+                kartleggingId = påbegyntBehovsvurdering.id,
             )
         }
     }
@@ -330,7 +331,7 @@ class SpørreundersøkelseApiTest {
         repeat(antallSvar) {
             val sesjonId = UUID.randomUUID()
             sendKartleggingSvarTilKafka(
-                kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+                kartleggingId = påbegyntBehovsvurdering.id,
                 spørsmålId = førsteSpørsmål.id,
                 sesjonId = sesjonId.toString(),
                 svarIder = listOf(førsteSvaralternativ.svarId),
@@ -342,7 +343,7 @@ class SpørreundersøkelseApiTest {
         val spørreundersøkelseResultat = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+            kartleggingId = påbegyntBehovsvurdering.id,
         )
 
         spørreundersøkelseResultat.spørsmålMedSvarPerTema.forAll { tema ->
@@ -373,7 +374,7 @@ class SpørreundersøkelseApiTest {
         repeat(antallSvar) {
             val sesjonId = UUID.randomUUID()
             sendKartleggingSvarTilKafka(
-                kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+                kartleggingId = påbegyntBehovsvurdering.id,
                 spørsmålId = førsteSpørsmål.id,
                 sesjonId = sesjonId.toString(),
                 svarIder = listOf(førsteSvaralternativ.svarId),
@@ -385,12 +386,12 @@ class SpørreundersøkelseApiTest {
         val spørreundersøkelseResultat = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = påbegyntBehovsvurdering.kartleggingId,
+            kartleggingId = påbegyntBehovsvurdering.id,
         )
 
         spørreundersøkelseResultat.spørsmålMedSvarPerTema.forAll { tema ->
             tema.spørsmålMedSvar.forAll { spørsmål ->
-                if (spørsmål.spørsmålId == førsteSpørsmål.id) {
+                if (spørsmål.id == førsteSpørsmål.id) {
                     spørsmål.antallDeltakereSomHarSvart shouldBe antallSvar
                     spørsmål.svarListe.first().antallSvar shouldBe antallSvar
                 } else {
@@ -406,23 +407,23 @@ class SpørreundersøkelseApiTest {
     @Test
     fun `alle med tilgang til fia skal kunne hente resultater av kartlegging`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettKartlegging()
-        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val behovsvurdering = sak.opprettKartlegging()
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val resultater = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartlegging.kartleggingId,
+            kartleggingId = behovsvurdering.id,
         )
-        resultater.kartleggingId shouldBe kartlegging.kartleggingId
+        resultater.id shouldBe behovsvurdering.id
 
-        val kartleggingMedSvar = hentKartleggingMedSvar(
+        val behovsvurderingResultat = hentKartleggingMedSvar(
             token = oauth2ServerContainer.saksbehandler2.token,
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = kartlegging.kartleggingId,
+            kartleggingId = behovsvurdering.id,
         )
-        kartleggingMedSvar.kartleggingId shouldBe kartlegging.kartleggingId
+        behovsvurderingResultat.id shouldBe behovsvurdering.id
     }
 
     @Test
@@ -445,8 +446,8 @@ class SpørreundersøkelseApiTest {
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.kartleggingId,
-                konsument = kartleggingKonsument,
+                key = kartleggingDto.id,
+                konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -479,8 +480,8 @@ class SpørreundersøkelseApiTest {
         runBlocking {
             // -- topic for fia-arbeidsgiver
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.kartleggingId,
-                konsument = kartleggingKonsument,
+                key = kartleggingDto.id,
+                konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
@@ -498,14 +499,14 @@ class SpørreundersøkelseApiTest {
 
         val response =
             lydiaApiContainer.performPost(
-                "$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}/avslutt",
+                "$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}/avslutt",
             )
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<SpørreundersøkelseDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.Forbidden.value
 
-        lydiaApiContainer shouldContainLog "Kartlegging er ikke i påbegynt".toRegex()
+        lydiaApiContainer shouldContainLog "Kartlegging er ikke i påbegynt status".toRegex()
     }
 
     @Test
@@ -518,7 +519,7 @@ class SpørreundersøkelseApiTest {
 
         val førsteSpørsmål = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
         sendKartleggingSvarTilKafka(
-            kartleggingId = pågåendeKartlegging.kartleggingId,
+            kartleggingId = pågåendeKartlegging.id,
             spørsmålId = førsteSpørsmål.id,
             sesjonId = UUID.randomUUID().toString(),
             svarIder = listOf(
@@ -528,11 +529,11 @@ class SpørreundersøkelseApiTest {
 
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'",
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
             ) shouldHaveSize 1
 
         val response =
-            lydiaApiContainer.performDelete("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
+            lydiaApiContainer.performDelete("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -540,8 +541,8 @@ class SpørreundersøkelseApiTest {
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.kartleggingId,
-                konsument = kartleggingKonsument,
+                key = kartleggingDto.id,
+                konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -553,11 +554,11 @@ class SpørreundersøkelseApiTest {
 
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'",
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
             ) shouldHaveSize 0
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'",
+                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
             ).forAll { it shouldBe "SLETTET" }
 
         hentIASakKartlegginger(
@@ -575,7 +576,7 @@ class SpørreundersøkelseApiTest {
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val response =
-            lydiaApiContainer.performDelete("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.kartleggingId}")
+            lydiaApiContainer.performDelete("$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}")
                 .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
                 .tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -583,11 +584,11 @@ class SpørreundersøkelseApiTest {
 
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.kartleggingId}'",
+                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
             ) shouldHaveSize 0
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
-                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.kartleggingId}'",
+                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
             ).forAll { it shouldBe "SLETTET" }
 
         hentIASakKartlegginger(
@@ -628,13 +629,13 @@ class SpørreundersøkelseApiTest {
 
         val behovsvurdering = sak.opprettKartlegging(prosessId = førsteSamarbeid.id)
         hentIASakKartlegginger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
-            .map { it.kartleggingId } shouldBe listOf(behovsvurdering.kartleggingId)
+            .map { it.id } shouldBe listOf(behovsvurdering.id)
 
         oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
         hentIASakKartlegginger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
-            .map { it.kartleggingId } shouldBe emptyList()
+            .map { it.id } shouldBe emptyList()
         hentIASakKartlegginger(sak.orgnr, sak.saksnummer, sisteSamarbeid.id)
-            .map { it.kartleggingId } shouldBe listOf(behovsvurdering.kartleggingId)
+            .map { it.id } shouldBe listOf(behovsvurdering.id)
     }
 
     @Test
@@ -689,7 +690,7 @@ class SpørreundersøkelseApiTest {
         hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = andreSamarbeid.id)
             .forExactlyOne {
                 it.status shouldBe AVSLUTTET
-                it.prosessId shouldBe andreSamarbeid.id
+                it.samarbeidId shouldBe andreSamarbeid.id
             }
 
         hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id) shouldHaveSize 0
@@ -703,7 +704,7 @@ class SpørreundersøkelseApiTest {
         val førsteSpørsmålId = førsteTema.spørsmålOgSvaralternativer.first().id
         val førsteSvarId = førsteTema.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
         sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingDto.kartleggingId,
+            kartleggingId = kartleggingDto.id,
             spørsmålId = førsteSpørsmålId,
             sesjonId = sesjonId,
             svarIder = listOf(førsteSvarId),
