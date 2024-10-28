@@ -12,6 +12,8 @@ val ApplicationCall.kartleggingId
     get() = parameters["kartleggingId"]
 val ApplicationCall.behovsvurderingId
     get() = parameters["behovsvurderingId"]
+val ApplicationCall.spørreundersøkelseId
+    get() = parameters["sporreundersokelseId"]
 val ApplicationCall.iaSakLeveranseId
     get() = parameters["iaSakLeveranseId"]
 val ApplicationCall.temaId

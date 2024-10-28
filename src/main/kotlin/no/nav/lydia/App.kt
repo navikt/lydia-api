@@ -215,7 +215,7 @@ fun startLydiaBackend() {
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,
         iaProsessService = iaProsessService,
-        behovsvurderingObservers = listOf(
+        spørreundersøkelseObservers = listOf(
             spørreundersøkelseProdusent,
             behovsvurderingMetrikkObserver,
             fullførtBehovsvurderingProdusent,

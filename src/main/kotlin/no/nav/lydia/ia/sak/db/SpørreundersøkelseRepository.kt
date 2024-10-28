@@ -405,7 +405,7 @@ class SpørreundersøkelseRepository(
         hentSpørreundersøkelse(spørreundersøkelseId)
     }
 
-    fun endreKartleggingStatus(
+    fun endreSpørreundersøkelseStatus(
         spørreundersøkelseId: String,
         status: SpørreundersøkelseStatus,
         sistEndret: LocalDateTime = LocalDateTime.now(),

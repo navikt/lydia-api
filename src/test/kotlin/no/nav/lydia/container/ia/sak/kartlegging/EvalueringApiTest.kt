@@ -1,16 +1,19 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
+import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeEmpty
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentEvalueringer
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -82,5 +85,40 @@ class EvalueringApiTest {
         alleEvalueringer.first().opprettetTidspunkt shouldBe evaluering.opprettetTidspunkt
         alleEvalueringer.first().endretTidspunkt shouldBe null
         alleEvalueringer.first().status shouldBe OPPRETTET
+    }
+
+    @Test
+    fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
+        val sak = nySakIViBistår()
+        val evaluering = sak.opprettEvaluering()
+        evaluering.type shouldBe "Evaluering"
+        evaluering.status shouldBe OPPRETTET
+
+        val påbegyntEvaluering = evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        påbegyntEvaluering.status shouldBe PÅBEGYNT
+
+        hentEvalueringer(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentAlleSamarbeid().first().id,
+        ).forExactlyOne {
+            it.status shouldBe PÅBEGYNT
+            it.id shouldBe evaluering.id
+            it.endretTidspunkt shouldNotBe null
+        }
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = evaluering.id,
+                konsument = spørreundersøkelseKonsument,
+            ) {
+                it.forExactlyOne { melding ->
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.type shouldBe "Evaluering"
+                    spørreundersøkelse.status shouldBe PÅBEGYNT
+                }
+            }
+        }
     }
 }

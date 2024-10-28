@@ -41,7 +41,7 @@ class SpørreundersøkelseService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     val iaProsessService: IAProsessService,
     val iaSakService: IASakService,
-    val behovsvurderingObservers: List<Observer<Spørreundersøkelse>>,
+    val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -123,7 +123,7 @@ class SpørreundersøkelseService(
                 type = type,
             )
         }.onRight { behovsvurdering ->
-            behovsvurderingObservers.forEach { it.receive(behovsvurdering) }
+            spørreundersøkelseObservers.forEach { it.receive(behovsvurdering) }
         }
 
     fun slettKartlegging(kartleggingId: String): Either<Feil, Spørreundersøkelse> {
@@ -135,7 +135,7 @@ class SpørreundersøkelseService(
         val oppdatertKartlegging =
             kartlegging.copy(status = SLETTET, endretTidspunkt = LocalDateTime.now())
 
-        behovsvurderingObservers.forEach { it.receive(oppdatertKartlegging) }
+        spørreundersøkelseObservers.forEach { it.receive(oppdatertKartlegging) }
 
         return oppdatertKartlegging.right()
     }
@@ -167,13 +167,13 @@ class SpørreundersøkelseService(
             IASakKartleggingError.`generell feil under uthenting`.left()
         }
 
-    fun endreKartleggingStatus(
+    fun endreSpørreundersøkelseStatus(
         spørreundersøkelseId: String,
         statusViSkalEndreTil: SpørreundersøkelseStatus,
     ): Either<Feil, Spørreundersøkelse> {
         val spørreundersøkelseUtenInnhold = spørreundersøkelseRepository.hentEnSpørreundersøkelseUtenInnhold(
             spørreundersøkelseId = spørreundersøkelseId,
-        ) ?: return IASakKartleggingError.`ugyldig kartleggingId`.left()
+        ) ?: return IASakKartleggingError.`ugyldig spørreundersøkelseId`.left()
 
         when (statusViSkalEndreTil) {
             PÅBEGYNT -> if (spørreundersøkelseUtenInnhold.status != OPPRETTET) {
@@ -186,15 +186,16 @@ class SpørreundersøkelseService(
             SLETTET -> return IASakKartleggingError.`ikke støttet statusendring`.left()
         }
 
-        val oppdatertKartlegging = spørreundersøkelseRepository.endreKartleggingStatus(
+        val oppdatertSpørreundersøkelse = spørreundersøkelseRepository.endreSpørreundersøkelseStatus(
             spørreundersøkelseId = spørreundersøkelseId,
             status = statusViSkalEndreTil,
-        )
-            ?: return IASakKartleggingError.`feil under oppdatering`.left()
+        ) ?: return IASakKartleggingError.`feil under oppdatering`.left()
 
-        behovsvurderingObservers.forEach { it.receive(oppdatertKartlegging) }
+        spørreundersøkelseObservers.forEach {
+            it.receive(oppdatertSpørreundersøkelse)
+        }
 
-        return oppdatertKartlegging.right()
+        return oppdatertSpørreundersøkelse.right()
     }
 
     fun stengTema(hendelse: StengTema) {
@@ -224,7 +225,7 @@ class SpørreundersøkelseService(
         val alleTemaErFullført = oppdatertSpørreundersøkelse.tema.all { it.stengtForSvar }
 
         if (alleTemaErFullført) {
-            endreKartleggingStatus(
+            endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = hendelse.spørreundersøkelseId,
                 statusViSkalEndreTil = AVSLUTTET,
             )

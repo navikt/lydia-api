@@ -13,7 +13,9 @@ class BehovsvurderingBigqueryProdusent(
     private val produsent: KafkaProdusent,
 ) : Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
-        sendTilKafka(spørreundersøkelse = input)
+        if (input.type == "Behovsvurdering") {
+            sendTilKafka(spørreundersøkelse = input)
+        }
     }
 
     fun reEksporter(input: Spørreundersøkelse) {

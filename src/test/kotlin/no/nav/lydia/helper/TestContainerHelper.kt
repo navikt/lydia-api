@@ -646,7 +646,7 @@ class IASakKartleggingHelper {
             "$EVALUERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId",
         ).authentication().bearer(token)
 
-        fun hentIASakKartlegginger(
+        fun hentBehovsvurderinger(
             orgnr: String,
             saksnummer: String,
             prosessId: Int,
@@ -720,12 +720,29 @@ class IASakKartleggingHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ) = lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/start")
-            .authentication().bearer(token)
-            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                success = { it },
-                failure = { fail(it.message) },
-            )
+        ): SpørreundersøkelseDto {
+            when (this.type) {
+                "Behovsvurdering" -> {
+                    return lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/start")
+                        .authentication().bearer(token)
+                        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                            success = { it },
+                            failure = { fail(it.message) },
+                        )
+                }
+                "Evaluering" -> {
+                    return lydiaApiContainer.performPost("$EVALUERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/start")
+                        .authentication().bearer(token)
+                        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                            success = { it },
+                            failure = { fail(it.message) },
+                        )
+                }
+                else -> {
+                    fail("Ukjent type: ${this.type}")
+                }
+            }
+        }
 
         fun SpørreundersøkelseDto.avslutt(
             token: String = oauth2ServerContainer.saksbehandler1.token,

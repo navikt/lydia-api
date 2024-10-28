@@ -19,7 +19,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentBehovsvurderinger
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
@@ -183,7 +183,7 @@ class BehovsvurderingApiTest {
 
         val behvosvurdering = sak.opprettBehovsvurdering()
 
-        val alleKartlegginger = hentIASakKartlegginger(
+        val alleKartlegginger = hentBehovsvurderinger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
@@ -375,15 +375,16 @@ class BehovsvurderingApiTest {
     }
 
     @Test
-    fun `skal kunne starte kartlegging`() {
+    fun `kan starte en Spørreundersøkelse av type Behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettBehovsvurdering()
-        kartleggingDto.status shouldBe OPPRETTET
+        val behovsvurdering = sak.opprettBehovsvurdering()
+        behovsvurdering.type shouldBe "Behovsvurdering"
+        behovsvurdering.status shouldBe OPPRETTET
 
-        val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        pågåendeKartlegging.status shouldBe PÅBEGYNT
+        val påbegyntBehovsvurdering = behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        påbegyntBehovsvurdering.status shouldBe PÅBEGYNT
 
-        hentIASakKartlegginger(
+        hentBehovsvurderinger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
@@ -394,7 +395,7 @@ class BehovsvurderingApiTest {
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.id,
+                key = behovsvurdering.id,
                 konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
@@ -416,7 +417,7 @@ class BehovsvurderingApiTest {
         val avsluttetKartlegging = påbegyntKartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         avsluttetKartlegging.status shouldBe AVSLUTTET
 
-        hentIASakKartlegginger(
+        hentBehovsvurderinger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
@@ -509,7 +510,7 @@ class BehovsvurderingApiTest {
                 "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
             ).forAll { it shouldBe "SLETTET" }
 
-        hentIASakKartlegginger(
+        hentBehovsvurderinger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
@@ -539,7 +540,7 @@ class BehovsvurderingApiTest {
                 "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
             ).forAll { it shouldBe "SLETTET" }
 
-        hentIASakKartlegginger(
+        hentBehovsvurderinger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
@@ -557,7 +558,7 @@ class BehovsvurderingApiTest {
         alleSamarbeid.forEach { samarbeid ->
             sak.opprettBehovsvurdering(prosessId = samarbeid.id)
 
-            hentIASakKartlegginger(
+            hentBehovsvurderinger(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
                 prosessId = samarbeid.id,
@@ -576,13 +577,13 @@ class BehovsvurderingApiTest {
         val sisteSamarbeid = alleSamarbeid.last()
 
         val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
-        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
+        hentBehovsvurderinger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
 
         oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
-        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
+        hentBehovsvurderinger(sak.orgnr, sak.saksnummer, førsteSamarbeid.id)
             .map { it.id } shouldBe emptyList()
-        hentIASakKartlegginger(sak.orgnr, sak.saksnummer, sisteSamarbeid.id)
+        hentBehovsvurderinger(sak.orgnr, sak.saksnummer, sisteSamarbeid.id)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
     }
 
@@ -635,13 +636,13 @@ class BehovsvurderingApiTest {
         val flyttetBehovsvurdering = oppdaterBehovsvurdering(behovsvurdering, sak, andreSamarbeid.id)
         flyttetBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = andreSamarbeid.id)
+        hentBehovsvurderinger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = andreSamarbeid.id)
             .forExactlyOne {
                 it.status shouldBe AVSLUTTET
                 it.samarbeidId shouldBe andreSamarbeid.id
             }
 
-        hentIASakKartlegginger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id) shouldHaveSize 0
+        hentBehovsvurderinger(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id) shouldHaveSize 0
     }
 
     fun enDeltakerSvarerPåEtSpørsmål(

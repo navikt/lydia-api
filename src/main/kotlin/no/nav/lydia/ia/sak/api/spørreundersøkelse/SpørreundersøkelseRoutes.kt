@@ -31,6 +31,7 @@ import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
+import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
@@ -124,7 +125,7 @@ fun Route.iaSakSpørreundersøkelse(
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
-            spørreundersøkelseService.endreKartleggingStatus(
+            spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = kartleggingId,
                 statusViSkalEndreTil = AVSLUTTET,
             )
@@ -171,7 +172,7 @@ fun Route.iaSakSpørreundersøkelse(
             call.kartleggingId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig kartleggingId`)
 
         call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
-            spørreundersøkelseService.endreKartleggingStatus(
+            spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = kartleggingId,
                 statusViSkalEndreTil = PÅBEGYNT,
             )
@@ -262,6 +263,30 @@ fun Route.iaSakSpørreundersøkelse(
             call.respond(it.httpStatusCode, it.feilmelding)
         }
     }
+
+    post("$EVALUERING_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/start") {
+        val spørreundersøkelseId =
+            call.spørreundersøkelseId ?: return@post call.sendFeil(IASakKartleggingError.`ugyldig spørreundersøkelseId`)
+
+        call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
+            spørreundersøkelseService.endreSpørreundersøkelseStatus(
+                spørreundersøkelseId = spørreundersøkelseId,
+                statusViSkalEndreTil = PÅBEGYNT,
+            )
+        }.also { kartlegging ->
+            auditLog.auditloggEither(
+                call = call,
+                either = kartlegging,
+                orgnummer = call.orgnummer,
+                auditType = AuditType.access,
+                saksnummer = call.saksnummer,
+            )
+        }.map {
+            call.respond(it.tilDto(true))
+        }.mapLeft {
+            call.sendFeil(it)
+        }
+    }
 }
 
 // TODO: bør endres til å returnere IASak og IAProsess i call-block?
@@ -297,9 +322,10 @@ object IASakKartleggingError {
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av kartlegging", HttpStatusCode.InternalServerError)
     val `feil under oppdatering` =
-        Feil("Feil under oppdatering av kartlegging", HttpStatusCode.InternalServerError)
+        Feil("Feil under oppdatering av spørreundersøkelse", HttpStatusCode.InternalServerError)
     val `sak er ikke i kartleggingsstatus` =
         Feil("Sak må være i kartleggingsstatus for å starte kartlegging", HttpStatusCode.Forbidden)
     val `ugyldig kartleggingId` = Feil("Ugyldig kartlegging", HttpStatusCode.BadRequest)
+    val `ugyldig spørreundersøkelseId` = Feil("Ugyldig spørreundersøkelse", HttpStatusCode.BadRequest)
     val `ugyldig temaId` = Feil("Ugyldig temaId", HttpStatusCode.BadRequest)
 }

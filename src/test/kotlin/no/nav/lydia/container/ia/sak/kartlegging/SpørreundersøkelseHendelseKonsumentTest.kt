@@ -68,7 +68,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
             behovsvurdering.stengTema(temaId = tema.temaId)
         }
 
-        val fullførtBehovsvurdering = IASakKartleggingHelper.hentIASakKartlegginger(
+        val fullførtBehovsvurdering = IASakKartleggingHelper.hentBehovsvurderinger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
@@ -92,7 +92,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         val førsteTema = behovsvurdering.temaMedSpørsmålOgSvaralternativer.first()
         behovsvurdering.stengTema(temaId = førsteTema.temaId)
 
-        val behovsvurderingMedEttStengtTema = IASakKartleggingHelper.hentIASakKartlegginger(
+        val behovsvurderingMedEttStengtTema = IASakKartleggingHelper.hentBehovsvurderinger(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
