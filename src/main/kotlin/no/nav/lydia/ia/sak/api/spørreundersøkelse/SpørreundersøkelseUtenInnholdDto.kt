@@ -10,7 +10,6 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenI
 data class SpørreundersøkelseUtenInnholdDto(
     val kartleggingId: String,
     val prosessId: Int,
-    val vertId: String,
     val status: SpørreundersøkelseStatus,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
@@ -23,7 +22,6 @@ fun SpørreundersøkelseUtenInnhold.tilDto() =
     SpørreundersøkelseUtenInnholdDto(
         kartleggingId = kartleggingId.toString(),
         prosessId = prosessId,
-        vertId = vertId?.toString() ?: "",
         status = status,
         opprettetAv = opprettetAv,
         opprettetTidspunkt = opprettetTidspunkt.toKotlinLocalDateTime(),

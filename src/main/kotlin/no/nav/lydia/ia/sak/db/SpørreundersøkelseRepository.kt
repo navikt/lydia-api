@@ -188,15 +188,13 @@ class SpørreundersøkelseRepository(
             ).left()
     }
 
-    private fun mapRowToSpørreundersøkelseUtenInnhold(row: Row): SpørreundersøkelseUtenInnhold = row.tilIASakKartleggingOversikt()
+    private fun mapRowToSpørreundersøkelseUtenInnhold(row: Row): SpørreundersøkelseUtenInnhold = row.tilSpørreundersøkelseUtenInnhold()
 
-    private fun Row.tilIASakKartleggingOversikt(): SpørreundersøkelseUtenInnhold {
+    private fun Row.tilSpørreundersøkelseUtenInnhold(): SpørreundersøkelseUtenInnhold {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
-        val vertId = this.stringOrNull("vert_id")?.let { UUID.fromString(it) }
         return SpørreundersøkelseUtenInnhold(
             kartleggingId = spørreundersøkelseId,
             prosessId = this.int("ia_prosess"),
-            vertId = vertId,
             status = SpørreundersøkelseStatus.valueOf(this.string("status")),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
