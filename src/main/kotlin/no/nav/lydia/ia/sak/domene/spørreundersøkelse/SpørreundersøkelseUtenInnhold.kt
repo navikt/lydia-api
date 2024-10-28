@@ -5,8 +5,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 data class SpørreundersøkelseUtenInnhold(
-    val kartleggingId: UUID,
-    val prosessId: Int,
+    val id: UUID,
+    val samarbeidId: Int,
     val status: SpørreundersøkelseStatus,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,

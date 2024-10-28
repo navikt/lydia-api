@@ -193,8 +193,8 @@ class SpørreundersøkelseRepository(
     private fun Row.tilSpørreundersøkelseUtenInnhold(): SpørreundersøkelseUtenInnhold {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
         return SpørreundersøkelseUtenInnhold(
-            kartleggingId = spørreundersøkelseId,
-            prosessId = this.int("ia_prosess"),
+            id = spørreundersøkelseId,
+            samarbeidId = this.int("ia_prosess"),
             status = SpørreundersøkelseStatus.valueOf(this.string("status")),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
