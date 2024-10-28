@@ -7,7 +7,6 @@ import java.util.UUID
 data class SpørreundersøkelseUtenInnhold(
     val kartleggingId: UUID,
     val prosessId: Int,
-    val vertId: UUID?,
     val status: SpørreundersøkelseStatus,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
