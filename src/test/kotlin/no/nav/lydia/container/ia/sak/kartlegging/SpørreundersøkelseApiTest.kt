@@ -72,44 +72,19 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `oppretter en ny kartlegging`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+    fun `kan opprette en spørreundersøkelse av type evaluering i status VI_BISTÅR`() {
+        val evaluering = nySakIKartleggesMedEtSamarbeid().opprettEvaluering()
 
-        val behovsvurdering = sak.opprettKartlegging()
-        behovsvurdering.kartleggingId.length shouldBe 36
-
-        postgresContainer
-            .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
-            ) shouldNotBe null
-    }
-
-    @Test
-    fun `skal også kunne opprette en behovsvurdering i status VI_BISTÅR`() {
-        val sak = nySakIViBistår()
-
-        val behovsvurdering = sak.opprettKartlegging()
-        behovsvurdering.kartleggingId.length shouldBe 36
-
-        postgresContainer
-            .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
-            ) shouldNotBe null
-    }
-
-    @Test
-    fun `skal kunne opprette en spørreundersøkelse av type behovsvurdering med flere temaer og sende på kafka`() {
-        val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettKartlegging()
-
-        behovsvurdering.type shouldBe "Behovsvurdering"
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forAll {
+        evaluering.type shouldBe "Evaluering"
+        evaluering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
+        evaluering.temaMedSpørsmålOgSvaralternativer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+            it.navn.shouldNotBeEmpty()
         }
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = behovsvurdering.kartleggingId,
+                key = evaluering.kartleggingId,
                 konsument = kartleggingKonsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
@@ -126,19 +101,44 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal kunne opprette en tom spørreundersøkelse av type evaluering og sende på kafka`() {
-        val evaluering = nySakIKartleggesMedEtSamarbeid().opprettEvaluering()
+    fun `kan opprette en spørreundersøkelse av type behovsvurdering i status KARTLEGGES`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
 
-        evaluering.type shouldBe "Evaluering"
-        evaluering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-        evaluering.temaMedSpørsmålOgSvaralternativer.forAll {
+        val behovsvurdering = sak.opprettKartlegging()
+        behovsvurdering.kartleggingId.length shouldBe 36
+
+        postgresContainer
+            .hentEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
+            ) shouldNotBe null
+    }
+
+    @Test
+    fun `kan opprette en spørreundersøkelse av type behovsvurdering i status VI_BISTÅR`() {
+        val sak = nySakIViBistår()
+
+        val behovsvurdering = sak.opprettKartlegging()
+        behovsvurdering.kartleggingId.length shouldBe 36
+
+        postgresContainer
+            .hentEnkelKolonne<String>(
+                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.kartleggingId}'",
+            ) shouldNotBe null
+    }
+
+    @Test
+    fun `kan opprette en spørreundersøkelse av type behovsvurdering med flere temaer`() {
+        val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettKartlegging()
+
+        behovsvurdering.type shouldBe "Behovsvurdering"
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
+        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
-            it.navn.shouldNotBeEmpty()
         }
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = evaluering.kartleggingId,
+                key = behovsvurdering.kartleggingId,
                 konsument = kartleggingKonsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
