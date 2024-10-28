@@ -153,16 +153,17 @@ class SpørreundersøkelseService(
         }
     }
 
-    fun hentKartlegginger(
+    fun hentSpørreundersøkelser(
         sak: IASak,
         prosessId: Int,
+        type: String,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> =
         try {
             iaProsessService.hentIAProsess(sak, prosessId).map {
-                spørreundersøkelseRepository.hentSpørreundersøkelser(prosess = it)
+                spørreundersøkelseRepository.hentSpørreundersøkelser(prosess = it, type = type)
             }
         } catch (e: Exception) {
-            log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
+            log.error("Noe gikk feil ved henting av spørreundersøkelse av type $type: ${e.message}", e)
             IASakKartleggingError.`generell feil under uthenting`.left()
         }
 

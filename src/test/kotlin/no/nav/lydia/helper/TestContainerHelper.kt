@@ -658,6 +658,18 @@ class IASakKartleggingHelper {
                 failure = { fail(it.message) },
             )
 
+        fun hentEvalueringer(
+            orgnr: String,
+            saksnummer: String,
+            prosessId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performGet("$EVALUERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
+            .authentication().bearer(token)
+            .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
+
         fun oppdaterBehovsvurdering(
             behovsvurdering: SpørreundersøkelseDto,
             sak: IASakDto,

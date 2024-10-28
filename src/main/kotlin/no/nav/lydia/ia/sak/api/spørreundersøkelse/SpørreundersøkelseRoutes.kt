@@ -81,7 +81,7 @@ fun Route.iaSakSpørreundersøkelse(
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-                spørreundersøkelseService.hentKartlegginger(sak = iaSak, prosessId = prosessId)
+                spørreundersøkelseService.hentSpørreundersøkelser(sak = iaSak, prosessId = prosessId, type = "Behovsvurdering")
             }
         }.also { kartleggingerEither ->
             auditLog.auditloggEither(
@@ -234,6 +234,30 @@ fun Route.iaSakSpørreundersøkelse(
             )
         }.map {
             call.respond(HttpStatusCode.Created, it.tilDto(true))
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
+    get("$EVALUERING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                spørreundersøkelseService.hentSpørreundersøkelser(sak = iaSak, prosessId = prosessId, type = "Evaluering")
+            }
+        }.also { evalueringEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = evalueringEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(HttpStatusCode.OK, it.tilDto())
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }

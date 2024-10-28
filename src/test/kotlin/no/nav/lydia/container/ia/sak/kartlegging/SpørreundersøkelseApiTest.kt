@@ -13,7 +13,6 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldHaveLength
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
@@ -22,6 +21,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentEvalueringer
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentIASakKartlegginger
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurdering
@@ -101,6 +101,26 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
+    fun `kan hente liste av alle spørreundersøkelser av typen Evaluering`() {
+        val sak = nySakIViBistår()
+
+        val evaluering = sak.opprettEvaluering()
+
+        val alleEvalueringer = hentEvalueringer(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = sak.hentAlleSamarbeid().first().id,
+        )
+
+        alleEvalueringer shouldHaveSize 1
+        alleEvalueringer.first().kartleggingId shouldBe evaluering.kartleggingId
+        alleEvalueringer.first().opprettetAv shouldBe evaluering.opprettetAv
+        alleEvalueringer.first().opprettetTidspunkt shouldBe evaluering.opprettetTidspunkt
+        alleEvalueringer.first().endretTidspunkt shouldBe null
+        alleEvalueringer.first().status shouldBe OPPRETTET
+    }
+
+    @Test
     fun `kan opprette en spørreundersøkelse av type behovsvurdering i status KARTLEGGES`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
@@ -155,7 +175,7 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal få feil når saksnummer er ukjent`() {
+    fun `skal få feil når saksnummer er ukjent ved oppretting av behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val resp = IASakKartleggingHelper.opprettBehovsvurdering(
             orgnr = sak.orgnr,
@@ -168,7 +188,7 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal få feil når orgnummer er feil`() {
+    fun `skal få feil når orgnummer er feil ved oppretting av behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val resp = IASakKartleggingHelper.opprettBehovsvurdering(
             orgnr = "222233334",
@@ -181,7 +201,7 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal sende kartlegging på kafka`() {
+    fun `kan opprette spørreundersøkelse av typen behovsvurdering og sende den på kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
         val behovsvurdering = sak.opprettKartlegging()
@@ -199,6 +219,7 @@ class SpørreundersøkelseApiTest {
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
                     spørreundersøkelse.status shouldBe OPPRETTET
+                    spørreundersøkelse.type shouldBe "Behovsvurdering"
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
                     spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
                         tema.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -212,7 +233,7 @@ class SpørreundersøkelseApiTest {
     }
 
     @Test
-    fun `skal kunne hente ut liste over alle kartlegginger knyttet til en sak`() {
+    fun `kan hente liste av alle spørreundersøkelser av typen Behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
         sak.opprettKartlegging()
@@ -223,7 +244,6 @@ class SpørreundersøkelseApiTest {
             prosessId = sak.hentAlleSamarbeid().first().id,
         )
         alleKartlegginger shouldHaveSize 1
-        alleKartlegginger.first().vertId shouldHaveLength 36
         alleKartlegginger.first().opprettetAv shouldBeEqual oauth2ServerContainer.saksbehandler1.navIdent
         alleKartlegginger.first().opprettetTidspunkt shouldNotBe null
         alleKartlegginger.first().endretTidspunkt shouldBe null

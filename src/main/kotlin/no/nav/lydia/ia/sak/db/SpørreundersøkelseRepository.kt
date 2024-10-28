@@ -66,26 +66,29 @@ class SpørreundersøkelseRepository(
                     mapOf(
                         "sporreundersokelseId" to spørreundersøkelseId,
                     ),
-                ).map(this::mapRowToIASakKartleggingOversikt).asSingle,
+                ).map(this::mapRowToSpørreundersøkelseUtenInnhold).asSingle,
             )
         }
 
-    fun hentSpørreundersøkelser(prosess: IAProsess) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
+    fun hentSpørreundersøkelser(
+        prosess: IAProsess,
+        type: String = "Behovsvurdering",
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
                     SELECT *
                     FROM ia_sak_kartlegging
                     WHERE ia_prosess = :prosessId
                     AND status != '$SLETTET'
-                    """.trimMargin(),
-                    mapOf(
-                        "prosessId" to prosess.id,
-                    ),
-                ).map(this::mapRowToIASakKartleggingOversikt).asList,
-            )
-        }
+                    AND type = '$type'
+                """.trimMargin(),
+                mapOf(
+                    "prosessId" to prosess.id,
+                ),
+            ).map(this::mapRowToSpørreundersøkelseUtenInnhold).asList,
+        )
+    }
 
     fun hentSpørreundersøkelse(spørreundersøkelseId: String) =
         using(sessionOf(dataSource)) { session ->
@@ -185,7 +188,7 @@ class SpørreundersøkelseRepository(
             ).left()
     }
 
-    private fun mapRowToIASakKartleggingOversikt(row: Row): SpørreundersøkelseUtenInnhold = row.tilIASakKartleggingOversikt()
+    private fun mapRowToSpørreundersøkelseUtenInnhold(row: Row): SpørreundersøkelseUtenInnhold = row.tilIASakKartleggingOversikt()
 
     private fun Row.tilIASakKartleggingOversikt(): SpørreundersøkelseUtenInnhold {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
