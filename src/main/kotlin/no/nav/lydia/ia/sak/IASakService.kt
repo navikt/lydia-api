@@ -134,10 +134,6 @@ class IASakService(
             return IASakError.`kan ikke fullføre med gjenstående leveranser`.left()
         }
 
-        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND && alleLeveranserPåEnSak.isEmpty()) {
-            return IASakError.`kan ikke fullføre da ingen leveranser står på saken`.left()
-        }
-
         when (hendelseDto.hendelsesType) {
             SLETT_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)

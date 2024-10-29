@@ -15,7 +15,6 @@ import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
@@ -1078,27 +1077,14 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal IKKE kunne fullføre en sak fra 'Vi Bistår' status dersom INGEN leveranse er levert`() {
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+    fun `skal kunne fullføre en sak selvom ingen leveranse er levert`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .also { sak ->
-                shouldFail {
-                    sak.nyHendelse(FULLFØR_BISTAND)
-                }
-            }
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-            .also { sak ->
-                val response = nyHendelsePåSakMedRespons(
-                    sak = sak,
-                    hendelsestype = FULLFØR_BISTAND,
-                    token = mockOAuth2Server.saksbehandler1.token,
-                )
-                response.statuskode() shouldBe HttpStatusCode.BadRequest.value
-                response.second.body()
-                    .asString("text/plain") shouldMatch "Kan ikke fullf.*re uten leveranser"
-            }
+            .nyHendelse(FULLFØR_BISTAND)
+        sak.status shouldBe FULLFØRT
     }
 
     @Test

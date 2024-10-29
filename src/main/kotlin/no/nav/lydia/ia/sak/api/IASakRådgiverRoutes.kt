@@ -330,6 +330,4 @@ object IASakError {
 
     val `kan ikke fullføre med gjenstående leveranser` =
         Feil("Kan ikke fullføre med gjenstående leveranser", HttpStatusCode.BadRequest)
-    val `kan ikke fullføre da ingen leveranser står på saken` =
-        Feil("Kan ikke fullføre uten leveranser", HttpStatusCode.BadRequest)
 }
