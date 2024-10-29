@@ -8,10 +8,8 @@ val ApplicationCall.orgnummer
     get() = parameters["orgnummer"]
 val ApplicationCall.saksnummer
     get() = parameters["saksnummer"]
-val ApplicationCall.kartleggingId
-    get() = parameters["kartleggingId"]
-val ApplicationCall.behovsvurderingId
-    get() = parameters["behovsvurderingId"]
+val ApplicationCall.type
+    get() = parameters["type"]
 val ApplicationCall.spørreundersøkelseId
     get() = parameters["sporreundersokelseId"]
 val ApplicationCall.iaSakLeveranseId

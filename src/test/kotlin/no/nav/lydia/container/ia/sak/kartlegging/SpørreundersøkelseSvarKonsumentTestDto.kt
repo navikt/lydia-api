@@ -10,7 +10,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingFlervalgSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
@@ -27,7 +27,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Oppdater
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import org.junit.After
 import org.junit.Before
@@ -57,7 +57,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `skal lagre svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettBehovsvurdering()
+        val kartlegging = sak.opprettSpørreundersøkelse()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val kartleggingSvarDto = kartlegging.sendKartleggingSvarTilKafka()
 
@@ -81,7 +81,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal bare kunne svare på kartlegging dersom den er i pågående status`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettBehovsvurdering()
+        val kartlegging = sak.opprettSpørreundersøkelse()
 
         // OPRETTET
         kartlegging.sendKartleggingSvarTilKafka()
@@ -97,7 +97,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
         // AVSLUTTET
         TestContainerHelper.lydiaApiContainer.performPost(
-            "$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}/avslutt",
+            "$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}/avslutt",
         )
             .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
@@ -106,7 +106,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
         // SLETTET
         TestContainerHelper.lydiaApiContainer.performDelete(
-            "$BEHOVSVURDERING_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}",
+            "$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}",
         )
             .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
@@ -117,7 +117,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal ikke lagre svar som ikke er et svaralternativ til spørsmål`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettBehovsvurdering()
+        val kartlegging = sak.opprettSpørreundersøkelse()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val svarIderHvorMinstEnIdErUkjent = listOf(
@@ -141,7 +141,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal ikke lagre svar dersom spørsmål ikke er funnet i kartlegging`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettBehovsvurdering()
+        val kartlegging = sak.opprettSpørreundersøkelse()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val ukjentSpørsmålId = UUID.randomUUID().toString()
@@ -165,7 +165,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal ikke lagre svar med flere svarIder på et enkeltvalg spørsmål i en kartlegging`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettBehovsvurdering()
+        val kartlegging = sak.opprettSpørreundersøkelse()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val spørsmålSomIkkeErFlervalg =
             kartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
@@ -187,7 +187,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `svar skal overskrives i DB ved nytt svar til et flervalg spørsmål mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettBehovsvurdering()
+        val kartleggingDto = sak.opprettSpørreundersøkelse()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val kartleggingSvarDto = kartleggingDto.sendKartleggingFlervalgSvarTilKafka(
@@ -230,7 +230,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `svar skal overskrives i DB ved nytt svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettBehovsvurdering()
+        val kartleggingDto = sak.opprettSpørreundersøkelse()
         val førsteSvarId =
             kartleggingDto.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
         val andreSvarId =
@@ -275,7 +275,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `skal få oppdatert antall som har svart på et spørsmål i en kartlegging`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettBehovsvurdering()
+        val kartleggingDto = sak.opprettSpørreundersøkelse()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         runBlocking {

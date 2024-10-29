@@ -11,7 +11,7 @@ import io.kotest.matchers.string.shouldNotBeEmpty
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentEvalueringer
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
@@ -72,10 +72,11 @@ class EvalueringApiTest {
         val sak = nySakIViBistår()
         val evaluering = sak.opprettEvaluering()
 
-        val alleEvalueringer = hentEvalueringer(
+        val alleEvalueringer = hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
+            type = "Evaluering",
         )
 
         alleEvalueringer shouldHaveSize 1
@@ -90,17 +91,20 @@ class EvalueringApiTest {
     @Test
     fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
         val sak = nySakIViBistår()
+        val type = "Evaluering"
         val evaluering = sak.opprettEvaluering()
-        evaluering.type shouldBe "Evaluering"
+
+        evaluering.type shouldBe type
         evaluering.status shouldBe OPPRETTET
 
         val påbegyntEvaluering = evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         påbegyntEvaluering.status shouldBe PÅBEGYNT
 
-        hentEvalueringer(
+        hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
+            type = type,
         ).forExactlyOne {
             it.status shouldBe PÅBEGYNT
             it.id shouldBe evaluering.id
@@ -115,7 +119,7 @@ class EvalueringApiTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.type shouldBe "Evaluering"
+                    spørreundersøkelse.type shouldBe type
                     spørreundersøkelse.status shouldBe PÅBEGYNT
                 }
             }

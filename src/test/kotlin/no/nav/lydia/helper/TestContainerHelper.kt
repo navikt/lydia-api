@@ -55,9 +55,8 @@ import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.BEHOVSVURDERING_BASE_ROUTE
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.EVALUERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
@@ -628,42 +627,23 @@ class SakHelper {
 
 class IASakKartleggingHelper {
     companion object {
-        fun opprettBehovsvurdering(
+        fun opprettSpørreundersøkelse(
             orgnr: String,
             saksnummer: String,
             prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
+            type: String,
         ) = lydiaApiContainer.performPost(
-            "$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId",
+            "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/$type",
         ).authentication().bearer(token)
 
-        fun opprettEvaluering(
+        fun hentSpørreundersøkelse(
             orgnr: String,
             saksnummer: String,
             prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPost(
-            "$EVALUERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId",
-        ).authentication().bearer(token)
-
-        fun hentBehovsvurderinger(
-            orgnr: String,
-            saksnummer: String,
-            prosessId: Int,
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performGet("$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
-            .authentication().bearer(token)
-            .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
-                success = { it },
-                failure = { fail(it.message) },
-            )
-
-        fun hentEvalueringer(
-            orgnr: String,
-            saksnummer: String,
-            prosessId: Int,
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performGet("$EVALUERING_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
+            type: String,
+        ) = lydiaApiContainer.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/$type")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
                 success = { it },
@@ -675,7 +655,7 @@ class IASakKartleggingHelper {
             sak: IASakDto,
             prosessId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPut("$BEHOVSVURDERING_BASE_ROUTE/${behovsvurdering.id}")
+        ) = lydiaApiContainer.performPut("$SPØRREUNDERSØKELSE_BASE_ROUTE/${behovsvurdering.id}")
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
@@ -690,14 +670,15 @@ class IASakKartleggingHelper {
                 failure = { fail("${it.message}: ${it.response.body().asString("text/plain")}") },
             )
 
-        fun IASakDto.opprettBehovsvurdering(
+        fun IASakDto.opprettSpørreundersøkelse(
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = opprettBehovsvurdering(
+        ) = opprettSpørreundersøkelse(
             orgnr = orgnr,
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
+            type = "Behovsvurdering",
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
@@ -706,11 +687,12 @@ class IASakKartleggingHelper {
         fun IASakDto.opprettEvaluering(
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = opprettEvaluering(
+        ) = opprettSpørreundersøkelse(
             orgnr = orgnr,
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
+            type = "Evaluering",
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
@@ -720,35 +702,19 @@ class IASakKartleggingHelper {
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ): SpørreundersøkelseDto {
-            when (this.type) {
-                "Behovsvurdering" -> {
-                    return lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/start")
-                        .authentication().bearer(token)
-                        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                            success = { it },
-                            failure = { fail(it.message) },
-                        )
-                }
-                "Evaluering" -> {
-                    return lydiaApiContainer.performPost("$EVALUERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/start")
-                        .authentication().bearer(token)
-                        .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                            success = { it },
-                            failure = { fail(it.message) },
-                        )
-                }
-                else -> {
-                    fail("Ukjent type: ${this.type}")
-                }
-            }
-        }
+        ): SpørreundersøkelseDto =
+            lydiaApiContainer.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnummer/$saksnummer/$id/start")
+                .authentication().bearer(token)
+                .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) },
+                )
 
         fun SpørreundersøkelseDto.avslutt(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ) = lydiaApiContainer.performPost("$BEHOVSVURDERING_BASE_ROUTE/$orgnummer/$saksnummer/$id/avslutt")
+        ) = lydiaApiContainer.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnummer/$saksnummer/$id/avslutt")
             .authentication().bearer(token)
             .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                 success = { it },
@@ -826,7 +792,7 @@ class IASakKartleggingHelper {
             orgnr: String,
             saksnummer: String,
             kartleggingId: String,
-        ) = lydiaApiContainer.performGet("$BEHOVSVURDERING_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
+        ) = lydiaApiContainer.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
             .authentication().bearer(token)
             .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
                 success = { respons -> respons },

@@ -15,7 +15,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakKartleggingError
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
@@ -491,7 +491,7 @@ class SpørreundersøkelseRepository(
             )
         }
         return hentSpørreundersøkelse(behovsvurderingId)?.right()
-            ?: IASakKartleggingError.`feil under oppdatering`.left()
+            ?: IASakSpørreundersøkelseError.`feil under oppdatering`.left()
     }
 
     fun hentAlleSpørreundersøkelser(): List<Spørreundersøkelse> =

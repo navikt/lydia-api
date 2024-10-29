@@ -19,7 +19,7 @@ import io.kotest.matchers.string.shouldMatch
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
@@ -137,7 +137,7 @@ class IASakApiTest {
         )
 
         val førsteSamarbeid = alleSamarbeid.first()
-        val kartlegging = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val kartlegging = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
         val saksStatusMedEnKartlegging = sak.hentSaksStatus()
         saksStatusMedEnKartlegging.kanFullføres shouldBe false
         saksStatusMedEnKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(

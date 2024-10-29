@@ -7,7 +7,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -39,7 +39,7 @@ class BehovsvurderingBigqueryEksportererTest {
     @Test
     fun `oppretting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val opprettetBehovsvurdering = sak.opprettBehovsvurdering()
+        val opprettetBehovsvurdering = sak.opprettSpørreundersøkelse()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -66,7 +66,7 @@ class BehovsvurderingBigqueryEksportererTest {
     @Test
     fun `starting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val startetBehovsvurdering = sak.opprettBehovsvurdering()
+        val startetBehovsvurdering = sak.opprettSpørreundersøkelse()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
@@ -97,7 +97,7 @@ class BehovsvurderingBigqueryEksportererTest {
     @Test
     fun `avslutting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val avsluttetBehovsvurdering = sak.opprettBehovsvurdering()
+        val avsluttetBehovsvurdering = sak.opprettSpørreundersøkelse()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
@@ -132,10 +132,10 @@ class BehovsvurderingBigqueryEksportererTest {
     fun `jobb starter re-eksport av alle behovsvurderinger til bigquery`() {
         val sak1 = nySakIKartlegges()
         val samarbeid1 = sak1.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak1.opprettBehovsvurdering(prosessId = samarbeid1.id)
+        sak1.opprettSpørreundersøkelse(prosessId = samarbeid1.id)
         val sak2 = nySakIKartlegges()
         val samarbeid2 = sak2.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak2.opprettBehovsvurdering(prosessId = samarbeid2.id)
+        sak2.opprettSpørreundersøkelse(prosessId = samarbeid2.id)
 
         runBlocking {
             kafkaContainerHelper.sendJobbMelding(Jobb.iaSakBehovsvurderingEksport)

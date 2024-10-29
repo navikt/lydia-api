@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
@@ -79,7 +79,7 @@ class IASakProsessTest {
         val sakMedFlereSamarbeid = sakMedEttSamarbeid.opprettNyttSamarbeid()
         sakMedFlereSamarbeid.hentAlleSamarbeid() shouldHaveSize 2
 
-        val behovsvurdering = sakMedFlereSamarbeid.opprettBehovsvurdering()
+        val behovsvurdering = sakMedFlereSamarbeid.opprettSpørreundersøkelse()
         behovsvurdering.status shouldBe SpørreundersøkelseStatus.OPPRETTET
     }
 
@@ -261,7 +261,7 @@ class IASakProsessTest {
         val sak = nySakIKartlegges().opprettNyttSamarbeid()
         val alleSamarbeidFørSletting = sak.hentAlleSamarbeid()
         val samarbeidSomSkalSlettes = alleSamarbeidFørSletting.first()
-        sak.opprettBehovsvurdering(prosessId = samarbeidSomSkalSlettes.id)
+        sak.opprettSpørreundersøkelse(prosessId = samarbeidSomSkalSlettes.id)
         shouldFail {
             sak.slettSamarbeid(samarbeidSomSkalSlettes)
         }
@@ -308,7 +308,7 @@ class IASakProsessTest {
         val samarbeid = sak.hentAlleSamarbeid()
         samarbeid shouldHaveSize 1
 
-        sak.opprettBehovsvurdering()
+        sak.opprettSpørreundersøkelse()
 
         shouldFail {
             sak.nyHendelse(
