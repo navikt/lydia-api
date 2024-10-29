@@ -9,11 +9,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenI
 @Serializable
 data class SpørreundersøkelseUtenInnholdDto(
     val id: String,
-    @Deprecated("Bruk Id i stedet")
-    val kartleggingId: String,
     val samarbeidId: Int,
-    @Deprecated("Bruk Id i stedet")
-    val prosessId: Int,
     val status: SpørreundersøkelseStatus,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
@@ -24,9 +20,7 @@ fun List<SpørreundersøkelseUtenInnhold>.tilDto() = map { it.tilDto() }
 
 fun SpørreundersøkelseUtenInnhold.tilDto() =
     SpørreundersøkelseUtenInnholdDto(
-        kartleggingId = id.toString(),
         id = id.toString(),
-        prosessId = samarbeidId,
         samarbeidId = samarbeidId,
         status = status,
         opprettetAv = opprettetAv,
