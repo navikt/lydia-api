@@ -130,7 +130,8 @@ class UrørteSakerTest {
                 navEnhet = NavEnhet(
                     enhetsnummer = rs.getString("nav_enhet_nummer"),
                     enhetsnavn = rs.getString("nav_enhet_navn"),
-                )
+                ),
+                resulterendeStatus = rs.getString("resulterende_status")?.let { IAProsessStatus.valueOf(it) }
             )
         }
     }

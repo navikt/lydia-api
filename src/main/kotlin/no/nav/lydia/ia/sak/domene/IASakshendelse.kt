@@ -31,6 +31,7 @@ open class IASakshendelse(
     val opprettetAv: String,
     val opprettetAvRolle: Rolle?,
     val navEnhet: NavEnhet,
+    val resulterendeStatus: IAProsessStatus?,
 ) {
     companion object {
         fun fromDto(dto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet) =
@@ -50,6 +51,7 @@ open class IASakshendelse(
                     opprettetAv = saksbehandler.navIdent,
                     opprettetAvRolle = saksbehandler.rolle,
                     navEnhet = navEnhet,
+                    resulterendeStatus = null,
                 ).right()
             }
 
@@ -63,7 +65,8 @@ open class IASakshendelse(
                 orgnummer = orgnummer,
                 opprettetAv = superbruker.navIdent,
                 opprettetAvRolle = superbruker.rolle,
-                navEnhet = navEnhet
+                navEnhet = navEnhet,
+                resulterendeStatus = IAProsessStatus.NY
             )
         }
 
@@ -81,6 +84,7 @@ open class IASakshendelse(
                 opprettetAv = superbruker.navIdent,
                 opprettetAvRolle = superbruker.rolle,
                 navEnhet = navEnhet,
+                resulterendeStatus = null,
             )
     }
 
@@ -116,6 +120,7 @@ class VirksomhetIkkeAktuellHendelse(
     opprettetAv: String,
     opprettetAvRolle: Rolle?,
     navEnhet: NavEnhet,
+    resulterendeStatus: IAProsessStatus?,
     val valgtÅrsak: ValgtÅrsak
 ) : IASakshendelse(
     id,
@@ -126,6 +131,7 @@ class VirksomhetIkkeAktuellHendelse(
     opprettetAv = opprettetAv,
     opprettetAvRolle = opprettetAvRolle,
     navEnhet = navEnhet,
+    resulterendeStatus = resulterendeStatus
 ) {
     companion object {
         fun fromDto(
@@ -148,7 +154,8 @@ class VirksomhetIkkeAktuellHendelse(
                         opprettetAv = navAnsatt.navIdent,
                         opprettetAvRolle = navAnsatt.rolle,
                         valgtÅrsak = valgtÅrsak,
-                        navEnhet = navEnhet
+                        navEnhet = navEnhet,
+                        resulterendeStatus = null,
                     ).right()
                 } catch (e: Exception) {
                     SaksHendelseFeil.`kunne ikke deserialisere payload`.left()
@@ -194,6 +201,7 @@ class ProsessHendelse(
     opprettetAv: String,
     opprettetAvRolle: Rolle?,
     navEnhet: NavEnhet,
+    resulterendeStatus: IAProsessStatus?,
     val prosessDto: IAProsessDto
 ) : IASakshendelse(
     id,
@@ -203,7 +211,8 @@ class ProsessHendelse(
     orgnummer,
     opprettetAv,
     opprettetAvRolle,
-    navEnhet
+    navEnhet,
+    resulterendeStatus
 ) {
     companion object {
         fun fromDto(dto: IASakshendelseDto, navAnsatt: NavAnsatt, navEnhet: NavEnhet): Either<Feil, ProsessHendelse> =
@@ -218,6 +227,7 @@ class ProsessHendelse(
                     opprettetAvRolle = navAnsatt.rolle,
                     prosessDto = Json.decodeFromString<IAProsessDto>(payload),
                     navEnhet = navEnhet,
+                    resulterendeStatus = null,
                 ).right()
             } ?: SaksHendelseFeil.`kunne ikke deserialisere payload`.left()
     }

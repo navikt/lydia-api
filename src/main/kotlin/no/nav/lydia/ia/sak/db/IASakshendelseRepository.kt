@@ -36,6 +36,7 @@ class IASakshendelseRepository(
                         opprettet,
                         nav_enhet_nummer,
                         nav_enhet_navn,
+                        resulterende_status,
                         aarsak_enum,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
@@ -67,6 +68,7 @@ class IASakshendelseRepository(
                         opprettet,
                         nav_enhet_nummer,
                         nav_enhet_navn,
+                        resulterende_status,
                         aarsak_enum,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
@@ -152,6 +154,7 @@ class IASakshendelseRepository(
                         opprettet,
                         nav_enhet_nummer,
                         nav_enhet_navn,
+                        resulterende_status,
                         aarsak_enum,
                         array_agg(begrunnelse_enum) as begrunnelser
                     FROM ia_sak_hendelse
@@ -179,6 +182,7 @@ class IASakshendelseRepository(
                     enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
                     enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
                 ),
+                resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IAProsessStatus.valueOf(it) },
             )
         return VirksomhetIkkeAktuellHendelse(
             id = row.string("id"),
@@ -192,6 +196,7 @@ class IASakshendelseRepository(
                 enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
                 enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
             ),
+            resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IAProsessStatus.valueOf(it) }
         )
     }
 

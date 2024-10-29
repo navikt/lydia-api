@@ -27,12 +27,12 @@ class SakSnapshotDto(
     val hendelseOpprettetAv: String?,
 ) {
     companion object {
-        fun from(iaSakshendelse: IASakshendelse, iaSak: IASak) =
+        fun from(iaSakshendelse: IASakshendelse) =
             SakSnapshotDto(
-                status = iaSak.status,
+                status = iaSakshendelse.resulterendeStatus ?: IAProsessStatus.IKKE_AKTIV,
                 hendelsestype = iaSakshendelse.hendelsesType,
                 tidspunktForSnapshot = iaSakshendelse.opprettetTidspunkt.toKotlinLocalDateTime(),
-                eier = iaSak.eidAv,
+                eier = iaSakshendelse.opprettetAv,
                 begrunnelser = when (iaSakshendelse) {
                     is VirksomhetIkkeAktuellHendelse -> iaSakshendelse.valgtÅrsak.begrunnelser.map { it.navn }
                     else -> emptyList()
@@ -51,7 +51,7 @@ fun IASak.tilSakshistorikk() = SakshistorikkDto(
     sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime()
         ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
     sakshendelser = hendelser.mapIndexed { index, hendelse ->
-        SakSnapshotDto.from(hendelse, IASak.fraHendelser(hendelser.subList(0, index + 1)))
+        SakSnapshotDto.from(hendelse)
     }.toList()
 )
 

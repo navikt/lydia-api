@@ -211,6 +211,7 @@ class IASakService(
                 type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
                 begrunnelser = listOf(BegrunnelseType.AUTOMATISK_LUKKET),
             ),
+            resulterendeStatus = IAProsessStatus.IKKE_AKTUELL,
         )
 
     private fun slettSak(

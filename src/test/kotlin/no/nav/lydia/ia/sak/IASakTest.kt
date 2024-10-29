@@ -473,7 +473,8 @@ class IASakTest {
             orgnummer = orgnummer,
             opprettetAv = navAnsatt.navIdent,
             opprettetAvRolle = navAnsatt.rolle,
-            navEnhet = navEnhet
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
         )
 
     private fun IASakshendelse.nesteHendelse(iaSakshendelseType: IASakshendelseType) =
@@ -489,7 +490,8 @@ class IASakTest {
                     type = NAV_IGANGSETTER_IKKE_TILTAK,
                     begrunnelser = listOf(FOR_FÅ_TAPTE_DAGSVERK)
                 ),
-                navEnhet = navEnhet
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
             )
 
             ENDRE_PROSESS, SLETT_PROSESS -> ProsessHendelse(
@@ -501,7 +503,8 @@ class IASakTest {
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
                 prosessDto = IAProsessDto(1, saksnummer, "Navn"),
-                navEnhet = navEnhet
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
             )
 
             else -> IASakshendelse(
@@ -512,7 +515,8 @@ class IASakTest {
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
-                navEnhet = navEnhet
+                navEnhet = navEnhet,
+                resulterendeStatus = null
             )
         }
 
