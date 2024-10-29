@@ -132,7 +132,6 @@ class IASakApiTest {
         saksStatusUtenNoe.kanFullføres shouldBe false
         saksStatusUtenNoe.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
             ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
-            ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING,
         )
 
         val førsteSamarbeid = alleSamarbeid.first()
