@@ -40,9 +40,6 @@ import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
 const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 
-@Deprecated("Bytter til å bruke query parameter")
-const val EVALUERING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/evaluering"
-
 fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
     spørreundersøkelseService: SpørreundersøkelseService,
@@ -82,62 +79,6 @@ fun Route.iaSakSpørreundersøkelse(
         }
     }
 
-    // TODO: DEPRECATED bytt til oppretting med query parameter
-    post("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
-        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            spørreundersøkelseService.opprettSpørreundersøkelse(
-                orgnummer = orgnummer,
-                saksbehandler = saksbehandler,
-                iaSak = iaSak,
-                prosessId = prosessId,
-                type = "Behovsvurdering",
-            )
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = spørreundersøkelseEither.getOrNull()?.saksnummer,
-            )
-        }.map {
-            call.respond(HttpStatusCode.Created, it.tilDto(true))
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-
-    // TODO: DEPRECATED bytt til oppretting med query parameter
-    post("$EVALUERING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
-        val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
-            spørreundersøkelseService.opprettSpørreundersøkelse(
-                orgnummer = orgnummer,
-                saksbehandler = saksbehandler,
-                iaSak = iaSak,
-                prosessId = prosessId,
-                type = "Evaluering",
-            )
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = spørreundersøkelseEither.getOrNull()?.saksnummer,
-            )
-        }.map {
-            call.respond(HttpStatusCode.Created, it.tilDto(true))
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-
     get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/type/{type}") {
         // hent alle spørreundersøkelser av en gitt type
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -161,60 +102,6 @@ fun Route.iaSakSpørreundersøkelse(
             auditLog.auditloggEither(
                 call = call,
                 either = spørreundersøkelseEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-
-    // TODO: DEPRECATED bytt til uthenting med query parameter
-    get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-                spørreundersøkelseService.hentSpørreundersøkelser(sak = iaSak, prosessId = prosessId, type = "Behovsvurdering")
-            }
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
-        }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
-        }
-    }
-
-    // TODO: DEPRECATED bytt til uthenting med query parameter
-    get("$EVALUERING_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-                spørreundersøkelseService.hentSpørreundersøkelser(
-                    sak = iaSak,
-                    prosessId = prosessId,
-                    type = "Evaluering",
-                )
-            }
-        }.also { evalueringEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = evalueringEither,
                 orgnummer = orgnummer,
                 auditType = AuditType.access,
                 saksnummer = saksnummer,
@@ -303,30 +190,6 @@ fun Route.iaSakSpørreundersøkelse(
             auditLog.auditloggEither(
                 call = call,
                 either = spørreundersøkelse,
-                orgnummer = call.orgnummer,
-                auditType = AuditType.access,
-                saksnummer = call.saksnummer,
-            )
-        }.map {
-            call.respond(it.tilDto(true))
-        }.mapLeft {
-            call.sendFeil(it)
-        }
-    }
-
-    // TODO: DEPRECATED start av evaluering går på ID, trenger ikke egen base path
-    post("$EVALUERING_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/start") {
-        val id = call.spørreundersøkelseId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
-
-        call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
-            spørreundersøkelseService.endreSpørreundersøkelseStatus(
-                spørreundersøkelseId = id,
-                statusViSkalEndreTil = PÅBEGYNT,
-            )
-        }.also { spørreundersøkelseEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = spørreundersøkelseEither,
                 orgnummer = call.orgnummer,
                 auditType = AuditType.access,
                 saksnummer = call.saksnummer,
