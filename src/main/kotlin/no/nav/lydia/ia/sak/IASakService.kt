@@ -401,14 +401,16 @@ class IASakService(
         val statusForBehovsvurderinger =
             iaSakRepository.hentStatusForBehovsvurderinger(prosess.id)
         if (statusForBehovsvurderinger.isEmpty()) {
-            årsaker.add(
-                ÅrsakTilAtSakIkkeKanAvsluttes(
-                    samarbeidsId = prosess.id,
-                    samarbeidsNavn = prosess.navn,
-                    type = ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING,
-                ),
-            )
+            return emptyList()
+//            årsaker.add(
+//                ÅrsakTilAtSakIkkeKanAvsluttes(
+//                    samarbeidsId = prosess.id,
+//                    samarbeidsNavn = prosess.navn,
+//                    type = ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING,
+//                ),
+//            )
         }
+
         statusForBehovsvurderinger.forEach {
             when (it.second) {
                 SpørreundersøkelseStatus.AVSLUTTET,
