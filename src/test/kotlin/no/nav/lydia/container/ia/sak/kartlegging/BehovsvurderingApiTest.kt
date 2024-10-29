@@ -509,7 +509,8 @@ class BehovsvurderingApiTest {
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
                 "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
-            ) shouldHaveSize 0
+            ).shouldNotBeEmpty()
+
         postgresContainer
             .hentAlleRaderTilEnkelKolonne<String>(
                 "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",

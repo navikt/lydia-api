@@ -375,33 +375,20 @@ class SpørreundersøkelseRepository(
         spørreundersøkelseId: String,
         sistEndret: LocalDateTime = LocalDateTime.now(),
     ) = using(sessionOf(dataSource)) { session ->
-        session.transaction { tx ->
-            tx.run(
-                queryOf(
-                    """
-                        DELETE FROM ia_sak_kartlegging_svar
-                        WHERE kartlegging_id = :kartleggingId
-                    """.trimMargin(),
-                    mapOf(
-                        "kartleggingId" to spørreundersøkelseId,
-                    ),
-                ).asUpdate,
-            )
-            tx.run(
-                queryOf(
-                    """
-                    UPDATE ia_sak_kartlegging SET
-                        status = '$SLETTET',
-                        endret = :sistEndret
-                    WHERE kartlegging_id = :kartleggingId
-                    """.trimIndent(),
-                    mapOf(
-                        "kartleggingId" to spørreundersøkelseId,
-                        "sistEndret" to sistEndret,
-                    ),
-                ).asUpdate,
-            )
-        }
+        session.run(
+            queryOf(
+                """
+                UPDATE ia_sak_kartlegging SET
+                    status = '$SLETTET',
+                    endret = :sistEndret
+                WHERE kartlegging_id = :kartleggingId
+                """.trimIndent(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId,
+                    "sistEndret" to sistEndret,
+                ),
+            ).asUpdate,
+        )
         hentSpørreundersøkelse(spørreundersøkelseId)
     }
 
