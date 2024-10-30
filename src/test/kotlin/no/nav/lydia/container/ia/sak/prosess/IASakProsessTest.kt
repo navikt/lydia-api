@@ -17,8 +17,8 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.nyttNavnPåSamarbeid
@@ -45,6 +45,23 @@ class IASakProsessTest {
     fun tearDown() {
         samarbeidsplanKonsument.unsubscribe()
         samarbeidsplanKonsument.close()
+    }
+
+    @Test
+    fun `tomme samarbeidsnavn skal lagres som NULL i databasen`() {
+        val sak = nySakIKartleggesMedEtSamarbeid(
+            navnPåSamarbeid = ""
+        )
+
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        postgresContainer.hentEnkelKolonne<String?>("""
+            select navn from ia_prosess where id = ${samarbeid.id}
+        """.trimIndent()) shouldBe null
+
+        sak.nyttNavnPåSamarbeid(samarbeid, " ")
+        postgresContainer.hentEnkelKolonne<String?>("""
+            select navn from ia_prosess where id = ${samarbeid.id}
+        """.trimIndent()) shouldBe null
     }
 
     @Test
@@ -325,7 +342,7 @@ class IASakProsessTest {
         val samarbeidEtterSlett = sak.hentAlleSamarbeid()
         samarbeidEtterSlett shouldHaveSize 1
 
-        val sisteHendelse = TestContainerHelper.postgresContainer.hentEnkelKolonne<String>(
+        val sisteHendelse = postgresContainer.hentEnkelKolonne<String>(
             """
             select id from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by  opprettet desc limit 1
             """.trimIndent(),
