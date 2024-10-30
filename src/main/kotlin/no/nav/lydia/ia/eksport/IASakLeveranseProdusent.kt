@@ -25,6 +25,10 @@ class IASakLeveranseProdusent(
         produsent.sendMelding(Topic.IA_SAK_LEVERANSE_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
     }
 
+    fun sendMelding(key: String, value: IASakLeveranseValue) {
+        produsent.sendMelding(Topic.IA_SAK_LEVERANSE_TOPIC.navn, key, Json.encodeToString(value))
+    }
+
     private fun IASakLeveranse.tilKafkaMelding(
     ): Pair<String, String> {
         val key = this.id.toString()
