@@ -78,7 +78,7 @@ class ProsessRepository(
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer,
-                        "navn" to navn,
+                        "navn" to navn.nullIfEmpty(),
                     ),
                 ).map(this::mapRowToIaProsessDto).asSingle,
             )!!
@@ -92,13 +92,16 @@ class ProsessRepository(
                     UPDATE ia_prosess SET navn = :navn WHERE id = :prosessId
                     """.trimIndent(),
                     mapOf(
-                        "navn" to prosessDto.navn,
+                        "navn" to prosessDto.navn.nullIfEmpty(),
                         "prosessId" to prosessDto.id,
                     ),
                 ).asUpdate,
             )
         }
     }
+
+    private fun String?.nullIfEmpty() =
+        this?.trim()?.takeIf { it.isNotEmpty() }
 
     private fun mapRowToIaProsessDto(row: Row) =
         IAProsess(

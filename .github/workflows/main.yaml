@@ -67,7 +67,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/grant_sequences'
+    if: github.ref == 'refs/heads/oppdater-navn'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
