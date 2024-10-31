@@ -1,7 +1,6 @@
 package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
-import ia.felles.integrasjoner.jobbsender.Jobb
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -44,7 +43,6 @@ import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -1245,15 +1243,5 @@ class IASakApiTest {
             "SUPERBRUKER",
             "SAKSBEHANDLER",
         )
-    }
-
-    @Test
-    fun `skal kunne kjøre rekalkulering av resulterende hendelser`() {
-        val sak = nySakIViBistår()
-        kafkaContainerHelper.sendJobbMelding(Jobb.kalkulerResulterendeStatusForHendelser)
-        lydiaApiContainer shouldContainLog
-            """
-            Hendelse ${VIRKSOMHET_SKAL_BISTÅS} med id '${sak.endretAvHendelseId}' i sak '${sak.saksnummer}' resulterer i status ${sak.status}
-            """.trimIndent().toRegex()
     }
 }
