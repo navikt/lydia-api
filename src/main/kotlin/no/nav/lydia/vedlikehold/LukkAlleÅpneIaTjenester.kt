@@ -26,29 +26,31 @@ class LukkAlleÅpneIaTjenester(
                     "",
                     emptySet()
                 )
-            )
-
-            iaSakLeveranseProdusent.sendMelding(
-                it.id.toString(),
-                IASakLeveranseProdusent.IASakLeveranseValue(
-                    it.id,
-                    it.saksnummer,
-                    it.modul.iaTjeneste.id,
-                    it.modul.iaTjeneste.navn,
-                    it.modul.id,
-                    it.modul.navn,
-                    it.frist.toKotlinLocalDate(),
-                    IASakLeveranseStatus.LEVERT,
-                    it.opprettetAv,
-                    java.time.LocalDateTime.now().toKotlinLocalDateTime(),
-                    "Fia system",
-                    Rolle.SUPERBRUKER,
-                    java.time.LocalDateTime.now().toKotlinLocalDateTime(),
-                    IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnummer,
-                    IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnavn,
-                    it.opprettetTidspunkt?.toKotlinLocalDateTime()
+            ).map { iaTjeneste ->
+                iaSakLeveranseProdusent.sendMelding(
+                    iaTjeneste.id.toString(),
+                    IASakLeveranseProdusent.IASakLeveranseValue(
+                        iaTjeneste.id,
+                        iaTjeneste.saksnummer,
+                        iaTjeneste.modul.iaTjeneste.id,
+                        iaTjeneste.modul.iaTjeneste.navn,
+                        iaTjeneste.modul.id,
+                        iaTjeneste.modul.navn,
+                        iaTjeneste.frist.toKotlinLocalDate(),
+                        IASakLeveranseStatus.LEVERT,
+                        iaTjeneste.opprettetAv,
+                        java.time.LocalDateTime.now().toKotlinLocalDateTime(),
+                        "Fia system",
+                        Rolle.SUPERBRUKER,
+                        java.time.LocalDateTime.now().toKotlinLocalDateTime(),
+                        IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnummer,
+                        IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnavn,
+                        iaTjeneste.opprettetTidspunkt?.toKotlinLocalDateTime()
+                    )
                 )
-            )
+            }
+
+
         }
     }
 }
