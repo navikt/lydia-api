@@ -110,6 +110,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingC
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
+import no.nav.lydia.vedlikehold.LukkAlleÅpneIaTjenester
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -285,6 +286,10 @@ fun startLydiaBackend() {
             behovsvurderingBigqueryProdusent = behovsvurderingBigqueryProdusent,
             behovsvurderingRepository = spørreundersøkelseRepository,
         ),
+        lukkAlleÅpneIaTjenester = LukkAlleÅpneIaTjenester(
+            iaSakLeveranseRepository = IASakLeveranseRepository(dataSource),
+            iaSakLeveranseProdusent = iaSakLeveranseProdusent
+        )
     )
 
     listOf(
@@ -384,6 +389,7 @@ private fun jobblytter(
     samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
     samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
     behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
+    lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester
 ) {
     Jobblytter.apply {
         create(
@@ -399,6 +405,7 @@ private fun jobblytter(
             samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer,
             samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer,
             behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer,
+            lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester
         )
         run()
     }

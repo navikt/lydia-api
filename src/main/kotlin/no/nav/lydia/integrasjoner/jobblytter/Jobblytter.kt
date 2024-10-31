@@ -34,6 +34,7 @@ import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
+import no.nav.lydia.vedlikehold.LukkAlleÅpneIaTjenester
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -61,6 +62,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer
     private lateinit var samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer
     private lateinit var behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer
+    private lateinit var lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester
     private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
     private val konsumentGruppe = Topic.JOBBLYTTER_TOPIC.konsumentGruppe
 
@@ -84,6 +86,7 @@ object Jobblytter : CoroutineScope {
         samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
         samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
         behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
+        lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
     ) {
         logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
@@ -105,6 +108,7 @@ object Jobblytter : CoroutineScope {
         this.samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer
         this.samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer
         this.behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer
+        this.lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester
 
         logger.info("Created kafka consumer job for $topicNavn")
     }
@@ -135,7 +139,7 @@ object Jobblytter : CoroutineScope {
                                     }
 
                                     kalkulerResulterendeStatusForHendelser -> {
-                                        iaSakhendelseStatusJobb.kjør()
+                                        lukkAlleÅpneIaTjenester.kjør()
                                     }
 
                                     iaSakEksport -> {
