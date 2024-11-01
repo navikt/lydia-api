@@ -140,19 +140,6 @@ class SpørreundersøkelseService(
         return oppdatertKartlegging.right()
     }
 
-    @Deprecated("Henting av kartlegginger uten prosess vil bli fjernet")
-    fun hentKartlegginger(sak: IASak): Either<Feil, List<SpørreundersøkelseUtenInnhold>> {
-        return try {
-            val prosess = iaProsessService.hentIAProsesser(sak).getOrNull()?.firstOrNull()
-                ?: return emptyList<SpørreundersøkelseUtenInnhold>().right()
-            val kartlegginger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess = prosess)
-            kartlegginger.right()
-        } catch (e: Exception) {
-            log.error("Noe gikk feil ved henting av kartlegging: ${e.message}", e)
-            IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
-        }
-    }
-
     fun hentSpørreundersøkelser(
         sak: IASak,
         prosessId: Int,
