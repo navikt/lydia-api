@@ -2,6 +2,7 @@ package no.nav.lydia.container.ia.sak.kartlegging
 
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
 import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
+import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -14,6 +15,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -40,7 +42,9 @@ class EvalueringApiTest {
 
     @Test
     fun `kan opprette en spørreundersøkelse av type evaluering i status VI_BISTÅR`() {
-        val evaluering = nySakIKartleggesMedEtSamarbeid().opprettEvaluering()
+        val sak = nySakIViBistår()
+        sak.opprettEnPlan()
+        val evaluering = sak.opprettEvaluering()
 
         evaluering.type shouldBe "Evaluering"
         evaluering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
@@ -68,8 +72,21 @@ class EvalueringApiTest {
     }
 
     @Test
+    fun `kan ikke opprette en spørreundersøkelse av type evaluering i en annen status enn VI_BISTÅR`() {
+        val sakIKartleggesMedSamarbeid = nySakIKartleggesMedEtSamarbeid()
+        shouldFail { sakIKartleggesMedSamarbeid.opprettEvaluering() }
+    }
+
+    @Test
+    fun `kan ikke opprette en spørreundersøkelse om det ikke eksisterer en plan`() {
+        val sak = nySakIViBistår()
+        shouldFail { sak.opprettEvaluering() }
+    }
+
+    @Test
     fun `kan hente liste av alle spørreundersøkelser av typen Evaluering`() {
         val sak = nySakIViBistår()
+        sak.opprettEnPlan()
         val evaluering = sak.opprettEvaluering()
 
         val alleEvalueringer = hentSpørreundersøkelse(
@@ -91,6 +108,7 @@ class EvalueringApiTest {
     @Test
     fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
         val sak = nySakIViBistår()
+        sak.opprettEnPlan()
         val type = "Evaluering"
         val evaluering = sak.opprettEvaluering()
 

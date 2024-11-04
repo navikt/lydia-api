@@ -258,7 +258,7 @@ object IASakSpørreundersøkelseError {
     val `feil under oppdatering` =
         Feil("Feil under oppdatering av spørreundersøkelse", HttpStatusCode.InternalServerError)
     val `sak ikke i rett status` =
-        Feil("Sak er ikke i status '${KARTLEGGES.name}'", HttpStatusCode.Forbidden)
+        Feil("Sak er ikke i rett status", HttpStatusCode.Forbidden)
     val `ugyldig id` = Feil("Ugyldig spørreundersøkelse", HttpStatusCode.BadRequest)
     val `ugyldig temaId` = Feil("Ugyldig tema", HttpStatusCode.BadRequest)
     val `ugyldig type` = Feil("Ugyldig type spørreundersøkelse", HttpStatusCode.BadRequest)

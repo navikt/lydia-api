@@ -392,6 +392,13 @@ class SakHelper {
                 it.status shouldBe IAProsessStatus.KARTLEGGES
             }
 
+        fun nySakISkalKontaktes(
+            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = opprettSakForVirksomhet(orgnummer)
+            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+
         fun nySakIKartleggesMedEtSamarbeid(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -816,6 +823,15 @@ class PlanHelper {
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
+
+        fun IASakDto.opprettEnPlan(token: String = oauth2ServerContainer.saksbehandler1.token) =
+            lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/${hentAlleSamarbeid().first().id}/opprett")
+                .jsonBody(Json.encodeToString(hentPlanMal()))
+                .authentication().bearer(token)
+                .tilSingelRespons<PlanDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail(it.message) },
+                )
 
         fun hentPlan(
             orgnr: String,

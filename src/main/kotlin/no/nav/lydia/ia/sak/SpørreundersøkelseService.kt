@@ -20,6 +20,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
+import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
@@ -41,6 +42,7 @@ class SpørreundersøkelseService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     val iaProsessService: IAProsessService,
     val iaSakService: IASakService,
+    val planService: PlanService,
     val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
@@ -112,18 +114,48 @@ class SpørreundersøkelseService(
         prosessId: Int,
         type: String,
     ): Either<Feil, Spørreundersøkelse> =
-        iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
-            spørreundersøkelseRepository.opprettSpørreundersøkelse(
-                orgnummer = orgnummer,
-                prosessId = prosess.id,
-                saksbehandler = saksbehandler,
-                spørreundersøkelseId = UUID.randomUUID(),
-                vertId = UUID.randomUUID(),
-                temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
-                type = type,
-            )
-        }.onRight { behovsvurdering ->
-            spørreundersøkelseObservers.forEach { it.receive(behovsvurdering) }
+        when (type) {
+            "Behovsvurdering" -> {
+                iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { samarbeid ->
+                    spørreundersøkelseRepository.opprettSpørreundersøkelse(
+                        orgnummer = orgnummer,
+                        prosessId = samarbeid.id,
+                        saksbehandler = saksbehandler,
+                        spørreundersøkelseId = UUID.randomUUID(),
+                        vertId = UUID.randomUUID(),
+                        temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
+                        type = type,
+                    )
+                }.onRight { behovsvurdering ->
+                    spørreundersøkelseObservers.forEach { it.receive(behovsvurdering) }
+                }
+            }
+            "Evaluering" -> {
+                if (iaSak.status == VI_BISTÅR) {
+                    planService.hentPlan(
+                        iaSak = iaSak,
+                        prosessId = prosessId,
+                    ).flatMap { plan ->
+                        iaProsessService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->
+                            spørreundersøkelseRepository.opprettSpørreundersøkelse(
+                                orgnummer = orgnummer,
+                                prosessId = samarbeid.id,
+                                saksbehandler = saksbehandler,
+                                spørreundersøkelseId = UUID.randomUUID(),
+                                vertId = UUID.randomUUID(),
+                                temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
+                                type = type,
+                            )
+                        }.onRight { behovsvurdering ->
+                            spørreundersøkelseObservers.forEach { it.receive(behovsvurdering) }
+                        }
+                    }
+                } else {
+                    IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
+                }
+            } else -> {
+                IASakSpørreundersøkelseError.`ugyldig type`.left()
+            }
         }
 
     fun slettSpørreundersøkelse(spørreundersøkelseId: String): Either<Feil, Spørreundersøkelse> {
