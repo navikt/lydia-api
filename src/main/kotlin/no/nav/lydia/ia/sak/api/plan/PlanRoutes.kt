@@ -2,12 +2,11 @@ package no.nav.lydia.ia.sak.api.plan
 
 import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.application
-import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.application
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -56,7 +55,7 @@ fun Route.iaSakPlan(
         val planMalDto = call.receive<PlanMalDto>()
 
         if (!planMalDto.erPlanGyldig()) {
-            application.log.info("Plan er ikke gyldig")
+            call.application.log.info("Plan er ikke gyldig")
             return@post call.sendFeil(IASakError.`ugyldig plan`)
         }
 
