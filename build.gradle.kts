@@ -2,13 +2,13 @@ val ktorVersion = "3.0.1"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.6.0"
 val kotestVerstion = "5.9.1"
-val testcontainersVersion = "1.20.2"
+val testcontainersVersion = "1.20.3"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm") version "2.0.21"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.21"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -36,7 +36,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.8")
+    implementation("ch.qos.logback:logback-classic:1.5.12")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -46,12 +46,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.5")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.13.6")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.4")
     implementation("com.zaxxer:HikariCP:6.0.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.19.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.20.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // Enklere httpklient
@@ -59,7 +59,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.8.0")
+    implementation("org.apache.kafka:kafka-clients:3.8.1")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -75,7 +75,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.41.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.45")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -92,13 +92,13 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.9.1")
+    testImplementation("org.wiremock:wiremock-standalone:3.9.2")
 
     // -- validere pdfa
     testImplementation("org.verapdf:validation-model:1.26.1")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.9")
+    testImplementation("no.nav.security:mock-oauth2-server:2.1.10")
 
     constraints {
         implementation("net.minidev:json-smart") {

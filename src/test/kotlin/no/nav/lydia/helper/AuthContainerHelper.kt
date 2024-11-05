@@ -4,6 +4,7 @@ import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jwt.SignedJWT
 import com.nimbusds.oauth2.sdk.AuthorizationCode
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant
+import com.nimbusds.oauth2.sdk.Scope
 import com.nimbusds.oauth2.sdk.TokenRequest
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic
 import com.nimbusds.oauth2.sdk.auth.Secret
@@ -58,7 +59,7 @@ class AuthContainerHelper(
 
     init {
         mockOath2Server = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-            builder.from("ghcr.io/navikt/mock-oauth2-server:2.1.8")
+            builder.from("ghcr.io/navikt/mock-oauth2-server:2.1.10")
                 .env(
                     mapOf(
                         "TZ" to TimeZone.getDefault().id,
@@ -120,7 +121,8 @@ class AuthContainerHelper(
         val tokenRequest = TokenRequest(
             URI.create(tokenEndpointUrl),
             ClientSecretBasic(ClientID(clientId), Secret("secret")),
-            AuthorizationCodeGrant(AuthorizationCode("123"), URI.create("http://localhost"))
+            AuthorizationCodeGrant(AuthorizationCode("123"), URI.create("http://localhost")),
+            Scope(audience)
         )
         return config.tokenProvider.accessToken(tokenRequest, issuerUrl.toHttpUrl(), tokenCallback, null)
     }
