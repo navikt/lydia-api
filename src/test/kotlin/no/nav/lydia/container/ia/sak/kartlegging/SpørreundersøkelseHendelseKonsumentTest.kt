@@ -1,6 +1,6 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -140,9 +140,9 @@ class SpørreundersøkelseHendelseKonsumentTest {
                     val resultaterForTema = Json.decodeFromString<SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat>(melding)
                     resultaterForTema.navn shouldBe tema.navn
                     resultaterForTema.spørsmålMedSvar.forExactlyOne { spørsmål ->
-                        spørsmål.spørsmålId shouldBe førsteSpørsmål.id
+                        spørsmål.id shouldBe førsteSpørsmål.id
                         spørsmål.svarListe.forEach { svar ->
-                            println("${svar.svarId} har ${svar.antallSvar} svar")
+                            println("${svar.id} har ${svar.antallSvar} svar")
                         }
                         spørsmål.svarListe.filter { svar -> svar.antallSvar == 5 } shouldHaveSize 1
                     }

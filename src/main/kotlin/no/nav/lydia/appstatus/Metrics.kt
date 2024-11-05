@@ -1,13 +1,13 @@
 package no.nav.lydia.appstatus
 
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.get
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.core.metrics.Counter
@@ -72,7 +72,6 @@ class Metrics {
             .help("Antall samarbeidsplan opprettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-
         fun loggHendelse(hendelsesType: IASakshendelseType) {
             when (hendelsesType) {
                 VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
@@ -91,10 +90,11 @@ class Metrics {
         }
 
         fun loggFølging(begyntÅFølge: Boolean) {
-            if (begyntÅFølge)
+            if (begyntÅFølge) {
                 iaSakFulgt.inc()
-            else
+            } else {
                 iaSakSluttetÅFølge.inc()
+            }
         }
 
         fun loggOpprettSamarbeidsplan(plan: Plan) {
@@ -105,14 +105,14 @@ class Metrics {
     }
 }
 
-data class ObservedPlan (
+data class ObservedPlan(
     val plan: Plan,
-    val hendelsesType: PlanHendelseType
-
+    val hendelsesType: PlanHendelseType,
 )
 
 enum class PlanHendelseType {
-    OPPRETT, OPPDATER
+    OPPRETT,
+    OPPDATER,
 }
 
 fun Routing.metrics() {

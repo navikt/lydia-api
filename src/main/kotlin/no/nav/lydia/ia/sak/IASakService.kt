@@ -5,7 +5,7 @@ import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
@@ -402,13 +402,6 @@ class IASakService(
             iaSakRepository.hentStatusForBehovsvurderinger(prosess.id)
         if (statusForBehovsvurderinger.isEmpty()) {
             return emptyList()
-//            årsaker.add(
-//                ÅrsakTilAtSakIkkeKanAvsluttes(
-//                    samarbeidsId = prosess.id,
-//                    samarbeidsNavn = prosess.navn,
-//                    type = ÅrsaksType.INGEN_FULLFØRT_BEHOVSVURDERING,
-//                ),
-//            )
         }
 
         statusForBehovsvurderinger.forEach {

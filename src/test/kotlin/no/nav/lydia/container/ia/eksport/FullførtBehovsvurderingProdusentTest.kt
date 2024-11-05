@@ -1,7 +1,7 @@
 package no.nav.lydia.container.ia.eksport
 
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeInteger
 import kotlinx.coroutines.runBlocking

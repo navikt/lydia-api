@@ -6,8 +6,8 @@ import arrow.core.right
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row

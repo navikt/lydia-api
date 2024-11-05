@@ -1,7 +1,7 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe

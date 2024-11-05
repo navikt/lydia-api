@@ -3,7 +3,7 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -17,8 +17,9 @@ import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class IASakRepository(val dataSource: DataSource) {
-
+class IASakRepository(
+    val dataSource: DataSource,
+) {
     fun opprettSak(iaSak: IASak): IASak =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -41,20 +42,23 @@ class IASakRepository(val dataSource: DataSource) {
                         :endret_av_hendelse
                     )
                     returning *                            
-                """.trimMargin(),
+                    """.trimMargin(),
                     mapOf(
                         "saksnummer" to iaSak.saksnummer,
                         "orgnr" to iaSak.orgnr,
                         "status" to iaSak.status.name,
                         "opprettet_av" to iaSak.opprettetAv,
                         "opprettet" to iaSak.opprettetTidspunkt,
-                        "endret_av_hendelse" to iaSak.endretAvHendelseId
-                    )
-                ).map(this::mapRowToIASak).asSingle
+                        "endret_av_hendelse" to iaSak.endretAvHendelseId,
+                    ),
+                ).map(this::mapRowToIASak).asSingle,
             )!!
         }
 
-    fun oppdaterSak(iaSak: IASak, sistOppdatertAvHendelseId: String?): Either<Feil, IASak> =
+    fun oppdaterSak(
+        iaSak: IASak,
+        sistOppdatertAvHendelseId: String?,
+    ): Either<Feil, IASak> =
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.validerAtSakHarRiktigEndretAvHendelse(iaSak.saksnummer, sistOppdatertAvHendelseId)
@@ -70,51 +74,54 @@ class IASakRepository(val dataSource: DataSource) {
                             endret_av_hendelse = :endret_av_hendelse
                         WHERE saksnummer = :saksnummer
                         RETURNING *
-                    """.trimMargin(),
+                        """.trimMargin(),
                         mapOf(
                             "saksnummer" to iaSak.saksnummer,
                             "status" to iaSak.status.name,
                             "endret_av" to iaSak.endretAv,
                             "endret" to iaSak.endretTidspunkt,
                             "eidAv" to iaSak.eidAv,
-                            "endret_av_hendelse" to iaSak.endretAvHendelseId
-                        )
-                    ).map(this::mapRowToIASak).asSingle
+                            "endret_av_hendelse" to iaSak.endretAvHendelseId,
+                        ),
+                    ).map(this::mapRowToIASak).asSingle,
                 )?.right() ?: IASakError.`fikk ikke oppdatert sak`.left()
             }
         }
 
-    fun slettSak(saksnummer: String, sistEndretAvHendelseId: String?) {
+    fun slettSak(
+        saksnummer: String,
+        sistEndretAvHendelseId: String?,
+    ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.validerAtSakHarRiktigEndretAvHendelse(saksnummer, sistEndretAvHendelseId)
                 tx.run(
                     queryOf(
                         """
-                            DELETE FROM ia_sak 
-                            WHERE saksnummer = :saksnummer
-                        """.trimIndent(), mapOf(
+                        DELETE FROM ia_sak 
+                        WHERE saksnummer = :saksnummer
+                        """.trimIndent(),
+                        mapOf(
                             "saksnummer" to saksnummer,
-                        )
-                    ).asUpdate
+                        ),
+                    ).asUpdate,
                 )
                 tx.run(
                     queryOf(
                         """
-                            DELETE FROM ia_sak_hendelse 
-                            WHERE saksnummer = :saksnummer
-                        """.trimIndent(), mapOf(
+                        DELETE FROM ia_sak_hendelse 
+                        WHERE saksnummer = :saksnummer
+                        """.trimIndent(),
+                        mapOf(
                             "saksnummer" to saksnummer,
-                        )
-                    ).asUpdate
+                        ),
+                    ).asUpdate,
                 )
             }
         }
     }
 
-    private fun mapRowToIASak(row: Row): IASak {
-        return row.tilIASak()
-    }
+    private fun mapRowToIASak(row: Row): IASak = row.tilIASak()
 
     fun hentSaker(orgnummer: String): List<IASak> =
         using(sessionOf(dataSource)) { session ->
@@ -124,11 +131,11 @@ class IASakRepository(val dataSource: DataSource) {
                     SELECT *
                     FROM ia_sak
                     WHERE orgnr = :orgnr
-                """.trimMargin(),
+                    """.trimMargin(),
                     mapOf(
                         "orgnr" to orgnummer,
-                    )
-                ).map(this::mapRowToIASak).asList
+                    ),
+                ).map(this::mapRowToIASak).asList,
             )
         }
 
@@ -140,28 +147,31 @@ class IASakRepository(val dataSource: DataSource) {
                     SELECT *
                     FROM ia_sak
                     WHERE saksnummer = :saksnummer
-                """.trimMargin(),
+                    """.trimMargin(),
                     mapOf(
                         "saksnummer" to saksnummer,
-                    )
-                ).map(this::mapRowToIASak).asSingle
+                    ),
+                ).map(this::mapRowToIASak).asSingle,
             )
         }
 
     fun hentAlleSaker(): List<IASak> =
         using(sessionOf(dataSource)) { session ->
             session.run(
-                queryOf("SELECT * FROM ia_sak").map(this::mapRowToIASak).asList
+                queryOf("SELECT * FROM ia_sak").map(this::mapRowToIASak).asList,
             )
         }
 
-    fun oppdaterSistEndret(iaSak: IASak, sistEndret: LocalDateTime = LocalDateTime.now()) {
+    fun oppdaterSistEndret(
+        iaSak: IASak,
+        sistEndret: LocalDateTime = LocalDateTime.now(),
+    ) {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     "UPDATE ia_sak SET endret = :sistEndret WHERE saksnummer = :saksnummer",
-                    mapOf("sistEndret" to sistEndret, "saksnummer" to iaSak.saksnummer)
-                ).asUpdate
+                    mapOf("sistEndret" to sistEndret, "saksnummer" to iaSak.saksnummer),
+                ).asUpdate,
             )
         }
     }
@@ -172,11 +182,11 @@ class IASakRepository(val dataSource: DataSource) {
                 queryOf(
                     """
                     SELECT * FROM ia_sak 
-                     WHERE eid_av IS NULL
-                     AND status = '${IAProsessStatus.VURDERES.name}'
-                     AND endret < (now() - INTERVAL '6 MONTH')
-                    """.trimIndent()
-                ).map(this::mapRowToIASak).asList
+                    WHERE eid_av IS NULL
+                    AND status = '${IAProsessStatus.VURDERES.name}'
+                    AND endret < (now() - INTERVAL '6 MONTH')
+                    """.trimIndent(),
+                ).map(this::mapRowToIASak).asList,
             )
         }
 
@@ -185,38 +195,38 @@ class IASakRepository(val dataSource: DataSource) {
             session.run(
                 queryOf(
                     """
-                      select kartlegging_id, status from ia_sak_kartlegging
-                        where ia_prosess = :prosessId
+                    select kartlegging_id, status from ia_sak_kartlegging
+                    where ia_prosess = :prosessId
                     """.trimIndent(),
                     mapOf(
-                        "prosessId" to prosessId
-                    )
+                        "prosessId" to prosessId,
+                    ),
                 ).map {
                     it.string("kartlegging_id") to SpørreundersøkelseStatus.valueOf(it.string("status"))
-                }.asList
+                }.asList,
             )
         }
 
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
             saksnummer: String,
-            sistEndretAvHendelseId: String?
+            sistEndretAvHendelseId: String?,
         ) {
             sistEndretAvHendelseId?.let {
                 run(
                     queryOf(
                         """
                         SELECT saksnummer FROM ia_sak WHERE saksnummer = :saksnummer AND endret_av_hendelse = :endret_av_hendelse
-                    """.trimIndent(),
+                        """.trimIndent(),
                         mapOf(
                             "saksnummer" to saksnummer,
-                            "endret_av_hendelse" to sistEndretAvHendelseId
-                        )
-                    ).map { it.string("saksnummer") }.asSingle
+                            "endret_av_hendelse" to sistEndretAvHendelseId,
+                        ),
+                    ).map { it.string("saksnummer") }.asSingle,
                 ) ?: throw RuntimeException(
                     "Sak har blitt oppdatert underveis! " +
-                            "Sak med saksnummer: $saksnummer " +
-                            "har ikke endret_av_hendelse = $sistEndretAvHendelseId som forventet."
+                        "Sak med saksnummer: $saksnummer " +
+                        "har ikke endret_av_hendelse = $sistEndretAvHendelseId som forventet.",
                 )
             }
         }

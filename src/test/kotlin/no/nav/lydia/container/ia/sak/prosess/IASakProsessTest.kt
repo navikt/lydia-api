@@ -1,6 +1,6 @@
 package no.nav.lydia.container.ia.sak.prosess
 
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -50,18 +50,22 @@ class IASakProsessTest {
     @Test
     fun `tomme samarbeidsnavn skal lagres som NULL i databasen`() {
         val sak = nySakIKartleggesMedEtSamarbeid(
-            navnPåSamarbeid = ""
+            navnPåSamarbeid = "",
         )
 
         val samarbeid = sak.hentAlleSamarbeid().first()
-        postgresContainer.hentEnkelKolonne<String?>("""
+        postgresContainer.hentEnkelKolonne<String?>(
+            """
             select navn from ia_prosess where id = ${samarbeid.id}
-        """.trimIndent()) shouldBe null
+            """.trimIndent(),
+        ) shouldBe null
 
         sak.nyttNavnPåSamarbeid(samarbeid, " ")
-        postgresContainer.hentEnkelKolonne<String?>("""
+        postgresContainer.hentEnkelKolonne<String?>(
+            """
             select navn from ia_prosess where id = ${samarbeid.id}
-        """.trimIndent()) shouldBe null
+            """.trimIndent(),
+        ) shouldBe null
     }
 
     @Test

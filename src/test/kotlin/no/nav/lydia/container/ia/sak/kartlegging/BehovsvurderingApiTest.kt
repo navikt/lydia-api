@@ -1,10 +1,10 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.SLETTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
@@ -111,9 +111,9 @@ class BehovsvurderingApiTest {
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
-                        it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+                    spørreundersøkelse.temaer shouldHaveSize 3
+                    spørreundersøkelse.temaer.forAll {
+                        it.spørsmål.shouldNotBeEmpty()
                         it.navn.shouldNotBeEmpty()
                     }
                 }
@@ -162,15 +162,15 @@ class BehovsvurderingApiTest {
                 liste.map { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.spørreundersøkelseId shouldBe behovsvurdering.id
+                    spørreundersøkelse.id shouldBe behovsvurdering.id
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
                     spørreundersøkelse.status shouldBe OPPRETTET
                     spørreundersøkelse.type shouldBe "Behovsvurdering"
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll { tema ->
-                        tema.spørsmålOgSvaralternativer.shouldNotBeEmpty()
-                        tema.spørsmålOgSvaralternativer.forAll {
+                    spørreundersøkelse.temaer shouldHaveSize 3
+                    spørreundersøkelse.temaer.forAll { tema ->
+                        tema.spørsmål.shouldNotBeEmpty()
+                        tema.spørsmål.forAll {
                             it.svaralternativer.shouldNotBeEmpty()
                         }
                     }

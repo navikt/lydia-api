@@ -1,7 +1,7 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.OPPRETTET
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus.PÅBEGYNT
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
@@ -61,9 +61,9 @@ class EvalueringApiTest {
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-                    spørreundersøkelse.temaMedSpørsmålOgSvaralternativer.forAll {
-                        it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
+                    spørreundersøkelse.temaer shouldHaveSize 3
+                    spørreundersøkelse.temaer.forAll {
+                        it.spørsmål.shouldNotBeEmpty()
                         it.navn.shouldNotBeEmpty()
                     }
                 }

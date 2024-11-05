@@ -1,6 +1,6 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
-import ia.felles.integrasjoner.kafkameldinger.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import java.time.LocalDateTime
 import java.util.UUID
 

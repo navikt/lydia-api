@@ -30,15 +30,18 @@ fun Tema.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>): TemaResultat 
 
 fun TemaResultat.tilKafkaMelding(): SerializableTemaResultat =
     SerializableTemaResultat(
+        id = id,
         temaId = id,
         navn = navn,
         spørsmålMedSvar = spørsmål.map { spørsmål ->
             SerializableSpørsmålResultat(
+                id = spørsmål.spørsmålId.toString(),
                 spørsmålId = spørsmål.spørsmålId.toString(),
                 tekst = spørsmål.spørsmåltekst,
                 flervalg = spørsmål.flervalg,
                 svarListe = spørsmål.svaralternativer.map { svar ->
                     SerializableSvarResultat(
+                        id = svar.svarId.toString(),
                         svarId = svar.svarId.toString(),
                         tekst = svar.svartekst,
                         antallSvar = svar.antallSvar,
