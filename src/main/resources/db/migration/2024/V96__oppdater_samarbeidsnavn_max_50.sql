@@ -1,0 +1,1 @@
+ALTER TABLE ia_prosess ALTER COLUMN navn TYPE VARCHAR(50);

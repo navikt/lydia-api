@@ -114,8 +114,10 @@ class IAProsessService(
 }
 
 const val DEFAULT_SAMARBEID_NAVN = "Samarbeid uten navn"
+const val MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN = 50
 
 object IAProsessFeil {
+    val `ugyldig samarbeidsnavn` = Feil("Ugyldig samarbeidsnavn", HttpStatusCode.BadRequest)
     val `feil ved henting av prosess` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
     val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
     val `kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan` =

@@ -24,6 +24,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
+import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -360,5 +361,22 @@ class IASakProsessTest {
         sak.hentAlleSamarbeid().forExactlyOne {
             it.navn shouldBe "Navn"
         }
+    }
+
+    @Test
+    fun `samarbeidsnavn er begrenset til 50 tegn`() {
+        val sak = nySakIKartlegges()
+
+        val forLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN + 1)
+        val gyldigLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN )
+        shouldFail {
+            sak.opprettNyttSamarbeid(navn = forLangtNavn)
+        }
+        val sakMedSamarbeid = sak.opprettNyttSamarbeid(navn = gyldigLangtNavn)
+        val samarbeid = sakMedSamarbeid.hentAlleSamarbeid().first()
+        shouldFail {
+            sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, forLangtNavn)
+        }
+        sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, gyldigLangtNavn)
     }
 }

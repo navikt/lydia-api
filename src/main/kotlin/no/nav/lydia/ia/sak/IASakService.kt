@@ -33,6 +33,8 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
@@ -141,6 +143,11 @@ class IASakService(
                 if (!iaProsessService.kanSletteProsess(sak = aktivSak, iaProsess = prosessDto)) {
                     return IAProsessFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
                 }
+            }
+            ENDRE_PROSESS, NY_PROSESS -> {
+                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                if (prosessDto.navn != null && prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
+                    return IAProsessFeil.`ugyldig samarbeidsnavn`.left()
             }
             else -> {}
         }
