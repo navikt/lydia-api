@@ -618,9 +618,9 @@ class BehovsvurderingApiTest {
         }
 
         // -- skal ikke kunne flytte til prosess i en annen sak
+        val nysak = nySakIKartlegges()
+            .opprettNyttSamarbeid()
         shouldFail {
-            val nysak = nySakIKartlegges()
-                .opprettNyttSamarbeid()
             oppdaterBehovsvurdering(behovsvurdering, sak, nysak.hentAlleSamarbeid().first().id)
         }
     }
