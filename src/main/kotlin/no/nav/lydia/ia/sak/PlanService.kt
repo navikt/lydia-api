@@ -6,7 +6,6 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import java.util.UUID
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
@@ -23,6 +22,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.AVBRUTT
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.UUID
 
 class PlanService(
     val iaProsessService: IAProsessService,
@@ -46,7 +46,7 @@ class PlanService(
             if (planEksistererAllerede) {
                 return Feil(
                     feilmelding = "Plan eksisterer allerede for dette samarbeidet: '$prosessId'",
-                    httpStatusCode = HttpStatusCode.BadRequest
+                    httpStatusCode = HttpStatusCode.BadRequest,
                 ).left()
             }
 
@@ -86,8 +86,12 @@ class PlanService(
                     endredeUndertemaer.firstOrNull { redigert -> redigert.id == lagretUndertema.id }?.let { redigert ->
                         lagretUndertema.copy(
                             inkludert = redigert.inkludert,
-                            status = if (redigert.inkludert) lagretUndertema.status
-                                ?: PlanUndertema.Status.PLANLAGT else null,
+                            status = if (redigert.inkludert) {
+                                lagretUndertema.status
+                                    ?: PlanUndertema.Status.PLANLAGT
+                            } else {
+                                null
+                            },
                             startDato = if (redigert.inkludert) redigert.startDato else null,
                             sluttDato = if (redigert.inkludert) redigert.sluttDato else null,
                         )
@@ -106,8 +110,8 @@ class PlanService(
                     it.receive(
                         ObservedPlan(
                             hendelsesType = PlanHendelseType.OPPDATER,
-                            plan = plan
-                        )
+                            plan = plan,
+                        ),
                     )
                 }
             }
@@ -140,12 +144,13 @@ class PlanService(
                 plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return PlanFeil.`fant ikke tema`.left()
             val lagretUndertema = lagredeUndertemaer.firstOrNull { it.id == undertemaId }
 
-            if (nyStatus == AVBRUTT && lagretUndertema != null && lagretUndertema.starterIFremtiden())
+            if (nyStatus == AVBRUTT && lagretUndertema != null && lagretUndertema.starterIFremtiden()) {
                 return Feil(
                     feilmelding = "Kan ikke endre status til '${nyStatus.name}' " +
-                            "fordi '${lagretUndertema.navn}' ikke har startet enda",
-                    httpStatusCode = HttpStatusCode.BadRequest
+                        "fordi '${lagretUndertema.navn}' ikke har startet enda",
+                    httpStatusCode = HttpStatusCode.BadRequest,
                 ).left()
+            }
 
             val oppdatertUndertema: PlanUndertema =
                 lagretUndertema?.copy(status = nyStatus)
@@ -162,8 +167,8 @@ class PlanService(
                     it.receive(
                         ObservedPlan(
                             hendelsesType = PlanHendelseType.OPPDATER,
-                            plan = plan
-                        )
+                            plan = plan,
+                        ),
                     )
                 }
             }

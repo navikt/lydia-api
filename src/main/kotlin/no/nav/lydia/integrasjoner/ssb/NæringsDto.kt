@@ -9,5 +9,5 @@ data class NæringsDto(
     val name: String,
     val notes: String,
     val parentCode: String,
-    val shortName: String
+    val shortName: String,
 )

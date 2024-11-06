@@ -1,15 +1,13 @@
 package no.nav.lydia.ia.sak.domene.plan
 
 import io.kotest.matchers.shouldBe
-import java.util.UUID
-import kotlin.test.Test
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
-
+import java.util.UUID
+import kotlin.test.Test
 
 class PlanUnitTest {
-
     @Test
     fun `Test utregning for startDato og sluttDato`() {
         val plan = Plan(
@@ -29,7 +27,7 @@ class PlanUnitTest {
                             inkludert = true,
                             status = PlanUndertema.Status.PLANLAGT,
                             startDato = LocalDate.parse("2021-01-01"),
-                            sluttDato = LocalDate.parse("2021-01-31")
+                            sluttDato = LocalDate.parse("2021-01-31"),
                         ),
                         PlanUndertema(
                             id = 2,
@@ -38,10 +36,10 @@ class PlanUnitTest {
                             inkludert = true,
                             status = PlanUndertema.Status.PLANLAGT,
                             startDato = LocalDate.parse("2021-02-01"),
-                            sluttDato = LocalDate.parse("2021-02-28")
-                        )
+                            sluttDato = LocalDate.parse("2021-02-28"),
+                        ),
                     ),
-                    ressurser = emptyList()
+                    ressurser = emptyList(),
                 ),
                 PlanTema(
                     id = 2,
@@ -55,12 +53,12 @@ class PlanUnitTest {
                             inkludert = true,
                             status = PlanUndertema.Status.PLANLAGT,
                             startDato = LocalDate.parse("2021-03-01"),
-                            sluttDato = LocalDate.parse("2021-03-06")
-                        )
+                            sluttDato = LocalDate.parse("2021-03-06"),
+                        ),
                     ),
                     ressurser = emptyList(),
-                )
-            )
+                ),
+            ),
         )
 
         plan.startDato() shouldBe LocalDate.parse("2021-01-01")

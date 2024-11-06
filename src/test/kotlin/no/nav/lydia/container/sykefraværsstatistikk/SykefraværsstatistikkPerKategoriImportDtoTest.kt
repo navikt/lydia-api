@@ -2,13 +2,15 @@ package no.nav.lydia.container.sykefraværsstatistikk
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraværsstatistikk.import.*
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletLandSykefraværsstatistikk
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.tilBehandletVirksomhetSykefraværsstatistikk
 import kotlin.test.Test
 
 class SykefraværsstatistikkPerKategoriImportDtoTest {
-
     private val gjeldendePeriode = TestData.gjeldendePeriode
 
     @Test
@@ -58,26 +60,28 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
         result.tapteDagsverk shouldBe 0.0
     }
 
-
-    private fun statistikkDto(kategori: Kategori, kode: String, antallPersoner: Int) =
-        SykefraværsstatistikkPerKategoriImportDto(
-            kategori = kategori,
-            kode = kode,
-            sistePubliserteKvartal = SistePubliserteKvartal(
-                årstall = gjeldendePeriode.årstall,
-                kvartal = gjeldendePeriode.kvartal,
-                prosent = 2.5,
-                tapteDagsverk = 2500.0,
-                muligeDagsverk = 10000.0,
-                antallPersoner = antallPersoner,
-                erMaskert = false
-            ),
-            siste4Kvartal = Siste4Kvartal(
-                prosent = 5.0,
-                tapteDagsverk = 50000.0,
-                muligeDagsverk = 100000.0,
-                erMaskert = false,
-                kvartaler = listOf(gjeldendePeriode.tilKvartal())
-            )
-        )
+    private fun statistikkDto(
+        kategori: Kategori,
+        kode: String,
+        antallPersoner: Int,
+    ) = SykefraværsstatistikkPerKategoriImportDto(
+        kategori = kategori,
+        kode = kode,
+        sistePubliserteKvartal = SistePubliserteKvartal(
+            årstall = gjeldendePeriode.årstall,
+            kvartal = gjeldendePeriode.kvartal,
+            prosent = 2.5,
+            tapteDagsverk = 2500.0,
+            muligeDagsverk = 10000.0,
+            antallPersoner = antallPersoner,
+            erMaskert = false,
+        ),
+        siste4Kvartal = Siste4Kvartal(
+            prosent = 5.0,
+            tapteDagsverk = 50000.0,
+            muligeDagsverk = 100000.0,
+            erMaskert = false,
+            kvartaler = listOf(gjeldendePeriode.tilKvartal()),
+        ),
+    )
 }

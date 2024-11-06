@@ -18,11 +18,11 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.team.MINE_SAKER_PATH
-import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.MineSakerDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -30,19 +30,22 @@ class IASakTeamApiTest {
     private val mockOAuth2Server = oauth2ServerContainer
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
 
-    private fun bliMedITeam(token: String, saksnummer: String) =
-        lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${saksnummer}")
-            .authentication().bearer(token)
-            .tilSingelRespons<BrukerITeamDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) })
-            .also { it.saksnummer shouldBe saksnummer }
+    private fun bliMedITeam(
+        token: String,
+        saksnummer: String,
+    ) = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/$saksnummer")
+        .authentication().bearer(token)
+        .tilSingelRespons<BrukerITeamDto>().third.fold(
+            success = { respons -> respons },
+            failure = { fail(it.message) },
+        )
+        .also { it.saksnummer shouldBe saksnummer }
 
     private fun IASakDto.leggTilFolger(token: String) = also { bliMedITeam(token = token, saksnummer) }
 
     private fun opprettSakBliOgMedITeam(
         token: String,
-        orgnummer: String = nyttOrgnummer()
+        orgnummer: String = nyttOrgnummer(),
     ): Pair<IASakDto, BrukerITeamDto> {
         val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
         return Pair(sak, bliMedITeam(token = token, saksnummer = sak.saksnummer))
@@ -56,7 +59,8 @@ class IASakTeamApiTest {
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .tilListeRespons<String>().third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) })
+                failure = { fail(it.message) },
+            )
             .shouldHaveSize(0)
 
         val userList = listOf(
@@ -73,12 +77,12 @@ class IASakTeamApiTest {
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .tilListeRespons<String>().third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) })
+                failure = { fail(it.message) },
+            )
             .shouldHaveSize(userList.size)
 
         teamList
             .shouldContainAll(userList.map { it.navIdent })
-
     }
 
     @Test
@@ -89,9 +93,11 @@ class IASakTeamApiTest {
         res.ident shouldBe mockOAuth2Server.superbruker1.navIdent
 
         postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
-            """select saksnummer from ia_sak_team
-                    where ident = '${mockOAuth2Server.superbruker1.navIdent}'
-                    and saksnummer = '${sak.saksnummer}'""".trimIndent()
+            """
+            select saksnummer from ia_sak_team
+            where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+            and saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
         ) shouldHaveSize 1
     }
 
@@ -107,7 +113,6 @@ class IASakTeamApiTest {
         resList.all {
             it.ident == bruker.navIdent
         }
-
     }
 
     @Test
@@ -145,24 +150,29 @@ class IASakTeamApiTest {
         val (sak, _) = opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token)
 
         postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
-            """select saksnummer from ia_sak_team
-                    where ident = '${mockOAuth2Server.superbruker1.navIdent}'
-                    and saksnummer = '${sak.saksnummer}'""".trimIndent()
+            """
+            select saksnummer from ia_sak_team
+            where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+            and saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
         ) shouldHaveSize 1
 
         val deleteRes = lydiaApiContainer.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .tilSingelRespons<BrukerITeamDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) })
+                failure = { fail(it.message) },
+            )
 
         deleteRes.saksnummer shouldBe sak.saksnummer
         deleteRes.ident shouldBe mockOAuth2Server.superbruker1.navIdent
 
         postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
-            """select saksnummer from ia_sak_team
-                    where ident = '${mockOAuth2Server.superbruker1.navIdent}'
-                    and saksnummer = '${sak.saksnummer}'""".trimIndent()
+            """
+            select saksnummer from ia_sak_team
+            where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+            and saksnummer = '${sak.saksnummer}'
+            """.trimIndent(),
         ) shouldHaveSize 0
     }
 
@@ -185,7 +195,7 @@ class IASakTeamApiTest {
         res.statusCode shouldBe HttpStatusCode.BadRequest.value
     }
 
-    //MineSakerTester
+    // MineSakerTester
     private fun IASakDto.sammenlignMedMineSaker(minsak: MineSakerDto) =
         minsak.iaSak.copy(gyldigeNesteHendelser = emptyList()) == this.copy(gyldigeNesteHendelser = emptyList())
 
@@ -205,7 +215,8 @@ class IASakTeamApiTest {
             .authentication().bearer(bruker)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) })
+                failure = { fail(it.message) },
+            )
 
         iaSakListe.all { sak ->
             res.any { sak.sammenlignMedMineSaker(it) }
@@ -231,7 +242,6 @@ class IASakTeamApiTest {
             .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
             .leggTilFolger(token = mockOAuth2Server.saksbehandler1.token)
 
-
         val sak4 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
 
@@ -241,7 +251,8 @@ class IASakTeamApiTest {
             .authentication().bearer(bruker)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) })
+                failure = { fail(it.message) },
+            )
 
         iaSakListe.all { sak ->
             res.any { sak.sammenlignMedMineSaker(it) }
@@ -250,7 +261,6 @@ class IASakTeamApiTest {
         res.any { sak4.sammenlignMedMineSaker(it) } shouldBe false
 
         res.map { it.iaSak.saksnummer }.shouldBeUnique()
-
     }
 
     @Test
@@ -268,7 +278,8 @@ class IASakTeamApiTest {
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) })
+                failure = { fail(it.message) },
+            )
 
         res.none {
             sak0.sammenlignMedMineSaker(it) || sak1.sammenlignMedMineSaker(it)

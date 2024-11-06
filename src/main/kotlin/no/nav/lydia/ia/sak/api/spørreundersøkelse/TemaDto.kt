@@ -14,5 +14,5 @@ fun Tema.toDto() =
     TemaDto(
         temaId = this.tema.id,
         navn = this.tema.navn,
-        spørsmålOgSvaralternativer = this.spørsmål.tilDto()
+        spørsmålOgSvaralternativer = this.spørsmål.tilDto(),
     )

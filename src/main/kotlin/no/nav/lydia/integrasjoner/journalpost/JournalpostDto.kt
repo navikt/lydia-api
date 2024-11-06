@@ -3,35 +3,37 @@ package no.nav.lydia.integrasjoner.journalpost
 import kotlinx.serialization.Serializable
 
 enum class JournalpostType {
-    UTGAAENDE
+    UTGAAENDE,
 }
 
 enum class IdType {
-    ORGNR
+    ORGNR,
 }
 
 enum class Sakstype {
-    FAGSAK
+    FAGSAK,
 }
 
 enum class FilType {
-    PDFA, JSON
+    PDFA,
+    JSON,
 }
 
 enum class Variantformat {
-    ARKIV, ORIGINAL
+    ARKIV,
+    ORIGINAL,
 }
 
 enum class Kanal {
-    NAV_NO
+    NAV_NO,
 }
 
 enum class JournalpostTema {
-    IAR
+    IAR,
 }
 
 enum class FagsakSystem {
-    FIA
+    FIA,
 }
 
 @Serializable
@@ -45,38 +47,38 @@ data class JournalpostDto(
     val avsenderMottaker: AvsenderMottaker,
     val bruker: Bruker,
     val sak: Sak,
-    val dokumenter: List<Dokument>
+    val dokumenter: List<Dokument>,
 )
 
 @Serializable
 data class AvsenderMottaker(
     val idType: IdType,
     val id: String,
-    val navn: String
+    val navn: String,
 )
 
 @Serializable
 data class Bruker(
     val idType: IdType,
-    val id: String
+    val id: String,
 )
 
 @Serializable
 data class Sak(
     val sakstype: Sakstype,
     val fagsakId: String,
-    val fagsaksystem: FagsakSystem
+    val fagsaksystem: FagsakSystem,
 )
 
 @Serializable
 data class Dokument(
     val tittel: String,
-    val dokumentvarianter: List<DokumentVariant>
+    val dokumentvarianter: List<DokumentVariant>,
 )
 
 @Serializable
 data class DokumentVariant(
     val filtype: FilType,
     val variantformat: Variantformat,
-    val fysiskDokument: String
+    val fysiskDokument: String,
 )

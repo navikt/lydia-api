@@ -12,14 +12,15 @@ class IASakLeveranseEksportør(
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    suspend fun eksporter() = coroutineScope {
-        launch {
-            val alleLeveranser = iaSakLeveranseRepository.hentAlleIASakLeveranser()
-            log.info("Starter re-eksport av ${alleLeveranser.size} leveranser")
-            alleLeveranser.forEach {
-                iaSakLeveranseProdusent.receive(it)
+    suspend fun eksporter() =
+        coroutineScope {
+            launch {
+                val alleLeveranser = iaSakLeveranseRepository.hentAlleIASakLeveranser()
+                log.info("Starter re-eksport av ${alleLeveranser.size} leveranser")
+                alleLeveranser.forEach {
+                    iaSakLeveranseProdusent.receive(it)
+                }
+                log.info("Ferdig med re-eksport av ${alleLeveranser.size} leveranser")
             }
-            log.info("Ferdig med re-eksport av ${alleLeveranser.size} leveranser")
         }
-    }
 }

@@ -13,25 +13,33 @@ import java.lang.IllegalArgumentException
 //  - Næring: det andre nivået i SN2007 identifisert ved en tosifret tallkode
 //  - Næringskode: femte nivå identifisert ved en femsifret tallkode (kalt også - feilaktig - 'bransje')
 enum class Kategori {
-    VIRKSOMHET, LAND, SEKTOR, BRANSJE, NÆRING, NÆRINGSKODE;
+    VIRKSOMHET,
+    LAND,
+    SEKTOR,
+    BRANSJE,
+    NÆRING,
+    NÆRINGSKODE,
+    ;
 
-    fun tabellnavn() = when (this) {
-        LAND -> "sykefravar_statistikk_land"
-        SEKTOR -> "sykefravar_statistikk_sektor"
-        BRANSJE -> "sykefravar_statistikk_bransje"
-        NÆRING -> "sykefravar_statistikk_naring"
-        NÆRINGSKODE -> "sykefravar_statistikk_naringsundergruppe"
-        VIRKSOMHET -> "sykefravar_statistikk_virksomhet"
-    }
+    fun tabellnavn() =
+        when (this) {
+            LAND -> "sykefravar_statistikk_land"
+            SEKTOR -> "sykefravar_statistikk_sektor"
+            BRANSJE -> "sykefravar_statistikk_bransje"
+            NÆRING -> "sykefravar_statistikk_naring"
+            NÆRINGSKODE -> "sykefravar_statistikk_naringsundergruppe"
+            VIRKSOMHET -> "sykefravar_statistikk_virksomhet"
+        }
 
-    fun kodenavn() = when (this) {
-        LAND -> "land"
-        SEKTOR -> "sektor_kode"
-        BRANSJE -> "bransje"
-        NÆRING -> "naring"
-        NÆRINGSKODE -> "naringsundergruppe"
-        VIRKSOMHET -> "orgnr"
-    }
+    fun kodenavn() =
+        when (this) {
+            LAND -> "land"
+            SEKTOR -> "sektor_kode"
+            BRANSJE -> "bransje"
+            NÆRING -> "naring"
+            NÆRINGSKODE -> "naringsundergruppe"
+            VIRKSOMHET -> "orgnr"
+        }
 }
 
 data class SykefraværsstatistikkPerKategoriImportDto(
@@ -57,7 +65,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     maskert = this.sistePubliserteKvartal.erMaskert,
                     kategori = this.kategori.name,
                     kode = this.kode,
-                )
+                ),
             )
 
         private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletSektorSykefraværsstatistikk() =
@@ -73,7 +81,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     kategori = this.kategori.name,
                     kode = this.kode.tilSektor()?.kode
                         ?: throw IllegalArgumentException("Ukjent sektor"), // Dette skal aldri skje, DTO er allerede filtrert
-                )
+                ),
             )
 
         private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletBransjeSykefraværsstatistikk() =
@@ -88,7 +96,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     maskert = this.sistePubliserteKvartal.erMaskert,
                     kategori = this.kategori.name,
                     kode = this.kode,
-                )
+                ),
             )
 
         private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletNæringSykefraværsstatistikk() =
@@ -103,7 +111,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     maskert = this.sistePubliserteKvartal.erMaskert,
                     kategori = this.kategori.name,
                     kode = this.kode,
-                )
+                ),
             )
 
         private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletNæringsundergruppeSykefraværsstatistikk() =
@@ -118,7 +126,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     maskert = this.sistePubliserteKvartal.erMaskert,
                     kategori = this.kategori.name,
                     kode = this.kode,
-                )
+                ),
             )
 
         private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikk() =
@@ -132,8 +140,8 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     tapteDagsverk = this.sistePubliserteKvartal.tapteDagsverk ?: 0.0,
                     maskert = this.sistePubliserteKvartal.erMaskert,
                     kategori = this.kategori.name,
-                    orgnr = this.kode
-                )
+                    orgnr = this.kode,
+                ),
             )
 
         private fun SykefraværsstatistikkPerKategoriImportDto.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal() =
@@ -147,8 +155,8 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                     maskert = this.siste4Kvartal.erMaskert,
                     kvartaler = this.siste4Kvartal.kvartaler,
                     kategori = this.kategori.name,
-                    orgnr = this.kode
-                )
+                    orgnr = this.kode,
+                ),
             )
 
         // Vi får Sektor fra Sykefraværsstatistikk-api som en 'beskrivelse' men lagre statistikk på tilsvarende 'kode'
@@ -160,7 +168,7 @@ data class SykefraværsstatistikkPerKategoriImportDto(
                         kode = it.kode.tilSektor()?.kode
                             ?: throw IllegalArgumentException("Ukjent sektor"), // Dette skal aldri skje, DTO er allerede filtrert
                         sistePubliserteKvartal = it.sistePubliserteKvartal,
-                        siste4Kvartal = it.siste4Kvartal
+                        siste4Kvartal = it.siste4Kvartal,
                     )
 
                     else -> it
@@ -219,7 +227,7 @@ data class Siste4Kvartal(
     @SerializedName("erMaskert")
     val erMaskert: Boolean,
     @SerializedName("kvartaler")
-    val kvartaler: List<Kvartal>
+    val kvartaler: List<Kvartal>,
 )
 
 @Serializable
@@ -245,7 +253,7 @@ data class SistePubliserteKvartal(
     @SerializedName("antallPersoner")
     val antallPersoner: Int?,
     @SerializedName("erMaskert")
-    val erMaskert: Boolean
+    val erMaskert: Boolean,
 )
 
 data class KeySykefraværsstatistikkPerKategori(

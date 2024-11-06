@@ -49,7 +49,6 @@ class IASakProdusentTest {
                 meldinger[1] shouldContain IAProsessStatus.VURDERES.name
                 meldinger[2] shouldContain IAProsessStatus.SLETTET.name
             }
-
         }
     }
 
@@ -65,9 +64,9 @@ class IASakProdusentTest {
                     payload = ValgtÅrsak(
                         type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = listOf(
-                            BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
-                        )
-                    ).toJson()
+                            BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
+                        ),
+                    ).toJson(),
                 )
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(key = sak.saksnummer, konsument) { meldinger ->
@@ -86,5 +85,4 @@ class IASakProdusentTest {
             }
         }
     }
-
 }

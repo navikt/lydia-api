@@ -7,13 +7,13 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 class IASakStatusOppdaterer(
-    val iaSakService: IASakService
+    val iaSakService: IASakService,
 ) {
     companion object {
         val KJØRER_RYDDE_I_URØRTE_SAKER = AtomicBoolean(false)
         val NAV_ENHET_FOR_TILBAKEFØRING = NavEnhet(
             enhetsnummer = "2840",
-            enhetsnavn = "IA- og sykefraværskontoret"
+            enhetsnavn = "IA- og sykefraværskontoret",
         )
     }
 

@@ -4,22 +4,26 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.validerBegrunnelser
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.tilgangskontroll.fia.Rolle
-import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 
 open class IASakshendelse(
@@ -34,28 +38,36 @@ open class IASakshendelse(
     val resulterendeStatus: IAProsessStatus?,
 ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, saksbehandler: NavAnsattMedSaksbehandlerRolle, navEnhet: NavEnhet) =
-            when (dto.hendelsesType) {
-                VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
+        fun fromDto(
+            dto: IASakshendelseDto,
+            saksbehandler: NavAnsattMedSaksbehandlerRolle,
+            navEnhet: NavEnhet,
+        ) = when (dto.hendelsesType) {
+            VIRKSOMHET_ER_IKKE_AKTUELL -> VirksomhetIkkeAktuellHendelse.fromDto(dto, saksbehandler, navEnhet)
 
-                NY_PROSESS,
-                ENDRE_PROSESS,
-                SLETT_PROSESS -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
+            NY_PROSESS,
+            ENDRE_PROSESS,
+            SLETT_PROSESS,
+            -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
 
-                else -> IASakshendelse(
-                    id = ULID.random(),
-                    opprettetTidspunkt = LocalDateTime.now(),
-                    saksnummer = dto.saksnummer,
-                    hendelsesType = dto.hendelsesType,
-                    orgnummer = dto.orgnummer,
-                    opprettetAv = saksbehandler.navIdent,
-                    opprettetAvRolle = saksbehandler.rolle,
-                    navEnhet = navEnhet,
-                    resulterendeStatus = null,
-                ).right()
-            }
+            else -> IASakshendelse(
+                id = ULID.random(),
+                opprettetTidspunkt = LocalDateTime.now(),
+                saksnummer = dto.saksnummer,
+                hendelsesType = dto.hendelsesType,
+                orgnummer = dto.orgnummer,
+                opprettetAv = saksbehandler.navIdent,
+                opprettetAvRolle = saksbehandler.rolle,
+                navEnhet = navEnhet,
+                resulterendeStatus = null,
+            ).right()
+        }
 
-        fun nyFørsteHendelse(orgnummer: String, superbruker: Superbruker, navEnhet: NavEnhet): IASakshendelse {
+        fun nyFørsteHendelse(
+            orgnummer: String,
+            superbruker: Superbruker,
+            navEnhet: NavEnhet,
+        ): IASakshendelse {
             val saksnummer = ULID.random()
             return IASakshendelse(
                 id = saksnummer,
@@ -66,26 +78,25 @@ open class IASakshendelse(
                 opprettetAv = superbruker.navIdent,
                 opprettetAvRolle = superbruker.rolle,
                 navEnhet = navEnhet,
-                resulterendeStatus = IAProsessStatus.NY
+                resulterendeStatus = IAProsessStatus.NY,
             )
         }
 
         fun IASak.nyHendelseBasertPåSak(
             hendelsestype: IASakshendelseType,
             superbruker: Superbruker,
-            navEnhet: NavEnhet
-        ) =
-            IASakshendelse(
-                id = ULID.random(),
-                opprettetTidspunkt = LocalDateTime.now(),
-                saksnummer = this.saksnummer,
-                hendelsesType = hendelsestype,
-                orgnummer = this.orgnr,
-                opprettetAv = superbruker.navIdent,
-                opprettetAvRolle = superbruker.rolle,
-                navEnhet = navEnhet,
-                resulterendeStatus = null,
-            )
+            navEnhet: NavEnhet,
+        ) = IASakshendelse(
+            id = ULID.random(),
+            opprettetTidspunkt = LocalDateTime.now(),
+            saksnummer = this.saksnummer,
+            hendelsesType = hendelsestype,
+            orgnummer = this.orgnr,
+            opprettetAv = superbruker.navIdent,
+            opprettetAvRolle = superbruker.rolle,
+            navEnhet = navEnhet,
+            resulterendeStatus = null,
+        )
     }
 
     @Serializable
@@ -95,7 +106,7 @@ open class IASakshendelse(
         val orgnummer: String,
         val saksnummer: String,
         val hendelsesType: IASakshendelseType,
-        val opprettetAv: String
+        val opprettetAv: String,
     )
 
     internal open fun tilKeyValueJsonPair(): Pair<String, String> {
@@ -106,7 +117,7 @@ open class IASakshendelse(
             orgnummer = orgnummer,
             saksnummer = saksnummer,
             hendelsesType = hendelsesType,
-            opprettetAv = opprettetAv
+            opprettetAv = opprettetAv,
         )
         return key to Json.encodeToString(value)
     }
@@ -121,30 +132,31 @@ class VirksomhetIkkeAktuellHendelse(
     opprettetAvRolle: Rolle?,
     navEnhet: NavEnhet,
     resulterendeStatus: IAProsessStatus?,
-    val valgtÅrsak: ValgtÅrsak
+    val valgtÅrsak: ValgtÅrsak,
 ) : IASakshendelse(
-    id,
-    opprettetTidspunkt = opprettetTidspunkt,
-    saksnummer = saksnummer,
-    hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
-    orgnummer = orgnummer,
-    opprettetAv = opprettetAv,
-    opprettetAvRolle = opprettetAvRolle,
-    navEnhet = navEnhet,
-    resulterendeStatus = resulterendeStatus
-) {
+        id,
+        opprettetTidspunkt = opprettetTidspunkt,
+        saksnummer = saksnummer,
+        hendelsesType = VIRKSOMHET_ER_IKKE_AKTUELL,
+        orgnummer = orgnummer,
+        opprettetAv = opprettetAv,
+        opprettetAvRolle = opprettetAvRolle,
+        navEnhet = navEnhet,
+        resulterendeStatus = resulterendeStatus,
+    ) {
     companion object {
         fun fromDto(
             dto: IASakshendelseDto,
             navAnsatt: NavAnsatt,
-            navEnhet: NavEnhet
+            navEnhet: NavEnhet,
         ): Either<Feil, VirksomhetIkkeAktuellHendelse> =
             dto.payload?.let { payload ->
 
                 try {
                     val valgtÅrsak: ValgtÅrsak = Json.decodeFromString(dto.payload)
-                    if (!valgtÅrsak.validerBegrunnelser())
+                    if (!valgtÅrsak.validerBegrunnelser()) {
                         return SaksHendelseFeil.`valgte begrunnelser tilhører ikke riktig årsak`.left()
+                    }
 
                     VirksomhetIkkeAktuellHendelse(
                         id = ULID.random(),
@@ -171,11 +183,14 @@ class VirksomhetIkkeAktuellHendelse(
         val saksnummer: String,
         val hendelsesType: IASakshendelseType,
         val opprettetAv: String,
-        val årsak: Årsak
+        val årsak: Årsak,
     )
 
     @Serializable
-    private data class Årsak(val type: String, val begrunnelser: List<String>)
+    private data class Årsak(
+        val type: String,
+        val begrunnelser: List<String>,
+    )
 
     override fun tilKeyValueJsonPair(): Pair<String, String> {
         val key = super.tilKeyValueJsonPair().first
@@ -186,7 +201,7 @@ class VirksomhetIkkeAktuellHendelse(
             orgnummer = orgnummer,
             hendelsesType = hendelsesType,
             saksnummer = saksnummer,
-            årsak = Årsak(type = valgtÅrsak.type.navn, begrunnelser = valgtÅrsak.begrunnelser.map { it.navn })
+            årsak = Årsak(type = valgtÅrsak.type.navn, begrunnelser = valgtÅrsak.begrunnelser.map { it.navn }),
         )
         return key to Json.encodeToString(value)
     }
@@ -202,20 +217,24 @@ class ProsessHendelse(
     opprettetAvRolle: Rolle?,
     navEnhet: NavEnhet,
     resulterendeStatus: IAProsessStatus?,
-    val prosessDto: IAProsessDto
+    val prosessDto: IAProsessDto,
 ) : IASakshendelse(
-    id,
-    opprettetTidspunkt,
-    saksnummer,
-    hendelsesType,
-    orgnummer,
-    opprettetAv,
-    opprettetAvRolle,
-    navEnhet,
-    resulterendeStatus
-) {
+        id,
+        opprettetTidspunkt,
+        saksnummer,
+        hendelsesType,
+        orgnummer,
+        opprettetAv,
+        opprettetAvRolle,
+        navEnhet,
+        resulterendeStatus,
+    ) {
     companion object {
-        fun fromDto(dto: IASakshendelseDto, navAnsatt: NavAnsatt, navEnhet: NavEnhet): Either<Feil, ProsessHendelse> =
+        fun fromDto(
+            dto: IASakshendelseDto,
+            navAnsatt: NavAnsatt,
+            navEnhet: NavEnhet,
+        ): Either<Feil, ProsessHendelse> =
             dto.payload?.let { payload ->
                 ProsessHendelse(
                     id = ULID.random(),
@@ -257,12 +276,12 @@ enum class IASakshendelseType {
 
     TILBAKE,
     FULLFØR_BISTAND,
-    SLETT_SAK
+    SLETT_SAK,
 }
 
 @Serializable
 class GyldigHendelse(
-    val saksHendelsestype: IASakshendelseType
+    val saksHendelsestype: IASakshendelseType,
 ) {
     val gyldigeÅrsaker: List<GyldigÅrsak> = when (saksHendelsestype) {
         VIRKSOMHET_ER_IKKE_AKTUELL -> GyldigÅrsak.from(saksHendelsestype)

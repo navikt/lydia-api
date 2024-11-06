@@ -6,13 +6,13 @@ import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
+import no.nav.lydia.helper.IATjenesteoversiktHelper
 import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverIATjeneste
 import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverModul
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilIATjeneste
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilModul
-import no.nav.lydia.helper.IATjenesteoversiktHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
@@ -44,7 +44,7 @@ class IATjenesteoversiktApiTest {
         sakVirksomhet1.opprettIASakLeveranse(frist = java.time.LocalDate.now().plusDays(10).toKotlinLocalDate(), 16)
     val leveranseFristFor10DagerSiden = sakVirksomhet2.opprettIASakLeveranse(
         frist = java.time.LocalDate.now().minusDays(10).toKotlinLocalDate(),
-        AKTIV_MODUL.id
+        AKTIV_MODUL.id,
     )
     val fullførtLeveranse =
         sakVirksomhet2.opprettIASakLeveranse(frist = java.time.LocalDate.now().toKotlinLocalDate(), 16)
@@ -120,7 +120,9 @@ class IATjenesteoversiktApiTest {
         val virksomhet1 = VirksomhetHelper.lastInnNyVirksomhet()
         val leveranseIAvsluttetSak =
             SakHelper.nySakIViBistår(orgnummer = virksomhet1.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
-        TestContainerHelper.postgresContainer.performUpdate("UPDATE ia_sak SET status = 'FULLFØRT' WHERE saksnummer = '${leveranseIAvsluttetSak.saksnummer}'")
+        TestContainerHelper.postgresContainer.performUpdate(
+            "UPDATE ia_sak SET status = 'FULLFØRT' WHERE saksnummer = '${leveranseIAvsluttetSak.saksnummer}'",
+        )
 
         val virksomhet2 = VirksomhetHelper.lastInnNyVirksomhet()
         val leveranseIÅpenSak =
@@ -134,7 +136,9 @@ class IATjenesteoversiktApiTest {
         }
 
         // rydd opp
-        TestContainerHelper.postgresContainer.performUpdate("delete from iasak_leveranse where saksnummer = '${leveranseIAvsluttetSak.saksnummer}'")
+        TestContainerHelper.postgresContainer.performUpdate(
+            "delete from iasak_leveranse where saksnummer = '${leveranseIAvsluttetSak.saksnummer}'",
+        )
         leveranseIÅpenSak.slettIASakLeveranse(virksomhet2.orgnr, saksbehandlerToken)
     }
 }

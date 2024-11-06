@@ -29,6 +29,7 @@ data class Virksomhet(
 )
 
 enum class VirksomhetStatus {
-    AKTIV, FJERNET, SLETTET
+    AKTIV,
+    FJERNET,
+    SLETTET,
 }
-

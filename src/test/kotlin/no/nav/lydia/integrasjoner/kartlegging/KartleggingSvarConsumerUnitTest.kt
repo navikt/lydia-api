@@ -1,11 +1,10 @@
 package no.nav.lydia.integrasjoner.kartlegging
 
 import io.kotest.matchers.shouldBe
-import java.util.UUID
-import kotlin.test.Test
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer.Companion.erSpørreundersøkelseSvarMeldingenGyldig
 import org.apache.kafka.clients.consumer.ConsumerRecord
-
+import java.util.UUID
+import kotlin.test.Test
 
 class KartleggingSvarConsumerUnitTest {
     @Test
@@ -17,8 +16,8 @@ class KartleggingSvarConsumerUnitTest {
                 0L,
                 "{}",
                 "{" +
-                        "}"
-            )
+                    "}",
+            ),
         ) shouldBe false
     }
 
@@ -38,8 +37,8 @@ class KartleggingSvarConsumerUnitTest {
                 "svarIder": ["${UUID.randomUUID()}", "${UUID.randomUUID()}"] 
                 }
                 
-            """.trimIndent()
-            )
+                """.trimIndent(),
+            ),
         ) shouldBe true
     }
 
@@ -59,8 +58,8 @@ class KartleggingSvarConsumerUnitTest {
                 "svarId": "${UUID.randomUUID()}" 
                 }
                 
-            """.trimIndent()
-            )
+                """.trimIndent(),
+            ),
         ) shouldBe false
     }
 
@@ -79,8 +78,8 @@ class KartleggingSvarConsumerUnitTest {
                 "svarId": "${UUID.randomUUID()}" 
                 }
                 
-            """.trimIndent()
-            )
+                """.trimIndent(),
+            ),
         ) shouldBe false
     }
 }

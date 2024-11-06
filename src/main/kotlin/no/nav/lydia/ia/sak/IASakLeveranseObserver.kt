@@ -4,7 +4,9 @@ import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 
-class IASakLeveranseObserver(private val iaSakRepository: IASakRepository) : Observer<IASakLeveranse> {
+class IASakLeveranseObserver(
+    private val iaSakRepository: IASakRepository,
+) : Observer<IASakLeveranse> {
     override fun receive(input: IASakLeveranse) {
         iaSakRepository.hentIASak(input.saksnummer)?.let { iaSak ->
             iaSakRepository.oppdaterSistEndret(iaSak)

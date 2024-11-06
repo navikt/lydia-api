@@ -10,14 +10,11 @@ data class PlanRessursDto(
     val url: String?,
 )
 
-fun List<PlanRessurs>.tilDtoer(): List<PlanRessursDto> {
-    return map { it.tilDto() }
-}
+fun List<PlanRessurs>.tilDtoer(): List<PlanRessursDto> = map { it.tilDto() }
 
-fun PlanRessurs.tilDto(): PlanRessursDto {
-    return PlanRessursDto(
+fun PlanRessurs.tilDto(): PlanRessursDto =
+    PlanRessursDto(
         id = id,
         beskrivelse = beskrivelse,
         url = url,
     )
-}

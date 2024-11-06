@@ -4,10 +4,10 @@ data class IAProsess(
     val id: Int,
     val saksnummer: String,
     val navn: String?,
-    val status: IAProsessStatus?
+    val status: IAProsessStatus?,
 )
 
 enum class IAProsessStatus {
     AKTIV,
-    SLETTET
+    SLETTET,
 }

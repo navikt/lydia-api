@@ -111,29 +111,27 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på sykefraværsprosent UNDER eller lik BRANSJE`() {
-        val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 8.0
-        val BRANSJE_SYKEHJEM_PROSENT = 6.0
         settSykefraværsprosentNæring(
             NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON,
-            NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT
+            NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT,
         )
         settSykefraværsprosentBransje(Bransje.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
-            5.0
+            5.0,
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Somatiske sykehjem", "87.102"),
-            6.0
+            6.0,
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Somatiske sykehjem", "87.102"),
-            7.0
+            7.0,
         )
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-            bransjeProgram = Bransje.SYKEHJEM.name
+            bransjeProgram = Bransje.SYKEHJEM.name,
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
@@ -142,29 +140,27 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på sykefraværsprosent OVER BRANSJE`() {
-        val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 4.0
-        val BRANSJE_SYKEHJEM_PROSENT = 6.0
         settSykefraværsprosentNæring(
             NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON,
-            NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT
+            (NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT / 2),
         )
         settSykefraværsprosentBransje(Bransje.SYKEHJEM, BRANSJE_SYKEHJEM_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Somatiske spesialsykehjem", "87.101"),
-            5.0
+            5.0,
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Somatiske sykehjem", "87.102"),
-            6.0
+            6.0,
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Somatiske sykehjem", "87.102"),
-            7.0
+            7.0,
         )
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-            bransjeProgram = Bransje.SYKEHJEM.name
+            bransjeProgram = Bransje.SYKEHJEM.name,
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
@@ -173,20 +169,19 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på sykefraværsprosent UNDER eller lik næring`() {
-        val NÆRING_JORDBRUK_PROSENT = 6.0
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Dyrking av ris", "01.120"),
-            4.0
+            4.0,
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Planteformering", "01.300"),
-            15.0
+            15.0,
         )
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-            næringsgrupper = NÆRING_JORDBRUK
+            næringsgrupper = NÆRING_JORDBRUK,
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
@@ -195,31 +190,28 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på sykefraværsprosent UNDER eller lik næring (flere næringer)`() {
-        val NÆRING_JORDBRUK_PROSENT = 6.0
-        val NÆRING_SKOGBRUK_PROSENT = 8.5
-
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         val virksomhetLikSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Dyrking av ris", "01.120"),
-            6.0
+            6.0,
         )
         val virksomhetOverSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Planteformering", "01.300"),
-            15.0
+            15.0,
         )
         settSykefraværsprosentNæring(NÆRING_SKOGBRUK, NÆRING_SKOGBRUK_PROSENT)
         val virksomhetUnderSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
-            8.4
+            8.4,
         )
         val virksomhetOverSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Avvirkning", "02.200"),
-            8.6
+            8.6,
         )
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_UNDER_ELLER_LIK.name,
-            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
+            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," },
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
@@ -232,20 +224,19 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på sykefraværsprosent over næring`() {
-        val NÆRING_JORDBRUK_PROSENT = 6.0
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Dyrking av ris", "01.120"),
-            4.0
+            4.0,
         )
         lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Planteformering", "01.300"),
-            15.0
+            15.0,
         )
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-            næringsgrupper = NÆRING_JORDBRUK
+            næringsgrupper = NÆRING_JORDBRUK,
         ).data
 
         results.size shouldBeGreaterThanOrEqual 1
@@ -254,31 +245,28 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på sykefraværsprosent over næring (flere næringer)`() {
-        val NÆRING_JORDBRUK_PROSENT = 6.0
-        val NÆRING_SKOGBRUK_PROSENT = 8.5
-
         settSykefraværsprosentNæring(NÆRING_JORDBRUK, NÆRING_JORDBRUK_PROSENT)
         val virksomhetUnderSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Dyrking av ris", "01.120"),
-            4.0
+            4.0,
         )
         val virksomhetOverSnittJordbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Planteformering", "01.300"),
-            15.0
+            15.0,
         )
         settSykefraværsprosentNæring(NÆRING_SKOGBRUK, NÆRING_SKOGBRUK_PROSENT)
         val virksomhetUnderSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Skogskjøtsel og andre skogbruksaktiviteter", "02.100"),
-            8.4
+            8.4,
         )
         val virksomhetOverSnittSkogbruk = lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             Næringsgruppe("Avvirkning", "02.200"),
-            8.6
+            8.6,
         )
 
         val results = hentSykefravær(
             snittFilter = SnittFilter.BRANSJE_NÆRING_OVER.name,
-            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," }
+            næringsgrupper = listOf(NÆRING_JORDBRUK, NÆRING_SKOGBRUK).joinToString { "," },
         ).data
 
         results.size shouldBeGreaterThanOrEqual 2
@@ -297,11 +285,12 @@ class SykefraværsstatistikkApiTest {
         sykefraværstatistikkKommunalSektor.forAll { sykefraværstatistikk ->
             hentVirksomhetsinformasjon(
                 orgnummer = sykefraværstatistikk.orgnr,
-                token = mockOAuth2Server.saksbehandler1.token
+                token = mockOAuth2Server.saksbehandler1.token,
             ).sektor shouldBe Sektor.KOMMUNAL.beskrivelse
         }
 
-        hentTotaltAntallTreffISykefravær(sektor = listOf(Sektor.KOMMUNAL)) shouldBeGreaterThanOrEqual sykefraværstatistikkKommunalSektor.size
+        hentTotaltAntallTreffISykefravær(sektor = listOf(Sektor.KOMMUNAL)) shouldBeGreaterThanOrEqual
+            sykefraværstatistikkKommunalSektor.size
     }
 
     @Test
@@ -352,7 +341,7 @@ class SykefraværsstatistikkApiTest {
             },
             sorteringsnokkel = sorteringsnøkkel,
             sorteringsretning = "desc",
-            token = mockOAuth2Server.saksbehandler1.token
+            token = mockOAuth2Server.saksbehandler1.token,
         )
 
         hentSykefravær(success = { response ->
@@ -397,7 +386,7 @@ class SykefraværsstatistikkApiTest {
             },
             kommuner = testKommune.nummer,
             sorteringsnokkel = sorteringsnøkkel,
-            sorteringsretning = "asc"
+            sorteringsretning = "asc",
         )
     }
 
@@ -409,7 +398,7 @@ class SykefraværsstatistikkApiTest {
 
         val sykefraværsprosentSiste4Kvartal = postgresContainer.hentEnkelKolonne<Double>(
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer' " +
-                    "order by publisert_arstall desc, publisert_kvartal desc"
+                "order by publisert_arstall desc, publisert_kvartal desc",
         )
         sykefraværsprosent shouldBe sykefraværsprosentSiste4Kvartal
     }
@@ -437,7 +426,6 @@ class SykefraværsstatistikkApiTest {
             it.navn shouldBe "Deatnu"
             it.navnNorsk shouldBe "Tana"
         }
-
     }
 
     @Test
@@ -456,8 +444,8 @@ class SykefraværsstatistikkApiTest {
         filterverdier.filtrerbareEiere shouldBe listOf(
             EierDTO(
                 navIdent = saksbehandler1.navIdent,
-                navn = saksbehandler1.navn
-            )
+                navn = saksbehandler1.navn,
+            ),
         )
         filterverdier.sektorer.map { it.kode } shouldBe Sektor.entries
             .map { it.kode }
@@ -488,7 +476,7 @@ class SykefraværsstatistikkApiTest {
             "M54321",
             "S54321",
             "S64321",
-            "R54321"
+            "R54321",
         )
     }
 
@@ -546,7 +534,7 @@ class SykefraværsstatistikkApiTest {
                         it shouldBe LUNNER.nummer
                     }
                 }
-            }
+            },
         )
     }
 
@@ -572,13 +560,13 @@ class SykefraværsstatistikkApiTest {
             response.data.forAll {
                 postgresContainer.hentEnkelKolonne<Int>(
                     """
-                        SELECT count(*) FROM virksomhet AS v JOIN virksomhet_naringsundergrupper AS vn ON (v.id = vn.virksomhet)
-                        WHERE v.orgnr = '${it.orgnr}' AND (
-                        vn.naringsundergruppe1 = '${SCENEKUNST.kode}' 
-                        OR vn.naringsundergruppe2 = '${SCENEKUNST.kode}' 
-                        OR vn.naringsundergruppe3 = '${SCENEKUNST.kode}'
-                        )
-                    """.trimIndent()
+                    SELECT count(*) FROM virksomhet AS v JOIN virksomhet_naringsundergrupper AS vn ON (v.id = vn.virksomhet)
+                    WHERE v.orgnr = '${it.orgnr}' AND (
+                    vn.naringsundergruppe1 = '${SCENEKUNST.kode}' 
+                    OR vn.naringsundergruppe2 = '${SCENEKUNST.kode}' 
+                    OR vn.naringsundergruppe3 = '${SCENEKUNST.kode}'
+                    )
+                    """.trimIndent(),
                 ) shouldBe 1
             }
         }, næringsgrupper = SCENEKUNST.kode)
@@ -590,7 +578,6 @@ class SykefraværsstatistikkApiTest {
             lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/?${Søkeparametere.NÆRINGSGRUPPER}=&fylker=&kommuner=")
                 .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
-
 
         val resultatUtenParametre =
             lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/")
@@ -618,7 +605,7 @@ class SykefraværsstatistikkApiTest {
             },
             kommuner = "$oslo,$nordreFollo",
             næringsgrupper = "${SCENEKUNST.tilTosifret()},${BEDRIFTSRÅDGIVNING.tilTosifret()}",
-            token = mockOAuth2Server.saksbehandler1.token
+            token = mockOAuth2Server.saksbehandler1.token,
         )
     }
 
@@ -708,7 +695,7 @@ class SykefraværsstatistikkApiTest {
         val virksomhet = lastInnNyVirksomhet(
             nyVirksomhet = nyVirksomhet(
                 næringer = listOf(næring),
-                navn = navn
+                navn = navn,
             ),
             sektor = Sektor.PRIVAT,
         )
@@ -739,7 +726,8 @@ class SykefraværsstatistikkApiTest {
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .tilSingelRespons<IASakDto>().third.fold(
                 success = { respons -> respons },
-                failure = { fail(it.message) })
+                failure = { fail(it.message) },
+            )
 
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
@@ -758,7 +746,6 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne paginere på ett statistikkresultat`() {
-
         hentSykefravær(success = { response1 ->
             response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
@@ -776,7 +763,6 @@ class SykefraværsstatistikkApiTest {
     fun `skal kunne hente totalt antall treff for et søk`() {
         hentTotaltAntallTreffISykefravær() shouldBe hentSykefraværForAlleVirksomheter().size
     }
-
 
     @Test
     fun `skal kunne filtrere virksomheter basert på sykefraværsprosent`() {
@@ -816,7 +802,7 @@ class SykefraværsstatistikkApiTest {
             success = {
                 it.data.size shouldBeGreaterThanOrEqual 1
                 it.data.forExactlyOne { dataVirksomhet -> dataVirksomhet.orgnr shouldBe virksomhet.orgnr }
-            }
+            },
         )
     }
 
@@ -837,9 +823,9 @@ class SykefraværsstatistikkApiTest {
                 it.data.map { virksomhet -> virksomhet.orgnr } shouldContainAll listOf(
                     virksomhet.orgnr,
                     virksomhet2.orgnr,
-                    virksomhet3.orgnr
+                    virksomhet3.orgnr,
                 )
-            }
+            },
         )
     }
 
@@ -858,7 +844,6 @@ class SykefraværsstatistikkApiTest {
         )
     }
 
-
     @Test
     fun `skal kunne filtrere på bare mine virksomheter`() {
         val testBruker1 = oauth2ServerContainer.superbruker1
@@ -866,10 +851,9 @@ class SykefraværsstatistikkApiTest {
         val ornummer1 = nyttOrgnummer()
         val ornummer2 = nyttOrgnummer()
 
-
         listOf(
             Pair(testBruker1, ornummer1),
-            Pair(testBruker2, ornummer2)
+            Pair(testBruker2, ornummer2),
         ).forEach { (bruker, virksomhet) ->
             opprettSakForVirksomhet(virksomhet, bruker.token)
                 .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker.token)
@@ -883,7 +867,7 @@ class SykefraværsstatistikkApiTest {
                     .forAll {
                         it.eidAv shouldBe testBruker1.navIdent
                     }
-            }
+            },
         )
         hentSykefravær(
             token = testBruker1.token,
@@ -899,7 +883,7 @@ class SykefraværsstatistikkApiTest {
                         it.eidAv shouldBe testBruker2.navIdent
                         it.orgnr shouldBe ornummer2
                     }
-            }
+            },
         )
     }
 
@@ -913,20 +897,20 @@ class SykefraværsstatistikkApiTest {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
 
-        val `sykefravær når saksbehandler filterer på seg selv` = hentSykefravær(
+        val sykefraværNårSaksbehandlerFiltrerPåSegSelv = hentSykefravær(
             eiere = saksbehandler1.navIdent,
-            token = saksbehandler1.token
+            token = saksbehandler1.token,
         ).data
-        val `sykefravær når superbruker filtrerer på seg selv` = hentSykefravær(
+        val sykefraværNårSuperbrukerFiltrererPåSegSelv = hentSykefravær(
             eiere = superbruker1.navIdent,
-            token = superbruker1.token
+            token = superbruker1.token,
         ).data
 
-        `sykefravær når saksbehandler filterer på seg selv`
+        sykefraværNårSaksbehandlerFiltrerPåSegSelv
             .forAll {
                 it.eidAv shouldBe saksbehandler1.navIdent
             }
-        `sykefravær når superbruker filtrerer på seg selv`
+        sykefraværNårSuperbrukerFiltrererPåSegSelv
             .forAll {
                 it.eidAv shouldBe superbruker1.navIdent
             }
@@ -945,16 +929,16 @@ class SykefraværsstatistikkApiTest {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
 
-        val `sykefravær når superbruker filterer på seg selv og saksbehandler1` = hentSykefravær(
+        val sykefraværNårSuperbrukerFiltrererPåSegSelvOgSaksbehandler1 = hentSykefravær(
             eiere = "${superbruker1.navIdent},${saksbehandler1.navIdent}",
             token = superbruker1.token,
         ).data
 
-        `sykefravær når superbruker filterer på seg selv og saksbehandler1`
+        sykefraværNårSuperbrukerFiltrererPåSegSelvOgSaksbehandler1
             .forNone {
                 it.eidAv shouldBe saksbehandler2.navIdent
             }
-        `sykefravær når superbruker filterer på seg selv og saksbehandler1`
+        sykefraværNårSuperbrukerFiltrererPåSegSelvOgSaksbehandler1
             .forAll {
                 listOf(superbruker1.navIdent, saksbehandler1.navIdent) shouldContain it.eidAv
             }
@@ -970,7 +954,7 @@ class SykefraværsstatistikkApiTest {
 
         hentSykefravær(
             eiere = saksbehandler1.navIdent,
-            token = superbruker1.token
+            token = superbruker1.token,
         ).data.forAll {
             it.eidAv shouldBe saksbehandler1.navIdent
         }
@@ -987,32 +971,32 @@ class SykefraværsstatistikkApiTest {
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = superbruker1.token)
 
         val ufiltrertSykefravær = hentSykefravær(token = saksbehandler1.token).data
-        val `sykefravær filtrert på brukeren selv` = hentSykefravær(
+        val sykefraværFiltrertPåBrukerenSelv = hentSykefravær(
             eiere = saksbehandler1.navIdent,
-            token = saksbehandler1.token
+            token = saksbehandler1.token,
         ).data
-        val `sykefravær filtrert på en annen eier` = hentSykefravær(
+        val sykefraværFiltrertPåEnAnnenEier = hentSykefravær(
             eiere = superbruker1.navIdent,
-            token = saksbehandler1.token
+            token = saksbehandler1.token,
         ).data
 
-        `sykefravær filtrert på en annen eier` shouldBe ufiltrertSykefravær
-        `sykefravær filtrert på brukeren selv` shouldNotBe ufiltrertSykefravær
+        sykefraværFiltrertPåEnAnnenEier shouldBe ufiltrertSykefravær
+        sykefraværFiltrertPåBrukerenSelv shouldNotBe ufiltrertSykefravær
     }
 
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {
         hentSykefraværRespons(
-            token = mockOAuth2Server.lesebruker.token
+            token = mockOAuth2Server.lesebruker.token,
         ).statuskode() shouldBe 200
         hentSykefraværRespons(
-            token = mockOAuth2Server.saksbehandler1.token
+            token = mockOAuth2Server.saksbehandler1.token,
         ).statuskode() shouldBe 200
         hentSykefraværRespons(
-            token = mockOAuth2Server.superbruker1.token
+            token = mockOAuth2Server.superbruker1.token,
         ).statuskode() shouldBe 200
         hentSykefraværRespons(
-            token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+            token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
         ).statuskode() shouldBe 403
     }
 
@@ -1021,19 +1005,19 @@ class SykefraværsstatistikkApiTest {
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.lesebruker.token
+            token = mockOAuth2Server.lesebruker.token,
         ).statuskode() shouldBe 200
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.saksbehandler1.token
+            token = mockOAuth2Server.saksbehandler1.token,
         ).statuskode() shouldBe 200
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.superbruker1.token
+            token = mockOAuth2Server.superbruker1.token,
         ).statuskode() shouldBe 200
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+            token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
         ).statuskode() shouldBe 403
     }
 
@@ -1072,7 +1056,6 @@ class SykefraværsstatistikkApiTest {
         hentSykefravær(kommuner = testKommune.nummer).also {
             it.data.single().sistEndret shouldBe sak.endretTidspunkt?.date
         }
-
     }
 
     @Test
@@ -1134,6 +1117,11 @@ class SykefraværsstatistikkApiTest {
     }
 
     companion object {
+        private val NÆRING_JORDBRUK_PROSENT = 6.0
+        private val NÆRING_SKOGBRUK_PROSENT = 8.5
+        private val BRANSJE_SYKEHJEM_PROSENT = 6.0
+        private val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 8.0
+
         private val sistePubliserteKvartal: SistePubliserteKvartal =
             SistePubliserteKvartal(
                 årstall = gjeldendePeriode.årstall,
@@ -1142,7 +1130,7 @@ class SykefraværsstatistikkApiTest {
                 muligeDagsverk = 10104849.1,
                 prosent = 6.0,
                 erMaskert = false,
-                antallPersoner = 3000001
+                antallPersoner = 3000001,
             )
         private val siste4Kvartal: Siste4Kvartal =
             Siste4Kvartal(
@@ -1150,16 +1138,16 @@ class SykefraværsstatistikkApiTest {
                 muligeDagsverk = 578099000.3,
                 prosent = 5.4,
                 erMaskert = false,
-                kvartaler = listOf(gjeldendePeriode.tilKvartal())
+                kvartaler = listOf(gjeldendePeriode.tilKvartal()),
             )
 
         fun lagVirksomhetMedNæringsundergruppeOgSykefraværsprosent(
             næringsundergruppe: Næringsgruppe,
-            prosent: Double
+            prosent: Double,
         ): String {
             val virksomhet = lastInnNyVirksomhet(
                 nyVirksomhet = nyVirksomhet(næringer = listOf(næringsundergruppe)),
-                sykefraværsProsent = prosent
+                sykefraværsProsent = prosent,
             )
             return virksomhet.orgnr
         }
@@ -1167,86 +1155,89 @@ class SykefraværsstatistikkApiTest {
         fun settSykefraværsprosentNæring(
             næring: String,
             prosentSiste4Kvartal: Double,
-            prosentSistePubliserteKvartal: Double = 2.0
+            prosentSistePubliserteKvartal: Double = 2.0,
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                 kategori = Kategori.NÆRING,
                 kode = næring,
                 kvartal = gjeldendePeriode.tilKvartal(),
                 sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
-                Topic.STATISTIKK_NARING_TOPIC
+                Topic.STATISTIKK_NARING_TOPIC,
             )
         }
 
         fun settSykefraværsprosentBransje(
             bransje: Bransje,
             prosentSiste4Kvartal: Double,
-            prosentSistePubliserteKvartal: Double = 2.0
+            prosentSistePubliserteKvartal: Double = 2.0,
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                 kategori = Kategori.BRANSJE,
                 kode = bransje.name.uppercase(),
                 kvartal = gjeldendePeriode.tilKvartal(),
                 sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
-                Topic.STATISTIKK_BRANSJE_TOPIC
+                Topic.STATISTIKK_BRANSJE_TOPIC,
             )
         }
 
         fun settSykefraværsprosentSektor(
             sektor: Sektor,
             prosentSiste4Kvartal: Double,
-            prosentSistePubliserteKvartal: Double = 2.0
+            prosentSistePubliserteKvartal: Double = 2.0,
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                 kategori = Kategori.SEKTOR,
                 kode = sektor.kode,
                 kvartal = gjeldendePeriode.tilKvartal(),
                 sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
-                Topic.STATISTIKK_SEKTOR_TOPIC
+                Topic.STATISTIKK_SEKTOR_TOPIC,
             )
         }
 
         fun settSykefraværsprosentLand(
             prosentSiste4Kvartal: Double,
-            prosentSistePubliserteKvartal: Double = 2.0
+            prosentSistePubliserteKvartal: Double = 2.0,
         ) {
             val kafkaMelding = SykefraværsstatistikkImportTestUtils.JsonMelding(
                 kategori = Kategori.LAND,
                 kode = LANDKODE_NO,
                 kvartal = gjeldendePeriode.tilKvartal(),
                 sistePubliserteKvartal = sistePubliserteKvartal.copy(prosent = prosentSistePubliserteKvartal),
-                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal)
+                siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
             TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
-                Topic.STATISTIKK_LAND_TOPIC
+                Topic.STATISTIKK_LAND_TOPIC,
             )
         }
     }
 }
 
-private fun <T> VirksomhetsoversiktDto.matcher(kolonne: String, test: (kolonne: T) -> Unit) {
+private fun <T> VirksomhetsoversiktDto.matcher(
+    kolonne: String,
+    test: (kolonne: T) -> Unit,
+) {
     test(
-        postgresContainer.hentEnkelKolonne("select $kolonne from virksomhet where orgnr = '$orgnr'")
+        postgresContainer.hentEnkelKolonne("select $kolonne from virksomhet where orgnr = '$orgnr'"),
     )
 }

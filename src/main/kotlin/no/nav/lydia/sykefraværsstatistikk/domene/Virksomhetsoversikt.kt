@@ -15,6 +15,5 @@ data class Virksomhetsoversikt(
     val maskert: Boolean,
     val status: IAProsessStatus?,
     val eidAv: String?,
-    val sistEndret: LocalDate?
+    val sistEndret: LocalDate?,
 )
-

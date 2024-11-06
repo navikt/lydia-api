@@ -146,8 +146,9 @@ class IASakService(
             }
             ENDRE_PROSESS, NY_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
-                if (prosessDto.navn != null && prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
+                if (prosessDto.navn != null && prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
                     return IAProsessFeil.`ugyldig samarbeidsnavn`.left()
+                }
             }
             else -> {}
         }

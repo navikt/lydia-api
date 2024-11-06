@@ -13,12 +13,12 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
-import java.util.*
+import java.util.TimeZone
 import kotlin.test.fail
 
 class PiaPdfgenContainerHelper(
     network: Network = Network.newNetwork(),
-    log: Logger = LoggerFactory.getLogger(PiaPdfgenContainerHelper::class.java)
+    log: Logger = LoggerFactory.getLogger(PiaPdfgenContainerHelper::class.java),
 ) {
     val piaPdfgenContainer: GenericContainer<*>
     val piaPdfgenNetworkAlias = "pia-pdfgen"
@@ -26,40 +26,43 @@ class PiaPdfgenContainerHelper(
     val baseUrl = "http://$piaPdfgenNetworkAlias:$port"
 
     init {
-        piaPdfgenContainer = GenericContainer(ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-            builder.from("ghcr.io/navikt/pia-pdfgen:v1.0.0-rc.4")
-                .env(
-                    mapOf(
-                        "TZ" to TimeZone.getDefault().id,
+        piaPdfgenContainer = GenericContainer(
+            ImageFromDockerfile().withDockerfileFromBuilder { builder ->
+                builder.from("ghcr.io/navikt/pia-pdfgen:v1.0.0-rc.4")
+                    .env(
+                        mapOf(
+                            "TZ" to TimeZone.getDefault().id,
+                        ),
                     )
-                )
-        })
+            },
+        )
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("pia-pdfgen").withSeparateOutputStreams())
             .withNetwork(network)
             .withExposedPorts(port.toInt())
             .withNetworkAliases(piaPdfgenNetworkAlias)
             .withCreateContainerCmdModifier { cmd -> cmd.withName("$piaPdfgenNetworkAlias-${System.currentTimeMillis()}") }
             .waitingFor(
-                HostPortWaitStrategy()
+                HostPortWaitStrategy(),
             ).apply {
                 start()
             }
     }
 
-    fun envVars(): Map<String, String> {
-        return mapOf(
-            "PIA_PDFGEN_URL" to baseUrl
+    fun envVars(): Map<String, String> =
+        mapOf(
+            "PIA_PDFGEN_URL" to baseUrl,
         )
-    }
 
-    fun hentBistandPdf(bistand: IASamarbeidDto) =
-        hentPdf(PdfType.IA_SAMARBEID, Json.encodeToString<IASamarbeidDto>(bistand))
+    fun hentBistandPdf(bistand: IASamarbeidDto) = hentPdf(PdfType.IA_SAMARBEID, Json.encodeToString<IASamarbeidDto>(bistand))
 
-    private fun hentPdf(pdfType: PdfType, json: String): ByteArray =
+    private fun hentPdf(
+        pdfType: PdfType,
+        json: String,
+    ): ByteArray =
         piaPdfgenContainer.performPost("/api/v1/genpdf/pia/${pdfType.type}")
             .jsonBody(json)
             .response().third.fold(
                 success = { it },
-                failure = { fail(it.message) }
+                failure = { fail(it.message) },
             )
 }

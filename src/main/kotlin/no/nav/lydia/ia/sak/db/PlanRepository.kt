@@ -4,8 +4,6 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import java.util.UUID
-import javax.sql.DataSource
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -28,6 +26,8 @@ import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import java.util.UUID
+import javax.sql.DataSource
 
 class PlanRepository(
     val dataSource: DataSource,
@@ -175,7 +175,7 @@ class PlanRepository(
                           from ia_sak_plan 
                         JOIN ia_prosess on ia_sak_plan.ia_prosess = ia_prosess.id 
                         JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
-                    """.trimMargin()
+                    """.trimMargin(),
                 ).map { row: Row ->
                     val planId = UUID.fromString(row.string("plan_id"))
 
@@ -217,11 +217,10 @@ class PlanRepository(
             )
         }
 
-
     private fun hentSamarbeidsplanOgMapTilKafkaMld(
         planId: UUID,
         session: Session,
-        row: Row
+        row: Row,
     ): SamarbeidsplanKafkaMelding {
         val plan = hentPlan(planId = planId, session = session)
         val startDato = plan?.startDato()
@@ -243,14 +242,17 @@ class PlanRepository(
         )
     }
 
-    private fun hentPlan(planId: UUID, session: Session): Plan? =
+    private fun hentPlan(
+        planId: UUID,
+        session: Session,
+    ): Plan? =
         session.run(
             queryOf(
                 """
                         SELECT *
                         FROM ia_sak_plan
                         WHERE plan_id = :planId
-                    """.trimMargin(),
+                """.trimMargin(),
                 mapOf(
                     "planId" to planId.toString(),
                 ),
@@ -484,11 +486,11 @@ class PlanRepository(
                     UPDATE ia_sak_plan SET
                       sist_endret = now()
                     WHERE plan_id = :planId
-                """.trimIndent(),
+                    """.trimIndent(),
                     mapOf(
-                        "planId" to plan.id.toString()
-                    )
-                ).asUpdate
+                        "planId" to plan.id.toString(),
+                    ),
+                ).asUpdate,
             )
         }
 }

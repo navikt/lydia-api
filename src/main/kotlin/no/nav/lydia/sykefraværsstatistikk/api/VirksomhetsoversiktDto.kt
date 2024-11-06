@@ -19,12 +19,10 @@ data class VirksomhetsoversiktDto(
     val tapteDagsverk: Double,
     val status: IAProsessStatus,
     val eidAv: String?,
-    val sistEndret: LocalDate?
+    val sistEndret: LocalDate?,
 ) {
-
     companion object {
-        fun List<Virksomhetsoversikt>.toDto(): List<VirksomhetsoversiktDto> =
-            this.map { it.toDto() }
+        fun List<Virksomhetsoversikt>.toDto(): List<VirksomhetsoversiktDto> = this.map { it.toDto() }
 
         fun Virksomhetsoversikt.toDto(): VirksomhetsoversiktDto =
             VirksomhetsoversiktDto(
@@ -40,7 +38,7 @@ data class VirksomhetsoversiktDto(
                 tapteDagsverk = this.tapteDagsverk,
                 status = this.status ?: IAProsessStatus.IKKE_AKTIV,
                 eidAv = this.eidAv,
-                sistEndret = this.sistEndret
+                sistEndret = this.sistEndret,
             )
     }
 }

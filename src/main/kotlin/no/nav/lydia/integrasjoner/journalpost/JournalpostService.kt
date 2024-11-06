@@ -39,7 +39,7 @@ class JournalpostService(
 
     fun journalfør(
         sakshendelse: IASakshendelse,
-        navAnsattMedSaksbehandlerRolle: NavAnsatt.NavAnsattMedSaksbehandlerRolle
+        navAnsattMedSaksbehandlerRolle: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
     ): Either<Feil, JournalpostResultatDto> {
         val virksomhet = virksomhetRepository.hentVirksomhet(sakshendelse.orgnummer)
             ?: return JournalpostFeil.FantIkkeVirksomhet.left()
@@ -49,13 +49,13 @@ class JournalpostService(
                 dato = ZonedDateTime.now().toString(),
                 virksomhet = VirksomhetDto(
                     orgnummer = virksomhet.orgnr,
-                    navn = virksomhet.navn
+                    navn = virksomhet.navn,
                 ),
                 sak = SakDto(
                     saksnummer = sakshendelse.saksnummer,
-                    navenhet = sakshendelse.navEnhet.enhetsnavn
-                )
-            )
+                    navenhet = sakshendelse.navEnhet.enhetsnavn,
+                ),
+            ),
         )
 
         return pdf.flatMap { base64EnkodetPdf ->
@@ -69,7 +69,7 @@ class JournalpostService(
     private fun journalpostDto(
         sakshendelse: IASakshendelse,
         virksomhet: Virksomhet,
-        pdf: String
+        pdf: String,
     ): JournalpostDto {
         val journalpostDto = JournalpostDto(
             eksternReferanseId = sakshendelse.id,
@@ -90,7 +90,7 @@ class JournalpostService(
             sak = Sak(
                 sakstype = Sakstype.FAGSAK,
                 fagsakId = sakshendelse.saksnummer,
-                fagsaksystem = FagsakSystem.FIA
+                fagsaksystem = FagsakSystem.FIA,
             ),
             dokumenter = listOf(
                 Dokument(
@@ -99,42 +99,41 @@ class JournalpostService(
                         DokumentVariant(
                             filtype = FilType.PDFA,
                             variantformat = Variantformat.ARKIV,
-                            fysiskDokument = pdf
-                        )
-                    )
-                )
-            )
+                            fysiskDokument = pdf,
+                        ),
+                    ),
+                ),
+            ),
         )
         return journalpostDto
     }
 
     private fun journalfør(
         journalpostDto: JournalpostDto,
-        accessToken: String
-    ) =
-        url.httpPost(listOf("forsoekFerdigstill" to true))
-            .jsonBody(Json.encodeToString<JournalpostDto>(journalpostDto))
-            .authentication().bearer(accessToken)
-            .response().third.fold(
-                success = {
-                    val resultat = json.decodeFromString<JournalpostResultatDto>(it.toString(charset = Charsets.UTF_8))
-                    log.info("Journalførte $resultat")
-                    resultat.right()
-                },
-                failure = {
-                    log.error("Klarte ikke å journalføre", it)
-                    JournalpostFeil.FeillendeJournalpost.left()
-                }
-            )
+        accessToken: String,
+    ) = url.httpPost(listOf("forsoekFerdigstill" to true))
+        .jsonBody(Json.encodeToString<JournalpostDto>(journalpostDto))
+        .authentication().bearer(accessToken)
+        .response().third.fold(
+            success = {
+                val resultat = json.decodeFromString<JournalpostResultatDto>(it.toString(charset = Charsets.UTF_8))
+                log.info("Journalførte $resultat")
+                resultat.right()
+            },
+            failure = {
+                log.error("Klarte ikke å journalføre", it)
+                JournalpostFeil.FeillendeJournalpost.left()
+            },
+        )
 
     object JournalpostFeil {
         val FeillendeJournalpost = Feil(
             feilmelding = "Klarte ikke å journalføre",
-            httpStatusCode = HttpStatusCode.InternalServerError
+            httpStatusCode = HttpStatusCode.InternalServerError,
         )
         val FantIkkeVirksomhet = Feil(
             feilmelding = "Fant ikke virksomhet",
-            httpStatusCode = HttpStatusCode.InternalServerError
+            httpStatusCode = HttpStatusCode.InternalServerError,
         )
     }
 }

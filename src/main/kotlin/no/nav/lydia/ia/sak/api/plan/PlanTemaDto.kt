@@ -14,12 +14,11 @@ data class PlanTemaDto(
 
 fun List<PlanTema>.tilDtoer() = map { it.tilDto() }
 
-fun PlanTema.tilDto(): PlanTemaDto {
-    return PlanTemaDto(
+fun PlanTema.tilDto(): PlanTemaDto =
+    PlanTemaDto(
         id = id,
         navn = navn,
         inkludert = inkludert,
         undertemaer = undertemaer.tilDtoer(),
-        ressurser = ressurser.tilDtoer()
+        ressurser = ressurser.tilDtoer(),
     )
-}

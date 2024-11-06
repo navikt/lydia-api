@@ -10,9 +10,8 @@ import java.io.InputStreamReader
 
 class NæringsDownloader(
     val url: String,
-    val næringsRepository: NæringsRepository
+    val næringsRepository: NæringsRepository,
 ) {
-
     private val log = LoggerFactory.getLogger(this.javaClass)
 
     fun lastInnNæringerFraFil() {
@@ -21,8 +20,9 @@ class NæringsDownloader(
             val gson = GsonBuilder().serializeNulls().create()
             JsonReader(InputStreamReader(stream)).use { reader ->
                 reader.beginObject()
-                while (reader.hasNext() && !reader.nextName().equals("classificationItems"))
+                while (reader.hasNext() && !reader.nextName().equals("classificationItems")) {
                     reader.skipValue()
+                }
                 reader.beginArray()
                 while (reader.hasNext()) {
                     val næringsDto = gson.fromJson<NæringsDto>(reader, NæringsDto::class.java)
@@ -43,8 +43,9 @@ class NæringsDownloader(
                 try {
                     JsonReader(InputStreamReader(ByteArrayInputStream(bytes))).use { reader ->
                         reader.beginObject()
-                        while (reader.hasNext() && !reader.nextName().equals("classificationItems"))
+                        while (reader.hasNext() && !reader.nextName().equals("classificationItems")) {
                             reader.skipValue()
+                        }
                         reader.beginArray()
                         while (reader.hasNext()) {
                             val næringsDto = gson.fromJson<NæringsDto>(reader, NæringsDto::class.java)
@@ -60,4 +61,3 @@ class NæringsDownloader(
             })
     }
 }
-

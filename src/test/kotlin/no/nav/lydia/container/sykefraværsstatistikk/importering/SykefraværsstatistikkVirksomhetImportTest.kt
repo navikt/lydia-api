@@ -27,7 +27,6 @@ import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-
 class SykefraværsstatistikkVirksomhetImportTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
 
@@ -39,7 +38,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             muligeDagsverk = 76139.3,
             prosent = 2.3,
             erMaskert = false,
-            antallPersoner = 1789
+            antallPersoner = 1789,
         )
     private val siste4Kvartal: Siste4Kvartal =
         Siste4Kvartal(
@@ -47,7 +46,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             muligeDagsverk = 300991.3,
             prosent = 2.7,
             erMaskert = false,
-            kvartaler = listOf(KVARTAL_2023_1)
+            kvartaler = listOf(KVARTAL_2023_1),
         )
 
     private val graderingSistePubliserteKvartal: GraderingSistePubliserteKvartal =
@@ -58,7 +57,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             tapteDagsverk = 1740.5,
             prosent = 2.3,
             erMaskert = false,
-            antallPersoner = 1789
+            antallPersoner = 1789,
         )
     private val graderingSiste4Kvartal: GraderingSiste4Kvartal =
         GraderingSiste4Kvartal(
@@ -66,7 +65,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             tapteDagsverk = 8020.0,
             prosent = 2.7,
             erMaskert = false,
-            kvartaler = listOf(KVARTAL_2023_1)
+            kvartaler = listOf(KVARTAL_2023_1),
         )
 
     @BeforeTest
@@ -88,14 +87,14 @@ class SykefraværsstatistikkVirksomhetImportTest {
                 tapteDagsverk = 100.0,
                 prosent = 10.0,
                 antallPersoner = 4,
-                erMaskert = true
+                erMaskert = true,
             ),
-            siste4Kvartal = graderingSiste4Kvartal
+            siste4Kvartal = graderingSiste4Kvartal,
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
         val gjeldendeKvartal =
@@ -117,14 +116,14 @@ class SykefraværsstatistikkVirksomhetImportTest {
                 tapteDagsverkGradert = 10.0,
                 tapteDagsverk = 100.0,
                 prosent = 10.0,
-                erMaskert = true
+                erMaskert = true,
             ),
-            sistePubliserteKvartal = graderingSistePubliserteKvartal
+            sistePubliserteKvartal = graderingSistePubliserteKvartal,
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
         val siste4Kvartaler =
@@ -147,18 +146,18 @@ class SykefraværsstatistikkVirksomhetImportTest {
             sistePubliserteKvartal = graderingSistePubliserteKvartal.copy(
                 tapteDagsverkGradert = null,
                 tapteDagsverk = null,
-                prosent = null
+                prosent = null,
             ),
             siste4Kvartal = graderingSiste4Kvartal.copy(
                 tapteDagsverkGradert = null,
                 tapteDagsverk = null,
-                prosent = null
-            )
+                prosent = null,
+            ),
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
         lydiaApiContainer shouldNotContainLog "PSQLException: ERROR: null value in column".toRegex()
@@ -179,18 +178,18 @@ class SykefraværsstatistikkVirksomhetImportTest {
             sistePubliserteKvartal = graderingSistePubliserteKvartal.copy(
                 tapteDagsverkGradert = 0.0,
                 tapteDagsverk = 0.0,
-                prosent = null
+                prosent = null,
             ),
             siste4Kvartal = graderingSiste4Kvartal.copy(
                 tapteDagsverkGradert = 0.0,
                 tapteDagsverk = 0.0,
-                prosent = null
-            )
+                prosent = null,
+            ),
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
         val graderingGjeldendeKvartal =
@@ -209,23 +208,23 @@ class SykefraværsstatistikkVirksomhetImportTest {
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
             sistePubliserteKvartal = sistePubliserteKvartal,
-            siste4Kvartal = siste4Kvartal
+            siste4Kvartal = siste4Kvartal,
         )
 
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_TOPIC,
         )
 
         kafkaMelding sistePubliserteKvartalShouldBeEqual
-                hentStatistikkGjeldendeKvartal(
-                    VIRKSOMHET,
-                    "999999999",
-                    KVARTAL_2023_1
-                ).sistePubliserteKvartal
+            hentStatistikkGjeldendeKvartal(
+                VIRKSOMHET,
+                "999999999",
+                KVARTAL_2023_1,
+            ).sistePubliserteKvartal
         kafkaMelding siste4KvartalShouldBeEqual
-                hentStatistikkSiste4Kvartal(VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
+            hentStatistikkSiste4Kvartal(VIRKSOMHET, "999999999", KVARTAL_2023_1).siste4Kvartal
     }
 
     @Test
@@ -235,15 +234,17 @@ class SykefraværsstatistikkVirksomhetImportTest {
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
             sistePubliserteKvartal = graderingSistePubliserteKvartal,
-            siste4Kvartal = graderingSiste4Kvartal
+            siste4Kvartal = graderingSiste4Kvartal,
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
-        lydiaApiContainer shouldContainLog "Lagret 1 meldinger i StatistikkVirksomhetGraderingConsumer \\(topic 'arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1'\\)".toRegex()
+        lydiaApiContainer shouldContainLog
+            "Lagret 1 meldinger i StatistikkVirksomhetGraderingConsumer \\(topic 'arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1'\\)"
+                .toRegex()
 
         val resultat = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
         resultat.orgnr shouldBe "999999999"
@@ -263,12 +264,12 @@ class SykefraværsstatistikkVirksomhetImportTest {
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
             sistePubliserteKvartal = graderingSistePubliserteKvartal,
-            siste4Kvartal = graderingSiste4Kvartal
+            siste4Kvartal = graderingSiste4Kvartal,
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
         val resultat = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
@@ -289,12 +290,12 @@ class SykefraværsstatistikkVirksomhetImportTest {
             kode = "999999999",
             kvartal = KVARTAL_2023_1,
             sistePubliserteKvartal = graderingSistePubliserteKvartal,
-            siste4Kvartal = graderingSiste4Kvartal
+            siste4Kvartal = graderingSiste4Kvartal,
         )
         kafkaContainer.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
         val oppdatertStatistikkMelding = SykefraværsstatistikkImportTestUtils.JsonMeldingGradering(
             kategori = "VIRKSOMHET_GRADERT",
@@ -305,20 +306,20 @@ class SykefraværsstatistikkVirksomhetImportTest {
                 tapteDagsverkGradert = 5.6,
                 prosent = 10.0,
                 antallPersoner = 200,
-                erMaskert = false
+                erMaskert = false,
             ),
             siste4Kvartal = graderingSiste4Kvartal.copy(
                 tapteDagsverkGradert = 17.2,
                 tapteDagsverk = 86.0,
                 kvartaler = listOf(KVARTAL_2023_1, KVARTAL_2022_4),
                 prosent = 20.0,
-                erMaskert = false
-            )
+                erMaskert = false,
+            ),
         )
         kafkaContainer.sendOgVentTilKonsumert(
             oppdatertStatistikkMelding.toJsonKey(),
             oppdatertStatistikkMelding.toJsonValue(),
-            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
         val resultatSistePubliserteKvartal =

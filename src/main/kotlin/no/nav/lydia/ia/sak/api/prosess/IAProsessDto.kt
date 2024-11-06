@@ -13,9 +13,11 @@ data class IAProsessDto(
 )
 
 fun List<IAProsess>.tilDto() = map { it.tilDto() }
-fun IAProsess.tilDto() = IAProsessDto(
-    id = id,
-    saksnummer = saksnummer,
-    navn = navn,
-    status = status
-)
+
+fun IAProsess.tilDto() =
+    IAProsessDto(
+        id = id,
+        saksnummer = saksnummer,
+        navn = navn,
+        status = status,
+    )

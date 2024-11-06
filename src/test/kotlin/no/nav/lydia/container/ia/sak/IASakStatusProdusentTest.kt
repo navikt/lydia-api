@@ -46,8 +46,8 @@ class IASakStatusProdusentTest {
                         type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = listOf(
                             BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID,
-                        )
-                    ).toJson()
+                        ),
+                    ).toJson(),
                 )
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(key = sak.orgnr, konsument) { meldinger ->

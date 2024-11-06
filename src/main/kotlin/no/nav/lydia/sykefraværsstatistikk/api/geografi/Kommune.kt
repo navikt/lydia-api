@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class Kommune(
     val navn: String,
     val navnNorsk: String? = null,
-    val nummer: String
+    val nummer: String,
 )

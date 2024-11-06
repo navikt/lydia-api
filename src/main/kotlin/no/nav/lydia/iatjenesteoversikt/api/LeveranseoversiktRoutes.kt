@@ -1,9 +1,9 @@
 package no.nav.lydia.iatjenesteoversikt.api
 
 import arrow.core.right
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
@@ -30,7 +30,7 @@ fun Route.iaTjenesteoversikt(
                 orgnummer = null,
                 auditType = AuditType.access,
                 melding = if (it.isRight()) "Henter IA-tjenestene som er under arbeid og eies av: ${call.innloggetNavIdent()}" else "",
-                severity = "INFO"
+                severity = "INFO",
             )
         }.map { mineIATjenester ->
             call.respond(mineIATjenester).right()

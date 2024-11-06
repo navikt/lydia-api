@@ -4,7 +4,6 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -92,13 +91,12 @@ fun Route.iaSakRådgiver(
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper = adGrupper) { navAnsatt ->
             iaSakService.hentSaksStatus(saksnummer)
-        }.map{
+        }.map {
             call.respond(it)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
-
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/aktiv") {
         val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)

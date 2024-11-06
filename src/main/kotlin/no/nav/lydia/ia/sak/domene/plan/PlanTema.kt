@@ -7,4 +7,3 @@ data class PlanTema(
     val undertemaer: List<PlanUndertema>,
     val ressurser: List<PlanRessurs>,
 )
-

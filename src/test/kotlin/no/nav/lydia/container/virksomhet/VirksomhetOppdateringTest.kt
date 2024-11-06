@@ -4,16 +4,16 @@ import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.genererEndretNavn
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
+import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
@@ -31,12 +31,14 @@ class VirksomhetOppdateringTest {
         val nyVirksomhet = nyVirksomhet(
             næringer = listOf(
                 Næringsgruppe(
-                    "Barnehager", "88.911"
+                    "Barnehager",
+                    "88.911",
                 ),
                 Næringsgruppe(
-                    "Dyrking av ettårige vekster ellers", "01.190"
-                )
-            )
+                    "Dyrking av ettårige vekster ellers",
+                    "01.190",
+                ),
+            ),
         )
         lastInnNyVirksomhet(nyVirksomhet)
 
@@ -44,12 +46,13 @@ class VirksomhetOppdateringTest {
             næringsundergrupper = listOf(
                 Næringsgruppe(
                     navn = "Dyrking av ettårige vekster ellers",
-                    kode = "01.190"
-                ), Næringsgruppe(
+                    kode = "01.190",
+                ),
+                Næringsgruppe(
                     navn = "Barnehager",
-                    kode = "88.911"
-                )
-            )
+                    kode = "88.911",
+                ),
+            ),
         )
         sendEndringForVirksomhet(oppdatertVirksomhet)
 
@@ -63,14 +66,14 @@ class VirksomhetOppdateringTest {
                 næringer = listOf(
                     Næringsgruppe(
                         navn = "Barnehager",
-                        kode = "88.911"
+                        kode = "88.911",
                     ),
                     Næringsgruppe(
                         navn = "Dyrking av ettårige vekster ellers",
-                        kode = "01.190"
-                    )
-                )
-            )
+                        kode = "01.190",
+                    ),
+                ),
+            ),
         ).skalHaRiktigTilstand()
     }
 
@@ -78,11 +81,11 @@ class VirksomhetOppdateringTest {
     fun `kan oppdatere endrede virksomheter`() {
         val virksomhet = lastInnNyVirksomhet(nyVirksomhet())
         sendEndringForVirksomhet(
-            virksomhet = virksomhet.copy(navn = virksomhet.genererEndretNavn())
+            virksomhet = virksomhet.copy(navn = virksomhet.genererEndretNavn()),
         )
         virksomhet.skalHaRiktigTilstandEtterOppdatering(
             status = VirksomhetStatus.AKTIV,
-            navn = virksomhet.genererEndretNavn()
+            navn = virksomhet.genererEndretNavn(),
         )
     }
 
@@ -106,7 +109,7 @@ class VirksomhetOppdateringTest {
         sendEndringForVirksomhet(virksomhet = virksomhetUtenAdresse)
         VirksomhetHelper.hentVirksomhetsinformasjonRespons(
             orgnummer = virksomhetUtenAdresse.orgnr,
-            token = token
+            token = token,
         ).second.statusCode shouldBe HttpStatusCode.NotFound.value
     }
 
@@ -123,8 +126,8 @@ class VirksomhetOppdateringTest {
             næringsundergrupper = listOf(
                 TestData.DYRKING_AV_RIS,
                 TestData.DYRKING_AV_KORN,
-                TestData.BEDRIFTSRÅDGIVNING
-            )
+                TestData.BEDRIFTSRÅDGIVNING,
+            ),
         )
         sendEndringForVirksomhet(virksomhet = virksomhetSomSkalFåNæringskodeOppdatert)
         virksomhetSomSkalFåNæringskodeOppdatert
@@ -132,12 +135,11 @@ class VirksomhetOppdateringTest {
     }
 }
 
-private fun genererOppdateringsid(testVirksomhet: TestVirksomhet) =
-    testVirksomhet.orgnr.toLong() + 1L
+private fun genererOppdateringsid(testVirksomhet: TestVirksomhet) = testVirksomhet.orgnr.toLong() + 1L
 
 private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(
     status: VirksomhetStatus = VirksomhetStatus.AKTIV,
-    navn: String = this.navn
+    navn: String = this.navn,
 ): VirksomhetDto {
     val virksomhetDto = skalHaRiktigTilstand(status, navn)
     virksomhetDto.sistEndretTidspunkt.plus(1.seconds) shouldBeGreaterThan virksomhetDto.opprettetTidspunkt
@@ -147,7 +149,7 @@ private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(
 private fun TestVirksomhet.skalHaRiktigTilstand(
     status: VirksomhetStatus = VirksomhetStatus.AKTIV,
     navn: String = this.navn,
-    token: String = TestContainerHelper.oauth2ServerContainer.superbruker1.token
+    token: String = TestContainerHelper.oauth2ServerContainer.superbruker1.token,
 ): VirksomhetDto {
     val virksomhetDto =
         hentVirksomhetsinformasjon(orgnummer = this.orgnr, token)

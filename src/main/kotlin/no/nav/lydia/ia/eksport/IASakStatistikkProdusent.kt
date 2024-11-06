@@ -39,7 +39,6 @@ class IASakStatistikkProdusent(
     private val allPubliseringsinfo = sistePubliseringService.hentAllPubliseringsinfo()
     private val gjeldendePeriode = sistePubliseringService.hentGjelendePeriode()
 
-
     override fun receive(input: IASak) {
         sendTilKafka(input = input)
     }
@@ -48,7 +47,7 @@ class IASakStatistikkProdusent(
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)!!
         val periode = allPubliseringsinfo.filter { info ->
             hendelse.opprettetTidspunkt.toLocalDate().isAfter(info.sistePubliseringsdato.toJavaLocalDate()) &&
-                    hendelse.opprettetTidspunkt.toLocalDate().isBefore(info.nestePubliseringsdato.toJavaLocalDate())
+                hendelse.opprettetTidspunkt.toLocalDate().isBefore(info.nestePubliseringsdato.toJavaLocalDate())
         }.map {
             it.gjeldendePeriode.tilPeriode()
         }.firstOrNull() ?: Periode.fraDato(hendelse.opprettetTidspunkt)
@@ -56,14 +55,18 @@ class IASakStatistikkProdusent(
         sendTilKafka(input, periode)
     }
 
-    private fun sendTilKafka(input: IASak, periode: Periode? = gjeldendePeriode) {
+    private fun sendTilKafka(
+        input: IASak,
+        periode: Periode? = gjeldendePeriode,
+    ) {
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
         val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
         val virksomhetsstatistikkSiste4Kvartal =
-            if (periode == gjeldendePeriode)
+            if (periode == gjeldendePeriode) {
                 sykefraværsstatistikkService.hentSykefraværForVirksomhetSiste4Kvartal(input.orgnr).getOrNull()
-            else
+            } else {
                 null
+            }
         val virksomhetsstatistikkSisteKvartal =
             sykefraværsstatistikkService.hentVirksomhetsstatistikkSisteKvartal(orgnr = input.orgnr, periode = periode)
                 .getOrNull()
@@ -73,7 +76,7 @@ class IASakStatistikkProdusent(
             virksomhet,
             fylkesnummer?.nummer,
             virksomhetsstatistikkSiste4Kvartal,
-            virksomhetsstatistikkSisteKvartal
+            virksomhetsstatistikkSisteKvartal,
         )
         produsent.sendMelding(Topic.IA_SAK_STATISTIKK_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
     }
@@ -96,11 +99,19 @@ class IASakStatistikkProdusent(
                 hendelse = hendelse?.hendelsesType,
                 endretAv = hendelse?.opprettetAv,
                 endretAvRolle = hendelse?.opprettetAvRolle,
-                ikkeAktuelBegrunnelse = if (hendelse is VirksomhetIkkeAktuellHendelse) hendelse.valgtÅrsak.begrunnelser.toString() else null,
+                ikkeAktuelBegrunnelse = if (hendelse is VirksomhetIkkeAktuellHendelse) {
+                    hendelse.valgtÅrsak.begrunnelser.toString()
+                } else {
+                    null
+                },
                 opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
                 endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime()
                     ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-                avsluttetTidspunkt = if (this.status.regnesSomAvsluttet()) this.endretTidspunkt?.toKotlinLocalDateTime() else null,
+                avsluttetTidspunkt = if (this.status.regnesSomAvsluttet()) {
+                    this.endretTidspunkt?.toKotlinLocalDateTime()
+                } else {
+                    null
+                },
                 antallPersoner = virksomhetsstatistikkSisteKvartal?.antallPersoner,
                 tapteDagsverk = virksomhetsstatistikkSisteKvartal?.tapteDagsverk,
                 tapteDagsverkGradert = virksomhetsstatistikkSisteKvartal?.tapteDagsverkGradert,
@@ -125,14 +136,14 @@ class IASakStatistikkProdusent(
                 enhetsnavn = hendelse?.navEnhet?.enhetsnavn,
             )
             return key to Json.encodeToString(value)
-
         }
 
-        private fun Virksomhet?.hentNæringsgrupper() = listOfNotNull(
-            this?.næringsundergruppe1,
-            this?.næringsundergruppe2,
-            this?.næringsundergruppe3
-        )
+        private fun Virksomhet?.hentNæringsgrupper() =
+            listOfNotNull(
+                this?.næringsundergruppe1,
+                this?.næringsundergruppe2,
+                this?.næringsundergruppe3,
+            )
     }
 
     @Serializable
@@ -182,5 +193,4 @@ fun finnBransje(næringsgrupper: List<Næringsgruppe>?): Bransje? {
     return næringskoderUtenPunktum?.firstNotNullOfOrNull {
         Bransje.fra(it)
     }
-
 }

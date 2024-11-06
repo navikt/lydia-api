@@ -7,7 +7,6 @@ import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
 
 class SykefraværsstatistikkPerKategoriImportDtoTest {
-
     @Test
     fun `filterPåKategoriSektorOgGyldigSektor filtrerer bort ugyldige sektorer`() {
         listOf(
@@ -15,14 +14,14 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
                 kategori = Kategori.SEKTOR,
                 kode = "Not OK",
                 sistePubliserteKvartal = sistePubliserteKvartal,
-                siste4Kvartal = siste4Kvartal
+                siste4Kvartal = siste4Kvartal,
             ),
             SykefraværsstatistikkPerKategoriImportDto(
                 kategori = Kategori.SEKTOR,
                 kode = Sektor.KOMMUNAL.name,
                 sistePubliserteKvartal = sistePubliserteKvartal,
-                siste4Kvartal = siste4Kvartal
-            )
+                siste4Kvartal = siste4Kvartal,
+            ),
         ).filterPåKategoriSektorOgGyldigSektor().size shouldBe 1
     }
 
@@ -33,17 +32,16 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
                 kategori = Kategori.VIRKSOMHET,
                 kode = "987654321",
                 sistePubliserteKvartal = sistePubliserteKvartal,
-                siste4Kvartal = siste4Kvartal
+                siste4Kvartal = siste4Kvartal,
             ),
             SykefraværsstatistikkPerKategoriImportDto(
                 kategori = Kategori.BRANSJE,
                 kode = "BARNEHAGER",
                 sistePubliserteKvartal = sistePubliserteKvartal,
-                siste4Kvartal = siste4Kvartal
-            )
+                siste4Kvartal = siste4Kvartal,
+            ),
         ).filterPåKategoriSektorOgGyldigSektor().size shouldBe 0
     }
-
 
     private val sistePubliserteKvartal: SistePubliserteKvartal =
         SistePubliserteKvartal(
@@ -53,7 +51,7 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
             muligeDagsverk = 10104849.1,
             prosent = 6.0,
             erMaskert = false,
-            antallPersoner = 3000001
+            antallPersoner = 3000001,
         )
     private val siste4Kvartal: Siste4Kvartal =
         Siste4Kvartal(
@@ -61,6 +59,6 @@ class SykefraværsstatistikkPerKategoriImportDtoTest {
             muligeDagsverk = 578099000.3,
             prosent = 5.4,
             erMaskert = false,
-            kvartaler = listOf(SykefraværsstatistikkImportTestUtils.KVARTAL_2023_1)
+            kvartaler = listOf(SykefraværsstatistikkImportTestUtils.KVARTAL_2023_1),
         )
 }

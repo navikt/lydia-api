@@ -1,7 +1,7 @@
 package no.nav.lydia.sykefraværsstatistikk.import
 
 sealed class BehandletKvartalsvisSykefraværsstatistikk(
-    open val statistikk: KvartalsvisSykefraværsstatistikk
+    open val statistikk: KvartalsvisSykefraværsstatistikk,
 ) {
     val kvartal
         get() = statistikk.kvartal
@@ -29,44 +29,43 @@ sealed class BehandletKvartalsvisSykefraværsstatistikk(
 }
 
 class BehandletLandSykefraværsstatistikk(
-    override val statistikk: LandSykefravær
+    override val statistikk: LandSykefravær,
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val land
         get() = statistikk.kode
 }
 
 class BehandletBransjeSykefraværsstatistikk(
-    override val statistikk: BransjeSykefravær
+    override val statistikk: BransjeSykefravær,
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val bransje
         get() = statistikk.kode
 }
 
 class BehandletNæringSykefraværsstatistikk(
-    override val statistikk: NæringSykefravær
+    override val statistikk: NæringSykefravær,
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val næring
         get() = statistikk.kode
 }
 
 class BehandletNæringsundergruppeSykefraværsstatistikk(
-    override val statistikk: NæringsundergruppeSykefravær
+    override val statistikk: NæringsundergruppeSykefravær,
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val næringsundergruppe
         get() = statistikk.kode
 }
 
 class BehandletSektorSykefraværsstatistikk(
-    override val statistikk: SektorSykefravær
+    override val statistikk: SektorSykefravær,
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val sektor
         get() = statistikk.kode
 }
 
 class BehandletVirksomhetSykefraværsstatistikk(
-    override val statistikk: SykefraværsstatistikkForVirksomhet
+    override val statistikk: SykefraværsstatistikkForVirksomhet,
 ) : BehandletKvartalsvisSykefraværsstatistikk(statistikk) {
     val orgnr
         get() = statistikk.orgnr
 }
-

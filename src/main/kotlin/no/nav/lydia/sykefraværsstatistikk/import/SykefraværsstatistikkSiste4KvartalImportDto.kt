@@ -16,7 +16,6 @@ data class SykefraværsstatistikkForVirksomhetSiste4Kvartal(
     override val publisertKvartal: Int,
     override val publisertÅrstall: Int,
     override val kvartaler: List<Kvartal>,
-
     override val prosent: Double,
     override val muligeDagsverk: Double,
     override val tapteDagsverk: Double,

@@ -1,6 +1,5 @@
 package no.nav.lydia.integrasjoner.azure
 
-
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.github.kittinunf.fuel.httpPost
@@ -44,7 +43,7 @@ class AzureTokenFetcher(
             "scope" to "https://graph.microsoft.com/.default",
             "client_id" to naisEnvironment.security.azureConfig.clientId,
             "client_assertion_type" to "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-            "client_assertion" to clientAssertion
+            "client_assertion" to clientAssertion,
         )
         return naisEnvironment.security.azureConfig.tokenEndpoint
             .httpPost(parameters = parameters)

@@ -7,8 +7,9 @@ import kotliquery.using
 import no.nav.lydia.sykefraværsstatistikk.PubliseringsinfoDto.Companion.tilPubliseringsinfo
 import javax.sql.DataSource
 
-class SistePubliseringRepository(val dataSource: DataSource) {
-
+class SistePubliseringRepository(
+    val dataSource: DataSource,
+) {
     fun hentPubliseringsinfo(): PubliseringsinfoDto =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -18,8 +19,8 @@ class SistePubliseringRepository(val dataSource: DataSource) {
                     FROM siste_publiseringsinfo
                     ORDER BY gjeldende_arstall DESC, gjeldende_kvartal DESC
                     LIMIT 1
-                """.trimMargin()
-                ).map(this::mapRowToPubliseringsinfo).asSingle
+                    """.trimMargin(),
+                ).map(this::mapRowToPubliseringsinfo).asSingle,
             ) ?: throw NoSuchElementException("Ingen publiseringsinfo funnet")
         }
 
@@ -31,12 +32,10 @@ class SistePubliseringRepository(val dataSource: DataSource) {
                         SELECT *
                         FROM siste_publiseringsinfo
                         ORDER BY gjeldende_arstall DESC, gjeldende_kvartal DESC
-                    """.trimMargin()
-                ).map(this::mapRowToPubliseringsinfo).asList
+                    """.trimMargin(),
+                ).map(this::mapRowToPubliseringsinfo).asList,
             )
         }
 
-    private fun mapRowToPubliseringsinfo(row: Row): PubliseringsinfoDto {
-        return row.tilPubliseringsinfo()
-    }
+    private fun mapRowToPubliseringsinfo(row: Row): PubliseringsinfoDto = row.tilPubliseringsinfo()
 }

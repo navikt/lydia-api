@@ -25,61 +25,59 @@ import kotlin.test.fail
 
 class VirksomhetHelper {
     companion object {
-        fun sendSlettingForVirksomhet(virksomhet: TestVirksomhet) =
-            sendOppdateringForVirksomhet(virksomhet, Sletting)
+        fun sendSlettingForVirksomhet(virksomhet: TestVirksomhet) = sendOppdateringForVirksomhet(virksomhet, Sletting)
 
-        fun sendEndringForVirksomhet(virksomhet: TestVirksomhet) =
-            sendOppdateringForVirksomhet(virksomhet, Endring)
+        fun sendEndringForVirksomhet(virksomhet: TestVirksomhet) = sendOppdateringForVirksomhet(virksomhet, Endring)
 
-        fun sendFjerningForVirksomhet(virksomhet: TestVirksomhet) =
-            sendOppdateringForVirksomhet(virksomhet, Fjernet)
+        fun sendFjerningForVirksomhet(virksomhet: TestVirksomhet) = sendOppdateringForVirksomhet(virksomhet, Fjernet)
 
         fun søkEtterVirksomheter(
             søkestreng: String,
             token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
             success: (List<VirksomhetSøkeresultat>) -> Unit,
-        ) =
-            TestContainerHelper.lydiaApiContainer.performGet(
-                url = "$VIRKSOMHET_PATH/finn?q=${
-                    URLEncoder.encode(
-                        søkestreng,
-                        Charset.defaultCharset()
-                    )
-                }"
-            )
-                .authentication().bearer(token)
-                .tilListeRespons<VirksomhetSøkeresultat>()
-                .third.fold(success = success, failure = { fail(it.message) })
+        ) = TestContainerHelper.lydiaApiContainer.performGet(
+            url = "$VIRKSOMHET_PATH/finn?q=${
+                URLEncoder.encode(
+                    søkestreng,
+                    Charset.defaultCharset(),
+                )
+            }",
+        )
+            .authentication().bearer(token)
+            .tilListeRespons<VirksomhetSøkeresultat>()
+            .third.fold(success = success, failure = { fail(it.message) })
 
-        fun hentVirksomhetsinformasjonRespons(orgnummer: String, token: String) =
-            TestContainerHelper.lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
-                .authentication().bearer(token)
-                .tilSingelRespons<VirksomhetDto>()
+        fun hentVirksomhetsinformasjonRespons(
+            orgnummer: String,
+            token: String,
+        ) = TestContainerHelper.lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
+            .authentication().bearer(token)
+            .tilSingelRespons<VirksomhetDto>()
 
         fun hentVirksomhetsinformasjon(
             orgnummer: String,
-            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token
-        ) =
-            hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
-                .third.fold(
-                    success = { response -> response },
-                    failure = { fail(it.message) }
-                )
+            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
+        ) = hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
+            .third.fold(
+                success = { response -> response },
+                failure = { fail(it.message) },
+            )
 
-        private fun hentSalesforceInfoRespons(orgnummer: String, token: String) =
-            TestContainerHelper.lydiaApiContainer.performGet("$SALESFORCE_INFO_PATH/$orgnummer")
-                .authentication().bearer(token)
-                .tilSingelRespons<SalesforceInfoResponse>()
+        private fun hentSalesforceInfoRespons(
+            orgnummer: String,
+            token: String,
+        ) = TestContainerHelper.lydiaApiContainer.performGet("$SALESFORCE_INFO_PATH/$orgnummer")
+            .authentication().bearer(token)
+            .tilSingelRespons<SalesforceInfoResponse>()
 
         fun hentSalesforceInfo(
             orgnummer: String,
-            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token
-        ) =
-            hentSalesforceInfoRespons(orgnummer = orgnummer, token = token)
-                .third.fold(
-                    success = { response -> response },
-                    failure = { fail(it.message) }
-                )
+            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
+        ) = hentSalesforceInfoRespons(orgnummer = orgnummer, token = token)
+            .third.fold(
+                success = { response -> response },
+                failure = { fail(it.message) },
+            )
 
         fun nyttOrgnummer() = lastInnNyVirksomhet().orgnr
 
@@ -87,30 +85,29 @@ class VirksomhetHelper {
             nyVirksomhet: TestVirksomhet = TestVirksomhet.nyVirksomhet(),
             sektor: Sektor = Sektor.STATLIG,
             perioder: List<Periode> = listOf(TestData.gjeldendePeriode, TestData.gjeldendePeriode.forrigePeriode()),
-            sykefraværsProsent: Double? = null
+            sykefraværsProsent: Double? = null,
         ): TestVirksomhet {
             lastInnTestdata(
                 TestData.fraVirksomhet(
                     virksomhet = nyVirksomhet,
                     sektor = sektor,
                     perioder = perioder,
-                    sykefraværsProsent = sykefraværsProsent
-                )
+                    sykefraværsProsent = sykefraværsProsent,
+                ),
             )
             return nyVirksomhet
         }
 
-        fun lastInnNyeVirksomheter(vararg virksomheter: TestVirksomhet): List<TestVirksomhet> {
-            return virksomheter.toList()
+        fun lastInnNyeVirksomheter(vararg virksomheter: TestVirksomhet): List<TestVirksomhet> =
+            virksomheter.toList()
                 .onEach(this::lastInnNyVirksomhet)
-        }
 
         fun lastInnStandardTestdata(antallTestVirksomheter: Int) {
             lastInnTestdata(
                 TestData(
                     inkluderStandardVirksomheter = true,
-                    antallTilfeldigeVirksomheter = antallTestVirksomheter
-                )
+                    antallTilfeldigeVirksomheter = antallTestVirksomheter,
+                ),
             )
         }
 
@@ -118,21 +115,21 @@ class VirksomhetHelper {
             kafkaContainerHelper.sendBrregOppdateringer(
                 testData.brregVirksomheter.toList().map {
                     it.tilOppdateringVirksomhet(endringstype = BrregVirksomhetEndringstype.Ny)
-                }
+                },
             )
 
             kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
                 importDtoer = testData.sykefraværsstatistikkVirksomhetMeldinger().toList(),
-                topic = Topic.STATISTIKK_VIRKSOMHET_TOPIC
+                topic = Topic.STATISTIKK_VIRKSOMHET_TOPIC,
             )
 
             kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
                 importDtoer = testData.graderingStatistikkVirksomhetKafkaMeldinger().toList(),
-                topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+                topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
             )
 
             kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
-                testData.sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger().toList()
+                testData.sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger().toList(),
             )
 
             TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
@@ -140,10 +137,10 @@ class VirksomhetHelper {
 
         private fun sendOppdateringForVirksomhet(
             virksomhet: TestVirksomhet,
-            endringstype: BrregVirksomhetEndringstype
+            endringstype: BrregVirksomhetEndringstype,
         ) {
             kafkaContainerHelper.sendBrregOppdatering(
-                virksomhet.tilOppdateringVirksomhet(endringstype)
+                virksomhet.tilOppdateringVirksomhet(endringstype),
             )
             TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
         }
@@ -162,22 +159,22 @@ class VirksomhetHelper {
                     beliggenhetsadresse = this.beliggenhet,
                     naeringskode1 = NæringsundergruppeBrreg(
                         kode = this.næringsundergruppe1.kode,
-                        beskrivelse = this.næringsundergruppe1.navn
+                        beskrivelse = this.næringsundergruppe1.navn,
                     ),
                     naeringskode2 = this.næringsundergruppe2?.let {
                         NæringsundergruppeBrreg(
                             kode = this.næringsundergruppe2.kode,
-                            beskrivelse = this.næringsundergruppe2.navn
+                            beskrivelse = this.næringsundergruppe2.navn,
                         )
                     },
                     naeringskode3 = this.næringsundergruppe3?.let {
                         NæringsundergruppeBrreg(
                             kode = this.næringsundergruppe3.kode,
-                            beskrivelse = this.næringsundergruppe3.navn
+                            beskrivelse = this.næringsundergruppe3.navn,
                         )
                     },
                 ),
-                endringstidspunkt = now()
+                endringstidspunkt = now(),
             )
     }
 }

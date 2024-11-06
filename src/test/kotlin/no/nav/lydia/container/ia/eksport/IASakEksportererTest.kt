@@ -36,7 +36,7 @@ class IASakEksportererTest {
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
             .nyHendelse(
                 hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK,
-                token = oauth2ServerContainer.saksbehandler1.token
+                token = oauth2ServerContainer.saksbehandler1.token,
             )
 
         runBlocking {
@@ -44,7 +44,7 @@ class IASakEksportererTest {
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = sak.saksnummer,
-                konsument = konsument
+                konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
                 meldinger.forAtLeastOne {

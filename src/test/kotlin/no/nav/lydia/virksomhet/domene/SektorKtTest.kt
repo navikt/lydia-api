@@ -5,7 +5,6 @@ import io.kotest.matchers.shouldBe
 import kotlin.test.Test
 
 class SektorKtTest {
-
     @Test
     fun `tilSektor lager Sektor ut i fra 'navn' eller 'kode'`() {
         Sektor.entries.forAll {

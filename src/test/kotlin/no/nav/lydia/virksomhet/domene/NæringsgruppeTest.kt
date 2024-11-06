@@ -2,11 +2,10 @@ package no.nav.lydia.virksomhet.domene
 
 import ia.felles.definisjoner.bransjer.Bransje
 import io.kotest.matchers.shouldBe
-import kotlin.test.Test
 import no.nav.lydia.virksomhet.domene.Næringsgruppe.Companion.UOPPGITT
+import kotlin.test.Test
 
 class NæringsgruppeTest {
-
     @Test
     fun `utledder bransje ut i fra næringsundergruppe`() {
         Næringsgruppe(navn = "Kanskje Barnehager", kode = "88911").tilBransje() shouldBe Bransje.BARNEHAGER
@@ -20,7 +19,7 @@ class NæringsgruppeTest {
         Næringsgruppe(navn = "Kanskje Bygg", kode = "41").tilBransje() shouldBe Bransje.BYGG
         Næringsgruppe(
             navn = "Kanskje Næringsmiddelindustri",
-            kode = "10"
+            kode = "10",
         ).tilBransje() shouldBe Bransje.NÆRINGSMIDDELINDUSTRI
         Næringsgruppe(navn = "Ukjent", kode = "00").tilBransje() shouldBe null
     }

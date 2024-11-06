@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class JournalpostResultatDto(
     val journalpostId: String,
     val melding: String?,
-    val journalpostferdigstilt: Boolean
+    val journalpostferdigstilt: Boolean,
 )

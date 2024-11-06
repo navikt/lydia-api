@@ -41,7 +41,10 @@ object BrregOppdateringConsumer : CoroutineScope {
         Runtime.getRuntime().addShutdownHook(Thread(BrregOppdateringConsumer::cancel))
     }
 
-    fun create(kafka: Kafka, repository: VirksomhetRepository) {
+    fun create(
+        kafka: Kafka,
+        repository: VirksomhetRepository,
+    ) {
         logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
         BrregOppdateringConsumer.kafka = kafka
@@ -49,7 +52,7 @@ object BrregOppdateringConsumer : CoroutineScope {
         kafkaConsumer = KafkaConsumer(
             BrregOppdateringConsumer.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
-            StringDeserializer()
+            StringDeserializer(),
         )
         logger.info("Created kafka consumer job for $topicNavn")
     }
@@ -72,11 +75,12 @@ object BrregOppdateringConsumer : CoroutineScope {
                                 when (oppdateringVirksomhet.endringstype) {
                                     BrregVirksomhetEndringstype.Ukjent,
                                     BrregVirksomhetEndringstype.Endring,
-                                    BrregVirksomhetEndringstype.Ny -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
+                                    BrregVirksomhetEndringstype.Ny,
+                                    -> oppdateringVirksomhet.metadata?.let { brregVirksomhet ->
                                         try {
                                             val virksomhet = brregVirksomhet.tilVirksomhet(
                                                 status = oppdateringVirksomhet.endringstype.tilStatus(),
-                                                oppdateringsId = oppdateringVirksomhet.oppdateringsid
+                                                oppdateringsId = oppdateringVirksomhet.oppdateringsid,
                                             )
                                             repository.insertVirksomhet(virksomhet)
                                             repository.insertNæringsundergrupper(virksomhet)
@@ -86,10 +90,11 @@ object BrregOppdateringConsumer : CoroutineScope {
                                     }
 
                                     BrregVirksomhetEndringstype.Sletting,
-                                    BrregVirksomhetEndringstype.Fjernet -> repository.oppdaterStatus(
+                                    BrregVirksomhetEndringstype.Fjernet,
+                                    -> repository.oppdaterStatus(
                                         orgnr = oppdateringVirksomhet.orgnummer,
                                         status = oppdateringVirksomhet.endringstype.tilStatus(),
-                                        oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid
+                                        oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid,
                                     )
                                 }
                             }
@@ -113,12 +118,13 @@ object BrregOppdateringConsumer : CoroutineScope {
         }
     }
 
-    private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job for $topicNavn")
-        kafkaConsumer.wakeup()
-        job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job for $topicNavn")
-    }
+    private fun cancel() =
+        runBlocking {
+            logger.info("Stopping kafka consumer job for $topicNavn")
+            kafkaConsumer.wakeup()
+            job.cancelAndJoin()
+            logger.info("Stopped kafka consumer job for $topicNavn")
+        }
 
     @Serializable
     data class OppdateringVirksomhet(
@@ -126,7 +132,7 @@ object BrregOppdateringConsumer : CoroutineScope {
         val oppdateringsid: Long,
         val endringstype: BrregVirksomhetEndringstype,
         val metadata: BrregVirksomhetDto? = null,
-        val endringstidspunkt: Instant
+        val endringstidspunkt: Instant,
     )
 
     enum class BrregVirksomhetEndringstype {
@@ -134,15 +140,18 @@ object BrregOppdateringConsumer : CoroutineScope {
         Endring, // Enheten har blitt endret i Enhetsregisteret
         Ny, // Enheten har blitt lagt til i Enhetsregisteret
         Sletting, // Enheten har blitt slettet fra Enhetsregisteret
-        Fjernet; // Enheten har blitt fjernet fra Åpne Data. Eventuelle kopier skal også fjerne enheten.
+        Fjernet, // Enheten har blitt fjernet fra Åpne Data. Eventuelle kopier skal også fjerne enheten.
+        ;
 
-        fun tilStatus() = when (this) {
-            Ukjent,
-            Endring,
-            Ny -> VirksomhetStatus.AKTIV
+        fun tilStatus() =
+            when (this) {
+                Ukjent,
+                Endring,
+                Ny,
+                -> VirksomhetStatus.AKTIV
 
-            Sletting -> VirksomhetStatus.SLETTET
-            Fjernet -> VirksomhetStatus.FJERNET
-        }
+                Sletting -> VirksomhetStatus.SLETTET
+                Fjernet -> VirksomhetStatus.FJERNET
+            }
     }
 }

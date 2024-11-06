@@ -79,7 +79,6 @@ fun Route.iaSakPlan(
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
-
     }
 
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}") {
@@ -205,7 +204,7 @@ fun Route.iaSakPlan(
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
                 planService.hentPlan(
                     iaSak = iaSak,
-                    prosessId = prosessId
+                    prosessId = prosessId,
                 )
             }
         }.also { planEither ->

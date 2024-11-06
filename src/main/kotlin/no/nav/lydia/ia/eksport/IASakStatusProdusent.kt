@@ -15,7 +15,6 @@ class IASakStatusProdusent(
     private val produsent: KafkaProdusent,
     private val iaSakRepository: IASakRepository,
 ) : Observer<IASak> {
-
     override fun receive(input: IASak) {
         val kafkaMelding = input.tilKafkaMelding()
         produsent.sendMelding(Topic.IA_SAK_STATUS_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
@@ -27,15 +26,14 @@ class IASakStatusProdusent(
                     produsent.sendMelding(
                         Topic.IA_SAK_STATUS_TOPIC.navn,
                         aktivKafkaMelding.first,
-                        aktivKafkaMelding.second
+                        aktivKafkaMelding.second,
                     )
                 }
         }
     }
 
     companion object {
-        fun IASak.tilKafkaMelding(
-        ): Pair<String, String> {
+        fun IASak.tilKafkaMelding(): Pair<String, String> {
             val key = this.orgnr
             val value = IASakStatus(
                 orgnr = this.orgnr,

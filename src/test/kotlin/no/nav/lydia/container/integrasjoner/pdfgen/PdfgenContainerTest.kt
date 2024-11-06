@@ -1,16 +1,16 @@
 package no.nav.lydia.container.integrasjoner.pdfgen
 
+import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.integrasjoner.pdfgen.IASamarbeidDto
+import no.nav.lydia.integrasjoner.pdfgen.SakDto
+import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
+import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider
+import org.verapdf.pdfa.Foundries
+import org.verapdf.pdfa.flavours.PDFAFlavour
 import java.io.ByteArrayInputStream
 import java.time.ZonedDateTime
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
-import no.nav.lydia.integrasjoner.pdfgen.IASamarbeidDto
-import no.nav.lydia.integrasjoner.pdfgen.SakDto
-import org.verapdf.gf.foundry.VeraGreenfieldFoundryProvider
-import org.verapdf.pdfa.Foundries
-import org.verapdf.pdfa.flavours.PDFAFlavour
 
 class PdfgenContainerTest {
     private val piaPdfgenContainer = TestContainerHelper.piaPdfgenContainer
@@ -27,13 +27,13 @@ class PdfgenContainerTest {
                 dato = ZonedDateTime.now().toString(),
                 sak = SakDto(
                     saksnummer = "tulll",
-                    navenhet = "Andeby ALS"
+                    navenhet = "Andeby ALS",
                 ),
                 virksomhet = VirksomhetDto(
                     orgnummer = "987654321",
-                    navn = "Andeby Catering"
-                )
-            )
+                    navn = "Andeby Catering",
+                ),
+            ),
         )
 
         val pdfaFlavour = PDFAFlavour.PDFA_2_U

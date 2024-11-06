@@ -10,7 +10,7 @@ data class BehandletImportGradertSykmelding(
     val tapteDagsverkGradert: Double?,
     val tapteDagsverk: Double?,
     val antallPersoner: Int?,
-    val erMaskert: Boolean
+    val erMaskert: Boolean,
 )
 
 data class BehandletImportGradertSykmeldingSiste4Kvartal(
@@ -21,13 +21,13 @@ data class BehandletImportGradertSykmeldingSiste4Kvartal(
     val tapteDagsverkGradert: Double?,
     val tapteDagsverk: Double?,
     val erMaskert: Boolean,
-    val kvartaler: List<Kvartal>
+    val kvartaler: List<Kvartal>,
 )
 
 fun GradertSykemeldingImportDto.skalMaskeres() =
-    this.sistePubliserteKvartal.erMaskert
-            || this.sistePubliserteKvartal.antallPersoner == null
-            || this.sistePubliserteKvartal.antallPersoner < MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER
+    this.sistePubliserteKvartal.erMaskert ||
+        this.sistePubliserteKvartal.antallPersoner == null ||
+        this.sistePubliserteKvartal.antallPersoner < MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER
 
 fun GradertSykemeldingImportDto.tilBehandletImportGradertSykmelding() =
     BehandletImportGradertSykmelding(
@@ -38,7 +38,7 @@ fun GradertSykemeldingImportDto.tilBehandletImportGradertSykmelding() =
         tapteDagsverkGradert = if (this.skalMaskeres()) 0.0 else this.sistePubliserteKvartal.tapteDagsverkGradert,
         tapteDagsverk = if (this.skalMaskeres()) 0.0 else this.sistePubliserteKvartal.tapteDagsverk,
         antallPersoner = this.sistePubliserteKvartal.antallPersoner,
-        erMaskert = this.skalMaskeres()
+        erMaskert = this.skalMaskeres(),
     )
 
 fun GradertSykemeldingImportDto.tilBehandletImportGradertSykmeldingSiste4Kvartal() =
@@ -50,7 +50,7 @@ fun GradertSykemeldingImportDto.tilBehandletImportGradertSykmeldingSiste4Kvartal
         tapteDagsverkGradert = if (this.siste4Kvartal.erMaskert) 0.0 else this.siste4Kvartal.tapteDagsverkGradert,
         tapteDagsverk = if (this.siste4Kvartal.erMaskert) 0.0 else this.siste4Kvartal.tapteDagsverk,
         erMaskert = this.siste4Kvartal.erMaskert,
-        kvartaler = this.siste4Kvartal.kvartaler
+        kvartaler = this.siste4Kvartal.kvartaler,
     )
 
 fun List<GradertSykemeldingImportDto>.tilBehandletImportGradertSykmelding() =

@@ -1,7 +1,7 @@
 package no.nav.lydia.sykefraværsstatistikk.import
 
 sealed class BehandletSykefraværsstatistikkSiste4Kvartal(
-    open val statistikk: SykefraværsstatistikkSiste4Kvartal
+    open val statistikk: SykefraværsstatistikkSiste4Kvartal,
 ) {
     val publisertKvartal
         get() = statistikk.publisertKvartal
@@ -22,7 +22,7 @@ sealed class BehandletSykefraværsstatistikkSiste4Kvartal(
 }
 
 class BehandletVirksomhetSykefraværsstatistikkSiste4Kvartal(
-    override val statistikk: SykefraværsstatistikkForVirksomhetSiste4Kvartal
+    override val statistikk: SykefraværsstatistikkForVirksomhetSiste4Kvartal,
 ) : BehandletSykefraværsstatistikkSiste4Kvartal(statistikk) {
     val orgnr
         get() = statistikk.orgnr

@@ -8,7 +8,9 @@ import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 import kotlin.system.measureTimeMillis
 
-class StatistikkViewOppdaterer(val dataSource: DataSource) {
+class StatistikkViewOppdaterer(
+    val dataSource: DataSource,
+) {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     fun oppdaterStatistikkView() {
@@ -17,8 +19,8 @@ class StatistikkViewOppdaterer(val dataSource: DataSource) {
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf(
-                        "REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering"
-                    ).asExecute
+                        "REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering",
+                    ).asExecute,
                 )
             }
         }

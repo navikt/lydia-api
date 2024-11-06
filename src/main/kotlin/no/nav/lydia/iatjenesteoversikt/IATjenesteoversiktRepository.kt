@@ -12,9 +12,11 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import javax.sql.DataSource
 
-class IATjenesteoversiktRepository(val dataSource: DataSource) {
-    fun hentIATjenester(saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle): List<IATjenesteoversiktDto> {
-        return using(sessionOf(dataSource)) { session ->
+class IATjenesteoversiktRepository(
+    val dataSource: DataSource,
+) {
+    fun hentIATjenester(saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle): List<IATjenesteoversiktDto> =
+        using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
@@ -38,19 +40,17 @@ class IATjenesteoversiktRepository(val dataSource: DataSource) {
                         IAProsessStatus.entries.filter { !it.regnesSomAvsluttet() }.joinToString { "'${it.name}'" }
                     })
                     and iasak_leveranse.status = :leveransestatus; 
-                """.trimIndent(),
+                    """.trimIndent(),
                     mapOf(
                         "navident" to saksbehandler.navIdent,
-                        "leveransestatus" to IASakLeveranseStatus.UNDER_ARBEID.name
-                    )
-                ).map(this::mapRowToIATjenesteoversikt).asList
+                        "leveransestatus" to IASakLeveranseStatus.UNDER_ARBEID.name,
+                    ),
+                ).map(this::mapRowToIATjenesteoversikt).asList,
             )
         }
-    }
 
-
-    private fun mapRowToIATjenesteoversikt(rad: Row): IATjenesteoversiktDto {
-        return IATjenesteoversiktDto(
+    private fun mapRowToIATjenesteoversikt(rad: Row): IATjenesteoversiktDto =
+        IATjenesteoversiktDto(
             orgnr = rad.string("orgnr"),
             virksomhetsnavn = rad.string("virksomhetsnavn"),
             iaTjeneste = IATjenesteDto(
@@ -67,6 +67,4 @@ class IATjenesteoversiktRepository(val dataSource: DataSource) {
             tentativFrist = rad.localDate("leveransefrist").toKotlinLocalDate(),
             status = rad.string("leveransestatus"),
         )
-    }
-
 }

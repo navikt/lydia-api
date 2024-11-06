@@ -12,10 +12,8 @@ data class TestVirksomhet(
     val orgnr: String,
     val navn: String,
     val næringsundergrupper: List<Næringsgruppe>,
-    val beliggenhet: Beliggenhetsadresse?
+    val beliggenhet: Beliggenhetsadresse?,
 ) {
-
-
     val næringsundergruppe1 = næringsundergrupper.first()
     val næringsundergruppe2 = næringsundergrupper.getOrNull(1)
     val næringsundergruppe3 = næringsundergrupper.getOrNull(2)
@@ -36,8 +34,8 @@ data class TestVirksomhet(
             næringsundergrupper = listOf(SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_OSLO,
-                adresse = listOf("Osloveien 1")
-            )
+                adresse = listOf("Osloveien 1"),
+            ),
         )
         val VIRKSOMHET_MED_HISTORISK_STATISTIKK = TestVirksomhet(
             orgnr = "314159265",
@@ -45,8 +43,8 @@ data class TestVirksomhet(
             næringsundergrupper = listOf(BARNEHAGER, SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = SANDNES,
-                adresse = listOf("Langgata 1")
-            )
+                adresse = listOf("Langgata 1"),
+            ),
         )
 
         val OSLO_FLERE_ADRESSER = TestVirksomhet(
@@ -55,8 +53,8 @@ data class TestVirksomhet(
             næringsundergrupper = listOf(SCENEKUNST, BEDRIFTSRÅDGIVNING),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_OSLO,
-                adresse = listOf("c/o Oslo Tigersen", "Osloveien 1", "0977 Oslo")
-            )
+                adresse = listOf("c/o Oslo Tigersen", "Osloveien 1", "0977 Oslo"),
+            ),
         )
         val OSLO_MANGLER_ADRESSER = TestVirksomhet(
             orgnr = "666666666",
@@ -64,8 +62,8 @@ data class TestVirksomhet(
             næringsundergrupper = listOf(SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_OSLO,
-                adresse = null
-            )
+                adresse = null,
+            ),
         )
         val UTENLANDSK = TestVirksomhet(
             orgnr = "123123123",
@@ -77,14 +75,14 @@ data class TestVirksomhet(
                 kommune = null,
                 postnummer = null,
                 poststed = "60313 FRANKFURT AM MAIN",
-                adresse = listOf("Deutchestrasse 1")
-            )
+                adresse = listOf("Deutchestrasse 1"),
+            ),
         )
         val MANGLER_BELIGGENHETSADRESSE = TestVirksomhet(
             orgnr = "321321321",
             navn = "Mangler beliggenhetsadresse",
             næringsundergrupper = listOf(SCENEKUNST),
-            beliggenhet = null
+            beliggenhet = null,
         )
         val BERGEN = TestVirksomhet(
             orgnr = "123456789",
@@ -92,8 +90,8 @@ data class TestVirksomhet(
             næringsundergrupper = listOf(BEDRIFTSRÅDGIVNING, SCENEKUNST),
             beliggenhet = beliggenhet(
                 kommune = KOMMUNE_BERGEN,
-                adresse = listOf("Bergenveien 1")
-            )
+                adresse = listOf("Bergenveien 1"),
+            ),
         )
 
         val TESTVIRKSOMHET_FOR_IMPORT = nyVirksomhet()
@@ -115,15 +113,14 @@ data class TestVirksomhet(
             beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
             næringer: List<Næringsgruppe> = tilfeldigeNæringsgrupper(),
             orgnr: String = hentUniktOrgnummer(),
-            navn: String = "Navn $orgnr"
-        ): TestVirksomhet {
-            return TestVirksomhet(
+            navn: String = "Navn $orgnr",
+        ): TestVirksomhet =
+            TestVirksomhet(
                 orgnr = orgnr,
                 navn = navn,
                 næringsundergrupper = næringer,
-                beliggenhet = beliggenhet
+                beliggenhet = beliggenhet,
             )
-        }
 
         private fun tilfeldigeNæringsgrupper() =
             when ((1..6).random()) {
@@ -139,15 +136,14 @@ data class TestVirksomhet(
             postnummer: String? = "1234",
             poststed: String? = "POSTSTED",
             adresse: List<String>? = listOf("adresse"),
-        ) =
-            Beliggenhetsadresse(
-                land = land,
-                landkode = landkode,
-                postnummer = postnummer,
-                poststed = poststed,
-                adresse = adresse,
-                kommunenummer = kommune?.nummer,
-                kommune = kommune?.navn
-            )
+        ) = Beliggenhetsadresse(
+            land = land,
+            landkode = landkode,
+            postnummer = postnummer,
+            poststed = poststed,
+            adresse = adresse,
+            kommunenummer = kommune?.nummer,
+            kommune = kommune?.navn,
+        )
     }
 }

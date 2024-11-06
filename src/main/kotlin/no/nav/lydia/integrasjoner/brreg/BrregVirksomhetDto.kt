@@ -16,21 +16,21 @@ data class BrregVirksomhetDto(
     val naeringskode1: NæringsundergruppeBrreg? = null,
     val naeringskode2: NæringsundergruppeBrreg? = null,
     val naeringskode3: NæringsundergruppeBrreg? = null,
-
-    ) {
-    fun hentNæringsgruppekoder() = mutableMapOf(
-        "naeringskode1" to hentNæringskode1()
-    ).apply {
-        naeringskode2?.let { this["naeringskode2"] = it.kode }
-        naeringskode3?.let { this["naeringskode3"] = it.kode }
-    }
+) {
+    fun hentNæringsgruppekoder() =
+        mutableMapOf(
+            "naeringskode1" to hentNæringskode1(),
+        ).apply {
+            naeringskode2?.let { this["naeringskode2"] = it.kode }
+            naeringskode3?.let { this["naeringskode3"] = it.kode }
+        }
 
     private fun hentNæringskode1() = (naeringskode1?.kode ?: Næringsgruppe.UOPPGITT.kode)
 }
 
 fun BrregVirksomhetDto.tilVirksomhet(
     status: VirksomhetStatus = VirksomhetStatus.AKTIV,
-    oppdateringsId: Long?
+    oppdateringsId: Long?,
 ): VirksomhetLagringDao {
     if (this.beliggenhetsadresse != null && this.beliggenhetsadresse.erRelevant()) {
         return VirksomhetLagringDao(
@@ -46,16 +46,18 @@ fun BrregVirksomhetDto.tilVirksomhet(
             landkode = beliggenhetsadresse.landkode!!,
             oppstartsdato = oppstartsdato?.let { LocalDate.parse(it) },
             oppdatertAvBrregOppdateringsId = oppdateringsId,
-            adresse = beliggenhetsadresse.adresse ?: emptyList()
+            adresse = beliggenhetsadresse.adresse ?: emptyList(),
         )
     }
-    throw UgyldigAdresseException("Beliggenhetsadresse $beliggenhetsadresse for orgnr $organisasjonsnummer inneholder ugyldige verdier for lagring")
+    throw UgyldigAdresseException(
+        "Beliggenhetsadresse $beliggenhetsadresse for orgnr $organisasjonsnummer inneholder ugyldige verdier for lagring",
+    )
 }
 
 @Serializable
 data class NæringsundergruppeBrreg(
     val beskrivelse: String,
-    val kode: String
+    val kode: String,
 )
 
 @Serializable
@@ -66,9 +68,7 @@ data class Beliggenhetsadresse(
     val poststed: String? = null,
     val adresse: List<String>? = null,
     val kommune: String? = null,
-    val kommunenummer: String? = null
+    val kommunenummer: String? = null,
 ) {
-    fun erRelevant() =
-        listOf(land, landkode, postnummer, poststed, kommune, kommunenummer).all { !it.isNullOrBlank() }
-
+    fun erRelevant() = listOf(land, landkode, postnummer, poststed, kommune, kommunenummer).all { !it.isNullOrBlank() }
 }

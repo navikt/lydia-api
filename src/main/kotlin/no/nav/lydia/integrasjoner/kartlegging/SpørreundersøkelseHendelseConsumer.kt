@@ -11,6 +11,7 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException
@@ -19,9 +20,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
-import no.nav.lydia.ia.sak.SpørreundersøkelseService
 
-class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk {
+class SpørreundersøkelseHendelseConsumer :
+    CoroutineScope,
+    Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private lateinit var job: Job
     private lateinit var kafka: Kafka
@@ -36,7 +38,10 @@ class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk {
         Runtime.getRuntime().addShutdownHook(Thread(this::cancel))
     }
 
-    fun create(kafka: Kafka, spørreundersøkelseService: SpørreundersøkelseService) {
+    fun create(
+        kafka: Kafka,
+        spørreundersøkelseService: SpørreundersøkelseService,
+    ) {
         logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
         this.spørreundersøkelseService = spørreundersøkelseService
@@ -44,7 +49,7 @@ class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk {
         this.kafkaConsumer = KafkaConsumer(
             this.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
             StringDeserializer(),
-            StringDeserializer()
+            StringDeserializer(),
         )
         logger.info("Created kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
     }
@@ -85,17 +90,15 @@ class SpørreundersøkelseHendelseConsumer : CoroutineScope, Helsesjekk {
         }
     }
 
-    private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
-        kafkaConsumer.wakeup()
-        job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job for topic '${topic.navn}'")
-    }
+    private fun cancel() =
+        runBlocking {
+            logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
+            kafkaConsumer.wakeup()
+            job.cancelAndJoin()
+            logger.info("Stopped kafka consumer job for topic '${topic.navn}'")
+        }
 
     private fun isRunning() = job.isActive
 
     override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN
-
 }
-
-

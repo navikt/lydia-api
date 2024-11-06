@@ -18,13 +18,16 @@ data class IASakLeveranse(
     val fullført: LocalDateTime?,
     val opprettetTidspunkt: LocalDateTime?, // gamle leveranser har ikke opprettet_tidspunkt
 ) {
-    fun slettet(): IASakLeveranse = this.copy(
-        status = IASakLeveranseStatus.SLETTET,
-    )
+    fun slettet(): IASakLeveranse =
+        this.copy(
+            status = IASakLeveranseStatus.SLETTET,
+        )
 }
 
 enum class IASakLeveranseStatus {
-    UNDER_ARBEID, LEVERT, SLETTET
+    UNDER_ARBEID,
+    LEVERT,
+    SLETTET,
 }
 
 @Serializable

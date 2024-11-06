@@ -2,25 +2,40 @@ package no.nav.lydia
 
 import arrow.core.Either
 import com.github.guepardoapps.kulid.ULID
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
 import no.nav.lydia.NaisEnvironment.Companion.Environment
 import no.nav.lydia.NaisEnvironment.Companion.Environment.`PROD-GCP`
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.tilgangskontroll.fia.innloggetNavIdent
 import org.slf4j.LoggerFactory
 
-
 enum class AuditType {
-    access, update, create, delete
+    @Suppress("ktlint:standard:enum-entry-name-case")
+    access,
+
+    @Suppress("ktlint:standard:enum-entry-name-case")
+    update,
+
+    @Suppress("ktlint:standard:enum-entry-name-case")
+    create,
+
+    @Suppress("ktlint:standard:enum-entry-name-case")
+    delete,
 }
 
-enum class Tillat(val tillat: String) {
-    Ja("Permit"), Nei("Deny")
+enum class Tillat(
+    val tillat: String,
+) {
+    Ja("Permit"),
+    Nei("Deny"),
 }
 
-class AuditLog(val miljø: Environment) {
+class AuditLog(
+    val miljø: Environment,
+) {
     private val auditLog = LoggerFactory.getLogger("auditLogger")
     private val fiaLog = LoggerFactory.getLogger(this::class.java)
 
@@ -34,25 +49,25 @@ class AuditLog(val miljø: Environment) {
         saksnummer: String?,
         melding: String?,
         severity: String,
-        feilkode: String? = null
+        feilkode: String? = null,
     ) {
         val logstring =
             "CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=${System.currentTimeMillis()} " +
-                    "suid=$navIdent " +
-                    (orgnummer?.let { "duid=$it " } ?: "") +
-                    "sproc=${ULID.random()} " +
-                    "requestMethod=$method " +
-                    "request=${
-                        uri.substring(
-                            0,
-                            uri.length.coerceAtMost(70)
-                        )
-                    } " +
-                    "flexString1Label=Decision " +
-                    "flexString1=${tillat.tillat}" +
-                    (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
-                    (melding?.let { " msg=$it" } ?: "") +
-                    (feilkode?.let { " flexString3Label=feilkode flexString3=$it" })
+                "suid=$navIdent " +
+                (orgnummer?.let { "duid=$it " } ?: "") +
+                "sproc=${ULID.random()} " +
+                "requestMethod=$method " +
+                "request=${
+                    uri.substring(
+                        0,
+                        uri.length.coerceAtMost(70),
+                    )
+                } " +
+                "flexString1Label=Decision " +
+                "flexString1=${tillat.tillat}" +
+                (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
+                (melding?.let { " msg=$it" } ?: "") +
+                (feilkode?.let { " flexString3Label=feilkode flexString3=$it" })
 
         when (miljø) {
             `PROD-GCP` -> auditLog.info(logstring)
@@ -68,7 +83,7 @@ class AuditLog(val miljø: Environment) {
         saksnummer: String? = null,
         melding: String? = null,
         auditType: AuditType,
-        severity: String = if (orgnummer.isNullOrEmpty()) "WARN" else "INFO"
+        severity: String = if (orgnummer.isNullOrEmpty()) "WARN" else "INFO",
     ) {
         val tillat = when (either) {
             is Either.Left -> either.value.httpStatusCode.tilTillat()

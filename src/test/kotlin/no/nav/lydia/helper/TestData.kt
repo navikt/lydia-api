@@ -1,15 +1,22 @@
 package no.nav.lydia.helper
 
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentPubliseringsinfo
+import no.nav.lydia.ia.sak.domene.IATjeneste
+import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
-import no.nav.lydia.sykefraværsstatistikk.import.*
+import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
+import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import java.math.RoundingMode
 import java.time.LocalDate
 import kotlin.random.Random
-import no.nav.lydia.ia.sak.domene.IATjeneste
-import no.nav.lydia.ia.sak.domene.Modul
 
 const val MAX_SYKEFRAVÆRSPROSENT = 20
 const val MAX_GRADERINGSPROSENT = 80
@@ -34,7 +41,7 @@ class TestData(
         val BOLIGBYGGELAG = Næringsgruppe(kode = "41.101", navn = "Boligbyggelag")
         val DYRKING_AV_KORN = Næringsgruppe(
             kode = "$NÆRING_JORDBRUK.110",
-            navn = "Dyrking av korn (unntatt ris), belgvekster og oljeholdige vekster"
+            navn = "Dyrking av korn (unntatt ris), belgvekster og oljeholdige vekster",
         )
         val DYRKING_AV_RIS = Næringsgruppe(kode = "$NÆRING_JORDBRUK.120", navn = "Dyrking av ris")
 
@@ -52,7 +59,7 @@ class TestData(
             val publiseringsinfo = hentPubliseringsinfo()
             Periode(
                 årstall = publiseringsinfo.fraTil.til.årstall,
-                kvartal = publiseringsinfo.fraTil.til.kvartal
+                kvartal = publiseringsinfo.fraTil.til.kvartal,
             )
         }
 
@@ -61,32 +68,28 @@ class TestData(
             sektor: Sektor = Sektor.STATLIG,
             perioder: List<Periode> = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
             sykefraværsProsent: Double? = null,
-        ) =
-            TestData().lagData(
-                virksomhet = virksomhet,
-                perioder = perioder,
-                sektor = sektor,
-                sykefraværsProsent = sykefraværsProsent
-            )
+        ) = TestData().lagData(
+            virksomhet = virksomhet,
+            perioder = perioder,
+            sektor = sektor,
+            sykefraværsProsent = sykefraværsProsent,
+        )
 
-        fun Periode.lagPerioder(antall: Int): List<Periode> {
-            return rekursivtLagPerioder(antall, mutableListOf(), this)
-        }
+        fun Periode.lagPerioder(antall: Int): List<Periode> = rekursivtLagPerioder(antall, mutableListOf(), this)
 
         fun datoSentIGjeldendePeriode() = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal * 3), 30)
 
         private fun rekursivtLagPerioder(
             perioderIgjen: Int,
             perioder: MutableList<Periode>,
-            periode: Periode
-        ): List<Periode> {
-            return if (perioderIgjen == 0) {
+            periode: Periode,
+        ): List<Periode> =
+            if (perioderIgjen == 0) {
                 perioder
             } else {
                 perioder.add(periode)
                 rekursivtLagPerioder(perioderIgjen - 1, perioder, periode.forrigePeriode())
             }
-        }
     }
 
     private val sykefraværsstatistikkVirksomhetKafkaMeldinger =
@@ -102,14 +105,14 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.OSLO,
                 perioder = listOf(gjeldendePeriode, gjeldendePeriode.forrigePeriode()),
-                antallPersoner = 6.0
+                antallPersoner = 6.0,
             )
             lagData(
                 virksomhet = TestVirksomhet.BERGEN,
                 perioder = gjeldendePeriode.lagPerioder(2),
                 sykefraværsProsent = 7.0,
                 graderingsprosent = 20.0,
-                tapteDagsverk = 1000.0
+                tapteDagsverk = 1000.0,
             )
 
             lagData(virksomhet = TestVirksomhet.OSLO_FLERE_ADRESSER, perioder = listOf(gjeldendePeriode))
@@ -120,19 +123,19 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_STATUSFILTER,
                 perioder = gjeldendePeriode.lagPerioder(2),
-                sykefraværsProsent = 6.0
+                sykefraværsProsent = 6.0,
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_GRUNNLAG,
                 perioder = gjeldendePeriode.lagPerioder(2),
                 antallPersoner = 42.0,
-                sykefraværsProsent = 6.0
+                sykefraværsProsent = 6.0,
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_OPPDATERING,
                 perioder = gjeldendePeriode.lagPerioder(2),
                 antallPersoner = 42.0,
-                sykefraværsProsent = 6.0
+                sykefraværsProsent = 6.0,
             )
             lagData(
                 virksomhet = TestVirksomhet.TESTVIRKSOMHET_FOR_Å_TESTE_FEILAKTIG_MASKERT_STATISTIKK,
@@ -141,9 +144,8 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.VIRKSOMHET_MED_HISTORISK_STATISTIKK,
                 gjeldendePeriode.lagPerioder(20),
-                tapteDagsverk = 1_000_000.0
+                tapteDagsverk = 1_000_000.0,
             )
-
         }
         genererTilfeldigeVirksomheter(antallVirksomheter = antallTilfeldigeVirksomheter)
     }
@@ -153,7 +155,7 @@ class TestData(
             lagData(
                 virksomhet = TestVirksomhet.nyVirksomhet(),
                 perioder = listOf(gjeldendePeriode),
-                sektor = Sektor.entries[(0..2).random()]
+                sektor = Sektor.entries[(0..2).random()],
             )
         }
     }
@@ -179,7 +181,7 @@ class TestData(
                     sykefraværsProsent = sykefraværsProsent ?: (1..MAX_SYKEFRAVÆRSPROSENT).random().toDouble(),
                     antallPersoner = antallPersoner.toInt(),
                     tapteDagsverk = tapteDagsverk,
-                )
+                ),
             )
             graderingStatistikkVirksomhetKafkaMeldinger.add(
                 GradertSykemeldingImportDto(
@@ -192,7 +194,7 @@ class TestData(
                         tapteDagsverkGradert = tapteDagsverkGradert,
                         tapteDagsverk = tapteDagsverk,
                         antallPersoner = antallPersoner.toInt(),
-                        erMaskert = false
+                        erMaskert = false,
                     ),
                     siste4Kvartal = GraderingSiste4Kvartal(
                         prosent = graderingsProsent,
@@ -201,10 +203,10 @@ class TestData(
                         erMaskert = false,
                         kvartaler = listOf(
                             gjeldendePeriode.tilKvartal(),
-                            gjeldendePeriode.forrigePeriode().tilKvartal()
-                        )
-                    )
-                )
+                            gjeldendePeriode.forrigePeriode().tilKvartal(),
+                        ),
+                    ),
+                ),
             )
             sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger.add(
                 SykefraværsstatistikkMetadataVirksomhetImportDto(
@@ -213,8 +215,8 @@ class TestData(
                     kvartal = periode.kvartal,
                     sektor = sektor.name,
                     bransje = virksomhet.næringsundergruppe1.tilBransje()?.name,
-                    naring = virksomhet.næringsundergruppe1.tilTosifret()
-                )
+                    naring = virksomhet.næringsundergruppe1.tilTosifret(),
+                ),
             )
         }
         brregVirksomheter.add(virksomhet)
@@ -222,15 +224,11 @@ class TestData(
         return this
     }
 
-    fun sykefraværsstatistikkVirksomhetMeldinger() =
-        sykefraværsstatistikkVirksomhetKafkaMeldinger
+    fun sykefraværsstatistikkVirksomhetMeldinger() = sykefraværsstatistikkVirksomhetKafkaMeldinger
 
-    fun graderingStatistikkVirksomhetKafkaMeldinger() =
-        graderingStatistikkVirksomhetKafkaMeldinger
+    fun graderingStatistikkVirksomhetKafkaMeldinger() = graderingStatistikkVirksomhetKafkaMeldinger
 
-    fun sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger() =
-        sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger
-
+    fun sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger() = sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger
 }
 
 fun lagSykefraværsstatistikkPerKategoriImportDto(
@@ -242,27 +240,26 @@ fun lagSykefraværsstatistikkPerKategoriImportDto(
     tapteDagsverk: Double = 20.0,
     muligeDagsverk: Double = 125.0,
     maskert: Boolean = false,
-) =
-    SykefraværsstatistikkPerKategoriImportDto(
-        kategori = kategori,
-        kode = kode,
-        sistePubliserteKvartal = SistePubliserteKvartal(
-            årstall = periode.årstall,
-            kvartal = periode.kvartal,
-            prosent = sykefraværsProsent,
-            antallPersoner = antallPersoner,
-            tapteDagsverk = tapteDagsverk,
-            muligeDagsverk = muligeDagsverk,
-            erMaskert = maskert
+) = SykefraværsstatistikkPerKategoriImportDto(
+    kategori = kategori,
+    kode = kode,
+    sistePubliserteKvartal = SistePubliserteKvartal(
+        årstall = periode.årstall,
+        kvartal = periode.kvartal,
+        prosent = sykefraværsProsent,
+        antallPersoner = antallPersoner,
+        tapteDagsverk = tapteDagsverk,
+        muligeDagsverk = muligeDagsverk,
+        erMaskert = maskert,
+    ),
+    siste4Kvartal = Siste4Kvartal(
+        prosent = sykefraværsProsent,
+        tapteDagsverk = tapteDagsverk * 4,
+        muligeDagsverk = muligeDagsverk * 4,
+        erMaskert = maskert,
+        kvartaler = listOf(
+            TestData.gjeldendePeriode.tilKvartal(),
+            TestData.gjeldendePeriode.forrigePeriode().tilKvartal(),
         ),
-        siste4Kvartal = Siste4Kvartal(
-            prosent = sykefraværsProsent,
-            tapteDagsverk = tapteDagsverk * 4,
-            muligeDagsverk = muligeDagsverk * 4,
-            erMaskert = maskert,
-            kvartaler = listOf(
-                TestData.gjeldendePeriode.tilKvartal(),
-                TestData.gjeldendePeriode.forrigePeriode().tilKvartal()
-            )
-        )
-    )
+    ),
+)

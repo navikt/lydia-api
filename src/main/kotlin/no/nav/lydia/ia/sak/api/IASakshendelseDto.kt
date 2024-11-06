@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.sak.api
 
-
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 
@@ -10,5 +9,5 @@ open class IASakshendelseDto(
     val saksnummer: String,
     val hendelsesType: IASakshendelseType,
     val endretAvHendelseId: String,
-    val payload: String? = null
+    val payload: String? = null,
 )

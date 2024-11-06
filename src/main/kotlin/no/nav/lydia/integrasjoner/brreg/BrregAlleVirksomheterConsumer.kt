@@ -39,7 +39,10 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
         Runtime.getRuntime().addShutdownHook(Thread(BrregAlleVirksomheterConsumer::cancel))
     }
 
-    fun create(kafka: Kafka, repository: VirksomhetRepository) {
+    fun create(
+        kafka: Kafka,
+        repository: VirksomhetRepository,
+    ) {
         logger.info("Creating kafka consumer job for $topicNavn i group $consumerGroupId")
         job = Job()
         BrregAlleVirksomheterConsumer.kafka = kafka
@@ -47,7 +50,7 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
         kafkaConsumer = KafkaConsumer(
             BrregAlleVirksomheterConsumer.kafka.consumerProperties(consumerGroupId = consumerGroupId),
             StringDeserializer(),
-            StringDeserializer()
+            StringDeserializer(),
         )
         logger.info("Created kafka consumer job for $topicNavn i group $consumerGroupId")
     }
@@ -71,7 +74,7 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
                                 try {
                                     val virksomhet = brregVirksomhet.tilVirksomhet(
                                         status = VirksomhetStatus.AKTIV,
-                                        oppdateringsId = null
+                                        oppdateringsId = null,
                                     )
                                     virksomhetRepository.insertVirksomhet(virksomhet)
                                     virksomhetRepository.insertNæringsundergrupper(virksomhet)
@@ -99,10 +102,11 @@ object BrregAlleVirksomheterConsumer : CoroutineScope {
         }
     }
 
-    private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job for $topicNavn")
-        kafkaConsumer.wakeup()
-        job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job for $topicNavn")
-    }
+    private fun cancel() =
+        runBlocking {
+            logger.info("Stopping kafka consumer job for $topicNavn")
+            kafkaConsumer.wakeup()
+            job.cancelAndJoin()
+            logger.info("Stopped kafka consumer job for $topicNavn")
+        }
 }

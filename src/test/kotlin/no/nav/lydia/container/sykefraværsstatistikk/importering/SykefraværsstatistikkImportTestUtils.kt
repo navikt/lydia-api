@@ -4,12 +4,15 @@ import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestData
-import no.nav.lydia.sykefraværsstatistikk.import.*
+import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
+import no.nav.lydia.sykefraværsstatistikk.import.Kategori
+import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.Siste4Kvartal
+import no.nav.lydia.sykefraværsstatistikk.import.SistePubliserteKvartal
 import java.sql.ResultSet
 
-
 class SykefraværsstatistikkImportTestUtils {
-
     data class StatistikkGjeldendeKvartal(
         val kategori: Kategori,
         val kode: String,
@@ -33,12 +36,12 @@ class SykefraværsstatistikkImportTestUtils {
         val orgnr: String,
         val graderingSiste4Kvartal: GraderingSiste4Kvartal,
         val publisertÅrstall: Int,
-        val publisertKvartal: Int
+        val publisertKvartal: Int,
     )
 
     data class JsonMelding(
         val key: JsonKey,
-        val value: JsonValue
+        val value: JsonValue,
     ) {
         constructor(
             kategori: Kategori,
@@ -50,24 +53,25 @@ class SykefraværsstatistikkImportTestUtils {
             JsonKey(
                 kategori = kategori,
                 kode = kode,
-                kvartal = kvartal
+                kvartal = kvartal,
             ),
             JsonValue(
                 kategori = kategori,
                 kode = kode,
                 kvartal = kvartal,
                 sistePubliserteKvartal = sistePubliserteKvartal,
-                siste4Kvartal = siste4Kvartal
-            )
+                siste4Kvartal = siste4Kvartal,
+            ),
         )
 
         fun toJsonKey() = key.toJson()
+
         fun toJsonValue() = value.toJson()
     }
 
     data class JsonMeldingGradering(
         val key: JsonKeyGradering,
-        val value: JsonValueGradering
+        val value: JsonValueGradering,
     ) {
         constructor(
             kategori: String,
@@ -79,25 +83,26 @@ class SykefraværsstatistikkImportTestUtils {
             JsonKeyGradering(
                 kategori = kategori,
                 kode = kode,
-                kvartal = kvartal
+                kvartal = kvartal,
             ),
             JsonValueGradering(
                 kategori = kategori,
                 kode = kode,
                 kvartal = kvartal,
                 sistePubliserteKvartal = sistePubliserteKvartal,
-                siste4Kvartal = siste4Kvartal
-            )
+                siste4Kvartal = siste4Kvartal,
+            ),
         )
 
         fun toJsonKey() = key.toJson()
+
         fun toJsonValue() = value.toJson()
     }
 
     data class JsonKey(
         val kategori: Kategori,
         val kode: String,
-        val kvartal: Kvartal
+        val kvartal: Kvartal,
     )
 
     data class JsonValue(
@@ -111,7 +116,7 @@ class SykefraværsstatistikkImportTestUtils {
     data class JsonKeyGradering(
         val kategori: String,
         val kode: String,
-        val kvartal: Kvartal
+        val kvartal: Kvartal,
     )
 
     data class JsonValueGradering(
@@ -133,11 +138,11 @@ class SykefraværsstatistikkImportTestUtils {
             val optionalClauseOnKode = if (verdi == null) "" else "and orgnr = '$verdi'"
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-            delete from sykefravar_statistikk_virksomhet_gradering
-            where arstall = ${kvartal.årstall}
-              and kvartal = ${kvartal.kvartal}
-              $optionalClauseOnKode
-        """.trimIndent()
+                delete from sykefravar_statistikk_virksomhet_gradering
+                where arstall = ${kvartal.årstall}
+                  and kvartal = ${kvartal.kvartal}
+                  $optionalClauseOnKode
+                """.trimIndent(),
             )
         }
 
@@ -148,11 +153,11 @@ class SykefraværsstatistikkImportTestUtils {
             val optionalClauseOnKode = if (orgnr == null) "" else "and orgnr = '$orgnr'"
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-            delete from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal
-            where publisert_arstall = ${kvartal.årstall}
-              and publisert_kvartal = ${kvartal.kvartal}
-              $optionalClauseOnKode
-        """.trimIndent()
+                delete from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal
+                where publisert_arstall = ${kvartal.årstall}
+                  and publisert_kvartal = ${kvartal.kvartal}
+                  $optionalClauseOnKode
+                """.trimIndent(),
             )
         }
 
@@ -165,99 +170,110 @@ class SykefraværsstatistikkImportTestUtils {
 
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-            delete from ${kategori.tabellnavn()} 
-            where arstall = ${kvartal.årstall}
-              and kvartal = ${kvartal.kvartal}
-              $optionalClauseOnKode
-        """.trimIndent()
+                delete from ${kategori.tabellnavn()} 
+                where arstall = ${kvartal.årstall}
+                  and kvartal = ${kvartal.kvartal}
+                  $optionalClauseOnKode
+                """.trimIndent(),
             )
         }
 
         fun cleanUpStatistikkSiste4KvartalTable(
             kategori: Kategori,
-            verdi: String? = null
+            verdi: String? = null,
         ) {
             val erKategoriTabell = kategori != Kategori.VIRKSOMHET
             val tabellnavn =
-                if (erKategoriTabell) "sykefravar_statistikk_kategori_siste_4_kvartal" else "sykefravar_statistikk_virksomhet_siste_4_kvartal"
+                if (erKategoriTabell) {
+                    "sykefravar_statistikk_kategori_siste_4_kvartal"
+                } else {
+                    "sykefravar_statistikk_virksomhet_siste_4_kvartal"
+                }
             val kodeKolonneLabel = if (erKategoriTabell) "kode" else "orgnr"
             val optionalClauseOnKode = if (verdi == null) "" else "where $kodeKolonneLabel = '$verdi'"
             TestContainerHelper.postgresContainer.performUpdate(
                 """
-              delete from $tabellnavn 
-              $optionalClauseOnKode
-        """.trimIndent()
+                delete from $tabellnavn 
+                $optionalClauseOnKode
+                """.trimIndent(),
             )
         }
 
-        fun JsonKey.toJson(): String = """
-                {
-                  "kategori": "${kategori.name}",
-                  "kode": "$kode",
-                  "kvartal": ${kvartal.kvartal},
-                  "årstall": ${kvartal.årstall}
-                }""".trimIndent()
+        fun JsonKey.toJson(): String =
+            """
+            {
+              "kategori": "${kategori.name}",
+              "kode": "$kode",
+              "kvartal": ${kvartal.kvartal},
+              "årstall": ${kvartal.årstall}
+            }
+            """.trimIndent()
 
         private fun List<Kvartal>.toJson(): String =
             this.joinToString(
                 transform = { """{"årstall": ${it.årstall},"kvartal": ${it.kvartal}}""" },
-                separator = ","
+                separator = ",",
             ).trimIndent()
 
-        fun JsonKeyGradering.toJson(): String = """
-                {
-                  "kategori": "$kategori",
-                  "kode": "$kode",
-                  "kvartal": ${kvartal.kvartal},
-                  "årstall": ${kvartal.årstall}
-                }""".trimIndent()
+        fun JsonKeyGradering.toJson(): String =
+            """
+            {
+              "kategori": "$kategori",
+              "kode": "$kode",
+              "kvartal": ${kvartal.kvartal},
+              "årstall": ${kvartal.årstall}
+            }
+            """.trimIndent()
 
-        fun JsonValueGradering.toJson(): String = """
-                {
-                  "kategori": "$kategori",
-                  "kode": "$kode",
-                  "sistePubliserteKvartal": {
-                    "årstall": ${kvartal.årstall},
-                    "kvartal": ${kvartal.kvartal},
-                    "prosent": ${sistePubliserteKvartal.prosent?.toPlainString()},
-                    "tapteDagsverkGradert": ${sistePubliserteKvartal.tapteDagsverkGradert?.toPlainString()},
-                    "tapteDagsverk": ${sistePubliserteKvartal.tapteDagsverk?.toPlainString()},
-                    "antallPersoner": ${sistePubliserteKvartal.antallPersoner},
-                    "erMaskert": ${sistePubliserteKvartal.erMaskert}
-                  },
-                  "siste4Kvartal": {
-                    "prosent": ${siste4Kvartal.prosent?.toPlainString()},
-                    "tapteDagsverkGradert": ${siste4Kvartal.tapteDagsverkGradert?.toPlainString()},
-                    "tapteDagsverk": ${siste4Kvartal.tapteDagsverk?.toPlainString()},
-                    "erMaskert": ${siste4Kvartal.erMaskert},
-                    "kvartaler": [${siste4Kvartal.kvartaler.toJson()}]
-                  }
-                }""".trimIndent()
+        fun JsonValueGradering.toJson(): String =
+            """
+            {
+              "kategori": "$kategori",
+              "kode": "$kode",
+              "sistePubliserteKvartal": {
+                "årstall": ${kvartal.årstall},
+                "kvartal": ${kvartal.kvartal},
+                "prosent": ${sistePubliserteKvartal.prosent?.toPlainString()},
+                "tapteDagsverkGradert": ${sistePubliserteKvartal.tapteDagsverkGradert?.toPlainString()},
+                "tapteDagsverk": ${sistePubliserteKvartal.tapteDagsverk?.toPlainString()},
+                "antallPersoner": ${sistePubliserteKvartal.antallPersoner},
+                "erMaskert": ${sistePubliserteKvartal.erMaskert}
+              },
+              "siste4Kvartal": {
+                "prosent": ${siste4Kvartal.prosent?.toPlainString()},
+                "tapteDagsverkGradert": ${siste4Kvartal.tapteDagsverkGradert?.toPlainString()},
+                "tapteDagsverk": ${siste4Kvartal.tapteDagsverk?.toPlainString()},
+                "erMaskert": ${siste4Kvartal.erMaskert},
+                "kvartaler": [${siste4Kvartal.kvartaler.toJson()}]
+              }
+            }
+            """.trimIndent()
 
-        fun JsonValue.toJson(): String = """
-                {
-                  "kategori": "${kategori.name}",
-                  "kode": "$kode",
-                  "sistePubliserteKvartal": {
-                    "årstall": ${kvartal.årstall},
-                    "kvartal": ${kvartal.kvartal},
-                    "prosent": ${sistePubliserteKvartal.prosent?.toPlainString()},
-                    "tapteDagsverk": ${sistePubliserteKvartal.tapteDagsverk?.toPlainString()},
-                    "muligeDagsverk": ${sistePubliserteKvartal.muligeDagsverk?.toPlainString()},
-                    "antallPersoner": ${sistePubliserteKvartal.antallPersoner},
-                    "erMaskert": ${sistePubliserteKvartal.erMaskert}
-                  },
-                  "siste4Kvartal": {
-                    "prosent": ${siste4Kvartal.prosent?.toPlainString()},
-                    "tapteDagsverk": ${siste4Kvartal.tapteDagsverk?.toPlainString()},
-                    "muligeDagsverk": ${siste4Kvartal.muligeDagsverk?.toPlainString()},
-                    "erMaskert": ${siste4Kvartal.erMaskert},
-                    "kvartaler": [${siste4Kvartal.kvartaler.toJson()}]
-                  }
-                }""".trimIndent()
+        fun JsonValue.toJson(): String =
+            """
+            {
+              "kategori": "${kategori.name}",
+              "kode": "$kode",
+              "sistePubliserteKvartal": {
+                "årstall": ${kvartal.årstall},
+                "kvartal": ${kvartal.kvartal},
+                "prosent": ${sistePubliserteKvartal.prosent?.toPlainString()},
+                "tapteDagsverk": ${sistePubliserteKvartal.tapteDagsverk?.toPlainString()},
+                "muligeDagsverk": ${sistePubliserteKvartal.muligeDagsverk?.toPlainString()},
+                "antallPersoner": ${sistePubliserteKvartal.antallPersoner},
+                "erMaskert": ${sistePubliserteKvartal.erMaskert}
+              },
+              "siste4Kvartal": {
+                "prosent": ${siste4Kvartal.prosent?.toPlainString()},
+                "tapteDagsverk": ${siste4Kvartal.tapteDagsverk?.toPlainString()},
+                "muligeDagsverk": ${siste4Kvartal.muligeDagsverk?.toPlainString()},
+                "erMaskert": ${siste4Kvartal.erMaskert},
+                "kvartaler": [${siste4Kvartal.kvartaler.toJson()}]
+              }
+            }
+            """.trimIndent()
 
-        private fun Double.toPlainString(): String =
-            this.toBigDecimal().toPlainString()
+        private fun Double.toPlainString(): String = this.toBigDecimal().toPlainString()
 
         private infix fun Double?.shouldBeOrEqualZeroIfNull(expected: Double?) =
             when (expected) {
@@ -285,14 +301,14 @@ class SykefraværsstatistikkImportTestUtils {
         fun hentStatistikkGjeldendeKvartal(
             kategori: Kategori,
             verdi: String,
-            kvartal: Kvartal
+            kvartal: Kvartal,
         ): StatistikkGjeldendeKvartal {
             val erKategoriTabell = kategori != Kategori.VIRKSOMHET
             val query = """
             select * from ${kategori.tabellnavn()} 
              where ${kategori.kodenavn()} = '$verdi'
              and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
-        """.trimMargin()
+            """.trimMargin()
             TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
@@ -309,20 +325,20 @@ class SykefraværsstatistikkImportTestUtils {
                         tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                         muligeDagsverk = rs.getDouble("mulige_dagsverk"),
                         antallPersoner = rs.getInt("antall_personer"),
-                        erMaskert = rs.getBoolean("maskert")
-                    )
+                        erMaskert = rs.getBoolean("maskert"),
+                    ),
                 )
             }
         }
 
         fun hentStatistikkVirksomhetGraderingGjeldendeKvartal(
             orgnr: String,
-            kvartal: Kvartal
+            kvartal: Kvartal,
         ): StatistikkGraderingGjeldendeKvartal {
             val query = """
             select * from sykefravar_statistikk_virksomhet_gradering 
              where orgnr = '$orgnr' and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
-        """.trimMargin()
+            """.trimMargin()
             TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
@@ -339,20 +355,20 @@ class SykefraværsstatistikkImportTestUtils {
                         tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
                         tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                         antallPersoner = rs.getInt("antall_personer"),
-                        erMaskert = rs.getBoolean("maskert")
-                    )
+                        erMaskert = rs.getBoolean("maskert"),
+                    ),
                 )
             }
         }
 
         fun hentStatistikkVirksomhetGraderingSiste4Kvartal(
             orgnr: String,
-            kvartal: Kvartal
+            kvartal: Kvartal,
         ): StatistikkGraderingSiste4Kvartal {
             val query = """
             select * from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal 
              where orgnr = '$orgnr' and publisert_arstall = ${kvartal.årstall} and publisert_kvartal = ${kvartal.kvartal}
-        """.trimMargin()
+            """.trimMargin()
             TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
@@ -367,7 +383,7 @@ class SykefraværsstatistikkImportTestUtils {
                         tapteDagsverkGradert = rs.getDouble("tapte_dagsverk_gradert"),
                         tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                         kvartaler = rs.getString("kvartaler").tilKvartaler(),
-                        erMaskert = rs.getBoolean("maskert")
+                        erMaskert = rs.getBoolean("maskert"),
                     ),
                     publisertÅrstall = rs.getInt("publisert_arstall"),
                     publisertKvartal = rs.getInt("publisert_kvartal"),
@@ -375,10 +391,18 @@ class SykefraværsstatistikkImportTestUtils {
             }
         }
 
-        fun hentStatistikkSiste4Kvartal(kategori: Kategori, verdi: String, kvartal: Kvartal): StatistikkSiste4Kvartal {
+        fun hentStatistikkSiste4Kvartal(
+            kategori: Kategori,
+            verdi: String,
+            kvartal: Kvartal,
+        ): StatistikkSiste4Kvartal {
             val erKategoriTabell = kategori != Kategori.VIRKSOMHET
             val tabellnavn =
-                if (erKategoriTabell) "sykefravar_statistikk_kategori_siste_4_kvartal" else "sykefravar_statistikk_virksomhet_siste_4_kvartal"
+                if (erKategoriTabell) {
+                    "sykefravar_statistikk_kategori_siste_4_kvartal"
+                } else {
+                    "sykefravar_statistikk_virksomhet_siste_4_kvartal"
+                }
             val kodeKolonneLabel = if (erKategoriTabell) "kode" else "orgnr"
             val query = """
             select * from $tabellnavn 
@@ -386,7 +410,7 @@ class SykefraværsstatistikkImportTestUtils {
                $kodeKolonneLabel = '$verdi'
                AND publisert_kvartal = ${kvartal.kvartal}
                AND publisert_arstall = ${kvartal.årstall}
-        """.trimMargin()
+            """.trimMargin()
             TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
@@ -401,8 +425,8 @@ class SykefraværsstatistikkImportTestUtils {
                         tapteDagsverk = rs.getDouble("tapte_dagsverk"),
                         muligeDagsverk = rs.getDouble("mulige_dagsverk"),
                         erMaskert = rs.getBoolean("maskert"),
-                        kvartaler = rs.getString("kvartaler").tilKvartaler()
-                    )
+                        kvartaler = rs.getString("kvartaler").tilKvartaler(),
+                    ),
                 )
             }
         }
@@ -416,7 +440,6 @@ class SykefraværsstatistikkImportTestUtils {
             }
         }
 
-        private fun String.tilKvartaler(): List<Kvartal> =
-            Gson().fromJson(this, Array<Kvartal>::class.java).asList()
+        private fun String.tilKvartaler(): List<Kvartal> = Gson().fromJson(this, Array<Kvartal>::class.java).asList()
     }
 }

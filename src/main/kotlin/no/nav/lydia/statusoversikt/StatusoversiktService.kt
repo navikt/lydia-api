@@ -9,9 +9,7 @@ class StatusoversiktService(
 ) {
     val log = LoggerFactory.getLogger(this.javaClass)
 
-    fun søkEtterStatusoversikt(
-        søkeparametere: Søkeparametere,
-    ): List<Statusoversikt> {
+    fun søkEtterStatusoversikt(søkeparametere: Søkeparametere): List<Statusoversikt> {
         val start = System.currentTimeMillis()
         val statusoversikts = statusoversiktRepository.hentStatusoversikt(søkeparametere = søkeparametere)
 

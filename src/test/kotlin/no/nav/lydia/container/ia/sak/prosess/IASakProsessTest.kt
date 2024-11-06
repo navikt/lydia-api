@@ -368,7 +368,7 @@ class IASakProsessTest {
         val sak = nySakIKartlegges()
 
         val forLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN + 1)
-        val gyldigLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN )
+        val gyldigLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
         shouldFail {
             sak.opprettNyttSamarbeid(navn = forLangtNavn)
         }

@@ -12,7 +12,6 @@ class AppContainerTest {
     private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
     private val postgresContainer = TestContainerHelper.postgresContainer
 
-
     @Test
     fun `kaller isAlive`() {
         val (_, response, _) = lydiaApiContainer.performGet("internal/isalive")
@@ -31,7 +30,7 @@ class AppContainerTest {
                      WHERE TABLE_SCHEMA = 'public' 
                      AND  TABLE_NAME = 'sykefravar_statistikk_virksomhet'
                 )
-        """.trimIndent()
+            """.trimIndent(),
         )
         databaseErSattOpp.shouldBeTrue()
     }
@@ -42,14 +41,16 @@ class AppContainerTest {
             .responseString()
 
         assert(response.isSuccessful)
-        result.fold(success = { metrikker ->
-            metrikker shouldContain "process_cpu_usage"
-            metrikker shouldContain "jvm_memory_used_bytes"
-            metrikker shouldContain "ktor_http_server_requests_active"
-            metrikker shouldContain "hikaricp_connections_acquire_seconds_count"
-        }, failure = {
-            fail("")
-        }
+        result.fold(
+            success = { metrikker ->
+                metrikker shouldContain "process_cpu_usage"
+                metrikker shouldContain "jvm_memory_used_bytes"
+                metrikker shouldContain "ktor_http_server_requests_active"
+                metrikker shouldContain "hikaricp_connections_acquire_seconds_count"
+            },
+            failure = {
+                fail("")
+            },
         )
     }
 
@@ -74,7 +75,7 @@ class AppContainerTest {
             },
             failure = {
                 fail("")
-            }
+            },
         )
     }
 }

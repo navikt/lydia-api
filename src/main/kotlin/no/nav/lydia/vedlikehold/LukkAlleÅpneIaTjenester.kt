@@ -11,7 +11,7 @@ import no.nav.lydia.tilgangskontroll.fia.Rolle
 
 class LukkAlleÅpneIaTjenester(
     val iaSakLeveranseRepository: IASakLeveranseRepository,
-    val iaSakLeveranseProdusent: IASakLeveranseProdusent
+    val iaSakLeveranseProdusent: IASakLeveranseProdusent,
 ) {
     fun kjør() {
         iaSakLeveranseRepository.hentAlleIASakLeveranser().filter {
@@ -24,8 +24,8 @@ class LukkAlleÅpneIaTjenester(
                     "Fia system",
                     "Fia system",
                     "",
-                    emptySet()
-                )
+                    emptySet(),
+                ),
             ).map { iaTjeneste ->
                 iaSakLeveranseProdusent.sendMelding(
                     iaTjeneste.id.toString(),
@@ -45,12 +45,10 @@ class LukkAlleÅpneIaTjenester(
                         java.time.LocalDateTime.now().toKotlinLocalDateTime(),
                         IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnummer,
                         IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnavn,
-                        iaTjeneste.opprettetTidspunkt?.toKotlinLocalDateTime()
-                    )
+                        iaTjeneste.opprettetTidspunkt?.toKotlinLocalDateTime(),
+                    ),
                 )
             }
-
-
         }
     }
 }

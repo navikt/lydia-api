@@ -1,7 +1,13 @@
 package no.nav.lydia.sykefraværsstatistikk.import
 
 import com.google.gson.GsonBuilder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Helse
@@ -34,7 +40,10 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         Runtime.getRuntime().addShutdownHook(Thread(StatistikkMetadataVirksomhetConsumer::cancel))
     }
 
-    fun create(kafka: Kafka, sykefraværsstatistikkService: SykefraværsstatistikkService) {
+    fun create(
+        kafka: Kafka,
+        sykefraværsstatistikkService: SykefraværsstatistikkService,
+    ) {
         logger.info("Creating kafka consumer job i StatistikkMetadataVirksomhetConsumer")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
@@ -42,7 +51,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         this.kafkaConsumer = KafkaConsumer(
             StatistikkMetadataVirksomhetConsumer.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
-            StringDeserializer()
+            StringDeserializer(),
         )
         logger.info("Created kafka consumer job i StatistikkMetadataVirksomhetConsumer")
     }
@@ -60,7 +69,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
                             if (!records.isEmpty) {
                                 sykefraværsstatistikkService.lagreStatistikkMetadataVirksomhet(
                                     records.toSykefraværsstatistikkMetadataVirksomhetImportDto()
-                                        .tilBehandletImportMetadataVirksomhet()
+                                        .tilBehandletImportMetadataVirksomhet(),
                                 )
                                 logger.info("Lagret ${records.count()} meldinger om i StatistikkMetadataVirksomhetConsumer")
                                 consumer.commitSync()
@@ -68,7 +77,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
                         } catch (e: RetriableException) {
                             logger.warn(
                                 "Had a retriable exception in StatistikkMetadataVirksomhetConsumer, retrying",
-                                e
+                                e,
                             )
                         }
                         delay(kafka.consumerLoopDelay)
@@ -83,20 +92,21 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         }
     }
 
-    private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job i StatistikkMetadataVirksomhetConsumer")
-        kafkaConsumer.wakeup()
-        job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job i StatistikkMetadataVirksomhetConsumer")
-    }
+    private fun cancel() =
+        runBlocking {
+            logger.info("Stopping kafka consumer job i StatistikkMetadataVirksomhetConsumer")
+            kafkaConsumer.wakeup()
+            job.cancelAndJoin()
+            logger.info("Stopped kafka consumer job i StatistikkMetadataVirksomhetConsumer")
+        }
 
     private fun ConsumerRecords<String, String>.toSykefraværsstatistikkMetadataVirksomhetImportDto():
-            List<SykefraværsstatistikkMetadataVirksomhetImportDto> {
+        List<SykefraværsstatistikkMetadataVirksomhetImportDto> {
         val gson = GsonBuilder().create()
         return this.map {
             gson.fromJson(
                 it.value(),
-                SykefraværsstatistikkMetadataVirksomhetImportDto::class.java
+                SykefraværsstatistikkMetadataVirksomhetImportDto::class.java,
             )
         }
     }

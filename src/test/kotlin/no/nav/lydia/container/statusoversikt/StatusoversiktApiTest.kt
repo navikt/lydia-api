@@ -25,7 +25,7 @@ class StatusoversiktApiTest {
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
                 sektor = Sektor.KOMMUNAL.kode,
-                token = mockOAuth2Server.superbruker1.token
+                token = mockOAuth2Server.superbruker1.token,
             ).third.get().data
 
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
@@ -37,13 +37,13 @@ class StatusoversiktApiTest {
     @Test
     fun `skal ikke kunne hente statusoversikt dersom man ikke er superbruker eller saksbehandler`() {
         StatusoversiktHelper.hentStatusoversikt(
-            token = mockOAuth2Server.lesebruker.token
+            token = mockOAuth2Server.lesebruker.token,
         ).second.statusCode shouldBe 403
         StatusoversiktHelper.hentStatusoversikt(
-            token = mockOAuth2Server.saksbehandler1.token
+            token = mockOAuth2Server.saksbehandler1.token,
         ).second.statusCode shouldBe 200
         StatusoversiktHelper.hentStatusoversikt(
-            token = mockOAuth2Server.superbruker1.token
+            token = mockOAuth2Server.superbruker1.token,
         ).second.statusCode shouldBe 200
     }
 
@@ -51,7 +51,7 @@ class StatusoversiktApiTest {
     fun `skal kunne filtrere på sektor`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(),
-            sektor = Sektor.KOMMUNAL
+            sektor = Sektor.KOMMUNAL,
         )
 
         nySakIViBistår(orgnummer = virksomhet.orgnr)
@@ -63,7 +63,7 @@ class StatusoversiktApiTest {
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
                 sektor = Sektor.KOMMUNAL.kode,
-                token = mockOAuth2Server.superbruker1.token
+                token = mockOAuth2Server.superbruker1.token,
             ).third.get().data
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
         statusoversiktKommunalSektor.first { statusoversikt ->
@@ -75,8 +75,8 @@ class StatusoversiktApiTest {
     fun `skal kunne filtrere på næring eller bransje`() {
         val virksomhet = VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(BOLIGBYGGELAG)
-            )
+                næringer = listOf(BOLIGBYGGELAG),
+            ),
         )
         nySakIViBistår(orgnummer = virksomhet.orgnr)
             .leggTilLeveranseOgFullførSak()
@@ -85,15 +85,15 @@ class StatusoversiktApiTest {
 
         VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
-                næringer = listOf(BARNEHAGER)
-            )
+                næringer = listOf(BARNEHAGER),
+            ),
         )
 
         val statusoversiktResults =
             StatusoversiktHelper.hentStatusoversikt(
                 næringsgrupper = "41",
                 bransjeProgram = "BARNEHAGER",
-                token = mockOAuth2Server.superbruker1.token
+                token = mockOAuth2Server.superbruker1.token,
             ).third.get().data
 
         statusoversiktResults.size shouldBeGreaterThan 1

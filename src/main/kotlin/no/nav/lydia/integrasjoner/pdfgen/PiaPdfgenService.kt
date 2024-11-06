@@ -9,25 +9,28 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.ia.sak.api.Feil
-import java.util.*
+import java.util.Base64
 
-class PiaPdfgenService(naisEnvironment: NaisEnvironment) {
+class PiaPdfgenService(
+    naisEnvironment: NaisEnvironment,
+) {
     val url = naisEnvironment.integrasjoner.piaPdfgenUrl
 
     fun genererBase64EnkodetBistandPdf(iaSamarbeidDto: IASamarbeidDto) =
         genererPdfDokument(
             PdfType.IA_SAMARBEID,
-            Json.encodeToString<IASamarbeidDto>(iaSamarbeidDto)
+            Json.encodeToString<IASamarbeidDto>(iaSamarbeidDto),
         ).map { it.tilBase64() }
 
-    fun genererPdfDokument(pdfType: PdfType, json: String) =
-        "$url/api/v1/genpdf/pia/${pdfType.type}".httpPost()
-            .jsonBody(json)
-            .response().third.fold(
-                success = { it.right() },
-                failure = { Feil(it.localizedMessage, HttpStatusCode.InternalServerError).left() }
-            )
+    fun genererPdfDokument(
+        pdfType: PdfType,
+        json: String,
+    ) = "$url/api/v1/genpdf/pia/${pdfType.type}".httpPost()
+        .jsonBody(json)
+        .response().third.fold(
+            success = { it.right() },
+            failure = { Feil(it.localizedMessage, HttpStatusCode.InternalServerError).left() },
+        )
 
-    private fun ByteArray.tilBase64() =
-        String(Base64.getEncoder().encode(this))
+    private fun ByteArray.tilBase64() = String(Base64.getEncoder().encode(this))
 }

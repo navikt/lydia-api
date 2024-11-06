@@ -48,13 +48,13 @@ class IASakLeveranseEksportererTest {
         val sak = nySakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(
             modulId = TestData.AKTIV_MODUL.id,
-            token = oauth2ServerContainer.saksbehandler1.token
+            token = oauth2ServerContainer.saksbehandler1.token,
         )
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = leveranse.id.toString(),
-                konsument = konsument
+                konsument = konsument,
             ) { meldinger ->
                 val objektene = meldinger.map {
                     Json.decodeFromString<IASakLeveranseValue>(it)
@@ -74,7 +74,7 @@ class IASakLeveranseEksportererTest {
                     it.opprettetTidspunkt shouldBe postgresContainer.hentEnkelKolonne<Timestamp?>(
                         """
                         select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
-                    """.trimIndent()
+                        """.trimIndent(),
                     )?.toLocalDateTime()?.toKotlinLocalDateTime()
                 }
             }
@@ -86,19 +86,21 @@ class IASakLeveranseEksportererTest {
         val sak = nySakIViBistår()
         val nyLeveranse = sak.opprettIASakLeveranse(
             modulId = TestData.AKTIV_MODUL.id,
-            token = oauth2ServerContainer.saksbehandler1.token
+            token = oauth2ServerContainer.saksbehandler1.token,
         )
         sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
 
         val levertLeveranse = nyLeveranse.oppdaterIASakLeveranse(
-            orgnr = sak.orgnr, status = IASakLeveranseStatus.LEVERT, token = oauth2ServerContainer.saksbehandler2.token
+            orgnr = sak.orgnr,
+            status = IASakLeveranseStatus.LEVERT,
+            token = oauth2ServerContainer.saksbehandler2.token,
         )
         levertLeveranse.slettIASakLeveranse(sak.orgnr, token = oauth2ServerContainer.saksbehandler2.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = nyLeveranse.id.toString(),
-                konsument = konsument
+                konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 3
                 meldinger.forExactlyOne {
@@ -137,7 +139,7 @@ class IASakLeveranseEksportererTest {
         val sak = nySakIViBistår()
         val nyLeveranse = sak.opprettIASakLeveranse(
             modulId = TestData.AKTIV_MODUL.id,
-            token = oauth2ServerContainer.saksbehandler1.token
+            token = oauth2ServerContainer.saksbehandler1.token,
         )
 
         var melding: IASakLeveranseValue? = null
@@ -145,7 +147,7 @@ class IASakLeveranseEksportererTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = nyLeveranse.id.toString(),
-                konsument = konsument
+                konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveSize 1
                 melding = Json.decodeFromString(meldinger.first())
@@ -157,7 +159,7 @@ class IASakLeveranseEksportererTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = nyLeveranse.id.toString(),
-                konsument = konsument
+                konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveSize 1
                 Json.decodeFromString<IASakLeveranseValue>(meldinger.first()) shouldBe melding

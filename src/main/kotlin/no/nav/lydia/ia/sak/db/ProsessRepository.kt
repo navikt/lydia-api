@@ -100,8 +100,7 @@ class ProsessRepository(
         }
     }
 
-    private fun String?.nullIfEmpty() =
-        this?.trim()?.takeIf { it.isNotEmpty() }
+    private fun String?.nullIfEmpty() = this?.trim()?.takeIf { it.isNotEmpty() }
 
     private fun mapRowToIaProsessDto(row: Row) =
         IAProsess(

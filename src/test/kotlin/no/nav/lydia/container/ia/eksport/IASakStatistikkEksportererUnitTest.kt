@@ -3,12 +3,12 @@ package no.nav.lydia.container.ia.eksport
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
 import io.kotest.matchers.shouldBe
+import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
+import no.nav.lydia.helper.TestData.Companion.NÆRING_BARNEHAGE
 import no.nav.lydia.ia.eksport.finnBransje
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import kotlin.test.Test
-import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
-import no.nav.lydia.helper.TestData.Companion.NÆRING_BARNEHAGE
 
 class IASakStatistikkEksportererUnitTest {
     private val næringsgruppeIkkeIBransjeprogram =
@@ -40,29 +40,29 @@ class IASakStatistikkEksportererUnitTest {
         finnBransje(
             listOf(
                 næringsgruppeIkkeIBransjeprogram,
-                næringsgruppeBygg
-            )
+                næringsgruppeBygg,
+            ),
         ) shouldBe Bransje.BYGG
 
         finnBransje(
             listOf(
                 BARNEHAGER,
-                næringsgruppeBygg
-            )
+                næringsgruppeBygg,
+            ),
         ) shouldBe Bransje.BARNEHAGER
 
         finnBransje(
             listOf(
                 NÆRING_BARNEHAGE,
-                næringsgruppeBygg
-            )
+                næringsgruppeBygg,
+            ),
         ) shouldBe Bransje.BYGG
 
         finnBransje(
             listOf(
                 næringsgruppeIkkeIBransjeprogram,
-                Næringsgruppe("Denne næringen finnes ikke heller i et bransjeprogram", "99998")
-            )
+                Næringsgruppe("Denne næringen finnes ikke heller i et bransjeprogram", "99998"),
+            ),
         ) shouldBe null
 
         finnBransje(emptyList()) shouldBe null
@@ -73,15 +73,15 @@ class IASakStatistikkEksportererUnitTest {
         finnBransje(
             listOf(
                 BARNEHAGER,
-                næringsgruppeBygg
-            )
+                næringsgruppeBygg,
+            ),
         ) shouldBe Bransje.BARNEHAGER
 
         finnBransje(
             listOf(
                 næringsgruppeBygg,
                 BARNEHAGER,
-            )
+            ),
         ) shouldBe Bransje.BYGG
     }
 }

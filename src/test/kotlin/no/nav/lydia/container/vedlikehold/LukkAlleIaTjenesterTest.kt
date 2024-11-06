@@ -63,9 +63,11 @@ class LukkAlleIaTjenesterTest {
                 }
             }
 
-            postgresContainer.hentEnkelKolonne<String>("""
+            postgresContainer.hentEnkelKolonne<String>(
+                """
                 select status from iasak_leveranse where id = ${leveranse.id}
-            """.trimIndent()) shouldBe "LEVERT"
+                """.trimIndent(),
+            ) shouldBe "LEVERT"
         }
     }
 }

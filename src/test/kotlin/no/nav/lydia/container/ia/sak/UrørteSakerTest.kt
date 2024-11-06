@@ -55,7 +55,7 @@ class UrørteSakerTest {
             hentSamarbeidshistorikk(orgnummer = sak.orgnr).forExactlyOne { sakshistorikk ->
                 sakshistorikk.sakshendelser.forExactlyOne { snapshot ->
                     snapshot.begrunnelser shouldBe listOf(
-                        BegrunnelseType.AUTOMATISK_LUKKET.navn
+                        BegrunnelseType.AUTOMATISK_LUKKET.navn,
                     )
                 }
             }
@@ -67,7 +67,7 @@ class UrørteSakerTest {
         val sakMedEier = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = oauth2ServerContainer.saksbehandler1.token
+                token = oauth2ServerContainer.saksbehandler1.token,
             )
         sakMedEier.oppdaterHendelsesTidspunkter(antallDagerTilbake = 365)
 
@@ -131,7 +131,7 @@ class UrørteSakerTest {
                     enhetsnummer = rs.getString("nav_enhet_nummer"),
                     enhetsnavn = rs.getString("nav_enhet_navn"),
                 ),
-                resulterendeStatus = rs.getString("resulterende_status")?.let { IAProsessStatus.valueOf(it) }
+                resulterendeStatus = rs.getString("resulterende_status")?.let { IAProsessStatus.valueOf(it) },
             )
         }
     }

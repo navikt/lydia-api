@@ -9,7 +9,6 @@ import java.lang.IllegalStateException
 import kotlin.test.Test
 
 class BehandletImportMetadataVirksomhetTest {
-
     @Test
     fun `Metadata virksomhet uten gyldig sektor skal ikke kunne mappes direkte til BehandletImportMetadataVirksomhet`() {
         assertSektorIkkeStøttesTilImport("")
@@ -25,7 +24,7 @@ class BehandletImportMetadataVirksomhetTest {
                 kvartal = 2,
                 orgnr = "999999999",
                 naring = "41",
-                bransje = "BYGG"
+                bransje = "BYGG",
             ),
             SykefraværsstatistikkMetadataVirksomhetImportDto(
                 sektor = "PRIVAT",
@@ -33,7 +32,7 @@ class BehandletImportMetadataVirksomhetTest {
                 kvartal = 2,
                 orgnr = "777777777",
                 naring = "49",
-                bransje = "TRANSPORT"
+                bransje = "TRANSPORT",
             ),
             SykefraværsstatistikkMetadataVirksomhetImportDto(
                 sektor = "UKJENT",
@@ -41,15 +40,14 @@ class BehandletImportMetadataVirksomhetTest {
                 kvartal = 2,
                 orgnr = "666666666",
                 naring = "49",
-                bransje = "TRANSPORT"
-            )
+                bransje = "TRANSPORT",
+            ),
         ).tilBehandletImportMetadataVirksomhet()
 
         result.size shouldBe 1
         result[0].orgnr shouldBe "777777777"
         result[0].sektor shouldBe Sektor.PRIVAT
     }
-
 
     private fun assertSektorIkkeStøttesTilImport(sektor: String) {
         val exceptionFordiSektorIkkeStøttesTilImport = shouldThrow<IllegalStateException> {
@@ -59,7 +57,7 @@ class BehandletImportMetadataVirksomhetTest {
                 kvartal = 2,
                 orgnr = "999999999",
                 naring = "41",
-                bransje = "BYGG"
+                bransje = "BYGG",
             ).tilBehandletImportMetadataVirksomhet()
         }
 

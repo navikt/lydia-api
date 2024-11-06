@@ -31,7 +31,7 @@ class AuditLogTest {
         nyttOrgnummer().also { orgnummer ->
             SakHelper.opprettSakForVirksomhetRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.superbruker1.token
+                token = mockOAuth2Server.superbruker1.token,
             ).also {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
@@ -39,7 +39,7 @@ class AuditLogTest {
                     orgnummer = orgnummer,
                     auditType = AuditType.create,
                     tillat = Tillat.Ja,
-                    saksnummer = it.third.get().saksnummer
+                    saksnummer = it.third.get().saksnummer,
                 )
             }
         }
@@ -47,7 +47,7 @@ class AuditLogTest {
         nyttOrgnummer().also { orgnummer ->
             SakHelper.opprettSakForVirksomhetRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.saksbehandler1.token
+                token = mockOAuth2Server.saksbehandler1.token,
             ).also {
                 lydiaApiContainer shouldContainLog auditLog(
                     request = it.first,
@@ -62,7 +62,7 @@ class AuditLogTest {
         nyttOrgnummer().also { orgnummer ->
             SakHelper.opprettSakForVirksomhetRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+                token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
             )
                 .also {
                     lydiaApiContainer shouldContainLog auditLog(
@@ -88,12 +88,12 @@ class AuditLogTest {
                     orgnummer = orgnummer,
                     auditType = AuditType.create,
                     tillat = Tillat.Ja,
-                    saksnummer = iaSak.saksnummer
+                    saksnummer = iaSak.saksnummer,
                 )
                 SakHelper.nyHendelsePåSakMedRespons(
                     iaSak,
                     IASakshendelseType.TA_EIERSKAP_I_SAK,
-                    token = mockOAuth2Server.lesebrukerAudit.token
+                    token = mockOAuth2Server.lesebrukerAudit.token,
                 ).also { responsPåTaEierskapMedLesebruker ->
                     lydiaApiContainer shouldContainLog auditLog(
                         request = responsPåTaEierskapMedLesebruker.first,
@@ -101,14 +101,14 @@ class AuditLogTest {
                         orgnummer = orgnummer,
                         auditType = AuditType.update,
                         tillat = Tillat.Nei,
-                        saksnummer = iaSak.saksnummer
+                        saksnummer = iaSak.saksnummer,
                     )
                 }
 
                 SakHelper.nyHendelsePåSakMedRespons(
                     iaSak,
                     IASakshendelseType.TA_EIERSKAP_I_SAK,
-                    token = mockOAuth2Server.saksbehandler1.token
+                    token = mockOAuth2Server.saksbehandler1.token,
                 ).also { responsPåTaEierskapMedSaksbehandler ->
                     lydiaApiContainer shouldContainLog auditLog(
                         request = responsPåTaEierskapMedSaksbehandler.first,
@@ -116,7 +116,7 @@ class AuditLogTest {
                         orgnummer = orgnummer,
                         auditType = AuditType.update,
                         tillat = Tillat.Ja,
-                        saksnummer = iaSak.saksnummer
+                        saksnummer = iaSak.saksnummer,
                     )
                 }
             }
@@ -157,12 +157,12 @@ class AuditLogTest {
                     orgnummer = orgnummer,
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
-                    saksnummer = sak.saksnummer
+                    saksnummer = sak.saksnummer,
                 )
             }
         SakHelper.hentSamarbeidshistorikkRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+            token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
         )
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
@@ -175,13 +175,12 @@ class AuditLogTest {
             }
     }
 
-
     @Test
     fun `auditlogger uthenting av sykefraværsstatistikk på en enkelt virksomhet`() {
         val orgnummer = "917482498"
         StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.lesebruker.token
+            token = mockOAuth2Server.lesebruker.token,
         ).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
@@ -193,7 +192,7 @@ class AuditLogTest {
         }
         StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.brukerUtenTilgangsrolle.token
+            token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
         ).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
@@ -210,7 +209,7 @@ class AuditLogTest {
         val orgnummer = "ikke_org_nr"
         StatistikkHelper.hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.lesebruker.token
+            token = mockOAuth2Server.lesebruker.token,
         ).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
@@ -218,7 +217,7 @@ class AuditLogTest {
                 orgnummer = orgnummer,
                 auditType = AuditType.access,
                 tillat = Tillat.Ja,
-                feilkode = HttpStatusCode.NotFound.value.toString()
+                feilkode = HttpStatusCode.NotFound.value.toString(),
             )
         }
     }
@@ -229,7 +228,7 @@ class AuditLogTest {
         val superbruker = mockOAuth2Server.superbruker1
         VirksomhetHelper.hentVirksomhetsinformasjonRespons(
             orgnummer,
-            token = superbruker.token
+            token = superbruker.token,
         ).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
@@ -242,7 +241,7 @@ class AuditLogTest {
         val brukerUtenTilgangsrolle = mockOAuth2Server.brukerUtenTilgangsrolle
         VirksomhetHelper.hentVirksomhetsinformasjonRespons(
             orgnummer,
-            token = brukerUtenTilgangsrolle.token
+            token = brukerUtenTilgangsrolle.token,
         ).also {
             lydiaApiContainer shouldContainLog auditLog(
                 request = it.first,
@@ -262,13 +261,13 @@ class AuditLogTest {
                 lydiaApiContainer shouldContainLog auditLog(
                     path = "/$SYKEFRAVÆRSSTATISTIKK_PATH?$KOMMUNER=&$FYLKER=&$NÆRINGSGRUPPER=&$SORTERINGSNØKKEL".substring(
                         0,
-                        70
+                        70,
                     ),
                     method = "GET",
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
-                    melding = "Søk med parametere: sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1"
+                    melding = "Søk med parametere: sorteringsnokkel=tapte_dagsverk sorteringsretning=desc side=1",
                 )
             }
     }
@@ -289,7 +288,7 @@ class AuditLogTest {
             iaStatus = "FULLFØRT",
             side = "2",
             bransjeProgram = "fly",
-            eiere = "N123"
+            eiere = "N123",
         )
             .also {
                 lydiaApiContainer shouldContainLog auditLog(
@@ -298,7 +297,8 @@ class AuditLogTest {
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
-                    melding = "Søk med parametere: sykefravarsprosentFra=5.0 sykefravarsprosentTil=30.0 ansatteFra=10 ansatteTil=50 kommuner=[1750] naringsgrupper=[bil] iaStatus=50 sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2"
+                    melding =
+                        "Søk med parametere: sykefravarsprosentFra=5.0 sykefravarsprosentTil=30.0 ansatteFra=10 ansatteTil=50 kommuner=[1750] naringsgrupper=[bil] iaStatus=50 sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2",
                 )
             }
     }
@@ -314,7 +314,7 @@ class AuditLogTest {
                     navIdent = saksbehandler.navIdent,
                     auditType = AuditType.access,
                     tillat = Tillat.Ja,
-                    melding = "Henter IA-tjenestene som er under arbeid og eies av: ${saksbehandler.navIdent}"
+                    melding = "Henter IA-tjenestene som er under arbeid og eies av: ${saksbehandler.navIdent}",
                 )
             }
 
@@ -327,7 +327,7 @@ class AuditLogTest {
                     navIdent = lesebruker.navIdent,
                     auditType = AuditType.access,
                     tillat = Tillat.Nei,
-                    melding = ""
+                    melding = "",
                 )
             }
     }
@@ -341,8 +341,8 @@ class AuditLogTest {
         saksnummer: String? = null,
         severity: String = "INFO",
         feilkode: String? = null,
-    ): Regex {
-        return auditLog(
+    ): Regex =
+        auditLog(
             method = request.method.toString(),
             path = request.url.path,
             navIdent = navIdent,
@@ -353,7 +353,6 @@ class AuditLogTest {
             severity = severity,
             feilkode = feilkode,
         )
-    }
 
     private fun auditLog(
         method: String,
@@ -366,17 +365,17 @@ class AuditLogTest {
         melding: String? = null,
         severity: String = "INFO",
         feilkode: String? = null,
-    ) =
-        ("CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=[0-9]+ " +
-                "suid=$navIdent " +
-                (orgnummer?.let { "duid=$it " } ?: "") +
-                "sproc=.{26} " +
-                "requestMethod=$method " +
-                "request=$path " +
-                "flexString1Label=Decision " +
-                "flexString1=${tillat.tillat}" +
-                (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
-                (feilkode?.let { " flexString3Label=feilkode flexString3=$it" } ?: "") +
-                (melding?.let { " msg=${it.replace("[", "\\[").replace("]", "\\]")}" } ?: "")
-                ).replace("|", "\\|").replace("?", "\\?").toRegex()
+    ) = (
+        "CEF:0|fia-api|auditLog|1.0|audit:${auditType.name}|fia-api|$severity|end=[0-9]+ " +
+            "suid=$navIdent " +
+            (orgnummer?.let { "duid=$it " } ?: "") +
+            "sproc=.{26} " +
+            "requestMethod=$method " +
+            "request=$path " +
+            "flexString1Label=Decision " +
+            "flexString1=${tillat.tillat}" +
+            (saksnummer?.let { " flexString2Label=saksnummer flexString2=$it" } ?: "") +
+            (feilkode?.let { " flexString3Label=feilkode flexString3=$it" } ?: "") +
+            (melding?.let { " msg=${it.replace("[", "\\[").replace("]", "\\]")}" } ?: "")
+    ).replace("|", "\\|").replace("?", "\\?").toRegex()
 }

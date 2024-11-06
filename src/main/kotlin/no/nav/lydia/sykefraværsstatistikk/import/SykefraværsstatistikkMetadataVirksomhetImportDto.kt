@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class SykefraværsstatistikkMetadataVirksomhetImportDto(
     @SerializedName("orgnr")
     val orgnr: String,
-    @SerializedName("arstall") // OBS: feltet er 'årstall' og ikke 'arstall' i sykefravarsstatistikk-metadata-virksomhet-v1
+    @SerializedName("arstall")
     val årstall: Int,
     @SerializedName("kvartal")
     val kvartal: Int,

@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory.getLogger
 private const val QUERY_PATH = "/services/data/v59.0/query"
 private const val TOKEN_TIMEOUT_MS = 50 * 60 * 1000 // 50 min i ms
 
-class SalesforceClient(private val salesforce: Salesforce) {
+class SalesforceClient(
+    private val salesforce: Salesforce,
+) {
     private val logger = getLogger(SalesforceClient::class.java)
     private var cachedToken: SalesforceAccessToken? = null
     private val httpClient = HttpClient(CIO) {
@@ -47,7 +49,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 header("Authorization", "Bearer ${gyldigToken.accessToken}")
                 parameter(
                     "q",
-                    "SELECT Id, INT_OrganizationNumber__c, TAG_Partner_Status__c FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'"
+                    "SELECT Id, INT_OrganizationNumber__c, TAG_Partner_Status__c FROM Account WHERE INT_OrganizationNumber__c = '$orgnr'",
                 )
             }
 
@@ -66,11 +68,12 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 orgnr = queryResponse.records.first().INT_OrganizationNumber__c,
                 url = "${gyldigToken.instanceUrl}/${queryResponse.records.first().Id}",
                 partnerStatus = queryResponse.records.first().TAG_Partner_Status__c?.let { status ->
-                    if (status.equals("Strategisk Partner", ignoreCase = true))
+                    if (status.equals("Strategisk Partner", ignoreCase = true)) {
                         status
-                    else
+                    } else {
                         null
-                }
+                    }
+                },
             ).right()
         }
     }
@@ -92,7 +95,7 @@ class SalesforceClient(private val salesforce: Salesforce) {
                 append("client_secret", salesforce.clientSecret)
                 append("username", salesforce.username)
                 append("password", salesforce.password + salesforce.securityToken)
-            }
+            },
         )
 
         if (!response.status.isSuccess()) {

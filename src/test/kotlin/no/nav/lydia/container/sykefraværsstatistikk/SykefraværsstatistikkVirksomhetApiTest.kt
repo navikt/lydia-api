@@ -3,8 +3,6 @@ package no.nav.lydia.container.sykefraværsstatistikk
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.definisjoner.bransjer.Bransje.TRANSPORT
 import io.kotest.matchers.shouldBe
-import kotlin.test.Test
-import kotlin.test.fail
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper
@@ -25,9 +23,10 @@ import no.nav.lydia.sykefraværsstatistikk.import.GradertSykemeldingImportDto
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkMetadataVirksomhetImportDto
 import no.nav.lydia.virksomhet.domene.Sektor
+import kotlin.test.Test
+import kotlin.test.fail
 
 class SykefraværsstatistikkVirksomhetApiTest {
-
     @Test
     fun `skal hente sykefraværsstatistikk for næring`() {
         SykefraværsstatistikkApiTest.settSykefraværsprosentNæring(NÆRING_JORDBRUK, 4.5)
@@ -78,9 +77,9 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 perioder = listOf(
                     gjeldendePeriode,
                     gjeldendePeriode.forrigePeriode(),
-                    Periode(kvartal = 4, årstall = 2019)
+                    Periode(kvartal = 4, årstall = 2019),
                 ),
-            )
+            ),
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal =
             TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
@@ -88,7 +87,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.kvartal}
                 and arstall=${gjeldendePeriode.årstall}
-                """.trimMargin()
+                """.trimMargin(),
             )
 
         val result =
@@ -123,9 +122,9 @@ class SykefraværsstatistikkVirksomhetApiTest {
                     kvartal = TestData.gjeldendePeriode.kvartal,
                     sektor = Sektor.PRIVAT.name,
                     bransje = virksomhet.næringsundergruppe1.tilBransje()?.name,
-                    naring = virksomhet.næringsundergruppe1.tilTosifret()
-                )
-            )
+                    naring = virksomhet.næringsundergruppe1.tilTosifret(),
+                ),
+            ),
         )
 
         val resultStatistikkSisteKvartal =
@@ -156,9 +155,9 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 perioder = listOf(
                     gjeldendePeriode,
                 ),
-            )
+            ),
         )
-        //Legg til testdata i forrige periode så vi kan verifisere at disse ikke blir hentet
+        // Legg til testdata i forrige periode så vi kan verifisere at disse ikke blir hentet
         val statistikk = GradertSykemeldingImportDto(
             kategori = "VIRKSOMHET_GRADERT",
             kode = virksomhet.orgnr,
@@ -169,7 +168,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 tapteDagsverkGradert = 1000.0,
                 tapteDagsverk = 10000.0,
                 antallPersoner = 150,
-                erMaskert = false
+                erMaskert = false,
             ),
             siste4Kvartal = GraderingSiste4Kvartal(
                 prosent = 25.3,
@@ -178,13 +177,13 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 erMaskert = false,
                 kvartaler = listOf(
                     TestData.gjeldendePeriode.tilKvartal(),
-                    TestData.gjeldendePeriode.forrigePeriode().tilKvartal()
-                )
-            )
+                    TestData.gjeldendePeriode.forrigePeriode().tilKvartal(),
+                ),
+            ),
         )
         TestContainerHelper.kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
             importDtoer = listOf(statistikk),
-            topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC
+            topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
         val result =
@@ -195,7 +194,6 @@ class SykefraværsstatistikkVirksomhetApiTest {
         result.tapteDagsverkGradert shouldBe 259.0
     }
 
-
     @Test
     fun `skal kunne hente sykefraværsstatistikk riktig når vi mangler siste periode`() {
         val gjeldendePeriode = TestData.gjeldendePeriode
@@ -204,7 +202,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(gjeldendePeriode.forrigePeriode()), // uten siste periode
-            )
+            ),
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal =
             TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
@@ -212,7 +210,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.forrigePeriode().kvartal}
                 and arstall=${gjeldendePeriode.forrigePeriode().årstall}
-                """.trimMargin()
+                """.trimMargin(),
             )
 
         val result =
@@ -228,7 +226,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
             TestData().lagData(
                 virksomhet = virksomhet,
                 perioder = listOf(gjeldendePeriode, gjeldendePeriode.nestePeriode()), // med ekstra periode
-            )
+            ),
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal =
             TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
@@ -236,7 +234,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.kvartal}
                 and arstall=${gjeldendePeriode.årstall}
-                """.trimMargin()
+                """.trimMargin(),
             )
 
         val result =

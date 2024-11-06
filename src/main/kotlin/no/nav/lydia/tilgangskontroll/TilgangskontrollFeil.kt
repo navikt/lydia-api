@@ -1,6 +1,6 @@
 package no.nav.lydia.tilgangskontroll
 
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 
 object TilgangskontrollFeil {

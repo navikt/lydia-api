@@ -4,25 +4,27 @@ import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.right
 import ia.felles.definisjoner.bransjer.Bransje
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
 import no.nav.lydia.sykefraværsstatistikk.SykefraværsstatistikkService
-import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsstatistikkSiste4KvartalDto.Companion.toDto
-import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktDto.Companion.toDto
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.søkeparametere
+import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsoversiktDto.Companion.toDto
+import no.nav.lydia.sykefraværsstatistikk.api.VirksomhetsstatistikkSiste4KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
-import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.tilgangskontroll.*
 import no.nav.lydia.tilgangskontroll.fia.innloggetNavIdent
 import no.nav.lydia.tilgangskontroll.fia.innloggetNavn
+import no.nav.lydia.tilgangskontroll.somHøyestTilgang
+import no.nav.lydia.tilgangskontroll.somLesebruker
+import no.nav.lydia.tilgangskontroll.superbruker
 
 const val SYKEFRAVÆRSSTATISTIKK_PATH = "sykefravarsstatistikk"
 const val FILTERVERDIER_PATH = "filterverdier"
@@ -47,8 +49,12 @@ fun Route.sykefraværsstatistikk(
             call.request.søkeparametere(geografiService, navAnsatt = navAnsatt)
         }.also {
             auditLog.auditloggEither(
-                call = call, either = it, orgnummer = null, auditType = AuditType.access,
-                melding = it.getOrNull()?.toLogString(), severity = "INFO"
+                call = call,
+                either = it,
+                orgnummer = null,
+                auditType = AuditType.access,
+                melding = it.getOrNull()?.toLogString(),
+                severity = "INFO",
             )
         }.map { søkeparametere ->
             sykefraværsstatistikkService.søkEtterVirksomheter(søkeparametere = søkeparametere)
@@ -154,8 +160,8 @@ fun Route.sykefraværsstatistikk(
             listOf(
                 EierDTO(
                     navIdent = call.innloggetNavIdent() ?: "",
-                    navn = call.innloggetNavn() ?: ""
-                )
+                    navn = call.innloggetNavn() ?: "",
+                ),
             )
         }
 
@@ -165,7 +171,7 @@ fun Route.sykefraværsstatistikk(
                 naringsgrupper = næringsRepository.hentNæringer(),
                 bransjeprogram = Bransje.entries,
                 filtrerbareEiere = filtrerbareEiere,
-            )
+            ),
         )
     }
 }

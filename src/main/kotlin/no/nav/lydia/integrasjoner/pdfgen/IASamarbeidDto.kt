@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class IASamarbeidDto(
     val dato: String,
     val sak: SakDto,
-    val virksomhet: VirksomhetDto
+    val virksomhet: VirksomhetDto,
 )

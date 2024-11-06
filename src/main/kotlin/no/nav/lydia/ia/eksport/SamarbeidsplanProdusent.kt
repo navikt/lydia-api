@@ -14,19 +14,17 @@ import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 class SamarbeidsplanProdusent(
     private val produsent: KafkaProdusent,
 ) {
-
     fun sendPåKafka(samarbeidsplan: SamarbeidsplanKafkaMelding) {
         val (nøkkel, melding) = samarbeidsplan.tilKeyValue()
         produsent.sendMelding(
             topic = Topic.SAMARBEIDSPLAN_TOPIC.navn,
             nøkkel = nøkkel,
-            verdi = melding
+            verdi = melding,
         )
     }
 
     private fun SamarbeidsplanKafkaMelding.tilKeyValue() =
         "${this.saksnummer}-${this.samarbeid.id}-${this.plan.id}" to Json.encodeToString<SamarbeidsplanKafkaMelding>(this)
-
 }
 
 @Serializable
@@ -67,16 +65,15 @@ fun PlanDto.tilPlanKafkaMeldingDto() =
         id = this.id,
         sistEndret = this.sistEndret,
         sistPublisert = this.sistPublisert,
-        temaer = this.temaer.tilPlanTemaKafkaMeldingDtoer()
+        temaer = this.temaer.tilPlanTemaKafkaMeldingDtoer(),
     )
 
-fun List<PlanTemaDto>.tilPlanTemaKafkaMeldingDtoer() =
-    this.map { it.tilPlanTemaKafkaMeldingDto() }
+fun List<PlanTemaDto>.tilPlanTemaKafkaMeldingDtoer() = this.map { it.tilPlanTemaKafkaMeldingDto() }
 
 fun PlanTemaDto.tilPlanTemaKafkaMeldingDto() =
     PlanTemaKafkaMeldingDto(
         id = this.id,
         navn = this.navn,
         inkludert = this.inkludert,
-        undertemaer = this.undertemaer
+        undertemaer = this.undertemaer,
     )

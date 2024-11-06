@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import ia.felles.definisjoner.bransjer.Bransje
-import javax.sql.DataSource
 import kotlinx.datetime.toKotlinLocalDate
 import kotliquery.Row
 import kotliquery.queryOf
@@ -33,109 +32,118 @@ import no.nav.lydia.sykefraværsstatistikk.domene.VirksomhetsstatistikkSisteKvar
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.Sektor
+import javax.sql.DataSource
 
-class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
+class VirksomhetsinformasjonRepository(
+    val dataSource: DataSource,
+) {
     private val gson: Gson = GsonBuilder().create()
 
-    fun søkEtterVirksomheter(
-        søkeparametere: Søkeparametere,
-    ) = using(sessionOf(dataSource)) { session ->
-        val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
-        val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
+    fun søkEtterVirksomheter(søkeparametere: Søkeparametere) =
+        using(sessionOf(dataSource)) { session ->
+            val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
+            val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
 
-        val sql = """
-            SELECT
-                statistikk.orgnr,
-                statistikk.navn,
-                statistikk.arstall,
-                statistikk.kvartal,
-                statistikk.antall_personer_siste_kvartal AS antall_personer,
-                statistikk.tapte_dagsverk,
-                statistikk.mulige_dagsverk,
-                statistikk.prosent,
-                statistikk.maskert,
-                ia_sak.status,
-                ia_sak.eid_av,
-                ia_sak.endret
-            FROM
-                virksomhetsstatistikk_for_prioritering AS statistikk
-                LEFT JOIN ia_sak ON (
-                    (ia_sak.orgnr = statistikk.orgnr) AND
-                    ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
-                )
-            WHERE true = true
-                
-                ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
-                ${filtrerPåKommuner(søkeparametere = søkeparametere)}
-                ${filtrerPåStatus(søkeparametere = søkeparametere)}
-                ${filtrerPåSektor(søkeparametere = søkeparametere)}
-                ${filtrerPåEiere(søkeparametere = søkeparametere)}
-                ${filtrerPåSnitt(søkeparametere = søkeparametere)}
-                
-                ${søkeparametere.sykefraværsprosentFra?.let { " AND prosent >= $it " } ?: ""}
-                ${søkeparametere.sykefraværsprosentTil?.let { " AND prosent <= $it " } ?: ""}
-                ${søkeparametere.ansatteFra?.let { " AND antall_personer_siste_kvartal >= $it " } ?: ""}
-                ${søkeparametere.ansatteTil?.let { " AND antall_personer_siste_kvartal <= $it " } ?: ""}
-            ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
-            LIMIT ${søkeparametere.virksomheterPerSide()}
-            OFFSET ${søkeparametere.offset()}
-        """.trimIndent()
+            val sql =
+                """
+                SELECT
+                    statistikk.orgnr,
+                    statistikk.navn,
+                    statistikk.arstall,
+                    statistikk.kvartal,
+                    statistikk.antall_personer_siste_kvartal AS antall_personer,
+                    statistikk.tapte_dagsverk,
+                    statistikk.mulige_dagsverk,
+                    statistikk.prosent,
+                    statistikk.maskert,
+                    ia_sak.status,
+                    ia_sak.eid_av,
+                    ia_sak.endret
+                FROM
+                    virksomhetsstatistikk_for_prioritering AS statistikk
+                    LEFT JOIN ia_sak ON (
+                        (ia_sak.orgnr = statistikk.orgnr) AND
+                        ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
+                    )
+                WHERE true = true
+                    
+                    ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
+                    ${filtrerPåKommuner(søkeparametere = søkeparametere)}
+                    ${filtrerPåStatus(søkeparametere = søkeparametere)}
+                    ${filtrerPåSektor(søkeparametere = søkeparametere)}
+                    ${filtrerPåEiere(søkeparametere = søkeparametere)}
+                    ${filtrerPåSnitt(søkeparametere = søkeparametere)}
+                    
+                    ${søkeparametere.sykefraværsprosentFra?.let { " AND prosent >= $it " } ?: ""}
+                    ${søkeparametere.sykefraværsprosentTil?.let { " AND prosent <= $it " } ?: ""}
+                    ${søkeparametere.ansatteFra?.let { " AND antall_personer_siste_kvartal >= $it " } ?: ""}
+                    ${søkeparametere.ansatteTil?.let { " AND antall_personer_siste_kvartal <= $it " } ?: ""}
+                ${søkeparametere.sorteringsnøkkel.tilOrderBy()} ${søkeparametere.sorteringsretning} NULLS LAST
+                LIMIT ${søkeparametere.virksomheterPerSide()}
+                OFFSET ${søkeparametere.offset()}
+                """.trimIndent()
 
-        val query = queryOf(
-            statement = sql,
-            mapOf(
-                "naringer" to session.createArrayOf("text", næringsgrupperMedBransjer),
-                "kommuner" to session.createArrayOf("text", søkeparametere.kommunenummer),
-                "sektorer" to session.createArrayOf("text", sektorer),
-                "eiere" to session.createArrayOf("text", søkeparametere.navIdenter),
-            )
-        ).map(this::mapRowToOversikt).asList
-        session.run(query)
-    }
-
-    fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere): Int? = using(sessionOf(dataSource)) { session ->
-        val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
-        val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
-
-        val sql = """
-            SELECT
-                COUNT(statistikk.orgnr) AS total
-            FROM
-                virksomhetsstatistikk_for_prioritering AS statistikk
-                LEFT JOIN ia_sak ON (
-                    (ia_sak.orgnr = statistikk.orgnr) AND
-                    ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
-                )
-            WHERE true = true
-                ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
-                ${filtrerPåKommuner(søkeparametere = søkeparametere)}
-                ${filtrerPåStatus(søkeparametere = søkeparametere)}
-                ${filtrerPåSektor(søkeparametere = søkeparametere)}
-                ${filtrerPåEiere(søkeparametere = søkeparametere)}
-                
-                ${søkeparametere.sykefraværsprosentFra?.let { " AND prosent >= $it " } ?: ""}
-                ${søkeparametere.sykefraværsprosentTil?.let { " AND prosent <= $it " } ?: ""}
-                ${filtrerPåSnitt(søkeparametere = søkeparametere)}
-                ${søkeparametere.ansatteFra?.let { " AND antall_personer_siste_kvartal >= $it " } ?: ""}
-                ${søkeparametere.ansatteTil?.let { " AND antall_personer_siste_kvartal <= $it " } ?: ""}
-        """.trimIndent()
-
-        val query = queryOf(
-            statement = sql,
-            mapOf(
-                "naringer" to session.createArrayOf("text", næringsgrupperMedBransjer),
-                "kommuner" to session.createArrayOf("text", søkeparametere.kommunenummer),
-                "sektorer" to session.createArrayOf("text", sektorer),
-                "eiere" to session.createArrayOf("text", søkeparametere.navIdenter),
-            )
-        )
-        session.run(query.map { it.int("total") }.asSingle)
-    }
-
-    fun hentVirksomhetsstatistikkSiste4Kvartal(orgnr: String, periode: Periode): VirksomhetsstatistikkSiste4Kvartal? {
-        return using(sessionOf(dataSource)) { session ->
             val query = queryOf(
-                statement = """
+                statement = sql,
+                mapOf(
+                    "naringer" to session.createArrayOf("text", næringsgrupperMedBransjer),
+                    "kommuner" to session.createArrayOf("text", søkeparametere.kommunenummer),
+                    "sektorer" to session.createArrayOf("text", sektorer),
+                    "eiere" to session.createArrayOf("text", søkeparametere.navIdenter),
+                ),
+            ).map(this::mapRowToOversikt).asList
+            session.run(query)
+        }
+
+    fun hentTotaltAntallVirksomheter(søkeparametere: Søkeparametere): Int? =
+        using(sessionOf(dataSource)) { session ->
+            val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
+            val sektorer = søkeparametere.sektor.map { it.kode }.toSet()
+
+            val sql =
+                """
+                SELECT
+                    COUNT(statistikk.orgnr) AS total
+                FROM
+                    virksomhetsstatistikk_for_prioritering AS statistikk
+                    LEFT JOIN ia_sak ON (
+                        (ia_sak.orgnr = statistikk.orgnr) AND
+                        ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
+                    )
+                WHERE true = true
+                    ${filtrerPåBransjeOgNæring(søkeparametere = søkeparametere)}
+                    ${filtrerPåKommuner(søkeparametere = søkeparametere)}
+                    ${filtrerPåStatus(søkeparametere = søkeparametere)}
+                    ${filtrerPåSektor(søkeparametere = søkeparametere)}
+                    ${filtrerPåEiere(søkeparametere = søkeparametere)}
+                    
+                    ${søkeparametere.sykefraværsprosentFra?.let { " AND prosent >= $it " } ?: ""}
+                    ${søkeparametere.sykefraværsprosentTil?.let { " AND prosent <= $it " } ?: ""}
+                    ${filtrerPåSnitt(søkeparametere = søkeparametere)}
+                    ${søkeparametere.ansatteFra?.let { " AND antall_personer_siste_kvartal >= $it " } ?: ""}
+                    ${søkeparametere.ansatteTil?.let { " AND antall_personer_siste_kvartal <= $it " } ?: ""}
+                """.trimIndent()
+
+            val query = queryOf(
+                statement = sql,
+                mapOf(
+                    "naringer" to session.createArrayOf("text", næringsgrupperMedBransjer),
+                    "kommuner" to session.createArrayOf("text", søkeparametere.kommunenummer),
+                    "sektorer" to session.createArrayOf("text", sektorer),
+                    "eiere" to session.createArrayOf("text", søkeparametere.navIdenter),
+                ),
+            )
+            session.run(query.map { it.int("total") }.asSingle)
+        }
+
+    fun hentVirksomhetsstatistikkSiste4Kvartal(
+        orgnr: String,
+        periode: Periode,
+    ): VirksomhetsstatistikkSiste4Kvartal? =
+        using(sessionOf(dataSource)) { session ->
+            val query = queryOf(
+                statement =
+                    """
                     SELECT
                         sykefravar_statistikk_virksomhet_siste_4_kvartal.orgnr,
                         sykefravar_statistikk_virksomhet_siste_4_kvartal.tapte_dagsverk,
@@ -158,95 +166,98 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_kvartal = ${periode.kvartal}
                         AND sykefravar_statistikk_virksomhet_siste_4_kvartal.publisert_arstall = ${periode.årstall}
 
-                """.trimIndent(), paramMap = mapOf(
-                    "orgnr" to orgnr
-                )
+                    """.trimIndent(),
+                paramMap = mapOf(
+                    "orgnr" to orgnr,
+                ),
             ).map(this::mapRowToSiste4Kvartal).asSingle
             session.run(query)
         }
-    }
 
-    fun hentVirksomhetsstatistikkSisteKvartal(orgnr: String, periode: Periode?, gjeldenPeriode: Periode) =
-        using(sessionOf(dataSource)) { session ->
-            val query = queryOf(
-                statement = """
-                    SELECT
-                        sykefravar_statistikk_virksomhet.orgnr,
-                        sykefravar_statistikk_virksomhet.arstall,
-                        sykefravar_statistikk_virksomhet.kvartal,
-                        sykefravar_statistikk_virksomhet.antall_personer,
-                        sykefravar_statistikk_virksomhet_gradering.tapte_dagsverk_gradert,
-                        sykefravar_statistikk_virksomhet.tapte_dagsverk,
-                        sykefravar_statistikk_virksomhet.mulige_dagsverk,
-                        sykefravar_statistikk_virksomhet.sykefravarsprosent,
-                        sykefravar_statistikk_virksomhet_gradering.prosent as graderingsprosent,
-                        sykefravar_statistikk_virksomhet.maskert
-                    FROM sykefravar_statistikk_virksomhet 
-                    LEFT JOIN sykefravar_statistikk_virksomhet_gradering
-                    ON (
-                        sykefravar_statistikk_virksomhet.orgnr = sykefravar_statistikk_virksomhet_gradering.orgnr
-                            AND sykefravar_statistikk_virksomhet.kvartal = sykefravar_statistikk_virksomhet_gradering.kvartal
-                            AND sykefravar_statistikk_virksomhet.arstall = sykefravar_statistikk_virksomhet_gradering.arstall
-                        )
-                    WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
-                    AND NOT (sykefravar_statistikk_virksomhet.arstall > ${gjeldenPeriode.årstall})
-                    AND NOT (sykefravar_statistikk_virksomhet.arstall = ${gjeldenPeriode.årstall} AND sykefravar_statistikk_virksomhet.kvartal > ${gjeldenPeriode.kvartal})
-                    ${
+    fun hentVirksomhetsstatistikkSisteKvartal(
+        orgnr: String,
+        periode: Periode?,
+        gjeldenPeriode: Periode,
+    ) = using(sessionOf(dataSource)) { session ->
+        val query = queryOf(
+            statement =
+                """
+                        SELECT
+                            sykefravar_statistikk_virksomhet.orgnr,
+                            sykefravar_statistikk_virksomhet.arstall,
+                            sykefravar_statistikk_virksomhet.kvartal,
+                            sykefravar_statistikk_virksomhet.antall_personer,
+                            sykefravar_statistikk_virksomhet_gradering.tapte_dagsverk_gradert,
+                            sykefravar_statistikk_virksomhet.tapte_dagsverk,
+                            sykefravar_statistikk_virksomhet.mulige_dagsverk,
+                            sykefravar_statistikk_virksomhet.sykefravarsprosent,
+                            sykefravar_statistikk_virksomhet_gradering.prosent as graderingsprosent,
+                            sykefravar_statistikk_virksomhet.maskert
+                        FROM sykefravar_statistikk_virksomhet 
+                        LEFT JOIN sykefravar_statistikk_virksomhet_gradering
+                        ON (
+                            sykefravar_statistikk_virksomhet.orgnr = sykefravar_statistikk_virksomhet_gradering.orgnr
+                                AND sykefravar_statistikk_virksomhet.kvartal = sykefravar_statistikk_virksomhet_gradering.kvartal
+                                AND sykefravar_statistikk_virksomhet.arstall = sykefravar_statistikk_virksomhet_gradering.arstall
+                            )
+                        WHERE (sykefravar_statistikk_virksomhet.orgnr = :orgnr)
+                        AND NOT (sykefravar_statistikk_virksomhet.arstall > ${gjeldenPeriode.årstall})
+                        AND NOT (sykefravar_statistikk_virksomhet.arstall = ${gjeldenPeriode.årstall} AND sykefravar_statistikk_virksomhet.kvartal > ${gjeldenPeriode.kvartal})
+                        ${
                     periode?.let {
                         """
-                            AND sykefravar_statistikk_virksomhet.kvartal = ${it.kvartal}
-                            AND sykefravar_statistikk_virksomhet.arstall = ${it.årstall}
+                        AND sykefravar_statistikk_virksomhet.kvartal = ${it.kvartal}
+                        AND sykefravar_statistikk_virksomhet.arstall = ${it.årstall}
                         """.trimIndent()
                     } ?: ""
                 }
-                    ORDER BY arstall DESC, kvartal DESC
-                    LIMIT 1
+                        ORDER BY arstall DESC, kvartal DESC
+                        LIMIT 1
                 """.trimIndent(),
-                paramMap = mapOf(
-                    "orgnr" to orgnr
-                )
-            ).map { mapRowToSisteKvartal(it) }.asSingle
-            session.run(query)
-        }
+            paramMap = mapOf(
+                "orgnr" to orgnr,
+            ),
+        ).map { mapRowToSisteKvartal(it) }.asSingle
+        session.run(query)
+    }
 
+    fun hentNæringstatistikkPerKvartal(næring: String) = hentKategoristatistikkPerKvartal(Kategori.NÆRING, næring)
 
-    fun hentNæringstatistikkPerKvartal(næring: String) =
-        hentKategoristatistikkPerKvartal(Kategori.NÆRING, næring)
+    fun hentBransjestatistikkPerKvartal(bransje: Bransje) = hentKategoristatistikkPerKvartal(Kategori.BRANSJE, bransje.name)
 
-    fun hentBransjestatistikkPerKvartal(bransje: Bransje) =
-        hentKategoristatistikkPerKvartal(Kategori.BRANSJE, bransje.name)
+    fun hentSektorstatistikkPerKvartal(sektor: Sektor) = hentKategoristatistikkPerKvartal(Kategori.SEKTOR, sektor.kode)
 
-    fun hentSektorstatistikkPerKvartal(sektor: Sektor) =
-        hentKategoristatistikkPerKvartal(Kategori.SEKTOR, sektor.kode)
+    fun hentLandsstatistikkPerKvartal() = hentKategoristatistikkPerKvartal(Kategori.LAND, LANDKODE_NO)
 
-    fun hentLandsstatistikkPerKvartal() =
-        hentKategoristatistikkPerKvartal(Kategori.LAND, LANDKODE_NO)
-
-    private fun hentKategoristatistikkPerKvartal(kategori: Kategori, kode: String) =
-        using(sessionOf(dataSource)) { session ->
-            val query = queryOf(
-                statement = """
-                    SELECT
-                        ${kategori.kodenavn()},
-                        arstall,
-                        kvartal,
-                        prosent,
-                        maskert
-                    FROM ${kategori.tabellnavn()}
-                    WHERE ${kategori.kodenavn()} = :kode
-                    ORDER BY arstall DESC, kvartal DESC
+    private fun hentKategoristatistikkPerKvartal(
+        kategori: Kategori,
+        kode: String,
+    ) = using(sessionOf(dataSource)) { session ->
+        val query = queryOf(
+            statement =
+                """
+                SELECT
+                    ${kategori.kodenavn()},
+                    arstall,
+                    kvartal,
+                    prosent,
+                    maskert
+                FROM ${kategori.tabellnavn()}
+                WHERE ${kategori.kodenavn()} = :kode
+                ORDER BY arstall DESC, kvartal DESC
                 """.trimIndent(),
-                paramMap = mapOf(
-                    "kode" to kode
-                )
-            ).map { mapKategoriRowToStatistikkdata(it) }.asList
-            session.run(query)
-        }
+            paramMap = mapOf(
+                "kode" to kode,
+            ),
+        ).map { mapKategoriRowToStatistikkdata(it) }.asList
+        session.run(query)
+    }
 
     fun hentVirksomhetsstatistikkPerKvartal(orgnr: String) =
         using(sessionOf(dataSource)) { session ->
             val query = queryOf(
-                statement = """
+                statement =
+                    """
                     SELECT
                         orgnr,
                         arstall,
@@ -256,43 +267,46 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                     FROM sykefravar_statistikk_virksomhet
                     WHERE (orgnr = :orgnr)
                     ORDER BY arstall DESC, kvartal DESC
-                """.trimIndent(),
+                    """.trimIndent(),
                 paramMap = mapOf(
-                    "orgnr" to orgnr
-                )
+                    "orgnr" to orgnr,
+                ),
             ).map { mapVirksomhetRowToStatistikkdata(it) }.asList
             session.run(query)
         }
 
-    private fun mapKategoriRowToStatistikkdata(row: Row) = Statistikkdata(
-        årstall = row.int("arstall"),
-        kvartal = row.int("kvartal"),
-        sykefraværsprosent = row.double("prosent"),
-        maskert = row.boolean("maskert"),
-    )
+    private fun mapKategoriRowToStatistikkdata(row: Row) =
+        Statistikkdata(
+            årstall = row.int("arstall"),
+            kvartal = row.int("kvartal"),
+            sykefraværsprosent = row.double("prosent"),
+            maskert = row.boolean("maskert"),
+        )
 
-    private fun mapVirksomhetRowToStatistikkdata(row: Row) = Statistikkdata(
-        årstall = row.int("arstall"),
-        kvartal = row.int("kvartal"),
-        sykefraværsprosent = row.double("sykefravarsprosent"),
-        maskert = row.boolean("maskert"),
-    )
+    private fun mapVirksomhetRowToStatistikkdata(row: Row) =
+        Statistikkdata(
+            årstall = row.int("arstall"),
+            kvartal = row.int("kvartal"),
+            sykefraværsprosent = row.double("sykefravarsprosent"),
+            maskert = row.boolean("maskert"),
+        )
 
-    private fun mapRowToSisteKvartal(row: Row) = VirksomhetsstatistikkSisteKvartal(
-        orgnr = row.string("orgnr"),
-        arstall = row.int("arstall"),
-        kvartal = row.int("kvartal"),
-        antallPersoner = row.double("antall_personer"),
-        tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert"),
-        tapteDagsverk = row.double("tapte_dagsverk"),
-        muligeDagsverk = row.double("mulige_dagsverk"),
-        sykefraværsprosent = row.double("sykefravarsprosent"),
-        graderingsprosent = row.doubleOrNull("graderingsprosent"),
-        maskert = row.boolean("maskert"),
-    )
+    private fun mapRowToSisteKvartal(row: Row) =
+        VirksomhetsstatistikkSisteKvartal(
+            orgnr = row.string("orgnr"),
+            arstall = row.int("arstall"),
+            kvartal = row.int("kvartal"),
+            antallPersoner = row.double("antall_personer"),
+            tapteDagsverkGradert = row.doubleOrNull("tapte_dagsverk_gradert"),
+            tapteDagsverk = row.double("tapte_dagsverk"),
+            muligeDagsverk = row.double("mulige_dagsverk"),
+            sykefraværsprosent = row.double("sykefravarsprosent"),
+            graderingsprosent = row.doubleOrNull("graderingsprosent"),
+            maskert = row.boolean("maskert"),
+        )
 
-    private fun mapRowToOversikt(row: Row): Virksomhetsoversikt {
-        return Virksomhetsoversikt(
+    private fun mapRowToOversikt(row: Row): Virksomhetsoversikt =
+        Virksomhetsoversikt(
             virksomhetsnavn = row.string("navn"),
             orgnr = row.string("orgnr"),
             arstall = row.int("arstall"),
@@ -306,9 +320,8 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
                 IAProsessStatus.valueOf(it)
             },
             eidAv = row.stringOrNull("eid_av"),
-            sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate()
+            sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate(),
         )
-    }
 
     private fun mapRowToSiste4Kvartal(row: Row): VirksomhetsstatistikkSiste4Kvartal {
         val kvartalListeType = object : TypeToken<List<Kvartal>>() {}.type
@@ -326,8 +339,8 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
         )
     }
 
-    private fun Sorteringsnøkkel.tilOrderBy(): String {
-        return when (this) {
+    private fun Sorteringsnøkkel.tilOrderBy(): String =
+        when (this) {
             NAVN_PÅ_VIRKSOMHET -> "ORDER BY navn"
             ANTALL_PERSONER -> "ORDER BY antall_personer"
             SYKEFRAVÆRSPROSENT -> "ORDER BY prosent"
@@ -335,5 +348,4 @@ class VirksomhetsinformasjonRepository(val dataSource: DataSource) {
             MULIGE_DAGSVERK -> "ORDER BY mulige_dagsverk"
             SIST_ENDRET -> "ORDER BY endret"
         }
-    }
 }

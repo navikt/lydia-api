@@ -10,7 +10,6 @@ data class Plan(
     val sistPublisert: LocalDate?,
     val temaer: List<PlanTema>,
 ) {
-
     fun startDato(): LocalDate? =
         temaer.flatMap { it.undertemaer }
             .filter { it.inkludert }
@@ -22,6 +21,4 @@ data class Plan(
             .filter { it.inkludert }
             .mapNotNull { it.sluttDato }
             .maxOrNull()
-
-    val publisert get() = this.sistPublisert != null
 }

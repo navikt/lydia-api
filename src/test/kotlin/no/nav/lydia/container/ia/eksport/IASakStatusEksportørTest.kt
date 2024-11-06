@@ -53,7 +53,7 @@ class IASakStatusEksportørTest {
                 .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
                 .nyHendelse(
                     hendelsestype = VIRKSOMHET_SKAL_KONTAKTES,
-                    token = oauth2ServerContainer.saksbehandler1.token
+                    token = oauth2ServerContainer.saksbehandler1.token,
                 )
 
         kafkaContainerHelper.sendJobbMelding(iaSakStatusExport)
@@ -61,7 +61,7 @@ class IASakStatusEksportørTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = sak.orgnr,
-                konsument = konsument
+                konsument = konsument,
             ) { meldinger ->
                 val objektene = meldinger.map {
                     Json.decodeFromString<IASakStatusProdusent.IASakStatus>(it)

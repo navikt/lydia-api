@@ -2,7 +2,6 @@ package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import kotlinx.datetime.LocalDateTime
 
-
 data class TemaInfo(
     val id: Int,
     val navn: String,
@@ -10,4 +9,3 @@ data class TemaInfo(
     val rekkefølge: Int,
     val sistEndret: LocalDateTime,
 )
-

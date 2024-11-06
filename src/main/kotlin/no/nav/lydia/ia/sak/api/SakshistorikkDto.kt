@@ -14,7 +14,7 @@ class SakshistorikkDto(
     val saksnummer: String,
     val opprettet: LocalDateTime,
     val sistEndret: LocalDateTime,
-    val sakshendelser: List<SakSnapshotDto>
+    val sakshendelser: List<SakSnapshotDto>,
 )
 
 @Serializable
@@ -37,19 +37,20 @@ class SakSnapshotDto(
                     is VirksomhetIkkeAktuellHendelse -> iaSakshendelse.valgtÅrsak.begrunnelser.map { it.navn }
                     else -> emptyList()
                 },
-                hendelseOpprettetAv = iaSakshendelse.opprettetAv
+                hendelseOpprettetAv = iaSakshendelse.opprettetAv,
             )
     }
 }
 
-fun IASak.tilSakshistorikk() = SakshistorikkDto(
-    saksnummer = this.saksnummer,
-    opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
-    sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime()
-        ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-    sakshendelser = hendelser.mapIndexed { index, hendelse ->
-        SakSnapshotDto.from(hendelse)
-    }.toList()
-)
+fun IASak.tilSakshistorikk() =
+    SakshistorikkDto(
+        saksnummer = this.saksnummer,
+        opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
+        sistEndret = this.endretTidspunkt?.toKotlinLocalDateTime()
+            ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
+        sakshendelser = hendelser.mapIndexed { index, hendelse ->
+            SakSnapshotDto.from(hendelse)
+        }.toList(),
+    )
 
 fun List<IASak>.tilSamarbeidshistorikk() = this.map(IASak::tilSakshistorikk)

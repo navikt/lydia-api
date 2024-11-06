@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 data class SalesforceQueryResponse(
     val totalSize: Int,
     val done: Boolean,
-    val records: List<Account>
+    val records: List<Account>,
 )
 
 @Serializable
 data class Account(
     val Id: String,
     val INT_OrganizationNumber__c: String,
-    val TAG_Partner_Status__c: String?
+    val TAG_Partner_Status__c: String?,
 )

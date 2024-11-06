@@ -25,25 +25,25 @@ data class VirksomhetDto(
     val næringsundergruppe2: Næringsgruppe?,
     val næringsundergruppe3: Næringsgruppe?,
     val næring: Næringsgruppe,
-    val bransje: Bransje?
+    val bransje: Bransje?,
 )
 
-fun Virksomhet.toDto() = VirksomhetDto(
-    orgnr = this.orgnr,
-    navn = this.navn,
-    adresse = this.adresse,
-    status = this.status,
-    oppstartsdato = oppstartsdato,
-    postnummer = this.postnummer,
-    poststed = this.poststed,
-    oppdatertAvBrregOppdateringsId = this.oppdatertAvBrregOppdateringsId,
-    opprettetTidspunkt = this.opprettetTidspunkt,
-    sistEndretTidspunkt = this.sistEndretTidspunkt,
-    sektor = sektor?.beskrivelse ?: "Ukjent",
-    næringsundergruppe1 = this.næringsundergruppe1,
-    næringsundergruppe2 = this.næringsundergruppe2,
-    næringsundergruppe3 = this.næringsundergruppe3,
-    næring = this.næring,
-    bransje = this.bransje,
-)
-
+fun Virksomhet.toDto() =
+    VirksomhetDto(
+        orgnr = this.orgnr,
+        navn = this.navn,
+        adresse = this.adresse,
+        status = this.status,
+        oppstartsdato = oppstartsdato,
+        postnummer = this.postnummer,
+        poststed = this.poststed,
+        oppdatertAvBrregOppdateringsId = this.oppdatertAvBrregOppdateringsId,
+        opprettetTidspunkt = this.opprettetTidspunkt,
+        sistEndretTidspunkt = this.sistEndretTidspunkt,
+        sektor = sektor?.beskrivelse ?: "Ukjent",
+        næringsundergruppe1 = this.næringsundergruppe1,
+        næringsundergruppe2 = this.næringsundergruppe2,
+        næringsundergruppe3 = this.næringsundergruppe3,
+        næring = this.næring,
+        bransje = this.bransje,
+    )

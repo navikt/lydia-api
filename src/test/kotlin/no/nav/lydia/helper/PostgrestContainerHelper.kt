@@ -13,7 +13,7 @@ import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 
 class PostgrestContainerHelper(
     network: Network = Network.newNetwork(),
-    log: Logger = LoggerFactory.getLogger(PostgrestContainerHelper::class.java)
+    log: Logger = LoggerFactory.getLogger(PostgrestContainerHelper::class.java),
 ) {
     private val postgresNetworkAlias = "postgrescontainer"
     private val lydiaDbName = "lydia-api-container-db"
@@ -21,7 +21,7 @@ class PostgrestContainerHelper(
     val postgresContainer: PostgreSQLContainer<*> =
         PostgreSQLContainer("postgres:14")
             .withLogConsumer(
-                Slf4jLogConsumer(log).withPrefix(postgresNetworkAlias).withSeparateOutputStreams()
+                Slf4jLogConsumer(log).withPrefix(postgresNetworkAlias).withSeparateOutputStreams(),
             )
             .withNetwork(network)
             .withNetworkAliases(postgresNetworkAlias)
@@ -34,11 +34,13 @@ class PostgrestContainerHelper(
     val dataSource = nyDataSource()
 
     fun nyDataSource() =
-        HikariDataSource(HikariConfig().apply {
-            jdbcUrl = postgresContainer.jdbcUrl
-            username = postgresContainer.username
-            password = postgresContainer.password
-        }).also {
+        HikariDataSource(
+            HikariConfig().apply {
+                jdbcUrl = postgresContainer.jdbcUrl
+                username = postgresContainer.username
+                password = postgresContainer.password
+            },
+        ).also {
             if (!migreringErKjørt) {
                 runMigration(it)
                 migreringErKjørt = true
@@ -77,11 +79,12 @@ class PostgrestContainerHelper(
         }
     }
 
-    fun envVars() = mapOf(
-        "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST" to postgresNetworkAlias,
-        "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT" to "5432",
-        "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME" to postgresContainer.username,
-        "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD" to postgresContainer.password,
-        "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE" to lydiaDbName
-    )
+    fun envVars() =
+        mapOf(
+            "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_HOST" to postgresNetworkAlias,
+            "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PORT" to "5432",
+            "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_USERNAME" to postgresContainer.username,
+            "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_PASSWORD" to postgresContainer.password,
+            "NAIS_DATABASE_LYDIA_API_LYDIA_API_DB_DATABASE" to lydiaDbName,
+        )
 }

@@ -17,7 +17,10 @@ class NaisEnvironment(
 ) {
     companion object {
         enum class Environment {
+            @Suppress("ktlint:standard:enum-entry-name-case")
             `PROD-GCP`,
+
+            @Suppress("ktlint:standard:enum-entry-name-case")
             `DEV-GCP`,
             LOKAL,
         }
@@ -76,7 +79,7 @@ class Kafka(
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong(),
 ) {
     companion object {
-        const val clientId: String = "lydia-api"
+        const val CLIENT_ID: String = "lydia-api"
     }
 
     fun producerProperties(): Map<String, Any> {
@@ -86,7 +89,7 @@ class Kafka(
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
             ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG to true, // Den sikrer rekkefølge
             ProducerConfig.ACKS_CONFIG to "all", // Den sikrer at data ikke mistes
-            ProducerConfig.CLIENT_ID_CONFIG to clientId,
+            ProducerConfig.CLIENT_ID_CONFIG to CLIENT_ID,
         )
         if (truststoreLocation.isNotEmpty()) {
             producerConfigs.putAll(securityConfigs())
@@ -122,7 +125,7 @@ class Kafka(
         mapOf(
             CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG to brokers,
             ConsumerConfig.GROUP_ID_CONFIG to consumerGroupId,
-            ConsumerConfig.CLIENT_ID_CONFIG to clientId,
+            ConsumerConfig.CLIENT_ID_CONFIG to CLIENT_ID,
             ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to "earliest",
             ConsumerConfig.MAX_POLL_RECORDS_CONFIG to "1000",
             ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to "false",

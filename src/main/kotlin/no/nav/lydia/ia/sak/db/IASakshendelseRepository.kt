@@ -196,7 +196,7 @@ class IASakshendelseRepository(
                 enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
                 enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
             ),
-            resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IAProsessStatus.valueOf(it) }
+            resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IAProsessStatus.valueOf(it) },
         )
     }
 
@@ -237,21 +237,23 @@ class IASakshendelseRepository(
         }
     }
 
-    fun lagreResulterendeStatus(hendelse: IASakshendelse, resulterendeStatus: IAProsessStatus) =
-        using(sessionOf(dataSource)) { session ->
-              session.run(
-                  queryOf(
-                      """
-                        UPDATE ia_sak_hendelse SET
-                         resulterende_status = :resulterendeStatus
-                        WHERE id = :hendelseId
-                        AND resulterende_status is null
-                      """.trimIndent(),
-                      mapOf(
-                          "resulterendeStatus" to resulterendeStatus.name,
-                          "hendelseId" to hendelse.id,
-                      )
-                  ).asUpdate
-              )
-        }
+    fun lagreResulterendeStatus(
+        hendelse: IASakshendelse,
+        resulterendeStatus: IAProsessStatus,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                UPDATE ia_sak_hendelse SET
+                 resulterende_status = :resulterendeStatus
+                WHERE id = :hendelseId
+                AND resulterende_status is null
+                """.trimIndent(),
+                mapOf(
+                    "resulterendeStatus" to resulterendeStatus.name,
+                    "hendelseId" to hendelse.id,
+                ),
+            ).asUpdate,
+        )
+    }
 }

@@ -7,9 +7,8 @@ data class ÅrsakTilAtSakIkkeKanAvsluttes(
     val samarbeidsId: Int,
     val samarbeidsNavn: String?,
     val type: ÅrsaksType,
-    val id: String? = null
+    val id: String? = null,
 )
-
 
 enum class ÅrsaksType {
     BEHOVSVURDERING_IKKE_FULLFØRT,

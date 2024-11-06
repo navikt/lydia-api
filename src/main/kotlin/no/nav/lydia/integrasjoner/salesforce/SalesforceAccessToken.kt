@@ -16,5 +16,5 @@ data class SalesforceAccessToken(
     val tokenType: String,
     @JsonNames("issued_at")
     val issuedAt: Long,
-    val signature: String
+    val signature: String,
 )

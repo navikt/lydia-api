@@ -9,14 +9,20 @@ class SykefraværsprosentTest {
     @Test
     fun `gyldig sykefraværsprosent skal validere`() {
         listOf(
-            "0", "7.5", "40.0", "100", "100.0000"
+            "0",
+            "7.5",
+            "40.0",
+            "100",
+            "100.0000",
         ).forAll { it.tilSykefraværsProsent().isRight() shouldBe true }
     }
 
     @Test
     fun `ugylgide sykefraværs prosenter skal ikke validere`() {
         listOf(
-            "-10", "100.1", "a"
+            "-10",
+            "100.1",
+            "a",
         ).forAll { it.tilSykefraværsProsent().isLeft() shouldBe true }
     }
 

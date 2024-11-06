@@ -40,7 +40,9 @@ class VirksomhetApiTest {
             postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${TestVirksomhet.UTENLANDSK.orgnr}'")
         antallUtenPostnummer shouldBe 0
         val antallUtenBeliggenhetsadresse =
-            postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${TestVirksomhet.MANGLER_BELIGGENHETSADRESSE.orgnr}'")
+            postgres.hentEnkelKolonne<Int>(
+                "select count(*) from virksomhet where orgnr = '${TestVirksomhet.MANGLER_BELIGGENHETSADRESSE.orgnr}'",
+            )
         antallUtenBeliggenhetsadresse shouldBe 0
     }
 
@@ -48,7 +50,7 @@ class VirksomhetApiTest {
     fun `skal kunne hente ut opplysninger om en virksomhet`() {
         val virksomhet = hentVirksomhetsinformasjon(
             OSLO_FLERE_ADRESSER.orgnr,
-            token = mockOAuthContainer.saksbehandler1.token
+            token = mockOAuthContainer.saksbehandler1.token,
         )
         virksomhet.orgnr shouldBe OSLO_FLERE_ADRESSER.orgnr
         virksomhet.navn shouldBe OSLO_FLERE_ADRESSER.navn
@@ -65,14 +67,14 @@ class VirksomhetApiTest {
             nyVirksomhet = nyVirksomhet(
                 næringer = listOf(
                     BARNEHAGER,
-                    NÆRING_MED_BINDESTREK
-                )
-            )
+                    NÆRING_MED_BINDESTREK,
+                ),
+            ),
         ).orgnr
 
         val virksomhet = hentVirksomhetsinformasjon(
             orgnummer = orgnummer,
-            token = mockOAuthContainer.saksbehandler1.token
+            token = mockOAuthContainer.saksbehandler1.token,
         )
 
         virksomhet.orgnr shouldBe orgnummer
@@ -132,7 +134,7 @@ class VirksomhetApiTest {
             nyVirksomhet(navn = "Andeby Elektriske"),
             nyVirksomhet(navn = "Skrue McDuck Inc"),
             nyVirksomhet(navn = "Donald Duck"),
-            nyVirksomhet(navn = "Crispy Duck")
+            nyVirksomhet(navn = "Crispy Duck"),
         )
 
         // -- eksakt match burde komme først
@@ -174,17 +176,17 @@ class VirksomhetApiTest {
         VirksomhetHelper.lastInnNyVirksomhet(virksomhet)
 
         hentVirksomhetsinformasjon(
-            orgnummer = virksomhet.orgnr
+            orgnummer = virksomhet.orgnr,
         ).status shouldBe VirksomhetStatus.AKTIV
 
         VirksomhetHelper.sendSlettingForVirksomhet(virksomhet)
         hentVirksomhetsinformasjon(
-            orgnummer = virksomhet.orgnr
+            orgnummer = virksomhet.orgnr,
         ).status shouldBe VirksomhetStatus.SLETTET
 
         VirksomhetHelper.sendFjerningForVirksomhet(virksomhet)
         hentVirksomhetsinformasjon(
-            orgnummer = virksomhet.orgnr
+            orgnummer = virksomhet.orgnr,
         ).status shouldBe VirksomhetStatus.FJERNET
     }
 
@@ -232,6 +234,5 @@ class VirksomhetApiTest {
         val strategiskPartner = hentSalesforceInfo(orgnummer = "777666555")
         strategiskPartner.orgnr shouldBe "777666555"
         strategiskPartner.partnerStatus shouldBe "Strategisk Partner"
-
     }
 }

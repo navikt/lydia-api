@@ -4,7 +4,10 @@ import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.årsak.domene.GyldigÅrsak.Companion.GYLDIGE_ÅRSAKER_FOR_IKKE_AKTUELL
 
 @Serializable
-class ValgtÅrsak(val type: ÅrsakType, val begrunnelser: List<BegrunnelseType>)
+class ValgtÅrsak(
+    val type: ÅrsakType,
+    val begrunnelser: List<BegrunnelseType>,
+)
 
 fun ValgtÅrsak.validerBegrunnelser() =
     begrunnelser.all { begrunnelse ->

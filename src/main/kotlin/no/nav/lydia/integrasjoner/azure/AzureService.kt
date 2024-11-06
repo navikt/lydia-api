@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
 private data class AzureResponse(
     @SerialName("@odata.nextLink")
     val nesteSide: String? = null,
-    val value: List<AzureAdBruker>
+    val value: List<AzureAdBruker>,
 )
 
 @Serializable
@@ -43,13 +43,17 @@ data class NavEnhet(
     val enhetsnavn: String,
 )
 
-
 @Serializable
-data class VeilederDTO(val id: String, val navIdent: String, val fornavn: String, val etternavn: String) {
+data class VeilederDTO(
+    val id: String,
+    val navIdent: String,
+    val fornavn: String,
+    val etternavn: String,
+) {
     fun tilEierDTO() = EierDTO(navIdent = navIdent, navn = fulltNavn)
+
     private val fulltNavn get() = "$fornavn $etternavn"
 }
-
 
 class AzureService(
     val tokenFetcher: AzureTokenFetcher,
@@ -59,11 +63,9 @@ class AzureService(
     private val azureAdProps = "id,givenName,surname,onPremisesSamAccountName,streetAddress,department,city"
     private val deserializer = Json { ignoreUnknownKeys = true }
 
-    fun hentNavenhet(
-        objectId: String?,
-    ): Either<Feil, NavEnhet> {
+    fun hentNavenhet(objectId: String?): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
-        val url = "${security.azureConfig.graphDatabaseUrl}/users/${objectId}?\$select=$azureAdProps"
+        val url = "${security.azureConfig.graphDatabaseUrl}/users/$objectId?\$select=$azureAdProps"
         return hentFraAzure(url, accessToken, AzureType.NAVENHET_FRA_INNLOGGET_BRUKER)
             .map { json -> deserializer.decodeFromString<AzureAdBruker>(json) }
             .map { azureAdBruker ->
@@ -74,9 +76,7 @@ class AzureService(
             }
     }
 
-    fun hentNavenhetFraNavIdent(
-        navIdent: String?,
-    ): Either<Feil, NavEnhet> {
+    fun hentNavenhetFraNavIdent(navIdent: String?): Either<Feil, NavEnhet> {
         val accessToken = tokenFetcher.clientCredentialsToken()
         val url =
             "${security.azureConfig.graphDatabaseUrl}/users?\$search=\"onPremisesSamAccountName:$navIdent\"&\$select=$azureAdProps"
@@ -91,38 +91,38 @@ class AzureService(
             }
     }
 
-    suspend fun hentVeiledere(): Either<Feil, Set<VeilederDTO>> = coroutineScope {
-        Either.catch {
-            val accessToken = tokenFetcher.clientCredentialsToken()
-            val gruppeIder = listOf(
-                security.adGrupper.saksbehandlerGruppe,
-                security.adGrupper.superbrukerGruppe
-            )
-            val veiledere = gruppeIder.map { gruppeId ->
-                async {
-                    hentBrukereForGruppe(security.azureConfig, gruppeId, accessToken)
-                }
-            }.awaitAll()
-                .flatMap { list ->
-                    list.map {
-                        VeilederDTO(
-                            id = it.id,
-                            fornavn = it.givenName ?: "",
-                            etternavn = it.surname ?: "",
-                            navIdent = it.onPremisesSamAccountName ?: ""
-                        )
+    suspend fun hentVeiledere(): Either<Feil, Set<VeilederDTO>> =
+        coroutineScope {
+            Either.catch {
+                val accessToken = tokenFetcher.clientCredentialsToken()
+                val gruppeIder = listOf(
+                    security.adGrupper.saksbehandlerGruppe,
+                    security.adGrupper.superbrukerGruppe,
+                )
+                val veiledere = gruppeIder.map { gruppeId ->
+                    async {
+                        hentBrukereForGruppe(security.azureConfig, gruppeId, accessToken)
                     }
-                }.toSet()
+                }.awaitAll()
+                    .flatMap { list ->
+                        list.map {
+                            VeilederDTO(
+                                id = it.id,
+                                fornavn = it.givenName ?: "",
+                                etternavn = it.surname ?: "",
+                                navIdent = it.onPremisesSamAccountName ?: "",
+                            )
+                        }
+                    }.toSet()
 
-            veiledere
-        }.mapLeft { Feil(it.message ?: "Ukjent feil under henting av veiledere", HttpStatusCode.InternalServerError) }
-    }
-
+                veiledere
+            }.mapLeft { Feil(it.message ?: "Ukjent feil under henting av veiledere", HttpStatusCode.InternalServerError) }
+        }
 
     private fun hentBrukereForGruppe(
         azureConfig: AzureConfig,
         gruppeId: String,
-        accessToken: String
+        accessToken: String,
     ): List<AzureAdBruker> {
         val antallVeilederePerSide = 800
         val alleRådgivere = mutableListOf<AzureAdBruker>()
@@ -140,44 +140,43 @@ class AzureService(
                     ifLeft = {
                         log.error(it.feilmelding)
                         url = ""
-                    }
+                    },
                 )
         } while (url.isNotEmpty())
 
         return alleRådgivere
     }
 
-
     enum class AzureType {
         NAVENHET_FRA_INNLOGGET_BRUKER,
         NAVENHET_FRA_NAVIDENT,
-        BRUKERE_I_GRUPPE
+        BRUKERE_I_GRUPPE,
     }
 
     private fun hentFraAzure(
         url: String,
         accessToken: String,
         typeSpørring: AzureType,
-    ) =
-        url.httpGet()
-            .authentication()
-            .bearer(token = accessToken)
-            .header(
-                HttpHeaders.Accept to "application/json", HttpHeaders.ContentType to "application/json",
-                "ConsistencyLevel" to "eventual"
-            )
-            .response()
-            .third
-            .fold(success = {
-                it.toString(Charsets.UTF_8).right()
-            }, failure = {
-                Feil(
-                    feilmelding = "Feilet under henting fra Azure (${typeSpørring.name}): ${it.message} ${
-                        it.errorData.toString(
-                            Charsets.UTF_8
-                        )
-                    }",
-                    httpStatusCode = HttpStatusCode.InternalServerError
-                ).left()
-            })
+    ) = url.httpGet()
+        .authentication()
+        .bearer(token = accessToken)
+        .header(
+            HttpHeaders.Accept to "application/json",
+            HttpHeaders.ContentType to "application/json",
+            "ConsistencyLevel" to "eventual",
+        )
+        .response()
+        .third
+        .fold(success = {
+            it.toString(Charsets.UTF_8).right()
+        }, failure = {
+            Feil(
+                feilmelding = "Feilet under henting fra Azure (${typeSpørring.name}): ${it.message} ${
+                    it.errorData.toString(
+                        Charsets.UTF_8,
+                    )
+                }",
+                httpStatusCode = HttpStatusCode.InternalServerError,
+            ).left()
+        })
 }

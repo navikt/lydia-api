@@ -16,7 +16,6 @@ data class VirksomhetsstatistikkSiste4KvartalDto(
     val antallKvartaler: Int?,
     val kvartaler: List<KvartalDto>,
 ) {
-
     companion object {
         fun VirksomhetsstatistikkSiste4Kvartal.toDto(): VirksomhetsstatistikkSiste4KvartalDto =
             VirksomhetsstatistikkSiste4KvartalDto(
@@ -33,10 +32,12 @@ data class VirksomhetsstatistikkSiste4KvartalDto(
 }
 
 @Serializable
-data class KvartalDto(val kvartal: Int, val årstall: Int) {
+data class KvartalDto(
+    val kvartal: Int,
+    val årstall: Int,
+) {
     companion object {
-        fun List<Kvartal>.toDto(): List<KvartalDto> =
-            this.map { it.toDto() }
+        fun List<Kvartal>.toDto(): List<KvartalDto> = this.map { it.toDto() }
 
         fun Kvartal.toDto(): KvartalDto =
             KvartalDto(
@@ -47,4 +48,7 @@ data class KvartalDto(val kvartal: Int, val årstall: Int) {
 }
 
 @Serializable
-class KvartalerFraTilDto(val fra: KvartalDto, val til: KvartalDto)
+class KvartalerFraTilDto(
+    val fra: KvartalDto,
+    val til: KvartalDto,
+)

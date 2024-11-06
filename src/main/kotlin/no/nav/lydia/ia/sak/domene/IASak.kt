@@ -63,8 +63,8 @@ class IASak private constructor(
     val status: IAProsessStatus
         get() = tilstand.status
 
-    private fun tilstandFraStatus(status: IAProsessStatus): ProsessTilstand {
-        return when (status) {
+    private fun tilstandFraStatus(status: IAProsessStatus): ProsessTilstand =
+        when (status) {
             NY -> StartTilstand()
             VURDERES -> VurderesTilstand()
             IKKE_AKTUELL -> IkkeAktuellTilstand()
@@ -75,33 +75,37 @@ class IASak private constructor(
             IKKE_AKTIV -> throw IllegalStateException()
             SLETTET -> throw IllegalStateException()
         }
-    }
 
     fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) = tilstand.gyldigeNesteHendelser(navAnsatt)
 
-    private fun kanUtføreHendelse(hendelse: IASakshendelse, navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-        when (hendelse) {
-            is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(navAnsatt)
-                .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
-                .filter { it.type == hendelse.valgtÅrsak.type }
-                .any {
-                    hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
-                        .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
-                }
+    private fun kanUtføreHendelse(
+        hendelse: IASakshendelse,
+        navAnsatt: NavAnsattMedSaksbehandlerRolle,
+    ) = when (hendelse) {
+        is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(navAnsatt)
+            .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
+            .filter { it.type == hendelse.valgtÅrsak.type }
+            .any {
+                hendelse.valgtÅrsak.begrunnelser.isNotEmpty()
+                    .and(it.begrunnelser.somBegrunnelseType().containsAll(hendelse.valgtÅrsak.begrunnelser))
+            }
 
-            else ->
-                gyldigeNesteHendelser(navAnsatt)
-                    .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
-                    .contains(hendelse.hendelsesType)
-        }
+        else ->
+            gyldigeNesteHendelser(navAnsatt)
+                .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
+                .contains(hendelse.hendelsesType)
+    }
 
     private fun erEierAvSak(navAnsatt: NavAnsattMedSaksbehandlerRolle) = eidAv == navAnsatt.navIdent
 
-    private fun utførHendelseSomRådgiver(navAnsatt: NavAnsattMedSaksbehandlerRolle, hendelse: IASakshendelse) =
-        if (kanUtføreHendelse(hendelse = hendelse, navAnsatt = navAnsatt))
-            behandleHendelse(hendelse = hendelse).right()
-        else
-            generellFeil()
+    private fun utførHendelseSomRådgiver(
+        navAnsatt: NavAnsattMedSaksbehandlerRolle,
+        hendelse: IASakshendelse,
+    ) = if (kanUtføreHendelse(hendelse = hendelse, navAnsatt = navAnsatt)) {
+        behandleHendelse(hendelse = hendelse).right()
+    } else {
+        generellFeil()
+    }
 
     private fun behandleHendelse(hendelse: IASakshendelse): IASak {
         when (hendelse.hendelsesType) {
@@ -115,11 +119,14 @@ class IASak private constructor(
             FULLFØR_BISTAND,
             ENDRE_PROSESS,
             NY_PROSESS,
-            SLETT_PROSESS, -> {
+            SLETT_PROSESS,
+            -> {
                 tilstand.behandleHendelse(hendelse)
                     .map { nyTilstand -> tilstand = nyTilstand }
                     .mapLeft { feil ->
-                        log.error("Prøver å utføre en ugyldig hendelse (${hendelse.hendelsesType.name}) på sak $saksnummer med status ${status.name}")
+                        log.error(
+                            "Prøver å utføre en ugyldig hendelse (${hendelse.hendelsesType.name}) på sak $saksnummer med status ${status.name}",
+                        )
                         throw IllegalStateException(feil.feilmelding)
                     }
             }
@@ -155,27 +162,33 @@ class IASak private constructor(
         return this
     }
 
-    private abstract inner class ProsessTilstand(val status: IAProsessStatus) {
-
+    private abstract inner class ProsessTilstand(
+        val status: IAProsessStatus,
+    ) {
         abstract fun behandleHendelse(hendelse: IASakshendelse): Either<TilstandsmaskinFeil, ProsessTilstand>
 
-        protected fun finnForrigeTilstand(): ProsessTilstand {
-            return when (finnForrigeTilstandBasertPåHendelsesrekke(hendelser.map { it.hendelsesType })) {
+        protected fun finnForrigeTilstand(): ProsessTilstand =
+            when (
+                finnForrigeTilstandBasertPåHendelsesrekke(
+                    hendelser.map {
+                        it.hendelsesType
+                    },
+                )
+            ) {
                 VIRKSOMHET_VURDERES -> VurderesTilstand()
                 VIRKSOMHET_SKAL_KONTAKTES -> KontaktesTilstand()
                 VIRKSOMHET_KARTLEGGES -> KartleggesTilstand()
                 VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand()
                 else -> throw IllegalStateException("Ugyldig forrige tilstand for hendelsesrekke ${hendelser.map { it.hendelsesType }}}")
             }
-        }
 
         abstract fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse>
-
     }
 
-    private inner class StartTilstand : ProsessTilstand(
-        status = NY
-    ) {
+    private inner class StartTilstand :
+        ProsessTilstand(
+            status = NY,
+        ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 VIRKSOMHET_VURDERES -> VurderesTilstand().right()
@@ -189,13 +202,26 @@ class IASak private constructor(
             }
     }
 
-    private inner class VurderesTilstand : ProsessTilstand(
-        status = VURDERES
-    ) {
+    private inner class VurderesTilstand :
+        ProsessTilstand(
+            status = VURDERES,
+        ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
-                VIRKSOMHET_SKAL_KONTAKTES -> if (eidAv.isNullOrEmpty()) feil(feilmelding = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status") else KontaktesTilstand().right()
-                SLETT_SAK -> if (eidAv != null) feil(feilmelding = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status") else SlettetTilstand().right()
+                VIRKSOMHET_SKAL_KONTAKTES -> if (eidAv.isNullOrEmpty()) {
+                    feil(
+                        feilmelding = "En virksomhet kan ikke kontaktes før saken har en eier. Status: $status",
+                    )
+                } else {
+                    KontaktesTilstand().right()
+                }
+                SLETT_SAK -> if (eidAv !=
+                    null
+                ) {
+                    feil(feilmelding = "SLETT er ikke en gyldig hendelse for IASak med eier. Status: $status")
+                } else {
+                    SlettetTilstand().right()
+                }
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
                 else -> generellFeil()
             }
@@ -203,35 +229,42 @@ class IASak private constructor(
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
             when (navAnsatt) {
                 is Saksbehandler -> {
-                    if (erEierAvSak(navAnsatt)) listOf(
-                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
-                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
-                    )
-                    else listOf(
-                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
-                    )
+                    if (erEierAvSak(navAnsatt)) {
+                        listOf(
+                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                        )
+                    } else {
+                        listOf(
+                            GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                        )
+                    }
                 }
 
                 is Superbruker -> {
-                    if (eidAv == null) listOf(
-                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
-                        GyldigHendelse(saksHendelsestype = SLETT_SAK)
-                    )
-                    else if (erEierAvSak(navAnsatt)) listOf(
-                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
-                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL)
-                    )
-                    else listOf(
-                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK)
-                    )
+                    if (eidAv == null) {
+                        listOf(
+                            GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                            GyldigHendelse(saksHendelsestype = SLETT_SAK),
+                        )
+                    } else if (erEierAvSak(navAnsatt)) {
+                        listOf(
+                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                        )
+                    } else {
+                        listOf(
+                            GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                        )
+                    }
                 }
             }
     }
 
-    private inner class KontaktesTilstand : ProsessTilstand(
-        status = KONTAKTES
-    ) {
-
+    private inner class KontaktesTilstand :
+        ProsessTilstand(
+            status = KONTAKTES,
+        ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 VIRKSOMHET_KARTLEGGES -> KartleggesTilstand().right()
@@ -241,17 +274,21 @@ class IASak private constructor(
             }
 
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-            if (erEierAvSak(navAnsatt)) listOf(
-                GyldigHendelse(saksHendelsestype = VIRKSOMHET_KARTLEGGES),
-                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                GyldigHendelse(saksHendelsestype = TILBAKE)
-            )
-            else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+            if (erEierAvSak(navAnsatt)) {
+                listOf(
+                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_KARTLEGGES),
+                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                    GyldigHendelse(saksHendelsestype = TILBAKE),
+                )
+            } else {
+                listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+            }
     }
 
-    private inner class KartleggesTilstand : ProsessTilstand(
-        status = KARTLEGGES
-    ) {
+    private inner class KartleggesTilstand :
+        ProsessTilstand(
+            status = KARTLEGGES,
+        ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 VIRKSOMHET_SKAL_BISTÅS -> ViBistårTilstand().right()
@@ -262,30 +299,37 @@ class IASak private constructor(
             }
 
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-            if (erEierAvSak(navAnsatt)) listOf(
-                GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
-                GyldigHendelse(saksHendelsestype = TILBAKE),
-                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
-                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
-                GyldigHendelse(saksHendelsestype = NY_PROSESS)
-            )
-            else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+            if (erEierAvSak(navAnsatt)) {
+                listOf(
+                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
+                    GyldigHendelse(saksHendelsestype = TILBAKE),
+                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                    GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                    GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
+                    GyldigHendelse(saksHendelsestype = NY_PROSESS),
+                )
+            } else {
+                listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+            }
     }
 
-    private inner class ViBistårTilstand : ProsessTilstand(
-        status = VI_BISTÅR
-    ) {
+    private inner class ViBistårTilstand :
+        ProsessTilstand(
+            status = VI_BISTÅR,
+        ) {
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-            if (erEierAvSak(navAnsatt)) listOf(
-                GyldigHendelse(saksHendelsestype = TILBAKE),
-                GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND),
-                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
-                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
-                GyldigHendelse(saksHendelsestype = NY_PROSESS)
-            )
-            else listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+            if (erEierAvSak(navAnsatt)) {
+                listOf(
+                    GyldigHendelse(saksHendelsestype = TILBAKE),
+                    GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND),
+                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                    GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                    GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
+                    GyldigHendelse(saksHendelsestype = NY_PROSESS),
+                )
+            } else {
+                listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+            }
 
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
@@ -297,7 +341,9 @@ class IASak private constructor(
             }
     }
 
-    private abstract inner class EndeTilstand(status: IAProsessStatus) : ProsessTilstand(status = status) {
+    private abstract inner class EndeTilstand(
+        status: IAProsessStatus,
+    ) : ProsessTilstand(status = status) {
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
             if (erEtterFristenForLåsingAvSak()) {
                 emptyList()
@@ -319,23 +365,24 @@ class IASak private constructor(
     private inner class IkkeAktuellTilstand : EndeTilstand(status = IKKE_AKTUELL)
 
     private inner class SlettetTilstand : ProsessTilstand(status = SLETTET) {
-        override fun behandleHendelse(hendelse: IASakshendelse) =
-            feil("Kan ikke utføre noen hendelser i en slettet tilstand")
+        override fun behandleHendelse(hendelse: IASakshendelse) = feil("Kan ikke utføre noen hendelser i en slettet tilstand")
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
-            emptyList()
+        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> = emptyList()
     }
 
     companion object {
-        fun NavAnsattMedSaksbehandlerRolle.utførHendelsePåSak(sak: IASak, hendelse: IASakshendelse) =
-            sak.utførHendelseSomRådgiver(this, hendelse)
+        fun NavAnsattMedSaksbehandlerRolle.utførHendelsePåSak(
+            sak: IASak,
+            hendelse: IASakshendelse,
+        ) = sak.utførHendelseSomRådgiver(this, hendelse)
 
-        fun tilbakeførSak(iaSak: IASak, hendelse: IASakshendelse) =
-            when (hendelse) {
-                is VirksomhetIkkeAktuellHendelse -> iaSak.behandleHendelse(hendelse)
-                else -> throw IllegalStateException("Kan ikke tilbakeføre sak med hendelsestype ${hendelse.hendelsesType.name}")
-            }
-
+        fun tilbakeførSak(
+            iaSak: IASak,
+            hendelse: IASakshendelse,
+        ) = when (hendelse) {
+            is VirksomhetIkkeAktuellHendelse -> iaSak.behandleHendelse(hendelse)
+            else -> throw IllegalStateException("Kan ikke tilbakeføre sak med hendelsestype ${hendelse.hendelsesType.name}")
+        }
 
         fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
             val hendelserSomEndrerStatus = hendelser.filter {
@@ -349,21 +396,24 @@ class IASak private constructor(
         }
 
         fun hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste: List<IASakshendelseType>): List<IASakshendelseType> {
-            if (liste.siste() != TILBAKE && liste.nestSiste() != TILBAKE)
+            if (liste.siste() != TILBAKE && liste.nestSiste() != TILBAKE) {
                 return liste
+            }
 
             if (liste.nestSiste() == TILBAKE) {
                 val rekursjonUtenSisteElement = hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste.dropLast(1))
                 return hendelsesRekkeMedHåndterteEldreTilbakeHendelser(rekursjonUtenSisteElement.plus(liste.siste()))
             }
 
-            if (liste.siste() == TILBAKE)
+            if (liste.siste() == TILBAKE) {
                 return hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste.dropLast(2))
+            }
 
             throw IllegalStateException("Merkelig hendelsesrekke: $liste")
         }
 
         fun List<IASakshendelseType>.nestSiste() = this.dropLast(1).last()
+
         fun List<IASakshendelseType>.siste() = this.last()
 
         fun fraFørsteHendelse(hendelse: IASakshendelse): IASak =
@@ -376,7 +426,7 @@ class IASak private constructor(
                 endretTidspunkt = null,
                 endretAv = null,
                 endretAvHendelseId = hendelse.id,
-                status = NY
+                status = NY,
             )
                 .also { sak -> sak.sakshendelser.add(hendelse) }
 
@@ -398,7 +448,7 @@ class IASak private constructor(
                 endretAv = this.stringOrNull("endret_av"),
                 status = valueOf(this.string("status")),
                 endretAvHendelseId = this.string("endret_av_hendelse"),
-                eidAv = this.stringOrNull("eid_av")
+                eidAv = this.stringOrNull("eid_av"),
             )
     }
 }
@@ -412,17 +462,19 @@ enum class IAProsessStatus {
     VI_BISTÅR,
     IKKE_AKTUELL,
     FULLFØRT,
-    SLETTET;
+    SLETTET,
+    ;
 
     fun regnesSomAvsluttet() = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
 
     companion object {
-        fun filtrerbareStatuser() =
-            entries.filterNot { it == NY || it == SLETTET }
+        fun filtrerbareStatuser() = entries.filterNot { it == NY || it == SLETTET }
     }
 }
 
-class TilstandsmaskinFeil(val feilmelding: String) {
+class TilstandsmaskinFeil(
+    val feilmelding: String,
+) {
     companion object {
         fun feil(feilmelding: String) = Either.Left(TilstandsmaskinFeil(feilmelding = feilmelding))
 

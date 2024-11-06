@@ -1,10 +1,10 @@
 package no.nav.lydia.ia.eksport
 
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import no.nav.lydia.ia.sak.db.PlanRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class SamarbeidsplanKafkaEksporterer(
     val samarbeidsplanProdusent: SamarbeidsplanProdusent,
@@ -32,7 +32,7 @@ class SamarbeidsplanKafkaEksporterer(
             KJØRER_SAMARBEIDSPLAN_KAFKA_EKSPORT.set(false)
             log.error(
                 "Klarte ikke å kjøre eksport av samarbeid, feil på samarbeidsplan nr. ${ANTALL_SAMARBEIDSPLAN_KAFKA_EKSPORT.get()}",
-                e
+                e,
             )
         }
         log.info("Ferdig med re-eksport av ${ANTALL_SAMARBEIDSPLAN_KAFKA_EKSPORT.get()}/${alleSamarbeidsplan.size} samarbeidsplan")

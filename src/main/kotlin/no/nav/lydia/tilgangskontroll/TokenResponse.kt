@@ -14,8 +14,8 @@ data class TokenResponse(
 }
 
 private fun utløperFraExpiresIn(expiresIn: Long?) =
-    if (expiresIn == null)
+    if (expiresIn == null) {
         0
-    else {
+    } else {
         System.currentTimeMillis() + ((expiresIn - 120) * 1000L)
     }

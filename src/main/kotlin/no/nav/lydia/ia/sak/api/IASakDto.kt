@@ -23,26 +23,27 @@ data class IASakDto(
     val eidAv: String?,
     val endretAvHendelseId: String,
     val gyldigeNesteHendelser: List<GyldigHendelse>,
-    val lukket: Boolean
+    val lukket: Boolean,
 ) {
     companion object {
         fun List<IASak>.toDto(navAnsatt: NavAnsatt) = this.map { it.toDto(navAnsatt) }
 
-        fun IASak.toDto(navAnsatt: NavAnsatt) = IASakDto(
-            saksnummer = this.saksnummer,
-            orgnr = this.orgnr,
-            status = this.status,
-            opprettetAv = this.opprettetAv,
-            opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
-            endretAv = this.endretAv,
-            endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
-            eidAv = this.eidAv,
-            endretAvHendelseId = this.endretAvHendelseId,
-            gyldigeNesteHendelser = when (navAnsatt) {
-                is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt)
-                else -> listOf()
-            },
-            lukket = this.erEtterFristenForLåsingAvSak() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL)
-        )
+        fun IASak.toDto(navAnsatt: NavAnsatt) =
+            IASakDto(
+                saksnummer = this.saksnummer,
+                orgnr = this.orgnr,
+                status = this.status,
+                opprettetAv = this.opprettetAv,
+                opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
+                endretAv = this.endretAv,
+                endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime(),
+                eidAv = this.eidAv,
+                endretAvHendelseId = this.endretAvHendelseId,
+                gyldigeNesteHendelser = when (navAnsatt) {
+                    is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt)
+                    else -> listOf()
+                },
+                lukket = this.erEtterFristenForLåsingAvSak() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL),
+            )
     }
 }

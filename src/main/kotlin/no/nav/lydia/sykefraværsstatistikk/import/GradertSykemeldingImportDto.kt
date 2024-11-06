@@ -14,7 +14,7 @@ data class GraderingSistePubliserteKvartal(
     val tapteDagsverkGradert: Double?,
     val tapteDagsverk: Double?,
     val antallPersoner: Int?,
-    val erMaskert: Boolean
+    val erMaskert: Boolean,
 )
 
 data class GraderingSiste4Kvartal(
@@ -22,6 +22,5 @@ data class GraderingSiste4Kvartal(
     val tapteDagsverkGradert: Double?,
     val tapteDagsverk: Double?,
     val erMaskert: Boolean,
-    val kvartaler: List<Kvartal>
+    val kvartaler: List<Kvartal>,
 )
-

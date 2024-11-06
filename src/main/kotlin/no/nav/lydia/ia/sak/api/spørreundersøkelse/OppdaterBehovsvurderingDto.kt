@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class OppdaterBehovsvurderingDto(
     val orgnummer: String,
     val saksnummer: String,
-    val prosessId: Int
+    val prosessId: Int,
 )

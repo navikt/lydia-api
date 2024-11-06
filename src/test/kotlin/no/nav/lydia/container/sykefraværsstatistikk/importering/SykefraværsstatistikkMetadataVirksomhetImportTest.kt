@@ -11,16 +11,18 @@ import kotlin.test.Test
 
 class SykefraværsstatistikkMetadataVirksomhetImportTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
-    private val KVARTAL_2022_4 = Kvartal(2022, 4)
+
+    companion object {
+        private val KVARTAL_2022_4 = Kvartal(2022, 4)
+    }
 
     @BeforeTest
     fun cleanUp() {
-
         TestContainerHelper.postgresContainer.performUpdate(
             """
             delete from virksomhet_statistikk_metadata
             where orgnr in ('888888888', '999999999')
-        """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -29,7 +31,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "KOMMUNAL"),
-            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
 
         val results = hentMetadataVirksomhet("888888888", "999999999")
@@ -42,12 +44,12 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "STATLIG"),
-            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("888888888"),
             jsonValue(orgnr = "888888888", sektor = "EN_HELT_UKJENT_SEKTOR"),
-            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
 
         val results = hentMetadataVirksomhet("888888888", "999999999")
@@ -64,7 +66,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             value,
-            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
 
         val results = hentMetadataVirksomhet("999999999")
@@ -80,12 +82,12 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "STATLIG"),
-            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
         kafkaContainer.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "PRIVAT"),
-            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
+            Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
 
         val results = hentMetadataVirksomhet("999999999")
@@ -96,18 +98,16 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         virksomhetMetadata.orgnr shouldBe "999999999"
     }
 
-
     private fun jsonKey(
         orgnr: String,
-        kvartal: Kvartal = KVARTAL_2022_4
-    ) =
-        """
-      {
-        "orgnr": "$orgnr",
-        "arstall": ${kvartal.årstall},
-        "kvartal": ${kvartal.kvartal}
-      }
-""".trimIndent()
+        kvartal: Kvartal = KVARTAL_2022_4,
+    ) = """
+        {
+          "orgnr": "$orgnr",
+          "arstall": ${kvartal.årstall},
+          "kvartal": ${kvartal.kvartal}
+        }
+        """.trimIndent()
 
     private fun jsonValue(
         orgnr: String,
@@ -115,17 +115,17 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
         næring: String = "88",
         bransje: String? = "BARNEHAGER",
         sektor: String = Sektor.PRIVAT.name,
-    ): String {
-        return """{
-        "orgnr": "$orgnr",
-        "arstall": ${kvartal.årstall},
-        "kvartal": ${kvartal.kvartal},
-        "naring": $næring,
-        "bransje": $bransje,
-        "sektor": $sektor
-      }
-""".trimIndent()
-    }
+    ): String =
+        """
+        {
+          "orgnr": "$orgnr",
+          "arstall": ${kvartal.årstall},
+          "kvartal": ${kvartal.kvartal},
+          "naring": $næring,
+          "bransje": $bransje,
+          "sektor": $sektor
+        }
+        """.trimIndent()
 
     private fun hentMetadataVirksomhet(vararg orgnr: String): List<VirksomhetMetadata> {
         var filter = ""
@@ -147,8 +147,8 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
                     VirksomhetMetadata(
                         orgnr = rs.getString("orgnr"),
                         kategori = rs.getString("kategori"),
-                        sektor = rs.getString("sektor")
-                    )
+                        sektor = rs.getString("sektor"),
+                    ),
                 )
             }
             return list
@@ -158,6 +158,6 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
     private data class VirksomhetMetadata(
         val orgnr: String,
         val kategori: String,
-        val sektor: String
+        val sektor: String,
     )
 }

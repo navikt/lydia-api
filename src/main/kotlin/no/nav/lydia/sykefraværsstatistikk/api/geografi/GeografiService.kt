@@ -30,32 +30,29 @@ class GeografiService {
         }
     }
 
-    fun hentFylkerOgKommuner(): List<FylkeOgKommuner> {
-        return alleFylker
+    fun hentFylkerOgKommuner(): List<FylkeOgKommuner> =
+        alleFylker
             .map { fylke ->
                 FylkeOgKommuner(
                     fylke,
-                    alleKommuner.filter { kommune -> kommune.nummer.take(2) == fylke.nummer })
+                    alleKommuner.filter { kommune -> kommune.nummer.take(2) == fylke.nummer },
+                )
             }
             .toMutableList()
-    }
 
-    fun hentKommunerFraFylkesnummer(fylkesnummer: List<String>): List<Kommune> {
-        return hentFylkerOgKommuner()
+    fun hentKommunerFraFylkesnummer(fylkesnummer: List<String>): List<Kommune> =
+        hentFylkerOgKommuner()
             .filter { fylkesnummer.contains(it.fylke.nummer) }.flatMap { it.kommuner }
-    }
-
 
     fun hentKommunerFraFylkerOgKommuner(
         fylkesnummerISøk: Set<String>,
-        kommunenummerISøk: Set<String>
+        kommunenummerISøk: Set<String>,
     ): Set<String> {
         val alleFylkerOgKommuner = hentFylkerOgKommuner()
         val fylkesnummerFraKommunenummerISøk = alleFylkerOgKommuner.filter { fylke ->
             val kommunerIFylke = fylke.kommuner.map { it.nummer }
             kommunenummerISøk.any { kommunerIFylke.contains(it) }
         }.map { it.fylke.nummer }
-
 
         val kommunenummerFraFylkesnummerISøk = alleFylkerOgKommuner
             .filterNot { fylkesnummerFraKommunenummerISøk.contains(it.fylke.nummer) }
@@ -65,13 +62,11 @@ class GeografiService {
 
         return setOf(
             *kommunenummerFraFylkesnummerISøk.toTypedArray(),
-            *kommunenummerISøk.toTypedArray()
+            *kommunenummerISøk.toTypedArray(),
         )
     }
 
-    fun finnFylke(kommunenummer: String): Fylke? =
-        hentFylkerOgKommuner().firstOrNull { it.harKommune(kommunenummer) }?.fylke
+    fun finnFylke(kommunenummer: String): Fylke? = hentFylkerOgKommuner().firstOrNull { it.harKommune(kommunenummer) }?.fylke
 
-    private fun FylkeOgKommuner.harKommune(kommunenummer: String) =
-        kommuner.map { it.nummer }.contains(kommunenummer)
+    private fun FylkeOgKommuner.harKommune(kommunenummer: String) = kommuner.map { it.nummer }.contains(kommunenummer)
 }

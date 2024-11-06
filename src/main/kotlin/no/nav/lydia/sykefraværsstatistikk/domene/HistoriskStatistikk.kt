@@ -25,5 +25,5 @@ data class Statistikkdata(
     val kvartal: Int,
     val årstall: Int,
     val sykefraværsprosent: Double,
-    val maskert: Boolean
+    val maskert: Boolean,
 )

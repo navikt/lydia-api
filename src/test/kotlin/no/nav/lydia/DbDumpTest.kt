@@ -3,13 +3,11 @@ package no.nav.lydia
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.VirksomhetHelper
 import org.junit.experimental.categories.Category
 import kotlin.test.Test
-import no.nav.lydia.helper.VirksomhetHelper
-
 
 class DbDumpTest {
-
     @Category(CommandLineOnlyTest::class) // OBS: ikke fjern denne ellers vil denne testen kjøre i CI (GitHub actions)
     @Test
     fun createTestDump() {

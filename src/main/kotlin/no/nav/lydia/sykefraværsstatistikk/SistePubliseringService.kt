@@ -3,7 +3,7 @@ package no.nav.lydia.sykefraværsstatistikk
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.Serializable
 import kotliquery.Row
@@ -13,13 +13,11 @@ import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import org.slf4j.LoggerFactory
 
 class SistePubliseringService(
-    private val sistePubliseringRepository: SistePubliseringRepository
+    private val sistePubliseringRepository: SistePubliseringRepository,
 ) {
-
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
     }
-
 
     fun hentPubliseringsinfo(): Either<Feil, Publiseringsinfo> {
         val publiseringsinfo = try {
@@ -28,7 +26,7 @@ class SistePubliseringService(
             logger.warn(e.message, e)
             return Feil(
                 e.message ?: "Ukjent feil under henting av publiseringsinfo",
-                HttpStatusCode.InternalServerError
+                HttpStatusCode.InternalServerError,
             ).left()
         }
         return publiseringsinfo.toPubliseringsinfo().right()
@@ -53,10 +51,10 @@ data class PubliseringsinfoDto(
             PubliseringsinfoDto(
                 gjeldendePeriode = PeriodeDto(
                     årstall = this.int("gjeldende_arstall"),
-                    kvartal = this.int("gjeldende_kvartal")
+                    kvartal = this.int("gjeldende_kvartal"),
                 ),
                 sistePubliseringsdato = this.localDate("siste_publiseringsdato").toKotlinLocalDate(),
-                nestePubliseringsdato = this.localDate("neste_publiseringsdato").toKotlinLocalDate()
+                nestePubliseringsdato = this.localDate("neste_publiseringsdato").toKotlinLocalDate(),
             )
     }
 
@@ -66,17 +64,16 @@ data class PubliseringsinfoDto(
             nestePubliseringsdato = nestePubliseringsdato,
             fraTil = KvartalerFraTil(
                 fra = gjeldendePeriode.tilPeriode().forrigePeriode().forrigePeriode().forrigePeriode().tilKvartal(),
-                til = gjeldendePeriode.tilPeriode().tilKvartal()
-            ).toDto()
+                til = gjeldendePeriode.tilPeriode().tilKvartal(),
+            ).toDto(),
         )
-
 }
 
 @Serializable
 data class Publiseringsinfo(
     val sistePubliseringsdato: kotlinx.datetime.LocalDate,
     val nestePubliseringsdato: kotlinx.datetime.LocalDate,
-    val fraTil: KvartalerFraTilDto
+    val fraTil: KvartalerFraTilDto,
 )
 
 @Serializable
@@ -84,9 +81,5 @@ data class PeriodeDto(
     val årstall: Int,
     val kvartal: Int,
 ) {
-    fun tilPeriode(): Periode {
-        return Periode(årstall = årstall, kvartal = kvartal)
-    }
+    fun tilPeriode(): Periode = Periode(årstall = årstall, kvartal = kvartal)
 }
-
-

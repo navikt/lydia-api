@@ -12,7 +12,6 @@ data class BehandletImportMetadataVirksomhet(
     val bransje: String,
     val sektor: Sektor,
 ) {
-
     companion object {
         fun SykefraværsstatistikkMetadataVirksomhetImportDto.tilBehandletImportMetadataVirksomhet() =
             BehandletImportMetadataVirksomhet(
@@ -22,9 +21,9 @@ data class BehandletImportMetadataVirksomhet(
                 bransje = this.bransje ?: "",
                 sektor = this.sektor.fraSykefraværsstistikkSektortilSektor() ?: throw IllegalStateException(
                     "Sektor '${this.sektor}' funnet i import av metadata virksomhet. " +
-                            "Denne skal ikke importeres. Sektor skal være en av " +
-                            SEKTOR_FRA_SYKEFRAVÆRSSTATISTIKK_TIL_IMPORT.joinToString(separator = ", ")
-                )
+                        "Denne skal ikke importeres. Sektor skal være en av " +
+                        SEKTOR_FRA_SYKEFRAVÆRSSTATISTIKK_TIL_IMPORT.joinToString(separator = ", "),
+                ),
             )
 
         fun List<SykefraværsstatistikkMetadataVirksomhetImportDto>.tilBehandletImportMetadataVirksomhet() =
@@ -34,11 +33,10 @@ data class BehandletImportMetadataVirksomhet(
     }
 }
 
-fun String.fraSykefraværsstistikkSektortilSektor(): Sektor? {
-    return when (this) {
+fun String.fraSykefraværsstistikkSektortilSektor(): Sektor? =
+    when (this) {
         "STATLIG" -> Sektor.STATLIG
         "KOMMUNAL" -> Sektor.KOMMUNAL
         "PRIVAT" -> Sektor.PRIVAT
         else -> null
     }
-}

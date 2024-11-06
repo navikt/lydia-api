@@ -19,18 +19,19 @@ class IASakLeveranseProdusent(
     private val produsent: KafkaProdusent,
     private val azureService: AzureService,
 ) : Observer<IASakLeveranse> {
-
     override fun receive(input: IASakLeveranse) {
         val kafkaMelding = input.tilKafkaMelding()
         produsent.sendMelding(Topic.IA_SAK_LEVERANSE_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
     }
 
-    fun sendMelding(key: String, value: IASakLeveranseValue) {
+    fun sendMelding(
+        key: String,
+        value: IASakLeveranseValue,
+    ) {
         produsent.sendMelding(Topic.IA_SAK_LEVERANSE_TOPIC.navn, key, Json.encodeToString(value))
     }
 
-    private fun IASakLeveranse.tilKafkaMelding(
-    ): Pair<String, String> {
+    private fun IASakLeveranse.tilKafkaMelding(): Pair<String, String> {
         val key = this.id.toString()
         val navEnhet = azureService.hentNavenhetFraNavIdent(sistEndretAv)
         val enhetsnummer = navEnhet.map { it.enhetsnummer }.getOrElse { "Ukjent" }
@@ -51,10 +52,9 @@ class IASakLeveranseProdusent(
             fullført = this.fullført?.toKotlinLocalDateTime(),
             enhetsnummer = enhetsnummer,
             enhetsnavn = enhetsnavn,
-            opprettetTidspunkt = this.opprettetTidspunkt?.toKotlinLocalDateTime()
+            opprettetTidspunkt = this.opprettetTidspunkt?.toKotlinLocalDateTime(),
         )
         return key to Json.encodeToString(value)
-
     }
 
     @Serializable
@@ -74,6 +74,6 @@ class IASakLeveranseProdusent(
         val fullført: LocalDateTime?,
         val enhetsnummer: String,
         val enhetsnavn: String,
-        val opprettetTidspunkt: LocalDateTime?
+        val opprettetTidspunkt: LocalDateTime?,
     )
 }

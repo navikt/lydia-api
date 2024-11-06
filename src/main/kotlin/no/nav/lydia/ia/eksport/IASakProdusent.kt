@@ -10,8 +10,9 @@ import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 
-class IASakProdusent(private val produsent: KafkaProdusent) : Observer<IASak> {
-
+class IASakProdusent(
+    private val produsent: KafkaProdusent,
+) : Observer<IASak> {
     override fun receive(input: IASak) {
         val kafkaMelding = input.tilKafkaMelding()
         produsent.sendMelding(Topic.IA_SAK_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
@@ -31,7 +32,6 @@ class IASakProdusent(private val produsent: KafkaProdusent) : Observer<IASak> {
                     ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
             )
             return key to Json.encodeToString(value)
-
         }
     }
 

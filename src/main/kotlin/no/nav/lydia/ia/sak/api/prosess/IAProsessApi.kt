@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.api.prosess
 
 import arrow.core.flatMap
-import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -36,7 +35,7 @@ fun Route.iaProsessApi(
                 either = it,
                 orgnummer = orgnummer,
                 auditType = AuditType.access,
-                saksnummer = saksnummer
+                saksnummer = saksnummer,
             )
         }.map {
             call.respond(it.tilDto())

@@ -7,9 +7,8 @@ import no.nav.lydia.ia.sak.db.PlanRepository
 
 class SendPlanPåKafkaObserver(
     val planRepository: PlanRepository,
-    val samarbeidsplanProdusent: SamarbeidsplanProdusent
+    val samarbeidsplanProdusent: SamarbeidsplanProdusent,
 ) : Observer<ObservedPlan> {
-
     override fun receive(input: ObservedPlan) {
         planRepository.hentSamarbeidsplanKafkaMelding(input.plan.id)?.let { plan ->
             samarbeidsplanProdusent.sendPåKafka(plan)

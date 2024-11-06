@@ -13,6 +13,8 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.Helse
 import no.nav.lydia.appstatus.Helsesjekk
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -24,10 +26,10 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
-import no.nav.lydia.ia.sak.SpørreundersøkelseService
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 
-class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
+class KartleggingSvarConsumer :
+    CoroutineScope,
+    Helsesjekk {
     private lateinit var job: Job
     private lateinit var kafka: Kafka
     private lateinit var spørreundersøkelseService: SpørreundersøkelseService
@@ -41,7 +43,10 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
         Runtime.getRuntime().addShutdownHook(Thread(this::cancel))
     }
 
-    fun create(kafka: Kafka, spørreundersøkelseService: SpørreundersøkelseService) {
+    fun create(
+        kafka: Kafka,
+        spørreundersøkelseService: SpørreundersøkelseService,
+    ) {
         logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
         this.spørreundersøkelseService = spørreundersøkelseService
@@ -49,7 +54,7 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
         this.kafkaConsumer = KafkaConsumer(
             this.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
             StringDeserializer(),
-            StringDeserializer()
+            StringDeserializer(),
         )
         logger.info("Created kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
     }
@@ -66,7 +71,7 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 spørreundersøkelseService.lagreSvar(
-                                    records.tilSpørreundersøkelseSvarDto()
+                                    records.tilSpørreundersøkelseSvarDto(),
                                 )
                                 logger.info("Lagret ${records.count()} meldinger i $consumer (topic '${topic.navn}') ")
                                 consumer.commitSync()
@@ -86,39 +91,40 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
         }
     }
 
-    private fun cancel() = runBlocking {
-        logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
-        kafkaConsumer.wakeup()
-        job.cancelAndJoin()
-        logger.info("Stopped kafka consumer job for topic '${topic.navn}'")
-    }
+    private fun cancel() =
+        runBlocking {
+            logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
+            kafkaConsumer.wakeup()
+            job.cancelAndJoin()
+            logger.info("Stopped kafka consumer job for topic '${topic.navn}'")
+        }
 
     private fun ConsumerRecords<String, String>.tilSpørreundersøkelseSvarDto(): List<SpørreundersøkelseSvarDto> {
         val gson = GsonBuilder().create()
         return this.filter { erSpørreundersøkelseSvarMeldingenGyldig(it) }.map {
             gson.fromJson(
                 it.value(),
-                SpørreundersøkelseSvarDto::class.java
+                SpørreundersøkelseSvarDto::class.java,
             )
         }
     }
-
 
     private fun isRunning() = job.isActive
 
     override fun helse() = if (isRunning()) Helse.UP else Helse.DOWN
 
     companion object {
-
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
-        fun String.erGyldigNøkkel() = try {
-            val sesjonIdOgSpørsmålId = this.split("_")
-            UUID.fromString(sesjonIdOgSpørsmålId[0])
-            UUID.fromString(sesjonIdOgSpørsmålId[1])
-            true
-        } catch (e: Exception) {
-            false
-        }
+
+        fun String.erGyldigNøkkel() =
+            try {
+                val sesjonIdOgSpørsmålId = this.split("_")
+                UUID.fromString(sesjonIdOgSpørsmålId[0])
+                UUID.fromString(sesjonIdOgSpørsmålId[1])
+                true
+            } catch (e: Exception) {
+                false
+            }
 
         fun erSpørreundersøkelseSvarMeldingenGyldig(kartleggingSvarRecord: ConsumerRecord<String, String>): Boolean {
             val nøkkel = kartleggingSvarRecord.key()
@@ -138,8 +144,5 @@ class KartleggingSvarConsumer : CoroutineScope, Helsesjekk {
                 false
             }
         }
-
     }
 }
-
-

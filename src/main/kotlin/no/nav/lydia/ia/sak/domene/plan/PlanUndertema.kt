@@ -16,12 +16,14 @@ data class PlanUndertema(
         PLANLAGT,
         PÅGÅR,
         FULLFØRT,
-        AVBRUTT
+        AVBRUTT,
     }
 
     fun starterIFremtiden(): Boolean {
         val iDag = java.time.LocalDate.now()
-        return startDato != null && startDato.toJavaLocalDate().isAfter(iDag)
-                && sluttDato != null && sluttDato.toJavaLocalDate().isAfter(iDag)
+        return startDato != null &&
+            startDato.toJavaLocalDate().isAfter(iDag) &&
+            sluttDato != null &&
+            sluttDato.toJavaLocalDate().isAfter(iDag)
     }
 }

@@ -1,12 +1,17 @@
 package no.nav.lydia.sykefraværsstatistikk.api
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.NonEmptyList
+import arrow.core.flatMap
+import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.zipOrAccumulate
+import arrow.core.right
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.definisjoner.bransjer.BransjeId
-import io.ktor.http.*
-import io.ktor.server.request.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
+import io.ktor.server.request.ApplicationRequest
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -36,7 +41,8 @@ data class Søkeparametere(
     val bransjeprogram: Set<Bransje>,
     val sektor: Set<Sektor>,
 ) {
-    fun toLogString() = "Søk med parametere:" +
+    fun toLogString() =
+        "Søk med parametere:" +
             (sykefraværsprosentFra?.let { " $SYKEFRAVÆRSPROSENT_FRA=$sykefraværsprosentFra" } ?: "") +
             (sykefraværsprosentTil?.let { " $SYKEFRAVÆRSPROSENT_TIL=$sykefraværsprosentTil" } ?: "") +
             (ansatteFra?.let { " $ANSATTE_FRA=$ansatteFra" } ?: "") +
@@ -69,62 +75,74 @@ data class Søkeparametere(
         const val IA_SAK_EIERE = "eiere"
         const val SEKTOR = "sektor"
 
-        fun ApplicationRequest.søkeparametere(geografiService: GeografiService, navAnsatt: NavAnsatt) =
-            either<NonEmptyList<String>, Søkeparametere> {
-                zipOrAccumulate(
-                    { queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().bind() },
-                    { queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent().bind() },
-                    { queryParameters[SIDE].tomSomNull()?.tilValidertHeltall()?.bind() },
-                    { queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall()?.bind() },
-                    { queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall()?.bind() }
-                ) { sykefraværsProsentFra, sykefraværsProsentTil, side, ansatteFra, ansatteTil ->
-                    Søkeparametere(
-                        sykefraværsprosentFra = sykefraværsProsentFra,
-                        sykefraværsprosentTil = sykefraværsProsentTil,
-                        snittFilter = queryParameters[SNITT_FILTER].tomSomNull()?.let { SnittFilter.valueOf(it) },
-                        side = side ?: 1,
-                        ansatteFra = ansatteFra,
-                        ansatteTil = ansatteTil,
-                        kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
-                        næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
-                        sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
-                        sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
-                        status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
-                        navIdenter = navIdenter(navAnsatt = navAnsatt),
-                        bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
-                        sektor = finnSektor(queryParameters[SEKTOR])
-                    )
-                }
-            }.mapLeft {
-                Feil(it.joinToString(separator = "\n"), HttpStatusCode.BadRequest)
+        fun ApplicationRequest.søkeparametere(
+            geografiService: GeografiService,
+            navAnsatt: NavAnsatt,
+        ) = either<NonEmptyList<String>, Søkeparametere> {
+            zipOrAccumulate(
+                { queryParameters[SYKEFRAVÆRSPROSENT_FRA].tilSykefraværsProsent().bind() },
+                { queryParameters[SYKEFRAVÆRSPROSENT_TIL].tilSykefraværsProsent().bind() },
+                { queryParameters[SIDE].tomSomNull()?.tilValidertHeltall()?.bind() },
+                { queryParameters[ANSATTE_FRA].tomSomNull()?.tilValidertHeltall()?.bind() },
+                { queryParameters[ANSATTE_TIL].tomSomNull()?.tilValidertHeltall()?.bind() },
+            ) { sykefraværsProsentFra, sykefraværsProsentTil, side, ansatteFra, ansatteTil ->
+                Søkeparametere(
+                    sykefraværsprosentFra = sykefraværsProsentFra,
+                    sykefraværsprosentTil = sykefraværsProsentTil,
+                    snittFilter = queryParameters[SNITT_FILTER].tomSomNull()?.let { SnittFilter.valueOf(it) },
+                    side = side ?: 1,
+                    ansatteFra = ansatteFra,
+                    ansatteTil = ansatteTil,
+                    kommunenummer = finnGyldigeKommunenummer(queryParameters, geografiService),
+                    næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
+                    sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
+                    sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
+                    status = queryParameters[IA_STATUS].tomSomNull()?.let { IAProsessStatus.valueOf(it) },
+                    navIdenter = navIdenter(navAnsatt = navAnsatt),
+                    bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
+                    sektor = finnSektor(queryParameters[SEKTOR]),
+                )
             }
+        }.mapLeft {
+            Feil(it.joinToString(separator = "\n"), HttpStatusCode.BadRequest)
+        }
 
         fun filtrerPåSektor(søkeparametere: Søkeparametere) =
-            if (søkeparametere.sektor.isEmpty()) ""
-            else " AND sektor in (select unnest(:sektorer)) "
+            if (søkeparametere.sektor.isEmpty()) {
+                ""
+            } else {
+                " AND sektor in (select unnest(:sektorer)) "
+            }
 
         fun filtrerPåEiere(søkeparametere: Søkeparametere) =
-            if (søkeparametere.navIdenter.isEmpty()) ""
-            else " AND ia_sak.eid_av in (select unnest(:eiere)) "
+            if (søkeparametere.navIdenter.isEmpty()) {
+                ""
+            } else {
+                " AND ia_sak.eid_av in (select unnest(:eiere)) "
+            }
 
         fun filtrerPåStatus(søkeparametere: Søkeparametere) =
             søkeparametere.status?.let { status ->
                 when (status) {
-                    IAProsessStatus.IKKE_AKTIV -> " AND (ia_sak.status IS NULL " +
+                    IAProsessStatus.IKKE_AKTIV ->
+                        " AND (ia_sak.status IS NULL " +
                             "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
                             "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
 
                     IAProsessStatus.IKKE_AKTUELL, IAProsessStatus.FULLFØRT, IAProsessStatus.SLETTET ->
                         " AND ia_sak.status = '$status' " +
-                                "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
+                            "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
 
                     else -> " AND ia_sak.status = '$status'"
                 }
             } ?: ""
 
         fun filtrerPåKommuner(søkeparametere: Søkeparametere) =
-            if (søkeparametere.kommunenummer.isEmpty()) ""
-            else " AND kommunenummer in (select unnest(:kommuner)) "
+            if (søkeparametere.kommunenummer.isEmpty()) {
+                ""
+            } else {
+                " AND kommunenummer in (select unnest(:kommuner)) "
+            }
 
         fun filtrerPåSnitt(søkeparametere: Søkeparametere) =
             søkeparametere.snittFilter?.let { snittFilter ->
@@ -132,17 +150,17 @@ data class Søkeparametere(
                             AND (
                               (statistikk.bransje_prosent is null AND statistikk.prosent ${
                     snittFilterTilSammenligningstegn(
-                        snittFilter
+                        snittFilter,
                     )
                 } statistikk.naring_prosent) 
                                 OR 
                               (statistikk.bransje_prosent is not null AND statistikk.prosent ${
                     snittFilterTilSammenligningstegn(
-                        snittFilter
+                        snittFilter,
                     )
                 } statistikk.bransje_prosent)
                             ) 
-                        """.trimIndent()
+                """.trimIndent()
             } ?: ""
 
         private fun snittFilterTilSammenligningstegn(snittFilter: SnittFilter) =
@@ -153,9 +171,9 @@ data class Søkeparametere(
 
         fun filtrerPåBransjeOgNæring(søkeparametere: Søkeparametere): String {
             val næringsgrupperMedBransjer = søkeparametere.næringsgrupperMedBransjer()
-            return if (næringsgrupperMedBransjer.isEmpty())
+            return if (næringsgrupperMedBransjer.isEmpty()) {
                 ""
-            else
+            } else {
                 """
                 AND (
                    substr(naringsundergruppe1, 1, 2) in (select unnest(:naringer)) 
@@ -169,30 +187,31 @@ data class Søkeparametere(
                         val femsifrede = koder[5]?.joinToString { "'${it.take(2)}.${it.takeLast(3)}'" }
                         femsifrede?.let {
                             "OR (naringsundergruppe1 in (select (unnest(:naringer))))" +
-                                    "OR (naringsundergruppe2 in (select (unnest(:naringer))))" +
-                                    "OR (naringsundergruppe3 in (select (unnest(:naringer))))"
+                                "OR (naringsundergruppe2 in (select (unnest(:naringer))))" +
+                                "OR (naringsundergruppe3 in (select (unnest(:naringer))))"
                         } ?: ""
-                    } else ""
+                    } else {
+                        ""
+                    }
                 }
                     )
-            """.trimIndent()
-        }
-
-        private fun Bransje.tilNæringskoder(): List<String> {
-            return when (this.bransjeId) {
-                is BransjeId.Næringskoder -> (this.bransjeId as BransjeId.Næringskoder).næringskoder
-                is BransjeId.Næring -> listOf((this.bransjeId as BransjeId.Næring).næring)
+                """.trimIndent()
             }
         }
 
-        private fun ApplicationRequest.navIdenter(navAnsatt: NavAnsatt): Set<String> {
-            return queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
+        private fun Bransje.tilNæringskoder(): List<String> =
+            when (this.bransjeId) {
+                is BransjeId.Næringskoder -> (this.bransjeId as BransjeId.Næringskoder).næringskoder
+                is BransjeId.Næring -> listOf((this.bransjeId as BransjeId.Næring).næring)
+            }
+
+        private fun ApplicationRequest.navIdenter(navAnsatt: NavAnsatt): Set<String> =
+            queryParameters[IA_SAK_EIERE].tilUnikeVerdier().let { eiere ->
                 when (navAnsatt) {
                     is Superbruker -> eiere.toSet()
                     else -> eiere.filter { it == navAnsatt.navIdent }.toSet()
                 }
             }
-        }
 
         private fun finnSektor(queryParams: String?): Set<Sektor> =
             queryParams.tomSomNull()?.tilUnikeVerdier()?.map { it.tilSektor() }?.requireNoNulls()?.toSet() ?: emptySet()
@@ -202,39 +221,45 @@ data class Søkeparametere(
             return Bransje.entries.filter { it.name in unikeVerdier }.toSet()
         }
 
-        private fun finnGyldigeKommunenummer(queryParameters: Parameters, geografiService: GeografiService) =
-            geografiService.hentKommunerFraFylkerOgKommuner(
-                queryParameters[FYLKER].tilUnikeVerdier(),
-                queryParameters[KOMMUNER].tilUnikeVerdier(),
-            )
+        private fun finnGyldigeKommunenummer(
+            queryParameters: Parameters,
+            geografiService: GeografiService,
+        ) = geografiService.hentKommunerFraFylkerOgKommuner(
+            queryParameters[FYLKER].tilUnikeVerdier(),
+            queryParameters[KOMMUNER].tilUnikeVerdier(),
+        )
 
-        private fun finnGyldigeNæringsgruppekoder(queryParameters: Parameters) =
-            queryParameters[NÆRINGSGRUPPER].tilUnikeVerdier()
+        private fun finnGyldigeNæringsgruppekoder(queryParameters: Parameters) = queryParameters[NÆRINGSGRUPPER].tilUnikeVerdier()
 
-        private fun String?.tilUnikeVerdier(): Set<String> =
-            this?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
-
+        private fun String?.tilUnikeVerdier(): Set<String> = this?.split(",")?.filter { it.isNotBlank() }?.toSet() ?: emptySet()
     }
 
     fun virksomheterPerSide() = VIRKSOMHETER_PER_SIDE
+
     fun offset() = (side - 1) * VIRKSOMHETER_PER_SIDE
 
-    internal fun næringsgrupperMedBransjer() = næringsgruppeKoder.toMutableSet().apply {
-        addAll(
-            bransjeprogram.flatMap { bransje ->
-                bransje.tilNæringskoder().map { næringskode ->
-                    if (næringskode.length == 5) "${næringskode.take(2)}.${næringskode.takeLast(3)}"
-                    else næringskode
-                }
-            }
-        )
-    }.toSet()
+    internal fun næringsgrupperMedBransjer() =
+        næringsgruppeKoder.toMutableSet().apply {
+            addAll(
+                bransjeprogram.flatMap { bransje ->
+                    bransje.tilNæringskoder().map { næringskode ->
+                        if (næringskode.length == 5) {
+                            "${næringskode.take(2)}.${næringskode.takeLast(3)}"
+                        } else {
+                            næringskode
+                        }
+                    }
+                },
+            )
+        }.toSet()
 }
 
-data class Periode(val kvartal: Int, val årstall: Int) {
+data class Periode(
+    val kvartal: Int,
+    val årstall: Int,
+) {
     companion object {
-        fun fraDato(dato: LocalDateTime) =
-            Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
+        fun fraDato(dato: LocalDateTime) = Periode(årstall = dato.year, kvartal = dato.monthValue / 4 + 1).forrigePeriode()
     }
 
     fun tilKvartal() = Kvartal(årstall = årstall, kvartal = kvartal)
@@ -259,26 +284,32 @@ data class Periode(val kvartal: Int, val årstall: Int) {
     }
 }
 
-enum class Sorteringsnøkkel(val verdi: String) {
+enum class Sorteringsnøkkel(
+    val verdi: String,
+) {
     NAVN_PÅ_VIRKSOMHET("navn"),
     TAPTE_DAGSVERK("tapte_dagsverk"),
     ANTALL_PERSONER("antall_personer"),
     MULIGE_DAGSVERK("mulige_dagsverk"),
     SYKEFRAVÆRSPROSENT("sykefravarsprosent"),
-    SIST_ENDRET("sist_endret");
+    SIST_ENDRET("sist_endret"),
+    ;
 
     companion object {
         fun from(verdi: String?) = entries.find { it.verdi == verdi?.lowercase() } ?: TAPTE_DAGSVERK
+
         fun alleSorteringsNøkler() = entries.map { it.toString() }
     }
 
     override fun toString(): String = this.verdi
 }
 
-
-enum class Sorteringsretning(private val retning: String) {
+enum class Sorteringsretning(
+    private val retning: String,
+) {
     SYNKENDE("desc"),
-    STIGENDE("asc");
+    STIGENDE("asc"),
+    ;
 
     companion object {
         fun from(verdi: String?): Sorteringsretning =
@@ -292,31 +323,36 @@ enum class Sorteringsretning(private val retning: String) {
     override fun toString(): String = this.retning
 }
 
-class Sykefraværsprosent private constructor(private val sykefraværsProsent: Double) {
+class Sykefraværsprosent private constructor(
+    private val sykefraværsProsent: Double,
+) {
     companion object {
         fun String?.tilSykefraværsProsent(): Either<String, Sykefraværsprosent?> =
             tomSomNull()?.tilValidertFlyttall()?.flatMap { it.tilSykefraværsProsent() } ?: Either.Right(null)
 
         fun Double.tilSykefraværsProsent(): Either<String, Sykefraværsprosent> =
-            if (this.isFinite() && (0.0..100.0).contains(this))
+            if (this.isFinite() && (0.0..100.0).contains(this)) {
                 Sykefraværsprosent(this).right()
-            else
+            } else {
                 "$this er ikke en gyldig sykefraværsprosent. Sykefraværsprosent er forventet å være '0.0 >= prosent <= 100.0'".left()
+            }
     }
 
     override fun toString() = sykefraværsProsent.toString()
 }
 
-private fun String.tilValidertFlyttall() = try {
-    this.toDouble().right()
-} catch (e: Exception) {
-    "$this er ikke et gyldig flyttall".left()
-}
+private fun String.tilValidertFlyttall() =
+    try {
+        this.toDouble().right()
+    } catch (e: Exception) {
+        "$this er ikke et gyldig flyttall".left()
+    }
 
-private fun String.tilValidertHeltall() = try {
-    this.toInt().right()
-} catch (e: Exception) {
-    "$this er ikke et gyldig heltall".left()
-}
+private fun String.tilValidertHeltall() =
+    try {
+        this.toInt().right()
+    } catch (e: Exception) {
+        "$this er ikke et gyldig heltall".left()
+    }
 
 private fun String?.tomSomNull() = this?.ifBlank { null }

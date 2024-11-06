@@ -20,7 +20,6 @@ class IASakStatusEksportør(
         val alleSaker = iaSakRepository.hentAlleSaker()
         log.info("Starter re-eksport av ${alleSaker.size} statuser")
         try {
-
             alleSaker.forEach { nåværendeIaSak ->
                 iaSakStatusProdusent.receive(nåværendeIaSak)
             }
