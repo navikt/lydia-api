@@ -25,7 +25,6 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurder
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
-import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -43,7 +42,6 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.After
 import org.junit.Before
 import java.util.UUID
@@ -622,7 +620,7 @@ class BehovsvurderingApiTest {
         // -- skal ikke kunne flytte til prosess i en annen sak
         shouldFail {
             val nysak = nySakIKartlegges()
-                .nyHendelse(IASakshendelseType.NY_PROSESS)
+                .opprettNyttSamarbeid()
             oppdaterBehovsvurdering(behovsvurdering, sak, nysak.hentAlleSamarbeid().first().id)
         }
     }
