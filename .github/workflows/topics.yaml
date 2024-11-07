@@ -36,6 +36,7 @@ jobs:
             .nais/topics/sporreundersokelse-oppdatering-topic.yaml,\
             .nais/topics/fullfort-behovsvurdering-topic.yaml,\
             .nais/topics/behovsvurdering-bigquery-topic.yaml,\
+            .nais/topics/samarbeidsplan-bigquery-topic.yaml,\
             .nais/topics/samarbeid-bigquery-topic.yaml,\
             .nais/topics/sporreundersokelse-hendelse-topic.yaml,\
             .nais/topics/sporreundersokelse-hendelse-topic.yaml,\

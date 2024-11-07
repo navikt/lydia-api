@@ -26,8 +26,8 @@ fun Spørreundersøkelse.tilDto(erEier: Boolean) =
     SpørreundersøkelseDto(
         id = if (erEier) id.toString() else "",
         kartleggingId = if (erEier) id.toString() else "",
-        samarbeidId = prosessId,
-        prosessId = prosessId,
+        samarbeidId = samarbeidId,
+        prosessId = samarbeidId,
         status = status,
         temaMedSpørsmålOgSvaralternativer = if (erEier) tema.map { it.toDto() } else emptyList(),
         opprettetAv = opprettetAv,

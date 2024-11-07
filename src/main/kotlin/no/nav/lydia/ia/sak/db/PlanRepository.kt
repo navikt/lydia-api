@@ -152,6 +152,7 @@ class PlanRepository(
                     val planId = UUID.fromString(row.string("plan_id"))
                     Plan(
                         id = planId,
+                        samarbeidId = row.int("ia_prosess"),
                         sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
                         sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
                         temaer = hentTema(planId, session),
@@ -260,6 +261,7 @@ class PlanRepository(
                 val planIdLestFraDB = UUID.fromString(row.string("plan_id"))
                 Plan(
                     id = planIdLestFraDB,
+                    samarbeidId = row.int("ia_prosess"),
                     sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
                     sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
                     temaer = hentTema(planIdLestFraDB, session),
@@ -491,6 +493,27 @@ class PlanRepository(
                         "planId" to plan.id.toString(),
                     ),
                 ).asUpdate,
+            )
+        }
+
+    fun hentAllePlaner(): List<Plan> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT *
+                        FROM ia_sak_plan
+                    """.trimMargin(),
+                ).map { row: Row ->
+                    val planId = UUID.fromString(row.string("plan_id"))
+                    Plan(
+                        id = planId,
+                        samarbeidId = row.int("ia_prosess"),
+                        sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
+                        sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
+                        temaer = hentTema(planId, session),
+                    )
+                }.asList,
             )
         }
 }

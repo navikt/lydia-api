@@ -45,6 +45,8 @@ import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
+import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
+import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
@@ -159,6 +161,9 @@ fun startLydiaBackend() {
     val behovsvurderingBigqueryProdusent = BehovsvurderingBigqueryProdusent(
         produsent = kafkaProdusent,
     )
+    val samarbeidsplanBigqueryProdusent = SamarbeidsplanBigqueryProdusent(
+        produsent = kafkaProdusent,
+    )
     val samarbeidBigqueryProdusent = SamarbeidBigqueryProdusent(
         produsent = kafkaProdusent,
     )
@@ -218,7 +223,12 @@ fun startLydiaBackend() {
     val planService = PlanService(
         iaProsessService = iaProsessService,
         planRepository = planRepository,
-        planObservers = listOf(oppdaterSistEndretPlanObserver, samarbeidplanMetrikkObserver, sendPlanPåKafkaObserver),
+        planObservers = listOf(
+            oppdaterSistEndretPlanObserver,
+            samarbeidplanMetrikkObserver,
+            sendPlanPåKafkaObserver,
+            samarbeidsplanBigqueryProdusent,
+        ),
     )
 
     val spørreundersøkelseService = SpørreundersøkelseService(
@@ -286,6 +296,10 @@ fun startLydiaBackend() {
         behovsvurderingBigqueryEksporterer = BehovsvurderingBigqueryEksporterer(
             behovsvurderingBigqueryProdusent = behovsvurderingBigqueryProdusent,
             behovsvurderingRepository = spørreundersøkelseRepository,
+        ),
+        samarbeidsplanBigqueryEksporterer = SamarbeidsplanBigqueryEksporterer(
+            samarbeidsplanBigqueryProdusent = samarbeidsplanBigqueryProdusent,
+            planRepository = planRepository,
         ),
         lukkAlleÅpneIaTjenester = LukkAlleÅpneIaTjenester(
             iaSakLeveranseRepository = IASakLeveranseRepository(dataSource),
@@ -389,6 +403,7 @@ private fun jobblytter(
     iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
     samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
     samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
+    samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
     behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
     lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
 ) {
@@ -407,6 +422,7 @@ private fun jobblytter(
             samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer,
             behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer,
             lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester,
+            samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer,
         )
         run()
     }

@@ -55,7 +55,7 @@ class SamarbeidsplanProdusentTest {
             orgnr = sak1.orgnr,
             saksnummer = sak1.saksnummer,
             prosessId = samarbeid1.id,
-            redigertPlan = planMal,
+            plan = planMal,
         )
         // lytte og konsummere kafka meldingen sendt til SF av "opprett plan funksjon"
         runBlocking {
@@ -73,7 +73,7 @@ class SamarbeidsplanProdusentTest {
             orgnr = sak2.orgnr,
             saksnummer = sak2.saksnummer,
             prosessId = samarbeid2.id,
-            redigertPlan = planMal,
+            plan = planMal,
         )
         // lytte og konsummere alle kafka meldingen sendt til SF av "opprett plan funksjon"
         runBlocking {
@@ -105,7 +105,7 @@ class SamarbeidsplanProdusentTest {
             orgnr = sak1.orgnr,
             saksnummer = sak1.saksnummer,
             prosessId = samarbeid1.id,
-            redigertPlan = planMal,
+            plan = planMal,
         )
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -155,7 +155,7 @@ class SamarbeidsplanProdusentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            redigertPlan = planMedEttTema,
+            plan = planMedEttTema,
         )
 
         runBlocking {
@@ -179,14 +179,14 @@ class SamarbeidsplanProdusentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            redigertPlan = planMal,
+            plan = planMal,
         )
         shouldFail {
             PlanHelper.opprettEnPlan(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
                 prosessId = sak.hentAlleSamarbeid().first().id,
-                redigertPlan = planMal,
+                plan = planMal,
             )
         }
         postgresContainer.hentEnkelKolonne<Int>(

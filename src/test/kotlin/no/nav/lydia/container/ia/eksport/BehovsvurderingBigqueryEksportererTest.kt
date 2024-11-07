@@ -27,7 +27,7 @@ class BehovsvurderingBigqueryEksportererTest {
 
     @Before
     fun setUp() {
-        konsument.subscribe(mutableListOf(Topic.BEHOVSVURDERING_BIGQUERY_TOPIC.navn))
+        konsument.subscribe(listOf(Topic.BEHOVSVURDERING_BIGQUERY_TOPIC.navn))
     }
 
     @After

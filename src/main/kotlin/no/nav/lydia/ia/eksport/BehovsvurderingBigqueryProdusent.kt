@@ -37,7 +37,7 @@ class BehovsvurderingBigqueryProdusent(
                 opprettetAv = this.opprettetAv,
                 opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
                 endret = this.endretTidspunkt?.toKotlinLocalDateTime() ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-                samarbeidId = this.prosessId,
+                samarbeidId = this.samarbeidId,
             )
             return key to Json.encodeToString(value)
         }

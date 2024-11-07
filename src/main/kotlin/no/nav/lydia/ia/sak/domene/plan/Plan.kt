@@ -6,6 +6,7 @@ import java.util.UUID
 
 data class Plan(
     val id: UUID,
+    val samarbeidId: Int,
     val sistEndret: LocalDateTime,
     val sistPublisert: LocalDate?,
     val temaer: List<PlanTema>,

@@ -66,8 +66,10 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -810,28 +812,74 @@ class IASakKartleggingHelper {
 
 class PlanHelper {
     companion object {
+        fun PlanDto.antallTemaInkludert() = temaer.filter { it.inkludert }.size
+
+        fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
+
+        fun IASakDto.hentPlan() =
+            hentPlan(
+                orgnr = orgnr,
+                saksnummer = saksnummer,
+                prosessId = hentAlleSamarbeid().first().id,
+            )
+
+        fun IASakDto.endreStatusPåInnhold(
+            temaId: Int,
+            innholdId: Int,
+            status: PlanUndertema.Status,
+        ) = endreStatus(
+            orgnr = orgnr,
+            saksnummer = saksnummer,
+            temaId = temaId,
+            undertemaId = innholdId,
+            status = status,
+            prosessId = hentAlleSamarbeid().first().id,
+        )
+
+        fun PlanMalDto.inkluderAlt(): PlanMalDto =
+            PlanMalDto(
+                tema = this.tema.map { tema ->
+                    TemaMalDto(
+                        rekkefølge = tema.rekkefølge,
+                        navn = tema.navn,
+                        inkludert = true,
+                        innhold = tema.innhold.map { innhold ->
+                            InnholdMalDto(
+                                rekkefølge = innhold.rekkefølge,
+                                navn = innhold.navn,
+                                inkludert = true,
+                                startDato = LocalDate(2021, 1, 1),
+                                sluttDato = LocalDate(2021, 1, 2),
+                            )
+                        },
+                    )
+                },
+            )
+
         fun opprettEnPlan(
             orgnr: String,
             saksnummer: String,
             prosessId: Int,
-            redigertPlan: PlanMalDto = hentPlanMal(),
+            plan: PlanMalDto = hentPlanMal(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/opprett")
-            .jsonBody(Json.encodeToString(redigertPlan))
+            .jsonBody(Json.encodeToString(plan))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
 
-        fun IASakDto.opprettEnPlan(token: String = oauth2ServerContainer.saksbehandler1.token) =
-            lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/${hentAlleSamarbeid().first().id}/opprett")
-                .jsonBody(Json.encodeToString(hentPlanMal()))
-                .authentication().bearer(token)
-                .tilSingelRespons<PlanDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = { fail(it.message) },
-                )
+        fun IASakDto.opprettEnPlan(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            plan: PlanMalDto = hentPlanMal(),
+        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/${hentAlleSamarbeid().first().id}/opprett")
+            .jsonBody(Json.encodeToString(plan))
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
 
         fun hentPlan(
             orgnr: String,

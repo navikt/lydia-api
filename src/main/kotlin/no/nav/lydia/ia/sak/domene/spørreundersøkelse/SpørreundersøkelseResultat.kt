@@ -24,7 +24,7 @@ fun Spørreundersøkelse.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>
     SpørreundersøkelseResultat(
         id = this.id,
         saksnummer = this.saksnummer,
-        prosessId = this.prosessId,
+        prosessId = this.samarbeidId,
         orgnummer = this.orgnummer,
         virksomhetsNavn = this.virksomhetsNavn,
         opprettetAv = this.opprettetAv,

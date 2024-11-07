@@ -6,6 +6,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakBehovsvurderingEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
@@ -31,6 +32,7 @@ import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
+import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
@@ -62,6 +64,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var iaSakhendelseStatusJobb: IaSakhendelseStatusJobb
     private lateinit var samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer
     private lateinit var samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer
+    private lateinit var samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer
     private lateinit var behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer
     private lateinit var lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester
     private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
@@ -86,6 +89,7 @@ object Jobblytter : CoroutineScope {
         iaSakhendelseStatusJobb: IaSakhendelseStatusJobb,
         samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
         samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
+        samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
         behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
         lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
     ) {
@@ -108,6 +112,7 @@ object Jobblytter : CoroutineScope {
         this.iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
         this.samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer
         this.samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer
+        this.samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer
         this.behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer
         this.lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester
 
@@ -181,6 +186,10 @@ object Jobblytter : CoroutineScope {
 
                                     iaSakSamarbeidEksport -> {
                                         samarbeidBigqueryEksporterer.eksporter()
+                                    }
+
+                                    iaSakSamarbeidsplanBigqueryEksport -> {
+                                        samarbeidsplanBigqueryEksporterer.eksporter()
                                     }
 
                                     iaSakBehovsvurderingEksport -> {

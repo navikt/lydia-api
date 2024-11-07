@@ -33,7 +33,7 @@ class FullførtBehovsvurderingProdusent(
             FullførtBehovsvurdering(
                 behovsvurderingId = this.id.toString(),
                 saksnummer = this.saksnummer,
-                prosessId = this.prosessId.toString(),
+                prosessId = this.samarbeidId.toString(),
                 fullførtTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime() ?: java.time.LocalDateTime.now()
                     .toKotlinLocalDateTime(),
             ),

@@ -12,6 +12,7 @@ class PlanUnitTest {
     fun `Test utregning for startDato og sluttDato`() {
         val plan = Plan(
             id = UUID.randomUUID(),
+            samarbeidId = 1,
             sistEndret = java.time.LocalDateTime.now().toKotlinLocalDateTime(),
             sistPublisert = java.time.LocalDate.now().toKotlinLocalDate(),
             temaer = listOf(

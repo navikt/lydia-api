@@ -27,7 +27,7 @@ class SpørreundersøkelseProdusent(
     fun sendPåKafka(spørreundersøkelse: Spørreundersøkelse) {
         val samarbeidNavn = iaProsessRepository.hentProsess(
             saksnummer = spørreundersøkelse.saksnummer,
-            prosessId = spørreundersøkelse.prosessId,
+            prosessId = spørreundersøkelse.samarbeidId,
         )?.navn ?: spørreundersøkelse.virksomhetsNavn
         val (nøkkel, verdi) = spørreundersøkelse.tilKafkaMelding(samarbeidNavn)
         produsent.sendMelding(

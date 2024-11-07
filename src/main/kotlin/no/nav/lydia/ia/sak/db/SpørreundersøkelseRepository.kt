@@ -210,7 +210,7 @@ class SpørreundersøkelseRepository(
         return Spørreundersøkelse(
             id = spørreundersøkelseId,
             saksnummer = this.string("saksnummer"),
-            prosessId = this.int("prosessId"),
+            samarbeidId = this.int("prosessId"),
             orgnummer = this.string("orgnr"),
             virksomhetsNavn = this.string("navn"),
             status = SpørreundersøkelseStatus.valueOf(this.string("status")),

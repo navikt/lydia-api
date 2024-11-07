@@ -140,11 +140,17 @@ class PlanService(
         nyStatus: PlanUndertema.Status,
     ): Either<Feil, PlanUndertema> {
         return hentPlan(iaSak = iaSak, prosessId = prosessId).flatMap { plan ->
-            val lagredeUndertemaer =
-                plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return PlanFeil.`fant ikke tema`.left()
-            val lagretUndertema = lagredeUndertemaer.firstOrNull { it.id == undertemaId }
+            val lagredeUndertemaer = plan.temaer.firstOrNull { it.id == temaId }?.undertemaer ?: return PlanFeil.`fant ikke tema`.left()
+            val lagretUndertema = lagredeUndertemaer.firstOrNull { it.id == undertemaId } ?: return PlanFeil.`fant ikke undertema`.left()
 
-            if (nyStatus == AVBRUTT && lagretUndertema != null && lagretUndertema.starterIFremtiden()) {
+            if (!lagretUndertema.inkludert) {
+                return Feil(
+                    feilmelding = "Kan ikke endre status til '${nyStatus.name}' da '${lagretUndertema.navn}' ikke er inkludert",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                ).left()
+            }
+
+            if (nyStatus == AVBRUTT && lagretUndertema.starterIFremtiden()) {
                 return Feil(
                     feilmelding = "Kan ikke endre status til '${nyStatus.name}' " +
                         "fordi '${lagretUndertema.navn}' ikke har startet enda",
