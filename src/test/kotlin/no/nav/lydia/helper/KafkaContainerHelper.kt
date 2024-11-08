@@ -224,6 +224,21 @@ class KafkaContainerHelper(
         }
     }
 
+    fun sendJobbMeldingUtenParam(jobb: Jobb) {
+        sendOgVentTilKonsumert(
+            nøkkel = jobb.name,
+            melding =
+            """
+                {
+                    "jobb": "${jobb.name}",
+                    "tidspunkt": "2023-01-01T00:00:00.000Z",
+                    "applikasjon": "lydia-api"
+                }
+                """.trimIndent(),
+            topic = Topic.JOBBLYTTER_TOPIC,
+        )
+    }
+
     fun sendJobbMelding(jobb: Jobb, parameter: String = "") {
         sendOgVentTilKonsumert(
             nøkkel = jobb.name,

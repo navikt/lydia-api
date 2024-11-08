@@ -212,7 +212,7 @@ object Jobblytter : CoroutineScope {
     data class SerializableJobbInfo(
         override val jobb: Jobb,
         override val tidspunkt: String,
-        override val parameter: String?,
+        override val parameter: String? = "",
         override val applikasjon: String,
     ) : JobbInfo
 
