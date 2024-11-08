@@ -1,6 +1,7 @@
 package no.nav.lydia.integrasjoner.jobblytter
 
 import ia.felles.integrasjoner.jobbsender.Jobb
+import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakBehovsvurderingEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
@@ -130,6 +131,14 @@ object Jobblytter : CoroutineScope {
                             } else {
                                 logger.info("Starter jobb $jobInfo")
                                 when (jobInfo.jobb) {
+                                    engangsJobb -> {
+                                        if (jobInfo.parameter.isNullOrEmpty()) {
+                                            logger.warn("Forsøkte å starte jobb 'engangsJobb/eksporterEnkelSak' med null/empty parameter. Avslutter")
+                                        } else {
+                                            iaSakEksporterer.eksporterEnkelSak(jobInfo.parameter)
+                                        }
+                                    }
+
                                     ryddeIUrørteSaker -> {
                                         iaSakStatusOppdaterer.ryddeIUrørteSaker()
                                     }
@@ -203,6 +212,7 @@ object Jobblytter : CoroutineScope {
     data class SerializableJobbInfo(
         override val jobb: Jobb,
         override val tidspunkt: String,
+        override val parameter: String?,
         override val applikasjon: String,
     ) : JobbInfo
 
