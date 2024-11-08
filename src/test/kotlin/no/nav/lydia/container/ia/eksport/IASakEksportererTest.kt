@@ -113,4 +113,12 @@ class IASakEksportererTest {
 
         lydiaApiContainer shouldContainLog "Eksport av enkel sak, med saksnummer: 'UKJENT_SAKSNUMMER' feilet. Sak ikke funnet".toRegex()
     }
+
+    @Test
+    fun `kafka-eksport av enkel IASak logger warn dersom ingen parameter er sendt`() {
+        // Start jobben som skal sende en melding om IA-sak på Kafka
+        kafkaContainerHelper.sendJobbMeldingUtenParam(engangsJobb)
+
+        lydiaApiContainer shouldContainLog "Forsøkte å starte jobb 'engangsJobb/eksporterEnkelSak' med null/empty parameter. Avslutter".toRegex()
+    }
 }
