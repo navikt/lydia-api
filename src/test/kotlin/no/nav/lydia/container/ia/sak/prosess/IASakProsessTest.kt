@@ -379,4 +379,15 @@ class IASakProsessTest {
         }
         sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, gyldigLangtNavn)
     }
+
+    @Test
+    fun `skal gå tilbake til forrige status dersom man trykker tilbake etter å ha slettet prosess`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val sakEtterSlettetSamarbeid = sak.slettSamarbeid(samarbeid)
+        sakEtterSlettetSamarbeid.status shouldBe IAProsessStatus.KARTLEGGES
+
+        val sakEtterTilbake = sakEtterSlettetSamarbeid.nyHendelse(IASakshendelseType.TILBAKE)
+        sakEtterTilbake.status shouldBe IAProsessStatus.KONTAKTES
+    }
 }
