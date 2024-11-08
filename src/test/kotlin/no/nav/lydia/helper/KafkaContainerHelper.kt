@@ -224,7 +224,7 @@ class KafkaContainerHelper(
         }
     }
 
-    fun sendJobbMelding(jobb: Jobb) {
+    fun sendJobbMelding(jobb: Jobb, parameter: String = "") {
         sendOgVentTilKonsumert(
             nøkkel = jobb.name,
             melding =
@@ -232,6 +232,7 @@ class KafkaContainerHelper(
                 {
                     "jobb": "${jobb.name}",
                     "tidspunkt": "2023-01-01T00:00:00.000Z",
+                    "parameter": "$parameter"
                     "applikasjon": "lydia-api"
                 }
                 """.trimIndent(),

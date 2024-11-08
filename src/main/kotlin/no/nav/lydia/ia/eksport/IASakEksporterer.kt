@@ -23,4 +23,16 @@ class IASakEksporterer(
             }
         KJØRER_SAKS_EKSPORT.set(false)
     }
+
+    fun eksporterEnkelSak(saksnummer: String) {
+        KJØRER_SAKS_EKSPORT.set(true)
+        log.info("Starter eksport av enkel sak, med saksnummer: '$saksnummer'")
+
+        iaSakRepository.hentIASak(saksnummer = saksnummer)?.let { iaSak ->
+            iaSakProdusent.receive(iaSak)
+        } ?: log.warn("Eksport av enkel sak, med saksnummer: '$saksnummer' feilet. Sak ikke funnet")
+
+        KJØRER_SAKS_EKSPORT.set(false)
+        log.info("Eksport av enkel sak er ferdig")
+    }
 }
