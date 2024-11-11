@@ -26,6 +26,7 @@ import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.medHendelser
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
@@ -162,7 +163,10 @@ class IASakService(
                 if (hendelser.last().id != hendelseDto.endretAvHendelseId) {
                     return IASakError.`prøvde å legge til en hendelse på en gammel sak`.left()
                 }
-                val sak = IASak.fraHendelser(hendelser)
+
+                val sak = iaSakRepository.hentIASak(hendelseDto.saksnummer)
+                    .medHendelser(hendelser) ?: return IASakError.`generell feil under uthenting`.left()
+
                 saksbehandler.utførHendelsePåSak(sak = sak, hendelse = sakshendelse)
                     .map { oppdatertSak ->
                         val nyStatus = oppdatertSak.status
@@ -185,6 +189,8 @@ class IASakService(
                     .mapLeft { it.tilFeilMedHttpFeilkode() }
             }
     }
+
+    fun IASak.print() = "'$saksnummer', $status, ${hendelser.size}"
 
     fun tilbakeførSaker(tørrKjør: Boolean) =
         iaSakRepository.hentUrørteSakerIVurderesUtenEier().map {

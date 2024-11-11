@@ -438,6 +438,14 @@ class IASak private constructor(
             return sak
         }
 
+        fun IASak?.medHendelser(hendelser: List<IASakshendelse>) =
+            if (this?.sakshendelser?.isEmpty() == true) {
+                this.sakshendelser.addAll(hendelser)
+                this
+            } else {
+                this
+            }
+
         fun Row.tilIASak(): IASak =
             IASak(
                 saksnummer = this.string("saksnummer"),
