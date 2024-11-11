@@ -113,6 +113,7 @@ data class ObservedPlan(
 enum class PlanHendelseType {
     OPPRETT,
     OPPDATER,
+    ENDRE_STATUS,
 }
 
 fun Routing.metrics() {

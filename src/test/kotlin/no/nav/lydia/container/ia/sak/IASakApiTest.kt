@@ -19,7 +19,7 @@ import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
-import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentAktivSakRespons
@@ -149,7 +149,7 @@ class IASakApiTest {
             )
         }
 
-        val plan = PlanHelper.opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id)
+        val plan = sak.opprettEnPlan()
         val saksStatusMedPlanOgKartlegging = sak.hentSaksStatus()
         saksStatusMedPlanOgKartlegging.kanFullføres shouldBe false
         saksStatusMedPlanOgKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(

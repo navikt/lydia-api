@@ -9,7 +9,6 @@ data class PlanTemaDto(
     val navn: String,
     val inkludert: Boolean,
     val undertemaer: List<PlanUndertemaDto>,
-    val ressurser: List<PlanRessursDto>,
 )
 
 fun List<PlanTema>.tilDtoer() = map { it.tilDto() }
@@ -20,5 +19,4 @@ fun PlanTema.tilDto(): PlanTemaDto =
         navn = navn,
         inkludert = inkludert,
         undertemaer = undertemaer.tilDtoer(),
-        ressurser = ressurser.tilDtoer(),
     )

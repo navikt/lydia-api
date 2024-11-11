@@ -319,7 +319,6 @@ object IASakError {
     val `ugyldig iaSakLeveranseId` = Feil("Ugyldig leveranseId", HttpStatusCode.BadRequest)
     val `ugyldig modul` = Feil("Ugyldig modul", HttpStatusCode.BadRequest)
     val `ikke eier av sak` = Feil("Ikke eier av sak", HttpStatusCode.BadRequest)
-    val `ugyldig plan` = Feil("Plan er ikke gyldig", HttpStatusCode.BadRequest)
     val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` = Feil(
         "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet",
         HttpStatusCode.NotImplemented,

@@ -10,6 +10,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -51,12 +52,7 @@ class SamarbeidsplanProdusentTest {
         // Opprette noen saker med planer
         val sak1 = nySakIKartleggesMedEtSamarbeid()
         val samarbeid1 = sak1.hentAlleSamarbeid().first()
-        val opprettetPlan1 = PlanHelper.opprettEnPlan(
-            orgnr = sak1.orgnr,
-            saksnummer = sak1.saksnummer,
-            prosessId = samarbeid1.id,
-            plan = planMal,
-        )
+        val opprettetPlan1 = sak1.opprettEnPlan(plan = planMal)
         // lytte og konsummere kafka meldingen sendt til SF av "opprett plan funksjon"
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -69,12 +65,7 @@ class SamarbeidsplanProdusentTest {
 
         val sak2 = nySakIKartleggesMedEtSamarbeid()
         val samarbeid2 = sak2.hentAlleSamarbeid().first()
-        val opprettetPlan2 = PlanHelper.opprettEnPlan(
-            orgnr = sak2.orgnr,
-            saksnummer = sak2.saksnummer,
-            prosessId = samarbeid2.id,
-            plan = planMal,
-        )
+        val opprettetPlan2 = sak2.opprettEnPlan(plan = planMal)
         // lytte og konsummere alle kafka meldingen sendt til SF av "opprett plan funksjon"
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -99,14 +90,8 @@ class SamarbeidsplanProdusentTest {
     fun `re-eksport av samarbeidsplaner til salesforce hvor samarbeid har et tomt (null) navn`() {
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
         val sak1 = nySakIKartlegges().opprettNyttSamarbeid(navn = null)
-
         val samarbeid1 = sak1.hentAlleSamarbeid().first()
-        val opprettetPlan1 = PlanHelper.opprettEnPlan(
-            orgnr = sak1.orgnr,
-            saksnummer = sak1.saksnummer,
-            prosessId = samarbeid1.id,
-            plan = planMal,
-        )
+        val opprettetPlan1 = sak1.opprettEnPlan(plan = planMal)
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
@@ -151,18 +136,13 @@ class SamarbeidsplanProdusentTest {
             },
         )
 
-        val opprettetPlan = PlanHelper.opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            plan = planMedEttTema,
-        )
+        val plan = sak.opprettEnPlan(plan = planMedEttTema)
 
         runBlocking {
             konsummerOgSjekkKafkaMelding(
                 sak1 = sak,
                 samarbeid1 = samarbeid,
-                opprettetPlan1 = opprettetPlan,
+                opprettetPlan1 = plan,
                 startDato = startDato,
                 sluttDato = sluttDato,
             )
@@ -175,20 +155,8 @@ class SamarbeidsplanProdusentTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         val planMal: PlanMalDto = PlanHelper.hentPlanMal()
 
-        PlanHelper.opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            plan = planMal,
-        )
-        shouldFail {
-            PlanHelper.opprettEnPlan(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                plan = planMal,
-            )
-        }
+        sak.opprettEnPlan(plan = planMal)
+        shouldFail { sak.opprettEnPlan(plan = planMal) }
         postgresContainer.hentEnkelKolonne<Int>(
             """
             SELECT COUNT(*) FROM ia_sak_plan WHERE ia_prosess = '${samarbeid.id}'

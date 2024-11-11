@@ -52,7 +52,6 @@ import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
-import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -812,15 +811,49 @@ class IASakKartleggingHelper {
 
 class PlanHelper {
     companion object {
+        val START_DATO = LocalDate(2021, 1, 1)
+        val SLUTT_DATO = LocalDate(2022, 2, 2)
+
         fun PlanDto.antallTemaInkludert() = temaer.filter { it.inkludert }.size
 
         fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
-        fun IASakDto.hentPlan() =
-            hentPlan(
-                orgnr = orgnr,
-                saksnummer = saksnummer,
-                prosessId = hentAlleSamarbeid().first().id,
+        fun PlanDto.antallInnholdMedStatus(status: PlanUndertema.Status) =
+            temaer.flatMap { it.undertemaer }.filter {
+                it.inkludert &&
+                    it.status == status
+            }.size
+
+        fun PlanDto.tidligstStartDato(): LocalDate =
+            this.temaer.flatMap { it.undertemaer }
+                .filter { it.startDato != null }
+                .minOf { it.startDato!! }
+
+        fun PlanDto.senesteSluttDato(): LocalDate =
+            this.temaer.flatMap { it.undertemaer }
+                .filter { it.sluttDato != null }
+                .maxOf { it.sluttDato!! }
+
+        fun IASakDto.hentPlan(
+            prosessId: Int = hentAlleSamarbeid().first().id,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        private fun hentPlan(
+            orgnr: String,
+            saksnummer: String,
+            prosessId: Int,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
             )
 
         fun IASakDto.endreStatusPåInnhold(
@@ -837,7 +870,7 @@ class PlanHelper {
         )
 
         fun PlanMalDto.inkluderAlt(): PlanMalDto =
-            PlanMalDto(
+            this.copy(
                 tema = this.tema.map { tema ->
                     TemaMalDto(
                         rekkefølge = tema.rekkefølge,
@@ -856,24 +889,130 @@ class PlanHelper {
                 },
             )
 
-        fun opprettEnPlan(
-            orgnr: String,
-            saksnummer: String,
-            prosessId: Int,
-            plan: PlanMalDto = hentPlanMal(),
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/opprett")
-            .jsonBody(Json.encodeToString(plan))
-            .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
+        fun PlanMalDto.inkluderEttTemaOgEttInnhold(
+            temanummer: Int,
+            innholdnummer: Int,
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): PlanMalDto =
+            this.copy(
+                tema = tema.map { tema ->
+                    if (temanummer == tema.rekkefølge) {
+                        tema.copy(
+                            inkludert = true,
+                            innhold = tema.innhold.inkluderEttInnhold(
+                                innholdnummer,
+                                startDato = startDato,
+                                sluttDato = sluttDato,
+                            ),
+                        )
+                    } else {
+                        tema
+                    }
+                },
+            )
+
+        fun PlanMalDto.inkluderEttTemaOgAltInnhold(
+            temanummer: Int,
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): PlanMalDto =
+            this.copy(
+                tema = tema.map { tema ->
+                    if (temanummer == tema.rekkefølge) {
+                        tema.copy(
+                            inkludert = true,
+                            innhold = tema.innhold.inkluderAltInnholdIMal(startDato = startDato, sluttDato = sluttDato),
+                        )
+                    } else {
+                        tema
+                    }
+                },
+            )
+
+        private fun List<InnholdMalDto>.inkluderAltInnholdIMal(
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): List<InnholdMalDto> =
+            this.map { innhold ->
+                innhold.copy(
+                    inkludert = true,
+                    startDato = startDato,
+                    sluttDato = sluttDato,
+                )
+            }
+
+        private fun List<InnholdMalDto>.inkluderEttInnhold(
+            innholdnummer: Int,
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): List<InnholdMalDto> =
+            this.map { innhold ->
+                if (innholdnummer == innhold.rekkefølge) {
+                    innhold.copy(
+                        inkludert = true,
+                        startDato = startDato,
+                        sluttDato = sluttDato,
+                    )
+                } else {
+                    innhold
+                }
+            }
+
+        fun List<PlanUndertemaDto>.inkluderAltInnhold(
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): List<PlanUndertemaDto> =
+            this.map { innhold ->
+                innhold.copy(
+                    inkludert = true,
+                    startDato = startDato,
+                    sluttDato = sluttDato,
+                )
+            }
+
+        fun PlanDto.inkluderTemaOgAltInnhold(
+            temaId: Int,
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): PlanDto =
+            this.copy(
+                temaer = temaer.map { tema ->
+                    if (tema.id == temaId) {
+                        tema.copy(
+                            inkludert = true,
+                            undertemaer = tema.undertemaer.inkluderAltInnhold(
+                                startDato = startDato,
+                                sluttDato = sluttDato,
+                            ),
+                        )
+                    } else {
+                        tema
+                    }
+                },
+            )
+
+        fun PlanDto.inkluderAlt(
+            startDato: LocalDate = START_DATO,
+            sluttDato: LocalDate = SLUTT_DATO,
+        ): PlanDto =
+            this.copy(
+                temaer = temaer.map { tema ->
+                    tema.copy(
+                        inkludert = true,
+                        undertemaer = tema.undertemaer.inkluderAltInnhold(
+                            startDato = startDato,
+                            sluttDato = sluttDato,
+                        ),
+                    )
+                },
             )
 
         fun IASakDto.opprettEnPlan(
             token: String = oauth2ServerContainer.saksbehandler1.token,
             plan: PlanMalDto = hentPlanMal(),
-        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/${hentAlleSamarbeid().first().id}/opprett")
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
+        ) = lydiaApiContainer.performPost("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/opprett")
             .jsonBody(Json.encodeToString(plan))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
@@ -881,24 +1020,10 @@ class PlanHelper {
                 failure = { fail(it.message) },
             )
 
-        fun hentPlan(
-            orgnr: String,
-            saksnummer: String,
-            prosessId: Int,
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = lydiaApiContainer.performGet("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
-            .authentication().bearer(token)
-            .tilSingelRespons<PlanDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
-            )
-
-        fun endreTema(
-            orgnr: String,
-            saksnummer: String,
-            prosessId: Int,
+        fun IASakDto.endreEttTema(
             temaId: Int,
             endring: List<EndreUndertemaRequest>,
+            prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/$temaId")
             .jsonBody(
@@ -907,7 +1032,23 @@ class PlanHelper {
                 ),
             )
             .authentication().bearer(token)
-            .tilSingelRespons<PlanTemaDto>().third.fold(
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
+        fun IASakDto.endreFlereTemaer(
+            endring: List<EndreTemaRequest>,
+            prosessId: Int = hentAlleSamarbeid().first().id,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
+            .jsonBody(
+                Json.encodeToString(
+                    endring,
+                ),
+            )
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -925,7 +1066,7 @@ class PlanHelper {
                 ),
             )
             .authentication().bearer(token)
-            .tilListeRespons<PlanTemaDto>().third.fold(
+            .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
@@ -938,32 +1079,34 @@ class PlanHelper {
             temaId: Int,
             undertemaId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
-        ): PlanUndertemaDto =
-            lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/$temaId/$undertemaId")
-                .jsonBody(
-                    Json.encodeToString(
-                        status,
-                    ),
-                )
-                .authentication().bearer(token)
-                .tilSingelRespons<PlanUndertemaDto>().third.fold(
-                    success = { respons -> respons },
-                    failure = { fail(it.message) },
-                )
+        ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/$temaId/$undertemaId")
+            .jsonBody(
+                Json.encodeToString(
+                    status,
+                ),
+            )
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
 
         fun PlanDto.tilRequest(): List<EndreTemaRequest> =
             this.temaer.map { tema ->
                 EndreTemaRequest(
                     tema.id,
                     tema.inkludert,
-                    tema.undertemaer.map { undertema ->
-                        EndreUndertemaRequest(
-                            undertema.id,
-                            undertema.inkludert,
-                            undertema.startDato,
-                            undertema.sluttDato,
-                        )
-                    },
+                    tema.undertemaer.tilRequest(),
+                )
+            }
+
+        fun List<PlanUndertemaDto>.tilRequest(): List<EndreUndertemaRequest> =
+            this.map { innhold ->
+                EndreUndertemaRequest(
+                    innhold.id,
+                    innhold.inkludert,
+                    innhold.startDato,
+                    innhold.sluttDato,
                 )
             }
 
@@ -987,18 +1130,21 @@ class PlanHelper {
                     undertemaer = tema.undertemaer.map {
                         it.copy(
                             inkludert = true,
+                            startDato = START_DATO,
+                            sluttDato = SLUTT_DATO,
                         )
                     },
                 )
             },
-        ).tilRequest().forEach { tema ->
-            endreTema(
+        ).tilRequest().also { endringer ->
+            endrePlan(
                 orgnr = orgnummer,
                 saksnummer = saksnummer,
                 prosessId = prosessId,
-                temaId = tema.id,
-                endring = tema.undertemaer,
+                endring = endringer,
+                token = token,
             )
+        }.forEach { tema ->
             tema.undertemaer.forEach {
                 endreStatus(
                     orgnr = orgnummer,
@@ -1401,8 +1547,7 @@ class StatistikkHelper {
 }
 
 @OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> Request.tilListeRespons() =
-    this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json.Default)
+inline fun <reified T : Any> Request.tilListeRespons() = this.responseObject(loader = ListSerializer(T::class.serializer()), json = Json)
 
 @OptIn(InternalSerializationApi::class)
-inline fun <reified T : Any> Request.tilSingelRespons() = this.responseObject(loader = T::class.serializer(), json = Json.Default)
+inline fun <reified T : Any> Request.tilSingelRespons() = this.responseObject(loader = T::class.serializer(), json = Json)

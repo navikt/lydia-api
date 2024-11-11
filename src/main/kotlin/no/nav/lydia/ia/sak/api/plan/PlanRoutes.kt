@@ -2,15 +2,12 @@ package no.nav.lydia.ia.sak.api.plan
 
 import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.application
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
-import kotlinx.datetime.LocalDate
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -48,16 +45,32 @@ fun Route.iaSakPlan(
         }
     }
 
+    get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val samarbeidId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
+            planService.hentPlan(samarbeidId = samarbeidId)
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
     post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
         val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
         val planMalDto = call.receive<PlanMalDto>()
-
-        if (!planMalDto.erPlanGyldig()) {
-            call.application.log.info("Plan er ikke gyldig")
-            return@post call.sendFeil(IASakError.`ugyldig plan`)
-        }
 
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             planService.opprettPlan(
@@ -81,7 +94,37 @@ fun Route.iaSakPlan(
         }
     }
 
+    put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        // endre flere temaer og innhold i en gitt plan
+        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val samarbeidId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
+
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+            planService.hentPlan(samarbeidId = samarbeidId).flatMap { lagretPlan ->
+                planService.endreFlereTemaer(
+                    lagretPlan = lagretPlan,
+                    endringAvPlan = endreTemaRequests,
+                )
+            }
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}") {
+        // endre alt innhold for et gitt tema
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
         val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
@@ -92,20 +135,16 @@ fun Route.iaSakPlan(
             ),
         )
 
-        val undertemaEndring = call.receive<List<EndreUndertemaRequest>>()
+        val nyttInnholdListe = call.receive<List<EndreUndertemaRequest>>()
 
-        if (!undertemaEndring.erDatoGyldigForInnhold()) {
-            application.log.info("Plan er ikke gyldig")
-            return@put call.sendFeil(IASakError.`ugyldig plan`)
-        }
-
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
-            planService.endreUndertemaerTilTema(
-                temaId = temaId,
-                iaSak = iaSak,
-                prosessId = prosessId,
-                endredeUndertemaer = undertemaEndring,
-            )
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+            planService.hentPlan(samarbeidId = prosessId).flatMap { lagretPlan ->
+                planService.endreEttTema(
+                    lagretPlan = lagretPlan,
+                    temaId = temaId,
+                    nyttInnholdListe = nyttInnholdListe,
+                )
+            }
         }.also { planEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -122,6 +161,7 @@ fun Route.iaSakPlan(
     }
 
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}/{undertemaId}") {
+        // endre status på ett innhold
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
         val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
@@ -140,71 +180,13 @@ fun Route.iaSakPlan(
 
         val nyStatus = call.receive<PlanUndertema.Status>()
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
-            planService.endreStatus(
-                temaId = temaId,
-                undertemaId = undertemaId,
-                iaSak = iaSak,
-                prosessId = prosessId,
-                nyStatus = nyStatus,
-            )
-        }.also { planEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = planEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDto())
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
-        val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-
-        val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
-
-        if (!endreTemaRequests.erEndretTemaGyldig()) {
-            application.log.info("Plan er ikke gyldig")
-            return@put call.sendFeil(IASakError.`ugyldig plan`)
-        }
-
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, iaSak ->
-            planService.endreFlereTema(
-                iaSak = iaSak,
-                prosessId = prosessId,
-                endredeTema = endreTemaRequests,
-            )
-        }.also { planEither ->
-            auditLog.auditloggEither(
-                call = call,
-                either = planEither,
-                orgnummer = orgnummer,
-                auditType = AuditType.create,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.OK, message = it.tilDtoer())
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
-        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-                planService.hentPlan(
-                    iaSak = iaSak,
-                    prosessId = prosessId,
+        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+            planService.hentPlan(samarbeidId = prosessId).flatMap { lagretPlan ->
+                planService.endreStatus(
+                    temaId = temaId,
+                    undertemaId = undertemaId,
+                    lagretPlan = lagretPlan,
+                    nyStatus = nyStatus,
                 )
             }
         }.also { planEither ->
@@ -221,41 +203,4 @@ fun Route.iaSakPlan(
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
-}
-
-private fun PlanMalDto.erPlanGyldig(): Boolean =
-    tema.all {
-        it.innhold.all { innhold -> erDatoerIGyldigPeriode(sluttDato = innhold.sluttDato, startDato = innhold.startDato) }
-    } &&
-        tema.all {
-            it.inkludert ||
-                it.innhold.all { innhold ->
-                    innhold.sluttDato == null && innhold.startDato == null && !innhold.inkludert
-                }
-        }
-
-private fun List<EndreUndertemaRequest>.erDatoGyldigForInnhold(): Boolean =
-    this.all { innhold ->
-        erDatoerIGyldigPeriode(sluttDato = innhold.sluttDato, startDato = innhold.startDato)
-    }
-
-private fun List<EndreTemaRequest>.erEndretTemaGyldig(): Boolean =
-    this.all { it.undertemaer.erDatoGyldigForInnhold() } &&
-        this.all { tema ->
-            if (tema.inkludert) {
-                true
-            } else {
-                tema.undertemaer.all { innhold ->
-                    innhold.sluttDato == null && innhold.startDato == null && !innhold.inkludert
-                }
-            }
-        }
-
-private fun erDatoerIGyldigPeriode(
-    sluttDato: LocalDate?,
-    startDato: LocalDate?,
-) = if (sluttDato == null || startDato == null) {
-    true
-} else {
-    sluttDato > startDato
 }

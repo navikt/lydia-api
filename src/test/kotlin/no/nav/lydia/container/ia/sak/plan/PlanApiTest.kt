@@ -1,43 +1,122 @@
 package no.nav.lydia.container.ia.sak.plan
 
 import io.kotest.assertions.shouldFail
-import io.kotest.inspectors.forAll
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.PlanHelper.Companion.SLUTT_DATO
+import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdInkludert
+import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdMedStatus
 import no.nav.lydia.helper.PlanHelper.Companion.antallTemaInkludert
-import no.nav.lydia.helper.PlanHelper.Companion.endreStatus
+import no.nav.lydia.helper.PlanHelper.Companion.endreEttTema
+import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaer
 import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAltInnhold
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgAltInnhold
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderTemaOgAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
+import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
-import no.nav.lydia.helper.forExactlyOne
+import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
-import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.AVBRUTT
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.FULLFØRT
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.PLANLAGT
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.PÅGÅR
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import java.time.LocalDate.now
 import kotlin.test.Test
 
 class PlanApiTest {
+    @Test
+    fun `kan ikke endre en plan om forespørselen er ufullstendig`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val planDto = sak.opprettEnPlan(plan = enTomPlanMal)
+
+        val inkludertUtenDato = planDto.copy(
+            temaer = planDto.temaer.map { tema ->
+                tema.copy(
+                    inkludert = true,
+                    undertemaer = tema.undertemaer.map { innhold ->
+                        innhold.copy(
+                            inkludert = true,
+                            startDato = null,
+                            sluttDato = null,
+                        )
+                    },
+                )
+            },
+        )
+
+        val datoUtenInkludert = planDto.copy(
+            temaer = planDto.temaer.map { tema ->
+                tema.copy(
+                    inkludert = true,
+                    undertemaer = tema.undertemaer.map { innhold ->
+                        innhold.copy(
+                            inkludert = false,
+                            startDato = START_DATO,
+                            sluttDato = SLUTT_DATO,
+                        )
+                    },
+                )
+            },
+        )
+
+        val gyldigEndring = planDto.inkluderTemaOgAltInnhold(planDto.temaer.first().id)
+
+        shouldFail { sak.endreFlereTemaer(endring = datoUtenInkludert.tilRequest()) }
+            .message shouldBe "HTTP Exception 400 Bad Request"
+
+        shouldFail { sak.endreFlereTemaer(endring = inkludertUtenDato.tilRequest()) }
+            .message shouldBe "HTTP Exception 400 Bad Request"
+
+        val uendretPlan = sak.hentPlan()
+        uendretPlan.antallTemaInkludert() shouldBe 0
+        uendretPlan.antallInnholdInkludert() shouldBe 0
+
+        sak.endreFlereTemaer(endring = gyldigEndring.tilRequest())
+
+        val endretPlan = sak.hentPlan()
+        endretPlan.antallTemaInkludert() shouldBe 1
+        endretPlan.antallInnholdInkludert() shouldBe planDto.temaer.first().undertemaer.size
+
+        shouldFail {
+            sak.endreEttTema(
+                endring = datoUtenInkludert.temaer.first().undertemaer.tilRequest(),
+                temaId = planDto.temaer.first().id,
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
+
+        shouldFail {
+            sak.endreEttTema(
+                endring = inkludertUtenDato.temaer.first().undertemaer.tilRequest(),
+                temaId = planDto.temaer.first().id,
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
+
+        val sammePlan = sak.hentPlan()
+        sammePlan.antallTemaInkludert() shouldBe 1
+        sammePlan.antallInnholdInkludert() shouldBe planDto.temaer.first().undertemaer.size
+    }
+
     @Test
     fun `kan opprette en plan basert på mal`() {
         // TODO: Det skal vel egentlig ikke være mulig å opprette en tom plan?
@@ -56,15 +135,11 @@ class PlanApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val enTomPlanMal = PlanHelper.hentPlanMal()
 
-        val plan = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            plan = enTomPlanMal.inkluderAlt(),
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 
         plan.antallTemaInkludert() shouldBeEqual plan.temaer.size
         plan.antallInnholdInkludert() shouldBeEqual plan.temaer.sumOf { it.undertemaer.size }
+        plan.id shouldBeEqual sak.hentPlan().id
     }
 
     @Test
@@ -77,9 +152,9 @@ class PlanApiTest {
 
         val endretPlan = sak.hentPlan()
 
-        endretPlan.antallTemaInkludert() shouldBe 3
-        endretPlan.antallInnholdInkludert() shouldBe 11
-        endretPlan.temaer.first().undertemaer.first().status shouldBe FULLFØRT
+        endretPlan.antallTemaInkludert() shouldBe plan.temaer.size
+        endretPlan.antallInnholdInkludert() shouldBe plan.temaer.sumOf { it.undertemaer.size }
+        endretPlan.antallInnholdMedStatus(FULLFØRT) shouldBe 1
     }
 
     @Test
@@ -94,7 +169,7 @@ class PlanApiTest {
                 innholdId = plan.temaer.first().undertemaer.first().id,
                 status = FULLFØRT,
             )
-        }
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 0
@@ -103,46 +178,125 @@ class PlanApiTest {
     }
 
     @Test
-    fun `kan sette alle tema og alle undertema til planlagt`() {
+    fun `kan endre på innhold i et tema som er inkludert`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val planDto = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
+        val planMedEttTemaOgEttInnhold = PlanHelper.hentPlanMal().inkluderEttTemaOgEttInnhold(
+            temanummer = 3,
+            innholdnummer = 1,
         )
+        val planDto = sak.opprettEnPlan(plan = planMedEttTemaOgEttInnhold)
+        val temaId = planDto.temaer.last().id
+        val endring = planDto.inkluderTemaOgAltInnhold(temaId = temaId).tilRequest().last()
 
-        val endretPlan = planDto.copy(
-            temaer = planDto.temaer.map { temaDto ->
-                temaDto.copy(
-                    inkludert = true,
-                    undertemaer = temaDto.undertemaer.map { undertemaDto ->
-                        undertemaDto.copy(
-                            inkludert = true,
-                            startDato = LocalDate(2021, 1, 1),
-                            sluttDato = LocalDate(2021, 1, 2),
-                        )
-                    },
+        sak.endreEttTema(temaId = temaId, endring = endring.undertemaer)
+
+        val endretPlan = sak.hentPlan()
+
+        endretPlan.antallTemaInkludert() shouldBe 1
+        endretPlan.antallInnholdInkludert() shouldBe 6
+    }
+
+    @Test
+    fun `kan ikke endre innhold i plan om det temaet ikke allerede er inkludert`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal)
+        val førsteTema = plan.temaer.first()
+
+        val endring = førsteTema.undertemaer.inkluderAltInnhold().tilRequest()
+
+        shouldFail { sak.endreEttTema(temaId = førsteTema.id, endring = endring) }
+            .message shouldBe "HTTP Exception 400 Bad Request"
+
+        val endretPlan = sak.hentPlan()
+        endretPlan.antallTemaInkludert() shouldBe 0
+        endretPlan.antallInnholdInkludert() shouldBe 0
+    }
+
+    @Test
+    fun `kan ikke endre på innhold i et tema som ikke er inkludert`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val planDto = sak.opprettEnPlan(plan = enTomPlanMal)
+
+        val endring = planDto.copy(
+            temaer = planDto.temaer.map { tema ->
+                tema.copy(
+                    undertemaer = tema.undertemaer.inkluderAltInnhold(),
                 )
             },
         )
 
-        val resp = PlanHelper.endrePlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            endring = endretPlan.tilRequest(),
+        shouldFail { sak.endreEttTema(temaId = endring.temaer.first().id, endring = endring.tilRequest().first().undertemaer) }
+            .message shouldBe "HTTP Exception 400 Bad Request"
+
+        val endretPlan = sak.hentPlan()
+        endretPlan.antallTemaInkludert() shouldBe 0
+        endretPlan.antallInnholdInkludert() shouldBe 0
+    }
+
+    @Test
+    fun `kan endre en tom plan til å inkludere alle tema og alle undertema`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val plan = sak.opprettEnPlan()
+
+        sak.endreFlereTemaer(endring = plan.inkluderAlt().tilRequest())
+
+        val endretPlan = sak.hentPlan()
+        endretPlan.antallTemaInkludert() shouldBe plan.temaer.size
+        endretPlan.antallInnholdInkludert() shouldBe plan.temaer.sumOf { it.undertemaer.size }
+    }
+
+    @Test
+    fun `kan endre en plan med ett inkludert tema til å inkludere alt innhold i temaet`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val planMalDto = PlanHelper.hentPlanMal().inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
+        val plan = sak.opprettEnPlan(plan = planMalDto)
+
+        plan.antallTemaInkludert() shouldBe 1
+        plan.antallInnholdInkludert() shouldBe 1
+
+        sak.endreEttTema(temaId = plan.temaer.last().id, endring = plan.inkluderAlt().tilRequest().last().undertemaer)
+
+        val endretPlan = sak.hentPlan()
+        endretPlan.antallTemaInkludert() shouldBe 1
+        endretPlan.antallInnholdInkludert() shouldBe plan.temaer.last().undertemaer.size
+    }
+
+    @Test
+    fun `kan endre flere planer i flere samarbeid uten at de påvirker hverandre`() {
+        val sak = nySakIKartlegges()
+            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid()
+        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val planMalDto = enTomPlanMal.inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
+
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+
+        val plan1 = sak.opprettEnPlan(plan = planMalDto, samarbeidId = alleSamarbeid.first().id)
+        val plan2 = sak.opprettEnPlan(plan = enTomPlanMal, samarbeidId = alleSamarbeid.last().id)
+
+        plan1.antallTemaInkludert() shouldBe 1
+        plan1.antallInnholdInkludert() shouldBe 1
+
+        plan2.antallTemaInkludert() shouldBe 0
+        plan2.antallInnholdInkludert() shouldBe 0
+
+        sak.endreEttTema(
+            temaId = plan1.temaer.last().id,
+            endring = plan1.inkluderAlt().tilRequest().last().undertemaer,
+            prosessId = alleSamarbeid.first().id,
         )
 
-        resp.first().id shouldBe endretPlan.temaer.first().id
-        resp.first().navn shouldBe endretPlan.temaer.first().navn
-        resp.first().inkludert shouldBe endretPlan.temaer.first().inkludert
-        resp.first().undertemaer.first().id shouldBe endretPlan.temaer.first().undertemaer.first().id
-        resp.first().undertemaer.first().inkludert shouldBe endretPlan.temaer.first().undertemaer.first().inkludert
-        resp.first().undertemaer.first().navn shouldBe endretPlan.temaer.first().undertemaer.first().navn
-        resp.first().undertemaer.first().målsetning shouldBe endretPlan.temaer.first().undertemaer.first().målsetning
-        resp.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
-        resp.first().undertemaer.first().startDato shouldBe endretPlan.temaer.first().undertemaer.first().startDato
-        resp.first().undertemaer.first().sluttDato shouldBe endretPlan.temaer.first().undertemaer.first().sluttDato
+        sak.endreFlereTemaer(endring = plan2.inkluderAlt().tilRequest(), prosessId = alleSamarbeid.last().id)
+
+        val endretPlan1 = sak.hentPlan(prosessId = alleSamarbeid.first().id)
+        endretPlan1.antallTemaInkludert() shouldBe 1
+        endretPlan1.antallInnholdInkludert() shouldBe plan1.temaer.last().undertemaer.size
+
+        val endretPlan2 = sak.hentPlan(prosessId = alleSamarbeid.last().id)
+        endretPlan2.antallTemaInkludert() shouldBe 3
+        endretPlan2.antallInnholdInkludert() shouldBe 11
     }
 
     @Test
@@ -169,33 +323,14 @@ class PlanApiTest {
                 ),
             ),
         )
-        val planDto = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            plan = enNyPlan,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
+        val planDto = sak.opprettEnPlan(plan = enNyPlan)
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
 
-        val resp =
-            endreStatus(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                temaId = førsteTema.id,
-                undertemaId = førsteUndertema.id,
-                status = PlanUndertema.Status.AVBRUTT,
-            )
-        resp.status shouldBe PlanUndertema.Status.AVBRUTT
-        resp.sluttDato shouldBe omEnMåned
+        sak.endreStatusPåInnhold(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
 
-        val planMedNyStatus = PlanHelper.hentPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
-        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
+        val planMedNyStatus = sak.hentPlan()
+        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe AVBRUTT
         planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe omEnMåned
     }
 
@@ -224,35 +359,17 @@ class PlanApiTest {
             ),
         )
 
-        val planDto = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            plan = enNyPlan,
-        )
+        val planDto = sak.opprettEnPlan(plan = enNyPlan)
         val førsteTema = planDto.temaer.first()
-        val førsteUndertema = planDto.temaer.first().undertemaer.first()
-        planDto.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
-        planDto.temaer.first().undertemaer.first().sluttDato shouldBe iGår
+        val førsteUndertema = førsteTema.undertemaer.first()
 
-        val resp =
-            endreStatus(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                temaId = førsteTema.id,
-                undertemaId = førsteUndertema.id,
-                status = PlanUndertema.Status.AVBRUTT,
-            )
-        resp.status shouldBe PlanUndertema.Status.AVBRUTT
-        resp.sluttDato shouldBe iGår
+        førsteUndertema.status shouldBe PLANLAGT
+        førsteUndertema.sluttDato shouldBe iGår
 
-        val planMedNyStatus = PlanHelper.hentPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
-        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
+        sak.endreStatusPåInnhold(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
+
+        val planMedNyStatus = sak.hentPlan()
+        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe AVBRUTT
         planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe iGår
     }
 
@@ -281,457 +398,169 @@ class PlanApiTest {
             ),
         )
 
-        val planDto = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            plan = enNyPlan,
-        )
+        val planDto = sak.opprettEnPlan(plan = enNyPlan)
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
-        planDto.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
+        planDto.temaer.first().undertemaer.first().status shouldBe PLANLAGT
         planDto.temaer.first().undertemaer.first().sluttDato shouldBe om6Måneder
         planDto.temaer.first().undertemaer.first().startDato shouldBe iMorgen
 
-        val result = shouldFail {
-            endreStatus(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                temaId = førsteTema.id,
-                undertemaId = førsteUndertema.id,
-                status = PlanUndertema.Status.AVBRUTT,
-            )
-        }
-        result.message shouldBe "HTTP Exception 400 Bad Request"
-    }
-
-    @Test
-    fun `kan sette alle undertemaer til planlagt`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val planDto = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
-
-        val endretPlan = planDto.copy(
-            temaer = planDto.temaer.map { temaDto ->
-                temaDto.copy(
-                    undertemaer = temaDto.undertemaer.map { undertemaDto ->
-                        undertemaDto.copy(
-                            inkludert = true,
-                        )
-                    },
-                )
-            },
-        )
-
-        val resp =
-            PlanHelper.endreTema(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                temaId = endretPlan.temaer.first().id,
-                endring = endretPlan.tilRequest().first().undertemaer,
-            )
-
-        resp.id shouldBe endretPlan.temaer.first().id
-        resp.navn shouldBe endretPlan.temaer.first().navn
-        resp.undertemaer.first().id shouldBe endretPlan.temaer.first().undertemaer.first().id
-        resp.undertemaer.first().inkludert shouldBe endretPlan.temaer.first().undertemaer.first().inkludert
-        resp.undertemaer.first().navn shouldBe endretPlan.temaer.first().undertemaer.first().navn
-        resp.undertemaer.first().målsetning shouldBe endretPlan.temaer.first().undertemaer.first().målsetning
-        resp.undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
+        shouldFail { sak.endreStatusPåInnhold(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT) }
+            .message shouldBe "HTTP Exception 400 Bad Request"
     }
 
     @Test
     fun `kan legge til nytt tema i plan uten uventet bieffekter`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
+        val enTomPlan = PlanHelper.hentPlanMal()
 
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+        val opprettetPlan = sak.opprettEnPlan(plan = enTomPlan.inkluderEttTemaOgEttInnhold(2, 1))
 
-        val startDato = LocalDate(2010, 1, 1)
-        val sluttDato = LocalDate(2025, 2, 2)
+        opprettetPlan.antallTemaInkludert() shouldBe 1
+        opprettetPlan.antallInnholdInkludert() shouldBe 1
+        opprettetPlan.antallInnholdMedStatus(status = PLANLAGT) shouldBe 1
 
-        val planMedEttTema = planMal.copy(
-            tema = planMal.tema.map { tema ->
-                if (tema.rekkefølge == 2) {
-                    tema.copy(
-                        inkludert = true,
-                        innhold = tema.innhold.map { innhold ->
-                            innhold.copy(
-                                inkludert = true,
-                                startDato = startDato,
-                                sluttDato = sluttDato,
-                            )
-                        },
-                    )
-                } else {
-                    tema
-                }
-            },
-        )
+        val nyStatus = PÅGÅR
 
-        val opprettetPlan = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            plan = planMedEttTema,
-        )
+        shouldFail {
+            sak.endreStatusPåInnhold(
+                temaId = opprettetPlan.temaer.first().id,
+                innholdId = opprettetPlan.temaer.first().undertemaer.first().id,
+                status = nyStatus,
+            )
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
-        opprettetPlan.temaer[0].inkludert shouldBe false
-        opprettetPlan.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
-
-        opprettetPlan.temaer[1].inkludert shouldBe true
-        opprettetPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
-
-        opprettetPlan.temaer[2].inkludert shouldBe false
-        opprettetPlan.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
-
-        val nyStatus = PlanUndertema.Status.PÅGÅR
-
-        endreStatus(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
+        sak.endreStatusPåInnhold(
             temaId = opprettetPlan.temaer[1].id,
-            undertemaId = opprettetPlan.temaer[1].undertemaer.first().id,
+            innholdId = opprettetPlan.temaer[1].undertemaer.first().id,
             status = nyStatus,
         )
 
-        val planMedNyStatus = PlanHelper.hentPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
+        val planMedNyStatus = sak.hentPlan()
 
-        planMedNyStatus.temaer[0].inkludert shouldBe false
-        planMedNyStatus.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
-        planMedNyStatus.temaer[0].undertemaer.forEach { it.status shouldBe null }
-        planMedNyStatus.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
-        planMedNyStatus.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
+        planMedNyStatus.antallTemaInkludert() shouldBe 1
+        planMedNyStatus.antallInnholdInkludert() shouldBe 1
+        planMedNyStatus.antallInnholdMedStatus(status = nyStatus) shouldBe 1
 
-        planMedNyStatus.temaer[1].inkludert shouldBe true
-        planMedNyStatus.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
-        planMedNyStatus.temaer[1].undertemaer.forExactlyOne { it.status shouldBe nyStatus }
-        planMedNyStatus.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
-        planMedNyStatus.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
+        sak.endreFlereTemaer(endring = planMedNyStatus.inkluderAlt().tilRequest())
 
-        planMedNyStatus.temaer[2].inkludert shouldBe false
-        planMedNyStatus.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
-        planMedNyStatus.temaer[2].undertemaer.forEach { it.status shouldBe null }
-        planMedNyStatus.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
-        planMedNyStatus.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
+        val planMedAltInnhold = sak.hentPlan()
 
-        val endretPlan = planMedNyStatus.copy(
-            temaer = listOf(
-                planMedNyStatus.temaer[0].copy(
-                    inkludert = true,
-                    undertemaer = planMedNyStatus.temaer[0].undertemaer.map { undertema ->
-                        undertema.copy(
-                            inkludert = true,
-                            startDato = startDato,
-                            sluttDato = sluttDato,
-                        )
-                    },
-                ),
-                planMedNyStatus.temaer[1],
-                planMedNyStatus.temaer[2],
-            ),
-        )
-
-        PlanHelper.endrePlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            endring = endretPlan.tilRequest(),
-        )
-
-        val planMedNyttTema = PlanHelper.hentPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
-
-        planMedNyttTema.temaer[0].inkludert shouldBe true
-        planMedNyttTema.temaer[0].undertemaer.forEach { it.inkludert shouldBe true }
-        planMedNyttTema.temaer[0].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
-        planMedNyttTema.temaer[0].undertemaer.forEach { it.startDato shouldBe startDato }
-        planMedNyttTema.temaer[0].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
-
-        planMedNyttTema.temaer[1].inkludert shouldBe true
-        planMedNyttTema.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
-        planMedNyttTema.temaer[1].undertemaer.forExactlyOne { it.status shouldBe nyStatus }
-        planMedNyttTema.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
-        planMedNyttTema.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
-
-        planMedNyttTema.temaer[2].inkludert shouldBe false
-        planMedNyttTema.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
-        planMedNyttTema.temaer[2].undertemaer.forEach { it.status shouldBe null }
-        planMedNyttTema.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
-        planMedNyttTema.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
+        planMedAltInnhold.antallTemaInkludert() shouldBe 3
+        planMedAltInnhold.antallInnholdInkludert() shouldBe 11
+        planMedAltInnhold.antallInnholdMedStatus(status = nyStatus) shouldBe 1
+        planMedAltInnhold.antallInnholdMedStatus(status = PLANLAGT) shouldBe 10
+        planMedAltInnhold.antallInnholdMedStatus(status = PÅGÅR) shouldBe 1
     }
 
     @Test
-    fun `kan ikke opprette plan med periode som er negativ - start dato etter slutt dato`() {
+    fun `Kan ikke opprette eller endre en plan med sluttdato før startdato`() {
+        // TODO: Kanskje litt vel lang test, dekkes noe av dette av andre tester?
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+        val enTomPlan = PlanHelper.hentPlanMal()
 
-        val startDato = LocalDate(2025, 1, 1)
-        val sluttDato = LocalDate(2010, 2, 2)
+        val ugyldigPlan = enTomPlan.inkluderEttTemaOgAltInnhold(temanummer = 3, startDato = SLUTT_DATO, sluttDato = START_DATO)
+        // sluttdato før start-dato
 
-        val planMedEttTema = planMal.copy(
-            tema = planMal.tema.map { tema ->
-                if (tema.rekkefølge == 2) {
-                    tema.copy(
-                        inkludert = true,
-                        innhold = tema.innhold.map { innhold ->
-                            innhold.copy(
-                                inkludert = true,
-                                startDato = startDato,
-                                sluttDato = sluttDato,
-                            )
-                        },
-                    )
-                } else {
-                    tema
-                }
-            },
+        val gyldigPlan = enTomPlan.inkluderEttTemaOgAltInnhold(temanummer = 3)
+
+        shouldFail { sak.opprettEnPlan(plan = ugyldigPlan) }
+            .message shouldBe "HTTP Exception 400 Bad Request"
+
+        val opprettetPlan = sak.opprettEnPlan(plan = gyldigPlan)
+        val sisteTema = opprettetPlan.temaer.last()
+        val førsteTema = opprettetPlan.temaer.first()
+
+        opprettetPlan.antallTemaInkludert() shouldBe 1
+        opprettetPlan.antallInnholdInkludert() shouldBe gyldigPlan.tema.last().innhold.size
+        opprettetPlan.antallInnholdMedStatus(PLANLAGT) shouldBe gyldigPlan.tema.last().innhold.size
+        opprettetPlan.tidligstStartDato() shouldBe START_DATO
+        opprettetPlan.senesteSluttDato() shouldBe SLUTT_DATO
+        // det siste temaet er inkludert
+
+        val ugyldigEndring = opprettetPlan.inkluderTemaOgAltInnhold(
+            temaId = opprettetPlan.temaer[0].id,
+            startDato = SLUTT_DATO,
+            sluttDato = START_DATO,
         )
+
+        val gyldigEndring = opprettetPlan.inkluderTemaOgAltInnhold(
+            temaId = opprettetPlan.temaer[0].id,
+            startDato = START_DATO,
+            sluttDato = SLUTT_DATO,
+        )
+
+        shouldFail { sak.endreFlereTemaer(endring = ugyldigEndring.tilRequest()) }
+            .message shouldBe "HTTP Exception 400 Bad Request"
+
+        val uendretPlan = sak.hentPlan()
+
+        uendretPlan.antallTemaInkludert() shouldBe 1
+        uendretPlan.antallInnholdInkludert() shouldBe sisteTema.undertemaer.size
+        uendretPlan.antallInnholdMedStatus(PLANLAGT) shouldBe sisteTema.undertemaer.size
+        uendretPlan.tidligstStartDato() shouldBe START_DATO
+        uendretPlan.senesteSluttDato() shouldBe SLUTT_DATO
+        // det siste temaet er inkludert samme som opprettetPlan
+
+        sak.endreFlereTemaer(endring = gyldigEndring.tilRequest())
+
+        val endretPlan = sak.hentPlan()
+        endretPlan.antallTemaInkludert() shouldBe 2
+        endretPlan.antallInnholdInkludert() shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
+        endretPlan.antallInnholdMedStatus(PLANLAGT) shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
+        endretPlan.tidligstStartDato() shouldBe START_DATO
+        endretPlan.senesteSluttDato() shouldBe SLUTT_DATO
+        // det første og siste temaet er inkludert
+
+        val nyUgyldigEndring = endretPlan.inkluderTemaOgAltInnhold(
+            temaId = endretPlan.temaer.last().id,
+            startDato = SLUTT_DATO.plus(DatePeriod(years = 1)),
+            sluttDato = START_DATO.plus(DatePeriod(years = 1)),
+        ) // setter alle innhold til feil dato
+
+        val nyGyldigEndring = endretPlan.inkluderTemaOgAltInnhold(
+            temaId = endretPlan.temaer.last().id,
+            startDato = START_DATO.plus(DatePeriod(years = 1)),
+            sluttDato = SLUTT_DATO.plus(DatePeriod(years = 1)),
+        ) // setter alle innhold til ny rett dato
 
         shouldFail {
-            opprettEnPlan(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                plan = planMedEttTema,
+            sak.endreEttTema(
+                endring = nyUgyldigEndring.tilRequest().last().undertemaer,
+                temaId = nyUgyldigEndring.temaer.last().id,
             )
-        }
+        }.message shouldBe "HTTP Exception 400 Bad Request"
 
-        lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
-    }
-
-    @Test
-    fun `kan ikke endre plan med periode som er negativ - start dato etter slutt dato`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
-
-        val startDato = LocalDate(2010, 1, 1)
-        val sluttDato = LocalDate(2025, 2, 2)
-
-        val planMedEttTema = planMal.copy(
-            tema = planMal.tema.map { tema ->
-                if (tema.rekkefølge == 2) {
-                    tema.copy(
-                        inkludert = true,
-                        innhold = tema.innhold.map { innhold ->
-                            innhold.copy(
-                                inkludert = true,
-                                startDato = startDato,
-                                sluttDato = sluttDato,
-                            )
-                        },
-                    )
-                } else {
-                    tema
-                }
-            },
+        sak.endreEttTema(
+            endring = nyGyldigEndring.tilRequest().last().undertemaer,
+            temaId = nyGyldigEndring.temaer.last().id,
         )
 
-        val opprettetPlan = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            plan = planMedEttTema,
-        )
+        val endretPlan2 = sak.hentPlan()
 
-        opprettetPlan.temaer[0].inkludert shouldBe false
-        opprettetPlan.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
+        endretPlan2.antallTemaInkludert() shouldBe 2
+        endretPlan2.antallInnholdInkludert() shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
+        endretPlan2.antallInnholdMedStatus(PLANLAGT) shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
+        endretPlan2.tidligstStartDato() shouldBe START_DATO
+        endretPlan2.senesteSluttDato() shouldBe SLUTT_DATO.plus(DatePeriod(years = 1))
+        // Alle temaer og alt innhold er inkludert, seneste sluttdato
 
-        opprettetPlan.temaer[1].inkludert shouldBe true
-        opprettetPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
-
-        opprettetPlan.temaer[2].inkludert shouldBe false
-        opprettetPlan.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
-
-        val endretPlan = opprettetPlan.copy(
-            temaer = listOf(
-                opprettetPlan.temaer[0].copy(
-                    inkludert = true,
-                    undertemaer = opprettetPlan.temaer[0].undertemaer.map { undertema ->
-                        undertema.copy(
-                            inkludert = true,
-                            startDato = sluttDato,
-                            sluttDato = startDato,
-                        )
-                    },
-                ),
-                opprettetPlan.temaer[1],
-                opprettetPlan.temaer[2],
-            ),
-        )
-
-        shouldFail {
-            PlanHelper.endrePlan(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                endring = endretPlan.tilRequest(),
-            )
-        }
-        lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
-
-        val lagretPlan = PlanHelper.hentPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
-        lagretPlan.temaer[1].inkludert shouldBe true
-        lagretPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
-        lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
-        lagretPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
-        lagretPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
-    }
-
-    @Test
-    fun `kan ikke endre tema med periode som er negativ - start dato etter slutt dato`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
-
-        val startDato = LocalDate(2010, 1, 1)
-        val sluttDato = LocalDate(2025, 2, 2)
-
-        val planMedEttTema = planMal.copy(
-            tema = planMal.tema.map { tema ->
-                if (tema.rekkefølge == 2) {
-                    tema.copy(
-                        inkludert = true,
-                        innhold = tema.innhold.map { innhold ->
-                            innhold.copy(
-                                inkludert = true,
-                                startDato = startDato,
-                                sluttDato = sluttDato,
-                            )
-                        },
-                    )
-                } else {
-                    tema
-                }
-            },
-        )
-
-        val opprettetPlan = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            plan = planMedEttTema,
-        )
-
-        opprettetPlan.temaer[0].inkludert shouldBe false
-        opprettetPlan.temaer[0].undertemaer.forEach { it.inkludert shouldBe false }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.status shouldBe null }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.startDato shouldBe null }
-        opprettetPlan.temaer[0].undertemaer.forEach { it.sluttDato shouldBe null }
-
-        opprettetPlan.temaer[1].inkludert shouldBe true
-        opprettetPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
-        opprettetPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
-
-        opprettetPlan.temaer[2].inkludert shouldBe false
-        opprettetPlan.temaer[2].undertemaer.forEach { it.inkludert shouldBe false }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.status shouldBe null }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.startDato shouldBe null }
-        opprettetPlan.temaer[2].undertemaer.forEach { it.sluttDato shouldBe null }
-
-        val endretPlan = opprettetPlan.copy(
-            temaer = listOf(
-                opprettetPlan.temaer[0].copy(
-                    inkludert = true,
-                    undertemaer = opprettetPlan.temaer[0].undertemaer.map { undertema ->
-                        undertema.copy(
-                            inkludert = true,
-                            startDato = sluttDato,
-                            sluttDato = startDato,
-                        )
-                    },
-                ),
-                opprettetPlan.temaer[1],
-                opprettetPlan.temaer[2],
-            ),
-        )
-
-        shouldFail {
-            PlanHelper.endreTema(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-                temaId = endretPlan.temaer.first().id,
-                endring = endretPlan.tilRequest().first().undertemaer,
-            )
-        }
-
-        lydiaApiContainer shouldContainLog "Plan er ikke gyldig".toRegex()
-
-        val lagretPlan = PlanHelper.hentPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
-        lagretPlan.temaer[1].inkludert shouldBe true
-        lagretPlan.temaer[1].undertemaer.forEach { it.inkludert shouldBe true }
-        lagretPlan.temaer[1].undertemaer.forEach { it.status shouldBe PlanUndertema.Status.PLANLAGT }
-        lagretPlan.temaer[1].undertemaer.forEach { it.startDato shouldBe startDato }
-        lagretPlan.temaer[1].undertemaer.forEach { it.sluttDato shouldBe sluttDato }
+        // datoer er endret
     }
 
     @Test
     fun `skal få feil når man henter plan uten å ha opprettet en plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        shouldFail {
-            PlanHelper.hentPlan(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = sak.hentAlleSamarbeid().first().id,
-            )
-        }
+        shouldFail { sak.hentPlan() }.message shouldBe "HTTP Exception 400 Bad Request"
     }
 
     @Test
     fun `skal kunne hente plan uten å være eier som lesebruker`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val opprettetPlan = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-        )
-        val hentetPlan = PlanHelper.hentPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
-            token = TestContainerHelper.oauth2ServerContainer.lesebruker.token,
-        )
+        val opprettetPlan = sak.opprettEnPlan()
+
+        val hentetPlan = sak.hentPlan(token = oauth2ServerContainer.lesebruker.token)
 
         opprettetPlan.id shouldBeEqual hentetPlan.id
     }
@@ -745,178 +574,21 @@ class PlanApiTest {
     }
 
     @Test
-    fun `skal kunne opprette plan knyttet til en gitt prosess`() {
+    fun `Skal oppdatere sist endret dato ved endring av plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val prosessId = sak.hentAlleSamarbeid().first().id
-        val opprettetPlan = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = prosessId,
-        )
-        opprettetPlan.id shouldBeEqual PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, prosessId).id
-    }
-
-    @Test
-    fun `skal kunne opprette og hente en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-
-        alleSamarbeid.forEach { samarbeid ->
-            val opprettetPlan = opprettEnPlan(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = samarbeid.id,
-            )
-
-            val hentetPlan = PlanHelper.hentPlan(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = samarbeid.id,
-            )
-            opprettetPlan.id shouldBe hentetPlan.id
-        }
-    }
-
-    @Test
-    fun `skal kunne endre status på et undertema i en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-
         val enTomPlanMal = PlanHelper.hentPlanMal()
 
-        alleSamarbeid.forEach { samarbeid ->
-            val planDto = opprettEnPlan(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = samarbeid.id,
-                plan = enTomPlanMal.inkluderAlt(),
-            )
-            val førsteTema = planDto.temaer.first()
-            val førsteUndertema = førsteTema.undertemaer.first()
+        val opprettetPlan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 
-            val nyStatus = FULLFØRT
-
-            val resp =
-                endreStatus(
-                    orgnr = sak.orgnr,
-                    saksnummer = sak.saksnummer,
-                    prosessId = samarbeid.id,
-                    temaId = førsteTema.id,
-                    undertemaId = førsteUndertema.id,
-                    status = nyStatus,
-                )
-
-            resp.status shouldBe nyStatus
-            val hentetPlan = PlanHelper.hentPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
-            hentetPlan.temaer
-                .first { it.id == førsteTema.id }.undertemaer
-                .first { it.id == førsteUndertema.id }.status shouldBe nyStatus
-        }
-    }
-
-    @Test
-    fun `kan sette alle undertemaer til planlagt i en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-
-        alleSamarbeid.forEach { samarbeid ->
-            val planDto =
-                opprettEnPlan(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
-            val tema = planDto.temaer.first()
-            val endreTemaRequest = tema.undertemaer.map { undertemaDto ->
-                EndreUndertemaRequest(
-                    id = undertemaDto.id,
-                    inkludert = true,
-                    startDato = undertemaDto.startDato,
-                    sluttDato = undertemaDto.sluttDato,
-                )
-            }
-
-            PlanHelper.endreTema(
-                orgnr = sak.orgnr,
-                saksnummer = sak.saksnummer,
-                prosessId = samarbeid.id,
-                temaId = tema.id,
-                endring = endreTemaRequest,
-            )
-            PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, samarbeid.id)
-                .temaer.first { it.id == tema.id }.undertemaer
-                .forAll {
-                    it.inkludert shouldBe true
-                    it.status shouldBe PlanUndertema.Status.PLANLAGT
-                }
-        }
-    }
-
-    @Test
-    fun `skal kunne endre en plan knyttet til en prosess`() {
-        val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
-        val alleSamarbeid = sak.hentAlleSamarbeid()
-        alleSamarbeid shouldHaveSize 2
-
-        alleSamarbeid.forEach { samarbeid ->
-            val opprettetPlan = opprettEnPlan(sak.orgnr, sak.saksnummer, samarbeid.id)
-            val endretPlan = opprettetPlan.copy(
-                temaer = opprettetPlan.temaer.map {
-                    it.copy(
-                        inkludert = true,
-                        undertemaer = it.undertemaer.map {
-                            it.copy(
-                                inkludert = true,
-                                status = PlanUndertema.Status.PLANLAGT,
-                            )
-                        },
-                    )
-                },
-            )
-            PlanHelper.endrePlan(sak.orgnr, sak.saksnummer, samarbeid.id, endretPlan.tilRequest())
-            val hentetPlan = PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, samarbeid.id)
-            hentetPlan.id shouldBe opprettetPlan.id
-            hentetPlan.temaer.forAll { tema ->
-                tema.inkludert shouldBe true
-                tema.undertemaer.forAll { undertema ->
-                    undertema.inkludert shouldBe true
-                    undertema.status shouldBe PlanUndertema.Status.PLANLAGT
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `skal oppdatere plan sin sist_endret ved endringer av plan`() {
-        val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-        val samarbeidId = sak.hentAlleSamarbeid().first().id
-
-        val enTomPlanMal = PlanHelper.hentPlanMal()
-        val opprettetPlan = opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = samarbeidId,
-            plan = enTomPlanMal.inkluderAlt(),
-        )
         val førsteTema = opprettetPlan.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
-        endreStatus(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = samarbeidId,
-            status = PlanUndertema.Status.PÅGÅR,
+
+        sak.endreStatusPåInnhold(
             temaId = førsteTema.id,
-            undertemaId = førsteUndertema.id,
+            innholdId = førsteUndertema.id,
+            status = PÅGÅR,
         )
-        val endretPlan = PlanHelper.hentPlan(sak.orgnr, sak.saksnummer, samarbeidId)
-        endretPlan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
+
+        sak.hentPlan().sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
     }
 }

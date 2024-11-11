@@ -11,7 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
-import no.nav.lydia.helper.PlanHelper
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -113,11 +113,7 @@ class IASakProsessTest {
 
         val førsteSamarbeid = alleSamarbeid.first()
 
-        val opprettetPlan = PlanHelper.opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = førsteSamarbeid.id,
-        )
+        val opprettetPlan = sak.opprettEnPlan()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -295,11 +291,7 @@ class IASakProsessTest {
         val sak = nySakIKartlegges().opprettNyttSamarbeid()
         val alleSamarbeidFørSletting = sak.hentAlleSamarbeid()
         val førsteSamarbeid = alleSamarbeidFørSletting.first()
-        PlanHelper.opprettEnPlan(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = førsteSamarbeid.id,
-        )
+        sak.opprettEnPlan()
 
         shouldFail {
             sak.slettSamarbeid(samarbeid = førsteSamarbeid)

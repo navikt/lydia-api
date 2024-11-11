@@ -20,7 +20,6 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.plan.PlanRessurs
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
@@ -289,8 +288,7 @@ class PlanRepository(
                     id = temaId,
                     navn = row.string("navn"),
                     inkludert = row.boolean("inkludert"),
-                    undertemaer = hentUndertema(planId, temaId, session),
-                    ressurser = hentRessurser(planId, temaId, session),
+                    undertemaer = hentUndertema(temaId, session),
                 )
             }.asList,
         )
@@ -317,15 +315,13 @@ class PlanRepository(
                         id = temaId,
                         navn = row.string("navn"),
                         inkludert = row.boolean("inkludert"),
-                        undertemaer = hentUndertema(planId, temaId, session),
-                        ressurser = hentRessurser(planId, temaId, session),
+                        undertemaer = hentUndertema(temaId = temaId, session = session),
                     )
                 }.asSingle,
             )
         }
 
     private fun hentUndertema(
-        planId: UUID,
         temaId: Int,
         session: Session,
     ): List<PlanUndertema> =
@@ -334,11 +330,9 @@ class PlanRepository(
                 """
                         SELECT *
                         FROM ia_sak_plan_undertema
-                        WHERE plan_id = :planId
-                        AND tema_id = :temaId
+                        WHERE tema_id = :temaId
                 """.trimMargin(),
                 mapOf(
-                    "planId" to planId.toString(),
                     "temaId" to temaId,
                 ),
             ).map { row: Row ->
@@ -355,36 +349,9 @@ class PlanRepository(
             }.asList,
         )
 
-    private fun hentRessurser(
-        planId: UUID,
-        temaId: Int,
-        session: Session,
-    ): List<PlanRessurs> =
-        session.run(
-            queryOf(
-                """
-                        SELECT *
-                        FROM ia_sak_plan_ressurs
-                        WHERE plan_id = :planId
-                        AND tema_id = :temaId
-                """.trimMargin(),
-                mapOf(
-                    "planId" to planId.toString(),
-                    "temaId" to temaId,
-                ),
-            ).map { row: Row ->
-                PlanRessurs(
-                    id = row.int("ressurs_id"),
-                    beskrivelse = row.string("beskrivelse"),
-                    url = row.stringOrNull("url"),
-                )
-            }.asList,
-        )
-
     fun oppdaterTema(
         planId: UUID,
         temaId: Int,
-        undertemaer: List<PlanUndertema>,
         inkludert: Boolean,
     ): PlanTema? {
         using(sessionOf(dataSource)) { session ->
@@ -394,60 +361,20 @@ class PlanRepository(
                         """
                         UPDATE ia_sak_plan_tema SET 
                             inkludert = :inkludert
-                        WHERE plan_id = :planId
-                        AND tema_id = :temaId
+                        WHERE tema_id = :temaId
                         """.trimMargin(),
                         mapOf(
-                            "planId" to planId.toString(),
                             "temaId" to temaId,
                             "inkludert" to inkludert,
                         ),
                     ).asUpdate,
                 )
             }
-
-            undertemaer.forEach { undertema ->
-                oppdaterUndertema(planId = planId, temaId = temaId, endretUndertema = undertema, session = session)
-            }
         }
         return hentTema(planId = planId, temaId = temaId)
     }
 
-    private fun oppdaterUndertema(
-        planId: UUID,
-        temaId: Int,
-        endretUndertema: PlanUndertema,
-        session: Session,
-    ) {
-        session.transaction { tx ->
-            tx.run(
-                queryOf(
-                    """
-                        UPDATE ia_sak_plan_undertema SET 
-                            inkludert = :inkludert,
-                            status = :status,
-                            start_dato = :startDato,
-                            slutt_dato = :sluttDato
-                        WHERE plan_id = :planId
-                        AND tema_id = :temaId
-                        AND undertema_id = :undertemaId
-                    """.trimMargin(),
-                    mapOf(
-                        "planId" to planId.toString(),
-                        "temaId" to temaId,
-                        "undertemaId" to endretUndertema.id,
-                        "inkludert" to endretUndertema.inkludert,
-                        "status" to endretUndertema.status?.name,
-                        "startDato" to endretUndertema.startDato?.toJavaLocalDate(),
-                        "sluttDato" to endretUndertema.sluttDato?.toJavaLocalDate(),
-                    ),
-                ).asUpdate,
-            )
-        }
-    }
-
     fun oppdaterUndertema(
-        planId: UUID,
         temaId: Int,
         undertema: PlanUndertema,
     ) = using(sessionOf(dataSource)) { session ->
@@ -460,12 +387,10 @@ class PlanRepository(
                         status = :status,
                         start_dato = :startDato,
                         slutt_dato = :sluttDato
-                    WHERE plan_id = :planId
-                    AND tema_id = :temaId
+                    WHERE tema_id = :temaId
                     AND undertema_id = :undertemaId
                     """.trimMargin(),
                     mapOf(
-                        "planId" to planId.toString(),
                         "temaId" to temaId,
                         "undertemaId" to undertema.id,
                         "inkludert" to undertema.inkludert,
@@ -477,7 +402,7 @@ class PlanRepository(
             )
         }
 
-        hentUndertema(planId = planId, temaId = temaId, session = session).firstOrNull { it.id == undertema.id }
+        hentUndertema(temaId = temaId, session = session).firstOrNull { it.id == undertema.id }
     }
 
     fun oppdaterSistEndret(plan: Plan) =

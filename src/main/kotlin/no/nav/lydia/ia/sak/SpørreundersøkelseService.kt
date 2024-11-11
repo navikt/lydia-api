@@ -132,10 +132,7 @@ class SpørreundersøkelseService(
             }
             "Evaluering" -> {
                 if (iaSak.status == VI_BISTÅR) {
-                    planService.hentPlan(
-                        iaSak = iaSak,
-                        prosessId = prosessId,
-                    ).flatMap { plan ->
+                    planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
                         iaProsessService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->
                             spørreundersøkelseRepository.opprettSpørreundersøkelse(
                                 orgnummer = orgnummer,

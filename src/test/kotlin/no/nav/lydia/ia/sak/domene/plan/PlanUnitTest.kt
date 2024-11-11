@@ -40,7 +40,6 @@ class PlanUnitTest {
                             sluttDato = LocalDate.parse("2021-02-28"),
                         ),
                     ),
-                    ressurser = emptyList(),
                 ),
                 PlanTema(
                     id = 2,
@@ -57,7 +56,6 @@ class PlanUnitTest {
                             sluttDato = LocalDate.parse("2021-03-06"),
                         ),
                     ),
-                    ressurser = emptyList(),
                 ),
             ),
         )

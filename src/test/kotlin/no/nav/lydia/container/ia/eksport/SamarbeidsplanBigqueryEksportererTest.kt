@@ -36,9 +36,7 @@ class SamarbeidsplanBigqueryEksportererTest {
 
         val planMalDto: PlanMalDto = hentPlanMal()
 
-        val plan = sak.opprettEnPlan(
-            plan = planMalDto.inkluderAlt(),
-        )
+        val plan = sak.opprettEnPlan(plan = planMalDto.inkluderAlt())
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -46,9 +44,7 @@ class SamarbeidsplanBigqueryEksportererTest {
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveSize 1
-                val planer = meldinger.map {
-                    Json.decodeFromString<SamarbeidsplanBigqueryProdusent.PlanValue>(it)
-                }
+                val planer = meldinger.map { Json.decodeFromString<SamarbeidsplanBigqueryProdusent.PlanValue>(it) }
                 planer shouldHaveSize 1
                 val sistePlan = planer.last()
                 sistePlan.id shouldBe plan.id
@@ -61,7 +57,5 @@ class SamarbeidsplanBigqueryEksportererTest {
     private fun SamarbeidsplanBigqueryProdusent.PlanValue.planlagteTemaer(): Int = this.temaer.filter { it.inkludert }.size
 
     private fun SamarbeidsplanBigqueryProdusent.PlanValue.planlagtInnhold(): Int =
-        this.temaer.flatMap {
-            it.innhold
-        }.filter { it.inkludert }.size
+        this.temaer.flatMap { it.innhold }.filter { it.inkludert }.size
 }

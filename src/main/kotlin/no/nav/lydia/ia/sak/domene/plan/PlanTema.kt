@@ -5,5 +5,4 @@ data class PlanTema(
     val navn: String,
     val inkludert: Boolean,
     val undertemaer: List<PlanUndertema>,
-    val ressurser: List<PlanRessurs>,
 )
