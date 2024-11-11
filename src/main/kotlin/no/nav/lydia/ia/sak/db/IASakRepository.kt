@@ -131,6 +131,7 @@ class IASakRepository(
                     SELECT *
                     FROM ia_sak
                     WHERE orgnr = :orgnr
+                    order by endret
                     """.trimMargin(),
                     mapOf(
                         "orgnr" to orgnummer,

@@ -26,7 +26,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import org.junit.After
 import org.junit.Before
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class IASakStatusEksportørTest {
@@ -79,7 +78,6 @@ class IASakStatusEksportørTest {
     }
 
     @Test
-    @Ignore
     fun `sletting av feilåpnet sak produserer en slett melding på topic og spiller ut aktiv sak sin status`() {
         runBlocking {
             val eldsteSak = SakHelper.nySakIViBistår().nyIkkeAktuellHendelse()
