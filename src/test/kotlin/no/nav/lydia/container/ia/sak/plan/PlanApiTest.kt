@@ -15,9 +15,9 @@ import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdInkludert
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdMedStatus
 import no.nav.lydia.helper.PlanHelper.Companion.antallTemaInkludert
-import no.nav.lydia.helper.PlanHelper.Companion.endreEttTema
-import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaer
-import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnhold
+import no.nav.lydia.helper.PlanHelper.Companion.endreEttTemaIPlan
+import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
+import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAltInnhold
@@ -82,31 +82,31 @@ class PlanApiTest {
 
         val gyldigEndring = planDto.inkluderTemaOgAltInnhold(planDto.temaer.first().id)
 
-        shouldFail { sak.endreFlereTemaer(endring = datoUtenInkludert.tilRequest()) }
+        shouldFail { sak.endreFlereTemaerIPlan(endring = datoUtenInkludert.tilRequest()) }
             .message shouldBe "HTTP Exception 400 Bad Request"
 
-        shouldFail { sak.endreFlereTemaer(endring = inkludertUtenDato.tilRequest()) }
+        shouldFail { sak.endreFlereTemaerIPlan(endring = inkludertUtenDato.tilRequest()) }
             .message shouldBe "HTTP Exception 400 Bad Request"
 
         val uendretPlan = sak.hentPlan()
         uendretPlan.antallTemaInkludert() shouldBe 0
         uendretPlan.antallInnholdInkludert() shouldBe 0
 
-        sak.endreFlereTemaer(endring = gyldigEndring.tilRequest())
+        sak.endreFlereTemaerIPlan(endring = gyldigEndring.tilRequest())
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 1
         endretPlan.antallInnholdInkludert() shouldBe planDto.temaer.first().undertemaer.size
 
         shouldFail {
-            sak.endreEttTema(
+            sak.endreEttTemaIPlan(
                 endring = datoUtenInkludert.temaer.first().undertemaer.tilRequest(),
                 temaId = planDto.temaer.first().id,
             )
         }.message shouldBe "HTTP Exception 400 Bad Request"
 
         shouldFail {
-            sak.endreEttTema(
+            sak.endreEttTemaIPlan(
                 endring = inkludertUtenDato.temaer.first().undertemaer.tilRequest(),
                 temaId = planDto.temaer.first().id,
             )
@@ -148,7 +148,11 @@ class PlanApiTest {
         val enTomPlanMal = PlanHelper.hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 
-        sak.endreStatusPåInnhold(temaId = plan.temaer.first().id, innholdId = plan.temaer.first().undertemaer.first().id, status = FULLFØRT)
+        sak.endreStatusPåInnholdIPlan(
+            temaId = plan.temaer.first().id,
+            innholdId = plan.temaer.first().undertemaer.first().id,
+            status = FULLFØRT,
+        )
 
         val endretPlan = sak.hentPlan()
 
@@ -164,7 +168,7 @@ class PlanApiTest {
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
 
         shouldFail {
-            sak.endreStatusPåInnhold(
+            sak.endreStatusPåInnholdIPlan(
                 temaId = plan.temaer.first().id,
                 innholdId = plan.temaer.first().undertemaer.first().id,
                 status = FULLFØRT,
@@ -188,12 +192,12 @@ class PlanApiTest {
         val temaId = planDto.temaer.last().id
         val endring = planDto.inkluderTemaOgAltInnhold(temaId = temaId).tilRequest().last()
 
-        sak.endreEttTema(temaId = temaId, endring = endring.undertemaer)
+        sak.endreEttTemaIPlan(temaId = temaId, endring = endring.undertemaer)
 
         val endretPlan = sak.hentPlan()
 
         endretPlan.antallTemaInkludert() shouldBe 1
-        endretPlan.antallInnholdInkludert() shouldBe 6
+        endretPlan.antallInnholdInkludert() shouldBe planDto.temaer.last().undertemaer.size
     }
 
     @Test
@@ -205,7 +209,7 @@ class PlanApiTest {
 
         val endring = førsteTema.undertemaer.inkluderAltInnhold().tilRequest()
 
-        shouldFail { sak.endreEttTema(temaId = førsteTema.id, endring = endring) }
+        shouldFail { sak.endreEttTemaIPlan(temaId = førsteTema.id, endring = endring) }
             .message shouldBe "HTTP Exception 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
@@ -227,7 +231,7 @@ class PlanApiTest {
             },
         )
 
-        shouldFail { sak.endreEttTema(temaId = endring.temaer.first().id, endring = endring.tilRequest().first().undertemaer) }
+        shouldFail { sak.endreEttTemaIPlan(temaId = endring.temaer.first().id, endring = endring.tilRequest().first().undertemaer) }
             .message shouldBe "HTTP Exception 400 Bad Request"
 
         val endretPlan = sak.hentPlan()
@@ -240,7 +244,7 @@ class PlanApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val plan = sak.opprettEnPlan()
 
-        sak.endreFlereTemaer(endring = plan.inkluderAlt().tilRequest())
+        sak.endreFlereTemaerIPlan(endring = plan.inkluderAlt().tilRequest())
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe plan.temaer.size
@@ -256,7 +260,7 @@ class PlanApiTest {
         plan.antallTemaInkludert() shouldBe 1
         plan.antallInnholdInkludert() shouldBe 1
 
-        sak.endreEttTema(temaId = plan.temaer.last().id, endring = plan.inkluderAlt().tilRequest().last().undertemaer)
+        sak.endreEttTemaIPlan(temaId = plan.temaer.last().id, endring = plan.inkluderAlt().tilRequest().last().undertemaer)
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 1
@@ -282,13 +286,13 @@ class PlanApiTest {
         plan2.antallTemaInkludert() shouldBe 0
         plan2.antallInnholdInkludert() shouldBe 0
 
-        sak.endreEttTema(
+        sak.endreEttTemaIPlan(
             temaId = plan1.temaer.last().id,
             endring = plan1.inkluderAlt().tilRequest().last().undertemaer,
             prosessId = alleSamarbeid.first().id,
         )
 
-        sak.endreFlereTemaer(endring = plan2.inkluderAlt().tilRequest(), prosessId = alleSamarbeid.last().id)
+        sak.endreFlereTemaerIPlan(endring = plan2.inkluderAlt().tilRequest(), prosessId = alleSamarbeid.last().id)
 
         val endretPlan1 = sak.hentPlan(prosessId = alleSamarbeid.first().id)
         endretPlan1.antallTemaInkludert() shouldBe 1
@@ -296,7 +300,7 @@ class PlanApiTest {
 
         val endretPlan2 = sak.hentPlan(prosessId = alleSamarbeid.last().id)
         endretPlan2.antallTemaInkludert() shouldBe 3
-        endretPlan2.antallInnholdInkludert() shouldBe 11
+        endretPlan2.antallInnholdInkludert() shouldBe plan2.temaer.sumOf { it.undertemaer.size }
     }
 
     @Test
@@ -327,7 +331,7 @@ class PlanApiTest {
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
 
-        sak.endreStatusPåInnhold(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
+        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
 
         val planMedNyStatus = sak.hentPlan()
         planMedNyStatus.temaer.first().undertemaer.first().status shouldBe AVBRUTT
@@ -366,7 +370,7 @@ class PlanApiTest {
         førsteUndertema.status shouldBe PLANLAGT
         førsteUndertema.sluttDato shouldBe iGår
 
-        sak.endreStatusPåInnhold(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
+        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
 
         val planMedNyStatus = sak.hentPlan()
         planMedNyStatus.temaer.first().undertemaer.first().status shouldBe AVBRUTT
@@ -405,7 +409,7 @@ class PlanApiTest {
         planDto.temaer.first().undertemaer.first().sluttDato shouldBe om6Måneder
         planDto.temaer.first().undertemaer.first().startDato shouldBe iMorgen
 
-        shouldFail { sak.endreStatusPåInnhold(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT) }
+        shouldFail { sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT) }
             .message shouldBe "HTTP Exception 400 Bad Request"
     }
 
@@ -423,14 +427,14 @@ class PlanApiTest {
         val nyStatus = PÅGÅR
 
         shouldFail {
-            sak.endreStatusPåInnhold(
+            sak.endreStatusPåInnholdIPlan(
                 temaId = opprettetPlan.temaer.first().id,
                 innholdId = opprettetPlan.temaer.first().undertemaer.first().id,
                 status = nyStatus,
             )
         }.message shouldBe "HTTP Exception 400 Bad Request"
 
-        sak.endreStatusPåInnhold(
+        sak.endreStatusPåInnholdIPlan(
             temaId = opprettetPlan.temaer[1].id,
             innholdId = opprettetPlan.temaer[1].undertemaer.first().id,
             status = nyStatus,
@@ -442,14 +446,14 @@ class PlanApiTest {
         planMedNyStatus.antallInnholdInkludert() shouldBe 1
         planMedNyStatus.antallInnholdMedStatus(status = nyStatus) shouldBe 1
 
-        sak.endreFlereTemaer(endring = planMedNyStatus.inkluderAlt().tilRequest())
+        sak.endreFlereTemaerIPlan(endring = planMedNyStatus.inkluderAlt().tilRequest())
 
         val planMedAltInnhold = sak.hentPlan()
 
         planMedAltInnhold.antallTemaInkludert() shouldBe 3
-        planMedAltInnhold.antallInnholdInkludert() shouldBe 11
+        planMedAltInnhold.antallInnholdInkludert() shouldBe opprettetPlan.temaer.sumOf { it.undertemaer.size }
         planMedAltInnhold.antallInnholdMedStatus(status = nyStatus) shouldBe 1
-        planMedAltInnhold.antallInnholdMedStatus(status = PLANLAGT) shouldBe 10
+        planMedAltInnhold.antallInnholdMedStatus(status = PLANLAGT) shouldBe opprettetPlan.temaer.sumOf { it.undertemaer.size } - 1
         planMedAltInnhold.antallInnholdMedStatus(status = PÅGÅR) shouldBe 1
     }
 
@@ -490,7 +494,7 @@ class PlanApiTest {
             sluttDato = SLUTT_DATO,
         )
 
-        shouldFail { sak.endreFlereTemaer(endring = ugyldigEndring.tilRequest()) }
+        shouldFail { sak.endreFlereTemaerIPlan(endring = ugyldigEndring.tilRequest()) }
             .message shouldBe "HTTP Exception 400 Bad Request"
 
         val uendretPlan = sak.hentPlan()
@@ -502,7 +506,7 @@ class PlanApiTest {
         uendretPlan.senesteSluttDato() shouldBe SLUTT_DATO
         // det siste temaet er inkludert samme som opprettetPlan
 
-        sak.endreFlereTemaer(endring = gyldigEndring.tilRequest())
+        sak.endreFlereTemaerIPlan(endring = gyldigEndring.tilRequest())
 
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 2
@@ -525,13 +529,13 @@ class PlanApiTest {
         ) // setter alle innhold til ny rett dato
 
         shouldFail {
-            sak.endreEttTema(
+            sak.endreEttTemaIPlan(
                 endring = nyUgyldigEndring.tilRequest().last().undertemaer,
                 temaId = nyUgyldigEndring.temaer.last().id,
             )
         }.message shouldBe "HTTP Exception 400 Bad Request"
 
-        sak.endreEttTema(
+        sak.endreEttTemaIPlan(
             endring = nyGyldigEndring.tilRequest().last().undertemaer,
             temaId = nyGyldigEndring.temaer.last().id,
         )
@@ -583,7 +587,7 @@ class PlanApiTest {
         val førsteTema = opprettetPlan.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
 
-        sak.endreStatusPåInnhold(
+        sak.endreStatusPåInnholdIPlan(
             temaId = førsteTema.id,
             innholdId = førsteUndertema.id,
             status = PÅGÅR,

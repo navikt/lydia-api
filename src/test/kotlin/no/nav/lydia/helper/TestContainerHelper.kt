@@ -856,7 +856,7 @@ class PlanHelper {
                 failure = { fail(it.message) },
             )
 
-        fun IASakDto.endreStatusPåInnhold(
+        fun IASakDto.endreStatusPåInnholdIPlan(
             temaId: Int,
             innholdId: Int,
             status: PlanUndertema.Status,
@@ -1020,7 +1020,7 @@ class PlanHelper {
                 failure = { fail(it.message) },
             )
 
-        fun IASakDto.endreEttTema(
+        fun IASakDto.endreEttTemaIPlan(
             temaId: Int,
             endring: List<EndreUndertemaRequest>,
             prosessId: Int = hentAlleSamarbeid().first().id,
@@ -1037,7 +1037,7 @@ class PlanHelper {
                 failure = { fail(it.message) },
             )
 
-        fun IASakDto.endreFlereTemaer(
+        fun IASakDto.endreFlereTemaerIPlan(
             endring: List<EndreTemaRequest>,
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,

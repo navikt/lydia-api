@@ -95,7 +95,6 @@ fun Route.iaSakPlan(
     }
 
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
-        // endre flere temaer og innhold i en gitt plan
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
         val samarbeidId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
@@ -124,7 +123,6 @@ fun Route.iaSakPlan(
     }
 
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}") {
-        // endre alt innhold for et gitt tema
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
         val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
@@ -161,7 +159,6 @@ fun Route.iaSakPlan(
     }
 
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}/{undertemaId}") {
-        // endre status på ett innhold
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
         val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
