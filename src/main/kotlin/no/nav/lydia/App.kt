@@ -210,7 +210,8 @@ fun startLydiaBackend() {
 
     val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
 
-    val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(produsent = kafkaProdusent, iaProsessRepository = prosessRepository)
+    val spørreundersøkelseProdusent =
+        SpørreundersøkelseProdusent(produsent = kafkaProdusent, iaProsessRepository = prosessRepository, planRepository = planRepository)
     val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()
     val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(produsent = kafkaProdusent)
 

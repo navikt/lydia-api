@@ -10,6 +10,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
+import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.api.plan.tilDto
+import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -19,6 +22,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 class SpørreundersøkelseProdusent(
     private val produsent: KafkaProdusent,
     private val iaProsessRepository: ProsessRepository,
+    private val planRepository: PlanRepository,
 ) : Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
         sendPåKafka(spørreundersøkelse = input)
@@ -29,7 +33,11 @@ class SpørreundersøkelseProdusent(
             saksnummer = spørreundersøkelse.saksnummer,
             prosessId = spørreundersøkelse.samarbeidId,
         )?.navn ?: spørreundersøkelse.virksomhetsNavn
-        val (nøkkel, verdi) = spørreundersøkelse.tilKafkaMelding(samarbeidNavn)
+        val plan = when (spørreundersøkelse.type) {
+            "Evaluering" -> planRepository.hentPlan(spørreundersøkelse.samarbeidId)
+            else -> null
+        }
+        val (nøkkel, verdi) = spørreundersøkelse.tilKafkaMelding(samarbeidNavn, plan?.tilDto())
         produsent.sendMelding(
             topic = Topic.SPORREUNDERSOKELSE_TOPIC.navn,
             nøkkel = nøkkel,
@@ -38,7 +46,10 @@ class SpørreundersøkelseProdusent(
     }
 
     companion object {
-        fun Spørreundersøkelse.tilKafkaMelding(samarbeidsnavn: String): Pair<String, String> {
+        fun Spørreundersøkelse.tilKafkaMelding(
+            samarbeidsnavn: String,
+            plan: PlanDto?,
+        ): Pair<String, String> {
             val nøkkel = this.id.toString()
             val verdi = SerializableSpørreundersøkelse(
                 id = this.id.toString(),
@@ -47,6 +58,7 @@ class SpørreundersøkelseProdusent(
                 samarbeidsNavn = samarbeidsnavn,
                 status = this.status,
                 type = this.type,
+                plan = plan,
                 temaer = tema.map { it.tilKafkaMelding() },
                 spørreundersøkelseId = this.id.toString(), // TODO: Deprecate this
                 temaMedSpørsmålOgSvaralternativer = tema.map { it.tilKafkaMelding() }, // TODO: Deprecate this
@@ -94,6 +106,7 @@ class SpørreundersøkelseProdusent(
         @Deprecated("Bruk temaer")
         override val temaMedSpørsmålOgSvaralternativer: List<SerializableTema>,
         override val type: String,
+        val plan: PlanDto?,
     ) : SpørreundersøkelseMelding
 
     @Serializable

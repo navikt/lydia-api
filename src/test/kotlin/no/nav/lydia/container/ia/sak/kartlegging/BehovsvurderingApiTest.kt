@@ -114,6 +114,7 @@ class BehovsvurderingApiTest {
                         it.spørsmål.shouldNotBeEmpty()
                         it.navn.shouldNotBeEmpty()
                     }
+                    spørreundersøkelse.plan shouldBe null
                 }
             }
         }

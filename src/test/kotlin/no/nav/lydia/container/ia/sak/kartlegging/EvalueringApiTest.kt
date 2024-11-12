@@ -78,7 +78,7 @@ class EvalueringApiTest {
     }
 
     @Test
-    fun `kan ikke opprette en spørreundersøkelse om det ikke eksisterer en plan`() {
+    fun `kan ikke opprette en spørreundersøkelse av typen evaluering om det ikke eksisterer en plan`() {
         val sak = nySakIViBistår()
         shouldFail { sak.opprettEvaluering() }
     }
@@ -108,7 +108,7 @@ class EvalueringApiTest {
     @Test
     fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
         val sak = nySakIViBistår()
-        sak.opprettEnPlan()
+        val opprettetPlan = sak.opprettEnPlan()
         val type = "Evaluering"
         val evaluering = sak.opprettEvaluering()
 
@@ -139,6 +139,7 @@ class EvalueringApiTest {
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
                     spørreundersøkelse.type shouldBe type
                     spørreundersøkelse.status shouldBe PÅBEGYNT
+                    spørreundersøkelse.plan?.id shouldBe opprettetPlan.id
                 }
             }
         }
