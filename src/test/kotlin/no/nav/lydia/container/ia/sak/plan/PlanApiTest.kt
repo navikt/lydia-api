@@ -270,8 +270,8 @@ class PlanApiTest {
     @Test
     fun `kan endre flere planer i flere samarbeid uten at de påvirker hverandre`() {
         val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid(navn = "Først")
+            .opprettNyttSamarbeid(navn = "Sist")
         val enTomPlanMal = PlanHelper.hentPlanMal()
         val planMalDto = enTomPlanMal.inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
 

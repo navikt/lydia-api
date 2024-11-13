@@ -118,6 +118,7 @@ const val MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN = 50
 
 object IAProsessFeil {
     val `ugyldig samarbeidsnavn` = Feil("Ugyldig samarbeidsnavn", HttpStatusCode.BadRequest)
+    val `samarbeidsnavn finnes allerede` = Feil("Samarbeidsnavn finnes allerede", HttpStatusCode.Conflict)
     val `feil ved henting av prosess` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
     val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
     val `kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan` =

@@ -557,8 +557,8 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal kunne opprette behovsvurdering for to forskjellige prosesser`() {
         val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid(navn = "Først")
+            .opprettNyttSamarbeid(navn = "Sist")
 
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 2
@@ -577,8 +577,8 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal kunne flytte en behhovsvurdering fra en prosess til en annen`() {
         val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid(navn = "Først")
+            .opprettNyttSamarbeid(navn = "Sist")
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 2
         val førsteSamarbeid = alleSamarbeid.first()
@@ -629,8 +629,8 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal kunne avslutte en flyttet behovsvurdering`() {
         val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid(navn = "Først")
+            .opprettNyttSamarbeid(navn = "Sist")
 
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 2

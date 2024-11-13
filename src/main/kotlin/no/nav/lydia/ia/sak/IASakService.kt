@@ -147,9 +147,16 @@ class IASakService(
             }
             ENDRE_PROSESS, NY_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
+                val alleProsesser = iaProsessService.hentIAProsesser(aktivSak)
+
                 if (prosessDto.navn != null && prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
                     return IAProsessFeil.`ugyldig samarbeidsnavn`.left()
                 }
+
+                alleProsesser.getOrNull()
+                    ?.find { it.navn == prosessDto.navn }
+                    ?.let { return IAProsessFeil.`samarbeidsnavn finnes allerede`.left() }
             }
             else -> {}
         }

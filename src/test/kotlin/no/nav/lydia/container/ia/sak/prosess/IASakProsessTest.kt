@@ -90,7 +90,7 @@ class IASakProsessTest {
     fun `skal kunne opprette flere prosesser på samme sak`() {
         val sakIKartlegges = nySakIKartleggesMedEtSamarbeid()
         sakIKartlegges.hentAlleSamarbeid() shouldHaveSize 1
-        sakIKartlegges.opprettNyttSamarbeid().hentAlleSamarbeid() shouldHaveSize 2
+        sakIKartlegges.opprettNyttSamarbeid(navn = "Annet samarbeidsnavn").hentAlleSamarbeid() shouldHaveSize 2
     }
 
     @Test
@@ -98,7 +98,7 @@ class IASakProsessTest {
         val sakMedEttSamarbeid = nySakIKartleggesMedEtSamarbeid()
         sakMedEttSamarbeid.hentAlleSamarbeid() shouldHaveSize 1
 
-        val sakMedFlereSamarbeid = sakMedEttSamarbeid.opprettNyttSamarbeid()
+        val sakMedFlereSamarbeid = sakMedEttSamarbeid.opprettNyttSamarbeid(navn = "Annet samarbeidsnavn")
         sakMedFlereSamarbeid.hentAlleSamarbeid() shouldHaveSize 2
 
         val behovsvurdering = sakMedFlereSamarbeid.opprettSpørreundersøkelse()
@@ -202,8 +202,8 @@ class IASakProsessTest {
     @Test
     fun `skal ikke få feil i sakshistorikk dersom man sletter flere samarbeid på rad`() {
         val sak = nySakIKartlegges()
-            .opprettNyttSamarbeid()
-            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid(navn = "First")
+            .opprettNyttSamarbeid(navn = "Sist")
 
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 2
@@ -237,7 +237,10 @@ class IASakProsessTest {
 
         sak.hentAlleSamarbeid() shouldHaveSize 1
 
-        sak.opprettNyttSamarbeid().opprettNyttSamarbeid().opprettNyttSamarbeid().hentAlleSamarbeid() shouldHaveSize 4
+        sak.opprettNyttSamarbeid(navn = "Navn 1")
+            .opprettNyttSamarbeid(navn = "Navn 2")
+            .opprettNyttSamarbeid(navn = "Navn 3")
+            .hentAlleSamarbeid() shouldHaveSize 4
 
         sak.hentAlleSamarbeid() shouldHaveSize 4
 
@@ -356,11 +359,20 @@ class IASakProsessTest {
     }
 
     @Test
+    fun `skal kun kunne opprette samarbeid med unikt navn`() {
+        val sak = nySakIKartlegges().opprettNyttSamarbeid(navn = "Navn")
+        shouldFail { sak.opprettNyttSamarbeid(navn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
+
+        sak.hentAlleSamarbeid().count { it.navn == "Navn" } shouldBeExactly 1
+    }
+
+    @Test
     fun `samarbeidsnavn er begrenset til 50 tegn`() {
         val sak = nySakIKartlegges()
 
         val forLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN + 1)
         val gyldigLangtNavn = "n".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
+        val nyttGydigLangtNavn = "o".repeat(MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN)
         shouldFail {
             sak.opprettNyttSamarbeid(navn = forLangtNavn)
         }
@@ -369,7 +381,7 @@ class IASakProsessTest {
         shouldFail {
             sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, forLangtNavn)
         }
-        sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, gyldigLangtNavn)
+        sakMedSamarbeid.nyttNavnPåSamarbeid(samarbeid, nyttGydigLangtNavn)
     }
 
     @Test
