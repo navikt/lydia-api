@@ -116,7 +116,6 @@ class SpørreundersøkelseRepository(
     fun opprettSpørreundersøkelse(
         orgnummer: String,
         spørreundersøkelseId: UUID,
-        vertId: UUID,
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         temaer: List<TemaInfo>,
@@ -129,7 +128,6 @@ class SpørreundersøkelseRepository(
                         """
                             INSERT INTO ia_sak_kartlegging (
                                 kartlegging_id,
-                                vert_id,
                                 orgnr,
                                 ia_prosess,
                                 status,
@@ -138,7 +136,6 @@ class SpørreundersøkelseRepository(
                             )
                             VALUES (
                                 :kartlegging_id,
-                                :vert_id,
                                 :orgnr,
                                 :prosessId,
                                 :status,
@@ -148,7 +145,6 @@ class SpørreundersøkelseRepository(
                         """.trimMargin(),
                         mapOf(
                             "kartlegging_id" to spørreundersøkelseId,
-                            "vert_id" to vertId,
                             "orgnr" to orgnummer,
                             "prosessId" to prosessId,
                             "status" to "OPPRETTET",
@@ -418,7 +414,7 @@ class SpørreundersøkelseRepository(
         TemaInfo(
             id = row.int("tema_id"),
             rekkefølge = row.int("rekkefolge"),
-            navn = row.string("beskrivelse"),
+            navn = row.string("navn"),
             status = TemaStatus.valueOf(row.string("status")),
             sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
         )

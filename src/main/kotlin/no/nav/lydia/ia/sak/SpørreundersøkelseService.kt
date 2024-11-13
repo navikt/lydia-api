@@ -122,7 +122,6 @@ class SpørreundersøkelseService(
                         prosessId = samarbeid.id,
                         saksbehandler = saksbehandler,
                         spørreundersøkelseId = UUID.randomUUID(),
-                        vertId = UUID.randomUUID(),
                         temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
                         type = type,
                     )
@@ -139,7 +138,6 @@ class SpørreundersøkelseService(
                                 prosessId = samarbeid.id,
                                 saksbehandler = saksbehandler,
                                 spørreundersøkelseId = UUID.randomUUID(),
-                                vertId = UUID.randomUUID(),
                                 temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
                                 type = type,
                             )

@@ -209,7 +209,7 @@ class BehovsvurderingApiTest {
         behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
                 postgresContainer.hentEnkelKolonne(
-                    "select tema_id from ia_sak_kartlegging_tema where beskrivelse = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV'",
+                    "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV'",
                 )
             val spørsmålIderForEtTema: List<String> =
                 postgresContainer.hentAlleRaderTilEnkelKolonne(
