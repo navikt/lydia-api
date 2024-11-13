@@ -15,8 +15,7 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
-import no.nav.lydia.integrasjoner.azure.AzureService
-import no.nav.lydia.tilgangskontroll.somSaksbehandler
+import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val IA_SAK_TEAM_PATH = "iasak/team"
 const val MINE_SAKER_PATH = "iasak/minesaker"
@@ -26,7 +25,6 @@ fun Route.iaSakTeam(
     iaSakService: IASakService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
-    azureService: AzureService,
 ) {
     get("$IA_SAK_TEAM_PATH/{saksnummer}") {
         val saksnummer = call.parameters["saksnummer"] ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
@@ -35,8 +33,8 @@ fun Route.iaSakTeam(
             { iaSak -> iaSak },
         )
 
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaTeamService.hentBrukereITeam(iaSak, saksbehandler)
+        call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
+            iaTeamService.hentBrukereITeam(iaSak, lesebruker)
         }.onLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -52,8 +50,8 @@ fun Route.iaSakTeam(
             { iaSak -> iaSak },
         )
 
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            return@somSaksbehandler iaTeamService.knyttBrukerTilSak(iaSak = iaSak, navAnsatt = saksbehandler)
+        call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
+            return@somLesebruker iaTeamService.knyttBrukerTilSak(iaSak = iaSak, navAnsatt = lesebruker)
         }.also {
             auditLog.auditloggEither(
                 call = call,
@@ -78,8 +76,8 @@ fun Route.iaSakTeam(
             { iaSak -> iaSak },
         )
 
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            return@somSaksbehandler iaTeamService.fjernBrukerFraSak(iaSak = iaSak, navAnsatt = saksbehandler)
+        call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
+            return@somLesebruker iaTeamService.fjernBrukerFraSak(iaSak = iaSak, navAnsatt = lesebruker)
         }.also {
             auditLog.auditloggEither(
                 call = call,
@@ -98,11 +96,11 @@ fun Route.iaSakTeam(
     }
 
     get(MINE_SAKER_PATH) {
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaTeamService.hentSakerTilBruker(saksbehandler).map {
+        call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
+            iaTeamService.hentSakerTilBruker(lesebruker).map {
                 it.map { (iasak, orgnavn) ->
                     MineSakerDto(
-                        iaSak = iasak.toDto(saksbehandler),
+                        iaSak = iasak.toDto(lesebruker),
                         orgnavn = orgnavn,
                     )
                 }

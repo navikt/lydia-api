@@ -136,13 +136,13 @@ class IASakTeamApiTest {
     }
 
     @Test
-    fun `skal ikke kunne bli med i team som lesebruker`() {
+    fun `skal kunne bli med i team som lesebruker`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
         val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
             .authentication().bearer(mockOAuth2Server.lesebruker.token)
             .tilSingelRespons<BrukerITeamDto>().second
 
-        res.statusCode shouldBe HttpStatusCode.Forbidden.value
+        res.statusCode shouldBe HttpStatusCode.Created.value
     }
 
     @Test

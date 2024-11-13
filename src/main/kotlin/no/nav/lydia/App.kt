@@ -531,7 +531,6 @@ private fun Application.lydiaRestApi(
                 iaSakService = iaSakService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
-                azureService = azureService,
             )
             iaProsessApi(
                 adGrupper = naisEnv.security.adGrupper,
