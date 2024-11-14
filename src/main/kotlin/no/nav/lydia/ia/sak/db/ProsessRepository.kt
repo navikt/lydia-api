@@ -9,6 +9,7 @@ import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class ProsessRepository(
@@ -89,11 +90,13 @@ class ProsessRepository(
             session.run(
                 queryOf(
                     """
-                    UPDATE ia_prosess SET navn = :navn WHERE id = :prosessId
+                    UPDATE ia_prosess SET navn = :navn, endret_tidspunkt = :endret_tidspunkt 
+                    WHERE id = :prosessId
                     """.trimIndent(),
                     mapOf(
                         "navn" to prosessDto.navn.nullIfEmpty(),
                         "prosessId" to prosessDto.id,
+                        "endret_tidspunkt" to LocalDateTime.now(),
                     ),
                 ).asUpdate,
             )
@@ -116,7 +119,7 @@ class ProsessRepository(
                 queryOf(
                     """
                     UPDATE ia_prosess
-                     SET status = 'SLETTET'
+                     SET status = 'SLETTET', endret_tidspunkt = :endret_tidspunkt
                      WHERE id = :prosessId
                      AND saksnummer = :saksnummer
                      returning *
@@ -124,7 +127,8 @@ class ProsessRepository(
                     mapOf(
                         "prosessId" to prosessHendelse.prosessDto.id,
                         "saksnummer" to prosessHendelse.saksnummer,
-                    ),
+                        "endret_tidspunkt" to LocalDateTime.now(),
+                        ),
                 ).map(this::mapRowToIaProsessDto).asSingle,
             )!!
         }

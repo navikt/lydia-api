@@ -169,6 +169,7 @@ class PlanRepository(
                           ia_prosess.id as ia_prosess_id,
                           ia_prosess.navn as navn,
                           ia_prosess.status as status,
+                          ia_prosess.endret_tidspunkt as endret_tidspunkt,
                           ia_sak.saksnummer as saksnummer,
                           ia_sak.orgnr as orgnr,
                           ia_sak_plan.plan_id as plan_id
@@ -197,6 +198,7 @@ class PlanRepository(
                           ia_prosess.id as ia_prosess_id,
                           ia_prosess.navn as navn,
                           ia_prosess.status as status,
+                          ia_prosess.endret_tidspunkt as endret_tidspunkt,
                           ia_sak.saksnummer as saksnummer,
                           ia_sak.orgnr as orgnr
                           from ia_sak_plan 
@@ -237,6 +239,7 @@ class PlanRepository(
                 status = IAProsessStatus.valueOf(row.string("status")),
                 startDato = startDato,
                 sluttDato = sluttDato,
+                endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime()
             ),
             plan = planDto,
         )
