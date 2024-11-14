@@ -1,9 +1,12 @@
 package no.nav.lydia.ia.sak.db
 
 import kotliquery.Row
+import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.eksport.SamarbeidDto
+import no.nav.lydia.ia.eksport.SamarbeidIVirksomhetDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
@@ -110,7 +113,7 @@ class ProsessRepository(
             id = row.int("id"),
             saksnummer = row.string("saksnummer"),
             navn = row.stringOrNull("navn"),
-            status = IAProsessStatus.valueOf(row.string("status")),
+            status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
         )
 
     fun oppdaterTilSlettetStatus(prosessHendelse: ProsessHendelse) =
@@ -128,8 +131,41 @@ class ProsessRepository(
                         "prosessId" to prosessHendelse.prosessDto.id,
                         "saksnummer" to prosessHendelse.saksnummer,
                         "endret_tidspunkt" to LocalDateTime.now(),
-                        ),
+                    ),
                 ).map(this::mapRowToIaProsessDto).asSingle,
             )!!
+        }
+
+    fun hentSamarbeidIVirksomhetDto(prosessId: Int): SamarbeidIVirksomhetDto? =
+        using(sessionOf(dataSource)) { session: Session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT 
+                          ia_prosess.id as ia_prosess_id,
+                          ia_prosess.navn as navn,
+                          ia_prosess.status as status,
+                          ia_prosess.endret_tidspunkt as endret_tidspunkt,
+                          ia_sak.saksnummer as saksnummer,
+                          ia_sak.orgnr as orgnr
+                          from ia_prosess 
+                        JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
+                        WHERE id = :prosessId
+                    """.trimMargin(),
+                    mapOf(
+                        "prosessId" to prosessId,
+                    ),
+                ).map { row: Row ->
+                    SamarbeidIVirksomhetDto(
+                        orgnr = row.string("orgnr"),
+                        saksnummer = row.string("saksnummer"),
+                        samarbeid = SamarbeidDto(
+                            id = row.int("ia_prosess_id"),
+                            navn = row.stringOrNull("navn"),
+                            status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) }
+                        )
+                    )
+                }.asSingle,
+            )
         }
 }

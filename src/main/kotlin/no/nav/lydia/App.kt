@@ -45,6 +45,7 @@ import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
+import no.nav.lydia.ia.eksport.SamarbeidProdusent
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
@@ -59,6 +60,7 @@ import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.SendPlanPåKafkaObserver
+import no.nav.lydia.ia.sak.SendSamarbeidPåKafkaObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
@@ -137,6 +139,7 @@ fun startLydiaBackend() {
     val prosessRepository = ProsessRepository(dataSource = dataSource)
     val planRepository = PlanRepository(dataSource = dataSource)
     val samarbeidsplanProdusent = SamarbeidsplanProdusent(produsent = kafkaProdusent)
+    val samarbeidProdusent = SamarbeidProdusent(produsent = kafkaProdusent)
 
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService =
@@ -184,11 +187,15 @@ fun startLydiaBackend() {
         planRepository = planRepository,
         samarbeidsplanProdusent = samarbeidsplanProdusent,
     )
+    val sendSamarbeidPåKafkaObserver = SendSamarbeidPåKafkaObserver(
+        prosessRepository = prosessRepository,
+        samarbeidProdusent = samarbeidProdusent,
+    )
     val iaProsessService = IAProsessService(
         prosessRepository = prosessRepository,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         planRepository = planRepository,
-        samarbeidObservers = listOf(samarbeidBigqueryProdusent),
+        samarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
         sendPlanPåKafkaObserver = sendPlanPåKafkaObserver,
     )
     val iaSakService = IASakService(
