@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -70,6 +71,51 @@ class IASakProsessTest {
     }
 
     @Test
+    fun `oppdater endret_tidspunkt i DB ved endring av samarbeidsnavn`() {
+        val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
+        val samarbeid = sak.hentAlleSamarbeid().first()
+
+        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+            """
+            select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
+            """.trimIndent(),
+        )?.toLocalDateTime()
+        endretTidspunktVedOpprettelse shouldNotBe null
+
+        sak.nyttNavnPåSamarbeid(samarbeid, "Avdeling 1 - Fysio")
+        val endretTidspunktEtterUpdate = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+            """
+            select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
+            """.trimIndent(),
+        )?.toLocalDateTime()
+
+        endretTidspunktEtterUpdate!!.shouldBeGreaterThan(endretTidspunktVedOpprettelse!!)
+    }
+
+    @Test
+    fun `oppdater endret_tidspunkt i DB ved sletting av samarbeid`() {
+        val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
+        val samarbeid = sak.hentAlleSamarbeid().first()
+
+        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+            """
+            select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
+            """.trimIndent(),
+        )?.toLocalDateTime()
+        endretTidspunktVedOpprettelse shouldNotBe null
+
+        sak.slettSamarbeid(samarbeid)
+        val endretTidspunktEtterSlett = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+            """
+            select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
+            """.trimIndent(),
+        )?.toLocalDateTime()
+
+        endretTidspunktEtterSlett!!.shouldBeGreaterThan(endretTidspunktVedOpprettelse!!)
+
+    }
+
+    @Test
     fun `skal beholde tildelt prosess selvom man går frem og TILBAKE i saksgang`() {
         val sakIKartlegges = nySakIKartleggesMedEtSamarbeid()
         val alleSamarbeid = sakIKartlegges.hentAlleSamarbeid()
@@ -127,6 +173,7 @@ class IASakProsessTest {
                     planTilSalesforce.samarbeid.id shouldBe førsteSamarbeid.id
                     planTilSalesforce.samarbeid.navn shouldBe førsteSamarbeid.navn
                     planTilSalesforce.samarbeid.status shouldBe førsteSamarbeid.status
+                    planTilSalesforce.samarbeid.endretTidspunkt shouldNotBe null
                     planTilSalesforce.plan.id shouldBe opprettetPlan.id
                     planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size
                     planTilSalesforce.plan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
@@ -150,6 +197,7 @@ class IASakProsessTest {
                     planTilSalesforce.samarbeid.id shouldBe oppdatertSamarbeid.id
                     planTilSalesforce.samarbeid.navn shouldBe oppdatertSamarbeid.navn
                     planTilSalesforce.samarbeid.status shouldBe oppdatertSamarbeid.status
+                    planTilSalesforce.samarbeid.endretTidspunkt shouldNotBe null
                     planTilSalesforce.plan.id shouldBe opprettetPlan.id
                     planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size
                     planTilSalesforce.plan.sistEndret shouldBeGreaterThan opprettetPlan.sistEndret
