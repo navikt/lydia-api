@@ -238,7 +238,7 @@ class PlanRepository(
             samarbeid = SamarbeidDto(
                 id = row.int("ia_prosess_id"),
                 navn = row.stringOrNull("navn") ?: DEFAULT_SAMARBEID_NAVN,
-                status = IAProsessStatus.valueOf(row.string("status")),
+                status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
                 startDato = startDato,
                 sluttDato = sluttDato,
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
