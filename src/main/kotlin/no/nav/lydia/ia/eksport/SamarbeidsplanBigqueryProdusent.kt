@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.eksport
 
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -52,6 +53,9 @@ class SamarbeidsplanBigqueryProdusent(
                 id = id,
                 navn = navn,
                 inkludert = inkludert,
+                status = status,
+                startDato = startDato,
+                sluttDato = sluttDato,
             )
     }
 
@@ -76,8 +80,8 @@ class SamarbeidsplanBigqueryProdusent(
         val id: Int,
         val navn: String,
         val inkludert: Boolean,
-//        val status: PlanUndertema.Status?,
-//        val startDato: LocalDate?,
-//        val sluttDato: LocalDate?,
+        val status: PlanUndertema.Status?,
+        val startDato: LocalDate?,
+        val sluttDato: LocalDate?,
     )
 }
