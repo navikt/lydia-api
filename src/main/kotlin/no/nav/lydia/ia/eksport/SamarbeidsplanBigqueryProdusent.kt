@@ -1,5 +1,9 @@
 package no.nav.lydia.ia.eksport
 
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdMelding
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
+import ia.felles.integrasjoner.kafkameldinger.eksport.PlanMelding
+import ia.felles.integrasjoner.kafkameldinger.eksport.TemaMelding
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
@@ -61,27 +65,27 @@ class SamarbeidsplanBigqueryProdusent(
 
     @Serializable
     data class PlanValue(
-        val id: String,
-        val samarbeidId: Int,
-        val sistEndret: LocalDateTime,
-        val temaer: List<TemaValue>,
-    )
+        override val id: String,
+        override val samarbeidId: Int,
+        override val sistEndret: LocalDateTime,
+        override val temaer: List<TemaValue>,
+    ) : PlanMelding
 
     @Serializable
     data class TemaValue(
-        val id: Int,
-        val navn: String,
-        val inkludert: Boolean,
-        val innhold: List<InnholdValue>,
-    )
+        override val id: Int,
+        override val navn: String,
+        override val inkludert: Boolean,
+        override val innhold: List<InnholdValue>,
+    ) : TemaMelding
 
     @Serializable
     data class InnholdValue(
-        val id: Int,
-        val navn: String,
-        val inkludert: Boolean,
-        val status: PlanUndertema.Status?,
-        val startDato: LocalDate?,
-        val sluttDato: LocalDate?,
-    )
+        override val id: Int,
+        override val navn: String,
+        override val inkludert: Boolean,
+        override val status: InnholdStatus?,
+        override val startDato: LocalDate?,
+        override val sluttDato: LocalDate?,
+    ) : InnholdMelding
 }

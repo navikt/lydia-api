@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.domene.plan
 
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 
@@ -8,17 +9,10 @@ data class PlanUndertema(
     val navn: String,
     val målsetning: String,
     val inkludert: Boolean,
-    val status: Status?,
+    val status: InnholdStatus?,
     val startDato: LocalDate?,
     val sluttDato: LocalDate?,
 ) {
-    enum class Status {
-        PLANLAGT,
-        PÅGÅR,
-        FULLFØRT,
-        AVBRUTT,
-    }
-
     fun starterIFremtiden(): Boolean {
         val iDag = java.time.LocalDate.now()
         return startDato != null &&

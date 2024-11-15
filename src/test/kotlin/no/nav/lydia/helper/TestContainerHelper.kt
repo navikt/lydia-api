@@ -10,6 +10,8 @@ import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
 import ia.felles.definisjoner.bransjer.Bransje
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -67,7 +69,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -818,7 +819,7 @@ class PlanHelper {
 
         fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdMedStatus(status: PlanUndertema.Status) =
+        fun PlanDto.antallInnholdMedStatus(status: InnholdStatus) =
             temaer.flatMap { it.undertemaer }.filter {
                 it.inkludert &&
                     it.status == status
@@ -859,7 +860,7 @@ class PlanHelper {
         fun IASakDto.endreStatusPåInnholdIPlan(
             temaId: Int,
             innholdId: Int,
-            status: PlanUndertema.Status,
+            status: InnholdStatus,
         ) = endreStatus(
             orgnr = orgnr,
             saksnummer = saksnummer,
@@ -1075,7 +1076,7 @@ class PlanHelper {
             orgnr: String,
             saksnummer: String,
             prosessId: Int,
-            status: PlanUndertema.Status,
+            status: InnholdStatus,
             temaId: Int,
             undertemaId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -1150,7 +1151,7 @@ class PlanHelper {
                     orgnr = orgnummer,
                     saksnummer = saksnummer,
                     prosessId = prosessId,
-                    status = PlanUndertema.Status.FULLFØRT,
+                    status = FULLFØRT,
                     temaId = tema.id,
                     undertemaId = it.id,
                 )

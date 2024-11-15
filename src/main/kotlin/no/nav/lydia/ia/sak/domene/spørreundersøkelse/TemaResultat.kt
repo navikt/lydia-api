@@ -23,26 +23,21 @@ fun Tema.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>): TemaResultat 
         status = this.tema.status,
         rekkefølge = this.tema.rekkefølge,
         sistEndret = this.tema.sistEndret.toJavaLocalDateTime(),
-        spørsmål = this.spørsmål.map { spørsmål ->
-            spørsmål.tilResultat(alleSvar)
-        },
+        spørsmål = this.spørsmål.map { it.tilResultat(alleSvar) },
     )
 
 fun TemaResultat.tilKafkaMelding(): SerializableTemaResultat =
     SerializableTemaResultat(
         id = id,
-        temaId = id,
         navn = navn,
         spørsmålMedSvar = spørsmål.map { spørsmål ->
             SerializableSpørsmålResultat(
                 id = spørsmål.spørsmålId.toString(),
-                spørsmålId = spørsmål.spørsmålId.toString(),
                 tekst = spørsmål.spørsmåltekst,
                 flervalg = spørsmål.flervalg,
                 svarListe = spørsmål.svaralternativer.map { svar ->
                     SerializableSvarResultat(
                         id = svar.svarId.toString(),
-                        svarId = svar.svarId.toString(),
                         tekst = svar.svartekst,
                         antallSvar = svar.antallSvar,
                     )

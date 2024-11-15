@@ -69,8 +69,6 @@ class SpørreundersøkelseOppdateringProdusent(
     @Serializable
     data class SerializableTemaResultat(
         override val id: Int,
-        @Deprecated("Bruk Id")
-        override val temaId: Int,
         override val navn: String,
         override val spørsmålMedSvar: List<SerializableSpørsmålResultat>,
     ) : TemaResultatMelding
@@ -78,8 +76,6 @@ class SpørreundersøkelseOppdateringProdusent(
     @Serializable
     data class SerializableSpørsmålResultat(
         override val id: String,
-        @Deprecated("Bruk id")
-        override val spørsmålId: String,
         override val tekst: String,
         override val flervalg: Boolean,
         override val svarListe: List<SerializableSvarResultat>,
@@ -88,8 +84,6 @@ class SpørreundersøkelseOppdateringProdusent(
     @Serializable
     data class SerializableSvarResultat(
         override val id: String,
-        @Deprecated("Bruk id")
-        override val svarId: String,
         override val tekst: String,
         override val antallSvar: Int,
     ) : SvarResultatMelding
