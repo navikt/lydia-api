@@ -196,7 +196,6 @@ fun startLydiaBackend() {
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         planRepository = planRepository,
         samarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
-        sendPlanPåKafkaObserver = sendPlanPåKafkaObserver,
     )
     val iaSakService = IASakService(
         iaSakRepository = iaSakRepository,

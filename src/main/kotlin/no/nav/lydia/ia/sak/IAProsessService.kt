@@ -5,8 +5,6 @@ import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
-import no.nav.lydia.appstatus.ObservedPlan
-import no.nav.lydia.appstatus.PlanHendelseType
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.db.PlanRepository
@@ -25,7 +23,6 @@ class IAProsessService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     val samarbeidObservers: List<Observer<IAProsess>>,
     val planRepository: PlanRepository,
-    val sendPlanPåKafkaObserver: SendPlanPåKafkaObserver,
 ) {
     fun hentIAProsesser(sak: IASak) =
         Either.catch {
