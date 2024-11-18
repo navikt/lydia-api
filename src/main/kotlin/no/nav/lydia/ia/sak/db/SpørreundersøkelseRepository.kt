@@ -230,7 +230,7 @@ class SpørreundersøkelseRepository(
                     JOIN ia_sak_kartlegging_tema USING (tema_id)
                     JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
                     WHERE kartlegging_id = :kartlegging_id
-                    ORDER BY ia_sak_kartlegging_tema.rekkefolge
+                    ORDER BY ia_sak_kartlegging_tema.rekkefolge, ia_sak_kartlegging_sporsmal.sporsmal_id, ia_sak_kartlegging_svaralternativer.svaralternativ_id
                     """.trimIndent(),
                     mapOf(
                         "kartlegging_id" to spørreundersøkelseId.toString(),
