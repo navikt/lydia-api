@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.eksport
 
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PÅGÅR
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -17,7 +18,6 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.PÅGÅR
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test

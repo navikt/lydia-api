@@ -4,6 +4,9 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.AVBRUTT
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PLANLAGT
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
@@ -17,7 +20,6 @@ import no.nav.lydia.ia.sak.domene.plan.Plan
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.AVBRUTT
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -156,7 +158,7 @@ class PlanService(
     private fun PlanUndertema.endreInnhold(nyttInnhold: EndreUndertemaRequest) =
         this.copy(
             inkludert = nyttInnhold.inkludert,
-            status = if (nyttInnhold.inkludert) this.status ?: PlanUndertema.Status.PLANLAGT else null,
+            status = if (nyttInnhold.inkludert) this.status ?: PLANLAGT else null,
             startDato = if (nyttInnhold.inkludert) nyttInnhold.startDato else null,
             sluttDato = if (nyttInnhold.inkludert) nyttInnhold.sluttDato else null,
         )
@@ -165,7 +167,7 @@ class PlanService(
         temaId: Int,
         undertemaId: Int,
         lagretPlan: Plan,
-        nyStatus: PlanUndertema.Status,
+        nyStatus: InnholdStatus,
     ): Either<Feil, Plan> {
         val lagretInnhold = lagretPlan.temaer.firstOrNull { it.id == temaId }?.undertemaer?.firstOrNull { it.id == undertemaId }
             ?: return PlanFeil.`fant ikke undertema`.left()

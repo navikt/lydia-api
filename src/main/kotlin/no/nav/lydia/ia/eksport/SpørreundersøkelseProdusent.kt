@@ -60,8 +60,6 @@ class SpørreundersøkelseProdusent(
                 type = this.type,
                 plan = plan,
                 temaer = tema.map { it.tilKafkaMelding() },
-                spørreundersøkelseId = this.id.toString(), // TODO: Deprecate this
-                temaMedSpørsmålOgSvaralternativer = tema.map { it.tilKafkaMelding() }, // TODO: Deprecate this
             )
             return nøkkel to Json.encodeToString(verdi)
         }
@@ -69,17 +67,14 @@ class SpørreundersøkelseProdusent(
         private fun Tema.tilKafkaMelding() =
             SerializableTema(
                 id = this.tema.id,
-                temaId = this.tema.id, // TODO: Deprecate this
                 navn = this.tema.navn,
                 spørsmål = this.spørsmål.map { it.tilKafkaMelding() },
-                spørsmålOgSvaralternativer = this.spørsmål.map { it.tilKafkaMelding() }, // TODO: Deprecate this
             )
 
         private fun Spørsmål.tilKafkaMelding() =
             SerializableSpørsmål(
                 id = spørsmålId.toString(),
                 tekst = spørsmåltekst,
-                spørsmål = spørsmåltekst, // TODO: Deprecate this
                 svaralternativer = svaralternativer.map { it.tilKafkaMelding() },
                 flervalg = flervalg,
             )
@@ -87,24 +82,18 @@ class SpørreundersøkelseProdusent(
         private fun Svaralternativ.tilKafkaMelding() =
             SerializableSvaralternativ(
                 id = svarId.toString(),
-                svarId = svarId.toString(), // TODO: Deprecate this
                 tekst = svartekst,
-                svartekst = svartekst, // TODO: Deprecate this
             )
     }
 
     @Serializable
     data class SerializableSpørreundersøkelse(
         override val id: String,
-        @Deprecated("Bruk id")
-        override val spørreundersøkelseId: String,
         override val orgnummer: String,
         override val samarbeidsNavn: String,
         override val virksomhetsNavn: String,
         override val status: SpørreundersøkelseStatus,
         override val temaer: List<SerializableTema>,
-        @Deprecated("Bruk temaer")
-        override val temaMedSpørsmålOgSvaralternativer: List<SerializableTema>,
         override val type: String,
         val plan: PlanDto?,
     ) : SpørreundersøkelseMelding
@@ -112,20 +101,14 @@ class SpørreundersøkelseProdusent(
     @Serializable
     data class SerializableTema(
         override val id: Int,
-        @Deprecated("Bruk id")
-        override val temaId: Int,
         override val navn: String,
         override val spørsmål: List<SerializableSpørsmål>,
-        @Deprecated("Bruk spørsmål")
-        override val spørsmålOgSvaralternativer: List<SerializableSpørsmål>,
     ) : TemaMelding
 
     @Serializable
     data class SerializableSpørsmål(
         override val id: String,
         override val tekst: String,
-        @Deprecated("Bruk tekst")
-        override val spørsmål: String,
         override val flervalg: Boolean,
         override val svaralternativer: List<SerializableSvaralternativ>,
     ) : SpørsmålMelding
@@ -133,10 +116,6 @@ class SpørreundersøkelseProdusent(
     @Serializable
     data class SerializableSvaralternativ(
         override val id: String,
-        @Deprecated("Bruk id")
-        override val svarId: String,
         override val tekst: String,
-        @Deprecated("Bruk tekst")
-        override val svartekst: String,
     ) : SvaralternativMelding
 }

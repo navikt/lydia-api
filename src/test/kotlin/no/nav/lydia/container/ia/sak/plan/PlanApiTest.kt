@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.sak.plan
 
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.*
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
@@ -35,10 +36,6 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.AVBRUTT
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.FULLFØRT
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.PLANLAGT
-import no.nav.lydia.ia.sak.domene.plan.PlanUndertema.Status.PÅGÅR
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import java.time.LocalDate.now
 import kotlin.test.Test

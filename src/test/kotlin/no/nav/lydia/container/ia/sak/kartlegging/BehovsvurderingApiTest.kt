@@ -51,7 +51,7 @@ class BehovsvurderingApiTest {
     private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     companion object {
-        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "018f4e25-6a40-713f-b769-267afa134896"
+        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01933f0f-4009-7838-b1b5-2d49e561dc5d"
     }
 
     @Before
@@ -201,7 +201,7 @@ class BehovsvurderingApiTest {
     }
 
     @Test
-    fun `nylig opprettet kartlegging får alle spørsmål med riktige svaralternativer knyttet til seg`() {
+    fun `nylig opprettet behovsvurdering får alle spørsmål med riktige svaralternativer knyttet til seg`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
         val behovsvurdering = sak.opprettSpørreundersøkelse()
@@ -209,7 +209,7 @@ class BehovsvurderingApiTest {
         behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
                 postgresContainer.hentEnkelKolonne(
-                    "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV'",
+                    "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV' and type = 'Behovsvurdering'",
                 )
             val spørsmålIderForEtTema: List<String> =
                 postgresContainer.hentAlleRaderTilEnkelKolonne(

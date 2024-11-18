@@ -3,6 +3,8 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PLANLAGT
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -115,7 +117,7 @@ class PlanRepository(
                                 mapOf(
                                     "navn" to innhold.navn,
                                     "inkludert" to innhold.inkludert,
-                                    "status" to if (innhold.inkludert) PlanUndertema.Status.PLANLAGT.name else null,
+                                    "status" to if (innhold.inkludert) PLANLAGT.name else null,
                                     "start_dato" to innhold.startDato?.toJavaLocalDate(),
                                     "slutt_dato" to innhold.sluttDato?.toJavaLocalDate(),
                                     "tema_id" to temaId,
@@ -239,7 +241,7 @@ class PlanRepository(
                 status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
                 startDato = startDato,
                 sluttDato = sluttDato,
-                endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime()
+                endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
             ),
             plan = planDto,
         )
@@ -345,7 +347,7 @@ class PlanRepository(
                     navn = innholdsNavn,
                     målsetning = hentInnholdsMålsetning(innholdsNavn) ?: "",
                     inkludert = row.boolean("inkludert"),
-                    status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
+                    status = row.stringOrNull("status")?.let { InnholdStatus.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
                     sluttDato = row.localDateOrNull("slutt_dato")?.toKotlinLocalDate(),
                 )
