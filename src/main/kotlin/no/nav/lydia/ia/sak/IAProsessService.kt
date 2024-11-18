@@ -66,14 +66,6 @@ class IAProsessService(
 
     private fun oppdaterNavnPåProsess(samarbeid: IAProsessDto): IAProsess? {
         prosessRepository.oppdaterNavnPåProsess(samarbeid)
-        planRepository.hentPlan(prosessId = samarbeid.id)?.let { plan ->
-            sendPlanPåKafkaObserver.receive(
-                ObservedPlan(
-                    plan = plan,
-                    hendelsesType = PlanHendelseType.OPPDATER,
-                ),
-            )
-        }
         return prosessRepository.hentProsess(
             saksnummer = samarbeid.saksnummer,
             prosessId = samarbeid.id,

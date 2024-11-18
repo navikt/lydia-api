@@ -52,7 +52,7 @@ class PlanService(
             }
 
             if (!mal.erGyldig()) {
-                logger.warn("Feil inndata i forespørsel")
+                logger.warn("Feil inndata i forespørsel. Mal er ikke gyldig.")
                 return PlanFeil.`feil inndata i forespørsel`.left()
             }
 
@@ -73,6 +73,7 @@ class PlanService(
     ): Either<Feil, Plan> {
         // valider endring
         if (!endringAvPlan.erGyldig(lagretPlan)) {
+            logger.warn("Endring av plan med id '${lagretPlan.id}' er ikke gyldig")
             return PlanFeil.`feil inndata i forespørsel`.left()
         }
 

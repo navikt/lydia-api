@@ -9,8 +9,8 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.eksport.SamarbeidIVirksomhetDto
 import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingKey
+import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
@@ -62,9 +62,9 @@ class SamarbeidProdusentTest {
             konsument = samarbeidKonsument,
         ) {
             it.forExactlyOne { melding ->
-                val planTilSalesforce = Json.decodeFromString<SamarbeidIVirksomhetDto>(melding)
+                val samarbeidSentTilSalesforce = Json.decodeFromString<SamarbeidKafkaMeldingValue>(melding)
                 samarbeidIKafkaErRiktigPlan(
-                    samarbeidKafkaMelding = planTilSalesforce,
+                    samarbeidKafkaMelding = samarbeidSentTilSalesforce,
                     sak = sak1,
                     samarbeid = samarbeid1,
                 )
@@ -73,7 +73,7 @@ class SamarbeidProdusentTest {
     }
 
     private fun samarbeidIKafkaErRiktigPlan(
-        samarbeidKafkaMelding: SamarbeidIVirksomhetDto,
+        samarbeidKafkaMelding: SamarbeidKafkaMeldingValue,
         sak: IASakDto,
         samarbeid: IAProsessDto,
     ) {
