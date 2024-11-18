@@ -51,7 +51,7 @@ class BehovsvurderingApiTest {
     private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     companion object {
-        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01932f59-7a00-7c2e-acb5-c6709503d92c"
+        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01933f0f-4009-7838-b1b5-2d49e561dc5d"
     }
 
     @Before
