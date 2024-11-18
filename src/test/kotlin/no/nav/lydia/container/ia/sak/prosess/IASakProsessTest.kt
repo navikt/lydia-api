@@ -12,7 +12,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -152,13 +155,12 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal kunne endre navn på et samarbeid og sende oppdatert plan på kafka`() {
+    fun `skal sende plan ved opprettelse av en ny plan på kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 1
 
         val førsteSamarbeid = alleSamarbeid.first()
-
         val opprettetPlan = sak.opprettEnPlan()
 
         runBlocking {
@@ -180,10 +182,23 @@ class IASakProsessTest {
                 }
             }
         }
+    }
 
-        val nyttNavn = "Nytt navn"
-        val oppdatertSamarbeid = sak.nyttNavnPåSamarbeid(iaProsessDto = førsteSamarbeid, nyttNavn = nyttNavn).hentAlleSamarbeid().first()
-        oppdatertSamarbeid.navn shouldBe nyttNavn
+    @Test
+    fun `skal sende plan ved endringer i plan på kafka`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val førsteSamarbeid = sak.hentAlleSamarbeid().first()
+        val opprettetPlan = sak.opprettEnPlan()
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = "${sak.saksnummer}-${førsteSamarbeid.id}-${opprettetPlan.id}",
+                konsument = samarbeidsplanKonsument,
+            ) {
+                it.size shouldBe 1
+            }
+        }
+        sak.endreFlereTemaerIPlan(endring = opprettetPlan.inkluderAlt().tilRequest())
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -194,9 +209,9 @@ class IASakProsessTest {
                     val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
                     planTilSalesforce.orgnr shouldBe sak.orgnr
                     planTilSalesforce.saksnummer shouldBe sak.saksnummer
-                    planTilSalesforce.samarbeid.id shouldBe oppdatertSamarbeid.id
-                    planTilSalesforce.samarbeid.navn shouldBe oppdatertSamarbeid.navn
-                    planTilSalesforce.samarbeid.status shouldBe oppdatertSamarbeid.status
+                    planTilSalesforce.samarbeid.id shouldBe førsteSamarbeid.id
+                    planTilSalesforce.samarbeid.navn shouldBe førsteSamarbeid.navn
+                    planTilSalesforce.samarbeid.status shouldBe førsteSamarbeid.status
                     planTilSalesforce.samarbeid.endretTidspunkt shouldNotBe null
                     planTilSalesforce.plan.id shouldBe opprettetPlan.id
                     planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size
