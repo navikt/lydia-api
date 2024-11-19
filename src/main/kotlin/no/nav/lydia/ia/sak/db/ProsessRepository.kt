@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.db
 
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
@@ -162,7 +163,8 @@ class ProsessRepository(
                         samarbeid = SamarbeidDto(
                             id = row.int("ia_prosess_id"),
                             navn = row.stringOrNull("navn"),
-                            status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) }
+                            status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
+                            endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime()
                         )
                     )
                 }.asSingle,

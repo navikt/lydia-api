@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.eksport
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -86,5 +87,6 @@ class SamarbeidProdusentTest {
             samarbeidKafkaMelding.samarbeid.navn shouldBe samarbeid.navn
         }
         samarbeidKafkaMelding.samarbeid.status shouldBe samarbeid.status
+        samarbeidKafkaMelding.samarbeid.endretTidspunkt shouldNotBe null
     }
 }
