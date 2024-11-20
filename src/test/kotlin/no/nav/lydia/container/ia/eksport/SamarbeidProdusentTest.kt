@@ -3,14 +3,12 @@ package no.nav.lydia.container.ia.eksport
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingKey
 import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
@@ -48,18 +46,12 @@ class SamarbeidProdusentTest {
         }
     }
 
-
     private suspend fun konsummerOgSjekkKafkaMelding(
         sak1: IASakDto,
         samarbeid1: IAProsessDto,
     ) {
         kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-            key = Json.encodeToString<SamarbeidKafkaMeldingKey>(
-                SamarbeidKafkaMeldingKey(
-                    saksnummer = sak1.saksnummer,
-                    samarbeidId = samarbeid1.id
-                )
-            ),
+            key = "${sak1.saksnummer}-${samarbeid1.id}",
             konsument = samarbeidKonsument,
         ) {
             it.forExactlyOne { melding ->

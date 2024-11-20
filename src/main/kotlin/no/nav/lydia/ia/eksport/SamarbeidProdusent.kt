@@ -10,20 +10,13 @@ class SamarbeidProdusent(
 ) {
     fun sendPåKafka(samarbeidIVirksomhetDto: SamarbeidIVirksomhetDto) {
         produsent.sendMelding(
-            Topic.SAMARBEIDSPLAN_TOPIC.navn,
-            samarbeidIVirksomhetDto.tilKey(),
-            samarbeidIVirksomhetDto.tilValue()
+            topic = Topic.SAMARBEIDSPLAN_TOPIC.navn,
+            nøkkel = samarbeidIVirksomhetDto.tilKey(),
+            verdi = samarbeidIVirksomhetDto.tilValue(),
         )
     }
 
-
-    private fun SamarbeidIVirksomhetDto.tilKey() =
-        Json.encodeToString<SamarbeidKafkaMeldingKey>(
-            SamarbeidKafkaMeldingKey(
-                saksnummer = this.saksnummer,
-                samarbeidId = this.samarbeid.id
-            )
-        )
+    private fun SamarbeidIVirksomhetDto.tilKey() = "${this.saksnummer}-${this.samarbeid.id}"
 
     private fun SamarbeidIVirksomhetDto.tilValue() =
         Json.encodeToString<SamarbeidKafkaMeldingValue>(
@@ -31,21 +24,14 @@ class SamarbeidProdusent(
                 orgnr = this.orgnr,
                 saksnummer = this.saksnummer,
                 samarbeid = this.samarbeid,
-            )
+            ),
         )
 }
-
 
 data class SamarbeidIVirksomhetDto(
     val orgnr: String,
     val saksnummer: String,
     val samarbeid: SamarbeidDto,
-)
-
-@Serializable
-data class SamarbeidKafkaMeldingKey(
-    val saksnummer: String,
-    val samarbeidId: Int,
 )
 
 @Serializable
