@@ -7,6 +7,8 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -17,6 +19,7 @@ import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -109,7 +112,7 @@ class SpørreundersøkelseRepository(
                     mapOf(
                         "kartleggingId" to spørreundersøkelseId,
                     ),
-                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asSingle,
+                ).map(this::mapRowToSpørreundersøkelse).asSingle,
             )
         }
 
@@ -198,10 +201,9 @@ class SpørreundersøkelseRepository(
         )
     }
 
-    private fun mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer(row: Row): Spørreundersøkelse =
-        row.tilIASakKartleggingMedSpørsmålOgSvaralternativer()
+    private fun mapRowToSpørreundersøkelse(row: Row): Spørreundersøkelse = row.tilSpørreundersøkelse()
 
-    private fun Row.tilIASakKartleggingMedSpørsmålOgSvaralternativer(): Spørreundersøkelse {
+    private fun Row.tilSpørreundersøkelse(): Spørreundersøkelse {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
         return Spørreundersøkelse(
             id = spørreundersøkelseId,
@@ -210,15 +212,17 @@ class SpørreundersøkelseRepository(
             orgnummer = this.string("orgnr"),
             virksomhetsNavn = this.string("navn"),
             status = SpørreundersøkelseStatus.valueOf(this.string("status")),
-            tema = hentTema(spørreundersøkelseId),
+            temaer = hentTemaer(spørreundersøkelseId),
             opprettetAv = this.string("opprettet_av"),
-            opprettetTidspunkt = this.localDateTime("opprettet"),
+            opprettetTidspunkt = this.localDateTime("opprettet").toKotlinLocalDateTime(),
             type = this.string("type"),
-            endretTidspunkt = this.localDateTimeOrNull("endret"),
+            endretTidspunkt = this.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
+            påbegyntTidspunkt = this.localDateTimeOrNull("pabegynt")?.toKotlinLocalDateTime(),
+            fullførtTidspunkt = this.localDateTimeOrNull("fullfort")?.toKotlinLocalDateTime(),
         )
     }
 
-    fun hentTema(spørreundersøkelseId: UUID) =
+    private fun hentTemaer(spørreundersøkelseId: UUID) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -262,27 +266,24 @@ class SpørreundersøkelseRepository(
     private fun List<SpørsmålsRad>.tilTemaMedSpørsmålOgSvaralternativer() =
         this.groupBy {
             it.tema
-        }.map {
-            val tema = it.key
-            val erTemaStengt = it.value.any { spørsmålsRad -> spørsmålsRad.erTemaStengt }
-            val spørsmål = it.value.groupBy { spørsmålsRad ->
-                spørsmålsRad.spørsmålId
-            }.map {
-                val spørsmålId = it.key
-                val spørsmåltekst = it.value.first().spørsmåltekst
-                val flervalg = it.value.first().flervalg
-                val svaralternativer = it.value.map {
-                    it.svaralternativ
+        }.map { tema ->
+            val temaInfo = tema.key
+            val erTemaStengt = tema.value.any { spørsmålsRad -> spørsmålsRad.erTemaStengt }
+            val spørsmål = tema.value.groupBy { spørsmålsRad -> spørsmålsRad.spørsmålId }
+                .map { spørsmål ->
+                    val spørsmålId = spørsmål.key
+                    val spørsmåltekst = spørsmål.value.first().spørsmåltekst
+                    val flervalg = spørsmål.value.first().flervalg
+                    val svaralternativer = spørsmål.value.map { it.svaralternativ }
+                    Spørsmål(
+                        spørsmålId = spørsmålId,
+                        spørsmåltekst = spørsmåltekst,
+                        flervalg = flervalg,
+                        svaralternativer = svaralternativer,
+                    )
                 }
-                Spørsmål(
-                    spørsmålId = spørsmålId,
-                    spørsmåltekst = spørsmåltekst,
-                    flervalg = flervalg,
-                    svaralternativer = svaralternativer,
-                )
-            }
             Tema(
-                tema = tema,
+                tema = temaInfo,
                 stengtForSvar = erTemaStengt,
                 spørsmål = spørsmål,
             )
@@ -324,16 +325,18 @@ class SpørreundersøkelseRepository(
         antallSvar = 0,
     )
 
-    private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvarDto = row.tilSpørreundersøkelseSvarDto()
+    private fun mapRowToSpørreundersøkelseSvarDto(row: Row): SpørreundersøkelseSvar = row.tilSpørreundersøkelseSvar()
 
     private val svarIderType = object : TypeToken<List<String>>() {}.type
 
-    private fun Row.tilSpørreundersøkelseSvarDto(): SpørreundersøkelseSvarDto =
-        SpørreundersøkelseSvarDto(
+    private fun Row.tilSpørreundersøkelseSvar(): SpørreundersøkelseSvar =
+        SpørreundersøkelseSvar(
             spørreundersøkelseId = this.string("kartlegging_id"),
             sesjonId = this.string("sesjon_id"),
             spørsmålId = this.string("sporsmal_id"),
             svarIder = gson.fromJson(this.string("svar_ider"), svarIderType),
+            opprettet = this.localDateTime("opprettet").toKotlinLocalDateTime(),
+            endret = this.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
         )
 
     fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =
@@ -388,27 +391,45 @@ class SpørreundersøkelseRepository(
         hentSpørreundersøkelse(spørreundersøkelseId)
     }
 
-    fun endreSpørreundersøkelseStatus(
-        spørreundersøkelseId: String,
-        status: SpørreundersøkelseStatus,
-        sistEndret: LocalDateTime = LocalDateTime.now(),
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                UPDATE ia_sak_kartlegging SET
-                    status = '${status.name}',
-                    endret = :sistEndret
-                WHERE kartlegging_id = :kartleggingId
-                """.trimIndent(),
-                mapOf(
-                    "kartleggingId" to spørreundersøkelseId,
-                    "sistEndret" to sistEndret,
-                ),
-            ).asUpdate,
-        )
-        hentSpørreundersøkelse(spørreundersøkelseId)
-    }
+    fun startSpørreundersøkelse(spørreundersøkelseId: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '${PÅBEGYNT.name}',
+                        endret = :navaerendeTidspunkt,
+                        pabegynt = :navaerendeTidspunkt
+                    WHERE kartlegging_id = :kartleggingId
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId,
+                        "navaerendeTidspunkt" to LocalDateTime.now(),
+                    ),
+                ).asUpdate,
+            )
+            hentSpørreundersøkelse(spørreundersøkelseId)
+        }
+
+    fun avsluttSpørreundersøkelse(spørreundersøkelseId: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '${AVSLUTTET.name}',
+                        endret = :navaerendeTidspunkt,
+                        fullfort = :navaerendeTidspunkt
+                        WHERE kartlegging_id = :kartleggingId
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId,
+                        "navaerendeTidspunkt" to LocalDateTime.now(),
+                    ),
+                ).asUpdate,
+            )
+            hentSpørreundersøkelse(spørreundersøkelseId)
+        }
 
     private fun mapTilTema(row: Row) =
         TemaInfo(
@@ -492,7 +513,7 @@ class SpørreundersøkelseRepository(
                         JOIN ia_sak using (saksnummer, orgnr)
                         JOIN virksomhet using (orgnr)
                     """.trimMargin(),
-                ).map(this::mapRowToIASakKartleggingMedSpørsmålOgSvaralternativer).asList,
+                ).map(this::mapRowToSpørreundersøkelse).asList,
             )
         }
 }

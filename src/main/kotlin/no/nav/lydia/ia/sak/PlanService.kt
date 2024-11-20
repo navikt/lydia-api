@@ -11,6 +11,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.appstatus.PlanHendelseType.OPPRETT
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
@@ -63,7 +64,7 @@ class PlanService(
                 mal = mal,
             )
         }.onRight { plan ->
-            planObservers.forEach { it.receive(ObservedPlan(hendelsesType = PlanHendelseType.OPPRETT, plan = plan)) }
+            planObservers.forEach { it.receive(ObservedPlan(hendelsesType = OPPRETT, plan = plan)) }
             logger.info("Opprettet plan med Id '${plan.id}'")
         }
 

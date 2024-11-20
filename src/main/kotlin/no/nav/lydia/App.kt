@@ -163,6 +163,7 @@ fun startLydiaBackend() {
     )
     val behovsvurderingBigqueryProdusent = BehovsvurderingBigqueryProdusent(
         produsent = kafkaProdusent,
+        spørreundersøkelseRepository = spørreundersøkelseRepository,
     )
     val samarbeidsplanBigqueryProdusent = SamarbeidsplanBigqueryProdusent(
         produsent = kafkaProdusent,

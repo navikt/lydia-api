@@ -2,7 +2,6 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
@@ -15,11 +14,15 @@ data class SpørreundersøkelseDto(
     @Deprecated("Bruk samarbeidId")
     val prosessId: Int,
     val status: SpørreundersøkelseStatus,
+    val temaer: List<TemaDto>,
+    @Deprecated("Bruk temaer")
     val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
     val opprettetAv: String,
     val type: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
+    val påbegyntTidspunkt: LocalDateTime?,
+    val fullførtTidspunkt: LocalDateTime?,
 )
 
 fun Spørreundersøkelse.tilDto(erEier: Boolean) =
@@ -29,9 +32,12 @@ fun Spørreundersøkelse.tilDto(erEier: Boolean) =
         samarbeidId = samarbeidId,
         prosessId = samarbeidId,
         status = status,
-        temaMedSpørsmålOgSvaralternativer = if (erEier) tema.map { it.toDto() } else emptyList(),
+        temaer = if (erEier) temaer.map { it.toDto() } else emptyList(),
+        temaMedSpørsmålOgSvaralternativer = if (erEier) temaer.map { it.toDto() } else emptyList(),
         opprettetAv = opprettetAv,
-        opprettetTidspunkt = opprettetTidspunkt.toKotlinLocalDateTime(),
         type = type,
-        endretTidspunkt = endretTidspunkt?.toKotlinLocalDateTime(),
+        opprettetTidspunkt = opprettetTidspunkt,
+        endretTidspunkt = endretTidspunkt,
+        påbegyntTidspunkt = påbegyntTidspunkt,
+        fullførtTidspunkt = fullførtTidspunkt,
     )

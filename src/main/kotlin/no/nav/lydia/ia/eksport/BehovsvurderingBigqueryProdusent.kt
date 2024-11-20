@@ -1,16 +1,19 @@
 package no.nav.lydia.ia.eksport
 
+import ia.felles.integrasjoner.kafkameldinger.eksport.BehovsvurderingMelding
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 class BehovsvurderingBigqueryProdusent(
     private val produsent: KafkaProdusent,
+    private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
 ) : Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
         if (input.type == "Behovsvurdering") {
@@ -23,34 +26,52 @@ class BehovsvurderingBigqueryProdusent(
     }
 
     private fun sendTilKafka(spørreundersøkelse: Spørreundersøkelse) {
-        val kafkaMelding = spørreundersøkelse.tilKafkaMelding()
+        val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
+        val kafkaMelding = spørreundersøkelse.tilKafkaMelding(alleSvar)
         produsent.sendMelding(Topic.BEHOVSVURDERING_BIGQUERY_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
     }
 
     companion object {
-        fun Spørreundersøkelse.tilKafkaMelding(): Pair<String, String> {
+        fun Spørreundersøkelse.tilKafkaMelding(alleSvar: List<SpørreundersøkelseSvar>): Pair<String, String> {
             val key = this.saksnummer
-            val value = BehovsvurderingUtenSvarValue(
+            val value = BehovsvurderingKafkamelding(
                 id = this.id.toString(),
                 orgnr = this.orgnummer,
                 status = this.status.name,
-                opprettetAv = this.opprettetAv,
-                opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
-                endret = this.endretTidspunkt?.toKotlinLocalDateTime() ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
                 samarbeidId = this.samarbeidId,
+                saksnummer = this.saksnummer,
+                opprettetAv = this.opprettetAv,
+                opprettet = this.opprettetTidspunkt,
+                harMinstEttSvar = alleSvar.isNotEmpty(),
+                endret = this.endretTidspunkt ?: this.opprettetTidspunkt, // TODO: Gjør dette nullable i BigQuery
+                påbegynt = this.påbegyntTidspunkt,
+                fullført = this.fullførtTidspunkt,
+                førsteSvarMotatt = alleSvar.tidForFørsteSvar(),
+                sisteSvarMottatt = alleSvar.tidForSisteSvar(),
             )
             return key to Json.encodeToString(value)
         }
+
+        private fun List<SpørreundersøkelseSvar>.tidForFørsteSvar(): LocalDateTime? = this.minOfOrNull { it.opprettet }
+
+        private fun List<SpørreundersøkelseSvar>.tidForSisteSvar(): LocalDateTime? = this.maxOfOrNull { it.endret ?: it.opprettet }
+        // TODO: test at tidForSisteSvar blir satt rett om man svarer på nytt på et spørsmål (oppdaterer endret)
     }
 
     @Serializable
-    data class BehovsvurderingUtenSvarValue(
-        val id: String,
-        val orgnr: String,
-        val status: String,
-        val opprettetAv: String,
-        val opprettet: LocalDateTime,
-        val endret: LocalDateTime,
-        val samarbeidId: Int,
-    )
+    data class BehovsvurderingKafkamelding(
+        override val id: String,
+        override val orgnr: String,
+        override val status: String,
+        override val samarbeidId: Int,
+        override val saksnummer: String,
+        override val opprettetAv: String,
+        override val opprettet: LocalDateTime,
+        override val harMinstEttSvar: Boolean,
+        override val endret: LocalDateTime,
+        override val påbegynt: LocalDateTime?,
+        override val fullført: LocalDateTime?,
+        override val førsteSvarMotatt: LocalDateTime?,
+        override val sisteSvarMottatt: LocalDateTime?,
+    ) : BehovsvurderingMelding
 }

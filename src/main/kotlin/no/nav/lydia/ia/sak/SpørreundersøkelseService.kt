@@ -10,6 +10,7 @@ import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.Spørreunders
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
+import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
@@ -25,7 +26,6 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.tilDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.tilKafkaMelding
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.tilResultat
@@ -49,51 +49,54 @@ class SpørreundersøkelseService(
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun lagreSvar(svarliste: List<SpørreundersøkelseSvarDto>) {
-        svarliste.forEach { svar ->
-            val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(svar.spørreundersøkelseId)
-
-            if (spørreundersøkelse == null) {
-                log.error("Fant ikke kartlegging på denne iden: ${svar.spørreundersøkelseId}, hopper over")
-                return@forEach
-            }
+        svarliste.forEach { besvarelse ->
+            val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(besvarelse.spørreundersøkelseId)
+                ?: run {
+                    log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
+                    return@forEach
+                }
             if (spørreundersøkelse.status != PÅBEGYNT) {
                 log.warn("Kan ikke svare på en kartlegging i status ${spørreundersøkelse.status}, hopper over")
                 return@forEach
             }
 
-            val spørsmål = spørreundersøkelse.finnSpørsmål(UUID.fromString(svar.spørsmålId))
-            if (spørsmål == null) {
-                log.warn("Finner ikke spørsmål '${svar.spørsmålId}' svaret er knyttet til, hopper over")
-                return@forEach
-            }
-            if (svar.svarIder.size > 1 && !spørsmål.flervalg) {
-                log.warn("Kan ikke lagre flere svar til et ikke flervalg spørsmål '${svar.spørsmålId}', hopper over")
-                return@forEach
-            }
-            if (!spørsmål.svaralternativer
-                    .map<Svaralternativ, String> { it.svarId.toString() }
-                    .toList()
-                    .containsAll(svar.svarIder)
-            ) {
-                log.warn("Funnet noen ukjente svarIder ('${svar.svarIder}') i svar til spørsmål '${svar.spørsmålId}', hopper over")
+            val spørsmål = spørreundersøkelse.finnSpørsmål(UUID.fromString(besvarelse.spørsmålId)) ?: run {
+                log.warn("Finner ikke spørsmål '${besvarelse.spørsmålId}' svaret er knyttet til, hopper over")
                 return@forEach
             }
 
-            spørreundersøkelseRepository.lagreSvar(svar)
-            val antallSvarPåSpørsmål = spørreundersøkelseRepository.hentAntallSvar(
+            if (besvarelse.svarIder.size > 1 && !spørsmål.flervalg) {
+                log.warn("Kan ikke lagre flere svar til et ikke flervalg spørsmål '${besvarelse.spørsmålId}', hopper over")
+                return@forEach
+            }
+
+            if (!spørsmål.svaralternativerHørerTilSpørsmål(besvarelser = besvarelse)) {
+                log.warn(
+                    "Funnet noen ukjente svarIder ('${besvarelse.svarIder}') i svar til spørsmål '${besvarelse.spørsmålId}', hopper over",
+                )
+                return@forEach
+            }
+
+            spørreundersøkelseRepository.lagreSvar(besvarelse)
+
+            val antallSvar = spørreundersøkelseRepository.hentAntallSvar(
                 spørreundersøkelseId = spørreundersøkelse.id,
-                spørsmålId = UUID.fromString(svar.spørsmålId),
-            )
+                spørsmålId = UUID.fromString(besvarelse.spørsmålId),
+            ).tilDto()
+
             spørreundersøkelseOppdateringProdusent.sendPåKafka(
                 SpørreundersøkelseOppdateringProdusent.AntallSvar(
                     spørreundersøkelseId = spørreundersøkelse.id.toString(),
-                    antallSvar = antallSvarPåSpørsmål.tilDto(),
+                    antallSvar = antallSvar,
                 ),
             )
 
-            log.info("Lagret svar for kartlegging med id: '${svar.spørreundersøkelseId}'")
+            log.info("Lagret svar for kartlegging med id: '${besvarelse.spørreundersøkelseId}'")
         }
     }
+
+    private fun Spørsmål.svaralternativerHørerTilSpørsmål(besvarelser: SpørreundersøkelseSvarDto) =
+        svaralternativer.map { (svarId: UUID) -> svarId.toString() }.toList().containsAll(besvarelser.svarIder)
 
     fun hentSpørreundersøkelseResultat(spørreundersøkelseId: String): Either<Feil, SpørreundersøkelseResultatDto> {
         val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
@@ -126,7 +129,7 @@ class SpørreundersøkelseService(
                         type = type,
                     )
                 }.onRight { behovsvurdering ->
-                    spørreundersøkelseObservers.forEach { it.receive(behovsvurdering) }
+                    spørreundersøkelseObservers.forEach { observer -> observer.receive(behovsvurdering) }
                 }
             }
             "Evaluering" -> {
@@ -141,8 +144,8 @@ class SpørreundersøkelseService(
                                 temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
                                 type = type,
                             )
-                        }.onRight { behovsvurdering ->
-                            spørreundersøkelseObservers.forEach { it.receive(behovsvurdering) }
+                        }.onRight { evaluering ->
+                            spørreundersøkelseObservers.forEach { observer -> observer.receive(evaluering) }
                         }
                     }
                 } else {
@@ -159,8 +162,7 @@ class SpørreundersøkelseService(
 
         spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
 
-        val oppdatertKartlegging =
-            spørreundersøkelse.copy(status = SLETTET, endretTidspunkt = LocalDateTime.now())
+        val oppdatertKartlegging = spørreundersøkelse.copy(status = SLETTET, endretTidspunkt = LocalDateTime.now().toKotlinLocalDateTime())
 
         spørreundersøkelseObservers.forEach { it.receive(oppdatertKartlegging) }
 
@@ -189,25 +191,24 @@ class SpørreundersøkelseService(
             spørreundersøkelseId = spørreundersøkelseId,
         ) ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
 
-        when (statusViSkalEndreTil) {
+        val oppdatertSpørreundersøkelse: Spørreundersøkelse = when (statusViSkalEndreTil) {
             PÅBEGYNT -> if (spørreundersøkelseUtenInnhold.status != OPPRETTET) {
                 return IASakSpørreundersøkelseError.`feil status kan ikke starte`.left()
+            } else {
+                spørreundersøkelseRepository.startSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
+                    ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
             }
             AVSLUTTET -> if (spørreundersøkelseUtenInnhold.status != PÅBEGYNT) {
                 return IASakSpørreundersøkelseError.`ikke påbegynt`.left()
+            } else {
+                spørreundersøkelseRepository.avsluttSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
+                    ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
             }
             OPPRETTET -> return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
             SLETTET -> return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
         }
 
-        val oppdatertSpørreundersøkelse = spørreundersøkelseRepository.endreSpørreundersøkelseStatus(
-            spørreundersøkelseId = spørreundersøkelseId,
-            status = statusViSkalEndreTil,
-        ) ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
-
-        spørreundersøkelseObservers.forEach {
-            it.receive(oppdatertSpørreundersøkelse)
-        }
+        spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
 
         return oppdatertSpørreundersøkelse.right()
     }
@@ -236,7 +237,7 @@ class SpørreundersøkelseService(
             return
         }
 
-        val alleTemaErFullført = oppdatertSpørreundersøkelse.tema.all { it.stengtForSvar }
+        val alleTemaErFullført = oppdatertSpørreundersøkelse.temaer.all { it.stengtForSvar }
 
         if (alleTemaErFullført) {
             endreSpørreundersøkelseStatus(
@@ -304,12 +305,12 @@ class SpørreundersøkelseService(
         val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
         val spørreundersøkelseResultat = spørreundersøkelse.tilResultat(alleSvar)
 
-        val temaResultat = spørreundersøkelseResultat.tema.firstOrNull { it.id == temaId }
+        val temaResultat = spørreundersøkelseResultat.temaer.firstOrNull { it.id == temaId }
             ?: return IASakSpørreundersøkelseError.`ugyldig temaId`.left()
 
         return temaResultat.tilKafkaMelding().right()
     }
 
     private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? =
-        tema.flatMap { it.spørsmål }.firstOrNull { it.spørsmålId == spørsmålId }
+        temaer.flatMap { it.spørsmål }.firstOrNull { it.spørsmålId == spørsmålId }
 }

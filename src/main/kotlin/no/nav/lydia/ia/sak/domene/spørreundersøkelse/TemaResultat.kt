@@ -4,7 +4,7 @@ import kotlinx.datetime.toJavaLocalDateTime
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableSpørsmålResultat
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableSvarResultat
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import java.time.LocalDateTime
 
 data class TemaResultat(
@@ -16,7 +16,7 @@ data class TemaResultat(
     val spørsmål: List<SpørsmålResultat>,
 )
 
-fun Tema.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>): TemaResultat =
+fun Tema.tilResultat(alleSvar: List<SpørreundersøkelseSvar>): TemaResultat =
     TemaResultat(
         id = this.tema.id,
         navn = this.tema.navn,

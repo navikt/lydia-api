@@ -1,11 +1,11 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
+import kotlinx.datetime.LocalDateTime
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
-import java.time.LocalDateTime
 import java.util.UUID
 
 data class SpørreundersøkelseResultat(
@@ -17,10 +17,10 @@ data class SpørreundersøkelseResultat(
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
-    val tema: List<TemaResultat>,
+    val temaer: List<TemaResultat>,
 )
 
-fun Spørreundersøkelse.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>): SpørreundersøkelseResultat =
+fun Spørreundersøkelse.tilResultat(alleSvar: List<SpørreundersøkelseSvar>): SpørreundersøkelseResultat =
     SpørreundersøkelseResultat(
         id = this.id,
         saksnummer = this.saksnummer,
@@ -30,15 +30,13 @@ fun Spørreundersøkelse.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>
         opprettetAv = this.opprettetAv,
         opprettetTidspunkt = this.opprettetTidspunkt,
         endretTidspunkt = this.endretTidspunkt,
-        tema = this.tema.map { tema ->
-            tema.tilResultat(alleSvar)
-        },
+        temaer = this.temaer.map { tema -> tema.tilResultat(alleSvar) },
     )
 
 fun SpørreundersøkelseResultat.tilDto(): SpørreundersøkelseResultatDto =
     SpørreundersøkelseResultatDto(
         id = this.id.toString(),
-        spørsmålMedSvarPerTema = this.tema.map { tema ->
+        spørsmålMedSvarPerTema = this.temaer.map { tema ->
             TemaResultatDto(
                 id = tema.id,
                 navn = tema.navn,

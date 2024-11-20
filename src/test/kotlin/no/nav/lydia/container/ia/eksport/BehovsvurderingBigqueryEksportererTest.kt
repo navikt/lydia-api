@@ -1,16 +1,19 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.jobbsender.Jobb
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
-import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -20,6 +23,7 @@ import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryProdusent
 import org.junit.After
 import org.junit.Before
+import java.util.UUID
 import kotlin.test.Test
 
 class BehovsvurderingBigqueryEksportererTest {
@@ -38,7 +42,7 @@ class BehovsvurderingBigqueryEksportererTest {
 
     @Test
     fun `oppretting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val opprettetBehovsvurdering = sak.opprettSpørreundersøkelse()
 
         runBlocking {
@@ -46,18 +50,21 @@ class BehovsvurderingBigqueryEksportererTest {
                 key = sak.saksnummer,
                 konsument = konsument,
             ) { meldinger ->
-                meldinger shouldHaveSize 1
+                meldinger shouldHaveAtLeastSize 1
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingUtenSvarValue>(it)
+                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
                 }
-                behovsvurderingerUtenSvar shouldHaveSize 1
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe opprettetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe opprettetBehovsvurdering.status.name
                 sisteBehovsvurdering.opprettetAv shouldBe opprettetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe opprettetBehovsvurdering.opprettetTidspunkt
-                sisteBehovsvurdering.endret shouldBe opprettetBehovsvurdering.opprettetTidspunkt
-                // For å unngå null i bigquery settes denne til opprettetTidspunkt ved startet kartlegging
+                sisteBehovsvurdering.påbegynt shouldBe null
+                sisteBehovsvurdering.endret shouldNotBe null
+                sisteBehovsvurdering.fullført shouldBe null
+                sisteBehovsvurdering.harMinstEttSvar shouldBe false
+                sisteBehovsvurdering.førsteSvarMotatt shouldBe null
+                sisteBehovsvurdering.sisteSvarMottatt shouldBe null
                 sisteBehovsvurdering.samarbeidId shouldBe opprettetBehovsvurdering.samarbeidId
             }
         }
@@ -65,7 +72,7 @@ class BehovsvurderingBigqueryEksportererTest {
 
     @Test
     fun `starting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val startetBehovsvurdering = sak.opprettSpørreundersøkelse()
             .start(
                 orgnummer = sak.orgnr,
@@ -77,26 +84,30 @@ class BehovsvurderingBigqueryEksportererTest {
                 key = sak.saksnummer,
                 konsument = konsument,
             ) { meldinger ->
-                meldinger shouldHaveSize 2
+                meldinger shouldHaveAtLeastSize 2
 
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingUtenSvarValue>(it)
+                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
                 }
-                behovsvurderingerUtenSvar shouldHaveSize 2
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe startetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe startetBehovsvurdering.status.name
+                sisteBehovsvurdering.samarbeidId shouldBe startetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe startetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe startetBehovsvurdering.opprettetTidspunkt
-                sisteBehovsvurdering.endret shouldBe startetBehovsvurdering.endretTidspunkt
-                sisteBehovsvurdering.samarbeidId shouldBe startetBehovsvurdering.samarbeidId
+                sisteBehovsvurdering.påbegynt shouldNotBe null
+                sisteBehovsvurdering.endret shouldNotBe null
+                sisteBehovsvurdering.fullført shouldBe null
+                sisteBehovsvurdering.harMinstEttSvar shouldBe false
+                sisteBehovsvurdering.førsteSvarMotatt shouldBe null
+                sisteBehovsvurdering.sisteSvarMottatt shouldBe null
             }
         }
     }
 
     @Test
     fun `avslutting av behovsvurdering skal trigge kafka-eksport av behovsvurdering`() {
-        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val sak = nySakIKartleggesMedEtSamarbeid()
         val avsluttetBehovsvurdering = sak.opprettSpørreundersøkelse()
             .start(
                 orgnummer = sak.orgnr,
@@ -112,18 +123,75 @@ class BehovsvurderingBigqueryEksportererTest {
                 key = sak.saksnummer,
                 konsument = konsument,
             ) { meldinger ->
-                meldinger shouldHaveSize 3
+                meldinger shouldHaveAtLeastSize 3
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingUtenSvarValue>(it)
+                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
                 }
-                behovsvurderingerUtenSvar shouldHaveSize 3
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status.name
+                sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe avsluttetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe avsluttetBehovsvurdering.opprettetTidspunkt
-                sisteBehovsvurdering.endret shouldBe avsluttetBehovsvurdering.endretTidspunkt
+                sisteBehovsvurdering.påbegynt shouldNotBe null
+                sisteBehovsvurdering.endret shouldNotBe null
+                sisteBehovsvurdering.fullført shouldNotBe null
+                sisteBehovsvurdering.harMinstEttSvar shouldBe false
+                sisteBehovsvurdering.førsteSvarMotatt shouldBe null
+                sisteBehovsvurdering.sisteSvarMottatt shouldBe null
+            }
+        }
+    }
+
+    @Test
+    fun `Behovsvurdering med info om besvarelse skal kunne sendes før fullføring`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val påbegyntBehovsvurdering = sak.opprettSpørreundersøkelse()
+            .start(
+                orgnummer = sak.orgnr,
+                saksnummer = sak.saksnummer,
+            )
+
+        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
+        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
+
+        val antallSvar = 3
+        repeat(antallSvar) {
+            val sesjonId = UUID.randomUUID()
+            sendKartleggingSvarTilKafka(
+                kartleggingId = påbegyntBehovsvurdering.id,
+                spørsmålId = førsteSpørsmål.id,
+                sesjonId = sesjonId.toString(),
+                svarIder = listOf(førsteSvaralternativ.svarId),
+            )
+        }
+
+        val avsluttetBehovsvurdering = påbegyntBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = sak.saksnummer,
+                konsument = konsument,
+            ) { meldinger ->
+                meldinger shouldHaveSize 3
+                val behovsvurderingerUtenSvar = meldinger.map {
+                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                }
+                behovsvurderingerUtenSvar shouldHaveSize 3
+                val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
+
+                sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
+                sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status.name
                 sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.samarbeidId
+                sisteBehovsvurdering.opprettetAv shouldBe avsluttetBehovsvurdering.opprettetAv
+                sisteBehovsvurdering.opprettet shouldBe avsluttetBehovsvurdering.opprettetTidspunkt
+                sisteBehovsvurdering.påbegynt shouldNotBe null
+                sisteBehovsvurdering.endret shouldNotBe null
+                sisteBehovsvurdering.fullført shouldNotBe null
+                sisteBehovsvurdering.harMinstEttSvar shouldBe true
+                sisteBehovsvurdering.førsteSvarMotatt shouldNotBe null
+                sisteBehovsvurdering.sisteSvarMottatt shouldNotBe null
+                sisteBehovsvurdering.fullført shouldBe sisteBehovsvurdering.endret
             }
         }
     }

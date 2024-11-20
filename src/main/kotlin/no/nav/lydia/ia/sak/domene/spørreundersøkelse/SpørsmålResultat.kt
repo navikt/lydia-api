@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import no.nav.lydia.ia.sak.MINIMUM_ANTALL_DELTAKERE
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import java.util.UUID
 
 data class SpørsmålResultat(
@@ -18,7 +18,7 @@ data class SvaralternativResultat(
     val antallSvar: Int,
 )
 
-fun Spørsmål.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>): SpørsmålResultat {
+fun Spørsmål.tilResultat(alleSvar: List<SpørreundersøkelseSvar>): SpørsmålResultat {
     val filtrerteSvar = filtrerVekkSvarMedForFåBesvarelser(alleSvar)
     return SpørsmålResultat(
         spørsmålId = this.spørsmålId,
@@ -42,7 +42,7 @@ fun Spørsmål.tilResultat(alleSvar: List<SpørreundersøkelseSvarDto>): Spørsm
     )
 }
 
-private fun filtrerVekkSvarMedForFåBesvarelser(alleSvar: List<SpørreundersøkelseSvarDto>): List<SpørreundersøkelseSvarDto> {
+private fun filtrerVekkSvarMedForFåBesvarelser(alleSvar: List<SpørreundersøkelseSvar>): List<SpørreundersøkelseSvar> {
     val spørsmålMedNokSvar = alleSvar.groupBy { it.spørsmålId }
         .filter { it.value.size >= MINIMUM_ANTALL_DELTAKERE }
         .map { it.key }

@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
-import java.time.LocalDateTime
+import kotlinx.datetime.LocalDateTime
 import java.util.UUID
 
 data class Spørreundersøkelse(
@@ -15,5 +15,7 @@ data class Spørreundersøkelse(
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
-    val tema: List<Tema>,
+    val påbegyntTidspunkt: LocalDateTime?,
+    val fullførtTidspunkt: LocalDateTime?,
+    val temaer: List<Tema>,
 )

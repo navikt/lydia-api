@@ -59,7 +59,7 @@ class SpørreundersøkelseProdusent(
                 status = this.status,
                 type = this.type,
                 plan = plan,
-                temaer = tema.map { it.tilKafkaMelding() },
+                temaer = temaer.map { it.tilKafkaMelding() },
             )
             return nøkkel to Json.encodeToString(verdi)
         }

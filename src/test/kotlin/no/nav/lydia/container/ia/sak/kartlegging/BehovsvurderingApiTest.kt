@@ -50,10 +50,6 @@ import kotlin.test.Test
 class BehovsvurderingApiTest {
     private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
-    companion object {
-        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01933f0f-4009-7838-b1b5-2d49e561dc5d"
-    }
-
     @Before
     fun setUp() {
         spørreundersøkelseKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
@@ -96,8 +92,8 @@ class BehovsvurderingApiTest {
         val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettSpørreundersøkelse()
 
         behovsvurdering.type shouldBe "Behovsvurdering"
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forAll {
+        behovsvurdering.temaer shouldHaveSize 3
+        behovsvurdering.temaer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
         }
 
@@ -205,8 +201,8 @@ class BehovsvurderingApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
         val behovsvurdering = sak.opprettSpørreundersøkelse()
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer.shouldNotBeEmpty()
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålOgSvarPerTema ->
+        behovsvurdering.temaer.shouldNotBeEmpty()
+        behovsvurdering.temaer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int =
                 postgresContainer.hentEnkelKolonne(
                     "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV' and type = 'Behovsvurdering'",
@@ -220,7 +216,7 @@ class BehovsvurderingApiTest {
             }.toList() shouldContainAll spørsmålIderForEtTema
         }
 
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { spørsmålMedSvarPerTema ->
+        behovsvurdering.temaer.forEach { spørsmålMedSvarPerTema ->
             spørsmålMedSvarPerTema.spørsmålOgSvaralternativer.forEach { spørsmålMedSvar ->
                 val svarIderForEtSpørsmål: List<String> =
                     postgresContainer.hentAlleRaderTilEnkelKolonne(
@@ -244,7 +240,7 @@ class BehovsvurderingApiTest {
             enDeltakerSvarerPåEtSpørsmål(kartleggingDto = påbegyntBehovsvurdering, UUID.randomUUID().toString())
         }
 
-        val førsteSpørsmål = påbegyntBehovsvurdering.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
         val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
         val sesjonId = UUID.randomUUID()
         sendKartleggingSvarTilKafka(
@@ -273,7 +269,7 @@ class BehovsvurderingApiTest {
         }
 
         val førsteSpørsmål =
-            påbegyntBehovsvurdering.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+            påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
         val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
 
         val antallSvar = 2
@@ -316,7 +312,7 @@ class BehovsvurderingApiTest {
         }
 
         val førsteSpørsmål =
-            påbegyntBehovsvurdering.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+            påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
         val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
 
         val antallSvar = 3
@@ -470,7 +466,7 @@ class BehovsvurderingApiTest {
 
         val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val førsteSpørsmål = pågåendeKartlegging.temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first()
+        val førsteSpørsmål = pågåendeKartlegging.temaer.first().spørsmålOgSvaralternativer.first()
         sendKartleggingSvarTilKafka(
             kartleggingId = pågåendeKartlegging.id,
             spørsmålId = førsteSpørsmål.id,
@@ -662,18 +658,59 @@ class BehovsvurderingApiTest {
         ) shouldHaveSize 0
     }
 
-    fun enDeltakerSvarerPåEtSpørsmål(
-        kartleggingDto: SpørreundersøkelseDto,
-        sesjonId: String = UUID.randomUUID().toString(),
-    ) {
-        val førsteTema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
-        val førsteSpørsmålId = førsteTema.spørsmålOgSvaralternativer.first().id
-        val førsteSvarId = førsteTema.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
-        sendKartleggingSvarTilKafka(
-            kartleggingId = kartleggingDto.id,
-            spørsmålId = førsteSpørsmålId,
-            sesjonId = sesjonId,
-            svarIder = listOf(førsteSvarId),
-        )
+    @Test
+    fun `Oppretting, start og fullføring av spørreundersøkelse oppdaterer rette tidspunktfelter`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val spørreundersøkelseDto = sak.opprettSpørreundersøkelse()
+        spørreundersøkelseDto.status shouldBe OPPRETTET
+        spørreundersøkelseDto.endretTidspunkt shouldBe null
+        spørreundersøkelseDto.påbegyntTidspunkt shouldBe null
+        spørreundersøkelseDto.fullførtTidspunkt shouldBe null
+
+        val påbegyntSpørreundersøkelse = spørreundersøkelseDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        påbegyntSpørreundersøkelse.status shouldBe PÅBEGYNT
+        påbegyntSpørreundersøkelse.endretTidspunkt shouldNotBe null
+        påbegyntSpørreundersøkelse.påbegyntTidspunkt shouldNotBe null
+        påbegyntSpørreundersøkelse.fullførtTidspunkt shouldBe null
+        påbegyntSpørreundersøkelse.endretTidspunkt shouldBe påbegyntSpørreundersøkelse.påbegyntTidspunkt
+
+        val fullførtSpørreundersøkelse = påbegyntSpørreundersøkelse.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        fullførtSpørreundersøkelse.status shouldBe AVSLUTTET
+        fullførtSpørreundersøkelse.endretTidspunkt shouldNotBe null
+        fullførtSpørreundersøkelse.påbegyntTidspunkt shouldNotBe null
+        fullførtSpørreundersøkelse.fullførtTidspunkt shouldNotBe null
+        fullførtSpørreundersøkelse.endretTidspunkt shouldBe fullførtSpørreundersøkelse.fullførtTidspunkt
+
+        runBlocking {
+            // -- topic for fia-arbeidsgiver
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = spørreundersøkelseDto.id,
+                konsument = spørreundersøkelseKonsument,
+            ) {
+                it.forExactlyOne { melding ->
+                    val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.status shouldBe AVSLUTTET
+                }
+            }
+        }
+    }
+
+    companion object {
+        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01933f0f-4009-7838-b1b5-2d49e561dc5d"
+
+        private fun enDeltakerSvarerPåEtSpørsmål(
+            kartleggingDto: SpørreundersøkelseDto,
+            sesjonId: String = UUID.randomUUID().toString(),
+        ) {
+            val førsteTema = kartleggingDto.temaer.first()
+            val førsteSpørsmålId = førsteTema.spørsmålOgSvaralternativer.first().id
+            val førsteSvarId = førsteTema.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
+            sendKartleggingSvarTilKafka(
+                kartleggingId = kartleggingDto.id,
+                spørsmålId = førsteSpørsmålId,
+                sesjonId = sesjonId,
+                svarIder = listOf(førsteSvarId),
+            )
+        }
     }
 }

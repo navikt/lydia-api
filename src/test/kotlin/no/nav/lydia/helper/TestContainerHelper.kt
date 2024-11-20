@@ -734,7 +734,7 @@ class IASakKartleggingHelper {
             this.svarAlternativerTilEtSpørsmål(ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER).map { it.svarId }
 
         fun SpørreundersøkelseDto.svarAlternativerTilEtSpørsmål(spørsmålId: String) =
-            this.temaMedSpørsmålOgSvaralternativer.map { tema ->
+            this.temaer.map { tema ->
                 tema.spørsmålOgSvaralternativer.firstOrNull { it.id == spørsmålId }
             }.first()!!.svaralternativer
 
@@ -749,10 +749,10 @@ class IASakKartleggingHelper {
         )
 
         fun SpørreundersøkelseDto.sendKartleggingSvarTilKafka(
-            spørsmålId: String = temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().id,
+            spørsmålId: String = temaer.first().spørsmålOgSvaralternativer.first().id,
             sesjonId: String = UUID.randomUUID().toString(),
             svarIder: List<String> =
-                listOf(temaMedSpørsmålOgSvaralternativer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
+                listOf(temaer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId),
         ) = sendKartleggingSvarTilKafka(
             kartleggingId = id,
             spørsmålId = spørsmålId,
@@ -761,7 +761,7 @@ class IASakKartleggingHelper {
         )
 
         fun SpørreundersøkelseDto.stengTema(temaId: Int) {
-            temaMedSpørsmålOgSvaralternativer.filter { it.temaId == temaId } shouldHaveSize 1
+            temaer.filter { it.temaId == temaId } shouldHaveSize 1
             kafkaContainerHelper.sendOgVentTilKonsumert(
                 nøkkel = Json.encodeToString(
                     SpørreundersøkelseHendeleseNøkkel(
@@ -820,10 +820,7 @@ class PlanHelper {
         fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
         fun PlanDto.antallInnholdMedStatus(status: InnholdStatus) =
-            temaer.flatMap { it.undertemaer }.filter {
-                it.inkludert &&
-                    it.status == status
-            }.size
+            temaer.flatMap { it.undertemaer }.filter { it.inkludert && it.status == status }.size
 
         fun PlanDto.tidligstStartDato(): LocalDate =
             this.temaer.flatMap { it.undertemaer }
@@ -1027,11 +1024,7 @@ class PlanHelper {
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/$temaId")
-            .jsonBody(
-                Json.encodeToString(
-                    endring,
-                ),
-            )
+            .jsonBody(Json.encodeToString(endring))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
@@ -1043,11 +1036,7 @@ class PlanHelper {
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
-            .jsonBody(
-                Json.encodeToString(
-                    endring,
-                ),
-            )
+            .jsonBody(Json.encodeToString(endring))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
@@ -1061,11 +1050,7 @@ class PlanHelper {
             endring: List<EndreTemaRequest>,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId")
-            .jsonBody(
-                Json.encodeToString(
-                    endring,
-                ),
-            )
+            .jsonBody(Json.encodeToString(endring))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
@@ -1081,11 +1066,7 @@ class PlanHelper {
             undertemaId: Int,
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = lydiaApiContainer.performPut("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/$temaId/$undertemaId")
-            .jsonBody(
-                Json.encodeToString(
-                    status,
-                ),
-            )
+            .jsonBody(Json.encodeToString(status))
             .authentication().bearer(token)
             .tilSingelRespons<PlanDto>().third.fold(
                 success = { respons -> respons },
