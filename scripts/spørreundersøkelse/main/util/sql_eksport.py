@@ -1,13 +1,35 @@
-from dataklasser.Tema import Tema
-from dataklasser.Spørsmål import Spørsmål
-from dataklasser.Svaralternativ import Svaralternativ
+from main.dataklasser.Tema import Tema
+from main.dataklasser.Undertema import Undertema
+from main.dataklasser.Spørsmål import Spørsmål
+from main.dataklasser.Svaralternativ import Svaralternativ
+
+
+def gjør_tema_inaktivt(temaId: int):
+    sql_fil = (
+            "UPDATE ia_sak_kartlegging_tema"
+            + "\n"
+            + "SET status = 'INAKTIV'"
+            + "\n"
+            + "WHERE tema_id = "
+            + str(temaId)
+            + ";"
+    )
+    return sql_fil
 
 
 def nytt_tema(tema: Tema):
     return (
         "INSERT INTO ia_sak_kartlegging_tema (tema_id, navn, status, rekkefolge, type)"
         + "\n"
-        + f"VALUES ({tema.id}, '{tema.navn}', 'AKTIV', {tema.rekkefølge}, '{tema.type})';"
+        + f"VALUES ({tema.id}, '{tema.navn}', 'AKTIV', {tema.rekkefølge}, '{tema.type}');"
+    )
+
+
+def nytt_undertema(undertema: Undertema, tema: Tema):
+    return (
+        "INSERT INTO ia_sak_kartlegging_undertema (undertema_id, navn, status, rekkefolge, tema_id, obligatorisk)"
+        + "\n"
+        + f"VALUES ({undertema.id}, '{undertema.navn}', 'AKTIV', {undertema.rekkefølge}, {tema.id}, {str(undertema.obligatorisk).lower()});"
     )
 
 

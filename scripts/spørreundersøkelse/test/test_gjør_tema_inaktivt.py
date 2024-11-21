@@ -1,4 +1,4 @@
-from main.gjør_tema_inaktivt import gjør_tema_inaktivt
+from main.util.sql_eksport import gjør_tema_inaktivt
 
 
 def test_gjør_tema_inaktivt():

@@ -1,6 +1,6 @@
 from typing import Literal
 from pydantic import BaseModel
-from dataklasser.Spørsmål import Spørsmål
+from main.dataklasser.Undertema import Undertema
 
 
 class Tema(BaseModel):
@@ -8,4 +8,4 @@ class Tema(BaseModel):
     navn: Literal["Partssamarbeid", "Sykefraværsarbeid", "Arbeidsmiljø"]
     rekkefølge: int
     type: Literal["Behovsvurdering", "Evaluering"]
-    spørsmål: list[Spørsmål]
+    undertemaer: list[Undertema]

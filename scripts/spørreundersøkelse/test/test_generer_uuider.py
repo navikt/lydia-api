@@ -1,4 +1,4 @@
-from main.generer_uuider import generer_uuider
+from main.util.generer_uuider import generer_uuider
 
 
 def test_generer_uuider():
