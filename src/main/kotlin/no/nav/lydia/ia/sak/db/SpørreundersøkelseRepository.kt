@@ -177,6 +177,30 @@ class SpørreundersøkelseRepository(
                         ).asUpdate,
                     )
                 }
+
+                temaer.sortedBy { it.rekkefølge }.forEach { tema ->
+                    tx.run(
+                        queryOf(
+                            """
+                    INSERT INTO ia_sak_kartlegging_kartlegging_til_undertema (
+                        kartlegging_id,
+                        tema_id, 
+                        undertema_id
+                    )
+                    VALUES (
+                        :kartlegging_id,
+                        :tema_id, 
+                        :tema_id
+                    )
+                            """.trimMargin(),
+                            mapOf(
+                                "kartlegging_id" to spørreundersøkelseId,
+                                "tema_id" to tema.id,
+                            ),
+                        ).asUpdate,
+                    )
+
+                }
             }
         }
 
@@ -187,7 +211,8 @@ class SpørreundersøkelseRepository(
             ).left()
     }
 
-    private fun mapRowToSpørreundersøkelseUtenInnhold(row: Row): SpørreundersøkelseUtenInnhold = row.tilSpørreundersøkelseUtenInnhold()
+    private fun mapRowToSpørreundersøkelseUtenInnhold(row: Row): SpørreundersøkelseUtenInnhold =
+        row.tilSpørreundersøkelseUtenInnhold()
 
     private fun Row.tilSpørreundersøkelseUtenInnhold(): SpørreundersøkelseUtenInnhold {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
@@ -228,13 +253,19 @@ class SpørreundersøkelseRepository(
                 queryOf(
                     """
                     SELECT *
-                    FROM ia_sak_kartlegging_sporsmal
-                    JOIN ia_sak_kartlegging_tema_til_spørsmål USING (sporsmal_id)
-                    JOIN ia_sak_kartlegging_svaralternativer USING (sporsmal_id)
-                    JOIN ia_sak_kartlegging_tema USING (tema_id)
-                    JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
-                    WHERE kartlegging_id = :kartlegging_id
-                    ORDER BY ia_sak_kartlegging_tema.rekkefolge, ia_sak_kartlegging_sporsmal.sporsmal_id, ia_sak_kartlegging_svaralternativer.svaralternativ_id
+                      FROM ia_sak_kartlegging_sporsmal
+                      JOIN ia_sak_kartlegging_sporsmal_til_undertema USING (sporsmal_id) 
+                      JOIN ia_sak_kartlegging_svaralternativer USING (sporsmal_id)
+                      JOIN ia_sak_kartlegging_undertema USING (undertema_id)
+                      JOIN ia_sak_kartlegging_tema USING (tema_id)
+                      JOIN ia_sak_kartlegging_kartlegging_til_tema USING (tema_id)
+                      JOIN ia_sak_kartlegging_kartlegging_til_undertema USING (undertema_id) 
+                    WHERE ia_sak_kartlegging_kartlegging_til_tema.kartlegging_id = :kartlegging_id
+                    AND ia_sak_kartlegging_kartlegging_til_undertema.kartlegging_id = :kartlegging_id
+                    ORDER BY ia_sak_kartlegging_tema.rekkefolge,
+                      ia_sak_kartlegging_undertema.rekkefolge,
+                      ia_sak_kartlegging_sporsmal.sporsmal_id, 
+                      ia_sak_kartlegging_svaralternativer.svaralternativ_id
                     """.trimIndent(),
                     mapOf(
                         "kartlegging_id" to spørreundersøkelseId.toString(),
