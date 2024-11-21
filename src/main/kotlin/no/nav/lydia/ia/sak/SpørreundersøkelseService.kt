@@ -135,13 +135,21 @@ class SpørreundersøkelseService(
             "Evaluering" -> {
                 if (iaSak.status == VI_BISTÅR) {
                     planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
+                        val temaerInkludertIPlan = plan.temaer.filter {
+                            it.inkludert
+                        }.map {
+                            it.navn
+                        }
+                        val temaerSomSkalEvalueres = spørreundersøkelseRepository.hentAktiveTemaer(type).filter {
+                            temaerInkludertIPlan.contains(it.navn)
+                        }
                         iaProsessService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->
                             spørreundersøkelseRepository.opprettSpørreundersøkelse(
                                 orgnummer = orgnummer,
                                 prosessId = samarbeid.id,
                                 saksbehandler = saksbehandler,
                                 spørreundersøkelseId = UUID.randomUUID(),
-                                temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
+                                temaer = temaerSomSkalEvalueres,
                                 type = type,
                             )
                         }.onRight { evaluering ->

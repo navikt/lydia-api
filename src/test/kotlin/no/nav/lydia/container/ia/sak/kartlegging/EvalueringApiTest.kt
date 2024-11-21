@@ -15,6 +15,8 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -22,6 +24,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
+import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.After
 import org.junit.Before
 import kotlin.test.Test
@@ -43,12 +46,12 @@ class EvalueringApiTest {
     @Test
     fun `kan opprette en spørreundersøkelse av type evaluering i status VI_BISTÅR`() {
         val sak = nySakIViBistår()
-        sak.opprettEnPlan()
+        sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering()
 
         evaluering.type shouldBe "Evaluering"
-        evaluering.temaMedSpørsmålOgSvaralternativer shouldHaveSize 3
-        evaluering.temaMedSpørsmålOgSvaralternativer.forAll {
+        evaluering.temaer shouldHaveSize 3
+        evaluering.temaer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
             it.navn.shouldNotBeEmpty()
         }
@@ -140,6 +143,36 @@ class EvalueringApiTest {
                     spørreundersøkelse.type shouldBe type
                     spørreundersøkelse.status shouldBe PÅBEGYNT
                     spørreundersøkelse.plan?.id shouldBe opprettetPlan.id
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `skal kun evaluere temaer som er inkludert i plan`() {
+        val sak = nySakIViBistår()
+        sak.opprettEnPlan(
+            plan = PlanMalDto().inkluderEttTemaOgEttInnhold(
+                temanummer = 3, // "Arbeidsmiljø"
+                innholdnummer = 1,
+            ),
+        )
+
+        val evaluering = sak.opprettEvaluering()
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = evaluering.id,
+                konsument = spørreundersøkelseKonsument,
+            ) { meldinger ->
+                meldinger.forExactlyOne { melding ->
+                    val spørreundersøkelse =
+                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    spørreundersøkelse.id shouldBe evaluering.id
+                    spørreundersøkelse.temaer shouldHaveSize 1
+                    spørreundersøkelse.temaer.forExactlyOne { tema ->
+                        tema.navn shouldBe "Arbeidsmiljø"
+                    }
                 }
             }
         }
