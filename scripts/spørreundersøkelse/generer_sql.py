@@ -333,6 +333,8 @@ if __name__ == "__main__":
         sql_script += "\n"
         sql_script += "\n"
         for undertema in tema.undertemaer:
+            sql_script += "\n"
+            sql_script += "\n"
             sql_script += nytt_undertema(undertema=undertema, tema=tema)
 
             for spørsmål in undertema.spørsmål:
