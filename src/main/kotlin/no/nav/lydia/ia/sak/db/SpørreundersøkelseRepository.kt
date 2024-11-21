@@ -199,7 +199,6 @@ class SpørreundersøkelseRepository(
                             ),
                         ).asUpdate,
                     )
-
                 }
             }
         }
@@ -211,8 +210,7 @@ class SpørreundersøkelseRepository(
             ).left()
     }
 
-    private fun mapRowToSpørreundersøkelseUtenInnhold(row: Row): SpørreundersøkelseUtenInnhold =
-        row.tilSpørreundersøkelseUtenInnhold()
+    private fun mapRowToSpørreundersøkelseUtenInnhold(row: Row): SpørreundersøkelseUtenInnhold = row.tilSpørreundersøkelseUtenInnhold()
 
     private fun Row.tilSpørreundersøkelseUtenInnhold(): SpørreundersøkelseUtenInnhold {
         val spørreundersøkelseId = UUID.fromString(this.string("kartlegging_id"))
@@ -252,7 +250,19 @@ class SpørreundersøkelseRepository(
             session.run(
                 queryOf(
                     """
-                    SELECT *
+                    SELECT 
+                        ia_sak_kartlegging_kartlegging_til_tema.kartlegging_id as kartlegging_id,
+                        ia_sak_kartlegging_kartlegging_til_tema.stengt as stengt,
+                        ia_sak_kartlegging_kartlegging_til_tema.tema_id as tema_id,
+                        ia_sak_kartlegging_tema.rekkefolge as rekkefolge,
+                        ia_sak_kartlegging_tema.navn as navn,
+                        ia_sak_kartlegging_tema.status as status,
+                        ia_sak_kartlegging_tema.sist_endret as sist_endret,                      
+                        ia_sak_kartlegging_sporsmal.sporsmal_id as sporsmal_id,
+                        ia_sak_kartlegging_sporsmal.sporsmal_tekst as sporsmal_tekst,
+                        ia_sak_kartlegging_sporsmal.flervalg as flervalg,
+                        ia_sak_kartlegging_svaralternativer.svaralternativ_id as svaralternativ_id,
+                        ia_sak_kartlegging_svaralternativer.svaralternativ_tekst as svaralternativ_tekst
                       FROM ia_sak_kartlegging_sporsmal
                       JOIN ia_sak_kartlegging_sporsmal_til_undertema USING (sporsmal_id) 
                       JOIN ia_sak_kartlegging_svaralternativer USING (sporsmal_id)
