@@ -89,7 +89,7 @@ class EvalueringApiTest {
     @Test
     fun `kan hente liste av alle spørreundersøkelser av typen Evaluering`() {
         val sak = nySakIViBistår()
-        sak.opprettEnPlan()
+        sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering()
 
         val alleEvalueringer = hentSpørreundersøkelse(
@@ -111,7 +111,7 @@ class EvalueringApiTest {
     @Test
     fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
         val sak = nySakIViBistår()
-        val opprettetPlan = sak.opprettEnPlan()
+        val opprettetPlan = sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val type = "Evaluering"
         val evaluering = sak.opprettEvaluering()
 
@@ -160,6 +160,8 @@ class EvalueringApiTest {
 
         val evaluering = sak.opprettEvaluering()
 
+        evaluering.temaer.size shouldBe 1
+
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = evaluering.id,
@@ -176,5 +178,12 @@ class EvalueringApiTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `skal ikke kunne opprette en tom evaluering pga tom plan`() {
+        val sak = nySakIViBistår()
+        sak.opprettEnPlan()
+        shouldFail { sak.opprettEvaluering() }.message shouldBe "HTTP Exception 400 Bad Request"
     }
 }

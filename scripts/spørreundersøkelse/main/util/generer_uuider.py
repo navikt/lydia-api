@@ -12,5 +12,5 @@ def generer_uuider(antall: int) -> list[str]:
 
 
 def generer_uuid_med_delay() -> str:
-    sleep(0.001)
+    sleep(0.01)
     return uuid7(as_type="str")
