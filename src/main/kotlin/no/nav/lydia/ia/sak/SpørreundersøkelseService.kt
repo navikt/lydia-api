@@ -10,6 +10,7 @@ import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.Spørreunders
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
@@ -137,10 +138,13 @@ class SpørreundersøkelseService(
                     planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
                         val temaerInkludertIPlan = plan.temaer.filter {
                             it.inkludert
+                        }.ifEmpty {
+                            return Feil(feilmelding = "Kan ikke opprette en tom plan", httpStatusCode = HttpStatusCode.BadRequest).left()
                         }.map {
                             it.navn
                         }
-                        val temaerSomSkalEvalueres = spørreundersøkelseRepository.hentAktiveTemaer(type).filter {
+                        val aktiveTemaer = spørreundersøkelseRepository.hentAktiveTemaer(type)
+                        val temaerSomSkalEvalueres = aktiveTemaer.filter {
                             temaerInkludertIPlan.contains(it.navn)
                         }
                         iaProsessService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->

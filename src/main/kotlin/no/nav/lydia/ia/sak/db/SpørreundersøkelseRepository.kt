@@ -30,6 +30,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaInfo
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 import java.util.UUID
@@ -179,26 +180,29 @@ class SpørreundersøkelseRepository(
                 }
 
                 temaer.sortedBy { it.rekkefølge }.forEach { tema ->
-                    tx.run(
-                        queryOf(
-                            """
-                    INSERT INTO ia_sak_kartlegging_kartlegging_til_undertema (
-                        kartlegging_id,
-                        tema_id, 
-                        undertema_id
-                    )
-                    VALUES (
-                        :kartlegging_id,
-                        :tema_id, 
-                        :tema_id
-                    )
-                            """.trimMargin(),
-                            mapOf(
-                                "kartlegging_id" to spørreundersøkelseId,
-                                "tema_id" to tema.id,
-                            ),
-                        ).asUpdate,
-                    )
+                    tema.undertemaer.sortedBy { it.rekkefølge }.forEach { undertema ->
+                        tx.run(
+                            queryOf(
+                                """
+                        INSERT INTO ia_sak_kartlegging_kartlegging_til_undertema (
+                            kartlegging_id,
+                            tema_id, 
+                            undertema_id
+                        )
+                        VALUES (
+                            :kartlegging_id,
+                            :tema_id, 
+                            :undertema_id
+                        )
+                                """.trimMargin(),
+                                mapOf(
+                                    "kartlegging_id" to spørreundersøkelseId,
+                                    "tema_id" to tema.id,
+                                    "undertema_id" to undertema.id,
+                                ),
+                            ).asUpdate,
+                        )
+                    }
                 }
             }
         }
@@ -472,14 +476,17 @@ class SpørreundersøkelseRepository(
             hentSpørreundersøkelse(spørreundersøkelseId)
         }
 
-    private fun mapTilTema(row: Row) =
-        TemaInfo(
-            id = row.int("tema_id"),
+    private fun mapTilTema(row: Row): TemaInfo {
+        val temaId = row.int("tema_id")
+        return TemaInfo(
+            id = temaId,
             rekkefølge = row.int("rekkefolge"),
             navn = row.string("navn"),
             status = TemaStatus.valueOf(row.string("status")),
             sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
+            undertemaer = hentAktiveUndertemaer(temaId = temaId),
         )
+    }
 
     fun stengTema(
         spørreundersøkelseId: String,
@@ -515,6 +522,27 @@ class SpørreundersøkelseRepository(
                 ).map(this::mapTilTema).asList,
             )
         }
+
+    private fun hentAktiveUndertemaer(temaId: Int): List<UndertemaInfo> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM ia_sak_kartlegging_undertema
+                    WHERE status = '${TemaStatus.AKTIV}'
+                    AND tema_id = '$temaId'
+                    """.trimIndent(),
+                ).map(this::mapTilUndertema).asList,
+            )
+        }
+
+    private fun mapTilUndertema(row: Row) =
+        UndertemaInfo(
+            id = row.int("undertema_id"),
+            navn = row.string("navn"),
+            rekkefølge = row.int("rekkefolge"),
+            status = TemaStatus.valueOf(row.string("status")),
+        )
 
     fun oppdaterBehovsvurdering(
         behovsvurderingId: String,
