@@ -7,9 +7,7 @@ from main.dataklasser.Svaralternativ import Svaralternativ, lagSvaralternativer
 
 class Spørsmål(BaseModel):
     tekst: str
-    id: Annotated[str, StringConstraints(min_length=36, max_length=36)] = (
-        generer_uuid_med_delay()
-    )
+    id: Annotated[str, StringConstraints(min_length=36, max_length=36)]
     flervalg: bool = False
     svaralternativer: list[Svaralternativ] = lagSvaralternativer(
         alternativer=[

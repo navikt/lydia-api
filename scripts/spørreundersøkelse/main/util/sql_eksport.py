@@ -17,6 +17,19 @@ def gjør_tema_inaktivt(temaId: int):
     return sql_fil
 
 
+def gjør_undertema_inaktivt(undertema_id: int):
+    sql_fil = (
+            "UPDATE ia_sak_kartlegging_undertema"
+            + "\n"
+            + "SET status = 'INAKTIV'"
+            + "\n"
+            + "WHERE undertema_id = "
+            + str(undertema_id)
+            + ";"
+    )
+    return sql_fil
+
+
 def nytt_tema(tema: Tema):
     return (
         "INSERT INTO ia_sak_kartlegging_tema (tema_id, navn, status, rekkefolge, type)"
@@ -57,4 +70,11 @@ def knytt_spørsmål_til_tema(spørsmål: Spørsmål, tema: Tema):
         "INSERT INTO ia_sak_kartlegging_tema_til_spørsmål (tema_id, sporsmal_id)"
         + "\n"
         + f"VALUES ({tema.id}, '{spørsmål.id}');"
+    )
+
+def knytt_spørsmål_til_undertema(spørsmål: Spørsmål, undertema: Undertema):
+    return (
+        "INSERT INTO ia_sak_kartlegging_sporsmal_til_undertema (undertema_id, sporsmal_id)"
+        + "\n"
+        + f"VALUES ({undertema.id}, '{spørsmål.id}');"
     )
