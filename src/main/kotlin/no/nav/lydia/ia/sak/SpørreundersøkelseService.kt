@@ -136,6 +136,7 @@ class SpørreundersøkelseService(
                     spørreundersøkelseObservers.forEach { observer -> observer.receive(behovsvurdering) }
                 }
             }
+
             "Evaluering" -> {
                 if (iaSak.status == VI_BISTÅR) {
                     planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
@@ -160,7 +161,8 @@ class SpørreundersøkelseService(
 
                         val temaerMedUndertemaerSomIPlan = temaerSomSkalEvalueres.map {
                             it.copy(
-                                undertemaer = it.undertemaer.filter { undertemaerInkludertIPlan.contains(it.navn) },
+                                undertemaer = it.undertemaer.filter { undertemaerInkludertIPlan.contains(it.navn) } +
+                                    spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaer(it.id),
                             )
                         }
 
@@ -180,7 +182,9 @@ class SpørreundersøkelseService(
                 } else {
                     IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
                 }
-            } else -> {
+            }
+
+            else -> {
                 IASakSpørreundersøkelseError.`ugyldig type`.left()
             }
         }

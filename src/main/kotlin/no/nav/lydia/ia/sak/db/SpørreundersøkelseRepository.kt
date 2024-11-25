@@ -528,6 +528,20 @@ class SpørreundersøkelseRepository(
             )
         }
 
+    fun hentObligatoriskeAktiveUndertemaer(temaId: Int): List<UndertemaInfo> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM ia_sak_kartlegging_undertema
+                    WHERE status = '${TemaStatus.AKTIV}'
+                    AND obligatorisk = true
+                    AND tema_id = '$temaId'
+                    """.trimIndent(),
+                ).map(this::mapTilUndertema).asList,
+            )
+        }
+
     private fun hentAktiveUndertemaer(temaId: Int): List<UndertemaInfo> =
         using(sessionOf(dataSource)) { session ->
             session.run(

@@ -4,6 +4,8 @@ import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.Spørreunders
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
+import io.kotest.inspectors.forAtLeastOne
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -175,8 +177,16 @@ class EvalueringApiTest {
                     spørreundersøkelse.temaer.forExactlyOne { tema ->
                         tema.navn shouldBe "Arbeidsmiljø"
                     }
-                    spørreundersøkelse.temaer.first().spørsmål.forAll { spørsmål ->
+                    val temaArbeidsmiljø = spørreundersøkelse.temaer.filter { it.navn == "Arbeidsmiljø" }.first()
+
+                    temaArbeidsmiljø.spørsmål.forAtLeastOne { spørsmål ->
                         spørsmål.kategori shouldBe "Utvikle arbeidsmiljøet"
+                    }
+                    temaArbeidsmiljø.spørsmål.forAtLeastOne { spørsmål ->
+                        spørsmål.kategori shouldBe "Veien videre"
+                    }
+                    temaArbeidsmiljø.spørsmål.forAll { spørsmål ->
+                        spørsmål.kategori shouldBeIn listOf("Utvikle arbeidsmiljøet", "Veien videre")
                     }
                 }
             }
