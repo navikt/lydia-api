@@ -175,6 +175,9 @@ class EvalueringApiTest {
                     spørreundersøkelse.temaer.forExactlyOne { tema ->
                         tema.navn shouldBe "Arbeidsmiljø"
                     }
+                    spørreundersøkelse.temaer.first().spørsmål.forAll { spørsmål ->
+                        spørsmål.kategori shouldBe "Utvikle arbeidsmiljøet"
+                    }
                 }
             }
         }
