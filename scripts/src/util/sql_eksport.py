@@ -1,7 +1,7 @@
-from main.dataklasser.Tema import Tema
-from main.dataklasser.Undertema import Undertema
-from main.dataklasser.Spørsmål import Spørsmål
-from main.dataklasser.Svaralternativ import Svaralternativ
+from dataklasser.Spørsmål import Spørsmål
+from dataklasser.Svaralternativ import Svaralternativ
+from dataklasser.Tema import Tema
+from dataklasser.Undertema import Undertema
 
 
 def gjør_tema_inaktivt(temaId: int):

@@ -1,5 +1,5 @@
-from main.util.generer_uuider import generer_uuid_med_delay
-from main.dataklasser.Svaralternativ import Svaralternativ
+from dataklasser.Svaralternativ import Svaralternativ
+from util.generer_uuider import generer_uuid_med_delay
 
 
 def lagSvaralternativer(alternativer: list[str]) -> list[Svaralternativ]:

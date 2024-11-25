@@ -1,5 +1,6 @@
 from typing import Literal
-from main.dataklasser.Undertema import Undertema
+
+from dataklasser.Undertema import Undertema
 
 
 class Tema:

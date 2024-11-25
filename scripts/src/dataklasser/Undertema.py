@@ -1,5 +1,4 @@
-from pydantic import BaseModel
-from main.dataklasser.Spørsmål import Spørsmål
+from dataklasser.Spørsmål import Spørsmål
 
 
 class Undertema:
