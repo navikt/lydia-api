@@ -77,6 +77,7 @@ class SpørreundersøkelseProdusent(
                 tekst = spørsmåltekst,
                 svaralternativer = svaralternativer.map { it.tilKafkaMelding() },
                 flervalg = flervalg,
+                kategori = undertemanavn,
             )
 
         private fun Svaralternativ.tilKafkaMelding() =
@@ -111,6 +112,7 @@ class SpørreundersøkelseProdusent(
         override val tekst: String,
         override val flervalg: Boolean,
         override val svaralternativer: List<SerializableSvaralternativ>,
+        val kategori: String,
     ) : SpørsmålMelding
 
     @Serializable

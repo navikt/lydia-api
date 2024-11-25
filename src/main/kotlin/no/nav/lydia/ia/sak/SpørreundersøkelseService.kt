@@ -51,11 +51,12 @@ class SpørreundersøkelseService(
 
     fun lagreSvar(svarliste: List<SpørreundersøkelseSvarDto>) {
         svarliste.forEach { besvarelse ->
-            val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(besvarelse.spørreundersøkelseId)
-                ?: run {
-                    log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
-                    return@forEach
-                }
+            val spørreundersøkelse =
+                spørreundersøkelseRepository.hentSpørreundersøkelse(besvarelse.spørreundersøkelseId)
+                    ?: run {
+                        log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
+                        return@forEach
+                    }
             if (spørreundersøkelse.status != PÅBEGYNT) {
                 log.warn("Kan ikke svare på en kartlegging i status ${spørreundersøkelse.status}, hopper over")
                 return@forEach
@@ -100,13 +101,15 @@ class SpørreundersøkelseService(
         svaralternativer.map { (svarId: UUID) -> svarId.toString() }.toList().containsAll(besvarelser.svarIder)
 
     fun hentSpørreundersøkelseResultat(spørreundersøkelseId: String): Either<Feil, SpørreundersøkelseResultatDto> {
-        val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
-            ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
+        val spørreundersøkelse =
+            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
+                ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
         if (spørreundersøkelse.status != AVSLUTTET) {
             return IASakSpørreundersøkelseError.`ikke avsluttet`.left()
         }
 
-        val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
+        val alleSvar =
+            spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
 
         return spørreundersøkelse.tilResultat(alleSvar).tilDto().right()
     }
@@ -139,7 +142,10 @@ class SpørreundersøkelseService(
                         val temaerInkludertIPlan = plan.temaer.filter {
                             it.inkludert
                         }.ifEmpty {
-                            return Feil(feilmelding = "Kan ikke opprette en tom plan", httpStatusCode = HttpStatusCode.BadRequest).left()
+                            return Feil(
+                                feilmelding = "Kan ikke opprette en evaluering basert på en tom plan",
+                                httpStatusCode = HttpStatusCode.BadRequest,
+                            ).left()
                         }.map {
                             it.navn
                         }
@@ -147,13 +153,24 @@ class SpørreundersøkelseService(
                         val temaerSomSkalEvalueres = aktiveTemaer.filter {
                             temaerInkludertIPlan.contains(it.navn)
                         }
+
+                        val undertemaerInkludertIPlan: List<String> = plan.temaer.filter {
+                            it.inkludert
+                        }.flatMap { it.undertemaer }.filter { it.inkludert }.map { it.navn }
+
+                        val temaerMedUndertemaerSomIPlan = temaerSomSkalEvalueres.map {
+                            it.copy(
+                                undertemaer = it.undertemaer.filter { undertemaerInkludertIPlan.contains(it.navn) },
+                            )
+                        }
+
                         iaProsessService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->
                             spørreundersøkelseRepository.opprettSpørreundersøkelse(
                                 orgnummer = orgnummer,
                                 prosessId = samarbeid.id,
                                 saksbehandler = saksbehandler,
                                 spørreundersøkelseId = UUID.randomUUID(),
-                                temaer = temaerSomSkalEvalueres,
+                                temaer = temaerMedUndertemaerSomIPlan,
                                 type = type,
                             )
                         }.onRight { evaluering ->
@@ -174,7 +191,8 @@ class SpørreundersøkelseService(
 
         spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
 
-        val oppdatertKartlegging = spørreundersøkelse.copy(status = SLETTET, endretTidspunkt = LocalDateTime.now().toKotlinLocalDateTime())
+        val oppdatertKartlegging =
+            spørreundersøkelse.copy(status = SLETTET, endretTidspunkt = LocalDateTime.now().toKotlinLocalDateTime())
 
         spørreundersøkelseObservers.forEach { it.receive(oppdatertKartlegging) }
 
@@ -210,12 +228,14 @@ class SpørreundersøkelseService(
                 spørreundersøkelseRepository.startSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                     ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
             }
+
             AVSLUTTET -> if (spørreundersøkelseUtenInnhold.status != PÅBEGYNT) {
                 return IASakSpørreundersøkelseError.`ikke påbegynt`.left()
             } else {
                 spørreundersøkelseRepository.avsluttSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                     ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
             }
+
             OPPRETTET -> return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
             SLETTET -> return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
         }
@@ -314,7 +334,8 @@ class SpørreundersøkelseService(
         val spørreundersøkelse =
             spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId.toString())
                 ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
-        val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
+        val alleSvar =
+            spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
         val spørreundersøkelseResultat = spørreundersøkelse.tilResultat(alleSvar)
 
         val temaResultat = spørreundersøkelseResultat.temaer.firstOrNull { it.id == temaId }

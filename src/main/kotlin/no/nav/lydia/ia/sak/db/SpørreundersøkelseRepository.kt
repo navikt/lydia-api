@@ -262,6 +262,7 @@ class SpørreundersøkelseRepository(
                         ia_sak_kartlegging_tema.navn as navn,
                         ia_sak_kartlegging_tema.status as status,
                         ia_sak_kartlegging_tema.sist_endret as sist_endret,                      
+                        ia_sak_kartlegging_undertema.navn as undertemanavn,
                         ia_sak_kartlegging_sporsmal.sporsmal_id as sporsmal_id,
                         ia_sak_kartlegging_sporsmal.sporsmal_tekst as sporsmal_tekst,
                         ia_sak_kartlegging_sporsmal.flervalg as flervalg,
@@ -289,6 +290,7 @@ class SpørreundersøkelseRepository(
                         spørreundersøkelseId = UUID.fromString(it.string("kartlegging_id")),
                         tema = mapTilTema(it),
                         erTemaStengt = it.boolean("stengt"),
+                        undertemanavn = it.string("undertemanavn"),
                         spørsmålId = UUID.fromString(it.string("sporsmal_id")),
                         spørsmåltekst = it.string("sporsmal_tekst"),
                         flervalg = it.boolean("flervalg"),
@@ -302,6 +304,7 @@ class SpørreundersøkelseRepository(
         val spørreundersøkelseId: UUID,
         val tema: TemaInfo,
         val erTemaStengt: Boolean,
+        val undertemanavn: String,
         val spørsmålId: UUID,
         val spørsmåltekst: String,
         val flervalg: Boolean,
@@ -320,8 +323,10 @@ class SpørreundersøkelseRepository(
                     val spørsmåltekst = spørsmål.value.first().spørsmåltekst
                     val flervalg = spørsmål.value.first().flervalg
                     val svaralternativer = spørsmål.value.map { it.svaralternativ }
+                    val undertemanavn = spørsmål.value.first().undertemanavn
                     Spørsmål(
                         spørsmålId = spørsmålId,
+                        undertemanavn = undertemanavn,
                         spørsmåltekst = spørsmåltekst,
                         flervalg = flervalg,
                         svaralternativer = svaralternativer,
