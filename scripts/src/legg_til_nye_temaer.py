@@ -1,21 +1,19 @@
-from main.dataklasser.Tema import Tema
-from main.dataklasser.Undertema import Undertema
-from main.dataklasser.Spørsmål import Spørsmål, lagSvaralternativer
-from main.util.generer_uuider import generer_uuid_med_delay
-from main.util.sql_eksport import (
-    nytt_tema,
-    nytt_spørsmål,
-    nytt_svaralternativ,
-    knytt_spørsmål_til_tema,
-    nytt_undertema,
+from dataklasser.Spørsmål import Spørsmål
+from dataklasser.Tema import Tema
+from dataklasser.Undertema import Undertema
+from util.sql_eksport import (
     gjør_tema_inaktivt,
     gjør_undertema_inaktivt,
+    knytt_spørsmål_til_tema,
     knytt_spørsmål_til_undertema,
+    nytt_spørsmål,
+    nytt_svaralternativ,
+    nytt_tema,
+    nytt_undertema,
 )
 
-
 #### Partssamarbeid ####
-# undertemaer
+
 
 forrige_tema_id = 15
 undertema_id = 15
@@ -347,7 +345,7 @@ if __name__ == "__main__":
         sql_script += "\n"
 
     with open(
-        "../../src/main/resources/db/migration/2024/V300__nytt_migreringsskript.sql",
+        "V1__nytt_migreringsskript.sql",
         "w",
     ) as text_file:
         text_file.write(sql_script)

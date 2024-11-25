@@ -1,4 +1,4 @@
-from main.util.generer_uuider import generer_uuid_med_delay
+from util.generer_uuider import generer_uuid_med_delay
 
 
 class Svaralternativ:

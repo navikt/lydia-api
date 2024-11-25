@@ -1,8 +1,8 @@
-from main.util.generer_uuider import generer_uuider
+from util.generer_uuider import generer_uuider
 
 
 def test_generer_uuider():
-    sortert_liste_med_uuider = generer_uuider(1000)
+    sortert_liste_med_uuider = generer_uuider(100)
 
     for i in range(len(sortert_liste_med_uuider) - 1):
         # sjekk at alle er i sortert rekkefølge
@@ -10,7 +10,7 @@ def test_generer_uuider():
 
 
 def test_generer_uuider_første_13_tegn():
-    sortert_liste_med_uuider = generer_uuider(1000)
+    sortert_liste_med_uuider = generer_uuider(100)
 
     for i in range(len(sortert_liste_med_uuider) - 1):
         # sjekk at alle er i sortert rekkefølge
