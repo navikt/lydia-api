@@ -333,8 +333,7 @@ class IASakService(
             IASakError.`generell feil under uthenting`.left()
         }
 
-    fun hentIASak(saksnummer: String) =
-        iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
+    fun hentIASak(saksnummer: String) = iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
 
     fun <T> somEierAvSak(
         saksnummer: String,

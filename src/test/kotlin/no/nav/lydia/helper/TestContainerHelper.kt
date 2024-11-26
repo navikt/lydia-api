@@ -819,8 +819,7 @@ class PlanHelper {
 
         fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdMedStatus(status: InnholdStatus) =
-            temaer.flatMap { it.undertemaer }.filter { it.inkludert && it.status == status }.size
+        fun PlanDto.antallInnholdMedStatus(status: InnholdStatus) = temaer.flatMap { it.undertemaer }.filter { it.inkludert && it.status == status }.size
 
         fun PlanDto.tidligstStartDato(): LocalDate =
             this.temaer.flatMap { it.undertemaer }
@@ -1159,8 +1158,7 @@ class IATjenesteoversiktHelper {
 
 class LeveranseHelper {
     companion object {
-        fun hentIATjenesterFraDatabase() =
-            TestContainerHelper.postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
+        fun hentIATjenesterFraDatabase() = TestContainerHelper.postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
 
         fun leggTilModul(modul: ModulDto) =
             TestContainerHelper.postgresContainer.performUpdate(

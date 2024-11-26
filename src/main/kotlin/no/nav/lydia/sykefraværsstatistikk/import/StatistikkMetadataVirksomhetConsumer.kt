@@ -100,8 +100,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
             logger.info("Stopped kafka consumer job i StatistikkMetadataVirksomhetConsumer")
         }
 
-    private fun ConsumerRecords<String, String>.toSykefraværsstatistikkMetadataVirksomhetImportDto():
-        List<SykefraværsstatistikkMetadataVirksomhetImportDto> {
+    private fun ConsumerRecords<String, String>.toSykefraværsstatistikkMetadataVirksomhetImportDto(): List<SykefraværsstatistikkMetadataVirksomhetImportDto> {
         val gson = GsonBuilder().create()
         return this.map {
             gson.fromJson(

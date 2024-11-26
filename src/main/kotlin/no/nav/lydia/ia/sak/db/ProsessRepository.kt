@@ -164,8 +164,8 @@ class ProsessRepository(
                             id = row.int("ia_prosess_id"),
                             navn = row.stringOrNull("navn"),
                             status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
-                            endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime()
-                        )
+                            endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
+                        ),
                     )
                 }.asSingle,
             )

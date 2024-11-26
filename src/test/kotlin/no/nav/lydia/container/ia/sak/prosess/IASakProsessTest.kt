@@ -115,7 +115,6 @@ class IASakProsessTest {
         )?.toLocalDateTime()
 
         endretTidspunktEtterSlett!!.shouldBeGreaterThan(endretTidspunktVedOpprettelse!!)
-
     }
 
     @Test

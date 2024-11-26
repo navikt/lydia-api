@@ -14,8 +14,7 @@ fun ApplicationCall.innloggetNavIdent() = this.principal<JWTPrincipal>()?.payloa
 
 fun ApplicationCall.innloggetNavn() = this.principal<JWTPrincipal>()?.payload?.claims?.get(Security.NAME_CLAIM)?.asString()
 
-fun ApplicationCall.azureADGrupper() =
-    this.principal<JWTPrincipal>()?.payload?.claims?.get(Security.GROUPS_CLAIM)?.asList(String::class.java)
+fun ApplicationCall.azureADGrupper() = this.principal<JWTPrincipal>()?.payload?.claims?.get(Security.GROUPS_CLAIM)?.asList(String::class.java)
 
 fun ApplicationCall.accessToken() =
     this.request.parseAuthorizationHeader()?.let {

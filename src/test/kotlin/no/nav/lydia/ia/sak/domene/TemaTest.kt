@@ -16,7 +16,7 @@ class TemaTest {
             status = AKTIV,
             rekkefølge = 2,
             sistEndret = now().toKotlinLocalDateTime(),
-            undertemaer = emptyList()
+            undertemaer = emptyList(),
         )
         val tema3 = TemaInfo(
             id = 3,
@@ -24,7 +24,7 @@ class TemaTest {
             navn = "tema 3",
             status = AKTIV,
             sistEndret = now().toKotlinLocalDateTime(),
-            undertemaer = emptyList()
+            undertemaer = emptyList(),
         )
 
         listOf(tema2, tema3).sortedBy { it.rekkefølge }.shouldContainInOrder(listOf(tema3, tema2))

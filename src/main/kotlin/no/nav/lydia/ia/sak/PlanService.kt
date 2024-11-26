@@ -33,8 +33,7 @@ class PlanService(
 ) {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    fun hentPlan(samarbeidId: Int): Either<Feil, Plan> =
-        planRepository.hentPlan(prosessId = samarbeidId)?.right() ?: PlanFeil.`fant ikke plan`.left()
+    fun hentPlan(samarbeidId: Int): Either<Feil, Plan> = planRepository.hentPlan(prosessId = samarbeidId)?.right() ?: PlanFeil.`fant ikke plan`.left()
 
     fun opprettPlan(
         iaSak: IASak,
@@ -226,8 +225,7 @@ class PlanService(
                     tema.undertemaer.erInnholdITema(lagretPlan.temaer.first { lagretTema -> lagretTema.id == tema.id })
             }
 
-        fun List<EndreUndertemaRequest>.erGyldig(lagretTema: PlanTema) =
-            harGyldigeFelter() && erInnholdITema(lagretTema) && lagretTema.inkludert
+        fun List<EndreUndertemaRequest>.erGyldig(lagretTema: PlanTema) = harGyldigeFelter() && erInnholdITema(lagretTema) && lagretTema.inkludert
 
         private fun List<EndreUndertemaRequest>.erInnholdITema(lagretTeam: PlanTema): Boolean =
             this.all { it.id in lagretTeam.undertemaer.map { innhold -> innhold.id } }

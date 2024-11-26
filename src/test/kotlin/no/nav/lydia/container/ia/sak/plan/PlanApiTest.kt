@@ -1,6 +1,9 @@
 package no.nav.lydia.container.ia.sak.plan
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.*
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.AVBRUTT
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PLANLAGT
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PÅGÅR
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual

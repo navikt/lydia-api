@@ -155,6 +155,5 @@ class SamarbeidsplanBigqueryEksportererTest {
 
     private fun SamarbeidsplanBigqueryProdusent.PlanValue.planlagteTemaer(): Int = this.temaer.filter { it.inkludert }.size
 
-    private fun SamarbeidsplanBigqueryProdusent.PlanValue.planlagtInnhold(): Int =
-        this.temaer.flatMap { it.innhold }.filter { it.inkludert }.size
+    private fun SamarbeidsplanBigqueryProdusent.PlanValue.planlagtInnhold(): Int = this.temaer.flatMap { it.innhold }.filter { it.inkludert }.size
 }

@@ -348,6 +348,5 @@ class SpørreundersøkelseService(
         return temaResultat.tilKafkaMelding().right()
     }
 
-    private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? =
-        temaer.flatMap { it.spørsmål }.firstOrNull { it.spørsmålId == spørsmålId }
+    private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? = temaer.flatMap { it.spørsmål }.firstOrNull { it.spørsmålId == spørsmålId }
 }

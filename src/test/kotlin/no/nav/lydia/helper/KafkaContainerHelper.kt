@@ -228,7 +228,7 @@ class KafkaContainerHelper(
         sendOgVentTilKonsumert(
             nøkkel = jobb.name,
             melding =
-            """
+                """
                 {
                     "jobb": "${jobb.name}",
                     "tidspunkt": "2023-01-01T00:00:00.000Z",
@@ -239,7 +239,10 @@ class KafkaContainerHelper(
         )
     }
 
-    fun sendJobbMelding(jobb: Jobb, parameter: String = "") {
+    fun sendJobbMelding(
+        jobb: Jobb,
+        parameter: String = "",
+    ) {
         sendOgVentTilKonsumert(
             nøkkel = jobb.name,
             melding =

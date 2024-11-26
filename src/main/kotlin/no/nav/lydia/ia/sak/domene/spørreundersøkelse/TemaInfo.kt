@@ -8,12 +8,12 @@ data class TemaInfo(
     val status: TemaStatus,
     val rekkefølge: Int,
     val sistEndret: LocalDateTime,
-    val undertemaer: List<UndertemaInfo>
+    val undertemaer: List<UndertemaInfo>,
 )
 
 data class UndertemaInfo(
     val id: Int,
     val navn: String,
-    val status: TemaStatus, //TODO: burde kanskje ikke hete temastatus?
+    val status: TemaStatus, // TODO: burde kanskje ikke hete temastatus?
     val rekkefølge: Int,
 )

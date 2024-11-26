@@ -61,9 +61,7 @@ class SykefraværsstatistikkService(
         )
     }
 
-    fun lagreSykefraværsstatistikkPerKategori(
-        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    fun lagreSykefraværsstatistikkPerKategori(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>) {
         val start = System.currentTimeMillis()
         lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe)
         lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe)
@@ -72,9 +70,7 @@ class SykefraværsstatistikkService(
         )
     }
 
-    private fun lagreSykefraværsstatistikkGjeldendeKvartal(
-        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    private fun lagreSykefraværsstatistikkGjeldendeKvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>) {
         sykefraværsstatistikkRepository.insertSykefraværsstatistikkForSisteGjelendeKvartalForLand(
             sykefraværsstatistikk = filterPåKategoriOgLogInfo(sykefraværsstatistikkKategoriImportDtoListe, LAND),
         )
@@ -104,9 +100,7 @@ class SykefraværsstatistikkService(
         )
     }
 
-    private fun lagreSykefraværsstatistikkSiste4Kvartal(
-        sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    private fun lagreSykefraværsstatistikkSiste4Kvartal(sykefraværsstatistikkKategoriImportDtoListe: List<SykefraværsstatistikkPerKategoriImportDto>) {
         val sykefraværsstatistikkForVirksomheter = sykefraværsstatistikkKategoriImportDtoListe
             .filter { it.kategori == VIRKSOMHET }
 

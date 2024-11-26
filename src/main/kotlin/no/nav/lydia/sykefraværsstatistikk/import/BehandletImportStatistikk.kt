@@ -20,8 +20,7 @@ sealed class BehandletKvartalsvisSykefraværsstatistikk(
     val kategori
         get() = statistikk.kategori
 
-    private fun KvartalsvisSykefraværsstatistikk.skalMaskeres() =
-        maskert || antallPersoner < MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER
+    private fun KvartalsvisSykefraværsstatistikk.skalMaskeres() = maskert || antallPersoner < MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER
 
     companion object {
         const val MIN_ANTALL_PERS_FOR_AT_STATISTIKKEN_IKKE_ER_PERSONOPPLYSNINGER = 5

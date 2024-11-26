@@ -132,9 +132,7 @@ class SykefraværsstatistikkRepository(
         }
     }
 
-    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForSektor(
-        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForSektor(sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertBehandletSektorStatistikk(
@@ -144,9 +142,7 @@ class SykefraværsstatistikkRepository(
         }
     }
 
-    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(
-        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForBransje(sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertBehandletBransjeStatistikk(
@@ -156,9 +152,7 @@ class SykefraværsstatistikkRepository(
         }
     }
 
-    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(
-        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæring(sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertBehandletNæringsStatistikk(
@@ -168,9 +162,7 @@ class SykefraværsstatistikkRepository(
         }
     }
 
-    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(
-        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForNæringskode(sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertBehandletNæringsundergruppeStatistikk(
@@ -181,9 +173,7 @@ class SykefraværsstatistikkRepository(
         }
     }
 
-    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(
-        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) {
+    fun insertSykefraværsstatistikkForSisteGjelendeKvartalForVirksomhet(sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.insertVirksomhetsstatistikk(
@@ -299,75 +289,73 @@ class SykefraværsstatistikkRepository(
             }
         }
 
-    fun insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(
-        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.transaction { tx ->
-            sykefraværsstatistikk.forEach {
-                tx.run(
-                    queryOf(
-                        """
-                        INSERT INTO sykefravar_statistikk_kategori_siste_4_kvartal(
-                            kategori,
-                            kode,
-                            tapte_dagsverk,
-                            mulige_dagsverk,
-                            prosent,
-                            maskert,
-                            antall_kvartaler,
-                            kvartaler,
-                            publisert_kvartal,
-                            publisert_arstall
-                        )
-                        VALUES(
-                            :kategori,
-                            :kode,
-                            :tapte_dagsverk,
-                            :mulige_dagsverk,
-                            :prosent,
-                            :maskert,
-                            :antall_kvartaler,
-                            :kvartaler::jsonb,
-                            :publisert_kvartal,
-                            :publisert_arstall
-                        )
-                        ON CONFLICT (kategori, kode, publisert_kvartal, publisert_arstall) DO UPDATE SET
-                            tapte_dagsverk = :tapte_dagsverk,
-                            mulige_dagsverk = :mulige_dagsverk,
-                            prosent = :prosent,
-                            maskert = :maskert,
-                            antall_kvartaler = :antall_kvartaler,
-                            kvartaler = :kvartaler::jsonb,
-                            sist_endret = now()
-                        """.trimIndent(),
-                        mapOf(
-                            "kategori" to it.kategori.name,
-                            "kode" to it.kode,
-                            "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
-                            "mulige_dagsverk" to it.siste4Kvartal.muligeDagsverk,
-                            "prosent" to it.siste4Kvartal.prosent,
-                            "maskert" to it.siste4Kvartal.erMaskert,
-                            "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
-                            "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
-                            "publisert_kvartal" to it.sistePubliserteKvartal.kvartal,
-                            "publisert_arstall" to it.sistePubliserteKvartal.årstall,
-                        ),
-                    ).asUpdate,
+    fun insertSykefraværsstatistikkForSiste4KvartalerForAndreKategorier(sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>) =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                sykefraværsstatistikk.forEach {
+                    tx.run(
+                        queryOf(
+                            """
+                            INSERT INTO sykefravar_statistikk_kategori_siste_4_kvartal(
+                                kategori,
+                                kode,
+                                tapte_dagsverk,
+                                mulige_dagsverk,
+                                prosent,
+                                maskert,
+                                antall_kvartaler,
+                                kvartaler,
+                                publisert_kvartal,
+                                publisert_arstall
+                            )
+                            VALUES(
+                                :kategori,
+                                :kode,
+                                :tapte_dagsverk,
+                                :mulige_dagsverk,
+                                :prosent,
+                                :maskert,
+                                :antall_kvartaler,
+                                :kvartaler::jsonb,
+                                :publisert_kvartal,
+                                :publisert_arstall
+                            )
+                            ON CONFLICT (kategori, kode, publisert_kvartal, publisert_arstall) DO UPDATE SET
+                                tapte_dagsverk = :tapte_dagsverk,
+                                mulige_dagsverk = :mulige_dagsverk,
+                                prosent = :prosent,
+                                maskert = :maskert,
+                                antall_kvartaler = :antall_kvartaler,
+                                kvartaler = :kvartaler::jsonb,
+                                sist_endret = now()
+                            """.trimIndent(),
+                            mapOf(
+                                "kategori" to it.kategori.name,
+                                "kode" to it.kode,
+                                "tapte_dagsverk" to it.siste4Kvartal.tapteDagsverk,
+                                "mulige_dagsverk" to it.siste4Kvartal.muligeDagsverk,
+                                "prosent" to it.siste4Kvartal.prosent,
+                                "maskert" to it.siste4Kvartal.erMaskert,
+                                "antall_kvartaler" to it.siste4Kvartal.kvartaler.size,
+                                "kvartaler" to gson.toJson(it.siste4Kvartal.kvartaler),
+                                "publisert_kvartal" to it.sistePubliserteKvartal.kvartal,
+                                "publisert_arstall" to it.sistePubliserteKvartal.årstall,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }
+        }
+
+    fun insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>) =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.insertVirksomhetsstatistikkSiste4Kvartal(
+                    behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe =
+                        sykefraværsstatistikk.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal(),
                 )
             }
         }
-    }
-
-    fun insertSykefraværsstatistikkForSiste4KvartalerForVirksomhet(
-        sykefraværsstatistikk: List<SykefraværsstatistikkPerKategoriImportDto>,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.transaction { tx ->
-            tx.insertVirksomhetsstatistikkSiste4Kvartal(
-                behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe =
-                    sykefraværsstatistikk.tilBehandletVirksomhetSykefraværsstatistikkSiste4Kvartal(),
-            )
-        }
-    }
 
     private fun TransactionalSession.insertVirksomhetsstatistikkSiste4Kvartal(
         behandletVirksomhetSykefraværsstatistikkSiste4KvartalListe: List<BehandletVirksomhetSykefraværsstatistikkSiste4Kvartal>,
@@ -463,12 +451,11 @@ class SykefraværsstatistikkRepository(
             is BehandletVirksomhetSykefraværsstatistikk -> this.orgnr
         }
 
-    private fun TransactionalSession.insertVirksomhetsstatistikk(
-        behandletVirksomhetStatistikkListe: List<BehandletVirksomhetSykefraværsstatistikk>,
-    ) = behandletVirksomhetStatistikkListe.forEach { sykefraværsStatistikk ->
-        run(
-            queryOf(
-                """
+    private fun TransactionalSession.insertVirksomhetsstatistikk(behandletVirksomhetStatistikkListe: List<BehandletVirksomhetSykefraværsstatistikk>) =
+        behandletVirksomhetStatistikkListe.forEach { sykefraværsStatistikk ->
+            run(
+                queryOf(
+                    """
                         INSERT INTO sykefravar_statistikk_virksomhet(
                             orgnr,
                             arstall,
@@ -496,28 +483,27 @@ class SykefraværsstatistikkRepository(
                             sykefravarsprosent = :sykefravarsprosent,
                             maskert = :maskert,
                             endret = now()
-                """.trimMargin(),
-                mapOf(
-                    "orgnr" to sykefraværsStatistikk.orgnr,
-                    "arstall" to sykefraværsStatistikk.årstall,
-                    "kvartal" to sykefraværsStatistikk.kvartal,
-                    "antall_personer" to sykefraværsStatistikk.antallPersoner,
-                    "tapte_dagsverk" to sykefraværsStatistikk.tapteDagsverk,
-                    "mulige_dagsverk" to sykefraværsStatistikk.muligeDagsverk,
-                    "sykefravarsprosent" to sykefraværsStatistikk.prosent,
-                    "maskert" to sykefraværsStatistikk.maskert,
-                ),
-            ).asUpdate,
-        )
-    }
+                    """.trimMargin(),
+                    mapOf(
+                        "orgnr" to sykefraværsStatistikk.orgnr,
+                        "arstall" to sykefraværsStatistikk.årstall,
+                        "kvartal" to sykefraværsStatistikk.kvartal,
+                        "antall_personer" to sykefraværsStatistikk.antallPersoner,
+                        "tapte_dagsverk" to sykefraværsStatistikk.tapteDagsverk,
+                        "mulige_dagsverk" to sykefraværsStatistikk.muligeDagsverk,
+                        "sykefravarsprosent" to sykefraværsStatistikk.prosent,
+                        "maskert" to sykefraværsStatistikk.maskert,
+                    ),
+                ).asUpdate,
+            )
+        }
 
-    private fun TransactionalSession.insertBehandletSektorStatistikk(
-        behandletSektorSykefraværsstatistikk: Collection<BehandletSektorSykefraværsstatistikk>,
-    ) = insertBehandletSykefraværsstatistikk(
-        tabellNavn = "sykefravar_statistikk_sektor",
-        kolonneNavn = "sektor_kode",
-        behandletStatistikkListe = behandletSektorSykefraværsstatistikk,
-    )
+    private fun TransactionalSession.insertBehandletSektorStatistikk(behandletSektorSykefraværsstatistikk: Collection<BehandletSektorSykefraværsstatistikk>) =
+        insertBehandletSykefraværsstatistikk(
+            tabellNavn = "sykefravar_statistikk_sektor",
+            kolonneNavn = "sektor_kode",
+            behandletStatistikkListe = behandletSektorSykefraværsstatistikk,
+        )
 
     private fun TransactionalSession.insertBehandletBransjeStatistikk(
         behandletBransjeSykefraværsstatistikk: Collection<BehandletBransjeSykefraværsstatistikk>,
@@ -527,13 +513,12 @@ class SykefraværsstatistikkRepository(
         behandletStatistikkListe = behandletBransjeSykefraværsstatistikk,
     )
 
-    private fun TransactionalSession.insertBehandletNæringsStatistikk(
-        behandletNæringSykefraværsstatistikk: Collection<BehandletNæringSykefraværsstatistikk>,
-    ) = insertBehandletSykefraværsstatistikk(
-        tabellNavn = "sykefravar_statistikk_naring",
-        kolonneNavn = "naring",
-        behandletStatistikkListe = behandletNæringSykefraværsstatistikk,
-    )
+    private fun TransactionalSession.insertBehandletNæringsStatistikk(behandletNæringSykefraværsstatistikk: Collection<BehandletNæringSykefraværsstatistikk>) =
+        insertBehandletSykefraværsstatistikk(
+            tabellNavn = "sykefravar_statistikk_naring",
+            kolonneNavn = "naring",
+            behandletStatistikkListe = behandletNæringSykefraværsstatistikk,
+        )
 
     private fun TransactionalSession.insertBehandletNæringsundergruppeStatistikk(
         behandletNæringsundergruppeSykefraværsstatistikk: Collection<BehandletNæringsundergruppeSykefraværsstatistikk>,
@@ -543,13 +528,12 @@ class SykefraværsstatistikkRepository(
         behandletStatistikkListe = behandletNæringsundergruppeSykefraværsstatistikk,
     )
 
-    private fun TransactionalSession.insertBehandletLandStatistikk(
-        behandletLandSykefraværsstatistikk: Collection<BehandletLandSykefraværsstatistikk>,
-    ) = insertBehandletSykefraværsstatistikk(
-        tabellNavn = "sykefravar_statistikk_land",
-        kolonneNavn = "land",
-        behandletStatistikkListe = behandletLandSykefraværsstatistikk,
-    )
+    private fun TransactionalSession.insertBehandletLandStatistikk(behandletLandSykefraværsstatistikk: Collection<BehandletLandSykefraværsstatistikk>) =
+        insertBehandletSykefraværsstatistikk(
+            tabellNavn = "sykefravar_statistikk_land",
+            kolonneNavn = "land",
+            behandletStatistikkListe = behandletLandSykefraværsstatistikk,
+        )
 
     private fun TransactionalSession.insertBehandletSykefraværsstatistikk(
         tabellNavn: String,
