@@ -27,11 +27,8 @@ build
 # Ignore Intellij project-specific directory
 /.idea/
 
-# working files fra scripts/tenor
-/scripts/tenor/input/
-/scripts/tenor/output/
-/scripts/tenor/tmp/
-
 # DS_Store for mac
 .DS_Store
+
+# Ignore VSCode project-specific directory
 .vscode
