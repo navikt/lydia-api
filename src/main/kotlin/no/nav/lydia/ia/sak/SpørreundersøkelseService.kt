@@ -318,9 +318,7 @@ class SpørreundersøkelseService(
         }
 
         oppdatertBehovsvurdering.getOrNull()?.let { oppdatertSpørreundersøkelse ->
-            if (oppdatertSpørreundersøkelse.status == AVSLUTTET) {
-                spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
-            }
+            spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
         }
         return oppdatertBehovsvurdering
     }
