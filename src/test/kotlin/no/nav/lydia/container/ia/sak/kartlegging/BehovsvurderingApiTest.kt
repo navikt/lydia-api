@@ -12,6 +12,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
@@ -39,6 +40,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
@@ -49,14 +51,18 @@ import kotlin.test.Test
 
 class BehovsvurderingApiTest {
     private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
+    private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
 
     @Before
     fun setUp() {
         spørreundersøkelseKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
+        fullførtBehovsvurderingKonsument.subscribe(mutableListOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
     }
 
     @After
     fun tearDown() {
+        fullførtBehovsvurderingKonsument.unsubscribe()
+        fullførtBehovsvurderingKonsument.close()
         spørreundersøkelseKonsument.unsubscribe()
         spørreundersøkelseKonsument.close()
     }
@@ -583,12 +589,56 @@ class BehovsvurderingApiTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
         hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = "Behovsvurdering")
             .map { it.id } shouldBe listOf(behovsvurdering.id)
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
+
         hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = "Behovsvurdering")
             .map { it.id } shouldBe emptyList()
         hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, sisteSamarbeid.id, type = "Behovsvurdering")
             .map { it.id } shouldBe listOf(behovsvurdering.id)
+    }
+
+    @Test
+    fun `skal sende på nytt til SF en Kafka melding om at en fullført behhovsvurdering er flyttet`() {
+        val sak = nySakIKartlegges()
+            .opprettNyttSamarbeid(navn = "Først")
+            .opprettNyttSamarbeid(navn = "Sist")
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+        val førsteSamarbeid = alleSamarbeid.first()
+        val sisteSamarbeid = alleSamarbeid.last()
+
+        val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = behovsvurdering.id,
+                konsument = fullførtBehovsvurderingKonsument,
+            ) {
+                it.forExactlyOne { melding ->
+                    val behovsvurderingIKafkaMelding = Json.decodeFromString<FullførtBehovsvurdering>(melding)
+                    behovsvurderingIKafkaMelding.behovsvurderingId shouldBe behovsvurdering.id
+                    behovsvurderingIKafkaMelding.prosessId shouldBe førsteSamarbeid.id.toString()
+                }
+            }
+        }
+
+        oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
+
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = behovsvurdering.id,
+                konsument = fullførtBehovsvurderingKonsument,
+            ) {
+                it.forExactlyOne { melding ->
+                    val behovsvurderingIKafkaMelding = Json.decodeFromString<FullførtBehovsvurdering>(melding)
+                    behovsvurderingIKafkaMelding.behovsvurderingId shouldBe behovsvurdering.id
+                    behovsvurderingIKafkaMelding.prosessId shouldBe sisteSamarbeid.id.toString()
+                }
+            }
+        }
     }
 
     @Test
@@ -623,7 +673,7 @@ class BehovsvurderingApiTest {
     }
 
     @Test
-    fun `skal kunne avslutte en flyttet behovsvurdering`() {
+    fun `skal IKKE kunne flytte en behovsvurdering som ikke er avsluttet (fullført)`() {
         val sak = nySakIKartlegges()
             .opprettNyttSamarbeid(navn = "Først")
             .opprettNyttSamarbeid(navn = "Sist")
@@ -637,23 +687,22 @@ class BehovsvurderingApiTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val flyttetBehovsvurdering = oppdaterBehovsvurdering(behovsvurdering, sak, andreSamarbeid.id)
-        flyttetBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        hentSpørreundersøkelse(
-            orgnr = sak.orgnr,
-            saksnummer = sak.saksnummer,
-            prosessId = andreSamarbeid.id,
-            type = "Behovsvurdering",
-        ).forExactlyOne {
-            it.status shouldBe AVSLUTTET
-            it.samarbeidId shouldBe andreSamarbeid.id
-        }
+        shouldFail { oppdaterBehovsvurdering(behovsvurdering, sak, andreSamarbeid.id) }.message shouldContain "kan ikke bytte samarbeid"
 
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = førsteSamarbeid.id,
+            type = "Behovsvurdering",
+        ).forExactlyOne {
+            it.status shouldBe PÅBEGYNT
+            it.samarbeidId shouldBe førsteSamarbeid.id
+        }
+
+        hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = andreSamarbeid.id,
             type = "Behovsvurdering",
         ) shouldHaveSize 0
     }

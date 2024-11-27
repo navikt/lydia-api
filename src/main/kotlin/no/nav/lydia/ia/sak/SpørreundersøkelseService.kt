@@ -289,7 +289,7 @@ class SpørreundersøkelseService(
         )
     }
 
-    fun oppdaterBehovsvurdering(
+    fun oppdaterSamarbeidIdIBehovsvurdering(
         behovsvurderingId: String,
         oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto,
     ): Either<Feil, Spørreundersøkelse> {
@@ -301,8 +301,11 @@ class SpørreundersøkelseService(
         if (behovsvurdering.saksnummer != oppdaterBehovsvurderingDto.saksnummer) {
             return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
         }
+        if (behovsvurdering.status != AVSLUTTET) {
+            return IASakSpørreundersøkelseError.`ikke avsluttet, kan ikke bytte samarbeid`.left()
+        }
 
-        return iaSakService.hentIASak(behovsvurdering.saksnummer).flatMap {
+        val oppdatertBehovsvurdering = iaSakService.hentIASak(behovsvurdering.saksnummer).flatMap {
             iaProsessService.hentIAProsesser(it)
         }.map { prosess ->
             prosess.map { it.id }
@@ -313,6 +316,13 @@ class SpørreundersøkelseService(
                 IASakSpørreundersøkelseError.`feil under oppdatering`.left()
             }
         }
+
+        oppdatertBehovsvurdering.getOrNull()?.let { oppdatertSpørreundersøkelse ->
+            if (oppdatertSpørreundersøkelse.status == AVSLUTTET) {
+                spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
+            }
+        }
+        return oppdatertBehovsvurdering
     }
 
     private fun sendResultaterForTemaPåKafka(

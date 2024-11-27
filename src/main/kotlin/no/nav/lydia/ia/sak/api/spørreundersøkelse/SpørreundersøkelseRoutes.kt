@@ -205,7 +205,10 @@ fun Route.iaSakSpørreundersøkelse(
         val input = call.receive<OppdaterBehovsvurderingDto>()
 
         call.somSaksbehandler(adGrupper) {
-            spørreundersøkelseService.oppdaterBehovsvurdering(id, input)
+            spørreundersøkelseService.oppdaterSamarbeidIdIBehovsvurdering(
+                behovsvurderingId = id,
+                oppdaterBehovsvurderingDto = input,
+            )
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -251,7 +254,15 @@ object IASakSpørreundersøkelseError {
     val `feil status kan ikke starte` =
         Feil("Kan ikke starte spørreundersøkelse, feil status", HttpStatusCode.Forbidden)
     val `ikke avsluttet` =
-        Feil("Spørreundersøkelse er ikke i status '${AVSLUTTET.name}', kan ikke hente resultat", HttpStatusCode.Forbidden)
+        Feil(
+            "Spørreundersøkelse er ikke i status '${AVSLUTTET.name}', kan ikke hente resultat",
+            HttpStatusCode.Forbidden,
+        )
+    val `ikke avsluttet, kan ikke bytte samarbeid` =
+        Feil(
+            "Spørreundersøkelse er ikke i status '${AVSLUTTET.name}', kan ikke bytte samarbeid",
+            HttpStatusCode.BadRequest,
+        )
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av en spørreundersøkelse", HttpStatusCode.InternalServerError)
     val `feil under oppdatering` =
