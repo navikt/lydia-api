@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.eksport
 
 import ia.felles.integrasjoner.kafkameldinger.eksport.BehovsvurderingMelding
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -37,13 +38,13 @@ class BehovsvurderingBigqueryProdusent(
             val value = BehovsvurderingKafkamelding(
                 id = this.id.toString(),
                 orgnr = this.orgnummer,
-                status = this.status.name,
+                status = this.status,
                 samarbeidId = this.samarbeidId,
                 saksnummer = this.saksnummer,
                 opprettetAv = this.opprettetAv,
                 opprettet = this.opprettetTidspunkt,
                 harMinstEttSvar = alleSvar.isNotEmpty(),
-                endret = this.endretTidspunkt ?: this.opprettetTidspunkt, // TODO: Gjør dette nullable i BigQuery
+                endret = this.endretTidspunkt,
                 påbegynt = this.påbegyntTidspunkt,
                 fullført = this.fullførtTidspunkt,
                 førsteSvarMotatt = alleSvar.tidForFørsteSvar(),
@@ -62,13 +63,13 @@ class BehovsvurderingBigqueryProdusent(
     data class BehovsvurderingKafkamelding(
         override val id: String,
         override val orgnr: String,
-        override val status: String,
+        override val status: SpørreundersøkelseStatus,
         override val samarbeidId: Int,
         override val saksnummer: String,
         override val opprettetAv: String,
         override val opprettet: LocalDateTime,
         override val harMinstEttSvar: Boolean,
-        override val endret: LocalDateTime,
+        override val endret: LocalDateTime?,
         override val påbegynt: LocalDateTime?,
         override val fullført: LocalDateTime?,
         override val førsteSvarMotatt: LocalDateTime?,
