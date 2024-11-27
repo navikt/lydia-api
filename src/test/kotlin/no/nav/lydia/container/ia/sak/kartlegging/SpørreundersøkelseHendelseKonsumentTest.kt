@@ -43,14 +43,14 @@ class SpørreundersøkelseHendelseKonsumentTest {
     @Test
     fun `skal oppdatere tema til stengt i databasen`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
-        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val tema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
-        kartleggingDto.stengTema(temaId = tema.temaId)
+        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
+        spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val tema = spørreundersøkelse.temaer.first()
+        spørreundersøkelse.stengTema(temaId = tema.temaId)
         TestContainerHelper.postgresContainer.hentEnkelKolonne<Boolean>(
             """
             SELECT stengt from ia_sak_kartlegging_kartlegging_til_tema
-                WHERE kartlegging_id = '${kartleggingDto.id}'
+                WHERE kartlegging_id = '${spørreundersøkelse.id}'
                 AND tema_id = ${tema.temaId}
             """.trimIndent(),
         ) shouldBe true
@@ -64,7 +64,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        behovsvurdering.temaMedSpørsmålOgSvaralternativer.forEach { tema ->
+        behovsvurdering.temaer.forEach { tema ->
             behovsvurdering.stengTema(temaId = tema.temaId)
         }
 
@@ -90,7 +90,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val førsteTema = behovsvurdering.temaMedSpørsmålOgSvaralternativer.first()
+        val førsteTema = behovsvurdering.temaer.first()
         behovsvurdering.stengTema(temaId = førsteTema.temaId)
 
         val behovsvurderingMedEttStengtTema = IASakKartleggingHelper.hentSpørreundersøkelse(
@@ -110,27 +110,27 @@ class SpørreundersøkelseHendelseKonsumentTest {
     @Test
     fun `skal sende resultater for stengt tema på kafka`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
-        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val tema = kartleggingDto.temaMedSpørsmålOgSvaralternativer.first()
+        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
+        spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val tema = spørreundersøkelse.temaer.first()
         val førsteSpørsmål = tema.spørsmålOgSvaralternativer.first()
         val svarIder = listOf(tema.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId)
 
         (1..5).forEach { _ ->
             val sesjonId = UUID.randomUUID().toString()
-            kartleggingDto.sendKartleggingSvarTilKafka(
+            spørreundersøkelse.sendKartleggingSvarTilKafka(
                 spørsmålId = førsteSpørsmål.id,
                 sesjonId = sesjonId,
                 svarIder = svarIder,
             )
         }
 
-        kartleggingDto.stengTema(temaId = tema.temaId)
+        spørreundersøkelse.stengTema(temaId = tema.temaId)
         runBlocking {
             TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
-                        spørreundersøkelseId = kartleggingDto.id,
+                        spørreundersøkelseId = spørreundersøkelse.id,
                         oppdateringsType = RESULTATER_FOR_TEMA,
                     ),
                 ),
