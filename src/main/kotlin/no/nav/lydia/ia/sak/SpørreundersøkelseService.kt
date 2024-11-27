@@ -295,6 +295,9 @@ class SpørreundersøkelseService(
     ): Either<Feil, Spørreundersøkelse> {
         val behovsvurdering = spørreundersøkelseRepository.hentSpørreundersøkelse(behovsvurderingId)
             ?: return IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
+        if (behovsvurdering.type == "Evaluering") {
+            return IASakSpørreundersøkelseError.`ugyldig type`.left()
+        }
         if (behovsvurdering.orgnummer != oppdaterBehovsvurderingDto.orgnummer) {
             return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
         }
@@ -356,5 +359,9 @@ class SpørreundersøkelseService(
         return temaResultat.tilKafkaMelding().right()
     }
 
-    private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? = temaer.flatMap { it.spørsmål }.firstOrNull { it.spørsmålId == spørsmålId }
+    private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? =
+        temaer.flatMap { it.spørsmål }.firstOrNull {
+            it.spørsmålId ==
+                spørsmålId
+        }
 }

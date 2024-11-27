@@ -410,11 +410,12 @@ class SakHelper {
         fun nySakIViBistår(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
+            navnPåSamarbeid: String? = DEFAULT_SAMARBEID_NAVN,
         ) = opprettSakForVirksomhet(orgnummer)
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .opprettNyttSamarbeid()
+            .opprettNyttSamarbeid(navn = navnPåSamarbeid)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
             .also {
                 it.status shouldBe IAProsessStatus.VI_BISTÅR
@@ -819,7 +820,11 @@ class PlanHelper {
 
         fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdMedStatus(status: InnholdStatus) = temaer.flatMap { it.undertemaer }.filter { it.inkludert && it.status == status }.size
+        fun PlanDto.antallInnholdMedStatus(status: InnholdStatus) =
+            temaer.flatMap { it.undertemaer }.filter {
+                it.inkludert &&
+                    it.status == status
+            }.size
 
         fun PlanDto.tidligstStartDato(): LocalDate =
             this.temaer.flatMap { it.undertemaer }
@@ -1158,7 +1163,8 @@ class IATjenesteoversiktHelper {
 
 class LeveranseHelper {
     companion object {
-        fun hentIATjenesterFraDatabase() = TestContainerHelper.postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
+        fun hentIATjenesterFraDatabase() =
+            TestContainerHelper.postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
 
         fun leggTilModul(modul: ModulDto) =
             TestContainerHelper.postgresContainer.performUpdate(

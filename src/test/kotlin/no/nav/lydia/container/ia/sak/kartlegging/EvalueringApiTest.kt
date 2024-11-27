@@ -1,5 +1,6 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.assertions.shouldFail
@@ -10,11 +11,14 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeEmpty
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
@@ -25,6 +29,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.After
@@ -198,5 +203,40 @@ class EvalueringApiTest {
         val sak = nySakIViBistår()
         sak.opprettEnPlan()
         shouldFail { sak.opprettEvaluering() }.message shouldBe "HTTP Exception 400 Bad Request"
+    }
+
+    @Test
+    fun `skal ikke flytte evaluering mellom samarbeid`() {
+        val sak = nySakIViBistår(navnPåSamarbeid = "Samarbeid 1")
+        sak.opprettNyttSamarbeid(navn = "Samarbeid 2")
+        val samarbeid1 = sak.hentAlleSamarbeid().first()
+        val samarbeid2 = sak.hentAlleSamarbeid().last()
+        sak.opprettEnPlan(samarbeidId = samarbeid1.id, plan = PlanMalDto().inkluderAlt())
+        val evaluering = sak.opprettEvaluering(prosessId = samarbeid1.id)
+        evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        evaluering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid1.id,
+            type = "Evaluering",
+        ).forExactlyOne {
+            it.status shouldBe AVSLUTTET
+            it.id shouldBe evaluering.id
+        }
+
+        shouldFail {
+            oppdaterBehovsvurdering(behovsvurdering = evaluering, sak = sak, prosessId = samarbeid2.id)
+        }.message shouldContain "Bad Request"
+
+        hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = samarbeid1.id,
+            type = "Evaluering",
+        ).forExactlyOne {
+            it.status shouldBe AVSLUTTET
+            it.id shouldBe evaluering.id
+        }
     }
 }
