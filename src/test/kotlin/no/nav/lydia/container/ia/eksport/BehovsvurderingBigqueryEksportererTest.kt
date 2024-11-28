@@ -56,11 +56,11 @@ class BehovsvurderingBigqueryEksportererTest {
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe opprettetBehovsvurdering.id
-                sisteBehovsvurdering.status shouldBe opprettetBehovsvurdering.status.name
+                sisteBehovsvurdering.status shouldBe opprettetBehovsvurdering.status
                 sisteBehovsvurdering.opprettetAv shouldBe opprettetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe opprettetBehovsvurdering.opprettetTidspunkt
                 sisteBehovsvurdering.påbegynt shouldBe null
-                sisteBehovsvurdering.endret shouldNotBe null
+                sisteBehovsvurdering.endret shouldBe null
                 sisteBehovsvurdering.fullført shouldBe null
                 sisteBehovsvurdering.harMinstEttSvar shouldBe false
                 sisteBehovsvurdering.førsteSvarMotatt shouldBe null
@@ -91,7 +91,7 @@ class BehovsvurderingBigqueryEksportererTest {
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe startetBehovsvurdering.id
-                sisteBehovsvurdering.status shouldBe startetBehovsvurdering.status.name
+                sisteBehovsvurdering.status shouldBe startetBehovsvurdering.status
                 sisteBehovsvurdering.samarbeidId shouldBe startetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe startetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe startetBehovsvurdering.opprettetTidspunkt
@@ -129,7 +129,7 @@ class BehovsvurderingBigqueryEksportererTest {
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
-                sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status.name
+                sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status
                 sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe avsluttetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe avsluttetBehovsvurdering.opprettetTidspunkt
@@ -181,7 +181,7 @@ class BehovsvurderingBigqueryEksportererTest {
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
 
                 sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
-                sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status.name
+                sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status
                 sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe avsluttetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe avsluttetBehovsvurdering.opprettetTidspunkt
