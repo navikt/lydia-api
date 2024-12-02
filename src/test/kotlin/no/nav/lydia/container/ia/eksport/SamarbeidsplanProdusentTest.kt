@@ -26,24 +26,26 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class SamarbeidsplanProdusentTest {
-    private val samarbeidsplanKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe,
-    )
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe)
 
-    @Before
-    fun setUp() {
-        samarbeidsplanKonsument.subscribe(listOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        samarbeidsplanKonsument.unsubscribe()
-        samarbeidsplanKonsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test
@@ -57,7 +59,7 @@ class SamarbeidsplanProdusentTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
-                konsument = samarbeidsplanKonsument,
+                konsument = konsument,
             ) {
                 println("Fikk en kafka melding for ${sak1.orgnr} ")
             }
@@ -70,7 +72,7 @@ class SamarbeidsplanProdusentTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak2.saksnummer}-${samarbeid2.id}-${opprettetPlan2.id}",
-                konsument = samarbeidsplanKonsument,
+                konsument = konsument,
             ) {
                 println("Fikk en kafka melding for ${sak2.orgnr} ")
             }
@@ -95,7 +97,7 @@ class SamarbeidsplanProdusentTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
-                konsument = samarbeidsplanKonsument,
+                konsument = konsument,
             ) {
                 println("Fikk en kafka melding for ${sak1.orgnr} ")
             }
@@ -173,7 +175,7 @@ class SamarbeidsplanProdusentTest {
     ) {
         kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
             key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
-            konsument = samarbeidsplanKonsument,
+            konsument = konsument,
         ) {
             it.forExactlyOne { melding ->
                 val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)

@@ -31,22 +31,26 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class IASakStatistikkEksportererTest {
-    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
-    @Before
-    fun setUp() {
-        konsument.subscribe(mutableListOf(Topic.IA_SAK_STATISTIKK_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.IA_SAK_STATISTIKK_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        konsument.unsubscribe()
-        konsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test

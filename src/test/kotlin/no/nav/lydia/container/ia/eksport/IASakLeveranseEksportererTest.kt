@@ -24,23 +24,27 @@ import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.tilgangskontroll.fia.Rolle
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import java.sql.Timestamp
 import kotlin.test.Test
 
 class IASakLeveranseEksportererTest {
-    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
-    @Before
-    fun setUp() {
-        konsument.subscribe(mutableListOf(Topic.IA_SAK_LEVERANSE_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.IA_SAK_LEVERANSE_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        konsument.unsubscribe()
-        konsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test

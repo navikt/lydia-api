@@ -39,6 +39,7 @@ import org.testcontainers.kafka.ConfluentKafkaContainer
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
 import java.util.TimeZone
+import java.util.concurrent.atomic.AtomicBoolean
 
 class KafkaContainerHelper(
     network: Network = Network.newNetwork(),
@@ -300,16 +301,25 @@ class KafkaContainerHelper(
     ) {
         withTimeout(Duration.ofSeconds(5)) {
             launch {
-                while (this.isActive) {
-                    val records = konsument.poll(Duration.ofMillis(50))
+                val funnetNoenMeldinger = AtomicBoolean()
+                val harPrøvdFlereGanger = AtomicBoolean()
+                val alleMeldinger = mutableListOf<String>()
+                while (this.isActive && !harPrøvdFlereGanger.get()) {
+                    val records = konsument.poll(Duration.ofMillis(1))
                     val meldinger = records
                         .filter { it.key() == key }
                         .map { it.value() }
                     if (meldinger.isNotEmpty()) {
-                        block(meldinger)
-                        break
+                        funnetNoenMeldinger.set(true)
+                        alleMeldinger.addAll(meldinger)
+                        konsument.commitSync()
+                    } else {
+                        if (funnetNoenMeldinger.get()) {
+                            harPrøvdFlereGanger.set(true)
+                        }
                     }
                 }
+                block(alleMeldinger)
             }
         }
     }
@@ -320,17 +330,18 @@ class KafkaContainerHelper(
         block: (meldinger: List<String>) -> Unit,
     ) {
         withTimeout(Duration.ofSeconds(5)) {
+            val nøklerProssesert = mutableMapOf<String, String>()
             launch {
-                while (this.isActive) {
+                while (this.isActive && !nøklerProssesert.keys.containsAll(keys)) {
                     val records = konsument.poll(Duration.ofMillis(50))
-                    val meldinger = records
+                    records
                         .filter { keys.contains(it.key()) }
-                        .map { it.value() }
-                    if (meldinger.isNotEmpty()) {
-                        block(meldinger)
-                        break
-                    }
+                        .forEach {
+                            nøklerProssesert[it.key()] = it.value()
+                        }
+                    konsument.commitSync()
                 }
+                block(nøklerProssesert.values.toList())
             }
         }
     }

@@ -16,22 +16,26 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class IASakEksportererTest {
-    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
-    @Before
-    fun setUp() {
-        konsument.subscribe(mutableListOf(Topic.IA_SAK_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.IA_SAK_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        konsument.unsubscribe()
-        konsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test

@@ -14,24 +14,26 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class FullførtBehovsvurderingProdusentTest {
-    private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe,
-    )
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe)
 
-    @Before
-    fun setUp() {
-        fullførtBehovsvurderingKonsument.subscribe(listOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        fullførtBehovsvurderingKonsument.unsubscribe()
-        fullførtBehovsvurderingKonsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test
@@ -47,7 +49,7 @@ class FullførtBehovsvurderingProdusentTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = kartleggingDto.id,
-                konsument = fullførtBehovsvurderingKonsument,
+                konsument = konsument,
             ) {
                 it.forExactlyOne { melding ->
                     val behovsvurdering = Json.decodeFromString<FullførtBehovsvurdering>(melding)

@@ -16,22 +16,26 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class SamarbeidBigqueryEksportererTest {
-    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
-    @Before
-    fun setUp() {
-        konsument.subscribe(mutableListOf(Topic.SAMARBEID_BIGQUERY_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.SAMARBEID_BIGQUERY_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        konsument.unsubscribe()
-        konsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test

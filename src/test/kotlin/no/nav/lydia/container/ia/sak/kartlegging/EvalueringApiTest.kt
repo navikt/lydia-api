@@ -32,22 +32,26 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class EvalueringApiTest {
-    private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
-    @Before
-    fun setUp() {
-        spørreundersøkelseKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        spørreundersøkelseKonsument.unsubscribe()
-        spørreundersøkelseKonsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test
@@ -66,7 +70,7 @@ class EvalueringApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = evaluering.id,
-                konsument = spørreundersøkelseKonsument,
+                konsument = konsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -142,7 +146,7 @@ class EvalueringApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = evaluering.id,
-                konsument = spørreundersøkelseKonsument,
+                konsument = konsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
@@ -172,7 +176,7 @@ class EvalueringApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = evaluering.id,
-                konsument = spørreundersøkelseKonsument,
+                konsument = konsument,
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =

@@ -44,29 +44,12 @@ import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import java.util.UUID
 import kotlin.test.Test
 
 class BehovsvurderingApiTest {
-    private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
-    private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(this::class.java.name)
-
-    @Before
-    fun setUp() {
-        spørreundersøkelseKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-        fullførtBehovsvurderingKonsument.subscribe(mutableListOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
-    }
-
-    @After
-    fun tearDown() {
-        fullførtBehovsvurderingKonsument.unsubscribe()
-        fullførtBehovsvurderingKonsument.close()
-        spørreundersøkelseKonsument.unsubscribe()
-        spørreundersøkelseKonsument.close()
-    }
-
     @Test
     fun `kan opprette en spørreundersøkelse av type behovsvurdering i status KARTLEGGES`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
@@ -746,6 +729,24 @@ class BehovsvurderingApiTest {
 
     companion object {
         const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01933f0f-4009-7838-b1b5-2d49e561dc5d"
+        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(Topic.SPORREUNDERSOKELSE_TOPIC.konsumentGruppe)
+        private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe)
+
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            spørreundersøkelseKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
+            fullførtBehovsvurderingKonsument.subscribe(mutableListOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
+        }
+
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            spørreundersøkelseKonsument.unsubscribe()
+            spørreundersøkelseKonsument.close()
+            fullførtBehovsvurderingKonsument.unsubscribe()
+            fullførtBehovsvurderingKonsument.close()
+        }
 
         private fun enDeltakerSvarerPåEtSpørsmål(
             kartleggingDto: SpørreundersøkelseDto,

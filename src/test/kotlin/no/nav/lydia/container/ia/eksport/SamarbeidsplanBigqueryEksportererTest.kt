@@ -18,22 +18,26 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class SamarbeidsplanBigqueryEksportererTest {
-    private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
-    @Before
-    fun setUp() {
-        konsument.subscribe(listOf(Topic.SAMARBEIDSPLAN_BIGQUERY_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.SAMARBEIDSPLAN_BIGQUERY_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        konsument.unsubscribe()
-        konsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test

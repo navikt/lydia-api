@@ -18,6 +18,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarAlternativerTilE
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarAlternativerTilEtSpørsmål
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
@@ -29,29 +30,36 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Spørreu
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.postgresql.util.PGobject
 import java.util.UUID
 import kotlin.test.Test
 
 class SpørreundersøkelseSvarKonsumentTestDto {
-    val kartleggingKonsument = TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelse")
-    val spørreundersøkelseOppdateringKonsument =
-        TestContainerHelper.kafkaContainerHelper.nyKonsument("spørreundersøkelseOppdatering")
+    companion object {
+        private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(
+            consumerGroupId = Topic.SPORREUNDERSOKELSE_TOPIC.konsumentGruppe,
+        )
+        private val spørreundersøkelseOppdateringKonsument = kafkaContainerHelper.nyKonsument(
+            consumerGroupId = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.konsumentGruppe,
+        )
 
-    @Before
-    fun setUp() {
-        kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-        spørreundersøkelseOppdateringKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
+            spørreundersøkelseOppdateringKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        kartleggingKonsument.unsubscribe()
-        kartleggingKonsument.close()
-        spørreundersøkelseOppdateringKonsument.unsubscribe()
-        spørreundersøkelseOppdateringKonsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            kartleggingKonsument.unsubscribe()
+            kartleggingKonsument.close()
+            spørreundersøkelseOppdateringKonsument.unsubscribe()
+            spørreundersøkelseOppdateringKonsument.close()
+        }
     }
 
     @Test

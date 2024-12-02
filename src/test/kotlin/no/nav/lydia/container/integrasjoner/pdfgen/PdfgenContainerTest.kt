@@ -13,8 +13,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PdfgenContainerTest {
-    private val piaPdfgenContainer = TestContainerHelper.piaPdfgenContainer
-
     @BeforeTest
     internal fun setup() {
         VeraGreenfieldFoundryProvider.initialise()
@@ -22,7 +20,7 @@ class PdfgenContainerTest {
 
     @Test
     fun `valider at genererte pdfer er i pdf-a format`() {
-        val pdf = piaPdfgenContainer.hentBistandPdf(
+        val pdf = TestContainerHelper.piaPdfgenContainer.hentBistandPdf(
             IASamarbeidDto(
                 dato = ZonedDateTime.now().toString(),
                 sak = SakDto(

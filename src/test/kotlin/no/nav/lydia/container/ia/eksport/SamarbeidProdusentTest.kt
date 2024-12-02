@@ -13,24 +13,26 @@ import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class SamarbeidProdusentTest {
-    private val samarbeidKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe,
-    )
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe)
 
-    @Before
-    fun setUp() {
-        samarbeidKonsument.subscribe(listOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        samarbeidKonsument.unsubscribe()
-        samarbeidKonsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test
@@ -52,7 +54,7 @@ class SamarbeidProdusentTest {
     ) {
         kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
             key = "${sak1.saksnummer}-${samarbeid1.id}",
-            konsument = samarbeidKonsument,
+            konsument = konsument,
         ) {
             it.forExactlyOne { melding ->
                 val samarbeidSentTilSalesforce = Json.decodeFromString<SamarbeidKafkaMeldingValue>(melding)

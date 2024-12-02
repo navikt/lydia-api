@@ -139,7 +139,6 @@ class TestContainerHelper {
                     kafkaContainerHelper.kafkaContainer,
                     postgresContainer.postgresContainer,
                     oauth2ServerContainer.mockOath2Server,
-                    piaPdfgenContainer.piaPdfgenContainer,
                 )
                 .withLogConsumer(Slf4jLogConsumer(log).withPrefix("lydiaApiContainer").withSeparateOutputStreams())
                 .withNetwork(network)
@@ -1163,8 +1162,7 @@ class IATjenesteoversiktHelper {
 
 class LeveranseHelper {
     companion object {
-        fun hentIATjenesterFraDatabase() =
-            TestContainerHelper.postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
+        fun hentIATjenesterFraDatabase() = TestContainerHelper.postgresContainer.hentAlleRaderTilEnkelKolonne<String>("select navn from ia_tjeneste")
 
         fun leggTilModul(modul: ModulDto) =
             TestContainerHelper.postgresContainer.performUpdate(

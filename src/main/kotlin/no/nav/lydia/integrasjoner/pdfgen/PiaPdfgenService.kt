@@ -12,17 +12,20 @@ import no.nav.lydia.ia.sak.api.Feil
 import java.util.Base64
 
 class PiaPdfgenService(
-    naisEnvironment: NaisEnvironment,
+    val naisEnvironment: NaisEnvironment,
 ) {
     val url = naisEnvironment.integrasjoner.piaPdfgenUrl
 
     fun genererBase64EnkodetBistandPdf(iaSamarbeidDto: IASamarbeidDto) =
-        genererPdfDokument(
-            PdfType.IA_SAMARBEID,
-            Json.encodeToString<IASamarbeidDto>(iaSamarbeidDto),
-        ).map { it.tilBase64() }
+        when (naisEnvironment.miljø) {
+            NaisEnvironment.Companion.Environment.`PROD-GCP`, NaisEnvironment.Companion.Environment.`DEV-GCP` -> genererPdfDokument(
+                PdfType.IA_SAMARBEID,
+                Json.encodeToString<IASamarbeidDto>(iaSamarbeidDto),
+            ).map { it.tilBase64() }
+            else -> "".right()
+        }
 
-    fun genererPdfDokument(
+    private fun genererPdfDokument(
         pdfType: PdfType,
         json: String,
     ) = "$url/api/v1/genpdf/pia/${pdfType.type}".httpPost()

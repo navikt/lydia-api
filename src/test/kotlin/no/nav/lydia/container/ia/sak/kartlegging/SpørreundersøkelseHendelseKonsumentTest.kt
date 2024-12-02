@@ -14,30 +14,34 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.stengTema
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.RESULTATER_FOR_TEMA
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import java.util.UUID
 import kotlin.test.Test
 
 class SpørreundersøkelseHendelseKonsumentTest {
-    val spørreundersøkelseOppdateringKonsument =
-        TestContainerHelper.kafkaContainerHelper.nyKonsument(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.konsumentGruppe)
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
-    @Before
-    fun setUp() {
-        spørreundersøkelseOppdateringKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        spørreundersøkelseOppdateringKonsument.unsubscribe()
-        spørreundersøkelseOppdateringKonsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test
@@ -134,7 +138,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
                         oppdateringsType = RESULTATER_FOR_TEMA,
                     ),
                 ),
-                konsument = spørreundersøkelseOppdateringKonsument,
+                konsument = konsument,
             ) { meldinger ->
                 meldinger.forEach { melding ->
                     val resultaterForTema = Json.decodeFromString<SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat>(melding)

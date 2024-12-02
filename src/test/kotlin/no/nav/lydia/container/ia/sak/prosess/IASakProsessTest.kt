@@ -32,24 +32,26 @@ import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import org.junit.After
-import org.junit.Before
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import kotlin.test.Test
 
 class IASakProsessTest {
-    private val samarbeidsplanKonsument = kafkaContainerHelper.nyKonsument(
-        Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe,
-    )
+    companion object {
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe)
 
-    @Before
-    fun setUp() {
-        samarbeidsplanKonsument.subscribe(listOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
-    }
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            konsument.subscribe(mutableListOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
+        }
 
-    @After
-    fun tearDown() {
-        samarbeidsplanKonsument.unsubscribe()
-        samarbeidsplanKonsument.close()
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
     }
 
     @Test
@@ -165,7 +167,7 @@ class IASakProsessTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak.saksnummer}-${førsteSamarbeid.id}-${opprettetPlan.id}",
-                konsument = samarbeidsplanKonsument,
+                konsument = konsument,
             ) {
                 it.forExactlyOne { melding ->
                     val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
@@ -192,7 +194,7 @@ class IASakProsessTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak.saksnummer}-${førsteSamarbeid.id}-${opprettetPlan.id}",
-                konsument = samarbeidsplanKonsument,
+                konsument = konsument,
             ) {
                 it.size shouldBe 1
             }
@@ -202,7 +204,7 @@ class IASakProsessTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = "${sak.saksnummer}-${førsteSamarbeid.id}-${opprettetPlan.id}",
-                konsument = samarbeidsplanKonsument,
+                konsument = konsument,
             ) {
                 it.forExactlyOne { melding ->
                     val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
