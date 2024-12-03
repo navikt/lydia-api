@@ -72,7 +72,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = spørreundersøkelseEither.getOrNull()?.saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it.tilDto(true))
+            call.respond(HttpStatusCode.Created, it.tilDto())
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -96,6 +96,35 @@ fun Route.iaSakSpørreundersøkelse(
                     prosessId = prosessId,
                     type = type,
                 )
+            }
+        }.also { spørreundersøkelseEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = spørreundersøkelseEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.access,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(HttpStatusCode.OK, it.tilDto())
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
+    get("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/type/{type}/{sporreundersokelseId}") {
+        val id = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val type = call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
+
+        if (type != "Evaluering" && type != "Behovsvurdering") {
+            return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
+        }
+
+        call.somSaksbehandler(adGrupper = adGrupper) { _ ->
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { _ ->
+                spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = id)
             }
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
@@ -149,7 +178,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto(true))
+            call.respond(it.tilDto())
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -170,7 +199,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto(erEier = false))
+            call.respond(it.tilDto())
         }.mapLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
@@ -194,7 +223,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto(true))
+            call.respond(it.tilDto())
         }.mapLeft {
             call.sendFeil(it)
         }
@@ -218,7 +247,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = input.saksnummer,
             )
         }.map {
-            call.respond(it.tilDto(true))
+            call.respond(it.tilDto())
         }.mapLeft {
             call.sendFeil(it)
         }

@@ -6,6 +6,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 @Serializable
 data class SpørsmålDto(
     val id: String,
+    val undertemanavn: String,
     val spørsmål: String,
     val svaralternativer: List<SvaralternativDto>,
     val flervalg: Boolean,
@@ -16,6 +17,7 @@ fun List<Spørsmål>.tilDto() = map { it.tilDto() }
 fun Spørsmål.tilDto() =
     SpørsmålDto(
         id = spørsmålId.toString(),
+        undertemanavn = undertemanavn,
         spørsmål = spørsmåltekst,
         svaralternativer = svaralternativer.tilDto(),
         flervalg = flervalg,

@@ -17,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentForhåndsvisning
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
@@ -198,6 +199,45 @@ class EvalueringApiTest {
                         spørsmål.kategori shouldBeIn listOf("Utvikle arbeidsmiljøet", "Veien videre")
                     }
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `skal kunne hente en forhåndsvisning av en spørreundersøkelse av typen evaluering`() {
+        val sak = nySakIViBistår(navnPåSamarbeid = "Samarbeid 1")
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(
+            samarbeidId = samarbeid.id,
+            plan = PlanMalDto().inkluderEttTemaOgEttInnhold(
+                temanummer = 3, // "Arbeidsmiljø"
+                innholdnummer = 1,
+            ),
+        )
+        val evaluering = sak.opprettEvaluering(prosessId = samarbeid.id)
+
+        evaluering.temaer shouldHaveSize 1
+        evaluering.status shouldBe OPPRETTET
+        evaluering.temaer.forExactlyOne { tema ->
+            tema.navn shouldBe "Arbeidsmiljø"
+            tema.spørsmålOgSvaralternativer.forAll { spørsmål ->
+                spørsmål.undertemanavn shouldBeIn listOf("Utvikle arbeidsmiljøet", "Veien videre")
+            }
+        }
+
+        val forhåndsvisning = sak.hentForhåndsvisning(
+            prosessId = samarbeid.id,
+            type = "Evaluering",
+            spørreundersøkseId = evaluering.id,
+        )
+
+        forhåndsvisning.id shouldBe evaluering.id
+        forhåndsvisning.status shouldBe evaluering.status
+        forhåndsvisning.temaer.size shouldBe evaluering.temaer.size
+        forhåndsvisning.temaer.forExactlyOne { tema ->
+            tema.navn shouldBe evaluering.temaer.first().navn
+            tema.spørsmålOgSvaralternativer.forAll { spørsmål ->
+                spørsmål.undertemanavn shouldBeIn listOf("Utvikle arbeidsmiljøet", "Veien videre")
             }
         }
     }

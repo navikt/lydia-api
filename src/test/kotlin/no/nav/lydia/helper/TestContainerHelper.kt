@@ -393,13 +393,6 @@ class SakHelper {
                 it.status shouldBe IAProsessStatus.KARTLEGGES
             }
 
-        fun nySakISkalKontaktes(
-            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
-            token: String = oauth2ServerContainer.saksbehandler1.token,
-        ) = opprettSakForVirksomhet(orgnummer)
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
-
         fun nySakIKartleggesMedEtSamarbeid(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = oauth2ServerContainer.saksbehandler1.token,
@@ -706,6 +699,19 @@ class IASakKartleggingHelper {
             success = { respons -> respons },
             failure = { fail(it.message) },
         )
+
+        fun IASakDto.hentForhåndsvisning(
+            prosessId: Int = hentAlleSamarbeid().first().id,
+            type: String = "Evaluering",
+            spørreundersøkseId: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ): SpørreundersøkelseDto =
+            lydiaApiContainer.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/$type/$spørreundersøkseId")
+                .authentication().bearer(token)
+                .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                    success = { it },
+                    failure = { fail(it.message) },
+                )
 
         fun SpørreundersøkelseDto.start(
             token: String = oauth2ServerContainer.saksbehandler1.token,

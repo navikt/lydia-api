@@ -25,15 +25,15 @@ data class SpørreundersøkelseDto(
     val fullførtTidspunkt: LocalDateTime?,
 )
 
-fun Spørreundersøkelse.tilDto(erEier: Boolean) =
+fun Spørreundersøkelse.tilDto() =
     SpørreundersøkelseDto(
-        id = if (erEier) id.toString() else "",
-        kartleggingId = if (erEier) id.toString() else "",
+        id = id.toString(),
+        kartleggingId = id.toString(),
         samarbeidId = samarbeidId,
         prosessId = samarbeidId,
         status = status,
-        temaer = if (erEier) temaer.map { it.toDto() } else emptyList(),
-        temaMedSpørsmålOgSvaralternativer = if (erEier) temaer.map { it.toDto() } else emptyList(),
+        temaer = temaer.map { it.toDto() },
+        temaMedSpørsmålOgSvaralternativer = temaer.map { it.toDto() },
         opprettetAv = opprettetAv,
         type = type,
         opprettetTidspunkt = opprettetTidspunkt,

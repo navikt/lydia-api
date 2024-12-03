@@ -217,6 +217,10 @@ class SpørreundersøkelseService(
             IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
         }
 
+    fun hentSpørreundersøkelse(spørreundersøkelseId: String): Either<Feil, Spørreundersøkelse> =
+        spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)?.right()
+            ?: IASakSpørreundersøkelseError.`ugyldig id`.left()
+
     fun endreSpørreundersøkelseStatus(
         spørreundersøkelseId: String,
         statusViSkalEndreTil: SpørreundersøkelseStatus,
