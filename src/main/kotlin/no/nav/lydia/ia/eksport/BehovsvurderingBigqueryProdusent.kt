@@ -1,6 +1,6 @@
 package no.nav.lydia.ia.eksport
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.BehovsvurderingMelding
+import ia.felles.integrasjoner.kafkameldinger.eksport.SpørreundersøkelseEksportMelding
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
@@ -17,9 +17,7 @@ class BehovsvurderingBigqueryProdusent(
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
 ) : Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
-        if (input.type == "Behovsvurdering") {
-            sendTilKafka(spørreundersøkelse = input)
-        }
+        sendTilKafka(spørreundersøkelse = input)
     }
 
     fun reEksporter(input: Spørreundersøkelse) {
@@ -34,19 +32,20 @@ class BehovsvurderingBigqueryProdusent(
 
     companion object {
         fun Spørreundersøkelse.tilKafkaMelding(alleSvar: List<SpørreundersøkelseSvar>): Pair<String, String> {
-            val key = this.saksnummer
+            val key = saksnummer
             val value = BehovsvurderingKafkamelding(
-                id = this.id.toString(),
-                orgnr = this.orgnummer,
-                status = this.status,
-                samarbeidId = this.samarbeidId,
-                saksnummer = this.saksnummer,
-                opprettetAv = this.opprettetAv,
-                opprettet = this.opprettetTidspunkt,
+                id = id.toString(),
+                orgnr = orgnummer,
+                status = status,
+                type = type,
+                samarbeidId = samarbeidId,
+                saksnummer = saksnummer,
+                opprettetAv = opprettetAv,
+                opprettet = opprettetTidspunkt,
                 harMinstEttSvar = alleSvar.isNotEmpty(),
-                endret = this.endretTidspunkt,
-                påbegynt = this.påbegyntTidspunkt,
-                fullført = this.fullførtTidspunkt,
+                endret = endretTidspunkt,
+                påbegynt = påbegyntTidspunkt,
+                fullført = fullførtTidspunkt,
                 førsteSvarMotatt = alleSvar.tidForFørsteSvar(),
                 sisteSvarMottatt = alleSvar.tidForSisteSvar(),
             )
@@ -63,6 +62,7 @@ class BehovsvurderingBigqueryProdusent(
     data class BehovsvurderingKafkamelding(
         override val id: String,
         override val orgnr: String,
+        override val type: String,
         override val status: SpørreundersøkelseStatus,
         override val samarbeidId: Int,
         override val saksnummer: String,
@@ -74,5 +74,5 @@ class BehovsvurderingBigqueryProdusent(
         override val fullført: LocalDateTime?,
         override val førsteSvarMotatt: LocalDateTime?,
         override val sisteSvarMottatt: LocalDateTime?,
-    ) : BehovsvurderingMelding
+    ) : SpørreundersøkelseEksportMelding
 }
