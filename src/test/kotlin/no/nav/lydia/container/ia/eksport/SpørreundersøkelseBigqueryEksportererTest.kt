@@ -24,21 +24,21 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
-import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent.SpørreundersøkelseEksport
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
 import kotlin.test.Test
 
-class BehovsvurderingBigqueryEksportererTest {
+class SpørreundersøkelseBigqueryEksportererTest {
     companion object {
         private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
 
         @BeforeClass
         @JvmStatic
         fun setUp() {
-            konsument.subscribe(listOf(Topic.BEHOVSVURDERING_BIGQUERY_TOPIC.navn))
+            konsument.subscribe(listOf(Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC.navn))
         }
 
         @AfterClass
@@ -61,7 +61,7 @@ class BehovsvurderingBigqueryEksportererTest {
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                    Json.decodeFromString<SpørreundersøkelseEksport>(it)
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe opprettetBehovsvurdering.id
@@ -93,7 +93,7 @@ class BehovsvurderingBigqueryEksportererTest {
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                    Json.decodeFromString<SpørreundersøkelseEksport>(it)
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe opprettetEvaluering.id
@@ -129,7 +129,7 @@ class BehovsvurderingBigqueryEksportererTest {
                 meldinger shouldHaveAtLeastSize 2
 
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                    Json.decodeFromString<SpørreundersøkelseEksport>(it)
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe startetBehovsvurdering.id
@@ -165,7 +165,7 @@ class BehovsvurderingBigqueryEksportererTest {
                 meldinger shouldHaveAtLeastSize 2
 
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                    Json.decodeFromString<SpørreundersøkelseEksport>(it)
                 }
                 val sisteSpørreundersøkelse = behovsvurderingerUtenSvar.last()
                 sisteSpørreundersøkelse.id shouldBe startetEvaluering.id
@@ -204,7 +204,7 @@ class BehovsvurderingBigqueryEksportererTest {
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 3
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                    Json.decodeFromString<SpørreundersøkelseEksport>(it)
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
@@ -242,7 +242,7 @@ class BehovsvurderingBigqueryEksportererTest {
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 3
                 val behovsvurderingerUtenSvar = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                    Json.decodeFromString<SpørreundersøkelseEksport>(it)
                 }
                 val sisteSpørreundersøkelse = behovsvurderingerUtenSvar.last()
                 sisteSpørreundersøkelse.id shouldBe avsluttetEvaluering.id
@@ -293,7 +293,7 @@ class BehovsvurderingBigqueryEksportererTest {
             ) { meldinger ->
                 meldinger shouldHaveSize 3
                 val spørreundersøkelser = meldinger.map {
-                    Json.decodeFromString<BehovsvurderingBigqueryProdusent.BehovsvurderingKafkamelding>(it)
+                    Json.decodeFromString<SpørreundersøkelseEksport>(it)
                 }
                 spørreundersøkelser shouldHaveSize 3
                 val sisteSpørreundersøkelse = spørreundersøkelser.last()

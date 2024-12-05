@@ -31,8 +31,6 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
 import no.nav.lydia.exceptions.UautorisertException
-import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryEksporterer
-import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryProdusent
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
@@ -50,6 +48,8 @@ import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanProdusent
+import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
+import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
@@ -161,7 +161,7 @@ fun startLydiaBackend() {
         geografiService = GeografiService(),
         sistePubliseringService = sistePubliseringService,
     )
-    val behovsvurderingBigqueryProdusent = BehovsvurderingBigqueryProdusent(
+    val spørreundersøkelseBigqueryProdusent = SpørreundersøkelseBigqueryProdusent(
         produsent = kafkaProdusent,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
     )
@@ -248,7 +248,7 @@ fun startLydiaBackend() {
             spørreundersøkelseProdusent,
             behovsvurderingMetrikkObserver,
             fullførtBehovsvurderingProdusent,
-            behovsvurderingBigqueryProdusent,
+            spørreundersøkelseBigqueryProdusent,
         ),
         spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
             produsent = kafkaProdusent,
@@ -301,9 +301,9 @@ fun startLydiaBackend() {
             samarbeidBigqueryProdusent = samarbeidBigqueryProdusent,
             samarbeidRepository = prosessRepository,
         ),
-        behovsvurderingBigqueryEksporterer = BehovsvurderingBigqueryEksporterer(
-            behovsvurderingBigqueryProdusent = behovsvurderingBigqueryProdusent,
-            behovsvurderingRepository = spørreundersøkelseRepository,
+        spørreundersøkelseBigqueryEksporterer = SpørreundersøkelseBigqueryEksporterer(
+            spørreundersøkelseBigqueryProdusent = spørreundersøkelseBigqueryProdusent,
+            spørreundersøkelseRepository = spørreundersøkelseRepository,
         ),
         samarbeidsplanBigqueryEksporterer = SamarbeidsplanBigqueryEksporterer(
             samarbeidsplanBigqueryProdusent = samarbeidsplanBigqueryProdusent,
@@ -412,7 +412,7 @@ private fun jobblytter(
     samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
     samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
     samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
-    behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
+    spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
     lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
 ) {
     Jobblytter.apply {
@@ -428,7 +428,7 @@ private fun jobblytter(
             iaSakhendelseStatusJobb = iaSakhendelseStatusJobb,
             samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer,
             samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer,
-            behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer,
+            spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer,
             lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester,
             samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer,
         )

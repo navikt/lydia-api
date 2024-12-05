@@ -26,7 +26,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.eksport.BehovsvurderingBigqueryEksporterer
 import no.nav.lydia.ia.eksport.IASakEksporterer
 import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
@@ -34,6 +33,7 @@ import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
+import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
@@ -65,7 +65,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer
     private lateinit var samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer
     private lateinit var samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer
-    private lateinit var behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer
+    private lateinit var spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer
     private lateinit var lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester
     private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
     private val konsumentGruppe = Topic.JOBBLYTTER_TOPIC.konsumentGruppe
@@ -90,7 +90,7 @@ object Jobblytter : CoroutineScope {
         samarbeidsplanKafkaEksporterer: SamarbeidsplanKafkaEksporterer,
         samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
         samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
-        behovsvurderingBigqueryEksporterer: BehovsvurderingBigqueryEksporterer,
+        spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
         lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
     ) {
         logger.info("Creating kafka consumer job for $topicNavn")
@@ -113,7 +113,7 @@ object Jobblytter : CoroutineScope {
         this.samarbeidsplanKafkaEksporterer = samarbeidsplanKafkaEksporterer
         this.samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer
         this.samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer
-        this.behovsvurderingBigqueryEksporterer = behovsvurderingBigqueryEksporterer
+        this.spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer
         this.lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester
 
         logger.info("Created kafka consumer job for $topicNavn")
@@ -192,8 +192,8 @@ object Jobblytter : CoroutineScope {
                                         samarbeidsplanBigqueryEksporterer.eksporter()
                                     }
 
-                                    iaSakBehovsvurderingEksport -> {
-                                        behovsvurderingBigqueryEksporterer.eksporter()
+                                    iaSakBehovsvurderingEksport -> { // TODO: Rename til noe som 'spørreundersøkelseEksport' i stedet for behovsvurdering
+                                        spørreundersøkelseBigqueryEksporterer.eksporter()
                                     }
 
                                     else -> {

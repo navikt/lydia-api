@@ -159,7 +159,7 @@ enum class Topic(
     IA_SAK_LEVERANSE_TOPIC("pia.ia-sak-leveranse-v1"),
     SPORREUNDERSOKELSE_TOPIC("pia.sporreundersokelse-v1", consumerGroupId = "lydia-api-sporreundersokelse-comsumer"),
     FULLFØRT_BEHOVSVURDERING_TOPIC("pia.fullfort-behovsvurdering-v1", "lydia-api-fullfort-behovsvurdering"),
-    BEHOVSVURDERING_BIGQUERY_TOPIC("pia.behovsvurdering-bigquery-v1"),
+    SPØRREUNDERSØKELSE_BIGQUERY_TOPIC("pia.behovsvurdering-bigquery-v1"), // TODO: rename til spørreundersøkelse?
     SAMARBEID_BIGQUERY_TOPIC("pia.samarbeid-bigquery-v1"),
     SAMARBEIDSPLAN_BIGQUERY_TOPIC("pia.samarbeidsplan-bigquery-v1"),
     SAMARBEIDSPLAN_TOPIC("pia.samarbeidsplan-v1", "lydia-api-samarbeidsplan"),

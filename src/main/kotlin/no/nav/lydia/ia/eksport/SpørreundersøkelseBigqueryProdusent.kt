@@ -12,7 +12,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
-class BehovsvurderingBigqueryProdusent(
+class SpørreundersøkelseBigqueryProdusent(
     private val produsent: KafkaProdusent,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
 ) : Observer<Spørreundersøkelse> {
@@ -27,13 +27,13 @@ class BehovsvurderingBigqueryProdusent(
     private fun sendTilKafka(spørreundersøkelse: Spørreundersøkelse) {
         val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
         val kafkaMelding = spørreundersøkelse.tilKafkaMelding(alleSvar)
-        produsent.sendMelding(Topic.BEHOVSVURDERING_BIGQUERY_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
+        produsent.sendMelding(Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
     }
 
     companion object {
         fun Spørreundersøkelse.tilKafkaMelding(alleSvar: List<SpørreundersøkelseSvar>): Pair<String, String> {
             val key = saksnummer
-            val value = BehovsvurderingKafkamelding(
+            val value = SpørreundersøkelseEksport(
                 id = id.toString(),
                 orgnr = orgnummer,
                 status = status,
@@ -59,7 +59,7 @@ class BehovsvurderingBigqueryProdusent(
     }
 
     @Serializable
-    data class BehovsvurderingKafkamelding(
+    data class SpørreundersøkelseEksport(
         override val id: String,
         override val orgnr: String,
         override val type: String,

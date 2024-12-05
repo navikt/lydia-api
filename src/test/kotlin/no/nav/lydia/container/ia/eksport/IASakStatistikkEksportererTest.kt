@@ -100,8 +100,7 @@ class IASakStatistikkEksportererTest {
          * */
         val gjeldendePeriode = TestData.gjeldendePeriode
         val forrigePeriode = gjeldendePeriode.forrigePeriode()
-        val sak =
-            opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = gjeldendePeriode.lagPerioder(3)).orgnr)
+        val sak = opprettSakForVirksomhet(orgnummer = lastInnNyVirksomhet(perioder = gjeldendePeriode.lagPerioder(3)).orgnr)
         sak.oppdaterHendelsespunkterTilDato(datoSentIGjeldendePeriode())
         sak.nyHendelse(TA_EIERSKAP_I_SAK)
 
