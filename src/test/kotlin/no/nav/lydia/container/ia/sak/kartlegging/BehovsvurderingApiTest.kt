@@ -728,7 +728,7 @@ class BehovsvurderingApiTest {
     }
 
     companion object {
-        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01933f0f-4009-7838-b1b5-2d49e561dc5d"
+        const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01939c0b-21f2-728d-aa91-3c84fef3bb18"
         private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(Topic.SPORREUNDERSOKELSE_TOPIC.konsumentGruppe)
         private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe)
 
