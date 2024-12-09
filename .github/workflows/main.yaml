@@ -65,7 +65,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/sende-melding-til-sf-ved-flytt-behovsv'
+    if: github.ref == 'refs/heads/nye-svaralternativer-sporreundersokelse'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
