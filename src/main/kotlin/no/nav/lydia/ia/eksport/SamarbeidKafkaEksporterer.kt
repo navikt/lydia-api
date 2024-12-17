@@ -4,16 +4,22 @@ import no.nav.lydia.ia.sak.db.ProsessRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+const val SAMARBEID_ID_PREFIKS = "SAMARBEID_ID_"
+
 class SamarbeidKafkaEksporterer(
     val prosessRepository: ProsessRepository,
     val samarbeidProdusent: SamarbeidProdusent,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
+    companion object {
+        fun String.parseSamarbeidId() = this.trim().removePrefix(SAMARBEID_ID_PREFIKS)
+    }
+
     fun eksporterEnkeltSamarbeid(samarbeidIdAsString: String) {
         log.info("Starter eksport av enkelt samarbeid, med ID: '$samarbeidIdAsString'")
 
-        samarbeidIdAsString.toIntOrNull()?.let { samarbeidId ->
+        samarbeidIdAsString.parseSamarbeidId().toIntOrNull()?.let { samarbeidId ->
             hentOgSendSamarbeidTilKafka(samarbeidId)
         } ?: log.warn("Eksport av enkelt samarbeid, med ID: '$samarbeidIdAsString' feilet. SamarbeidId er ikke gyldig")
 

@@ -15,6 +15,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.ia.eksport.SAMARBEID_ID_PREFIKS
 import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import org.junit.AfterClass
@@ -58,7 +59,7 @@ class SamarbeidEksportererTest {
         }
 
         // Start jobben som skal sende en melding om IA-sak på Kafka
-        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = samarbeid.id.toString())
+        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "${SAMARBEID_ID_PREFIKS}${samarbeid.id}")
         runBlocking {
             // Sjekk at denne meldingen ble sendt på Kafka
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
