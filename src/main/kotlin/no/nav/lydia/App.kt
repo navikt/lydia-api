@@ -43,6 +43,7 @@ import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
+import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidProdusent
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent
@@ -189,8 +190,10 @@ fun startLydiaBackend() {
         samarbeidsplanProdusent = samarbeidsplanProdusent,
     )
     val sendSamarbeidPåKafkaObserver = SendSamarbeidPåKafkaObserver(
-        prosessRepository = prosessRepository,
-        samarbeidProdusent = samarbeidProdusent,
+        samarbeidKafkaEksporterer = SamarbeidKafkaEksporterer(
+            prosessRepository = prosessRepository,
+            samarbeidProdusent = samarbeidProdusent,
+        ),
     )
     val iaProsessService = IAProsessService(
         prosessRepository = prosessRepository,
@@ -313,6 +316,10 @@ fun startLydiaBackend() {
             iaSakLeveranseRepository = IASakLeveranseRepository(dataSource),
             iaSakLeveranseProdusent = iaSakLeveranseProdusent,
         ),
+        samarbeidKafkaEksporterer = SamarbeidKafkaEksporterer(
+            prosessRepository = prosessRepository,
+            samarbeidProdusent = samarbeidProdusent,
+        ),
     )
 
     listOf(
@@ -414,6 +421,7 @@ private fun jobblytter(
     samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
     spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
     lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
+    samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
 ) {
     Jobblytter.apply {
         create(
@@ -431,6 +439,7 @@ private fun jobblytter(
             spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer,
             lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester,
             samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer,
+            samarbeidKafkaEksporterer = samarbeidKafkaEksporterer,
         )
         run()
     }

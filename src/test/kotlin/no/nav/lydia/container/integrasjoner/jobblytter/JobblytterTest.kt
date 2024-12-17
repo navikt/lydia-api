@@ -1,6 +1,7 @@
 package no.nav.lydia.container.integrasjoner.jobblytter
 
 import ia.felles.integrasjoner.jobbsender.Jobb.alleKategorierSykefraværsstatistikkDvhImport
+import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
@@ -15,6 +16,19 @@ import org.junit.Test
 
 class JobblytterTest {
     private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
+
+    @Test
+    fun `engangsjobb logger warn dersom ingen parameter er sendt`() {
+        kafkaContainer.sendJobbMeldingUtenParam(engangsJobb)
+
+        lydiaApiContainer shouldContainLog "Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter".toRegex()
+    }
+
+    @Test
+    fun `skal kunne trigge engangsJobb jobb via kafka`() {
+        kafkaContainer.sendJobbMelding(engangsJobb, "vilkårlig parameter")
+        lydiaApiContainer shouldContainLog "Jobb 'engangsJobb' ferdig".toRegex()
+    }
 
     @Test
     fun `skal kunne trigge ryddeIUrørteSaker jobb via kafka`() {
