@@ -43,9 +43,7 @@ class SamarbeidsplanBigqueryEksportererTest {
     @Test
     fun `oppretting av plan skal trigge kafka-eksport til BigQuery`() {
         val sak = nySakIViBistår()
-
         val planMalDto: PlanMalDto = hentPlanMal()
-
         val plan = sak.opprettEnPlan(plan = planMalDto.inkluderAlt())
 
         runBlocking {
@@ -66,11 +64,8 @@ class SamarbeidsplanBigqueryEksportererTest {
     @Test
     fun `endring av hele planen skal trigge kafka-eksport til BigQuery`() {
         val sak = nySakIViBistår()
-
         val enTomPlan: PlanMalDto = hentPlanMal()
-
         val plan = sak.opprettEnPlan(plan = enTomPlan)
-
         val planMedAlt = plan.inkluderAlt()
 
         sak.endreFlereTemaerIPlan(
@@ -95,9 +90,7 @@ class SamarbeidsplanBigqueryEksportererTest {
     @Test
     fun `endring av tema skal trigge kafka-eksport til BigQuery`() {
         val sak = nySakIViBistår()
-
         val enTomPlan: PlanMalDto = hentPlanMal()
-
         val plan = sak.opprettEnPlan(
             plan = enTomPlan.inkluderEttTemaOgEttInnhold(
                 temanummer = 3,
