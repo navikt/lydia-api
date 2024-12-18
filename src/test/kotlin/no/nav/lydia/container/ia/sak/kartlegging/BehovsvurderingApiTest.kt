@@ -196,13 +196,19 @@ class BehovsvurderingApiTest {
                 postgresContainer.hentEnkelKolonne(
                     "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV' and type = 'Behovsvurdering'",
                 )
-            val spørsmålIderForEtTema: List<String> =
-                postgresContainer.hentAlleRaderTilEnkelKolonne(
-                    "select sporsmal_id from ia_sak_kartlegging_tema_til_spørsmål where tema_id = $temaId",
-                )
-            spørsmålOgSvarPerTema.spørsmålOgSvaralternativer.map { spørsmålMedSvar ->
-                spørsmålMedSvar.id
-            }.toList() shouldContainAll spørsmålIderForEtTema
+            postgresContainer.hentAlleRaderTilEnkelKolonne<Int>(
+                """
+                select undertema_id from ia_sak_kartlegging_undertema where tema_id = $temaId
+                """.trimIndent(),
+            ).forAll { undertemaId ->
+                val spørsmålIderForEtUndertema: List<String> =
+                    postgresContainer.hentAlleRaderTilEnkelKolonne(
+                        "select sporsmal_id from ia_sak_kartlegging_sporsmal_til_undertema where undertema_id = $undertemaId",
+                    )
+                spørsmålOgSvarPerTema.spørsmålOgSvaralternativer.map { spørsmålMedSvar ->
+                    spørsmålMedSvar.id
+                }.toList() shouldContainAll spørsmålIderForEtUndertema
+            }
         }
 
         behovsvurdering.temaer.forEach { spørsmålMedSvarPerTema ->

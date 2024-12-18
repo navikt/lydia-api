@@ -1,0 +1,1 @@
+DROP TABLE ia_sak_kartlegging_tema_til_spørsmål;
