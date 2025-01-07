@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
@@ -15,6 +16,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
@@ -116,10 +118,8 @@ class IASakTeamApiTest {
     }
 
     @Test
-    fun `skal ikke kunne dobbeltregistrere knytning`() {
-        val (sak, _) = opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token)
-
-        val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+    fun `skal ikke kunne bli med i team uten sak`() {
+        val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/ikkeetsaksnummer")
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
             .tilSingelRespons<BrukerITeamDto>().second
 
@@ -127,12 +127,21 @@ class IASakTeamApiTest {
     }
 
     @Test
-    fun `skal ikke kunne bli med i team uten sak`() {
-        val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/ikkeetsaksnummer")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
-            .tilSingelRespons<BrukerITeamDto>().second
+    fun `skal bli følger av sak dersom man blir fratatt eierskap`() {
+        val sak = nySakIKartlegges(token = mockOAuth2Server.saksbehandler1.token)
+        val sakEtterEierskapBytte = sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler2.token)
+        sakEtterEierskapBytte.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
 
-        res.statusCode shouldBe HttpStatusCode.BadRequest.value
+        val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
+            .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
+            .tilListeRespons<MineSakerDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+        res.forExactlyOne {
+            it.iaSak.saksnummer shouldBe sak.saksnummer
+            it.iaSak.eidAv shouldBe sakEtterEierskapBytte.eidAv
+        }
     }
 
     @Test

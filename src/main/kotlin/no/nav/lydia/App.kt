@@ -54,6 +54,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
+import no.nav.lydia.ia.sak.EierskapsendringObserver
 import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
@@ -201,6 +202,12 @@ fun startLydiaBackend() {
         planRepository = planRepository,
         samarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
     )
+
+    val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
+    val eierskapsendringObserver = EierskapsendringObserver(
+        iaTeamService = iaTeamService,
+    )
+
     val iaSakService = IASakService(
         iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
@@ -216,9 +223,8 @@ fun startLydiaBackend() {
         iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver),
         iaProsessService = iaProsessService,
         planRepository = planRepository,
+        endringsObservers = listOf(eierskapsendringObserver),
     )
-
-    val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
 
     val spørreundersøkelseProdusent =
         SpørreundersøkelseProdusent(produsent = kafkaProdusent, iaProsessRepository = prosessRepository, planRepository = planRepository)

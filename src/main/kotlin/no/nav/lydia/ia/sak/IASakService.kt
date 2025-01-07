@@ -9,6 +9,7 @@ import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
+import no.nav.lydia.EndringsObserver
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.Feil
@@ -66,6 +67,7 @@ class IASakService(
     private val iaSakObservers: List<Observer<IASak>>,
     private val iaSaksLeveranseObservers: List<Observer<IASakLeveranse>>,
     private val planRepository: PlanRepository,
+    private val endringsObservers: List<EndringsObserver<IASak, IASakshendelse>>,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -192,6 +194,7 @@ class IASakService(
                             else -> {}
                         }
                         return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
+                            .onRight { lagretSak -> endringsObservers.forEach { it.recieve(sak, sakshendelse, lagretSak) } }
                     }
                     .mapLeft { it.tilFeilMedHttpFeilkode() }
             }
