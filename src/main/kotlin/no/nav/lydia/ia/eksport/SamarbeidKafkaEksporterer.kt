@@ -26,6 +26,14 @@ class SamarbeidKafkaEksporterer(
         log.info("Ferdig med eksport av samarbeid med Id '$samarbeidIdAsString'")
     }
 
+    fun eksporterAlleSamarbeid() {
+        prosessRepository.hentAlleSamarbeidIVirksomhetDto().forEach { samarbeidIVirksomhetDto ->
+            samarbeidProdusent.sendPåKafka(samarbeidIVirksomhetDto)
+            log.info("Eksport av enkelt samarbeid, med ID: '${samarbeidIVirksomhetDto.samarbeid.id}' for virksomhet '${samarbeidIVirksomhetDto.orgnr}' er sendt på Kafka")
+        }
+        log.info("Ferdig med eksport av alle samarbeid. Totalt '${prosessRepository.hentAlleSamarbeidIVirksomhetDto().size}' samarbeid")
+    }
+
     fun hentOgSendSamarbeidTilKafka(samarbeidId: Int) {
         prosessRepository.hentSamarbeidIVirksomhetDto(samarbeidId)?.let { samarbeidIVirksomhetDto ->
             samarbeidProdusent.sendPåKafka(samarbeidIVirksomhetDto)

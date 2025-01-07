@@ -1,6 +1,6 @@
 val ktorVersion = "3.0.1"
 val fuelVersion = "2.3.1"
-val iaFellesVersion = "1.10.0-RC2"
+val iaFellesVersion = "1.10.1"
 val kotestVerstion = "5.9.1"
 val testcontainersVersion = "1.20.3"
 
@@ -36,7 +36,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.12")
+    implementation("ch.qos.logback:logback-classic:1.5.15")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")

@@ -116,7 +116,7 @@ class SamarbeidBigqueryEksportererTest {
                 }
             }
 
-            kafkaContainerHelper.sendJobbMelding(Jobb.iaSakSamarbeidEksport)
+            kafkaContainerHelper.sendJobbMelding(Jobb.iaSakSamarbeidBigQueryEksport)
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 keys = listOf(
@@ -154,6 +154,6 @@ class SamarbeidBigqueryEksportererTest {
         }
 
         lydiaApiContainer.shouldNotContainLog("Klarte ikke å kjøre eksport av samarbeid".toRegex())
-        lydiaApiContainer.shouldContainLog("Jobb 'iaSakSamarbeidEksport' ferdig".toRegex())
+        lydiaApiContainer.shouldContainLog("Jobb 'iaSakSamarbeidBigQueryEksport' ferdig".toRegex())
     }
 }

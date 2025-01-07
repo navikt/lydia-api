@@ -156,18 +156,39 @@ class ProsessRepository(
                     mapOf(
                         "prosessId" to prosessId,
                     ),
-                ).map { row: Row ->
-                    SamarbeidIVirksomhetDto(
-                        orgnr = row.string("orgnr"),
-                        saksnummer = row.string("saksnummer"),
-                        samarbeid = SamarbeidDto(
-                            id = row.int("ia_prosess_id"),
-                            navn = row.stringOrNull("navn"),
-                            status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
-                            endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
-                        ),
-                    )
-                }.asSingle,
+                ).map (this::mapTilSamarbeidVirksomhetDto).asSingle,
             )
         }
+
+    fun hentAlleSamarbeidIVirksomhetDto(): List<SamarbeidIVirksomhetDto> =
+        using(sessionOf(dataSource)) { session: Session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT 
+                          ia_prosess.id as ia_prosess_id,
+                          ia_prosess.navn as navn,
+                          ia_prosess.status as status,
+                          ia_prosess.endret_tidspunkt as endret_tidspunkt,
+                          ia_sak.saksnummer as saksnummer,
+                          ia_sak.orgnr as orgnr
+                          from ia_prosess 
+                        JOIN ia_sak on ia_sak.saksnummer = ia_prosess.saksnummer 
+                    """.trimMargin(),
+                ).map(this::mapTilSamarbeidVirksomhetDto).asList,
+            )
+        }
+
+   private fun mapTilSamarbeidVirksomhetDto(row: Row): SamarbeidIVirksomhetDto {
+        return SamarbeidIVirksomhetDto(
+            orgnr = row.string("orgnr"),
+            saksnummer = row.string("saksnummer"),
+            samarbeid = SamarbeidDto(
+                id = row.int("ia_prosess_id"),
+                navn = row.stringOrNull("navn"),
+                status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
+                endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
+            ),
+        )
+    }
 }

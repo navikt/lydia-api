@@ -2,9 +2,9 @@ package no.nav.lydia.integrasjoner.jobblytter
 
 import ia.felles.integrasjoner.jobbsender.Jobb
 import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakBehovsvurderingEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidBigQueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
@@ -15,6 +15,7 @@ import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSakerTørrKjør
+import ia.felles.integrasjoner.jobbsender.Jobb.spørreundersøkelseBigQueryEksport
 import ia.felles.integrasjoner.jobbsender.JobbInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -189,6 +190,10 @@ object Jobblytter : CoroutineScope {
                                     }
 
                                     iaSakSamarbeidEksport -> {
+                                        samarbeidKafkaEksporterer.eksporterAlleSamarbeid()
+                                    }
+
+                                    iaSakSamarbeidBigQueryEksport -> {
                                         samarbeidBigqueryEksporterer.eksporter()
                                     }
 
@@ -196,7 +201,7 @@ object Jobblytter : CoroutineScope {
                                         samarbeidsplanBigqueryEksporterer.eksporter()
                                     }
 
-                                    iaSakBehovsvurderingEksport -> { // TODO: Rename til noe som 'spørreundersøkelseEksport' i stedet for behovsvurdering
+                                    spørreundersøkelseBigQueryEksport -> {
                                         spørreundersøkelseBigqueryEksporterer.eksporter()
                                     }
 

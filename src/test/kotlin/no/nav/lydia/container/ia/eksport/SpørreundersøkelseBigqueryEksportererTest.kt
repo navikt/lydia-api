@@ -325,10 +325,10 @@ class SpørreundersøkelseBigqueryEksportererTest {
         sak2.opprettSpørreundersøkelse(prosessId = samarbeid2.id)
 
         runBlocking {
-            kafkaContainerHelper.sendJobbMelding(Jobb.iaSakBehovsvurderingEksport)
+            kafkaContainerHelper.sendJobbMelding(Jobb.spørreundersøkelseBigQueryEksport)
         }
 
         lydiaApiContainer.shouldNotContainLog("Klarte ikke å kjøre eksport av behovsvurderinger".toRegex())
-        lydiaApiContainer.shouldContainLog("Jobb 'iaSakBehovsvurderingEksport' ferdig".toRegex())
+        lydiaApiContainer.shouldContainLog("Jobb 'spørreundersøkelseBigQueryEksport' ferdig".toRegex())
     }
 }

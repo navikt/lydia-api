@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
+import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
@@ -90,5 +91,49 @@ class SamarbeidEksportererTest {
         kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "1298765")
 
         lydiaApiContainer shouldContainLog "Eksport av enkelt samarbeid, med ID: '1298765' feilet. Samarbeid ikke funnet".toRegex()
+    }
+
+    @Test
+    fun `skal trigge kafka-eksport av alle samarbeid`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+
+        // Opprettelse av ett samarbeid på en sak trigger utsendelse til Kafka -> vi må lese denne meldingen først
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = "${sak.saksnummer}-${samarbeid.id}",
+                konsument = konsument,
+            ) { meldinger ->
+                meldinger shouldHaveAtLeastSize 1
+                meldinger.forAtLeastOne {
+                    it shouldContain sak.saksnummer
+                }
+            }
+        }
+
+        // Start jobben som skal sende en melding om IA-sak på Kafka
+        kafkaContainerHelper.sendJobbMelding(iaSakSamarbeidEksport)
+        runBlocking {
+            // Sjekk at denne meldingen ble sendt på Kafka
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = "${sak.saksnummer}-${samarbeid.id}",
+                konsument = konsument,
+            ) {
+                it.forExactlyOne { melding ->
+                    val samarbeidKafkaMelding = Json.decodeFromString<SamarbeidKafkaMeldingValue>(melding)
+                    samarbeidKafkaMelding.orgnr shouldBe sak.orgnr
+                    samarbeidKafkaMelding.saksnummer shouldBe sak.saksnummer
+                    samarbeidKafkaMelding.samarbeid.id shouldBe samarbeid.id
+                    if (samarbeid.navn == null) {
+                        samarbeidKafkaMelding.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
+                    } else {
+                        samarbeidKafkaMelding.samarbeid.navn shouldBe samarbeid.navn
+                    }
+                    samarbeidKafkaMelding.samarbeid.status shouldBe samarbeid.status
+                    samarbeidKafkaMelding.samarbeid.endretTidspunkt shouldNotBe null
+                }
+            }
+        }
+        lydiaApiContainer shouldContainLog "Ferdig med eksport av alle samarbeid".toRegex()
     }
 }
