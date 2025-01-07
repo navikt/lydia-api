@@ -39,16 +39,18 @@ class IATeamRepository(
         session.run(
             queryOf(
                 """
-                        INSERT INTO ia_sak_team (
-                            saksnummer,
-                            ident
-                        )
-                        VALUES (
-                            :saksnummer,
-                            :ident
-                        )
-                        ON CONFLICT DO NOTHING
-                        returning *                            
+                    WITH input(ident, saksnummer) AS (
+                      VALUES (:ident, :saksnummer)
+                    )
+                    , ins AS (
+                       INSERT INTO ia_sak_team (ident, saksnummer) 
+                       SELECT * FROM input
+                       ON CONFLICT DO NOTHING
+                       RETURNING *
+                    )
+                    SELECT * FROM ins
+                    UNION  ALL
+                    SELECT * FROM input JOIN ia_sak_team USING (ident, saksnummer);                          
                 """.trimMargin(),
                 mapOf(
                     "saksnummer" to iaSak.saksnummer,
