@@ -458,6 +458,20 @@ class IASak private constructor(
                 endretAvHendelseId = this.string("endret_av_hendelse"),
                 eidAv = this.stringOrNull("eid_av"),
             )
+
+        // -- trengs da IASak ikke er en data class
+        fun IASak.kopier(): IASak =
+            IASak(
+                saksnummer = this.saksnummer,
+                orgnr = this.orgnr,
+                opprettetTidspunkt = this.opprettetTidspunkt,
+                opprettetAv = this.opprettetAv,
+                endretTidspunkt = this.endretTidspunkt,
+                endretAv = this.endretAv,
+                status = this.status,
+                endretAvHendelseId = this.endretAvHendelseId,
+                eidAv = this.eidAv,
+            )
     }
 }
 
