@@ -28,6 +28,7 @@ import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.kopier
 import no.nav.lydia.ia.sak.domene.IASak.Companion.medHendelser
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
@@ -176,6 +177,8 @@ class IASakService(
                 val sak = iaSakRepository.hentIASak(hendelseDto.saksnummer)
                     .medHendelser(hendelser) ?: return IASakError.`generell feil under uthenting`.left()
 
+                val umodifisertIaSak = sak.kopier() // siden vi muterer state i utførhende -> behandleHendelse
+
                 saksbehandler.utførHendelsePåSak(sak = sak, hendelse = sakshendelse)
                     .map { oppdatertSak ->
                         val nyStatus = oppdatertSak.status
@@ -194,7 +197,7 @@ class IASakService(
                             else -> {}
                         }
                         return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
-                            .onRight { lagretSak -> endringsObservers.forEach { it.recieve(sak, sakshendelse, lagretSak) } }
+                            .onRight { lagretSak -> endringsObservers.forEach { it.recieve(umodifisertIaSak, sakshendelse, lagretSak) } }
                     }
                     .mapLeft { it.tilFeilMedHttpFeilkode() }
             }

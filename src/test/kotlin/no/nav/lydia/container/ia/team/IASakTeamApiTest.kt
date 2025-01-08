@@ -5,9 +5,9 @@ import io.kotest.matchers.collections.shouldBeUnique
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
@@ -20,7 +20,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.team.MINE_SAKER_PATH
@@ -128,8 +128,18 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal bli følger av sak dersom man blir fratatt eierskap`() {
-        val sak = nySakIKartlegges(token = mockOAuth2Server.saksbehandler1.token)
-        val sakEtterEierskapBytte = sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler2.token)
+        // sanity
+        mockOAuth2Server.saksbehandler1.navIdent shouldNotBe mockOAuth2Server.saksbehandler2.navIdent
+
+        val sakFørEierskapsendring = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(
+            TA_EIERSKAP_I_SAK,
+            token = mockOAuth2Server.saksbehandler1.token,
+        )
+
+        val sakEtterEierskapBytte = sakFørEierskapsendring.nyHendelse(
+            TA_EIERSKAP_I_SAK,
+            token = mockOAuth2Server.saksbehandler2.token,
+        )
         sakEtterEierskapBytte.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
 
         val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
@@ -139,8 +149,9 @@ class IASakTeamApiTest {
                 failure = { fail(it.message) },
             )
         res.forExactlyOne {
-            it.iaSak.saksnummer shouldBe sak.saksnummer
-            it.iaSak.eidAv shouldBe sakEtterEierskapBytte.eidAv
+            it.iaSak.saksnummer shouldBe sakFørEierskapsendring.saksnummer
+            it.iaSak.eidAv shouldBe sakEtterEierskapBytte.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
+            it.iaSak.eidAv shouldNotBe sakFørEierskapsendring.eidAv
         }
     }
 
@@ -212,11 +223,11 @@ class IASakTeamApiTest {
     fun `skal få alle saker man er eier av`() {
         val bruker = mockOAuth2Server.superbruker1.token
         val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
         val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
 
         val iaSakListe = listOf(sak0, sak1).sortedBy { it.orgnr }
 
@@ -236,23 +247,23 @@ class IASakTeamApiTest {
     fun `skal få alle saker man følger eller eier`() {
         val bruker = mockOAuth2Server.superbruker1.token
         val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
         val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
             .leggTilFolger(token = bruker)
             .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
             .leggTilFolger(token = mockOAuth2Server.saksbehandler1.token)
         val sak2 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
             .leggTilFolger(token = bruker)
         val sak3 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
             .leggTilFolger(token = bruker)
             .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
             .leggTilFolger(token = mockOAuth2Server.saksbehandler1.token)
 
         val sak4 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
 
         val iaSakListe = listOf(sak0, sak1, sak2, sak3)
 
@@ -275,13 +286,13 @@ class IASakTeamApiTest {
     @Test
     fun `skal ikke få saker man ikke eier eller følger`() {
         val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
         val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token)
             .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
 
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token)
 
         val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
             .authentication().bearer(mockOAuth2Server.superbruker1.token)
