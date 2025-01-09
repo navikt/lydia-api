@@ -10,7 +10,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 class EierskapsendringObserver(
     val iaTeamService: IATeamService,
 ) : EndringsObserver<IASak, IASakshendelse> {
-    override fun recieve(
+    override fun receive(
         før: IASak,
         endring: IASakshendelse,
         etter: IASak,

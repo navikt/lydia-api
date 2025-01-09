@@ -197,7 +197,7 @@ class IASakService(
                             else -> {}
                         }
                         return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
-                            .onRight { lagretSak -> endringsObservers.forEach { it.recieve(umodifisertIaSak, sakshendelse, lagretSak) } }
+                            .onRight { lagretSak -> endringsObservers.forEach { it.receive(umodifisertIaSak, sakshendelse, lagretSak) } }
                     }
                     .mapLeft { it.tilFeilMedHttpFeilkode() }
             }
