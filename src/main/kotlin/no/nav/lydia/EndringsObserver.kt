@@ -1,7 +1,7 @@
 package no.nav.lydia
 
 interface EndringsObserver<T, U> {
-    fun recieve(
+    fun receive(
         før: T,
         endring: U,
         etter: T,
