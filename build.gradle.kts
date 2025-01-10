@@ -1,14 +1,14 @@
-val ktorVersion = "3.0.1"
+val ktorVersion = "3.0.3"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.10.1"
 val kotestVerstion = "5.9.1"
-val testcontainersVersion = "1.20.3"
+val testcontainersVersion = "1.20.4"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.1.0"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.0.21"
+    kotlin("plugin.serialization") version "2.1.0"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -46,20 +46,20 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.13.6")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.14.2")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.4")
-    implementation("com.zaxxer:HikariCP:6.0.0")
-    implementation("org.flywaydb:flyway-database-postgresql:10.20.1")
-    implementation("com.github.seratch:kotliquery:1.9.0")
+    implementation("com.zaxxer:HikariCP:6.2.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.1.1")
+    implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
     implementation("com.google.code.gson:gson:2.11.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.8.1")
+    implementation("org.apache.kafka:kafka-clients:3.9.0")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -75,7 +75,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:9.45")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.0.1")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -92,10 +92,10 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.9.2")
+    testImplementation("org.wiremock:wiremock-standalone:3.10.0")
 
     // -- validere pdfa
-    testImplementation("org.verapdf:validation-model:1.26.1")
+    testImplementation("org.verapdf:validation-model:1.26.2")
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:2.1.10")
@@ -111,7 +111,7 @@ dependencies {
         }
         implementation("io.netty:netty-common") {
             version {
-                require("4.1.115.Final")
+                require("4.1.116.Final")
             }
             because(
                 "Versjoner <4.1.114 er sårbar for DoS (CVE-2024-47535). Inkludert i ktor 3.0.1",
