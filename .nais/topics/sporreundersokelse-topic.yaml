@@ -22,5 +22,8 @@ spec:
       application: fia-arbeidsgiver
       access: read   # read, write, readwrite
     - team: pia
+      application: pia-survey
+      access: read
+    - team: pia
       application: pia-devops
       access: read
