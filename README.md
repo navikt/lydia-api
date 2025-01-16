@@ -101,6 +101,18 @@ I script filen `run.sh` kan du oppdatere lenken til filen du har generert og las
 `Database`: `postgres`  
 4. Trykk på `Test connection` for å verifisere at tilkoblingen fungerer
 
+### Med Visual Studio Code
+1. Installer [Database Client extension](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-mysql-client2)
+2. Åpne databasepanelet
+3. Trykk på `+` og velg `PostgreSQL` under `Server Type`
+4. Fyll ut feltene slik:
+`Host`: `localhost`
+`Port`: `5432`
+`User`: `postgres`
+`Password`: `test`
+`Database`: `postgres`
+5. Trykk på `Connect`/`Save`
+
 ## Kode generert av GitHub Copilot
 
 Dette repoet tar i bruk GitHub Copilot for kodeforslag.
