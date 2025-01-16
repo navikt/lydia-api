@@ -44,7 +44,7 @@ class SamarbeidBigqueryProdusent(
         val id: Int,
         val saksnummer: String,
         val opprettet: LocalDateTime,
-        val sistEndret: LocalDateTime,
+        val sistEndret: LocalDateTime? = null,
         val navn: String? = null,
         val status: String? = null,
     )
