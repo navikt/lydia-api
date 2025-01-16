@@ -42,7 +42,7 @@ fun TemaResultat.tilKafkaMelding(): SerializableTemaResultat =
                         antallSvar = svar.antallSvar,
                     )
                 },
-                kategori = ""
+                kategori = spørsmål.undertemanavn
             )
         },
     )
