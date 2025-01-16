@@ -116,7 +116,7 @@ class ProsessRepository(
             navn = row.stringOrNull("navn"),
             status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
             opprettet = row.localDateTime("opprettet").toKotlinLocalDateTime(),
-            sistEndret = row.localDateTime("endret_tidspunkt").toKotlinLocalDateTime(),
+            sistEndret = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
         )
 
     fun oppdaterTilSlettetStatus(prosessHendelse: ProsessHendelse) =
