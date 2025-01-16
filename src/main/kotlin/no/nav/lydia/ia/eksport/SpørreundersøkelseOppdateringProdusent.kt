@@ -79,6 +79,7 @@ class SpørreundersøkelseOppdateringProdusent(
         override val tekst: String,
         override val flervalg: Boolean,
         override val svarListe: List<SerializableSvarResultat>,
+        val kategori: String,
     ) : SpørsmålResultatMelding
 
     @Serializable
