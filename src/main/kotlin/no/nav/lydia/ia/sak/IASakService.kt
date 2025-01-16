@@ -158,7 +158,7 @@ class IASakService(
                 }
 
                 alleProsesser.getOrNull()
-                    ?.find { it.navn == prosessDto.navn }
+                    ?.find { it.navn.equals(prosessDto.navn, ignoreCase = true) }
                     ?.let { return IAProsessFeil.`samarbeidsnavn finnes allerede`.left() }
             }
             else -> {}

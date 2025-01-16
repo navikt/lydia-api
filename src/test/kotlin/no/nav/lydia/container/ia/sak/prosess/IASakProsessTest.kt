@@ -443,6 +443,7 @@ class IASakProsessTest {
     fun `skal kun kunne opprette samarbeid med unikt navn`() {
         val sak = nySakIKartlegges().opprettNyttSamarbeid(navn = "Navn")
         shouldFail { sak.opprettNyttSamarbeid(navn = "Navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
+        shouldFail { sak.opprettNyttSamarbeid(navn = "navn") }.message shouldBe "HTTP Exception 409 Conflict Samarbeidsnavn finnes allerede"
 
         sak.hentAlleSamarbeid().count { it.navn == "Navn" } shouldBeExactly 1
     }
