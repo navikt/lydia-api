@@ -4,6 +4,7 @@ import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.Spørreunders
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -52,6 +53,22 @@ class IASakProsessTest {
             konsument.unsubscribe()
             konsument.close()
         }
+    }
+
+    @Test
+    fun `endring på samarbeid oppdaterer sistEndret`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+
+        sak.nyttNavnPåSamarbeid(samarbeid, "Første")
+            .nyttNavnPåSamarbeid(samarbeid, "Andre")
+            .nyttNavnPåSamarbeid(samarbeid, "Tredje")
+
+        val samarbeidMedNyttNavn = sak.hentAlleSamarbeid().first()
+
+        samarbeidMedNyttNavn.navn shouldBe "Tredje"
+        samarbeid.opprettet shouldBe samarbeidMedNyttNavn.opprettet
+        samarbeid.sistEndret!! shouldBeLessThan samarbeidMedNyttNavn.sistEndret!!
     }
 
     @Test

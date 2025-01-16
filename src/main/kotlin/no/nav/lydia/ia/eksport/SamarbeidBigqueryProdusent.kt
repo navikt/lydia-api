@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.eksport
 
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -25,12 +26,14 @@ class SamarbeidBigqueryProdusent(
 
     companion object {
         fun IAProsess.tilKafkaMelding(): Pair<String, String> {
-            val key = this.saksnummer
+            val key = saksnummer
             val value = SamarbeidValue(
-                id = this.id,
-                saksnummer = this.saksnummer,
-                navn = this.navn,
-                status = this.status?.name,
+                id = id,
+                saksnummer = saksnummer,
+                navn = navn,
+                status = status?.name,
+                opprettet = opprettet,
+                sistEndret = sistEndret,
             )
             return key to Json.encodeToString(value)
         }
@@ -40,6 +43,8 @@ class SamarbeidBigqueryProdusent(
     data class SamarbeidValue(
         val id: Int,
         val saksnummer: String,
+        val opprettet: LocalDateTime,
+        val sistEndret: LocalDateTime,
         val navn: String? = null,
         val status: String? = null,
     )

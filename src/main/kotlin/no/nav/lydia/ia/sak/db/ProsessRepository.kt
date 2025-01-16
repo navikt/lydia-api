@@ -115,6 +115,8 @@ class ProsessRepository(
             saksnummer = row.string("saksnummer"),
             navn = row.stringOrNull("navn"),
             status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
+            opprettet = row.localDateTime("opprettet").toKotlinLocalDateTime(),
+            sistEndret = row.localDateTime("endret_tidspunkt").toKotlinLocalDateTime(),
         )
 
     fun oppdaterTilSlettetStatus(prosessHendelse: ProsessHendelse) =
@@ -156,7 +158,7 @@ class ProsessRepository(
                     mapOf(
                         "prosessId" to prosessId,
                     ),
-                ).map (this::mapTilSamarbeidVirksomhetDto).asSingle,
+                ).map(this::mapTilSamarbeidVirksomhetDto).asSingle,
             )
         }
 
@@ -179,8 +181,8 @@ class ProsessRepository(
             )
         }
 
-   private fun mapTilSamarbeidVirksomhetDto(row: Row): SamarbeidIVirksomhetDto {
-        return SamarbeidIVirksomhetDto(
+    private fun mapTilSamarbeidVirksomhetDto(row: Row): SamarbeidIVirksomhetDto =
+        SamarbeidIVirksomhetDto(
             orgnr = row.string("orgnr"),
             saksnummer = row.string("saksnummer"),
             samarbeid = SamarbeidDto(
@@ -190,5 +192,4 @@ class ProsessRepository(
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
             ),
         )
-    }
 }

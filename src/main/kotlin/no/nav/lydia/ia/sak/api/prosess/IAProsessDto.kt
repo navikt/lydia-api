@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.api.prosess
 
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
@@ -10,6 +11,8 @@ data class IAProsessDto(
     val saksnummer: String,
     val navn: String? = null,
     val status: IAProsessStatus? = null,
+    val opprettet: LocalDateTime? = null,
+    val sistEndret: LocalDateTime? = null,
 )
 
 fun List<IAProsess>.tilDto() = map { it.tilDto() }
@@ -20,4 +23,6 @@ fun IAProsess.tilDto() =
         saksnummer = saksnummer,
         navn = navn,
         status = status,
+        opprettet = opprettet,
+        sistEndret = sistEndret,
     )
