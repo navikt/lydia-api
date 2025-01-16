@@ -22,6 +22,7 @@ data class SpørsmålResultatDto(
     val flervalg: Boolean,
     val antallDeltakereSomHarSvart: Int,
     val svarListe: List<SvarResultatDto>,
+    val kategori: String,
 )
 
 @Serializable

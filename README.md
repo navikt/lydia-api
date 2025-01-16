@@ -44,13 +44,13 @@ som er nevnte i [`README i repoet`](https://github.com/abiosoft/colima).
 
 For å koble seg mot Aiven Kafka lokalt trenger man:
 - [kafka-cli](https://kafka.apache.org/quickstart) (kan også installeres med [brew install kafka](https://formulae.brew.sh/formula/kafka))
-- [nais-cli](https://doc.nais.io/cli/install/)
+- [nais-cli](https://doc.nais.io/operate/cli/how-to/install/)
 
 Vi har gitt tilgang til en k8s-ressurs som heter `pia-devops` som har lese- og skrivetilgang til `ia-sak-v1`-topicet. 
 Det er denne man bruker som utvikler om man vil koble seg opp mot topicet lokalt. Det gjør man slik: 
 
 0. `logg på gcloud og sett cluster med kubectx`
-1. `nais aiven create kafka pia-devops pia` (lager en [AivenApplication](https://doc.nais.io/cli/commands/aiven/#aiven-command) og gir neste kommando i output)
+1. `nais aiven create kafka pia-devops pia` (lager en [AivenApplication](https://doc.nais.io/operate/cli/reference/aiven/) og gir neste kommando i output)
 2. Output fra forrige steg gir neste kommando, noe som: `nais aiven get kafka pia-devops-pia-<id> pia` denne lager lage secrets
 3. Output fra forrige steg gir path til der config ble lagret `KAFKA_CONFIG=<path-til-config>`
 4. `source $KAFKA_CONFIG/kafka-secret.env`

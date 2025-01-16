@@ -6,6 +6,7 @@ import java.util.UUID
 
 data class SpørsmålResultat(
     val spørsmålId: UUID,
+    val undertemanavn: String,
     val spørsmåltekst: String,
     val antallDeltakereSomHarSvart: Int,
     val svaralternativer: List<SvaralternativResultat>,
@@ -39,6 +40,7 @@ fun Spørsmål.tilResultat(alleSvar: List<SpørreundersøkelseSvar>): Spørsmål
                 }.size,
             )
         },
+        undertemanavn = undertemanavn
     )
 }
 
