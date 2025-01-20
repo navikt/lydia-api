@@ -18,4 +18,9 @@ data class Spørreundersøkelse(
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
     val temaer: List<Tema>,
-)
+    val gyldigTilTidspunkt: LocalDateTime,
+) {
+    companion object {
+        val ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG = 24L
+    }
+}

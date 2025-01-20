@@ -5,6 +5,9 @@ import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.Spørreunders
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørsmålMelding
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SvaralternativMelding
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.TemaMelding
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -60,6 +63,9 @@ class SpørreundersøkelseProdusent(
                 type = this.type,
                 plan = plan,
                 temaer = temaer.map { it.tilKafkaMelding() },
+                opprettet = opprettetTidspunkt,
+                endret = endretTidspunkt,
+                gyldigTil = opprettetTidspunkt.toJavaLocalDateTime().plusDays(1).toKotlinLocalDateTime(),
             )
             return nøkkel to Json.encodeToString(verdi)
         }
@@ -97,6 +103,9 @@ class SpørreundersøkelseProdusent(
         override val temaer: List<SerializableTema>,
         override val type: String,
         val plan: PlanDto?,
+        val opprettet: LocalDateTime,
+        val endret: LocalDateTime?,
+        val gyldigTil: LocalDateTime,
     ) : SpørreundersøkelseMelding
 
     @Serializable

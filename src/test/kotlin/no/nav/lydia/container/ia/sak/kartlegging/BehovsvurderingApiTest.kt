@@ -17,6 +17,8 @@ import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
@@ -44,12 +46,23 @@ import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
 import kotlin.test.Test
 
 class BehovsvurderingApiTest {
+    @Test
+    fun `skal sette riktig gyldighetstid`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+
+        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val opprettet = behovsvurdering.opprettetTidspunkt
+        val burdeVæreGyldigTil = opprettet.toJavaLocalDateTime().plusHours(ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG).toKotlinLocalDateTime()
+        behovsvurdering.gyldigTilTidspunkt shouldBe burdeVæreGyldigTil
+    }
+
     @Test
     fun `kan opprette en spørreundersøkelse av type behovsvurdering i status KARTLEGGES`() {
         val sak = nySakIKartleggesMedEtSamarbeid()

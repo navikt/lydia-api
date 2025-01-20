@@ -23,6 +23,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -127,6 +128,7 @@ class SpørreundersøkelseRepository(
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
+                val opprettet = LocalDateTime.now()
                 tx.run(
                     queryOf(
                         """
@@ -136,7 +138,9 @@ class SpørreundersøkelseRepository(
                                 ia_prosess,
                                 status,
                                 opprettet_av,
-                                type
+                                type,
+                                opprettet,
+                                gyldig_til
                             )
                             VALUES (
                                 :kartlegging_id,
@@ -144,7 +148,9 @@ class SpørreundersøkelseRepository(
                                 :prosessId,
                                 :status,
                                 :opprettet_av,
-                                :sporreundersokelseType
+                                :sporreundersokelseType,
+                                :opprettet,
+                                :gyldigTil
                             )
                         """.trimMargin(),
                         mapOf(
@@ -154,6 +160,8 @@ class SpørreundersøkelseRepository(
                             "status" to "OPPRETTET",
                             "opprettet_av" to saksbehandler.navIdent,
                             "sporreundersokelseType" to type,
+                            "opprettet" to opprettet,
+                            "gyldigTil" to opprettet.plusHours(ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG),
                         ),
                     ).asUpdate,
                 )
@@ -246,6 +254,7 @@ class SpørreundersøkelseRepository(
             endretTidspunkt = this.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
             påbegyntTidspunkt = this.localDateTimeOrNull("pabegynt")?.toKotlinLocalDateTime(),
             fullførtTidspunkt = this.localDateTimeOrNull("fullfort")?.toKotlinLocalDateTime(),
+            gyldigTilTidspunkt = this.localDateTime("gyldig_til").toKotlinLocalDateTime(),
         )
     }
 

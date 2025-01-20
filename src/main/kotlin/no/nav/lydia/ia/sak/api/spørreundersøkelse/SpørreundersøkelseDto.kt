@@ -23,6 +23,7 @@ data class SpørreundersøkelseDto(
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
+    val gyldigTilTidspunkt: LocalDateTime,
 )
 
 fun Spørreundersøkelse.tilDto() =
@@ -40,4 +41,5 @@ fun Spørreundersøkelse.tilDto() =
         endretTidspunkt = endretTidspunkt,
         påbegyntTidspunkt = påbegyntTidspunkt,
         fullførtTidspunkt = fullførtTidspunkt,
+        gyldigTilTidspunkt = gyldigTilTidspunkt,
     )
