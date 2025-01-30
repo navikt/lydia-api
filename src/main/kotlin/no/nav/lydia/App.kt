@@ -53,7 +53,6 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
-import no.nav.lydia.ia.sak.BehovsvurderingMetrikkObserver
 import no.nav.lydia.ia.sak.EierskapsendringObserver
 import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
@@ -63,6 +62,7 @@ import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
 import no.nav.lydia.ia.sak.SendPlanPåKafkaObserver
 import no.nav.lydia.ia.sak.SendSamarbeidPåKafkaObserver
+import no.nav.lydia.ia.sak.SpørreundersøkelseMetrikkObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
@@ -228,7 +228,7 @@ fun startLydiaBackend() {
 
     val spørreundersøkelseProdusent =
         SpørreundersøkelseProdusent(produsent = kafkaProdusent, iaProsessRepository = prosessRepository, planRepository = planRepository)
-    val behovsvurderingMetrikkObserver = BehovsvurderingMetrikkObserver()
+    val spørreundersøkelseMetrikkObserver = SpørreundersøkelseMetrikkObserver()
     val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(produsent = kafkaProdusent)
 
     val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(
@@ -255,7 +255,7 @@ fun startLydiaBackend() {
         planService = planService,
         spørreundersøkelseObservers = listOf(
             spørreundersøkelseProdusent,
-            behovsvurderingMetrikkObserver,
+            spørreundersøkelseMetrikkObserver,
             fullførtBehovsvurderingProdusent,
             spørreundersøkelseBigqueryProdusent,
         ),

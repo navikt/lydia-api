@@ -42,6 +42,26 @@ class Metrics {
             .help("Antall behovsvurderinger slettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
+        val evalueringerOpprettet = Counter.builder()
+            .name("${NAMESPACE}_ia_evaluering_opprettet")
+            .help("Antall evalueringer opprettet")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
+        val evalueringerStartet = Counter.builder()
+            .name("${NAMESPACE}_ia_evaluering_startet")
+            .help("Antall evalueringer startet")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
+        val evalueringerFullført = Counter.builder()
+            .name("${NAMESPACE}_ia_evaluering_fullfort")
+            .help("Antall evalueringer fullfort")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
+        val evalueringerSlettet = Counter.builder()
+            .name("${NAMESPACE}_ia_evaluering_slettet")
+            .help("Antall evalueringer slettet")
+            .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
+
         val virksomheterPrioritert = Counter.builder()
             .name("${NAMESPACE}_ia_virksomheter_vurdert")
             .help("Antall virksomheter som blir vurdert for ia-samarbeid")
@@ -86,6 +106,15 @@ class Metrics {
                 PÅBEGYNT -> behovsvurderingerStartet.inc()
                 AVSLUTTET -> behovsvurderingerFullført.inc()
                 SLETTET -> behovsvurderingerSlettet.inc()
+            }
+        }
+
+        fun loggEvaluering(status: SpørreundersøkelseStatus) {
+            when (status) {
+                OPPRETTET -> evalueringerOpprettet.inc()
+                PÅBEGYNT -> evalueringerStartet.inc()
+                AVSLUTTET -> evalueringerFullført.inc()
+                SLETTET -> evalueringerSlettet.inc()
             }
         }
 
