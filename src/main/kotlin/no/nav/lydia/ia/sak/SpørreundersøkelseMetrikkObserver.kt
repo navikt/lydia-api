@@ -7,8 +7,8 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 class SpørreundersøkelseMetrikkObserver : Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
         when (input.type) {
-            "behovsvurdering" -> Metrics.loggBehovsvurdering(input.status)
-            "evaluering" -> Metrics.loggEvaluering(input.status)
+            "Behovsvurdering" -> Metrics.loggBehovsvurdering(input.status)
+            "Evaluering" -> Metrics.loggEvaluering(input.status)
             else -> {}
         }
     }

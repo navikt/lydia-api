@@ -14,7 +14,7 @@ class FullførtBehovsvurderingProdusent(
     private val produsent: KafkaProdusent,
 ) : Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
-        if (input.status == AVSLUTTET) {
+        if (input.type == "Behovsvurdering" && input.status == AVSLUTTET) {
             sendPåKafka(input)
         }
     }
