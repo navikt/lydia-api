@@ -233,6 +233,9 @@ class SpørreundersøkelseRepository(
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
             endretTidspunkt = this.localDateTimeOrNull("endret"),
+            påbegyntTidspunkt = this.localDateTimeOrNull("pabegynt"),
+            fullførtTidspunkt = this.localDateTimeOrNull("fullfort"),
+            gyldigTilTidspunkt = this.localDateTime("gyldig_til"),
         )
     }
 
@@ -580,8 +583,9 @@ class SpørreundersøkelseRepository(
             session.run(
                 queryOf(
                     """
-                    UPDATE ia_sak_kartlegging
-                    SET ia_prosess = :prosessId
+                    UPDATE ia_sak_kartlegging SET 
+                    ia_prosess = :prosessId,
+                    endret = now()
                     WHERE kartlegging_id = :behovsvurderingId
                     """.trimIndent(),
                     mapOf(

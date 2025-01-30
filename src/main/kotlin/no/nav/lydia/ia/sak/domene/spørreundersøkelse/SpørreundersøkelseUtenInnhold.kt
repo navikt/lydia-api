@@ -11,4 +11,7 @@ data class SpørreundersøkelseUtenInnhold(
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
+    val påbegyntTidspunkt: LocalDateTime?,
+    val fullførtTidspunkt: LocalDateTime?,
+    val gyldigTilTidspunkt: LocalDateTime,
 )

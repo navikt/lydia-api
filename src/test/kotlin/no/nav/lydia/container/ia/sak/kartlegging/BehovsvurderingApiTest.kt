@@ -594,7 +594,8 @@ class BehovsvurderingApiTest {
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
+        val oppdatertBehovsvurdering = oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
+        oppdatertBehovsvurdering.endretTidspunkt shouldNotBe oppdatertBehovsvurdering.fullførtTidspunkt
 
         hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = "Behovsvurdering")
             .map { it.id } shouldBe emptyList()

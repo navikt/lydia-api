@@ -14,6 +14,9 @@ data class SpørreundersøkelseUtenInnholdDto(
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
+    val påbegyntTidspunkt: LocalDateTime?,
+    val fullførtTidspunkt: LocalDateTime?,
+    val gyldigTilTidspunkt: LocalDateTime,
 )
 
 fun List<SpørreundersøkelseUtenInnhold>.tilDto() = map { it.tilDto() }
@@ -26,4 +29,7 @@ fun SpørreundersøkelseUtenInnhold.tilDto() =
         opprettetAv = opprettetAv,
         opprettetTidspunkt = opprettetTidspunkt.toKotlinLocalDateTime(),
         endretTidspunkt = endretTidspunkt?.toKotlinLocalDateTime(),
+        påbegyntTidspunkt = påbegyntTidspunkt?.toKotlinLocalDateTime(),
+        fullførtTidspunkt = fullførtTidspunkt?.toKotlinLocalDateTime(),
+        gyldigTilTidspunkt = gyldigTilTidspunkt.toKotlinLocalDateTime(),
     )
