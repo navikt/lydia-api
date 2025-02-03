@@ -53,6 +53,7 @@ class AuthContainerHelper(
     val saksbehandler2: TestBruker
     val superbruker1: TestBruker
     val superbruker2: TestBruker
+    val teamPiaBruker: TestBruker
     val brukerUtenTilgangsrolle: TestBruker
 
     init {
@@ -84,6 +85,7 @@ class AuthContainerHelper(
                 saksbehandler2 = TestBruker(navIdent = "Y54321", saksbehandlerGroupId)
                 superbruker1 = TestBruker(navIdent = "S54321", superbrukerGroupId)
                 superbruker2 = TestBruker(navIdent = "S22222", superbrukerGroupId)
+                teamPiaBruker = TestBruker(navIdent = "P12345", teamPiaGroupId)
                 brukerUtenTilgangsrolle = TestBruker(navIdent = "U54321", ugyldigRolleGroupId)
             }
     }

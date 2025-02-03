@@ -55,6 +55,7 @@ class IASakTest {
             superbrukerGruppe = "123",
             saksbehandlerGruppe = "456",
             lesebrukerGruppe = "789",
+            teamPiaGruppe = "136",
         )
 
         val superbruker1 = Superbruker(

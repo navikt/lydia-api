@@ -38,6 +38,7 @@ sealed class NavAnsatt private constructor(
 
                 return validert(
                     setOf(
+                        adGrupper.teamPiaGruppe,
                         adGrupper.lesebrukerGruppe,
                         adGrupper.saksbehandlerGruppe,
                         adGrupper.superbrukerGruppe,

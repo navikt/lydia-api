@@ -69,6 +69,7 @@ class ADGrupper(
     val superbrukerGruppe: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),
     val saksbehandlerGruppe: String = getEnvVar("FIA_SAKSBEHANDLER_GROUP_ID"),
     val lesebrukerGruppe: String = getEnvVar("FIA_LESETILGANG_GROUP_ID"),
+    val teamPiaGruppe: String = getEnvVar("TEAM_PIA_GROUP_ID"),
 )
 
 class Kafka(

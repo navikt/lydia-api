@@ -452,6 +452,12 @@ class SykefraværsstatistikkApiTest {
     }
 
     @Test
+    fun `teamet skal få lesetilgang`() {
+        val teamPiaBruker = mockOAuth2Server.teamPiaBruker
+        hentFilterverdier(token = teamPiaBruker.token)
+    }
+
+    @Test
     fun `kun superbrukere skal få lov til å se alle saksbehandlere i systemet`() {
         val lesebruker = mockOAuth2Server.lesebruker
         hentFilterverdier(token = lesebruker.token)
