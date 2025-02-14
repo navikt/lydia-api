@@ -1,14 +1,14 @@
-val ktorVersion = "3.0.3"
+val ktorVersion = "3.1.0"
 val fuelVersion = "2.3.1"
-val iaFellesVersion = "1.10.1"
+val iaFellesVersion = "1.10.2"
 val kotestVerstion = "5.9.1"
 val testcontainersVersion = "1.20.4"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.1.10"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.1.0"
+    kotlin("plugin.serialization") version "2.1.10"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -36,7 +36,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.15")
+    implementation("ch.qos.logback:logback-classic:1.5.16")
     implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -46,17 +46,17 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.14.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.14.4")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.4")
+    implementation("org.postgresql:postgresql:42.7.5")
     implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("org.flywaydb:flyway-database-postgresql:11.1.1")
+    implementation("org.flywaydb:flyway-database-postgresql:11.3.2")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.12.1")
 
     // Kafka
     implementation("org.apache.kafka:kafka-clients:3.9.0")
@@ -73,7 +73,7 @@ dependencies {
     // Felles definisjoner for IA-domenet
     implementation("com.github.navikt:ia-felles:$iaFellesVersion")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
     implementation("com.nimbusds:nimbus-jose-jwt:10.0.1")
 
@@ -92,10 +92,10 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.10.0")
+    testImplementation("org.wiremock:wiremock-standalone:3.12.0")
 
     // -- validere pdfa
-    testImplementation("org.verapdf:validation-model:1.26.2")
+    testImplementation("org.verapdf:validation-model:1.26.5")
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:2.1.10")
@@ -103,23 +103,23 @@ dependencies {
     constraints {
         implementation("net.minidev:json-smart") {
             version {
-                require("2.5.1")
+                require("2.5.2")
             }
             because(
-                "From Kotlin version: 1.7.20 -> Earlier versions of json-smart package are vulnerable to Denial of Service (DoS) due to a StackOverflowError when parsing a deeply nested JSON array or object.",
+                "versjoner < 2.5.2 har diverse sårbarheter",
             )
         }
-        implementation("io.netty:netty-common") {
+        implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.116.Final")
+                require("4.1.118.Final")
             }
             because(
-                "Versjoner <4.1.114 er sårbar for DoS (CVE-2024-47535). Inkludert i ktor 3.0.1",
+                "Versjoner <4.1.117 er sårbare. Inkludert i ktor 3.1.0",
             )
         }
         implementation("joda-time:joda-time") {
             version {
-                require("2.13.0")
+                require("2.13.1")
             }
             because("kotliquery har sårbar versjon på v2.11.0")
         }
