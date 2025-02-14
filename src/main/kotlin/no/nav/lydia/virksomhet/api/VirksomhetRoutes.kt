@@ -1,9 +1,8 @@
 package no.nav.lydia.virksomhet.api
 
+import arrow.core.left
 import arrow.core.right
-import arrow.core.rightIfNotNull
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.application.log
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -32,7 +31,7 @@ fun Route.virksomhet(
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto()
-                .rightIfNotNull { VirksomhetFeil.`fant ikke virksomhet` }
+                ?.right() ?: VirksomhetFeil.`fant ikke virksomhet`.left()
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
         }.map {

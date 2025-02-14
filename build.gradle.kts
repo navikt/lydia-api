@@ -65,7 +65,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:1.2.4")
+    implementation("io.arrow-kt:arrow-core:2.0.1")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
