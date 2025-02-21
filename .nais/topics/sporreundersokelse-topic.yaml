@@ -8,7 +8,7 @@ metadata:
 spec:
   pool: {{kafkaPool}}
   config:  # optional; all fields are optional too; defaults shown
-    cleanupPolicy: compact  # delete, compact, compact,delete
+    cleanupPolicy: delete  # delete, compact, compact,delete
     minimumInSyncReplicas: 2
     partitions: 1
     replication: 3  # see min/max requirements
