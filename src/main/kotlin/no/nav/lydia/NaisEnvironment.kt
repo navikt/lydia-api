@@ -199,6 +199,7 @@ enum class Topic(
         "lydia-api-statistikk-virksomhet-gradering-consumer",
     ),
     JOBBLYTTER_TOPIC("pia.jobblytter-v1", "lydia-api-jobblytter-consumer"),
+    SALESFORCE_AKTIVITET_TOPIC("team-dialog.employer-activity", "lydia-api-salesforce-aktivitet-consumer"),
     ;
 
     val konsumentGruppe
