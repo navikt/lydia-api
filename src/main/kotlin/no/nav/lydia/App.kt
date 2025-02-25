@@ -92,6 +92,7 @@ import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
+import no.nav.lydia.integrasjoner.salesforce.SalesforceAktivitetKonsument
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
@@ -361,6 +362,12 @@ fun startLydiaBackend() {
         create(kafka = naisEnv.kafka, spørreundersøkelseService = spørreundersøkelseService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
+
+    SalesforceAktivitetKonsument().apply {
+        create(kafka = naisEnv.kafka)
+        run()
+    }
+//        .also { HelseMonitor.leggTilHelsesjekk(it) } // TODO: uncomment
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
