@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SalesforceAktivitet(
     val Id__c: String, // -- Id til aktivitet i SF
-    val ActivityCreatedDate__c: String, // -- Når aktiviteten ble opprettet i SF
+    val ActivityCreatedDate__c: String?, // -- Når aktiviteten ble opprettet i SF
     val EventObject__c: String, // -- Objekttype i SF (Task ; Event)
     val TaskEvent__c: String, // -- Hva slags aktivitet (Møte ; Oppgave)
     val EventType__c: String, // -- Type hendelse (Created ; Updated ; Deleted ; Undeleted)
