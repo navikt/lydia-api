@@ -1,4 +1,4 @@
-package no.nav.lydia.integrasjoner.salesforce
+package no.nav.lydia.integrasjoner.salesforce.aktiviteter
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +27,7 @@ class SalesforceAktivitetKonsument :
     private lateinit var job: Job
     private lateinit var kafka: Kafka
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
+    private lateinit var salesforceAktivitetService: SalesforceAktivitetService
     private val topic = Topic.SALESFORCE_AKTIVITET_TOPIC
     private val json = Json {
         ignoreUnknownKeys = true
@@ -39,10 +40,14 @@ class SalesforceAktivitetKonsument :
         Runtime.getRuntime().addShutdownHook(Thread(this::cancel))
     }
 
-    fun create(kafka: Kafka) {
+    fun create(
+        kafka: Kafka,
+        salesforceAktivitetService: SalesforceAktivitetService,
+    ) {
         logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
         this.kafka = kafka
+        this.salesforceAktivitetService = salesforceAktivitetService
         this.kafkaConsumer = KafkaConsumer(
             this.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
             StringDeserializer(),
@@ -63,13 +68,14 @@ class SalesforceAktivitetKonsument :
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 val aktiviteter = records.map {
-                                    json.decodeFromString<SalesforceAktivitet>(it.value())
-                                }.filter {
-                                    !it.IACaseNumber__c.isNullOrBlank()
+                                    json.decodeFromString<SalesforceAktivitetDto>(it.value())
+                                    // TODO: Håndter feilformaterte meldinger
+                                }.filter { aktivitet ->
+                                    !aktivitet.IACaseNumber__c.isNullOrBlank()
                                 }
 
                                 aktiviteter.forEach {
-                                    logger.info("Hentet aktivitet. id: '${it.Id__c}', type: '${it.TaskEvent__c}', saksnummer: '${it.IACaseNumber__c}'")
+                                    logger.info("Hentet aktivitet. ${it.tilLog()}")
                                 }
                                 logger.info("Behandlet ${records.count()} meldinger i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr")
 //                                consumer.commitSync()
