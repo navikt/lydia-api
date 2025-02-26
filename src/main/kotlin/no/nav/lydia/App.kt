@@ -92,8 +92,10 @@ import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
-import no.nav.lydia.integrasjoner.salesforce.SalesforceAktivitetKonsument
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetKonsument
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetRepository
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetService
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
@@ -364,7 +366,13 @@ fun startLydiaBackend() {
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
     SalesforceAktivitetKonsument().apply {
-        create(kafka = naisEnv.kafka)
+        create(
+            kafka = naisEnv.kafka,
+            salesforceAktivitetService = SalesforceAktivitetService(
+                SalesforceAktivitetRepository(dataSource = dataSource),
+                iaSakRepository,
+            ),
+        )
         run()
     }
 //        .also { HelseMonitor.leggTilHelsesjekk(it) } // TODO: uncomment
