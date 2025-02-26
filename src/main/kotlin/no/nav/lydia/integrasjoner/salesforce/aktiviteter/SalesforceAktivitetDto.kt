@@ -29,5 +29,7 @@ data class SalesforceAktivitetDto(
             " saksnummer: '$IACaseNumber__c'," +
             " samarbeid: '$IACooperationId__c'," +
             " tema: '$Service__c'," +
-            " undertema: '$IASubtheme__c',"
+            " undertema: '$IASubtheme__c'," +
+            " created: '$ActivityCreatedDate__c'" +
+            " planlagt: '$ActivityDate__c'"
 }
