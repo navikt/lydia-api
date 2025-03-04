@@ -15,7 +15,7 @@ class SalesforceAktivitetKonsumentTest {
             Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
 
-        TestContainerHelper.lydiaApiContainer shouldContainLog "Hentet aktivitet. id: 'id', type: 'Oppgave', saksnummer: 'saksnummer'".toRegex()
+        TestContainerHelper.lydiaApiContainer shouldContainLog "Lagrer.*aktivitet:.*id=id, type=Oppgave, saksnummer=saksnummer".toRegex()
     }
 
     @Test
@@ -26,7 +26,7 @@ class SalesforceAktivitetKonsumentTest {
             Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
 
-        TestContainerHelper.lydiaApiContainer shouldNotContainLog "Hentet aktivitet. id: 'id2', type: 'Oppgave'".toRegex()
+        TestContainerHelper.lydiaApiContainer shouldNotContainLog "Lagrer.*aktivitet:.*id=id2, type=Oppgave".toRegex()
     }
 
     @Test
@@ -37,7 +37,7 @@ class SalesforceAktivitetKonsumentTest {
             Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
 
-        TestContainerHelper.lydiaApiContainer shouldContainLog "Hentet aktivitet. id: 'id3', type: 'Oppgave', saksnummer: 'saksnummer'".toRegex()
+        TestContainerHelper.lydiaApiContainer shouldContainLog "Lagrer.*aktivitet:.*id=id3, type=Oppgave, saksnummer=saksnummer".toRegex()
     }
 
     private fun melding(
