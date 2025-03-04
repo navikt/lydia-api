@@ -76,12 +76,15 @@ class SalesforceAktivitetKonsument :
                                     }
 
                                     aktiviteter.forEach {
+                                        logger.info("Forsøker å lagre aktivitet: $it")
                                         salesforceAktivitetService.lagreAktivitet(it.tilDomene())
                                     }
-                                    logger.info("Behandlet ${records.count()} meldinger i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr")
+                                    logger.info(
+                                        "Behandlet ${records.count()} aktiviteter i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr",
+                                    )
 //                                consumer.commitSync()
                                 } catch (e: Exception) {
-                                    logger.warn("Fikk feilmelding ved lagring av aktivitet; ${e.message}")
+                                    logger.warn("Fikk feilmelding ved lagring av aktivitet; ${e.message}", e)
                                 }
                             }
                         } catch (e: RetriableException) {
