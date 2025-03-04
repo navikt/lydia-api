@@ -76,7 +76,7 @@ class SalesforceAktivitetKonsument :
                                     }
 
                                     aktiviteter.forEach {
-                                        logger.info("Forsøker å lagre aktivitet: $it")
+                                        logger.info("Forsøker å lagre aktivitet: ${it.Id__c}")
                                         salesforceAktivitetService.lagreAktivitet(it.tilDomene())
                                     }
                                     logger.info(
