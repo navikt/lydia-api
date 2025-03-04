@@ -40,5 +40,7 @@ internal fun SalesforceAktivitetDto.tilDomene() =
         fullført = CompletedDate__c?.let { ZonedDateTime.parse(it) },
         møteStart = ActivityDate__c?.let { ZonedDateTime.parse(it) },
         møteSlutt = EndDateTime__c?.let { ZonedDateTime.parse(it) },
-        status = Status__c?.let { SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it) },
+        status = Status__c?.let {
+            if (it.isBlank()) null else SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
+        },
     )
