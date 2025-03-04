@@ -37,7 +37,7 @@ class SalesforceAktivitetRepository(
                             :oppgavePlanlagt,
                             :oppgaveFullfort,
                             :moteStart,
-                            :moteSlutt
+                            :moteSlutt,
                             :status
                         )
                         ON CONFLICT (id) DO UPDATE

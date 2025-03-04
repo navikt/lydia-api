@@ -1,9 +1,17 @@
 package no.nav.lydia.container.integrasjoner.salesforce
 
+import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
+import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.ia.sak.api.IASakDto
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
+import java.util.UUID
 import kotlin.test.Test
 
 class SalesforceAktivitetKonsumentTest {
@@ -16,6 +24,43 @@ class SalesforceAktivitetKonsumentTest {
         )
 
         TestContainerHelper.lydiaApiContainer shouldContainLog "Lagrer.*aktivitet:.*id=id, type=Oppgave, saksnummer=saksnummer".toRegex()
+    }
+
+    @Test
+    fun `kan lagre sf-aktiviteter`() {
+        val sak = nySakIViBistår()
+        val samarbeidId = sak.hentAlleSamarbeid().first().id
+
+        val dto = salesforceAktivitetDto(sak, samarbeidId)
+        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = dto.Id__c,
+            melding = Json.encodeToString(dto),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+
+        postgresContainer.hentEnkelKolonne<String>("SELECT saksnummer FROM salesforce_aktiviteter WHERE id = '${dto.Id__c}'") shouldBe sak.saksnummer
+    }
+
+    private fun salesforceAktivitetDto(
+        sak: IASakDto,
+        samarbeidId: Int,
+    ): SalesforceAktivitetDto {
+        val dto =
+            SalesforceAktivitetDto(
+                Id__c = UUID.randomUUID().toString(),
+                EventType__c = "Created",
+                TaskEvent__c = "Møte",
+                IACaseNumber__c = sak.saksnummer,
+                IACooperationId__c = "$samarbeidId",
+                Service__c = "Sykefraværsarbeid",
+                IASubtheme__c = "Sykefraværsrutiner",
+                ActivityDate__c = "2025-03-04T00:00:00Z",
+                CompletedDate__c = null,
+                EndDateTime__c = "2025-03-04T14:00:00Z",
+                Status__c = "",
+                AccountOrgNumber__c = sak.orgnr,
+            )
+        return dto
     }
 
     @Test
@@ -70,7 +115,7 @@ class SalesforceAktivitetKonsumentTest {
           "ReminderDateTime__c": "2025-02-26T07:00:00Z",
           "Service__c": "Sykefraværsarbeid",
           "StartDateTime__c": null,
-          "Status__c": "Fullført",
+          "Status__c": "",
           "Subject__c": "Test for Pia",
           "TaskEvent__c": "Oppgave",
           "CompletedDate__c": null,
