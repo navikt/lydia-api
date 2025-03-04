@@ -371,6 +371,7 @@ fun startLydiaBackend() {
             salesforceAktivitetService = SalesforceAktivitetService(
                 SalesforceAktivitetRepository(dataSource = dataSource),
                 iaSakRepository,
+                prosessRepository,
             ),
         )
         run()

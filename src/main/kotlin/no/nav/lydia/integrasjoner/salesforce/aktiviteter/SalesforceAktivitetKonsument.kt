@@ -67,18 +67,22 @@ class SalesforceAktivitetKonsument :
                         try {
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
-                                val aktiviteter = records.map {
-                                    json.decodeFromString<SalesforceAktivitetDto>(it.value())
-                                    // TODO: Håndter feilformaterte meldinger
-                                }.filter { aktivitet ->
-                                    !aktivitet.IACaseNumber__c.isNullOrBlank()
-                                }
+                                try {
+                                    val aktiviteter = records.map {
+                                        json.decodeFromString<SalesforceAktivitetDto>(it.value())
+                                        // TODO: Håndter feilformaterte meldinger
+                                    }.filter { aktivitet ->
+                                        !aktivitet.IACaseNumber__c.isNullOrBlank()
+                                    }
 
-                                aktiviteter.forEach {
-                                    logger.info("Hentet aktivitet. ${it.tilLog()}")
-                                }
-                                logger.info("Behandlet ${records.count()} meldinger i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr")
+                                    aktiviteter.forEach {
+                                        salesforceAktivitetService.lagreAktivitet(it.tilDomene())
+                                    }
+                                    logger.info("Behandlet ${records.count()} meldinger i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr")
 //                                consumer.commitSync()
+                                } catch (e: Exception) {
+                                    logger.warn("Fikk feilmelding ved lagring av aktivitet; ${e.message}")
+                                }
                             }
                         } catch (e: RetriableException) {
                             logger.warn("Had a retriable exception in $consumer (topic '${topic.navn}'), retrying", e)

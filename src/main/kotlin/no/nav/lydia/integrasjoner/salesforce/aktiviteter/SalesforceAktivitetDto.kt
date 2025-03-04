@@ -8,28 +8,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SalesforceAktivitetDto(
     val Id__c: String, // -- Id til aktivitet i SF
-    val ActivityCreatedDate__c: String? = null, // -- Når aktiviteten ble opprettet i SF
-    val EventObject__c: String, // -- Objekttype i SF (Task ; Event)
     val TaskEvent__c: String, // -- Hva slags aktivitet (Møte ; Oppgave)
-    val EventType__c: String, // -- Type hendelse (Created ; Updated ; Deleted ; Undeleted)
-    val Type__c: String? = null, // -- Hvilken kanal er brukt (Call ; Email ; SMS ; Meeting ; Other)
-    val ActivityDate__c: String? = null, // -- Planlagt tid for aktivitet
-    val Status__c: String? = null, // -- Status på aktivitet (Åpen ; Fullført)
-//    val Subject__c: String? = null, // -- Fritekst emne for aktivitet
-    val AccountOrgNumber__c: String? = null, // -- Orgnummer aktiviteten gjelder
-    val ActivityType__c: String? = null, // -- Aktivitetstype
     val IACaseNumber__c: String? = null, // -- IA saksnummer
     val IACooperationId__c: String? = null, // -- Samarbeidsid
     val Service__c: String? = null, // -- Plan - Tema
     val IASubtheme__c: String? = null, // -- Plan - Undertema
-) {
-    fun tilLog() =
-        "id: '$Id__c'," +
-            " type: '$TaskEvent__c'," +
-            " saksnummer: '$IACaseNumber__c'," +
-            " samarbeid: '$IACooperationId__c'," +
-            " tema: '$Service__c'," +
-            " undertema: '$IASubtheme__c'," +
-            " created: '$ActivityCreatedDate__c'" +
-            " planlagt: '$ActivityDate__c'"
-}
+    val ActivityDate__c: String? = null, // -- Planlagt tid for aktivitet
+    val CompletedDate__c: String? = null, // -- Når en oppdage ble fullført
+    val EndDateTime__c: String? = null, // -- Når et møte er planlagt ferdig
+    val Status__c: String? = null, // -- Status på aktivitet (Åpen ; Fullført)
+    val AccountOrgNumber__c: String? = null, // -- Orgnummer aktiviteten gjelder
+)
