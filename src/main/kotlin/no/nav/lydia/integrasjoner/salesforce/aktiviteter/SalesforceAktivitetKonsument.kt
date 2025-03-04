@@ -82,7 +82,7 @@ class SalesforceAktivitetKonsument :
                                     logger.info(
                                         "Behandlet ${records.count()} aktiviteter i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr",
                                     )
-//                                consumer.commitSync()
+                                    consumer.commitSync()
                                 } catch (e: Exception) {
                                     logger.warn("Fikk feilmelding ved lagring av aktivitet; ${e.message}", e)
                                 }
