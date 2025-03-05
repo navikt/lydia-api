@@ -11,7 +11,27 @@ class SalesforceAktivitetService(
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass.name)
 
-    fun lagreAktivitet(aktivitet: SalesforceAktivitet) {
+    fun håndterAktivitet(aktivitetDto: SalesforceAktivitetDto) {
+        val aktivitet = aktivitetDto.tilDomene()
+        when (aktivitetDto.EventType__c) {
+            "Created",
+            "Updated",
+            -> {
+                lagreAktivitet(aktivitet)
+            }
+            "Deleted" -> {
+                oppdaterSlettetStatus(aktivitet, slettet = true)
+            }
+            "Undeleted" -> {
+                oppdaterSlettetStatus(aktivitet, slettet = false)
+            }
+            else -> {
+                logger.warn("Mottok uventet EventType__c: ${aktivitetDto.EventType__c} for aktivitet: ${aktivitetDto.Id__c}")
+            }
+        }
+    }
+
+    private fun lagreAktivitet(aktivitet: SalesforceAktivitet) {
         val iaSak = iaSakRepository.hentIASak(aktivitet.saksnummer)
         val samarbeid = aktivitet.samarbeidsId?.let { prosessRepository.hentProsess(aktivitet.saksnummer, it) }
 
@@ -26,5 +46,12 @@ class SalesforceAktivitetService(
         } else {
             logger.info("Lagrer IKKE aktivitet: $aktivitet")
         }
+    }
+
+    private fun oppdaterSlettetStatus(
+        aktivitet: SalesforceAktivitet,
+        slettet: Boolean,
+    ) {
+        salesforceAktivitetRepository.oppdaterSlettetStatus(aktivitet, slettet)
     }
 }

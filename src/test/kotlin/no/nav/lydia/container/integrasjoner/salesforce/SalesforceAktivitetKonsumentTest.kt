@@ -58,6 +58,38 @@ class SalesforceAktivitetKonsumentTest {
         postgresContainer.hentEnkelKolonne<String>("SELECT saksnummer FROM salesforce_aktiviteter WHERE id = '${dto.Id__c}'") shouldBe sak.saksnummer
     }
 
+    @Test
+    fun `kan slette og gjenopprette sf-aktiviteter`() {
+        val sak = nySakIViBistår()
+        val samarbeidId = sak.hentAlleSamarbeid().first().id
+
+        val aktivitet = salesforceAktivitetDto(
+            saksnummer = sak.saksnummer,
+            orgnummer = sak.orgnr,
+            samarbeidId = samarbeidId,
+        )
+        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = aktivitet.Id__c,
+            melding = Json.encodeToString(aktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        postgresContainer.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe false
+
+        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = aktivitet.Id__c,
+            melding = Json.encodeToString(aktivitet.copy(EventType__c = "Deleted")),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        postgresContainer.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe true
+
+        TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = aktivitet.Id__c,
+            melding = Json.encodeToString(aktivitet.copy(EventType__c = "Undeleted")),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        postgresContainer.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe false
+    }
+
     private fun salesforceAktivitetDto(
         saksnummer: String? = null,
         orgnummer: String? = null,
