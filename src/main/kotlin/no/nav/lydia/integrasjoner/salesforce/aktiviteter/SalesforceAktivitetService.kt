@@ -52,6 +52,7 @@ class SalesforceAktivitetService(
         aktivitet: SalesforceAktivitet,
         slettet: Boolean,
     ) {
+        logger.info("${if (slettet) "Sletter" else "Gjenoppretter"} aktivitet $aktivitet")
         salesforceAktivitetRepository.oppdaterSlettetStatus(aktivitet, slettet)
     }
 }
