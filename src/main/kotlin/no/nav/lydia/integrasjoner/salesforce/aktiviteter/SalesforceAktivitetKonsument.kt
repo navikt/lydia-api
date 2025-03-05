@@ -7,6 +7,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
@@ -69,13 +70,20 @@ class SalesforceAktivitetKonsument :
                             if (!records.isEmpty) {
                                 try {
                                     val aktiviteter = records.map {
-                                        json.decodeFromString<SalesforceAktivitetDto>(it.value())
-                                        // TODO: Håndter feilformaterte meldinger
-                                    }.filter { aktivitet ->
-                                        !aktivitet.IACaseNumber__c.isNullOrBlank()
-                                    }
+                                        try {
+                                            json.decodeFromString<SalesforceAktivitetDto>(it.value())
+                                        } catch (e: SerializationException) {
+                                            logger.error("Klarte ikke å dekode aktivitet med nøkkel ${it.key()}")
+                                            null
+                                        } catch (e: IllegalArgumentException) {
+                                            logger.error("Aktivitet med nøkkel ${it.key()} er feil formatert")
+                                            null
+                                        }
+                                    }.filterNotNull()
 
-                                    aktiviteter.forEach {
+                                    aktiviteter.filter { aktivitet ->
+                                        !aktivitet.IACaseNumber__c.isNullOrBlank()
+                                    }.forEach {
                                         logger.info("Forsøker å lagre aktivitet: ${it.Id__c}")
                                         salesforceAktivitetService.håndterAktivitet(it)
                                     }

@@ -375,8 +375,7 @@ fun startLydiaBackend() {
             ),
         )
         run()
-    }
-//        .also { HelseMonitor.leggTilHelsesjekk(it) } // TODO: uncomment
+    }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
     embeddedServer(Netty, port = 8080) {
         lydiaRestApi(
