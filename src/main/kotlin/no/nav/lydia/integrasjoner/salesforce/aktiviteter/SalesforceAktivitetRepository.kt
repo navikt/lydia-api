@@ -8,6 +8,27 @@ import javax.sql.DataSource
 class SalesforceAktivitetRepository(
     val dataSource: DataSource,
 ) {
+    fun oppdaterSlettetStatus(
+        aktivitet: SalesforceAktivitet,
+        slettet: Boolean,
+    ) {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE salesforce_aktiviteter
+                        SET slettet = :slettet
+                        WHERE id = :id
+                    """.trimIndent(),
+                    mapOf(
+                        "slettet" to slettet,
+                        "id" to aktivitet.id,
+                    ),
+                ).asUpdate,
+            )
+        }
+    }
+
     fun lagreAktivitet(aktivitet: SalesforceAktivitet) =
         using(sessionOf(dataSource)) { session ->
             session.run(

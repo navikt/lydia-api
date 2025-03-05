@@ -77,7 +77,7 @@ class SalesforceAktivitetKonsument :
 
                                     aktiviteter.forEach {
                                         logger.info("Forsøker å lagre aktivitet: ${it.Id__c}")
-                                        salesforceAktivitetService.lagreAktivitet(it.tilDomene())
+                                        salesforceAktivitetService.håndterAktivitet(it)
                                     }
                                     logger.info(
                                         "Behandlet ${records.count()} aktiviteter i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr",
