@@ -26,7 +26,7 @@ class SalesforceAktivitetKonsumentTest {
     }
 
     @Test
-    fun `skal ikke lagre meldinger på sf-aktivitet topic hvir det mangler samarbeids-id`() {
+    fun `skal ikke lagre meldinger på sf-aktivitet topic hvis det mangler samarbeids-id`() {
         val sak = nySakIViBistår()
         val dto = salesforceAktivitetDto(saksnummer = sak.saksnummer, orgnummer = sak.orgnr)
         TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
