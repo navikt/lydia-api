@@ -27,6 +27,16 @@ spec:
   prometheus:
     enabled: true
     path: "/metrics"
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+      destinations:
+        - id: "grafana-lgtm"
+    logging:
+      destinations:
+        - id: loki
+        - id: elastic
   accessPolicy:
     outbound:
       rules:
