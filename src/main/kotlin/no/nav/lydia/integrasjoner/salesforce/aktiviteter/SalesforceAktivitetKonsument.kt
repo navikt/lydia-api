@@ -69,7 +69,8 @@ class SalesforceAktivitetKonsument :
                             val records = consumer.poll(Duration.ofSeconds(1))
                             if (!records.isEmpty) {
                                 try {
-                                    val aktiviteter = records.map {
+                                    val aktiviteter = records.mapNotNull {
+                                        logger.info("Mottok aktivitet melding med nøkkel ${it.key()}")
                                         try {
                                             json.decodeFromString<SalesforceAktivitetDto>(it.value())
                                         } catch (e: SerializationException) {
@@ -79,14 +80,13 @@ class SalesforceAktivitetKonsument :
                                             logger.error("Aktivitet med nøkkel ${it.key()} er feil formatert")
                                             null
                                         }
-                                    }.filterNotNull()
-
-                                    aktiviteter.filter { aktivitet ->
+                                    }.filter { aktivitet ->
                                         !aktivitet.IACaseNumber__c.isNullOrBlank()
-                                    }.forEach {
+                                    }.onEach {
                                         logger.info("Forsøker å lagre aktivitet: ${it.Id__c}")
                                         salesforceAktivitetService.håndterAktivitet(it)
                                     }
+
                                     logger.info(
                                         "Behandlet ${records.count()} aktiviteter i topic '${topic.navn}'). ${aktiviteter.size} er knyttet til et saksnr",
                                     )
