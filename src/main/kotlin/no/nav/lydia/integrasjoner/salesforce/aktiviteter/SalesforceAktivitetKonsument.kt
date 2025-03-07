@@ -70,7 +70,6 @@ class SalesforceAktivitetKonsument :
                             if (!records.isEmpty) {
                                 try {
                                     val aktiviteter = records.mapNotNull {
-                                        logger.info("Mottok aktivitet melding med nøkkel ${it.key()}")
                                         try {
                                             json.decodeFromString<SalesforceAktivitetDto>(it.value())
                                         } catch (e: SerializationException) {
@@ -80,6 +79,8 @@ class SalesforceAktivitetKonsument :
                                             logger.error("Aktivitet med nøkkel ${it.key()} er feil formatert")
                                             null
                                         }
+                                    }.onEach {
+                                        logger.info("Behandler aktivitet med id: ${it.Id__c}, IA-saksnummer: ${it.IACaseNumber__c}")
                                     }.filter { aktivitet ->
                                         !aktivitet.IACaseNumber__c.isNullOrBlank()
                                     }.onEach {
