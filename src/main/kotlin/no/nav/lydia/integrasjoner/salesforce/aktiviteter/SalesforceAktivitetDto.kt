@@ -12,6 +12,7 @@ data class SalesforceAktivitetDto(
     val TaskEvent__c: String, // -- Hva slags aktivitet (Møte ; Oppgave)
     val IACaseNumber__c: String? = null, // -- IA saksnummer
     val IACooperationId__c: String? = null, // -- Samarbeidsid
+    val IAPlanId__c: String? = null, // -- Plan - id
     val Service__c: String? = null, // -- Plan - Tema
     val IASubtheme__c: String? = null, // -- Plan - Undertema
     val ActivityDate__c: String? = null, // -- Planlagt tid for aktivitet

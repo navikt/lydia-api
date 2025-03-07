@@ -13,6 +13,7 @@ class SalesforceAktivitetService(
 
     fun håndterAktivitet(aktivitetDto: SalesforceAktivitetDto) {
         val aktivitet = aktivitetDto.tilDomene()
+        logger.info("Behandler aktivitet: ${aktivitetDto.Id__c} for plan: ${aktivitetDto.IAPlanId__c}")
         when (aktivitetDto.EventType__c) {
             "Created",
             "Updated",
