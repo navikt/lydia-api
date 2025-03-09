@@ -13,7 +13,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.ia.eksport.FullførtBehovsvurdering
+import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test

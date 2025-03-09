@@ -9,7 +9,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingValue
+import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto

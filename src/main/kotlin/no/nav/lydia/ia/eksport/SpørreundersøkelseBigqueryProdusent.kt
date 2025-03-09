@@ -4,58 +4,44 @@ import ia.felles.integrasjoner.kafkameldinger.eksport.SpørreundersøkelseEkspor
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 class SpørreundersøkelseBigqueryProdusent(
-    private val produsent: KafkaProdusent,
+    kafka: Kafka,
+    topic: Topic = Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-) : Observer<Spørreundersøkelse> {
-    override fun receive(input: Spørreundersøkelse) {
-        sendTilKafka(spørreundersøkelse = input)
-    }
+) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
+    Observer<Spørreundersøkelse> {
+    override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
 
-    fun reEksporter(input: Spørreundersøkelse) {
-        sendTilKafka(input)
-    }
+    override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
+        val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = input.id.toString())
 
-    private fun sendTilKafka(spørreundersøkelse: Spørreundersøkelse) {
-        val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = spørreundersøkelse.id.toString())
-        val kafkaMelding = spørreundersøkelse.tilKafkaMelding(alleSvar)
-        produsent.sendMelding(Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
-    }
+        val nøkkel = input.saksnummer
+        val verdi = SpørreundersøkelseEksport(
+            id = input.id.toString(),
+            orgnr = input.orgnummer,
+            status = input.status,
+            type = input.type,
+            samarbeidId = input.samarbeidId,
+            saksnummer = input.saksnummer,
+            opprettetAv = input.opprettetAv,
+            opprettet = input.opprettetTidspunkt,
+            harMinstEttSvar = alleSvar.isNotEmpty(),
+            endret = input.endretTidspunkt,
+            påbegynt = input.påbegyntTidspunkt,
+            fullført = input.fullførtTidspunkt,
+            førsteSvarMotatt = alleSvar.minOfOrNull { it.opprettet },
+            sisteSvarMottatt = alleSvar.maxOfOrNull { it.endret ?: it.opprettet },
+            // TODO: test at tidForSisteSvar blir satt rett om man svarer på nytt på et spørsmål (oppdaterer endret)
+        )
 
-    companion object {
-        fun Spørreundersøkelse.tilKafkaMelding(alleSvar: List<SpørreundersøkelseSvar>): Pair<String, String> {
-            val key = saksnummer
-            val value = SpørreundersøkelseEksport(
-                id = id.toString(),
-                orgnr = orgnummer,
-                status = status,
-                type = type,
-                samarbeidId = samarbeidId,
-                saksnummer = saksnummer,
-                opprettetAv = opprettetAv,
-                opprettet = opprettetTidspunkt,
-                harMinstEttSvar = alleSvar.isNotEmpty(),
-                endret = endretTidspunkt,
-                påbegynt = påbegyntTidspunkt,
-                fullført = fullførtTidspunkt,
-                førsteSvarMotatt = alleSvar.tidForFørsteSvar(),
-                sisteSvarMottatt = alleSvar.tidForSisteSvar(),
-            )
-            return key to Json.encodeToString(value)
-        }
-
-        private fun List<SpørreundersøkelseSvar>.tidForFørsteSvar(): LocalDateTime? = this.minOfOrNull { it.opprettet }
-
-        private fun List<SpørreundersøkelseSvar>.tidForSisteSvar(): LocalDateTime? = this.maxOfOrNull { it.endret ?: it.opprettet }
-        // TODO: test at tidForSisteSvar blir satt rett om man svarer på nytt på et spørsmål (oppdaterer endret)
+        return nøkkel to Json.encodeToString(verdi)
     }
 
     @Serializable

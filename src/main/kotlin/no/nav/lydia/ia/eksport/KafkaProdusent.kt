@@ -1,27 +1,42 @@
 package no.nav.lydia.ia.eksport
 
 import no.nav.lydia.Kafka
+import no.nav.lydia.Topic
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
-class KafkaProdusent(
-    kafkaConfig: Kafka,
+abstract class KafkaProdusent<T>(
+    protected val kafka: Kafka,
+    protected val topic: Topic,
 ) {
-    private val producer: KafkaProducer<String, String> = KafkaProducer(kafkaConfig.producerProperties())
+    private val produsent: KafkaProducer<String, String> =
+        KafkaProducer(kafka.producerProperties(clientId = topic.konsumentGruppe))
 
     init {
         Runtime.getRuntime().addShutdownHook(
             Thread {
-                producer.close()
+                produsent.close()
             },
         )
     }
 
     fun sendMelding(
-        topic: String,
         nøkkel: String,
         verdi: String,
     ) {
-        producer.send(ProducerRecord(topic, nøkkel, verdi))
+        produsent.send(
+            ProducerRecord(
+                topic.navn,
+                nøkkel,
+                verdi,
+            ),
+        )
+    }
+
+    protected abstract fun tilKafkaMelding(input: T): Pair<String, String>
+
+    fun sendPåKafka(input: T) {
+        val (key, value) = tilKafkaMelding(input)
+        sendMelding(key, value)
     }
 }

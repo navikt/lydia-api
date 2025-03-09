@@ -2,41 +2,30 @@ package no.nav.lydia.ia.eksport
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 
 class SamarbeidBigqueryProdusent(
-    private val produsent: KafkaProdusent,
-) : Observer<IAProsess> {
-    override fun receive(input: IAProsess) {
-        sendTilKafka(samarbeid = input)
-    }
+    kafka: Kafka,
+    topic: Topic = Topic.SAMARBEID_BIGQUERY_TOPIC,
+) : KafkaProdusent<IAProsess>(kafka, topic),
+    Observer<IAProsess> {
+    override fun receive(input: IAProsess) = sendPåKafka(input = input)
 
-    fun reEksporter(input: IAProsess) {
-        sendTilKafka(input)
-    }
-
-    private fun sendTilKafka(samarbeid: IAProsess) {
-        val kafkaMelding = samarbeid.tilKafkaMelding()
-        produsent.sendMelding(Topic.SAMARBEID_BIGQUERY_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
-    }
-
-    companion object {
-        fun IAProsess.tilKafkaMelding(): Pair<String, String> {
-            val key = saksnummer
-            val value = SamarbeidValue(
-                id = id,
-                saksnummer = saksnummer,
-                navn = navn,
-                status = status?.name,
-                opprettet = opprettet,
-                sistEndret = sistEndret,
-            )
-            return key to Json.encodeToString(value)
-        }
+    override fun tilKafkaMelding(input: IAProsess): Pair<String, String> {
+        val nøkkel = input.saksnummer
+        val verdi = SamarbeidValue(
+            id = input.id,
+            saksnummer = input.saksnummer,
+            navn = input.navn,
+            status = input.status?.name,
+            opprettet = input.opprettet,
+            sistEndret = input.sistEndret,
+        )
+        return nøkkel to Json.encodeToString(verdi)
     }
 
     @Serializable

@@ -20,7 +20,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Topic

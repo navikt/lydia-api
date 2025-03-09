@@ -23,9 +23,7 @@ class SamarbeidsplanBigqueryEksporterer(
         log.info("Starter re-eksport av ${allePlaner.size} samarbeidsplaner")
 
         try {
-            allePlaner.forEach { nåværendePlan ->
-                samarbeidsplanBigqueryProdusent.reEksporter(nåværendePlan)
-            }
+            allePlaner.forEach { nåværendePlan -> samarbeidsplanBigqueryProdusent.reEksporter(plan = nåværendePlan) }
         } catch (e: Exception) {
             KJØRER_STATISTIKK_EKSPORT.set(false)
             log.error("Klarte ikke å kjøre eksport av samarbeidsplaner", e)

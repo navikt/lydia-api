@@ -6,7 +6,6 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
@@ -280,32 +279,31 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `skal få oppdatert antall som har svart på et spørsmål i en kartlegging`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
-        spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val opprettetSpørreundersøkelse = sak.opprettSpørreundersøkelse()
+        opprettetSpørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         runBlocking {
-            TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = spørreundersøkelse.id,
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = opprettetSpørreundersøkelse.id,
                 konsument = kartleggingKonsument,
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
                     spørreundersøkelse.status shouldBe PÅBEGYNT
                 }
             }
         }
 
-        val spørsmålId = spørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first().id
-        spørreundersøkelse.sendKartleggingSvarTilKafka(
+        val spørsmålId = opprettetSpørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first().id
+        opprettetSpørreundersøkelse.sendKartleggingSvarTilKafka(
             spørsmålId = spørsmålId,
         )
 
         runBlocking {
-            TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
-                        spørreundersøkelse.id,
+                        opprettetSpørreundersøkelse.id,
                         ANTALL_SVAR,
                     ),
                 ),
@@ -316,7 +314,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
                         Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(
                             melding,
                         )
-                    antallSvarForSpørsmål.spørreundersøkelseId shouldBe spørreundersøkelse.id
+                    antallSvarForSpørsmål.spørreundersøkelseId shouldBe opprettetSpørreundersøkelse.id
                     antallSvarForSpørsmål.spørsmålId shouldBe spørsmålId
                     antallSvarForSpørsmål.antallSvar shouldBe 1
                 }

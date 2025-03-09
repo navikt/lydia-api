@@ -17,7 +17,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SAMARBEID_ID_PREFIKS
-import no.nav.lydia.ia.eksport.SamarbeidKafkaMeldingValue
+import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import org.junit.AfterClass
 import org.junit.BeforeClass
