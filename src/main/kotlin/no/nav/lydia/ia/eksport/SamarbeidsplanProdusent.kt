@@ -3,8 +3,8 @@ package no.nav.lydia.ia.eksport
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
@@ -12,19 +12,15 @@ import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 
 class SamarbeidsplanProdusent(
-    private val produsent: KafkaProdusent,
-) {
-    fun sendPåKafka(samarbeidsplan: SamarbeidsplanKafkaMelding) {
-        val (nøkkel, melding) = samarbeidsplan.tilKeyValue()
-        produsent.sendMelding(
-            topic = Topic.SAMARBEIDSPLAN_TOPIC.navn,
-            nøkkel = nøkkel,
-            verdi = melding,
-        )
+    kafka: Kafka,
+    topic: Topic = Topic.SAMARBEIDSPLAN_TOPIC,
+) : KafkaProdusent<SamarbeidsplanKafkaMelding>(kafka, topic) {
+    // TODO: burde ikke denne ta i mot domene og gjøre om til KAFKA melding?
+    override fun tilKafkaMelding(input: SamarbeidsplanKafkaMelding): Pair<String, String> {
+        val key = "${input.saksnummer}-${input.samarbeid.id}-${input.plan.id}"
+        val value = Json.encodeToString<SamarbeidsplanKafkaMelding>(input)
+        return key to value
     }
-
-    private fun SamarbeidsplanKafkaMelding.tilKeyValue() =
-        "${this.saksnummer}-${this.samarbeid.id}-${this.plan.id}" to Json.encodeToString<SamarbeidsplanKafkaMelding>(this)
 }
 
 @Serializable

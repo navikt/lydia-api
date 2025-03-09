@@ -23,9 +23,7 @@ class SamarbeidBigqueryEksporterer(
         log.info("Starter re-eksport av ${alleSamarbeid.size} samarbeid")
 
         try {
-            alleSamarbeid.forEach { nåværendeSamarbeid ->
-                samarbeidBigqueryProdusent.reEksporter(nåværendeSamarbeid)
-            }
+            alleSamarbeid.forEach { nåværendeSamarbeid -> samarbeidBigqueryProdusent.receive(nåværendeSamarbeid) }
         } catch (e: Exception) {
             KJØRER_STATISTIKK_EKSPORT.set(false)
             log.error("Klarte ikke å kjøre eksport av samarbeid", e)

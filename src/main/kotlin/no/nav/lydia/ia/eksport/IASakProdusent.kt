@@ -3,36 +3,33 @@ package no.nav.lydia.ia.eksport
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 
 class IASakProdusent(
-    private val produsent: KafkaProdusent,
-) : Observer<IASak> {
-    override fun receive(input: IASak) {
-        val kafkaMelding = input.tilKafkaMelding()
-        produsent.sendMelding(Topic.IA_SAK_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
-    }
+    kafka: Kafka,
+    topic: Topic = Topic.IA_SAK_TOPIC,
+) : KafkaProdusent<IASak>(kafka, topic),
+    Observer<IASak> {
+    override fun receive(input: IASak) = sendPåKafka(input = input)
 
-    companion object {
-        fun IASak.tilKafkaMelding(): Pair<String, String> {
-            val key = this.saksnummer
-            val value = IASakValue(
-                saksnummer = this.saksnummer,
-                orgnr = this.orgnr,
-                eierAvSak = this.eidAv,
-                endretAvHendelseId = this.endretAvHendelseId,
-                status = this.status,
-                opprettetTidspunkt = this.opprettetTidspunkt.toKotlinLocalDateTime(),
-                endretTidspunkt = this.endretTidspunkt?.toKotlinLocalDateTime()
-                    ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-            )
-            return key to Json.encodeToString(value)
-        }
+    override fun tilKafkaMelding(input: IASak): Pair<String, String> {
+        val nøkkel = input.saksnummer
+        val verdi = IASakValue(
+            saksnummer = input.saksnummer,
+            orgnr = input.orgnr,
+            eierAvSak = input.eidAv,
+            endretAvHendelseId = input.endretAvHendelseId,
+            status = input.status,
+            opprettetTidspunkt = input.opprettetTidspunkt.toKotlinLocalDateTime(),
+            endretTidspunkt = input.endretTidspunkt?.toKotlinLocalDateTime()
+                ?: input.opprettetTidspunkt.toKotlinLocalDateTime(),
+        )
+        return nøkkel to Json.encodeToString(verdi)
     }
 
     @Serializable

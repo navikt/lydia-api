@@ -7,8 +7,8 @@ import ia.felles.integrasjoner.kafkameldinger.eksport.TemaMelding
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.appstatus.ObservedPlan
@@ -17,51 +17,42 @@ import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 
 class SamarbeidsplanBigqueryProdusent(
-    private val produsent: KafkaProdusent,
-) : Observer<ObservedPlan> {
-    override fun receive(input: ObservedPlan) {
-        sendTilKafka(samarbeidsplan = input.plan)
+    kafka: Kafka,
+    topic: Topic = Topic.SAMARBEIDSPLAN_BIGQUERY_TOPIC,
+) : KafkaProdusent<Plan>(kafka, topic),
+    Observer<ObservedPlan> {
+    override fun receive(input: ObservedPlan) = sendPåKafka(input = input.plan)
+
+    fun reEksporter(plan: Plan) = sendPåKafka(input = plan)
+
+    override fun tilKafkaMelding(input: Plan): Pair<String, String> {
+        val nøkkel = input.id.toString()
+        val verdi = PlanValue(
+            id = input.id.toString(),
+            samarbeidId = input.samarbeidId,
+            sistEndret = input.sistEndret,
+            temaer = input.temaer.map { it.tilKafkaMelding() },
+        )
+        return nøkkel to Json.encodeToString(verdi)
     }
 
-    fun reEksporter(input: Plan) {
-        sendTilKafka(input)
-    }
+    private fun PlanTema.tilKafkaMelding(): TemaValue =
+        TemaValue(
+            id = id,
+            navn = navn,
+            inkludert = inkludert,
+            innhold = undertemaer.map { it.tilKafkaMelding() },
+        )
 
-    private fun sendTilKafka(samarbeidsplan: Plan) {
-        val kafkaMelding = samarbeidsplan.tilKafkaMelding()
-        produsent.sendMelding(Topic.SAMARBEIDSPLAN_BIGQUERY_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
-    }
-
-    companion object {
-        fun Plan.tilKafkaMelding(): Pair<String, String> {
-            val key = this.id.toString()
-            val value = PlanValue(
-                id = this.id.toString(),
-                samarbeidId = this.samarbeidId,
-                sistEndret = this.sistEndret,
-                temaer = this.temaer.map { it.tilKafkaMelding() },
-            )
-            return key to Json.encodeToString(value)
-        }
-
-        fun PlanTema.tilKafkaMelding(): TemaValue =
-            TemaValue(
-                id = id,
-                navn = navn,
-                inkludert = inkludert,
-                innhold = undertemaer.map { it.tilKafkaMelding() },
-            )
-
-        fun PlanUndertema.tilKafkaMelding(): InnholdValue =
-            InnholdValue(
-                id = id,
-                navn = navn,
-                inkludert = inkludert,
-                status = status,
-                startDato = startDato,
-                sluttDato = sluttDato,
-            )
-    }
+    private fun PlanUndertema.tilKafkaMelding(): InnholdValue =
+        InnholdValue(
+            id = id,
+            navn = navn,
+            inkludert = inkludert,
+            status = status,
+            startDato = startDato,
+            sluttDato = sluttDato,
+        )
 
     @Serializable
     data class PlanValue(

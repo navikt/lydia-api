@@ -4,7 +4,6 @@ import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.Spørreunders
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
@@ -131,7 +130,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
         spørreundersøkelse.stengTema(temaId = tema.temaId)
         runBlocking {
-            TestContainerHelper.kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
                         spørreundersøkelseId = spørreundersøkelse.id,

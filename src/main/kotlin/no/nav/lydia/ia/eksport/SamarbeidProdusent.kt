@@ -1,42 +1,29 @@
 package no.nav.lydia.ia.eksport
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.ia.sak.db.ProsessRepository.SamarbeidIVirksomhetDto
 
 class SamarbeidProdusent(
-    private val produsent: KafkaProdusent,
-) {
-    fun sendPåKafka(samarbeidIVirksomhetDto: SamarbeidIVirksomhetDto) {
-        produsent.sendMelding(
-            topic = Topic.SAMARBEIDSPLAN_TOPIC.navn,
-            nøkkel = samarbeidIVirksomhetDto.tilKey(),
-            verdi = samarbeidIVirksomhetDto.tilValue(),
+    kafka: Kafka,
+    topic: Topic = Topic.SAMARBEIDSPLAN_TOPIC,
+) : KafkaProdusent<SamarbeidIVirksomhetDto>(kafka, topic) {
+    override fun tilKafkaMelding(input: SamarbeidIVirksomhetDto): Pair<String, String> {
+        val nøkkel = "${input.saksnummer}-${input.samarbeid.id}"
+        val verdi = SamarbeidKafkaMeldingValue(
+            orgnr = input.orgnr,
+            saksnummer = input.saksnummer,
+            samarbeid = input.samarbeid,
         )
+        return nøkkel to Json.encodeToString(verdi)
     }
 
-    private fun SamarbeidIVirksomhetDto.tilKey() = "${this.saksnummer}-${this.samarbeid.id}"
-
-    private fun SamarbeidIVirksomhetDto.tilValue() =
-        Json.encodeToString<SamarbeidKafkaMeldingValue>(
-            SamarbeidKafkaMeldingValue(
-                orgnr = this.orgnr,
-                saksnummer = this.saksnummer,
-                samarbeid = this.samarbeid,
-            ),
-        )
+    @Serializable
+    data class SamarbeidKafkaMeldingValue(
+        val orgnr: String,
+        val saksnummer: String,
+        val samarbeid: SamarbeidDto,
+    )
 }
-
-data class SamarbeidIVirksomhetDto(
-    val orgnr: String,
-    val saksnummer: String,
-    val samarbeid: SamarbeidDto,
-)
-
-@Serializable
-data class SamarbeidKafkaMeldingValue(
-    val orgnr: String,
-    val saksnummer: String,
-    val samarbeid: SamarbeidDto,
-)

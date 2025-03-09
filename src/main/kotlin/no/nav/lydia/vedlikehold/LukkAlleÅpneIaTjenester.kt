@@ -2,12 +2,15 @@ package no.nav.lydia.vedlikehold
 
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
+import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.Rolle
+import java.time.LocalDateTime
 
 class LukkAlleÅpneIaTjenester(
     val iaSakLeveranseRepository: IASakLeveranseRepository,
@@ -27,27 +30,27 @@ class LukkAlleÅpneIaTjenester(
                     emptySet(),
                 ),
             ).map { iaTjeneste ->
-                iaSakLeveranseProdusent.sendMelding(
-                    iaTjeneste.id.toString(),
-                    IASakLeveranseProdusent.IASakLeveranseValue(
-                        iaTjeneste.id,
-                        iaTjeneste.saksnummer,
-                        iaTjeneste.modul.iaTjeneste.id,
-                        iaTjeneste.modul.iaTjeneste.navn,
-                        iaTjeneste.modul.id,
-                        iaTjeneste.modul.navn,
-                        iaTjeneste.frist.toKotlinLocalDate(),
-                        IASakLeveranseStatus.LEVERT,
-                        iaTjeneste.opprettetAv,
-                        java.time.LocalDateTime.now().toKotlinLocalDateTime(),
-                        "Fia system",
-                        Rolle.SUPERBRUKER,
-                        java.time.LocalDateTime.now().toKotlinLocalDateTime(),
-                        IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnummer,
-                        IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnavn,
-                        iaTjeneste.opprettetTidspunkt?.toKotlinLocalDateTime(),
-                    ),
+                val nøkkel = iaTjeneste.id.toString()
+                val verdi = IASakLeveranseValue(
+                    id = iaTjeneste.id,
+                    saksnummer = iaTjeneste.saksnummer,
+                    iaTjenesteId = iaTjeneste.modul.iaTjeneste.id,
+                    iaTjenesteNavn = iaTjeneste.modul.iaTjeneste.navn,
+                    iaModulId = iaTjeneste.modul.id,
+                    iaModulNavn = iaTjeneste.modul.navn,
+                    frist = iaTjeneste.frist.toKotlinLocalDate(),
+                    status = IASakLeveranseStatus.LEVERT,
+                    opprettetAv = iaTjeneste.opprettetAv,
+                    sistEndret = LocalDateTime.now().toKotlinLocalDateTime(),
+                    sistEndretAv = "Fia system",
+                    sistEndretAvRolle = Rolle.SUPERBRUKER,
+                    fullført = LocalDateTime.now().toKotlinLocalDateTime(),
+                    enhetsnummer = IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnummer,
+                    enhetsnavn = IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnavn,
+                    opprettetTidspunkt = iaTjeneste.opprettetTidspunkt?.toKotlinLocalDateTime(),
                 )
+
+                iaSakLeveranseProdusent.sendMelding(nøkkel, Json.encodeToString(verdi))
             }
         }
     }

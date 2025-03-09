@@ -6,8 +6,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
@@ -16,45 +16,36 @@ import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 
 class IASakLeveranseProdusent(
-    private val produsent: KafkaProdusent,
+    kafka: Kafka,
+    topic: Topic = Topic.IA_SAK_LEVERANSE_TOPIC,
     private val azureService: AzureService,
-) : Observer<IASakLeveranse> {
-    override fun receive(input: IASakLeveranse) {
-        val kafkaMelding = input.tilKafkaMelding()
-        produsent.sendMelding(Topic.IA_SAK_LEVERANSE_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
-    }
+) : KafkaProdusent<IASakLeveranse>(kafka, topic),
+    Observer<IASakLeveranse> {
+    override fun receive(input: IASakLeveranse) = sendPåKafka(input = input)
 
-    fun sendMelding(
-        key: String,
-        value: IASakLeveranseValue,
-    ) {
-        produsent.sendMelding(Topic.IA_SAK_LEVERANSE_TOPIC.navn, key, Json.encodeToString(value))
-    }
+    override fun tilKafkaMelding(input: IASakLeveranse): Pair<String, String> {
+        val navEnhet = azureService.hentNavenhetFraNavIdent(input.sistEndretAv)
 
-    private fun IASakLeveranse.tilKafkaMelding(): Pair<String, String> {
-        val key = this.id.toString()
-        val navEnhet = azureService.hentNavenhetFraNavIdent(sistEndretAv)
-        val enhetsnummer = navEnhet.map { it.enhetsnummer }.getOrElse { "Ukjent" }
-        val enhetsnavn = navEnhet.map { it.enhetsnavn }.getOrElse { "Ukjent" }
-        val value = IASakLeveranseValue(
-            id = this.id,
-            saksnummer = this.saksnummer,
-            iaTjenesteId = this.modul.iaTjeneste.id,
-            iaTjenesteNavn = this.modul.iaTjeneste.navn,
-            iaModulId = this.modul.id,
-            iaModulNavn = this.modul.navn,
-            frist = this.frist.toKotlinLocalDate(),
-            status = this.status,
-            opprettetAv = this.opprettetAv,
-            sistEndret = this.sistEndret.toKotlinLocalDateTime(),
-            sistEndretAv = this.sistEndretAv,
-            sistEndretAvRolle = this.sistEndretAvRolle,
-            fullført = this.fullført?.toKotlinLocalDateTime(),
-            enhetsnummer = enhetsnummer,
-            enhetsnavn = enhetsnavn,
-            opprettetTidspunkt = this.opprettetTidspunkt?.toKotlinLocalDateTime(),
+        val nøkkel = input.id.toString()
+        val verdi = IASakLeveranseValue(
+            id = input.id,
+            saksnummer = input.saksnummer,
+            iaTjenesteId = input.modul.iaTjeneste.id,
+            iaTjenesteNavn = input.modul.iaTjeneste.navn,
+            iaModulId = input.modul.id,
+            iaModulNavn = input.modul.navn,
+            frist = input.frist.toKotlinLocalDate(),
+            status = input.status,
+            opprettetAv = input.opprettetAv,
+            sistEndret = input.sistEndret.toKotlinLocalDateTime(),
+            sistEndretAv = input.sistEndretAv,
+            sistEndretAvRolle = input.sistEndretAvRolle,
+            fullført = input.fullført?.toKotlinLocalDateTime(),
+            enhetsnummer = navEnhet.map { it.enhetsnummer }.getOrElse { "Ukjent" },
+            enhetsnavn = navEnhet.map { it.enhetsnavn }.getOrElse { "Ukjent" },
+            opprettetTidspunkt = input.opprettetTidspunkt?.toKotlinLocalDateTime(),
         )
-        return key to Json.encodeToString(value)
+        return nøkkel to Json.encodeToString(verdi)
     }
 
     @Serializable

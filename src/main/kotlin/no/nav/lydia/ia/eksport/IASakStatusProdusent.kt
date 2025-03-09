@@ -3,8 +3,8 @@ package no.nav.lydia.ia.eksport
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -12,38 +12,32 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 
 class IASakStatusProdusent(
-    private val produsent: KafkaProdusent,
+    kafka: Kafka,
+    topic: Topic = Topic.IA_SAK_STATUS_TOPIC,
     private val iaSakRepository: IASakRepository,
-) : Observer<IASak> {
+) : KafkaProdusent<IASak>(kafka, topic),
+    Observer<IASak> {
     override fun receive(input: IASak) {
-        val kafkaMelding = input.tilKafkaMelding()
-        produsent.sendMelding(Topic.IA_SAK_STATUS_TOPIC.navn, kafkaMelding.first, kafkaMelding.second)
+        // TODO: Hva gjør denne observeren, hvorfor sender den saken den mottar og sender siste aktive sak på orgnr?
+        sendPåKafka(input = input)
+
         if (input.status == IAProsessStatus.SLETTET) {
             iaSakRepository.hentSaker(input.orgnr)
                 .lastOrNull { it.status != IAProsessStatus.SLETTET }
-                ?.let { aktivSak ->
-                    val aktivKafkaMelding = aktivSak.tilKafkaMelding()
-                    produsent.sendMelding(
-                        Topic.IA_SAK_STATUS_TOPIC.navn,
-                        aktivKafkaMelding.first,
-                        aktivKafkaMelding.second,
-                    )
-                }
+                ?.let { aktivSak -> sendPåKafka(input = aktivSak) }
         }
     }
 
-    companion object {
-        fun IASak.tilKafkaMelding(): Pair<String, String> {
-            val key = this.orgnr
-            val value = IASakStatus(
-                orgnr = this.orgnr,
-                saksnummer = this.saksnummer,
-                status = this.status,
-                sistOppdatert = this.endretTidspunkt?.toKotlinLocalDateTime()
-                    ?: this.opprettetTidspunkt.toKotlinLocalDateTime(),
-            )
-            return key to Json.encodeToString(value)
-        }
+    override fun tilKafkaMelding(input: IASak): Pair<String, String> {
+        val nøkkel = input.orgnr
+        val verdi = IASakStatus(
+            orgnr = input.orgnr,
+            saksnummer = input.saksnummer,
+            status = input.status,
+            sistOppdatert = input.endretTidspunkt?.toKotlinLocalDateTime() ?: input.opprettetTidspunkt.toKotlinLocalDateTime(),
+        )
+
+        return nøkkel to Json.encodeToString(verdi)
     }
 
     @Serializable

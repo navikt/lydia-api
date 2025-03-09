@@ -7,7 +7,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.eksport.SamarbeidDto
-import no.nav.lydia.ia.eksport.SamarbeidIVirksomhetDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
@@ -192,4 +191,10 @@ class ProsessRepository(
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
             ),
         )
+
+    data class SamarbeidIVirksomhetDto(
+        val orgnr: String,
+        val saksnummer: String,
+        val samarbeid: SamarbeidDto,
+    )
 }

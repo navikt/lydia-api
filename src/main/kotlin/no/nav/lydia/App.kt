@@ -40,7 +40,6 @@ import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
-import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryProdusent
 import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
@@ -134,7 +133,6 @@ fun startLydiaBackend() {
 
     val dataSource = createDataSource(database = naisEnv.database)
     runMigration(dataSource = dataSource)
-    val kafkaProdusent = KafkaProdusent(naisEnv.kafka)
 
     val virksomhetRepository = VirksomhetRepository(dataSource = dataSource)
     val næringsRepository = NæringsRepository(dataSource = dataSource)
@@ -143,23 +141,22 @@ fun startLydiaBackend() {
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
     val prosessRepository = ProsessRepository(dataSource = dataSource)
     val planRepository = PlanRepository(dataSource = dataSource)
-    val samarbeidsplanProdusent = SamarbeidsplanProdusent(produsent = kafkaProdusent)
-    val samarbeidProdusent = SamarbeidProdusent(produsent = kafkaProdusent)
+    val samarbeidsplanProdusent = SamarbeidsplanProdusent(kafka = naisEnv.kafka)
+    val samarbeidProdusent = SamarbeidProdusent(kafka = naisEnv.kafka)
 
     val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
-    val sykefraværsstatistikkService =
-        SykefraværsstatistikkService(
-            sykefraværsstatistikkRepository = SykefraværsstatistikkRepository(dataSource = dataSource),
-            virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
-            sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
-            virksomhetRepository = virksomhetRepository,
-        )
+    val sykefraværsstatistikkService = SykefraværsstatistikkService(
+        sykefraværsstatistikkRepository = SykefraværsstatistikkRepository(dataSource = dataSource),
+        virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
+        sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource)),
+        virksomhetRepository = virksomhetRepository,
+    )
     val årsakRepository = ÅrsakRepository(dataSource = dataSource)
     val auditLog = AuditLog(naisEnv.miljø)
     val sistePubliseringService = SistePubliseringService(SistePubliseringRepository(dataSource = dataSource))
-    val iaSakProdusent = IASakProdusent(produsent = kafkaProdusent)
+    val iaSakProdusent = IASakProdusent(kafka = naisEnv.kafka)
     val iaSakStatistikkProdusent = IASakStatistikkProdusent(
-        produsent = kafkaProdusent,
+        kafka = naisEnv.kafka,
         virksomhetService = virksomhetService,
         sykefraværsstatistikkService = sykefraværsstatistikkService,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
@@ -167,17 +164,13 @@ fun startLydiaBackend() {
         sistePubliseringService = sistePubliseringService,
     )
     val spørreundersøkelseBigqueryProdusent = SpørreundersøkelseBigqueryProdusent(
-        produsent = kafkaProdusent,
+        kafka = naisEnv.kafka,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
     )
-    val samarbeidsplanBigqueryProdusent = SamarbeidsplanBigqueryProdusent(
-        produsent = kafkaProdusent,
-    )
-    val samarbeidBigqueryProdusent = SamarbeidBigqueryProdusent(
-        produsent = kafkaProdusent,
-    )
+    val samarbeidsplanBigqueryProdusent = SamarbeidsplanBigqueryProdusent(kafka = naisEnv.kafka)
+    val samarbeidBigqueryProdusent = SamarbeidBigqueryProdusent(kafka = naisEnv.kafka)
     val iaSakStatusProdusent = IASakStatusProdusent(
-        produsent = kafkaProdusent,
+        kafka = naisEnv.kafka,
         iaSakRepository = iaSakRepository,
     )
     val azureService = AzureService(
@@ -185,7 +178,7 @@ fun startLydiaBackend() {
         security = naisEnv.security,
     )
     val iaSakLeveranseProdusent = IASakLeveranseProdusent(
-        produsent = kafkaProdusent,
+        kafka = naisEnv.kafka,
         azureService = azureService,
     )
     val iaSakLeveranseObserver = IASakLeveranseObserver(iaSakRepository)
@@ -229,10 +222,13 @@ fun startLydiaBackend() {
         endringsObservers = listOf(eierskapsendringObserver),
     )
 
-    val spørreundersøkelseProdusent =
-        SpørreundersøkelseProdusent(produsent = kafkaProdusent, iaProsessRepository = prosessRepository, planRepository = planRepository)
+    val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
+        kafka = naisEnv.kafka,
+        iaProsessRepository = prosessRepository,
+        planRepository = planRepository,
+    )
     val spørreundersøkelseMetrikkObserver = SpørreundersøkelseMetrikkObserver()
-    val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(produsent = kafkaProdusent)
+    val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(kafka = naisEnv.kafka)
 
     val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(
         planRepository = planRepository,
@@ -251,6 +247,7 @@ fun startLydiaBackend() {
         ),
     )
 
+    val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,
@@ -262,9 +259,7 @@ fun startLydiaBackend() {
             fullførtBehovsvurderingProdusent,
             spørreundersøkelseBigqueryProdusent,
         ),
-        spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(
-            produsent = kafkaProdusent,
-        ),
+        spørreundersøkelseOppdateringProdusent = spørreundersøkelseOppdateringProdusent,
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))

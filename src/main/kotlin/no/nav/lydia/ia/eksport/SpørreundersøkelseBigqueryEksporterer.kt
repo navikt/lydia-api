@@ -24,7 +24,7 @@ class SpørreundersøkelseBigqueryEksporterer(
 
         try {
             alleSpørreundersøkelser.forEach { gjeldendeSpørreundersøkelse ->
-                spørreundersøkelseBigqueryProdusent.reEksporter(gjeldendeSpørreundersøkelse)
+                spørreundersøkelseBigqueryProdusent.receive(gjeldendeSpørreundersøkelse)
             }
         } catch (e: Exception) {
             KJØRER_STATISTIKK_EKSPORT.set(false)

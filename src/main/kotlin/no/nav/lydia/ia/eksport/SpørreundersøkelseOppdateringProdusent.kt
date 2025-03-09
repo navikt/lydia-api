@@ -4,20 +4,36 @@ import ia.felles.integrasjoner.kafkameldinger.oppdatering.SpørsmålResultatMeld
 import ia.felles.integrasjoner.kafkameldinger.oppdatering.SvarResultatMelding
 import ia.felles.integrasjoner.kafkameldinger.oppdatering.TemaResultatMelding
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
 
 class SpørreundersøkelseOppdateringProdusent(
-    private val produsent: KafkaProdusent,
+    kafka: Kafka,
+    private val topic: Topic = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC,
 ) {
+    private val produsent: KafkaProducer<String, String> = KafkaProducer(kafka.producerProperties(clientId = topic.konsumentGruppe))
+
+    init {
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                produsent.close()
+            },
+        )
+    }
+
+    // TODO: Se på å implementere KafkaProdusent<T> for å unngå duplisering av kode
     fun <T> sendPåKafka(oppdatering: SpørreundersøkelseOppdatering<T>) {
         val (nøkkel, verdi) = oppdatering.tilKafkaMelding()
-        produsent.sendMelding(
-            topic = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn,
-            nøkkel = nøkkel,
-            verdi = verdi,
+        produsent.send(
+            ProducerRecord(
+                topic.navn,
+                nøkkel,
+                verdi,
+            ),
         )
     }
 
