@@ -8,9 +8,9 @@ import org.apache.kafka.clients.producer.ProducerRecord
 abstract class KafkaProdusent<T>(
     protected val kafka: Kafka,
     protected val topic: Topic,
+    protected val clientId: String = topic.konsumentGruppe,
 ) {
-    private val produsent: KafkaProducer<String, String> =
-        KafkaProducer(kafka.producerProperties(clientId = topic.konsumentGruppe))
+    private val produsent: KafkaProducer<String, String> = KafkaProducer(kafka.producerProperties(clientId = clientId))
 
     init {
         Runtime.getRuntime().addShutdownHook(

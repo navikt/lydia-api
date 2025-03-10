@@ -9,7 +9,8 @@ import no.nav.lydia.ia.sak.db.ProsessRepository.SamarbeidIVirksomhetDto
 class SamarbeidProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SAMARBEIDSPLAN_TOPIC,
-) : KafkaProdusent<SamarbeidIVirksomhetDto>(kafka, topic) {
+    clientId: String = "${topic.konsumentGruppe}-samarbeid-producer",
+) : KafkaProdusent<SamarbeidIVirksomhetDto>(kafka = kafka, topic = topic, clientId = clientId) {
     override fun tilKafkaMelding(input: SamarbeidIVirksomhetDto): Pair<String, String> {
         val nøkkel = "${input.saksnummer}-${input.samarbeid.id}"
         val verdi = SamarbeidKafkaMeldingValue(
