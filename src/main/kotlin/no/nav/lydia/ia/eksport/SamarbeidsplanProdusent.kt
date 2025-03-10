@@ -14,7 +14,8 @@ import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 class SamarbeidsplanProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SAMARBEIDSPLAN_TOPIC,
-) : KafkaProdusent<SamarbeidsplanKafkaMelding>(kafka, topic) {
+    clientId: String = "${topic.konsumentGruppe}-samarbeidsplan-producer",
+) : KafkaProdusent<SamarbeidsplanKafkaMelding>(kafka = kafka, topic = topic, clientId = clientId) {
     // TODO: burde ikke denne ta i mot domene og gjøre om til KAFKA melding?
     override fun tilKafkaMelding(input: SamarbeidsplanKafkaMelding): Pair<String, String> {
         val key = "${input.saksnummer}-${input.samarbeid.id}-${input.plan.id}"

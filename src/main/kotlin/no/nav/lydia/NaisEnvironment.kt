@@ -191,7 +191,9 @@ enum class Topic(
     ),
     SAMARBEIDSPLAN_TOPIC(
         navn = "pia.samarbeidsplan-v1",
-        groupId = "lydia-api-samarbeidsplan-producer",
+        groupId = "lydia-api-samarbeidsplan",
+        // TODO: Finn en bedre løsning på groupId, dette topicet blir brukt av SamarbeidProudsent og SamarbeidsplanProdusent
+        //  Per nå blir groupId brukt med en post-fix for å gi unik id. groupId bør kanskje settes på hver produsent i stedet.
     ),
     SPORREUNDERSOKELSE_HENDELSE_TOPIC(
         navn = "pia.sporreundersokelse-hendelse-v1",
