@@ -155,39 +155,39 @@ enum class Topic(
 ) {
     IA_SAK_TOPIC(
         navn = "pia.ia-sak-v1",
-        groupId = "lydia-api-ia-sak-producer-consumer",
+        groupId = "lydia-api-ia-sak-producer",
     ),
     IA_SAK_STATISTIKK_TOPIC(
         navn = "pia.ia-sak-statistikk-v1",
-        groupId = "lydia-api-ia-sak-statistikk-producer-consumer",
+        groupId = "lydia-api-ia-sak-statistikk-producer",
     ),
     IA_SAK_STATUS_TOPIC(
         navn = "pia.ia-sak-status-v1",
-        groupId = "lydia-api-ia-sak-status-producer-consumer",
+        groupId = "lydia-api-ia-sak-status-producer",
     ),
     IA_SAK_LEVERANSE_TOPIC(
         navn = "pia.ia-sak-leveranse-v1",
-        groupId = "lydia-api-ia-sak-leveranse-producer-consumer",
+        groupId = "lydia-api-ia-sak-leveranse-producer",
     ),
     SPORREUNDERSOKELSE_TOPIC(
         navn = "pia.sporreundersokelse-v1",
-        groupId = "lydia-api-sporreundersokelse-comsumer",
+        groupId = "lydia-api-sporreundersokelse-consumer",
     ),
     FULLFØRT_BEHOVSVURDERING_TOPIC(
         navn = "pia.fullfort-behovsvurdering-v1",
-        groupId = "lydia-api-fullfort-behovsvurdering",
+        groupId = "lydia-api-fullfort-behovsvurdering-producer",
     ),
     SPØRREUNDERSØKELSE_BIGQUERY_TOPIC(
         navn = "pia.behovsvurdering-bigquery-v1",
-        groupId = "lydia-api-behovsvurdering-bigquery-producer-consumer",
+        groupId = "lydia-api-behovsvurdering-bigquery-producer",
     ),
     SAMARBEID_BIGQUERY_TOPIC(
         navn = "pia.samarbeid-bigquery-v1",
-        groupId = "lydia-api-samarbeid-bigquery-producer-consumer",
+        groupId = "lydia-api-samarbeid-bigquery-producer",
     ),
     SAMARBEIDSPLAN_BIGQUERY_TOPIC(
         navn = "pia.samarbeidsplan-bigquery-v1",
-        groupId = "lydia-api-samarbeidsplan-bigquery-producer-consumer",
+        groupId = "lydia-api-samarbeidsplan-bigquery-producer",
     ),
     SAMARBEIDSPLAN_TOPIC(
         navn = "pia.samarbeidsplan-v1",
