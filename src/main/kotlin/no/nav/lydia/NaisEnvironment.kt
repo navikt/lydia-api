@@ -191,7 +191,7 @@ enum class Topic(
     ),
     SAMARBEIDSPLAN_TOPIC(
         navn = "pia.samarbeidsplan-v1",
-        groupId = "lydia-api-samarbeidsplan",
+        groupId = "lydia-api-samarbeidsplan-producer",
     ),
     SPORREUNDERSOKELSE_HENDELSE_TOPIC(
         navn = "pia.sporreundersokelse-hendelse-v1",
