@@ -26,6 +26,7 @@ class SpørreundersøkelseOppdateringProdusent(
     }
 
     // TODO: Se på å implementere KafkaProdusent<T> for å unngå duplisering av kode
+    // Evt bare dropp det helt når pia-survey gjør det obsolete
     fun <T> sendPåKafka(oppdatering: SpørreundersøkelseOppdatering<T>) {
         val (nøkkel, verdi) = oppdatering.tilKafkaMelding()
         produsent.send(
