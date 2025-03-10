@@ -18,7 +18,6 @@ class IASakStatusProdusent(
 ) : KafkaProdusent<IASak>(kafka, topic),
     Observer<IASak> {
     override fun receive(input: IASak) {
-        // TODO: Hva gjør denne observeren, hvorfor sender den saken den mottar og sender siste aktive sak på orgnr?
         sendPåKafka(input = input)
 
         if (input.status == IAProsessStatus.SLETTET) {
