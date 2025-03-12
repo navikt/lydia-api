@@ -1,0 +1,1 @@
+ALTER TABLE salesforce_aktiviteter ADD COLUMN sist_endret_salesforce timestamp;

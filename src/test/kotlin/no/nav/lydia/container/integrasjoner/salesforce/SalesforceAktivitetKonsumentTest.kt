@@ -12,7 +12,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
-import java.sql.Timestamp
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -136,6 +135,7 @@ class SalesforceAktivitetKonsumentTest {
             saksnummer = sak.saksnummer,
             orgnummer = sak.orgnr,
             samarbeidId = samarbeid.id,
+            type = "Møte",
         )
         kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = aktivitet.Id__c,
@@ -162,14 +162,15 @@ class SalesforceAktivitetKonsumentTest {
             nøkkel = aktivitet.Id__c,
             melding = Json.encodeToString(
                 oppdatertAktivitet.copy(
-                    LastModifiedDate__c = sistEndretISalesforce.minusHours(2).format(DateTimeFormatter.ISO_DATE_TIME),
+                    TaskEvent__c = "Oppgave",
+                    LastModifiedDate__c = sistEndretISalesforce.minusHours(12).format(DateTimeFormatter.ISO_DATE_TIME),
                 ),
             ),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        postgresContainer.hentEnkelKolonne<Timestamp>(
-            "SELECT sist_endret FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
-        ).time shouldBe sistEndretISalesforce.toInstant().toEpochMilli()
+        postgresContainer.hentEnkelKolonne<String>(
+            "SELECT type FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
+        ) shouldBe "Møte"
     }
 
     private fun salesforceAktivitetDto(
@@ -178,12 +179,13 @@ class SalesforceAktivitetKonsumentTest {
         orgnummer: String? = null,
         samarbeidId: Int? = null,
         planId: String? = null,
+        type: String = "Møte",
         sistEndret: ZonedDateTime = ZonedDateTime.now(),
     ) = SalesforceAktivitetDto(
         Id__c = UUID.randomUUID().toString(),
         LastModifiedDate__c = sistEndret.format(DateTimeFormatter.ISO_DATE_TIME),
         EventType__c = hendelsesType,
-        TaskEvent__c = "Møte",
+        TaskEvent__c = type,
         IACaseNumber__c = saksnummer,
         IACooperationId__c = "${samarbeidId ?: ""}",
         IAPlanId__c = planId ?: "",

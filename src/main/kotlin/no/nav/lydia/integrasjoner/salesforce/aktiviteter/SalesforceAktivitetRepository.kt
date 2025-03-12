@@ -48,7 +48,7 @@ class SalesforceAktivitetRepository(
                             mote_start,
                             mote_slutt,
                             status,
-                            sist_endret
+                            sist_endret_salesforce
                         )
                         VALUES (
                             :id,
@@ -103,9 +103,13 @@ class SalesforceAktivitetRepository(
                         mote_start = :moteStart,
                         mote_slutt = :moteSlutt,
                         status = :status,
-                        sist_endret = :sistEndretISalesforce
+                        sist_endret_salesforce = :sistEndretISalesforce,
+                        sist_endret = now()
                     WHERE id = :id
-                    AND sist_endret <= :sistEndretISalesforce
+                    AND (
+                        sist_endret_salesforce IS NULL OR
+                        sist_endret_salesforce <= :sistEndretISalesforce
+                    )
                     """.trimIndent(),
                     mapOf(
                         "id" to aktivitet.id,
