@@ -15,12 +15,12 @@ class SalesforceAktivitetService(
 
     fun håndterAktivitet(aktivitetDto: SalesforceAktivitetDto) {
         val aktivitet = aktivitetDto.tilDomene()
-        logger.info("Behandler aktivitet: ${aktivitetDto.Id__c} for plan: ${aktivitetDto.IAPlanId__c}")
         when (aktivitetDto.EventType__c) {
-            "Created",
-            "Updated",
-            -> {
+            "Created" -> {
                 lagreAktivitet(aktivitet)
+            }
+            "Updated" -> {
+                oppdaterAktivitet(aktivitet)
             }
             "Deleted" -> {
                 oppdaterSlettetStatus(aktivitet, slettet = true)
@@ -34,24 +34,38 @@ class SalesforceAktivitetService(
         }
     }
 
-    private fun lagreAktivitet(aktivitet: SalesforceAktivitet) {
-        val iaSak = iaSakRepository.hentIASak(aktivitet.saksnummer)
-        val samarbeid = aktivitet.samarbeidsId?.let { prosessRepository.hentProsess(aktivitet.saksnummer, it) }
-        val plan = samarbeid?.let {
-            planRepository.hentPlan(it.id)
+    private fun oppdaterAktivitet(aktivitet: SalesforceAktivitet) {
+        val skalOppdateres = verifisertAktivitet(aktivitet)
+        if (skalOppdateres) {
+            logger.info("Oppdaterer aktivitet: $aktivitet")
+            salesforceAktivitetRepository.oppdaterAktivitet(aktivitet)
+        } else {
+            logger.info("Oppdaterer IKKE aktivitet: $aktivitet")
         }
-        if (plan?.id?.toString() != aktivitet.planId) {
-            logger.warn("Lagrer ikke aktivitet '${aktivitet.id}', da plan-id '${aktivitet.planId}' ikke stemmer")
-            return
-        }
+    }
 
-        val skalLagres = iaSak != null && samarbeid != null
+    private fun lagreAktivitet(aktivitet: SalesforceAktivitet) {
+        val skalLagres = verifisertAktivitet(aktivitet)
         if (skalLagres) {
             logger.info("Lagrer aktivitet: $aktivitet")
             salesforceAktivitetRepository.lagreAktivitet(aktivitet)
         } else {
             logger.info("Lagrer IKKE aktivitet: $aktivitet")
         }
+    }
+
+    private fun verifisertAktivitet(aktivitet: SalesforceAktivitet): Boolean {
+        val iaSak = iaSakRepository.hentIASak(aktivitet.saksnummer)
+        val samarbeid = aktivitet.samarbeidsId?.let { prosessRepository.hentProsess(aktivitet.saksnummer, it) }
+        val plan = samarbeid?.let {
+            planRepository.hentPlan(it.id)
+        }
+        if (plan?.id?.toString() != aktivitet.planId) {
+            logger.warn("Plan '${aktivitet.planId}' for aktivitet '${aktivitet.id}' stemmer ikke med plan i samarbeid: ${aktivitet.samarbeidsId}")
+            return false
+        }
+
+        return iaSak != null && samarbeid != null
     }
 
     private fun oppdaterSlettetStatus(

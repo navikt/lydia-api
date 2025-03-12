@@ -4,6 +4,7 @@ import java.time.ZonedDateTime
 
 data class SalesforceAktivitet(
     val id: String,
+    val sistEndretISalesforce: ZonedDateTime,
     val type: AktivitetsType,
     val saksnummer: String,
     val samarbeidsId: Int?,
@@ -32,6 +33,7 @@ data class SalesforceAktivitet(
 internal fun SalesforceAktivitetDto.tilDomene() =
     SalesforceAktivitet(
         id = Id__c,
+        sistEndretISalesforce = ZonedDateTime.parse(LastModifiedDate__c),
         type = SalesforceAktivitet.Companion.AktivitetsType.valueOf(TaskEvent__c),
         saksnummer = IACaseNumber__c ?: throw IllegalStateException("mangler saksnummer"),
         samarbeidsId = IACooperationId__c?.let { if (it.isBlank()) null else it.toInt() },
@@ -40,7 +42,7 @@ internal fun SalesforceAktivitetDto.tilDomene() =
         undertema = IASubtheme__c,
         planlagt = ActivityDate__c?.let { ZonedDateTime.parse(it) },
         fullført = CompletedDate__c?.let { ZonedDateTime.parse(it) },
-        møteStart = ActivityDate__c?.let { ZonedDateTime.parse(it) },
+        møteStart = StartDateTime__c?.let { ZonedDateTime.parse(it) },
         møteSlutt = EndDateTime__c?.let { ZonedDateTime.parse(it) },
         status = Status__c?.let {
             if (it.isBlank()) null else SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)

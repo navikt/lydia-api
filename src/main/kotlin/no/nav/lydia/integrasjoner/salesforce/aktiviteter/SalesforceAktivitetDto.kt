@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class SalesforceAktivitetDto(
     val Id__c: String, // -- Id til aktivitet i SF
+    val LastModifiedDate__c: String, // -- Når aktiviteten sist ble endret i sf
     val EventType__c: String, // -- Hva slags hendelse (Created ; Updated ; Deleted ; Undeleted)
     val TaskEvent__c: String, // -- Hva slags aktivitet (Møte ; Oppgave)
     val IACaseNumber__c: String? = null, // -- IA saksnummer
@@ -17,6 +18,7 @@ data class SalesforceAktivitetDto(
     val IASubtheme__c: String? = null, // -- Plan - Undertema
     val ActivityDate__c: String? = null, // -- Planlagt tid for aktivitet
     val CompletedDate__c: String? = null, // -- Når en oppdage ble fullført
+    val StartDateTime__c: String? = null,
     val EndDateTime__c: String? = null, // -- Når et møte er planlagt ferdig
     val Status__c: String? = null, // -- Status på aktivitet (Åpen ; Fullført)
     val AccountOrgNumber__c: String? = null, // -- Orgnummer aktiviteten gjelder

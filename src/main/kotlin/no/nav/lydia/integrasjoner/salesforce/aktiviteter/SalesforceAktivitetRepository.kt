@@ -47,7 +47,8 @@ class SalesforceAktivitetRepository(
                             oppgave_fullfort,
                             mote_start,
                             mote_slutt,
-                            status
+                            status,
+                            sist_endret
                         )
                         VALUES (
                             :id,
@@ -61,23 +62,54 @@ class SalesforceAktivitetRepository(
                             :oppgaveFullfort,
                             :moteStart,
                             :moteSlutt,
-                            :status
+                            :status,
+                            :sistEndretISalesforce
                         )
-                        ON CONFLICT (id) DO UPDATE
-                        SET type = :type,
-                            saksnummer = :saksnummer,
-                            samarbeid = :samarbeid,
-                            plan_id = :planId,
-                            tema = :tema,
-                            undertema = :undertema,
-                            oppgave_planlagt = :oppgavePlanlagt,
-                            oppgave_fullfort = :oppgaveFullfort,
-                            mote_start = :moteStart,
-                            mote_slutt = :moteSlutt,
-                            status = :status
+                        ON CONFLICT (id) DO NOTHING
                     """.trimIndent(),
                     mapOf(
                         "id" to aktivitet.id,
+                        "sistEndretISalesforce" to aktivitet.sistEndretISalesforce,
+                        "type" to aktivitet.type.name,
+                        "saksnummer" to aktivitet.saksnummer,
+                        "samarbeid" to aktivitet.samarbeidsId,
+                        "planId" to aktivitet.planId,
+                        "tema" to aktivitet.tema,
+                        "undertema" to aktivitet.undertema,
+                        "oppgavePlanlagt" to aktivitet.planlagt,
+                        "oppgaveFullfort" to aktivitet.fullført,
+                        "moteStart" to aktivitet.møteStart,
+                        "moteSlutt" to aktivitet.møteSlutt,
+                        "status" to aktivitet.status?.name,
+                    ),
+                ).asUpdate,
+            )
+        }
+
+    fun oppdaterAktivitet(aktivitet: SalesforceAktivitet) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE salesforce_aktiviteter
+                    SET type = :type,
+                        saksnummer = :saksnummer,
+                        samarbeid = :samarbeid,
+                        plan_id = :planId,
+                        tema = :tema,
+                        undertema = :undertema,
+                        oppgave_planlagt = :oppgavePlanlagt,
+                        oppgave_fullfort = :oppgaveFullfort,
+                        mote_start = :moteStart,
+                        mote_slutt = :moteSlutt,
+                        status = :status,
+                        sist_endret = :sistEndretISalesforce
+                    WHERE id = :id
+                    AND sist_endret <= :sistEndretISalesforce
+                    """.trimIndent(),
+                    mapOf(
+                        "id" to aktivitet.id,
+                        "sistEndretISalesforce" to aktivitet.sistEndretISalesforce,
                         "type" to aktivitet.type.name,
                         "saksnummer" to aktivitet.saksnummer,
                         "samarbeid" to aktivitet.samarbeidsId,

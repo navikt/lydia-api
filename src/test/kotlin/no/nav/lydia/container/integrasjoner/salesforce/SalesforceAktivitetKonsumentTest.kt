@@ -12,6 +12,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
+import java.sql.Timestamp
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.test.Test
 
@@ -38,7 +41,7 @@ class SalesforceAktivitetKonsumentTest {
         )
 
         TestContainerHelper.lydiaApiContainer shouldContainLog
-            "Lagrer IKKE aktivitet:.*id=${dto.Id__c}, type=${dto.TaskEvent__c}, saksnummer=${dto.IACaseNumber__c}".toRegex()
+            "Lagrer IKKE aktivitet:.*id=${dto.Id__c},.* type=${dto.TaskEvent__c}, saksnummer=${dto.IACaseNumber__c}".toRegex()
     }
 
     @Test
@@ -61,7 +64,7 @@ class SalesforceAktivitetKonsumentTest {
     }
 
     @Test
-    fun `skal ikke lagre aktivitetr dersom planId er feil`() {
+    fun `skal ikke lagre aktiviteter dersom planId er feil`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val aktivitetMedFeilPlanId = salesforceAktivitetDto(
@@ -125,14 +128,61 @@ class SalesforceAktivitetKonsumentTest {
         postgresContainer.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe false
     }
 
+    @Test
+    fun `skal kun oppdatere aktivitet dersom den har nyere sistEndret`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val aktivitet = salesforceAktivitetDto(
+            saksnummer = sak.saksnummer,
+            orgnummer = sak.orgnr,
+            samarbeidId = samarbeid.id,
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = aktivitet.Id__c,
+            melding = Json.encodeToString(aktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        postgresContainer.hentEnkelKolonne<String?>("SELECT plan_id FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe null
+
+        val planId = sak.opprettEnPlan(samarbeidId = samarbeid.id).id
+        val sistEndretISalesforce = ZonedDateTime.now()
+        val oppdatertAktivitet = aktivitet.copy(
+            LastModifiedDate__c = sistEndretISalesforce.format(DateTimeFormatter.ISO_DATE_TIME),
+            IAPlanId__c = planId,
+            EventType__c = "Updated",
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = aktivitet.Id__c,
+            melding = Json.encodeToString(oppdatertAktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        postgresContainer.hentEnkelKolonne<String>("SELECT plan_id FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe planId
+
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = aktivitet.Id__c,
+            melding = Json.encodeToString(
+                oppdatertAktivitet.copy(
+                    LastModifiedDate__c = sistEndretISalesforce.minusHours(2).format(DateTimeFormatter.ISO_DATE_TIME),
+                ),
+            ),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        postgresContainer.hentEnkelKolonne<Timestamp>(
+            "SELECT sist_endret FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
+        ).time shouldBe sistEndretISalesforce.toInstant().toEpochMilli()
+    }
+
     private fun salesforceAktivitetDto(
+        hendelsesType: String = "Created",
         saksnummer: String? = null,
         orgnummer: String? = null,
         samarbeidId: Int? = null,
         planId: String? = null,
+        sistEndret: ZonedDateTime = ZonedDateTime.now(),
     ) = SalesforceAktivitetDto(
         Id__c = UUID.randomUUID().toString(),
-        EventType__c = "Created",
+        LastModifiedDate__c = sistEndret.format(DateTimeFormatter.ISO_DATE_TIME),
+        EventType__c = hendelsesType,
         TaskEvent__c = "Møte",
         IACaseNumber__c = saksnummer,
         IACooperationId__c = "${samarbeidId ?: ""}",
@@ -141,6 +191,7 @@ class SalesforceAktivitetKonsumentTest {
         IASubtheme__c = "Sykefraværsrutiner",
         ActivityDate__c = "2025-03-04T00:00:00Z",
         CompletedDate__c = null,
+        StartDateTime__c = "2025-03-04T13:00:00Z",
         EndDateTime__c = "2025-03-04T14:00:00Z",
         Status__c = "",
         AccountOrgNumber__c = orgnummer,
