@@ -17,7 +17,8 @@ class SalesforceAktivitetRepository(
                 queryOf(
                     """
                     UPDATE salesforce_aktiviteter
-                        SET slettet = :slettet
+                        SET slettet = :slettet,
+                        sist_endret = now()
                         WHERE id = :id
                     """.trimIndent(),
                     mapOf(
