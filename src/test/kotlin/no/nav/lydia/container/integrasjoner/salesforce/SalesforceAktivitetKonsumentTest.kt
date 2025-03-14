@@ -12,6 +12,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
+import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -173,6 +176,47 @@ class SalesforceAktivitetKonsumentTest {
         ) shouldBe "Møte"
     }
 
+    @Test
+    fun `skal lagre tider i riktig lokal dato`() {
+        val sak = nySakIViBistår()
+        val samarbeidId = sak.hentAlleSamarbeid().first().id
+
+        val møteStart = ZonedDateTime.now(atUTC)
+        val møteSlutt = ZonedDateTime.now(atUTC).plusHours(1)
+        val oppgavePlanlagt = ZonedDateTime.of(LocalDate.now().atStartOfDay(), ZoneId.of("Europe/Oslo")).withZoneSameInstant(atUTC)
+        val oppgaveFullført = null
+
+        val aktivitet = salesforceAktivitetDto(
+            saksnummer = sak.saksnummer,
+            samarbeidId = samarbeidId,
+            møteStart = møteStart.format(utcFormat),
+            møteSlutt = møteSlutt.format(utcFormat),
+            oppgavePlanlagt = oppgavePlanlagt.format(utcFormat),
+            oppgaveFullført = oppgaveFullført,
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = aktivitet.Id__c,
+            melding = Json.encodeToString(aktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+
+        postgresContainer.hentEnkelKolonne<Timestamp>(
+            "SELECT mote_start FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
+        ).time shouldBe møteStart.toEpochSecond() * 1000
+        postgresContainer.hentEnkelKolonne<Timestamp>(
+            "SELECT mote_slutt FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
+        ).time shouldBe møteSlutt.toEpochSecond() * 1000
+        postgresContainer.hentEnkelKolonne<Timestamp>(
+            "SELECT oppgave_planlagt FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
+        ).time shouldBe oppgavePlanlagt.toEpochSecond() * 1000
+        postgresContainer.hentEnkelKolonne<Timestamp?>(
+            "SELECT oppgave_fullfort FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
+        ) shouldBe null
+    }
+
+    private val atUTC = ZoneId.of("UTC")
+    private val utcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+
     private fun salesforceAktivitetDto(
         hendelsesType: String = "Created",
         saksnummer: String? = null,
@@ -180,10 +224,14 @@ class SalesforceAktivitetKonsumentTest {
         samarbeidId: Int? = null,
         planId: String? = null,
         type: String = "Møte",
-        sistEndret: ZonedDateTime = ZonedDateTime.now(),
+        sistEndretSalesforce: String = ZonedDateTime.now(atUTC).format(utcFormat),
+        møteStart: String? = ZonedDateTime.now(atUTC).format(utcFormat),
+        møteSlutt: String? = ZonedDateTime.now(atUTC).plusHours(1).format(utcFormat),
+        oppgavePlanlagt: String? = ZonedDateTime.of(LocalDate.now().atStartOfDay(), ZoneId.of("Europe/Oslo")).withZoneSameInstant(atUTC).format(utcFormat),
+        oppgaveFullført: String? = null,
     ) = SalesforceAktivitetDto(
         Id__c = UUID.randomUUID().toString(),
-        LastModifiedDate__c = sistEndret.format(DateTimeFormatter.ISO_DATE_TIME),
+        LastModifiedDate__c = sistEndretSalesforce,
         EventType__c = hendelsesType,
         TaskEvent__c = type,
         IACaseNumber__c = saksnummer,
@@ -191,10 +239,10 @@ class SalesforceAktivitetKonsumentTest {
         IAPlanId__c = planId ?: "",
         Service__c = "Sykefraværsarbeid",
         IASubtheme__c = "Sykefraværsrutiner",
-        ActivityDate__c = "2025-03-04T00:00:00Z",
-        CompletedDate__c = null,
-        StartDateTime__c = "2025-03-04T13:00:00Z",
-        EndDateTime__c = "2025-03-04T14:00:00Z",
+        ActivityDate__c = oppgavePlanlagt,
+        CompletedDate__c = oppgaveFullført,
+        StartDateTime__c = møteStart,
+        EndDateTime__c = møteSlutt,
         Status__c = "",
         AccountOrgNumber__c = orgnummer,
     )
