@@ -3,11 +3,46 @@ package no.nav.lydia.integrasjoner.salesforce.aktiviteter
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import javax.sql.DataSource
 
 class SalesforceAktivitetRepository(
     val dataSource: DataSource,
 ) {
+    fun hentAktiviteter(samarbeid: IAProsess) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM salesforce_aktiviteter
+                    WHERE samarbeid = :samarbeidsId
+                    AND slettet = false
+                    """.trimIndent(),
+                    mapOf(
+                        "samarbeidsId" to samarbeid.id,
+                    ),
+                ).map { row ->
+                    SalesforceAktivitet(
+                        id = row.string("id"),
+                        sistEndretISalesforce = row.zonedDateTime("sist_endret"),
+                        type = SalesforceAktivitet.Companion.AktivitetsType.valueOf(row.string("type")),
+                        saksnummer = row.string("saksnummer"),
+                        samarbeidsId = row.int("samarbeid"),
+                        planId = row.stringOrNull("plan_id"),
+                        tema = row.stringOrNull("tema"),
+                        undertema = row.stringOrNull("undertema"),
+                        planlagt = row.zonedDateTimeOrNull("oppgave_planlagt"),
+                        fullført = row.zonedDateTimeOrNull("oppgave_fullfort"),
+                        møteStart = row.zonedDateTimeOrNull("mote_start"),
+                        møteSlutt = row.zonedDateTimeOrNull("mote_slutt"),
+                        status = row.stringOrNull("status")?.let {
+                            SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
+                        },
+                    )
+                }.asList,
+            )
+        }
+
     fun oppdaterSlettetStatus(
         aktivitet: SalesforceAktivitet,
         slettet: Boolean,
@@ -66,51 +101,23 @@ class SalesforceAktivitetRepository(
                             :status,
                             :sistEndretISalesforce
                         )
-                        ON CONFLICT (id) DO NOTHING
-                    """.trimIndent(),
-                    mapOf(
-                        "id" to aktivitet.id,
-                        "sistEndretISalesforce" to aktivitet.sistEndretISalesforce,
-                        "type" to aktivitet.type.name,
-                        "saksnummer" to aktivitet.saksnummer,
-                        "samarbeid" to aktivitet.samarbeidsId,
-                        "planId" to aktivitet.planId,
-                        "tema" to aktivitet.tema,
-                        "undertema" to aktivitet.undertema,
-                        "oppgavePlanlagt" to aktivitet.planlagt,
-                        "oppgaveFullfort" to aktivitet.fullført,
-                        "moteStart" to aktivitet.møteStart,
-                        "moteSlutt" to aktivitet.møteSlutt,
-                        "status" to aktivitet.status?.name,
-                    ),
-                ).asUpdate,
-            )
-        }
-
-    fun oppdaterAktivitet(aktivitet: SalesforceAktivitet) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE salesforce_aktiviteter
-                    SET type = :type,
-                        saksnummer = :saksnummer,
-                        samarbeid = :samarbeid,
-                        plan_id = :planId,
-                        tema = :tema,
-                        undertema = :undertema,
-                        oppgave_planlagt = :oppgavePlanlagt,
-                        oppgave_fullfort = :oppgaveFullfort,
-                        mote_start = :moteStart,
-                        mote_slutt = :moteSlutt,
-                        status = :status,
-                        sist_endret_salesforce = :sistEndretISalesforce,
-                        sist_endret = now()
-                    WHERE id = :id
-                    AND (
-                        sist_endret_salesforce IS NULL OR
-                        sist_endret_salesforce <= :sistEndretISalesforce
-                    )
+                        ON CONFLICT (id) DO UPDATE SET
+                            type = :type, 
+                            saksnummer = :saksnummer, 
+                            samarbeid = :samarbeid, 
+                            plan_id = :planId, 
+                            tema = :tema, 
+                            undertema = :undertema, 
+                            oppgave_planlagt = :oppgavePlanlagt,
+                            oppgave_fullfort = :oppgaveFullfort, 
+                            mote_start = :moteStart,
+                            mote_slutt = :moteSlutt, 
+                            status = :status, 
+                            sist_endret_salesforce = :sistEndretISalesforce
+                        WHERE (
+                            salesforce_aktiviteter.sist_endret_salesforce IS NULL OR
+                            salesforce_aktiviteter.sist_endret_salesforce <= :sistEndretISalesforce
+                        )
                     """.trimIndent(),
                     mapOf(
                         "id" to aktivitet.id,

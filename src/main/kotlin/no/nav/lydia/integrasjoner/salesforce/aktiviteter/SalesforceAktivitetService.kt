@@ -16,11 +16,8 @@ class SalesforceAktivitetService(
     fun håndterAktivitet(aktivitetDto: SalesforceAktivitetDto) {
         val aktivitet = aktivitetDto.tilDomene()
         when (aktivitetDto.EventType__c) {
-            "Created" -> {
+            "Created", "Updated" -> {
                 lagreAktivitet(aktivitet)
-            }
-            "Updated" -> {
-                oppdaterAktivitet(aktivitet)
             }
             "Deleted" -> {
                 oppdaterSlettetStatus(aktivitet, slettet = true)
@@ -31,16 +28,6 @@ class SalesforceAktivitetService(
             else -> {
                 logger.warn("Mottok uventet EventType__c: ${aktivitetDto.EventType__c} for aktivitet: ${aktivitetDto.Id__c}")
             }
-        }
-    }
-
-    private fun oppdaterAktivitet(aktivitet: SalesforceAktivitet) {
-        val skalOppdateres = verifisertAktivitet(aktivitet)
-        if (skalOppdateres) {
-            logger.info("Oppdaterer aktivitet: $aktivitet")
-            salesforceAktivitetRepository.oppdaterAktivitet(aktivitet)
-        } else {
-            logger.info("Oppdaterer IKKE aktivitet: $aktivitet")
         }
     }
 

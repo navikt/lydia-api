@@ -150,7 +150,7 @@ class SalesforceAktivitetKonsumentTest {
         val planId = sak.opprettEnPlan(samarbeidId = samarbeid.id).id
         val sistEndretISalesforce = ZonedDateTime.now()
         val oppdatertAktivitet = aktivitet.copy(
-            LastModifiedDate__c = sistEndretISalesforce.format(DateTimeFormatter.ISO_DATE_TIME),
+            LastModifiedDate__c = sistEndretISalesforce.format(utcFormat),
             IAPlanId__c = planId,
             EventType__c = "Updated",
         )
@@ -166,7 +166,7 @@ class SalesforceAktivitetKonsumentTest {
             melding = Json.encodeToString(
                 oppdatertAktivitet.copy(
                     TaskEvent__c = "Oppgave",
-                    LastModifiedDate__c = sistEndretISalesforce.minusHours(12).format(DateTimeFormatter.ISO_DATE_TIME),
+                    LastModifiedDate__c = sistEndretISalesforce.minusHours(12).format(utcFormat),
                 ),
             ),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
