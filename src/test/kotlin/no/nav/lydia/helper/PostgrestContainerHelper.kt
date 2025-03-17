@@ -27,11 +27,6 @@ class PostgrestContainerHelper(
             .withNetworkAliases(postgresNetworkAlias)
             .withDatabaseName(lydiaDbName)
             .withCreateContainerCmdModifier { cmd -> cmd.withName("$postgresNetworkAlias-${System.currentTimeMillis()}") }
-            .withEnv(
-                mapOf(
-                    "TZ" to "Europe/Oslo",
-                ),
-            )
             .waitingFor(HostPortWaitStrategy()).apply {
                 start()
             }

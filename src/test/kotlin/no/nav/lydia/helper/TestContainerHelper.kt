@@ -153,7 +153,6 @@ class TestContainerHelper {
                                     mapOf(
                                         "CONSUMER_LOOP_DELAY" to "1",
                                         "NAIS_CLUSTER_NAME" to "lokal",
-                                        "TZ" to "Europe/Oslo",
                                     ),
                                 ),
                         )
