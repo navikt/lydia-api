@@ -14,6 +14,7 @@ data class PlanUndertemaDto(
     val status: InnholdStatus?,
     val startDato: LocalDate?,
     val sluttDato: LocalDate?,
+    val harAktiviteterISalesforce: Boolean,
 )
 
 fun List<PlanUndertema>.tilDtoer(): List<PlanUndertemaDto> = map { it.tilDto() }
@@ -27,4 +28,5 @@ fun PlanUndertema.tilDto(): PlanUndertemaDto =
         status = status,
         startDato = startDato,
         sluttDato = sluttDato,
+        harAktiviteterISalesforce = aktiviteterISalesforce.isNotEmpty(),
     )

@@ -26,6 +26,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 import javax.sql.DataSource
@@ -350,9 +351,49 @@ class PlanRepository(
                     status = row.stringOrNull("status")?.let { InnholdStatus.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
                     sluttDato = row.localDateOrNull("slutt_dato")?.toKotlinLocalDate(),
+                    aktiviteterISalesforce = hentAktiviterISalesforce(temaId, innholdsNavn),
                 )
             }.asList,
         )
+
+    fun hentAktiviterISalesforce(
+        temaId: Int,
+        undertemanavn: String,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                SELECT salesforce_aktiviteter.* 
+                FROM ia_sak_plan_undertema JOIN salesforce_aktiviteter USING (plan_id)
+                WHERE tema_id = :temaId
+                AND navn = :undertemanavn
+                AND salesforce_aktiviteter.slettet = false
+                """.trimIndent(),
+                mapOf(
+                    "temaId" to temaId,
+                    "undertemanavn" to undertemanavn,
+                ),
+            ).map { row ->
+                SalesforceAktivitet(
+                    id = row.string("id"),
+                    sistEndretISalesforce = row.zonedDateTime("sist_endret"),
+                    type = SalesforceAktivitet.Companion.AktivitetsType.valueOf(row.string("type")),
+                    saksnummer = row.string("saksnummer"),
+                    samarbeidsId = row.int("samarbeid"),
+                    planId = row.stringOrNull("plan_id"),
+                    tema = row.stringOrNull("tema"),
+                    undertema = row.stringOrNull("undertema"),
+                    planlagt = row.zonedDateTimeOrNull("oppgave_planlagt"),
+                    fullført = row.zonedDateTimeOrNull("oppgave_fullfort"),
+                    møteStart = row.zonedDateTimeOrNull("mote_start"),
+                    møteSlutt = row.zonedDateTimeOrNull("mote_slutt"),
+                    status = row.stringOrNull("status")?.let {
+                        SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
+                    },
+                )
+            }.asList,
+        )
+    }
 
     fun oppdaterTema(
         planId: UUID,

@@ -30,6 +30,7 @@ class PlanUnitTest {
                             status = PLANLAGT,
                             startDato = LocalDate.parse("2021-01-01"),
                             sluttDato = LocalDate.parse("2021-01-31"),
+                            aktiviteterISalesforce = listOf(),
                         ),
                         PlanUndertema(
                             id = 2,
@@ -39,6 +40,7 @@ class PlanUnitTest {
                             status = PLANLAGT,
                             startDato = LocalDate.parse("2021-02-01"),
                             sluttDato = LocalDate.parse("2021-02-28"),
+                            aktiviteterISalesforce = listOf(),
                         ),
                     ),
                 ),
@@ -55,6 +57,7 @@ class PlanUnitTest {
                             status = PLANLAGT,
                             startDato = LocalDate.parse("2021-03-01"),
                             sluttDato = LocalDate.parse("2021-03-06"),
+                            aktiviteterISalesforce = listOf(),
                         ),
                     ),
                 ),
