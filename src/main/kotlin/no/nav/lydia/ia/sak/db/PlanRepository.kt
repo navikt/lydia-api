@@ -366,12 +366,12 @@ class PlanRepository(
                 SELECT salesforce_aktiviteter.* 
                 FROM ia_sak_plan_undertema JOIN salesforce_aktiviteter USING (plan_id)
                 WHERE tema_id = :temaId
-                AND navn = :undertemanavn
+                AND navn like :undertemanavn
                 AND salesforce_aktiviteter.slettet = false
                 """.trimIndent(),
                 mapOf(
                     "temaId" to temaId,
-                    "undertemanavn" to undertemanavn,
+                    "undertemanavn" to "%$undertemanavn%",
                 ),
             ).map { row ->
                 SalesforceAktivitet(
