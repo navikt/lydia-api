@@ -44,14 +44,6 @@ class SalesforceAktivitetService(
     private fun verifisertAktivitet(aktivitet: SalesforceAktivitet): Boolean {
         val iaSak = iaSakRepository.hentIASak(aktivitet.saksnummer)
         val samarbeid = aktivitet.samarbeidsId?.let { prosessRepository.hentProsess(aktivitet.saksnummer, it) }
-        val plan = samarbeid?.let {
-            planRepository.hentPlan(it.id)
-        }
-        if (plan?.id?.toString() != aktivitet.planId) {
-            logger.warn("Plan '${aktivitet.planId}' for aktivitet '${aktivitet.id}' stemmer ikke med plan i samarbeid: ${aktivitet.samarbeidsId}")
-            return false
-        }
-
         return iaSak != null && samarbeid != null
     }
 

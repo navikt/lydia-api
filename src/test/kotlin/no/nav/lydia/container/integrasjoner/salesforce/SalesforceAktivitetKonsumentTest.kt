@@ -67,39 +67,6 @@ class SalesforceAktivitetKonsumentTest {
     }
 
     @Test
-    fun `skal ikke lagre aktiviteter dersom planId er feil`() {
-        val sak = nySakIViBistår()
-        val samarbeid = sak.hentAlleSamarbeid().first()
-        val aktivitetMedFeilPlanId = salesforceAktivitetDto(
-            saksnummer = sak.saksnummer,
-            orgnummer = sak.orgnr,
-            samarbeidId = samarbeid.id,
-            planId = UUID.randomUUID().toString(),
-        )
-        kafkaContainerHelper.sendOgVentTilKonsumert(
-            nøkkel = aktivitetMedFeilPlanId.Id__c,
-            melding = Json.encodeToString(aktivitetMedFeilPlanId),
-            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
-        )
-        postgresContainer.hentEnkelKolonne<Int>("select count(*) from salesforce_aktiviteter where id = '${aktivitetMedFeilPlanId.Id__c}'") shouldBe 0L
-
-        val plan = sak.opprettEnPlan(samarbeidId = samarbeid.id)
-        val aktivitetMedRiktigPlanId = salesforceAktivitetDto(
-            saksnummer = sak.saksnummer,
-            orgnummer = sak.orgnr,
-            samarbeidId = samarbeid.id,
-            planId = plan.id,
-        )
-        kafkaContainerHelper.sendOgVentTilKonsumert(
-            nøkkel = aktivitetMedFeilPlanId.Id__c,
-            melding = Json.encodeToString(aktivitetMedRiktigPlanId),
-            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
-        )
-
-        postgresContainer.hentEnkelKolonne<Int>("select count(*) from salesforce_aktiviteter where id = '${aktivitetMedRiktigPlanId.Id__c}'") shouldBe 1L
-    }
-
-    @Test
     fun `kan slette og gjenopprette sf-aktiviteter`() {
         val sak = nySakIViBistår()
         val samarbeidId = sak.hentAlleSamarbeid().first().id
