@@ -1,5 +1,6 @@
 package no.nav.lydia.integrasjoner.salesforce.aktiviteter
 
+import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -103,3 +104,22 @@ class SalesforceAktivitetRepository(
             )
         }
 }
+
+fun Row.mapTilSalesforceAktivitet() =
+    SalesforceAktivitet(
+        id = this.string("id"),
+        sistEndretISalesforce = this.zonedDateTime("sist_endret"),
+        type = no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet.Companion.AktivitetsType.valueOf(this.string("type")),
+        saksnummer = this.string("saksnummer"),
+        samarbeidsId = this.int("samarbeid"),
+        planId = this.stringOrNull("plan_id"),
+        tema = this.stringOrNull("tema"),
+        undertema = this.stringOrNull("undertema"),
+        planlagt = this.zonedDateTimeOrNull("oppgave_planlagt"),
+        fullført = this.zonedDateTimeOrNull("oppgave_fullfort"),
+        møteStart = this.zonedDateTimeOrNull("mote_start"),
+        møteSlutt = this.zonedDateTimeOrNull("mote_slutt"),
+        status = this.stringOrNull("status")?.let {
+            no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
+        },
+    )

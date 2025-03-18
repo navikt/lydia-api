@@ -1,7 +1,9 @@
 package no.nav.lydia.container.ia.sak.prosess
 
+import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
@@ -17,23 +19,37 @@ import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
+import no.nav.lydia.helper.SakHelper.Companion.kanSletteSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
+import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
+import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import java.sql.Timestamp
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 import kotlin.test.Test
 
 class IASakProsessTest {
@@ -52,6 +68,52 @@ class IASakProsessTest {
             konsument.unsubscribe()
             konsument.close()
         }
+    }
+
+    @Test
+    fun `skal få riktige begrunnelser for om et samarbeid kan slettes`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val skalKunneSlettes = sak.kanSletteSamarbeid(samarbeid)
+        skalKunneSlettes.kanSlettes shouldBe true
+        skalKunneSlettes.begrunnelser shouldHaveSize 0
+
+        val behovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
+        val skalIkkeKunneSlettesPgaBehovsVurdering = sak.kanSletteSamarbeid(samarbeid)
+        skalIkkeKunneSlettesPgaBehovsVurdering.kanSlettes shouldBe false
+        skalIkkeKunneSlettesPgaBehovsVurdering.begrunnelser shouldBe listOf(IAProsessService.SletteBegrunnelser.FINNES_BEHOVSVURDERING)
+
+        lydiaApiContainer.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
+            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+            .tilSingelRespons<SpørreundersøkelseDto>()
+        val skalKunneSlettesIgjen = sak.kanSletteSamarbeid(samarbeid)
+        skalKunneSlettesIgjen.kanSlettes shouldBe true
+        skalKunneSlettesIgjen.begrunnelser shouldHaveSize 0
+
+        val salesforceAktivitet = SalesforceAktivitetDto(
+            Id__c = UUID.randomUUID().toString(),
+            IACaseNumber__c = sak.saksnummer,
+            IACooperationId__c = samarbeid.id.toString(),
+            LastModifiedDate__c = ZonedDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
+            EventType__c = "Created",
+            TaskEvent__c = "Møte",
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = salesforceAktivitet.Id__c,
+            melding = Json.encodeToString(salesforceAktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        val skalIkkeKunneSlettesPgaSfAktivitet = sak.kanSletteSamarbeid(samarbeid)
+        skalIkkeKunneSlettesPgaSfAktivitet.kanSlettes shouldBe false
+        skalIkkeKunneSlettesPgaSfAktivitet.begrunnelser shouldBe listOf(IAProsessService.SletteBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
+
+        sak.opprettEnPlan()
+        val skalIallfallIkkeKunneSlettes = sak.kanSletteSamarbeid(samarbeid)
+        skalIallfallIkkeKunneSlettes.kanSlettes shouldBe false
+        skalIallfallIkkeKunneSlettes.begrunnelser shouldContainExactlyInAnyOrder listOf(
+            IAProsessService.SletteBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
+            IAProsessService.SletteBegrunnelser.FINNES_SAMARBEIDSPLAN,
+        )
     }
 
     @Test
@@ -96,7 +158,7 @@ class IASakProsessTest {
         val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
         val samarbeid = sak.hentAlleSamarbeid().first()
 
-        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -104,7 +166,7 @@ class IASakProsessTest {
         endretTidspunktVedOpprettelse shouldNotBe null
 
         sak.nyttNavnPåSamarbeid(samarbeid, "Avdeling 1 - Fysio")
-        val endretTidspunktEtterUpdate = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+        val endretTidspunktEtterUpdate = postgresContainer.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -118,7 +180,7 @@ class IASakProsessTest {
         val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
         val samarbeid = sak.hentAlleSamarbeid().first()
 
-        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -126,7 +188,7 @@ class IASakProsessTest {
         endretTidspunktVedOpprettelse shouldNotBe null
 
         sak.slettSamarbeid(samarbeid)
-        val endretTidspunktEtterSlett = postgresContainer.hentEnkelKolonne<java.sql.Timestamp?>(
+        val endretTidspunktEtterSlett = postgresContainer.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),

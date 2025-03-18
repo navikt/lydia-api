@@ -26,7 +26,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
-import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 import javax.sql.DataSource
@@ -378,25 +378,7 @@ class PlanRepository(
                     "planId" to planId,
                     "undertemaId" to undertemaId,
                 ),
-            ).map { row ->
-                SalesforceAktivitet(
-                    id = row.string("id"),
-                    sistEndretISalesforce = row.zonedDateTime("sist_endret"),
-                    type = SalesforceAktivitet.Companion.AktivitetsType.valueOf(row.string("type")),
-                    saksnummer = row.string("saksnummer"),
-                    samarbeidsId = row.int("samarbeid"),
-                    planId = row.stringOrNull("plan_id"),
-                    tema = row.stringOrNull("tema"),
-                    undertema = row.stringOrNull("undertema"),
-                    planlagt = row.zonedDateTimeOrNull("oppgave_planlagt"),
-                    fullført = row.zonedDateTimeOrNull("oppgave_fullfort"),
-                    møteStart = row.zonedDateTimeOrNull("mote_start"),
-                    møteSlutt = row.zonedDateTimeOrNull("mote_slutt"),
-                    status = row.stringOrNull("status")?.let {
-                        SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
-                    },
-                )
-            }.asList,
+            ).map(Row::mapTilSalesforceAktivitet).asList,
         )
     }
 

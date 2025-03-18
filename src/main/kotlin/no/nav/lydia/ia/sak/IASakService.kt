@@ -144,7 +144,7 @@ class IASakService(
             SLETT_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
-                if (!iaProsessService.kanSletteProsess(sak = aktivSak, iaProsess = prosessDto)) {
+                if (iaProsessService.kanSletteProsess(sak = aktivSak, iaProsess = prosessDto).isNotEmpty()) {
                     return IAProsessFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
                 }
             }

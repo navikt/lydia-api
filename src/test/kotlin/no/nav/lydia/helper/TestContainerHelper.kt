@@ -44,6 +44,7 @@ import no.nav.lydia.ia.sak.api.IA_MODULER_PATH
 import no.nav.lydia.ia.sak.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.IA_TJENESTER_PATH
+import no.nav.lydia.ia.sak.api.KanSletteSamarbeidDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
@@ -577,6 +578,19 @@ class SakHelper {
                 payload = Json.encodeToString(samarbeid),
             )
 
+        fun IASakDto.kanSletteSamarbeid(
+            samarbeid: IAProsessDto,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/${this.orgnr}/${this.saksnummer}/${samarbeid.id}/kanslettes")
+            .authentication().bearer(token)
+            .tilSingelRespons<KanSletteSamarbeidDto>()
+            .third.fold(
+                success = { respons -> respons },
+                failure = {
+                    fail(it.stackTraceToString())
+                },
+            )
+
         fun IASakDto.nyIkkeAktuellHendelse(token: String = oauth2ServerContainer.saksbehandler1.token) =
             nyHendelse(
                 hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
@@ -673,13 +687,14 @@ class IASakKartleggingHelper {
 
         fun IASakDto.opprettSpørreundersøkelse(
             prosessId: Int = hentAlleSamarbeid().first().id,
+            type: String = "Behovsvurdering",
             token: String = oauth2ServerContainer.saksbehandler1.token,
         ) = opprettSpørreundersøkelse(
             orgnr = orgnr,
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
-            type = "Behovsvurdering",
+            type = type,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },

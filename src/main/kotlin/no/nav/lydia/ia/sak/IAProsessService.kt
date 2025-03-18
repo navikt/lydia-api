@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
+import java.lang.IllegalStateException
 
 class IAProsessService(
     val prosessRepository: ProsessRepository,
@@ -69,20 +70,34 @@ class IAProsessService(
         )
     }
 
+    enum class SletteBegrunnelser {
+        FINNES_SALESFORCE_AKTIVITET,
+        FINNES_BEHOVSVURDERING,
+        FINNES_SAMARBEIDSPLAN,
+        FINNES_EVALUERING,
+    }
+
     fun kanSletteProsess(
         sak: IASak,
         iaProsess: IAProsessDto,
-    ): Boolean {
-        val prosess = hentIAProsess(sak, iaProsess.id).getOrNull() ?: return false
+    ): List<SletteBegrunnelser> {
+        val prosess = hentIAProsess(sak, iaProsess.id).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
+        val liste = mutableListOf<SletteBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess).isNotEmpty()) {
-            return false
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering").isNotEmpty()) {
+            liste.add(SletteBegrunnelser.FINNES_BEHOVSVURDERING)
+        }
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering").isNotEmpty()) {
+            liste.add(SletteBegrunnelser.FINNES_EVALUERING)
         }
         if (planRepository.hentPlan(prosessId = prosess.id) != null) {
-            return false
+            liste.add(SletteBegrunnelser.FINNES_SAMARBEIDSPLAN)
+        }
+        if (prosessRepository.hentSalesforceAktiviteter(sak.saksnummer, iaProsess.id).isNotEmpty()) {
+            liste.add(SletteBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
         }
 
-        return true
+        return liste
     }
 
     private fun slettProsess(
@@ -91,7 +106,7 @@ class IAProsessService(
     ): IAProsess? {
         val samarbeid = sakshendelse.prosessDto
 
-        return if (kanSletteProsess(sak = sak, iaProsess = samarbeid)) {
+        return if (kanSletteProsess(sak = sak, iaProsess = samarbeid).isEmpty()) {
             prosessRepository.oppdaterTilSlettetStatus(sakshendelse)
         } else {
             prosessRepository.hentProsess(

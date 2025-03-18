@@ -12,6 +12,7 @@ import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -179,6 +180,26 @@ class ProsessRepository(
                 ).map(this::mapTilSamarbeidVirksomhetDto).asList,
             )
         }
+
+    fun hentSalesforceAktiviteter(
+        saksnummer: String,
+        samarbeidId: Int,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                SELECT * FROM salesforce_aktiviteter
+                WHERE saksnummer = :saksnummer 
+                AND samarbeid = :samarbeidId
+                AND slettet = false
+                """.trimIndent(),
+                mapOf(
+                    "saksnummer" to saksnummer,
+                    "samarbeidId" to samarbeidId,
+                ),
+            ).map(Row::mapTilSalesforceAktivitet).asList,
+        )
+    }
 
     private fun mapTilSamarbeidVirksomhetDto(row: Row): SamarbeidIVirksomhetDto =
         SamarbeidIVirksomhetDto(

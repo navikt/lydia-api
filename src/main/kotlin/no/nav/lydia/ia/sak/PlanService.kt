@@ -274,4 +274,8 @@ object PlanFeil {
         feilmelding = "Feil ved oppdatering av undertema",
         httpStatusCode = HttpStatusCode.InternalServerError,
     )
+    val `aktiviteter i salesforce` = Feil(
+        feilmelding = "Det finnes aktiviteter registrert på dette undertemaet i Salesforce.",
+        httpStatusCode = HttpStatusCode.Conflict,
+    )
 }
