@@ -79,8 +79,6 @@ class SalesforceAktivitetKonsument :
                                             logger.error("Aktivitet med nøkkel ${it.key()} er feil formatert")
                                             null
                                         }
-                                    }.onEach {
-                                        logger.info("Behandler aktivitet med id: ${it.Id__c}, IA-saksnummer: ${it.IACaseNumber__c}")
                                     }.filter { aktivitet ->
                                         !aktivitet.IACaseNumber__c.isNullOrBlank()
                                     }.onEach {

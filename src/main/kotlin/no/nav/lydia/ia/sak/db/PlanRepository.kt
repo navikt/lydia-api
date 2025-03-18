@@ -343,35 +343,40 @@ class PlanRepository(
                 ),
             ).map { row: Row ->
                 val innholdsNavn = row.string("navn")
+                val undertemaId = row.int("undertema_id")
                 PlanUndertema(
-                    id = row.int("undertema_id"),
+                    id = undertemaId,
                     navn = innholdsNavn,
                     målsetning = hentInnholdsMålsetning(innholdsNavn) ?: "",
                     inkludert = row.boolean("inkludert"),
                     status = row.stringOrNull("status")?.let { InnholdStatus.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
                     sluttDato = row.localDateOrNull("slutt_dato")?.toKotlinLocalDate(),
-                    aktiviteterISalesforce = hentAktiviterISalesforce(temaId, innholdsNavn),
+                    aktiviteterISalesforce = hentAktiviterISalesforce(
+                        planId = row.string("plan_id"),
+                        undertemaId = undertemaId,
+                    ),
                 )
             }.asList,
         )
 
     fun hentAktiviterISalesforce(
-        temaId: Int,
-        undertemanavn: String,
+        planId: String,
+        undertemaId: Int,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf(
                 """
                 SELECT salesforce_aktiviteter.* 
                 FROM ia_sak_plan_undertema JOIN salesforce_aktiviteter USING (plan_id)
-                WHERE tema_id = :temaId
-                AND navn like :undertemanavn
+                WHERE plan_id = :planId
+                AND undertema_id = :undertemaId
+                AND position(lower(navn) in lower(undertema)) > 0
                 AND salesforce_aktiviteter.slettet = false
                 """.trimIndent(),
                 mapOf(
-                    "temaId" to temaId,
-                    "undertemanavn" to "%$undertemanavn%",
+                    "planId" to planId,
+                    "undertemaId" to undertemaId,
                 ),
             ).map { row ->
                 SalesforceAktivitet(
