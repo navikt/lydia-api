@@ -117,12 +117,10 @@ class PlanService(
         val undertemaerMedAktiviteterOgInkludert = lagretPlan.temaer.flatMap {
             it.undertemaer
         }.filter { it.inkludert }.filter {
-            val a = planRepository.hentAktiviterISalesforce(
+            planRepository.hentAktiviterISalesforce(
                 lagretPlan.id.toString(),
                 it.id,
-            )
-            logger.info("plan ${lagretPlan.id}, undertema ${it.id} har ${a.size} aktiviteter")
-            a.isNotEmpty()
+            ).isNotEmpty()
         }.map { it.id }
         val ff = endringAvPlan
             .any {
