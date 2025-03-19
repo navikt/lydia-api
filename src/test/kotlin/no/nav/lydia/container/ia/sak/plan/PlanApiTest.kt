@@ -5,6 +5,8 @@ import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PLANLAGT
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PÅGÅR
 import io.kotest.assertions.shouldFail
+import io.kotest.assertions.shouldFailWithMessage
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
@@ -13,6 +15,8 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.serialization.json.Json
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.SLUTT_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
@@ -34,16 +38,88 @@ import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import java.time.LocalDate.now
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 import kotlin.test.Test
 
 class PlanApiTest {
+    @Test
+    fun `skal ikke kunne fjerne undertemaer som har aktiviteter fra salesforce knyttet til seg`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
+        val førsteTema = plan.temaer.first()
+        val førsteUndertema = førsteTema.undertemaer.first()
+        førsteUndertema.inkludert shouldBe true
+
+        val salesforceAktivitet = SalesforceAktivitetDto(
+            Id__c = UUID.randomUUID().toString(),
+            IACaseNumber__c = sak.saksnummer,
+            IACooperationId__c = samarbeid.id.toString(),
+            IAPlanId__c = plan.id,
+            LastModifiedDate__c = ZonedDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
+            EventType__c = "Created",
+            TaskEvent__c = "Møte",
+            Service__c = førsteTema.navn,
+            IASubtheme__c = førsteUndertema.navn,
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = salesforceAktivitet.Id__c,
+            melding = Json.encodeToString(salesforceAktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        shouldFailWithMessage("HTTP Exception 409 Conflict") {
+            sak.endreEttTemaIPlan(
+                temaId = førsteTema.id,
+                endring = førsteTema.undertemaer.map {
+                    it.copy(
+                        inkludert = false,
+                        startDato = null,
+                        sluttDato = null,
+                    )
+                }.tilRequest(),
+                prosessId = samarbeid.id,
+            )
+        }
+        lydiaApiContainer shouldContainLog "Endring av plan med id '${plan.id}' kan ikke gjennomføres, da det finnes aktiviteter i SF".toRegex()
+
+        // -- Send slette melding om SF aktivitet
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = salesforceAktivitet.Id__c,
+            melding = Json.encodeToString(salesforceAktivitet.copy(EventType__c = "Deleted")),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+
+        val planEtterEndring = sak.endreEttTemaIPlan(
+            temaId = førsteTema.id,
+            endring = førsteTema.undertemaer.map {
+                it.copy(
+                    inkludert = false,
+                    startDato = null,
+                    sluttDato = null,
+                )
+            }.tilRequest(),
+            prosessId = samarbeid.id,
+        )
+        planEtterEndring.temaer.first().undertemaer.forAll {
+            it.inkludert shouldBe false
+        }
+    }
+
     @Test
     fun `kan ikke endre en plan om forespørselen er ufullstendig`() {
         val sak = nySakIKartleggesMedEtSamarbeid()

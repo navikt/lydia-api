@@ -77,6 +77,11 @@ class PlanService(
             return PlanFeil.`feil inndata i forespørsel`.left()
         }
 
+        if (harAktiviteterFraSalesforce(lagretPlan, endringAvPlan.flatMap { it.undertemaer })) {
+            logger.warn("Endring av plan med id '${lagretPlan.id}' kan ikke gjennomføres, da det finner aktiviteter i SF")
+            return PlanFeil.`aktiviteter i salesforce`.left()
+        }
+
         endringAvPlan.forEach { tema ->
             planRepository.oppdaterTema(
                 planId = lagretPlan.id,
@@ -105,6 +110,27 @@ class PlanService(
         }
     }
 
+    private fun harAktiviteterFraSalesforce(
+        lagretPlan: Plan,
+        endringAvPlan: List<EndreUndertemaRequest>,
+    ): Boolean {
+        val undertemaerMedAktiviteterOgInkludert = lagretPlan.temaer.flatMap {
+            it.undertemaer
+        }.filter { it.inkludert }.filter {
+            val a = planRepository.hentAktiviterISalesforce(
+                lagretPlan.id.toString(),
+                it.id,
+            )
+            logger.info("plan ${lagretPlan.id}, undertema ${it.id} har ${a.size} aktiviteter")
+            a.isNotEmpty()
+        }.map { it.id }
+        val ff = endringAvPlan
+            .any {
+                !it.inkludert && undertemaerMedAktiviteterOgInkludert.contains(it.id)
+            }
+        return ff
+    }
+
     fun endreEttTema(
         lagretPlan: Plan,
         temaId: Int,
@@ -115,6 +141,11 @@ class PlanService(
 
         if (!nyttInnholdListe.erGyldig(lagretTema)) {
             return PlanFeil.`feil inndata i forespørsel`.left()
+        }
+
+        if (harAktiviteterFraSalesforce(lagretPlan, nyttInnholdListe)) {
+            logger.warn("Endring av plan med id '${lagretPlan.id}' kan ikke gjennomføres, da det finnes aktiviteter i SF")
+            return PlanFeil.`aktiviteter i salesforce`.left()
         }
 
         // gjør endring
