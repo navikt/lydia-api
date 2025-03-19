@@ -122,11 +122,10 @@ class PlanService(
                 it.id,
             ).isNotEmpty()
         }.map { it.id }
-        val ff = endringAvPlan
+        return endringAvPlan
             .any {
                 !it.inkludert && undertemaerMedAktiviteterOgInkludert.contains(it.id)
             }
-        return ff
     }
 
     fun endreEttTema(
