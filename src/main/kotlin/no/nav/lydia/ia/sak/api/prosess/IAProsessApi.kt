@@ -12,6 +12,7 @@ import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.KanFullføreSamarbeidDto
 import no.nav.lydia.ia.sak.api.KanSletteSamarbeidDto
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
@@ -26,6 +27,26 @@ fun Route.iaProsessApi(
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
+    get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/{prosessId}/kanfullfores") {
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val samarbeid = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        call.somSaksbehandler(adGrupper) {
+            iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
+                iaProsessService.hentIAProsess(iaSak, samarbeid).map {
+                    iaProsessService.kanFullføreProsess(iaSak, it.tilDto())
+                }
+            }
+        }.map { begrunnelser ->
+            call.respond(
+                KanFullføreSamarbeidDto(
+                    kanFullføres = begrunnelser.none { it != IAProsessService.FullføreBegrunneler.INGEN_EVALUERING },
+                    begrunnelser = begrunnelser,
+                ),
+            )
+        }.mapLeft {
+            call.respond(message = it.feilmelding, status = it.httpStatusCode)
+        }
+    }
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/{prosessId}/kanslettes") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val samarbeid = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
@@ -36,11 +57,11 @@ fun Route.iaProsessApi(
                     iaProsessService.kanSletteProsess(iaSak, it.tilDto())
                 }
             }
-        }.map {
+        }.map { begrunnelser ->
             call.respond(
                 KanSletteSamarbeidDto(
-                    kanSlettes = it.isEmpty(),
-                    begrunnelser = it,
+                    kanSlettes = begrunnelser.isEmpty(),
+                    begrunnelser = begrunnelser,
                 ),
             )
         }.mapLeft {

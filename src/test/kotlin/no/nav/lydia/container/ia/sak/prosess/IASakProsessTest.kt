@@ -13,12 +13,17 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
+import no.nav.lydia.helper.SakHelper.Companion.kanFullføreSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.kanSletteSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -68,6 +73,39 @@ class IASakProsessTest {
             konsument.unsubscribe()
             konsument.close()
         }
+    }
+
+    @Test
+    fun `skal få riktige begrunnelser for om et samarbeid kan fullføres`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val manglerPlan = sak.kanFullføreSamarbeid(samarbeid)
+        manglerPlan.kanFullføres shouldBe false
+        manglerPlan.begrunnelser shouldContainExactlyInAnyOrder listOf(
+            IAProsessService.FullføreBegrunneler.INGEN_PLAN,
+            IAProsessService.FullføreBegrunneler.INGEN_EVALUERING,
+        )
+
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val kanFullføres = sak.kanFullføreSamarbeid(samarbeid)
+        kanFullføres.kanFullføres shouldBe true
+        kanFullføres.begrunnelser shouldBe listOf(
+            IAProsessService.FullføreBegrunneler.INGEN_EVALUERING,
+        )
+
+        val evaluering = sak.opprettEvaluering()
+        val aktivEvaluering = sak.kanFullføreSamarbeid(samarbeid)
+        aktivEvaluering.kanFullføres shouldBe false
+        aktivEvaluering.begrunnelser shouldBe listOf(
+            IAProsessService.FullføreBegrunneler.AKTIV_EVALUERING,
+        )
+
+        evaluering
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val kanFullføresUtenAdvarsler = sak.kanFullføreSamarbeid(samarbeid)
+        kanFullføresUtenAdvarsler.kanFullføres shouldBe true
+        kanFullføresUtenAdvarsler.begrunnelser shouldHaveSize 0
     }
 
     @Test

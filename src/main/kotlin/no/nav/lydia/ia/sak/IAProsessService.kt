@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.sak.api.Feil
@@ -68,6 +69,42 @@ class IAProsessService(
             saksnummer = samarbeid.saksnummer,
             prosessId = samarbeid.id,
         )
+    }
+
+    enum class FullføreBegrunneler {
+        INGEN_EVALUERING,
+        INGEN_PLAN,
+        AKTIV_EVALUERING,
+        AKTIV_BEHOVSVURDERING,
+    }
+
+    fun kanFullføreProsess(
+        sak: IASak,
+        iaProsess: IAProsessDto,
+    ): List<FullføreBegrunneler> {
+        val prosess = hentIAProsess(sak, iaProsess.id).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
+        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering")
+        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering")
+        val liste = mutableListOf<FullføreBegrunneler>()
+
+        if (behovsvurderinger.filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }.isNotEmpty()) {
+            liste.add(FullføreBegrunneler.AKTIV_BEHOVSVURDERING)
+        }
+
+        if (evalueringer.isEmpty()) {
+            liste.add(FullføreBegrunneler.INGEN_EVALUERING)
+        }
+
+        if (evalueringer.filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }.isNotEmpty()) {
+            liste.add(FullføreBegrunneler.AKTIV_EVALUERING)
+        }
+
+        val plan = planRepository.hentPlan(prosessId = prosess.id)
+        if (plan == null) {
+            liste.add(FullføreBegrunneler.INGEN_PLAN)
+        }
+
+        return liste
     }
 
     enum class SletteBegrunnelser {
