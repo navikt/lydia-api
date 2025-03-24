@@ -39,7 +39,7 @@ fun Route.iaProsessApi(
         }.map { begrunnelser ->
             call.respond(
                 KanFullføreSamarbeidDto(
-                    kanFullføres = begrunnelser.none { it != IAProsessService.FullføreBegrunneler.INGEN_EVALUERING },
+                    kanFullføres = begrunnelser.none { it != IAProsessService.FullføreBegrunnelser.INGEN_EVALUERING },
                     begrunnelser = begrunnelser,
                 ),
             )

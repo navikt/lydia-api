@@ -15,6 +15,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
@@ -120,6 +121,7 @@ class IASak private constructor(
             ENDRE_PROSESS,
             NY_PROSESS,
             SLETT_PROSESS,
+            FULLFØR_PROSESS,
             -> {
                 tilstand.behandleHendelse(hendelse)
                     .map { nyTilstand -> tilstand = nyTilstand }
@@ -326,6 +328,7 @@ class IASak private constructor(
                     GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
                     GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
                     GyldigHendelse(saksHendelsestype = NY_PROSESS),
+                    GyldigHendelse(saksHendelsestype = FULLFØR_PROSESS),
                 )
             } else {
                 listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
@@ -336,7 +339,7 @@ class IASak private constructor(
                 TILBAKE -> finnForrigeTilstand().right()
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
                 FULLFØR_BISTAND -> FullførtTilstand().right()
-                ENDRE_PROSESS, NY_PROSESS, SLETT_PROSESS -> this.right()
+                ENDRE_PROSESS, NY_PROSESS, SLETT_PROSESS, FULLFØR_PROSESS -> this.right()
                 else -> generellFeil()
             }
     }
@@ -386,7 +389,7 @@ class IASak private constructor(
 
         fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
             val hendelserSomEndrerStatus = hendelser.filter {
-                !listOf(TA_EIERSKAP_I_SAK, NY_PROSESS, ENDRE_PROSESS, SLETT_PROSESS).contains(it)
+                !listOf(TA_EIERSKAP_I_SAK, NY_PROSESS, ENDRE_PROSESS, SLETT_PROSESS, FULLFØR_PROSESS).contains(it)
             }
 
             val hendelsesRekkeMedHåndterteTilbakeHendelser =

@@ -38,6 +38,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
@@ -146,6 +147,17 @@ class IASakService(
                 val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
                 if (iaProsessService.kanSletteProsess(sak = aktivSak, iaProsess = prosessDto).isNotEmpty()) {
                     return IAProsessFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
+                }
+            }
+            FULLFØR_PROSESS -> {
+                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
+                val fullføreBegrunnelser = iaProsessService.kanFullføreProsess(
+                    sak = aktivSak,
+                    iaProsess = prosessDto,
+                )
+                if (fullføreBegrunnelser.any { it != IAProsessService.FullføreBegrunnelser.INGEN_EVALUERING }) {
+                    return IAProsessFeil.`kan ikke fullføre samarbeid`.left()
                 }
             }
             ENDRE_PROSESS, NY_PROSESS -> {

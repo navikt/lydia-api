@@ -71,6 +71,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
@@ -258,6 +259,7 @@ class IASakApiTest {
                 ENDRE_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
                 NY_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
                 SLETT_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
+                FULLFØR_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
 
                 else ->
                     sak.nyHendelse(it)

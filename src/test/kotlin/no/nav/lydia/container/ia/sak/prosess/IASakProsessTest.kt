@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
@@ -22,6 +23,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
+import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.kanFullføreSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.kanSletteSamarbeid
@@ -76,28 +78,95 @@ class IASakProsessTest {
     }
 
     @Test
+    fun `skal kunne fullføre et samarbeid`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak.fullførSamarbeid(samarbeid)
+        postgresContainer.hentEnkelKolonne<String>(
+            "SELECT status FROM ia_prosess WHERE id = ${samarbeid.id}",
+        ) shouldBe no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT.name
+    }
+
+    @Test
+    fun `fullførte samarbeid skal ikke vises i listen over aktive samarbeid`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak.fullførSamarbeid(samarbeid)
+        sak.hentAlleSamarbeid() shouldHaveSize 0
+    }
+
+    @Test
+    fun `skal kunne starte nytt samarbeid etter å ha fullført et samarbeid`() {
+        var sak = nySakIViBistår()
+        val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        sak = sak.opprettNyttSamarbeid(navn = "Det andre samarbeid")
+        sak.hentAlleSamarbeid().map { it.navn } shouldBe listOf("Det andre samarbeid")
+    }
+
+    @Test
+    fun `skal kunne gå frem og tilbake i saksgang selv med fullført samarbeid`() {
+        var sak = nySakIViBistår()
+        val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        sak = sak.nyHendelse(IASakshendelseType.TILBAKE)
+        sak = sak.nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+        sak = sak.nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
+        sak.status shouldBe IAProsessStatus.FULLFØRT
+    }
+
+    @Test
+    fun `skal få riktig historikk for saken etter fullført samarbeid`() {
+        var sak = nySakIViBistår()
+        val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        val historikk = hentSamarbeidshistorikk(sak.orgnr)
+        historikk.forExactlyOne {
+            it.sakshendelser.map { it.hendelsestype } shouldContainInOrder listOf(
+                IASakshendelseType.VIRKSOMHET_VURDERES,
+                IASakshendelseType.TA_EIERSKAP_I_SAK,
+                IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
+                IASakshendelseType.VIRKSOMHET_KARTLEGGES,
+                IASakshendelseType.NY_PROSESS,
+                IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS,
+                IASakshendelseType.FULLFØR_PROSESS,
+            )
+        }
+    }
+
+    @Test
     fun `skal få riktige begrunnelser for om et samarbeid kan fullføres`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val manglerPlan = sak.kanFullføreSamarbeid(samarbeid)
         manglerPlan.kanFullføres shouldBe false
         manglerPlan.begrunnelser shouldContainExactlyInAnyOrder listOf(
-            IAProsessService.FullføreBegrunneler.INGEN_PLAN,
-            IAProsessService.FullføreBegrunneler.INGEN_EVALUERING,
+            IAProsessService.FullføreBegrunnelser.INGEN_PLAN,
+            IAProsessService.FullføreBegrunnelser.INGEN_EVALUERING,
         )
 
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val kanFullføres = sak.kanFullføreSamarbeid(samarbeid)
         kanFullføres.kanFullføres shouldBe true
         kanFullføres.begrunnelser shouldBe listOf(
-            IAProsessService.FullføreBegrunneler.INGEN_EVALUERING,
+            IAProsessService.FullføreBegrunnelser.INGEN_EVALUERING,
         )
 
         val evaluering = sak.opprettEvaluering()
         val aktivEvaluering = sak.kanFullføreSamarbeid(samarbeid)
         aktivEvaluering.kanFullføres shouldBe false
         aktivEvaluering.begrunnelser shouldBe listOf(
-            IAProsessService.FullføreBegrunneler.AKTIV_EVALUERING,
+            IAProsessService.FullføreBegrunnelser.AKTIV_EVALUERING,
         )
 
         evaluering

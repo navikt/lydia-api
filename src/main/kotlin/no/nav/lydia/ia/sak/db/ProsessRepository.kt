@@ -9,7 +9,6 @@ import kotliquery.using
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
@@ -119,25 +118,28 @@ class ProsessRepository(
             sistEndret = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
         )
 
-    fun oppdaterTilSlettetStatus(prosessHendelse: ProsessHendelse) =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE ia_prosess
-                     SET status = 'SLETTET', endret_tidspunkt = :endret_tidspunkt
-                     WHERE id = :prosessId
-                     AND saksnummer = :saksnummer
-                     returning *
-                    """.trimIndent(),
-                    mapOf(
-                        "prosessId" to prosessHendelse.prosessDto.id,
-                        "saksnummer" to prosessHendelse.saksnummer,
-                        "endret_tidspunkt" to LocalDateTime.now(),
-                    ),
-                ).map(this::mapRowToIaProsessDto).asSingle,
-            )!!
-        }
+    fun oppdaterStatus(
+        samarbeid: IAProsessDto,
+        status: IAProsessStatus,
+    ) = using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                """
+                UPDATE ia_prosess
+                 SET status = :status, endret_tidspunkt = :endret_tidspunkt
+                 WHERE id = :prosessId
+                 AND saksnummer = :saksnummer
+                 returning *
+                """.trimIndent(),
+                mapOf(
+                    "prosessId" to samarbeid.id,
+                    "saksnummer" to samarbeid.saksnummer,
+                    "status" to status.name,
+                    "endret_tidspunkt" to LocalDateTime.now(),
+                ),
+            ).map(this::mapRowToIaProsessDto).asSingle,
+        )!!
+    }
 
     fun hentSamarbeidIVirksomhetDto(prosessId: Int): SamarbeidIVirksomhetDto? =
         using(sessionOf(dataSource)) { session: Session ->

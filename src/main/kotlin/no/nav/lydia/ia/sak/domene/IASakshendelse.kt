@@ -6,12 +6,12 @@ import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
@@ -48,6 +48,7 @@ open class IASakshendelse(
             NY_PROSESS,
             ENDRE_PROSESS,
             SLETT_PROSESS,
+            FULLFØR_PROSESS,
             -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
 
             else -> IASakshendelse(
@@ -272,6 +273,7 @@ enum class IASakshendelseType {
     NY_PROSESS,
     ENDRE_PROSESS,
     SLETT_PROSESS,
+    FULLFØR_PROSESS,
     // --
 
     TILBAKE,
