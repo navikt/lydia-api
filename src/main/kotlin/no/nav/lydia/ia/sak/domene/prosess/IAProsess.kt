@@ -13,5 +13,6 @@ data class IAProsess(
 
 enum class IAProsessStatus {
     AKTIV,
+    FULLFØRT,
     SLETTET,
 }

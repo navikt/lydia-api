@@ -14,10 +14,12 @@ import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import java.lang.IllegalStateException
 
 class IAProsessService(
@@ -46,6 +48,7 @@ class IAProsessService(
         when (sakshendelse) {
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
+                    FULLFØR_PROSESS -> fullførProsess(sakshendelse, sak)
                     ENDRE_PROSESS -> oppdaterNavnPåProsess(sakshendelse.prosessDto)
                         ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
                     SLETT_PROSESS -> slettProsess(sakshendelse, sak)
@@ -71,37 +74,42 @@ class IAProsessService(
         )
     }
 
-    enum class FullføreBegrunneler {
+    enum class FullføreBegrunnelser {
         INGEN_EVALUERING,
         INGEN_PLAN,
         AKTIV_EVALUERING,
         AKTIV_BEHOVSVURDERING,
+        SAK_I_FEIL_STATUS,
     }
 
     fun kanFullføreProsess(
         sak: IASak,
         iaProsess: IAProsessDto,
-    ): List<FullføreBegrunneler> {
+    ): List<FullføreBegrunnelser> {
         val prosess = hentIAProsess(sak, iaProsess.id).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
         val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering")
         val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering")
-        val liste = mutableListOf<FullføreBegrunneler>()
+        val liste = mutableListOf<FullføreBegrunnelser>()
 
-        if (behovsvurderinger.filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }.isNotEmpty()) {
-            liste.add(FullføreBegrunneler.AKTIV_BEHOVSVURDERING)
+        if (sak.status != no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR) {
+            liste.add(FullføreBegrunnelser.SAK_I_FEIL_STATUS)
+        }
+
+        if (behovsvurderinger.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
+            liste.add(FullføreBegrunnelser.AKTIV_BEHOVSVURDERING)
         }
 
         if (evalueringer.isEmpty()) {
-            liste.add(FullføreBegrunneler.INGEN_EVALUERING)
+            liste.add(FullføreBegrunnelser.INGEN_EVALUERING)
         }
 
-        if (evalueringer.filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }.isNotEmpty()) {
-            liste.add(FullføreBegrunneler.AKTIV_EVALUERING)
+        if (evalueringer.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
+            liste.add(FullføreBegrunnelser.AKTIV_EVALUERING)
         }
 
         val plan = planRepository.hentPlan(prosessId = prosess.id)
         if (plan == null) {
-            liste.add(FullføreBegrunneler.INGEN_PLAN)
+            liste.add(FullføreBegrunnelser.INGEN_PLAN)
         }
 
         return liste
@@ -137,6 +145,23 @@ class IAProsessService(
         return liste
     }
 
+    private fun fullførProsess(
+        sakshendelse: ProsessHendelse,
+        sak: IASak,
+    ): IAProsess? {
+        val samarbeid = sakshendelse.prosessDto
+
+        val kanFullføres = kanFullføreProsess(sak = sak, iaProsess = samarbeid).none { it != FullføreBegrunnelser.INGEN_EVALUERING }
+        return if (kanFullføres) {
+            prosessRepository.oppdaterStatus(samarbeid, IAProsessStatus.FULLFØRT)
+        } else {
+            prosessRepository.hentProsess(
+                saksnummer = samarbeid.saksnummer,
+                prosessId = samarbeid.id,
+            )
+        }
+    }
+
     private fun slettProsess(
         sakshendelse: ProsessHendelse,
         sak: IASak,
@@ -144,7 +169,7 @@ class IAProsessService(
         val samarbeid = sakshendelse.prosessDto
 
         return if (kanSletteProsess(sak = sak, iaProsess = samarbeid).isEmpty()) {
-            prosessRepository.oppdaterTilSlettetStatus(sakshendelse)
+            prosessRepository.oppdaterStatus(samarbeid, IAProsessStatus.SLETTET)
         } else {
             prosessRepository.hentProsess(
                 saksnummer = samarbeid.saksnummer,
@@ -164,4 +189,6 @@ object IAProsessFeil {
     val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
     val `kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan` =
         Feil("kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan", HttpStatusCode.BadRequest)
+    val `kan ikke fullføre samarbeid` =
+        Feil("kan ikke fullføre samarbeid", HttpStatusCode.BadRequest)
 }

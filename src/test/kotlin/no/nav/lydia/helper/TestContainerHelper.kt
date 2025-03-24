@@ -573,6 +573,12 @@ class SakHelper {
             payload: String? = null,
         ) = nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
+        fun IASakDto.fullførSamarbeid(samarbeid: IAProsessDto) =
+            nyHendelse(
+                hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
+                payload = Json.encodeToString(samarbeid),
+            )
+
         fun IASakDto.slettSamarbeid(samarbeid: IAProsessDto) =
             nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
