@@ -474,4 +474,31 @@ class PlanRepository(
                 }.asList,
             )
         }
+
+    fun settPlanTilFullført(plan: Plan) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                plan.temaer.forEach { tema ->
+                    tx.run(
+                        queryOf(
+                            """
+                            UPDATE ia_sak_plan_undertema
+                            SET status = :statusFullfort
+                            WHERE status != :statusAvbrutt
+                            AND tema_id = :temaId
+                            AND plan_id = :planId
+                            AND inkludert = true
+                            """.trimIndent(),
+                            mapOf(
+                                "statusFullfort" to InnholdStatus.FULLFØRT.name,
+                                "statusAvbrutt" to InnholdStatus.AVBRUTT.name,
+                                "temaId" to tema.id,
+                                "planId" to plan.id.toString(),
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }
+        }
+    }
 }
