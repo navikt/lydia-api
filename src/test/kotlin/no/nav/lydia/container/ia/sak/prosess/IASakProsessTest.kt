@@ -1,8 +1,10 @@
 package no.nav.lydia.container.ia.sak.prosess
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
@@ -19,6 +21,8 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
+import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
@@ -121,6 +125,39 @@ class IASakProsessTest {
         sak = sak.nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
         sak = sak.nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
         sak.status shouldBe IAProsessStatus.FULLFØRT
+    }
+
+    @Test
+    fun `skal fullføre alle inkluderte undertemaer i plan når samarbeid fullføres`() {
+        var sak = nySakIViBistår()
+        val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        val plan = sak.hentPlan(prosessId = samarbeidSomFullføres.id)
+        plan.temaer.forAll { tema ->
+            tema.undertemaer.forAll { undertema ->
+                undertema.status shouldBe InnholdStatus.FULLFØRT
+            }
+        }
+    }
+
+    @Test
+    fun `skal ikke fullføre avbrutte undertemaer når samarbeid fullføres`() {
+        var sak = nySakIViBistår()
+        val samarbeidSomFullføres = sak.hentAlleSamarbeid().first()
+        val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val tema = plan.temaer.first()
+        val undertema = tema.undertemaer.first()
+        sak.endreStatusPåInnholdIPlan(
+            temaId = tema.id,
+            innholdId = undertema.id,
+            status = InnholdStatus.AVBRUTT,
+        )
+        sak = sak.fullførSamarbeid(samarbeidSomFullføres)
+        val planEtterFullføring = sak.hentPlan(prosessId = samarbeidSomFullføres.id)
+        planEtterFullføring.temaer.flatMap { it.undertemaer }.forExactlyOne {
+            it.status shouldBe InnholdStatus.AVBRUTT
+        }
     }
 
     @Test

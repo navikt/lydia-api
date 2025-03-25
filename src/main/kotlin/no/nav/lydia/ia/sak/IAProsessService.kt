@@ -20,7 +20,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
-import java.lang.IllegalStateException
 
 class IAProsessService(
     val prosessRepository: ProsessRepository,
@@ -153,6 +152,10 @@ class IAProsessService(
 
         val kanFullføres = kanFullføreProsess(sak = sak, iaProsess = samarbeid).none { it != FullføreBegrunnelser.INGEN_EVALUERING }
         return if (kanFullføres) {
+            val plan = planRepository.hentPlan(samarbeid.id)
+            plan?.let {
+                planRepository.settPlanTilFullført(plan)
+            }
             prosessRepository.oppdaterStatus(samarbeid, IAProsessStatus.FULLFØRT)
         } else {
             prosessRepository.hentProsess(
