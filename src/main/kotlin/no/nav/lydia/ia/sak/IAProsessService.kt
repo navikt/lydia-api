@@ -6,6 +6,8 @@ import arrow.core.right
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
+import no.nav.lydia.appstatus.ObservedPlan
+import no.nav.lydia.appstatus.PlanHendelseType
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.db.PlanRepository
@@ -26,6 +28,7 @@ class IAProsessService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     val samarbeidObservers: List<Observer<IAProsess>>,
     val planRepository: PlanRepository,
+    val planObservers: List<Observer<ObservedPlan>>,
 ) {
     fun hentIAProsesser(sak: IASak) =
         Either.catch {
@@ -47,7 +50,9 @@ class IAProsessService(
         when (sakshendelse) {
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
-                    FULLFØR_PROSESS -> fullførProsess(sakshendelse, sak)
+                    FULLFØR_PROSESS -> fullførProsess(sakshendelse, sak)?.let { samarbeid ->
+                        samarbeidObservers.forEach { it.receive(samarbeid) }
+                    }
                     ENDRE_PROSESS -> oppdaterNavnPåProsess(sakshendelse.prosessDto)
                         ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
                     SLETT_PROSESS -> slettProsess(sakshendelse, sak)
@@ -152,9 +157,18 @@ class IAProsessService(
 
         val kanFullføres = kanFullføreProsess(sak = sak, iaProsess = samarbeid).none { it != FullføreBegrunnelser.INGEN_EVALUERING }
         return if (kanFullføres) {
-            val plan = planRepository.hentPlan(samarbeid.id)
-            plan?.let {
+            planRepository.hentPlan(samarbeid.id)?.let { plan ->
                 planRepository.settPlanTilFullført(plan)
+                planRepository.hentPlan(samarbeid.id)?.let { oppdatertPlan ->
+                    planObservers.forEach {
+                        it.receive(
+                            ObservedPlan(
+                                plan = oppdatertPlan,
+                                hendelsesType = PlanHendelseType.ENDRE_STATUS,
+                            ),
+                        )
+                    }
+                }
             }
             prosessRepository.oppdaterStatus(samarbeid, IAProsessStatus.FULLFØRT)
         } else {
