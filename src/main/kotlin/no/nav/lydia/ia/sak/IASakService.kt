@@ -145,18 +145,14 @@ class IASakService(
             SLETT_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
-                if (iaProsessService.kanSletteProsess(sak = aktivSak, iaProsess = prosessDto).isNotEmpty()) {
+                if (!iaProsessService.kanSletteProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
                 }
             }
             FULLFØR_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
-                val fullføreBegrunnelser = iaProsessService.kanFullføreProsess(
-                    sak = aktivSak,
-                    iaProsess = prosessDto,
-                )
-                if (fullføreBegrunnelser.any { it != IAProsessService.FullføreBegrunnelser.INGEN_EVALUERING }) {
+                if (!iaProsessService.kanFullføreProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke fullføre samarbeid`.left()
                 }
             }

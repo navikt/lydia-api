@@ -30,6 +30,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.kanFullføreSamarbeid
+import no.nav.lydia.helper.SakHelper.Companion.kanGjennomføreStatusendring
 import no.nav.lydia.helper.SakHelper.Companion.kanSletteSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -182,28 +183,60 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal få riktige begrunnelser for om et samarbeid kan fullføres`() {
+    fun `skal få riktige begrunnelser for om et samarbeid kan fullføres (NY)`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val manglerPlan = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
+        manglerPlan.kanGjennomføres shouldBe false
+        manglerPlan.blokkerende shouldBe listOf(IAProsessService.StatusendringBegrunnelser.INGEN_PLAN)
+        manglerPlan.advarsler shouldBe listOf(IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING)
+
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val kanFullføres = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
+        kanFullføres.kanGjennomføres shouldBe true
+        kanFullføres.advarsler shouldBe listOf(
+            IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING,
+        )
+
+        val evaluering = sak.opprettEvaluering()
+        val aktivEvaluering = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
+        aktivEvaluering.kanGjennomføres shouldBe false
+        aktivEvaluering.blokkerende shouldBe listOf(
+            IAProsessService.StatusendringBegrunnelser.AKTIV_EVALUERING,
+        )
+
+        evaluering
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val kanFullføresUtenAdvarsler = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
+        kanFullføresUtenAdvarsler.kanGjennomføres shouldBe true
+        kanFullføresUtenAdvarsler.advarsler shouldHaveSize 0
+        kanFullføresUtenAdvarsler.blokkerende shouldHaveSize 0
+    }
+
+    @Test
+    fun `skal få riktige begrunnelser for om et samarbeid kan fullføres (GAMMEL)`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val manglerPlan = sak.kanFullføreSamarbeid(samarbeid)
         manglerPlan.kanFullføres shouldBe false
         manglerPlan.begrunnelser shouldContainExactlyInAnyOrder listOf(
-            IAProsessService.FullføreBegrunnelser.INGEN_PLAN,
-            IAProsessService.FullføreBegrunnelser.INGEN_EVALUERING,
+            IAProsessService.StatusendringBegrunnelser.INGEN_PLAN,
+            IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING,
         )
 
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val kanFullføres = sak.kanFullføreSamarbeid(samarbeid)
         kanFullføres.kanFullføres shouldBe true
         kanFullføres.begrunnelser shouldBe listOf(
-            IAProsessService.FullføreBegrunnelser.INGEN_EVALUERING,
+            IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING,
         )
 
         val evaluering = sak.opprettEvaluering()
         val aktivEvaluering = sak.kanFullføreSamarbeid(samarbeid)
         aktivEvaluering.kanFullføres shouldBe false
         aktivEvaluering.begrunnelser shouldBe listOf(
-            IAProsessService.FullføreBegrunnelser.AKTIV_EVALUERING,
+            IAProsessService.StatusendringBegrunnelser.AKTIV_EVALUERING,
         )
 
         evaluering
@@ -215,7 +248,53 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal få riktige begrunnelser for om et samarbeid kan slettes`() {
+    fun `skal få riktige begrunnelser for om et samarbeid kan slettes (NY)`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val skalKunneSlettes = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
+        skalKunneSlettes.kanGjennomføres shouldBe true
+        skalKunneSlettes.blokkerende shouldHaveSize 0
+
+        val behovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
+        val skalIkkeKunneSlettesPgaBehovsVurdering = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
+        skalIkkeKunneSlettesPgaBehovsVurdering.kanGjennomføres shouldBe false
+        skalIkkeKunneSlettesPgaBehovsVurdering.blokkerende shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
+
+        lydiaApiContainer.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
+            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+            .tilSingelRespons<SpørreundersøkelseDto>()
+        val skalKunneSlettesIgjen = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
+        skalKunneSlettesIgjen.kanGjennomføres shouldBe true
+        skalKunneSlettesIgjen.blokkerende shouldHaveSize 0
+
+        val salesforceAktivitet = SalesforceAktivitetDto(
+            Id__c = UUID.randomUUID().toString(),
+            IACaseNumber__c = sak.saksnummer,
+            IACooperationId__c = samarbeid.id.toString(),
+            LastModifiedDate__c = ZonedDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
+            EventType__c = "Created",
+            TaskEvent__c = "Møte",
+        )
+        kafkaContainerHelper.sendOgVentTilKonsumert(
+            nøkkel = salesforceAktivitet.Id__c,
+            melding = Json.encodeToString(salesforceAktivitet),
+            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
+        )
+        val skalIkkeKunneSlettesPgaSfAktivitet = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
+        skalIkkeKunneSlettesPgaSfAktivitet.kanGjennomføres shouldBe false
+        skalIkkeKunneSlettesPgaSfAktivitet.blokkerende shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
+
+        sak.opprettEnPlan()
+        val skalIallfallIkkeKunneSlettes = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
+        skalIallfallIkkeKunneSlettes.kanGjennomføres shouldBe false
+        skalIallfallIkkeKunneSlettes.blokkerende shouldContainExactlyInAnyOrder listOf(
+            IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
+            IAProsessService.StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
+        )
+    }
+
+    @Test
+    fun `skal få riktige begrunnelser for om et samarbeid kan slettes (GAMMEL)`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val skalKunneSlettes = sak.kanSletteSamarbeid(samarbeid)
@@ -225,7 +304,7 @@ class IASakProsessTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
         val skalIkkeKunneSlettesPgaBehovsVurdering = sak.kanSletteSamarbeid(samarbeid)
         skalIkkeKunneSlettesPgaBehovsVurdering.kanSlettes shouldBe false
-        skalIkkeKunneSlettesPgaBehovsVurdering.begrunnelser shouldBe listOf(IAProsessService.SletteBegrunnelser.FINNES_BEHOVSVURDERING)
+        skalIkkeKunneSlettesPgaBehovsVurdering.begrunnelser shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
 
         lydiaApiContainer.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
             .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
@@ -249,14 +328,14 @@ class IASakProsessTest {
         )
         val skalIkkeKunneSlettesPgaSfAktivitet = sak.kanSletteSamarbeid(samarbeid)
         skalIkkeKunneSlettesPgaSfAktivitet.kanSlettes shouldBe false
-        skalIkkeKunneSlettesPgaSfAktivitet.begrunnelser shouldBe listOf(IAProsessService.SletteBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
+        skalIkkeKunneSlettesPgaSfAktivitet.begrunnelser shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
 
         sak.opprettEnPlan()
         val skalIallfallIkkeKunneSlettes = sak.kanSletteSamarbeid(samarbeid)
         skalIallfallIkkeKunneSlettes.kanSlettes shouldBe false
         skalIallfallIkkeKunneSlettes.begrunnelser shouldContainExactlyInAnyOrder listOf(
-            IAProsessService.SletteBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
-            IAProsessService.SletteBegrunnelser.FINNES_SAMARBEIDSPLAN,
+            IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
+            IAProsessService.StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
         )
     }
 

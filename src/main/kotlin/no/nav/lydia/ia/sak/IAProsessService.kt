@@ -8,7 +8,17 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.AKTIV_EVALUERING
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.FINNES_BEHOVSVURDERING
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.FINNES_EVALUERING
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.INGEN_PLAN
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.SAK_I_FEIL_STATUS
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
@@ -78,75 +88,85 @@ class IAProsessService(
         )
     }
 
-    enum class FullføreBegrunnelser {
+    enum class StatusendringBegrunnelser {
+        // -- fullføre
         INGEN_EVALUERING,
         INGEN_PLAN,
         AKTIV_EVALUERING,
         AKTIV_BEHOVSVURDERING,
         SAK_I_FEIL_STATUS,
-    }
 
-    fun kanFullføreProsess(
-        sak: IASak,
-        iaProsess: IAProsessDto,
-    ): List<FullføreBegrunnelser> {
-        val prosess = hentIAProsess(sak, iaProsess.id).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
-        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering")
-        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering")
-        val liste = mutableListOf<FullføreBegrunnelser>()
-
-        if (sak.status != no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR) {
-            liste.add(FullføreBegrunnelser.SAK_I_FEIL_STATUS)
-        }
-
-        if (behovsvurderinger.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
-            liste.add(FullføreBegrunnelser.AKTIV_BEHOVSVURDERING)
-        }
-
-        if (evalueringer.isEmpty()) {
-            liste.add(FullføreBegrunnelser.INGEN_EVALUERING)
-        }
-
-        if (evalueringer.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
-            liste.add(FullføreBegrunnelser.AKTIV_EVALUERING)
-        }
-
-        val plan = planRepository.hentPlan(prosessId = prosess.id)
-        if (plan == null) {
-            liste.add(FullføreBegrunnelser.INGEN_PLAN)
-        }
-
-        return liste
-    }
-
-    enum class SletteBegrunnelser {
+        // -- slette
         FINNES_SALESFORCE_AKTIVITET,
         FINNES_BEHOVSVURDERING,
         FINNES_SAMARBEIDSPLAN,
         FINNES_EVALUERING,
     }
 
+    fun kanFullføreProsess(
+        sak: IASak,
+        samarbeidsId: Int,
+    ): KanGjennomføreStatusendring {
+        val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
+        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering")
+        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering")
+        val blokkerende = mutableListOf<StatusendringBegrunnelser>()
+        val advarsler = mutableListOf<StatusendringBegrunnelser>()
+
+        if (sak.status != no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR) {
+            blokkerende.add(SAK_I_FEIL_STATUS)
+        }
+
+        if (behovsvurderinger.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
+            blokkerende.add(AKTIV_BEHOVSVURDERING)
+        }
+
+        if (evalueringer.isEmpty()) {
+            advarsler.add(INGEN_EVALUERING)
+        }
+
+        if (evalueringer.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
+            blokkerende.add(AKTIV_EVALUERING)
+        }
+
+        val plan = planRepository.hentPlan(prosessId = prosess.id)
+        if (plan == null) {
+            blokkerende.add(INGEN_PLAN)
+        }
+
+        return KanGjennomføreStatusendring(
+            kanGjennomføres = blokkerende.isEmpty(),
+            advarsler = advarsler.toList(),
+            blokkerende = blokkerende.toList(),
+        )
+    }
+
     fun kanSletteProsess(
         sak: IASak,
-        iaProsess: IAProsessDto,
-    ): List<SletteBegrunnelser> {
-        val prosess = hentIAProsess(sak, iaProsess.id).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
-        val liste = mutableListOf<SletteBegrunnelser>()
+        samarbeidsId: Int,
+    ): KanGjennomføreStatusendring {
+        val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
+        val blokkerende = mutableListOf<StatusendringBegrunnelser>()
+        val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
         if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering").isNotEmpty()) {
-            liste.add(SletteBegrunnelser.FINNES_BEHOVSVURDERING)
+            blokkerende.add(FINNES_BEHOVSVURDERING)
         }
         if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering").isNotEmpty()) {
-            liste.add(SletteBegrunnelser.FINNES_EVALUERING)
+            blokkerende.add(FINNES_EVALUERING)
         }
         if (planRepository.hentPlan(prosessId = prosess.id) != null) {
-            liste.add(SletteBegrunnelser.FINNES_SAMARBEIDSPLAN)
+            blokkerende.add(FINNES_SAMARBEIDSPLAN)
         }
-        if (prosessRepository.hentSalesforceAktiviteter(sak.saksnummer, iaProsess.id).isNotEmpty()) {
-            liste.add(SletteBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
+        if (prosessRepository.hentSalesforceAktiviteter(sak.saksnummer, prosess.id).isNotEmpty()) {
+            blokkerende.add(FINNES_SALESFORCE_AKTIVITET)
         }
 
-        return liste
+        return KanGjennomføreStatusendring(
+            kanGjennomføres = blokkerende.isEmpty(),
+            blokkerende = blokkerende,
+            advarsler = advarsler,
+        )
     }
 
     private fun fullførProsess(
@@ -155,8 +175,7 @@ class IAProsessService(
     ): IAProsess? {
         val samarbeid = sakshendelse.prosessDto
 
-        val kanFullføres = kanFullføreProsess(sak = sak, iaProsess = samarbeid).none { it != FullføreBegrunnelser.INGEN_EVALUERING }
-        return if (kanFullføres) {
+        return if (kanFullføreProsess(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
             planRepository.hentPlan(samarbeid.id)?.let { plan ->
                 planRepository.settPlanTilFullført(plan)
                 planRepository.hentPlan(samarbeid.id)?.let { oppdatertPlan ->
@@ -185,7 +204,7 @@ class IAProsessService(
     ): IAProsess? {
         val samarbeid = sakshendelse.prosessDto
 
-        return if (kanSletteProsess(sak = sak, iaProsess = samarbeid).isEmpty()) {
+        return if (kanSletteProsess(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
             prosessRepository.oppdaterStatus(samarbeid, IAProsessStatus.SLETTET)
         } else {
             prosessRepository.hentProsess(

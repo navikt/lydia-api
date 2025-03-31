@@ -45,6 +45,7 @@ import no.nav.lydia.ia.sak.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.IA_TJENESTER_PATH
 import no.nav.lydia.ia.sak.api.KanFullføreSamarbeidDto
+import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
 import no.nav.lydia.ia.sak.api.KanSletteSamarbeidDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
@@ -583,6 +584,20 @@ class SakHelper {
             nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
                 payload = Json.encodeToString(samarbeid),
+            )
+
+        fun IASakDto.kanGjennomføreStatusendring(
+            samarbeid: IAProsessDto,
+            statusEndring: String,
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+        ) = lydiaApiContainer.performGet("$IA_SAK_RADGIVER_PATH/${this.orgnr}/${this.saksnummer}/${samarbeid.id}/kan/$statusEndring")
+            .authentication().bearer(token)
+            .tilSingelRespons<KanGjennomføreStatusendring>()
+            .third.fold(
+                success = { respons -> respons },
+                failure = {
+                    fail(it.stackTraceToString())
+                },
             )
 
         fun IASakDto.kanFullføreSamarbeid(
