@@ -192,12 +192,17 @@ fun startLydiaBackend() {
             samarbeidProdusent = samarbeidProdusent,
         ),
     )
+
+    val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(
+        planRepository = planRepository,
+    )
+
     val iaProsessService = IAProsessService(
         prosessRepository = prosessRepository,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         planRepository = planRepository,
         samarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
-        planObservers = listOf(sendPlanPåKafkaObserver),
+        planObservers = listOf(oppdaterSistEndretPlanObserver, sendPlanPåKafkaObserver),
     )
 
     val iaTeamService = IATeamService(iaTeamRepository = iaTeamRepository)
@@ -230,10 +235,6 @@ fun startLydiaBackend() {
     )
     val spørreundersøkelseMetrikkObserver = SpørreundersøkelseMetrikkObserver()
     val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(kafka = naisEnv.kafka)
-
-    val oppdaterSistEndretPlanObserver = OppdaterSistEndretPlanObserver(
-        planRepository = planRepository,
-    )
 
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
 
