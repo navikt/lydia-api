@@ -11,6 +11,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.appstatus.PlanHendelseType.ENDRE_STATUS
 import no.nav.lydia.appstatus.PlanHendelseType.OPPRETT
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
@@ -219,8 +220,39 @@ class PlanService(
             planObservers.forEach {
                 it.receive(
                     ObservedPlan(
-                        hendelsesType = PlanHendelseType.ENDRE_STATUS,
+                        hendelsesType = ENDRE_STATUS,
                         plan = oppdatertPlan,
+                    ),
+                )
+            }
+        }
+    }
+
+    fun slettPlan(samarbeidId: Int): Either<Feil, Plan> {
+        // hent plan og valider
+        val plan = planRepository.hentPlan(samarbeidId) ?: return PlanFeil.`fant ikke plan`.left()
+
+        val erNoenTemaerInkludert = plan.temaer.any { tema ->
+            tema.inkludert || tema.undertemaer.any { undertema -> undertema.inkludert }
+        }
+        if (erNoenTemaerInkludert) {
+            return PlanFeil.`plan er ikke tom`.left()
+        }
+
+        val finnesSalesforceAktivitet = plan.temaer.any { tema ->
+            tema.undertemaer.any { undertema -> undertema.aktiviteterISalesforce.isNotEmpty() }
+        }
+        if (finnesSalesforceAktivitet) {
+            return PlanFeil.`aktiviteter i salesforce`.left()
+        }
+
+        // oppdater status og notify observers
+        return planRepository.settPlanTilSlettet(plan).onRight { oppdatertPlan ->
+            planObservers.forEach {
+                it.receive(
+                    ObservedPlan(
+                        plan = oppdatertPlan,
+                        ENDRE_STATUS,
                     ),
                 )
             }
@@ -280,7 +312,7 @@ object PlanFeil {
     )
     val `fant ikke plan` = Feil(
         feilmelding = "Fant ikke plan",
-        httpStatusCode = HttpStatusCode.BadRequest,
+        httpStatusCode = HttpStatusCode.NotFound,
     )
     val `fant ikke tema` = Feil(
         feilmelding = "Fant ikke tema",
@@ -304,6 +336,10 @@ object PlanFeil {
     )
     val `aktiviteter i salesforce` = Feil(
         feilmelding = "Det finnes aktiviteter registrert på dette undertemaet i Salesforce.",
+        httpStatusCode = HttpStatusCode.Conflict,
+    )
+    val `plan er ikke tom` = Feil(
+        feilmelding = "Plan er ikke tom",
         httpStatusCode = HttpStatusCode.Conflict,
     )
 }

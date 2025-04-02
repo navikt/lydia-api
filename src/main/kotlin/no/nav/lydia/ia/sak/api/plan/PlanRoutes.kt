@@ -6,6 +6,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -85,6 +86,31 @@ fun Route.iaSakPlan(
                 either = planEither,
                 orgnummer = orgnummer,
                 auditType = AuditType.create,
+                saksnummer = saksnummer,
+            )
+        }.map {
+            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
+        }.mapLeft {
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
+        }
+    }
+
+    delete("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
+        val orgnummer = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val samarbeidId = call.prosessId ?: return@delete call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+
+        call.somEierAvSakIProsess(
+            iaSakService = iaSakService,
+            adGrupper = adGrupper,
+        ) { _, _ ->
+            planService.slettPlan(samarbeidId)
+        }.also { planEither ->
+            auditLog.auditloggEither(
+                call = call,
+                either = planEither,
+                orgnummer = orgnummer,
+                auditType = AuditType.delete,
                 saksnummer = saksnummer,
             )
         }.map {

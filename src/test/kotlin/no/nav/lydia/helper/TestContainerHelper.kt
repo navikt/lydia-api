@@ -1076,6 +1076,16 @@ class PlanHelper {
                 failure = { fail(it.message) },
             )
 
+        fun IASakDto.slettPlanForSamarbeid(
+            token: String = oauth2ServerContainer.saksbehandler1.token,
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
+        ) = lydiaApiContainer.performDelete("$PLAN_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId")
+            .authentication().bearer(token)
+            .tilSingelRespons<PlanDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+
         fun IASakDto.endreEttTemaIPlan(
             temaId: Int,
             endring: List<EndreUndertemaRequest>,

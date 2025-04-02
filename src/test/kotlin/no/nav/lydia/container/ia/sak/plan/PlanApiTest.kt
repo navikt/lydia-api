@@ -10,6 +10,7 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.minus
@@ -17,7 +18,6 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.SLUTT_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.START_DATO
 import no.nav.lydia.helper.PlanHelper.Companion.antallInnholdInkludert
@@ -27,6 +27,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.endreEttTemaIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgAltInnhold
@@ -34,6 +35,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.inkluderEttTemaOgEttInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderTemaOgAltInnhold
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
+import no.nav.lydia.helper.PlanHelper.Companion.slettPlanForSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
@@ -48,6 +50,7 @@ import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import java.time.LocalDate.now
 import java.time.ZonedDateTime
@@ -57,10 +60,46 @@ import kotlin.test.Test
 
 class PlanApiTest {
     @Test
+    fun `skal kunne slette en tom plan`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(samarbeidId = samarbeid.id)
+        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        slettetPlan.status shouldBe IAProsessStatus.SLETTET
+
+        shouldFailWithMessage("HTTP Exception 404 Not Found") {
+            sak.hentPlan(prosessId = samarbeid.id)
+        }
+    }
+
+    @Test
+    fun `skal kunne opprette en ny plan etter at man har slettet en`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(samarbeidId = samarbeid.id)
+        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        val nyPlan = sak.opprettEnPlan(samarbeidId = samarbeid.id)
+        val hentetPlan = sak.hentPlan(prosessId = samarbeid.id)
+        hentetPlan.id shouldBe nyPlan.id
+        hentetPlan.status shouldBe IAProsessStatus.AKTIV
+        hentetPlan.id shouldNotBe slettetPlan.id
+    }
+
+    @Test
+    fun `skal ikke kunne slette plan dersom planen inneholder aktive temaer`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(samarbeidId = samarbeid.id, plan = hentPlanMal().inkluderAlt())
+        shouldFailWithMessage("HTTP Exception 409 Conflict") {
+            sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        }
+    }
+
+    @Test
     fun `skal ikke kunne fjerne undertemaer som har aktiviteter fra salesforce knyttet til seg`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
         val førsteTema = plan.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
@@ -123,7 +162,7 @@ class PlanApiTest {
     @Test
     fun `kan ikke endre en plan om forespørselen er ufullstendig`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val planDto = sak.opprettEnPlan(plan = enTomPlanMal)
 
         val inkludertUtenDato = planDto.copy(
@@ -199,7 +238,7 @@ class PlanApiTest {
         //  (hindret ved oppretting i frontend, men mulig å nullstille en plan ved endring)
 
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
 
         plan.antallTemaInkludert() shouldBe 0
@@ -209,7 +248,7 @@ class PlanApiTest {
     @Test
     fun `kan opprette en ny plan med alt inkludert`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
 
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 
@@ -221,7 +260,7 @@ class PlanApiTest {
     @Test
     fun `kan endre status på innhold i plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 
         sak.endreStatusPåInnholdIPlan(
@@ -240,7 +279,7 @@ class PlanApiTest {
     @Test
     fun `kan ikke endre status på innhold i plan om innhold ikke er inkludert`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
 
         shouldFail {
@@ -260,7 +299,7 @@ class PlanApiTest {
     @Test
     fun `kan endre på innhold i et tema som er inkludert`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val planMedEttTemaOgEttInnhold = PlanHelper.hentPlanMal().inkluderEttTemaOgEttInnhold(
+        val planMedEttTemaOgEttInnhold = hentPlanMal().inkluderEttTemaOgEttInnhold(
             temanummer = 3,
             innholdnummer = 1,
         )
@@ -279,7 +318,7 @@ class PlanApiTest {
     @Test
     fun `kan ikke endre innhold i plan om det temaet ikke allerede er inkludert`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val plan = sak.opprettEnPlan(plan = enTomPlanMal)
         val førsteTema = plan.temaer.first()
 
@@ -296,7 +335,7 @@ class PlanApiTest {
     @Test
     fun `kan ikke endre på innhold i et tema som ikke er inkludert`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val planDto = sak.opprettEnPlan(plan = enTomPlanMal)
 
         val endring = planDto.copy(
@@ -330,7 +369,7 @@ class PlanApiTest {
     @Test
     fun `kan endre en plan med ett inkludert tema til å inkludere alt innhold i temaet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val planMalDto = PlanHelper.hentPlanMal().inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
+        val planMalDto = hentPlanMal().inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
         val plan = sak.opprettEnPlan(plan = planMalDto)
 
         plan.antallTemaInkludert() shouldBe 1
@@ -348,7 +387,7 @@ class PlanApiTest {
         val sak = nySakIKartlegges()
             .opprettNyttSamarbeid(navn = "Først")
             .opprettNyttSamarbeid(navn = "Sist")
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
         val planMalDto = enTomPlanMal.inkluderEttTemaOgEttInnhold(temanummer = 3, innholdnummer = 1)
 
         val alleSamarbeid = sak.hentAlleSamarbeid()
@@ -492,7 +531,7 @@ class PlanApiTest {
     @Test
     fun `kan legge til nytt tema i plan uten uventet bieffekter`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlan = PlanHelper.hentPlanMal()
+        val enTomPlan = hentPlanMal()
 
         val opprettetPlan = sak.opprettEnPlan(plan = enTomPlan.inkluderEttTemaOgEttInnhold(2, 1))
 
@@ -537,7 +576,7 @@ class PlanApiTest {
     fun `Kan ikke opprette eller endre en plan med sluttdato før startdato`() {
         // TODO: Kanskje litt vel lang test, dekkes noe av dette av andre tester?
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlan = PlanHelper.hentPlanMal()
+        val enTomPlan = hentPlanMal()
 
         val ugyldigPlan = enTomPlan.inkluderEttTemaOgAltInnhold(temanummer = 3, startDato = SLUTT_DATO, sluttDato = START_DATO)
         // sluttdato før start-dato
@@ -631,7 +670,7 @@ class PlanApiTest {
     @Test
     fun `skal få feil når man henter plan uten å ha opprettet en plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        shouldFail { sak.hentPlan() }.message shouldBe "HTTP Exception 400 Bad Request"
+        shouldFail { sak.hentPlan() }.message shouldBe "HTTP Exception 404 Not Found"
     }
 
     @Test
@@ -647,7 +686,7 @@ class PlanApiTest {
 
     @Test
     fun `skal kunne hente plan-mal som eier`() {
-        val planMal = PlanHelper.hentPlanMal()
+        val planMal = hentPlanMal()
 
         planMal.tema.size shouldBe 3
         planMal.tema.first().navn shouldBe "Partssamarbeid"
@@ -656,7 +695,7 @@ class PlanApiTest {
     @Test
     fun `Skal oppdatere sist endret dato ved endring av plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val enTomPlanMal = PlanHelper.hentPlanMal()
+        val enTomPlanMal = hentPlanMal()
 
         val opprettetPlan = sak.opprettEnPlan(plan = enTomPlanMal.inkluderAlt())
 

@@ -37,6 +37,7 @@ data class PlanKafkaMeldingDto(
     val id: String,
     val sistEndret: LocalDateTime,
     val sistPublisert: LocalDate?,
+    val status: IAProsessStatus?,
     val temaer: List<PlanTemaKafkaMeldingDto>,
 )
 
@@ -63,6 +64,7 @@ fun PlanDto.tilPlanKafkaMeldingDto() =
         id = this.id,
         sistEndret = this.sistEndret,
         sistPublisert = this.sistPublisert,
+        status = this.status,
         temaer = this.temaer.tilPlanTemaKafkaMeldingDtoer(),
     )
 

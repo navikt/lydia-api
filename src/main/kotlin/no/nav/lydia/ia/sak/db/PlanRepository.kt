@@ -18,6 +18,7 @@ import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.eksport.tilPlanKafkaMeldingDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
+import no.nav.lydia.ia.sak.PlanFeil
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.domene.plan.Plan
@@ -146,20 +147,12 @@ class PlanRepository(
                         SELECT *
                         FROM ia_sak_plan
                         WHERE ia_prosess = :prosessId
+                        AND status != 'SLETTET'
                     """.trimMargin(),
                     mapOf(
                         "prosessId" to prosessId,
                     ),
-                ).map { row: Row ->
-                    val planId = UUID.fromString(row.string("plan_id"))
-                    Plan(
-                        id = planId,
-                        samarbeidId = row.int("ia_prosess"),
-                        sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
-                        sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
-                        temaer = hentTema(planId, session),
-                    )
-                }.asSingle,
+                ).map { tilPlan(it, session) }.asSingle,
             )
         }
 
@@ -262,16 +255,7 @@ class PlanRepository(
                 mapOf(
                     "planId" to planId.toString(),
                 ),
-            ).map { row: Row ->
-                val planIdLestFraDB = UUID.fromString(row.string("plan_id"))
-                Plan(
-                    id = planIdLestFraDB,
-                    samarbeidId = row.int("ia_prosess"),
-                    sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
-                    sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
-                    temaer = hentTema(planIdLestFraDB, session),
-                )
-            }.asSingle,
+            ).map { tilPlan(it, session) }.asSingle,
         )
 
     private fun hentTema(
@@ -462,18 +446,24 @@ class PlanRepository(
                         SELECT *
                         FROM ia_sak_plan
                     """.trimMargin(),
-                ).map { row: Row ->
-                    val planId = UUID.fromString(row.string("plan_id"))
-                    Plan(
-                        id = planId,
-                        samarbeidId = row.int("ia_prosess"),
-                        sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
-                        sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
-                        temaer = hentTema(planId, session),
-                    )
-                }.asList,
+                ).map { tilPlan(it, session) }.asList,
             )
         }
+
+    private fun PlanRepository.tilPlan(
+        row: Row,
+        session: Session,
+    ): Plan {
+        val planIdLestFraDB = UUID.fromString(row.string("plan_id"))
+        return Plan(
+            id = planIdLestFraDB,
+            samarbeidId = row.int("ia_prosess"),
+            sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
+            sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
+            status = IAProsessStatus.valueOf(row.string("status")),
+            temaer = hentTema(planIdLestFraDB, session),
+        )
+    }
 
     fun settPlanTilFullført(plan: Plan) {
         using(sessionOf(dataSource)) { session ->
@@ -498,7 +488,39 @@ class PlanRepository(
                         ).asUpdate,
                     )
                 }
+                tx.run(
+                    queryOf(
+                        """
+                        UPDATE ia_sak_plan
+                        SET status = :statusFullfort
+                        WHERE plan_id = :planId
+                        """.trimIndent(),
+                        mapOf(
+                            "statusFullfort" to IAProsessStatus.FULLFØRT.name,
+                            "planId" to plan.id.toString(),
+                        ),
+                    ).asUpdate,
+                )
             }
         }
     }
+
+    fun settPlanTilSlettet(plan: Plan) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_plan
+                    SET status = :statusSlettet
+                    WHERE plan_id = :planId
+                    """.trimIndent(),
+                    mapOf(
+                        "statusSlettet" to IAProsessStatus.SLETTET.name,
+                        "planId" to plan.id.toString(),
+                    ),
+                ).asUpdate,
+            )
+
+            hentPlan(plan.id, session)?.right() ?: PlanFeil.`fant ikke plan`.left()
+        }
 }
