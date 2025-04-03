@@ -21,7 +21,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Setup Gradle to generate and submit dependency graphs
+        uses: gradle/actions/setup-gradle@v4
         with:
           dependency-graph: generate-and-submit
       - name: Compile, run tests and build
@@ -52,6 +53,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Deploy application to ${{ matrix.cluster }}
@@ -67,8 +69,9 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/avslutt-samarbeid'
+    if: github.ref == 'refs/heads/unik-klient-id-per-produsent'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Deploy application to dev
