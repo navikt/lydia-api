@@ -507,19 +507,41 @@ class PlanRepository(
 
     fun settPlanTilSlettet(plan: Plan) =
         using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    UPDATE ia_sak_plan
-                    SET status = :statusSlettet
-                    WHERE plan_id = :planId
-                    """.trimIndent(),
-                    mapOf(
-                        "statusSlettet" to IAProsessStatus.SLETTET.name,
-                        "planId" to plan.id.toString(),
-                    ),
-                ).asUpdate,
-            )
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
+                        UPDATE ia_sak_plan
+                        SET status = :statusSlettet
+                        WHERE plan_id = :planId
+                        """.trimIndent(),
+                        mapOf(
+                            "statusSlettet" to IAProsessStatus.SLETTET.name,
+                            "planId" to plan.id.toString(),
+                        ),
+                    ).asUpdate,
+                )
+                tx.run(
+                    queryOf(
+                        """
+                        UPDATE ia_sak_plan_undertema
+                        SET inkludert = false, start_dato = null, slutt_dato = null
+                        WHERE plan_id = :planId
+                        """.trimIndent(),
+                        mapOf("planId" to plan.id.toString()),
+                    ).asUpdate,
+                )
+                tx.run(
+                    queryOf(
+                        """
+                        UPDATE ia_sak_plan_tema
+                        SET inkludert = false
+                        WHERE plan_id = :planId
+                        """.trimIndent(),
+                        mapOf("planId" to plan.id.toString()),
+                    ).asUpdate,
+                )
+            }
 
             hentPlan(plan.id, session)?.right() ?: PlanFeil.`fant ikke plan`.left()
         }

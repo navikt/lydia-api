@@ -232,13 +232,6 @@ class PlanService(
         // hent plan og valider
         val plan = planRepository.hentPlan(samarbeidId) ?: return PlanFeil.`fant ikke plan`.left()
 
-        val erNoenTemaerInkludert = plan.temaer.any { tema ->
-            tema.inkludert || tema.undertemaer.any { undertema -> undertema.inkludert }
-        }
-        if (erNoenTemaerInkludert) {
-            return PlanFeil.`plan er ikke tom`.left()
-        }
-
         val finnesSalesforceAktivitet = plan.temaer.any { tema ->
             tema.undertemaer.any { undertema -> undertema.aktiviteterISalesforce.isNotEmpty() }
         }
@@ -336,10 +329,6 @@ object PlanFeil {
     )
     val `aktiviteter i salesforce` = Feil(
         feilmelding = "Det finnes aktiviteter registrert på dette undertemaet i Salesforce.",
-        httpStatusCode = HttpStatusCode.Conflict,
-    )
-    val `plan er ikke tom` = Feil(
-        feilmelding = "Plan er ikke tom",
         httpStatusCode = HttpStatusCode.Conflict,
     )
 }

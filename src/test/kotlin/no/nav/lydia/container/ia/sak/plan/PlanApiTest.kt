@@ -86,12 +86,21 @@ class PlanApiTest {
     }
 
     @Test
-    fun `skal ikke kunne slette plan dersom planen inneholder aktive temaer`() {
+    fun `skal kunne slette plan dersom planen inneholder aktive temaer`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(samarbeidId = samarbeid.id, plan = hentPlanMal().inkluderAlt())
-        shouldFailWithMessage("HTTP Exception 409 Conflict") {
-            sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
+        slettetPlan.status shouldBe IAProsessStatus.SLETTET
+        slettetPlan.temaer.forAll { tema ->
+            tema.inkludert shouldBe false
+            tema.undertemaer.forAll { undertema ->
+                undertema.inkludert shouldBe false
+            }
+        }
+
+        shouldFailWithMessage("HTTP Exception 404 Not Found") {
+            sak.hentPlan(prosessId = samarbeid.id)
         }
     }
 
