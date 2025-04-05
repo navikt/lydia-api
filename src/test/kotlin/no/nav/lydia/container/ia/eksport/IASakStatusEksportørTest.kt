@@ -13,15 +13,15 @@ import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import org.junit.AfterClass
@@ -30,13 +30,12 @@ import kotlin.test.Test
 
 class IASakStatusEksportørTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.IA_SAK_STATUS_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.IA_SAK_STATUS_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -52,13 +51,15 @@ class IASakStatusEksportørTest {
             TestVirksomhet.nyVirksomhet(næringer = listOf(BOLIGBYGGELAG))
         lastInnNyVirksomhet(virksomhet)
 
-        val sak =
-            opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = oauth2ServerContainer.superbruker1.token)
-                .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
-                .nyHendelse(
-                    hendelsestype = VIRKSOMHET_SKAL_KONTAKTES,
-                    token = oauth2ServerContainer.saksbehandler1.token,
-                )
+        val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = authContainerHelper.superbruker1.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.saksbehandler1.token,
+            )
+            .nyHendelse(
+                hendelsestype = VIRKSOMHET_SKAL_KONTAKTES,
+                token = authContainerHelper.saksbehandler1.token,
+            )
 
         kafkaContainerHelper.sendJobbMelding(iaSakStatusExport)
 
@@ -89,7 +90,10 @@ class IASakStatusEksportørTest {
 
             // -- Slett en sak, for å teste om siste melding er den gjeldene aktive statusen
             opprettSakForVirksomhet(orgnummer = eldsteSak.orgnr)
-                .nyHendelse(IASakshendelseType.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
+                .nyHendelse(
+                    hendelsestype = SLETT_SAK,
+                    token = authContainerHelper.superbruker1.token,
+                )
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
                 meldinger shouldHaveSize 20

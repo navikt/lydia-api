@@ -2,7 +2,7 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import com.google.gson.Gson
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSistePubliserteKvartal
@@ -136,7 +136,7 @@ class SykefraværsstatistikkImportTestUtils {
             kvartal: Kvartal = TestData.gjeldendePeriode.tilKvartal(),
         ) {
             val optionalClauseOnKode = if (verdi == null) "" else "and orgnr = '$verdi'"
-            TestContainerHelper.postgresContainer.performUpdate(
+            postgresContainerHelper.performUpdate(
                 """
                 delete from sykefravar_statistikk_virksomhet_gradering
                 where arstall = ${kvartal.årstall}
@@ -151,7 +151,7 @@ class SykefraværsstatistikkImportTestUtils {
             kvartal: Kvartal = TestData.gjeldendePeriode.tilKvartal(),
         ) {
             val optionalClauseOnKode = if (orgnr == null) "" else "and orgnr = '$orgnr'"
-            TestContainerHelper.postgresContainer.performUpdate(
+            postgresContainerHelper.performUpdate(
                 """
                 delete from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal
                 where publisert_arstall = ${kvartal.årstall}
@@ -168,7 +168,7 @@ class SykefraværsstatistikkImportTestUtils {
         ) {
             val optionalClauseOnKode = if (verdi == null) "" else "and ${kategori.kodenavn()} = '$verdi'"
 
-            TestContainerHelper.postgresContainer.performUpdate(
+            postgresContainerHelper.performUpdate(
                 """
                 delete from ${kategori.tabellnavn()} 
                 where arstall = ${kvartal.årstall}
@@ -191,7 +191,7 @@ class SykefraværsstatistikkImportTestUtils {
                 }
             val kodeKolonneLabel = if (erKategoriTabell) "kode" else "orgnr"
             val optionalClauseOnKode = if (verdi == null) "" else "where $kodeKolonneLabel = '$verdi'"
-            TestContainerHelper.postgresContainer.performUpdate(
+            postgresContainerHelper.performUpdate(
                 """
                 delete from $tabellnavn 
                 $optionalClauseOnKode
@@ -309,7 +309,7 @@ class SykefraværsstatistikkImportTestUtils {
              where ${kategori.kodenavn()} = '$verdi'
              and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
             """.trimMargin()
-            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+            postgresContainerHelper.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
                 val rs = statement.resultSet
@@ -339,7 +339,7 @@ class SykefraværsstatistikkImportTestUtils {
             select * from sykefravar_statistikk_virksomhet_gradering 
              where orgnr = '$orgnr' and arstall = ${kvartal.årstall} and kvartal = ${kvartal.kvartal}
             """.trimMargin()
-            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+            postgresContainerHelper.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
                 val rs = statement.resultSet
@@ -369,7 +369,7 @@ class SykefraværsstatistikkImportTestUtils {
             select * from sykefravar_statistikk_virksomhet_gradering_siste_4_kvartal 
              where orgnr = '$orgnr' and publisert_arstall = ${kvartal.årstall} and publisert_kvartal = ${kvartal.kvartal}
             """.trimMargin()
-            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+            postgresContainerHelper.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
                 val rs = statement.resultSet
@@ -411,7 +411,7 @@ class SykefraværsstatistikkImportTestUtils {
                AND publisert_kvartal = ${kvartal.kvartal}
                AND publisert_arstall = ${kvartal.årstall}
             """.trimMargin()
-            TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+            postgresContainerHelper.dataSource.connection.use { connection ->
                 val statement = connection.createStatement()
                 statement.execute(query)
                 val rs = statement.resultSet

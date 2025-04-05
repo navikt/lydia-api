@@ -3,8 +3,11 @@ package no.nav.lydia.helper
 import com.github.kittinunf.fuel.core.extensions.authentication
 import kotlinx.datetime.Clock.System.now
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
@@ -33,9 +36,9 @@ class VirksomhetHelper {
 
         fun søkEtterVirksomheter(
             søkestreng: String,
-            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
             success: (List<VirksomhetSøkeresultat>) -> Unit,
-        ) = TestContainerHelper.lydiaApiContainer.performGet(
+        ) = applikasjon.performGet(
             url = "$VIRKSOMHET_PATH/finn?q=${
                 URLEncoder.encode(
                     søkestreng,
@@ -50,13 +53,13 @@ class VirksomhetHelper {
         fun hentVirksomhetsinformasjonRespons(
             orgnummer: String,
             token: String,
-        ) = TestContainerHelper.lydiaApiContainer.performGet("$VIRKSOMHET_PATH/$orgnummer")
+        ) = applikasjon.performGet("$VIRKSOMHET_PATH/$orgnummer")
             .authentication().bearer(token)
             .tilSingelRespons<VirksomhetDto>()
 
         fun hentVirksomhetsinformasjon(
             orgnummer: String,
-            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
         ) = hentVirksomhetsinformasjonRespons(orgnummer = orgnummer, token = token)
             .third.fold(
                 success = { response -> response },
@@ -66,13 +69,13 @@ class VirksomhetHelper {
         private fun hentSalesforceInfoRespons(
             orgnummer: String,
             token: String,
-        ) = TestContainerHelper.lydiaApiContainer.performGet("$SALESFORCE_INFO_PATH/$orgnummer")
+        ) = applikasjon.performGet("$SALESFORCE_INFO_PATH/$orgnummer")
             .authentication().bearer(token)
             .tilSingelRespons<SalesforceInfoResponse>()
 
         fun hentSalesforceInfo(
             orgnummer: String,
-            token: String = TestContainerHelper.oauth2ServerContainer.saksbehandler1.token,
+            token: String = authContainerHelper.saksbehandler1.token,
         ) = hentSalesforceInfoRespons(orgnummer = orgnummer, token = token)
             .third.fold(
                 success = { response -> response },
@@ -132,7 +135,7 @@ class VirksomhetHelper {
                 testData.sykefraværsstatistikkMetadataVirksomhetKafkaMeldinger().toList(),
             )
 
-            TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
+            postgresContainerHelper.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
         }
 
         private fun sendOppdateringForVirksomhet(
@@ -142,7 +145,7 @@ class VirksomhetHelper {
             kafkaContainerHelper.sendBrregOppdatering(
                 virksomhet.tilOppdateringVirksomhet(endringstype),
             )
-            TestContainerHelper.postgresContainer.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
+            postgresContainerHelper.performUpdate("REFRESH MATERIALIZED VIEW virksomhetsstatistikk_for_prioritering")
         }
 
         fun TestVirksomhet.genererEndretNavn() = this.navn.reversed()

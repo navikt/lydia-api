@@ -16,7 +16,7 @@ import no.nav.lydia.container.sykefraværsstatistikk.importering.Sykefraværssta
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
 import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
@@ -160,7 +160,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
-        lydiaApiContainer shouldNotContainLog "PSQLException: ERROR: null value in column".toRegex()
+        applikasjon shouldNotContainLog "PSQLException: ERROR: null value in column".toRegex()
         shouldFail {
             hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999997", kvartal = KVARTAL_2023_1)
         }
@@ -242,7 +242,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
-        lydiaApiContainer shouldContainLog
+        applikasjon shouldContainLog
             "Lagret 1 meldinger i StatistikkVirksomhetGraderingConsumer \\(topic 'arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1'\\)"
                 .toRegex()
 

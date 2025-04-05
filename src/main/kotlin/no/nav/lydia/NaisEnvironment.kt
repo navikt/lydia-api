@@ -79,10 +79,6 @@ class Kafka(
     val credstorePassword: String = getEnvVar("KAFKA_CREDSTORE_PASSWORD"),
     val consumerLoopDelay: Long = getEnvVar("CONSUMER_LOOP_DELAY").toLong(),
 ) {
-    companion object {
-        const val CLIENT_ID: String = "lydia-api"
-    }
-
     fun producerProperties(clientId: String): Map<String, Any> {
         val producerConfigs = mutableMapOf(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to brokers,
@@ -151,115 +147,112 @@ class Integrasjoner(
 
 enum class Topic(
     val navn: String,
-    private val groupId: String,
+    val konsumentGruppe: String,
 ) {
     IA_SAK_TOPIC(
         navn = "pia.ia-sak-v1",
-        groupId = "lydia-api-ia-sak-producer",
+        konsumentGruppe = "lydia-api-ia-sak-producer",
     ),
     IA_SAK_STATISTIKK_TOPIC(
         navn = "pia.ia-sak-statistikk-v1",
-        groupId = "lydia-api-ia-sak-statistikk-producer",
+        konsumentGruppe = "lydia-api-ia-sak-statistikk-producer",
     ),
     IA_SAK_STATUS_TOPIC(
         navn = "pia.ia-sak-status-v1",
-        groupId = "lydia-api-ia-sak-status-producer",
+        konsumentGruppe = "lydia-api-ia-sak-status-producer",
     ),
     IA_SAK_LEVERANSE_TOPIC(
         navn = "pia.ia-sak-leveranse-v1",
-        groupId = "lydia-api-ia-sak-leveranse-producer",
+        konsumentGruppe = "lydia-api-ia-sak-leveranse-producer",
     ),
     SPORREUNDERSOKELSE_TOPIC(
         navn = "pia.sporreundersokelse-v1",
-        groupId = "lydia-api-sporreundersokelse-consumer",
+        konsumentGruppe = "lydia-api-sporreundersokelse-consumer",
     ),
     FULLFØRT_BEHOVSVURDERING_TOPIC(
         navn = "pia.fullfort-behovsvurdering-v1",
-        groupId = "lydia-api-fullfort-behovsvurdering-producer",
+        konsumentGruppe = "lydia-api-fullfort-behovsvurdering-producer",
     ),
     SPØRREUNDERSØKELSE_BIGQUERY_TOPIC(
         navn = "pia.behovsvurdering-bigquery-v1",
-        groupId = "lydia-api-behovsvurdering-bigquery-producer",
+        konsumentGruppe = "lydia-api-behovsvurdering-bigquery-producer",
     ),
     SAMARBEID_BIGQUERY_TOPIC(
         navn = "pia.samarbeid-bigquery-v1",
-        groupId = "lydia-api-samarbeid-bigquery-producer",
+        konsumentGruppe = "lydia-api-samarbeid-bigquery-producer",
     ),
     SAMARBEIDSPLAN_BIGQUERY_TOPIC(
         navn = "pia.samarbeidsplan-bigquery-v1",
-        groupId = "lydia-api-samarbeidsplan-bigquery-producer",
+        konsumentGruppe = "lydia-api-samarbeidsplan-bigquery-producer",
     ),
     SAMARBEIDSPLAN_TOPIC(
         navn = "pia.samarbeidsplan-v1",
-        groupId = "lydia-api-samarbeidsplan",
+        konsumentGruppe = "lydia-api-samarbeidsplan",
         // TODO: Finn en bedre løsning på groupId, dette topicet blir brukt av SamarbeidProudsent og SamarbeidsplanProdusent
         //  Per nå blir groupId brukt med en post-fix for å gi unik id. groupId bør kanskje settes på hver produsent i stedet.
     ),
     SPORREUNDERSOKELSE_HENDELSE_TOPIC(
         navn = "pia.sporreundersokelse-hendelse-v1",
-        groupId = "lydia-api-sporreundersokelse-hendelse-consumer",
+        konsumentGruppe = "lydia-api-sporreundersokelse-hendelse-consumer",
     ),
     SPORREUNDERSOKELSE_OPPDATERING_TOPIC(
         navn = "pia.sporreundersokelse-oppdatering-v1",
-        groupId = "lydia-api-sporreundersokelse-oppdatering-consumer",
+        konsumentGruppe = "lydia-api-sporreundersokelse-oppdatering-consumer",
     ),
     BRREG_OPPDATERING_TOPIC(
         navn = "pia.brreg-oppdatering",
-        groupId = "lydia-api-brreg-oppdatering-consumer",
+        konsumentGruppe = "lydia-api-brreg-oppdatering-consumer",
     ),
     BRREG_ALLE_VIRKSOMHETER_TOPIC(
         navn = "pia.brreg-alle-virksomheter",
-        groupId = "lydia-api-brreg-alle-virksomheter-consumer",
+        konsumentGruppe = "lydia-api-brreg-alle-virksomheter-consumer",
     ),
     STATISTIKK_METADATA_VIRKSOMHET_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1",
-        groupId = "lydia-api-statistikk-metadata-virksomhet-consumer",
+        konsumentGruppe = "lydia-api-statistikk-metadata-virksomhet-consumer",
     ),
     STATISTIKK_LAND_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-land-v1",
-        groupId = "lydia-api-statistikk-land-consumer",
+        konsumentGruppe = "lydia-api-statistikk-land-consumer",
     ),
     STATISTIKK_SEKTOR_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-sektor-v1",
-        groupId = "lydia-api-statistikk-sektor-consumer",
+        konsumentGruppe = "lydia-api-statistikk-sektor-consumer",
     ),
     STATISTIKK_BRANSJE_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-bransje-v1",
-        groupId = "lydia-api-statistikk-bransje-consumer",
+        konsumentGruppe = "lydia-api-statistikk-bransje-consumer",
     ),
     STATISTIKK_NARING_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-naring-v1",
-        groupId = "lydia-api-statistikk-naring-consumer",
+        konsumentGruppe = "lydia-api-statistikk-naring-consumer",
     ),
     STATISTIKK_NARINGSKODE_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-naringskode-v1",
-        groupId = "lydia-api-statistikk-naringskode-consumer",
+        konsumentGruppe = "lydia-api-statistikk-naringskode-consumer",
     ),
     STATISTIKK_VIRKSOMHET_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1",
-        groupId = "lydia-api-statistikk-virksomhet-consumer",
+        konsumentGruppe = "lydia-api-statistikk-virksomhet-consumer",
     ),
     STATISTIKK_VIRKSOMHET_GRADERING_TOPIC(
         navn = "arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1",
-        groupId = "lydia-api-statistikk-virksomhet-gradering-consumer",
+        konsumentGruppe = "lydia-api-statistikk-virksomhet-gradering-consumer",
     ),
     JOBBLYTTER_TOPIC(
         navn = "pia.jobblytter-v1",
-        groupId = "lydia-api-jobblytter-consumer",
+        konsumentGruppe = "lydia-api-jobblytter-consumer",
     ),
     SALESFORCE_AKTIVITET_TOPIC(
         navn = "team-dialog.employer-activity",
-        groupId = "lydia-api-salesforce-aktivitet-consumer",
+        konsumentGruppe = "lydia-api-salesforce-aktivitet-consumer",
     ),
 
     @Deprecated("Bruk SPORREUNDERSOKELSE_HENDELSE_TOPIC")
     SPORREUNDERSOKELSE_SVAR_TOPIC(
         navn = "pia.sporreundersokelse-svar-v1",
-        groupId = "lydia-api-sporreundersokelse-svar-consumer",
+        konsumentGruppe = "lydia-api-sporreundersokelse-svar-consumer",
     ),
-    ;
-
-    val konsumentGruppe get() = groupId
 }
 
 fun getEnvVar(

@@ -1,6 +1,6 @@
 package no.nav.lydia.container.integrasjoner.pdfgen
 
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.piaPdfgenContainerHelper
 import no.nav.lydia.integrasjoner.pdfgen.IASamarbeidDto
 import no.nav.lydia.integrasjoner.pdfgen.SakDto
 import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
@@ -14,13 +14,11 @@ import kotlin.test.Test
 
 class PdfgenContainerTest {
     @BeforeTest
-    internal fun setup() {
-        VeraGreenfieldFoundryProvider.initialise()
-    }
+    internal fun setup() = VeraGreenfieldFoundryProvider.initialise()
 
     @Test
     fun `valider at genererte pdfer er i pdf-a format`() {
-        val pdf = TestContainerHelper.piaPdfgenContainer.hentBistandPdf(
+        val pdf = piaPdfgenContainerHelper.hentBistandPdf(
             IASamarbeidDto(
                 dato = ZonedDateTime.now().toString(),
                 sak = SakDto(

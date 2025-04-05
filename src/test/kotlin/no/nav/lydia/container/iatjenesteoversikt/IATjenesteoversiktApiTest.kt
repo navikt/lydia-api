@@ -17,7 +17,8 @@ import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData.Companion.AKTIV_MODUL
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.api.IATjenesteDto
@@ -27,8 +28,7 @@ import org.junit.After
 import org.junit.Test
 
 class IATjenesteoversiktApiTest {
-    private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
-    val saksbehandlerToken = mockOAuth2Server.saksbehandler1.token
+    val saksbehandlerToken = authContainerHelper.saksbehandler1.token
 
     // lag to virksomheter og sett dei til Vi bistår
     val virksomhet1 = VirksomhetHelper.lastInnNyVirksomhet()
@@ -69,7 +69,7 @@ class IATjenesteoversiktApiTest {
 
     @Test
     fun `skal ikke kunne hente ia-tjenester som lesebruker`() {
-        val lesebrukerToken = mockOAuth2Server.lesebruker.token
+        val lesebrukerToken = authContainerHelper.lesebruker.token
         val mineLeveranser = IATjenesteoversiktHelper.hentMineIATjenester(token = lesebrukerToken)
 
         mineLeveranser.second.statusCode shouldBe HttpStatusCode.Forbidden.value
@@ -84,7 +84,7 @@ class IATjenesteoversiktApiTest {
 
     @Test
     fun `skal få ei tom liste om du ikke har planlagte ia-tjenester`() {
-        val saksbehandler2Token = mockOAuth2Server.saksbehandler2.token
+        val saksbehandler2Token = authContainerHelper.saksbehandler2.token
         val mineLeveranser = IATjenesteoversiktHelper.hentMineIATjenester(token = saksbehandler2Token).third.get()
 
         mineLeveranser shouldHaveSize 0
@@ -101,7 +101,7 @@ class IATjenesteoversiktApiTest {
 
         // Lagar sak og opprettar ein ia-tjeneste med den nylaga ia-tenesten og modulen
         val sak = SakHelper.nySakIViBistår(token = saksbehandlerToken)
-        val leveranse = sak.opprettIASakLeveranse(modulId = modul.id, token = saksbehandlerToken)
+        sak.opprettIASakLeveranse(modulId = modul.id, token = saksbehandlerToken)
 
         // Deaktiverar modul og teneste
         deaktiverModul(modul = modul)
@@ -120,7 +120,7 @@ class IATjenesteoversiktApiTest {
         val virksomhet1 = VirksomhetHelper.lastInnNyVirksomhet()
         val leveranseIAvsluttetSak =
             SakHelper.nySakIViBistår(orgnummer = virksomhet1.orgnr).opprettIASakLeveranse(modulId = AKTIV_MODUL.id)
-        TestContainerHelper.postgresContainer.performUpdate(
+        postgresContainerHelper.performUpdate(
             "UPDATE ia_sak SET status = 'FULLFØRT' WHERE saksnummer = '${leveranseIAvsluttetSak.saksnummer}'",
         )
 
@@ -136,7 +136,7 @@ class IATjenesteoversiktApiTest {
         }
 
         // rydd opp
-        TestContainerHelper.postgresContainer.performUpdate(
+        postgresContainerHelper.performUpdate(
             "delete from iasak_leveranse where saksnummer = '${leveranseIAvsluttetSak.saksnummer}'",
         )
         leveranseIÅpenSak.slettIASakLeveranse(virksomhet2.orgnr, saksbehandlerToken)

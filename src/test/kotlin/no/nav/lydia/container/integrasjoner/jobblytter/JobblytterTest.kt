@@ -9,75 +9,73 @@ import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import org.junit.Test
 
 class JobblytterTest {
-    private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
-
     @Test
     fun `engangsjobb logger warn dersom ingen parameter er sendt`() {
-        kafkaContainer.sendJobbMeldingUtenParam(engangsJobb)
+        kafkaContainerHelper.sendJobbMeldingUtenParam(engangsJobb)
 
-        lydiaApiContainer shouldContainLog "Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter".toRegex()
+        applikasjon shouldContainLog "Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter".toRegex()
     }
 
     @Test
     fun `skal kunne trigge engangsJobb jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(engangsJobb, "vilkårlig parameter")
-        lydiaApiContainer shouldContainLog "Jobb 'engangsJobb' ferdig".toRegex()
+        kafkaContainerHelper.sendJobbMelding(engangsJobb, "vilkårlig parameter")
+        applikasjon shouldContainLog "Jobb 'engangsJobb' ferdig".toRegex()
     }
 
     @Test
     fun `skal kunne trigge ryddeIUrørteSaker jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
-        lydiaApiContainer shouldContainLog "Ferdig med å rydde opp i urørte saker".toRegex()
-        lydiaApiContainer shouldContainLog "Jobb 'ryddeIUrørteSaker' ferdig".toRegex()
+        kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
+        applikasjon shouldContainLog "Ferdig med å rydde opp i urørte saker".toRegex()
+        applikasjon shouldContainLog "Jobb 'ryddeIUrørteSaker' ferdig".toRegex()
     }
 
     @Test
     fun `skal kunne trigge iaSakEksport jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(iaSakEksport)
-        lydiaApiContainer shouldContainLog "Jobb 'iaSakEksport' ferdig".toRegex()
+        kafkaContainerHelper.sendJobbMelding(iaSakEksport)
+        applikasjon shouldContainLog "Jobb 'iaSakEksport' ferdig".toRegex()
     }
 
     @Test
     fun `skal kunne trigge iaSakStatistikkEksport jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(iaSakStatistikkEksport)
+        kafkaContainerHelper.sendJobbMelding(iaSakStatistikkEksport)
 
-        lydiaApiContainer shouldContainLog "Jobb 'iaSakStatistikkEksport' ferdig".toRegex()
+        applikasjon shouldContainLog "Jobb 'iaSakStatistikkEksport' ferdig".toRegex()
     }
 
     @Test
     fun `skal kunne trigge iaSakStatusExport jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(iaSakStatusExport)
-        lydiaApiContainer shouldContainLog "Jobb 'iaSakStatusExport' ferdig".toRegex()
+        kafkaContainerHelper.sendJobbMelding(iaSakStatusExport)
+        applikasjon shouldContainLog "Jobb 'iaSakStatusExport' ferdig".toRegex()
     }
 
     @Test
     fun `skal kunne trigge iaSakLeveranseEksport jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(iaSakLeveranseEksport)
-        lydiaApiContainer shouldContainLog "Jobb 'iaSakLeveranseEksport' ferdig".toRegex()
+        kafkaContainerHelper.sendJobbMelding(iaSakLeveranseEksport)
+        applikasjon shouldContainLog "Jobb 'iaSakLeveranseEksport' ferdig".toRegex()
     }
 
     @Test
     fun `skal kunne trigge næringsImport jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(næringsImport)
-        lydiaApiContainer shouldContainLog "Jobb 'næringsImport' ferdig".toRegex()
+        kafkaContainerHelper.sendJobbMelding(næringsImport)
+        applikasjon shouldContainLog "Jobb 'næringsImport' ferdig".toRegex()
     }
 
     @Test
     fun `skal kunne trigge materialized view oppdatering jobb via kafka`() {
-        kafkaContainer.sendJobbMelding(materializedViewOppdatering)
-        lydiaApiContainer shouldContainLog "Oppdaterte statistikkview på ".toRegex()
-        lydiaApiContainer shouldContainLog "Jobb 'materializedViewOppdatering' ferdig".toRegex()
+        kafkaContainerHelper.sendJobbMelding(materializedViewOppdatering)
+        applikasjon shouldContainLog "Oppdaterte statistikkview på ".toRegex()
+        applikasjon shouldContainLog "Jobb 'materializedViewOppdatering' ferdig".toRegex()
     }
 
     @Test
     fun `skal ignorere irrelevante jobber`() {
-        kafkaContainer.sendJobbMelding(alleKategorierSykefraværsstatistikkDvhImport)
-        lydiaApiContainer shouldContainLog "Jobb 'alleKategorierSykefraværsstatistikkDvhImport' ignorert".toRegex()
+        kafkaContainerHelper.sendJobbMelding(alleKategorierSykefraværsstatistikkDvhImport)
+        applikasjon shouldContainLog "Jobb 'alleKategorierSykefraværsstatistikkDvhImport' ignorert".toRegex()
     }
 }

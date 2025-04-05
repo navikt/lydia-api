@@ -6,9 +6,9 @@ import no.nav.lydia.ia.sak.db.ProsessRepository
 import org.slf4j.LoggerFactory
 
 class SalesforceAktivitetService(
-    val salesforceAktivitetRepository: SalesforceAktivitetRepository,
-    val iaSakRepository: IASakRepository,
-    val prosessRepository: ProsessRepository,
+    private val salesforceAktivitetRepository: SalesforceAktivitetRepository,
+    private val iaSakRepository: IASakRepository,
+    private val prosessRepository: ProsessRepository,
     val planRepository: PlanRepository,
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass.name)

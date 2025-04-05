@@ -9,7 +9,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
@@ -21,13 +21,12 @@ import kotlin.test.Test
 
 class LukkAlleIaTjenesterTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.IA_SAK_LEVERANSE_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.IA_SAK_LEVERANSE_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -67,7 +66,7 @@ class LukkAlleIaTjenesterTest {
                 }
             }
 
-            postgresContainer.hentEnkelKolonne<String>(
+            postgresContainerHelper.hentEnkelKolonne<String>(
                 """
                 select status from iasak_leveranse where id = ${leveranse.id}
                 """.trimIndent(),

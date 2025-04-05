@@ -8,9 +8,9 @@ import no.nav.lydia.helper.SakHelper.Companion.hentSaker
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -24,8 +24,6 @@ import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.junit.Test
 
 class UrørteSakerTest {
-    private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
-
     @Test
     fun `skal tilbakeføre urørte saker i vurderes uten eier`() {
         val urørtGammelSak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
@@ -39,7 +37,7 @@ class UrørteSakerTest {
             it.eidAv shouldBe null
         }
 
-        kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
+        kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakerEtterRydding = hentSaker(orgnummer = urørtGammelSak.orgnr)
         sakerEtterRydding shouldHaveSize 1
@@ -67,7 +65,7 @@ class UrørteSakerTest {
         val sakMedEier = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = oauth2ServerContainer.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             )
         sakMedEier.oppdaterHendelsesTidspunkter(antallDagerTilbake = 365)
 
@@ -76,10 +74,10 @@ class UrørteSakerTest {
         sakerFørRydding.forExactlyOne {
             it.saksnummer shouldBe sakMedEier.saksnummer
             it.status shouldBe IAProsessStatus.VURDERES
-            it.eidAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+            it.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
         }
 
-        kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
+        kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakerEtterRydding = hentSaker(orgnummer = sakMedEier.orgnr)
         sakerEtterRydding shouldHaveSize 1
@@ -102,7 +100,7 @@ class UrørteSakerTest {
             it.eidAv shouldBe null
         }
 
-        kafkaContainer.sendJobbMelding(ryddeIUrørteSaker)
+        kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakerEtterRydding = hentSaker(orgnummer = urørtNyereSak.orgnr)
         sakerEtterRydding shouldHaveSize 1
@@ -113,7 +111,7 @@ class UrørteSakerTest {
     }
 
     private fun hentHendelse(hendelsesId: String): IASakshendelse {
-        postgresContainer.dataSource.connection.use { connection ->
+        postgresContainerHelper.dataSource.connection.use { connection ->
             val statement = connection.createStatement()
             statement.execute("select * from ia_sak_hendelse where id = '$hendelsesId'")
             val rs = statement.resultSet

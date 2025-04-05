@@ -30,8 +30,8 @@ import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
@@ -54,8 +54,6 @@ import java.time.LocalDateTime
 import kotlin.test.Test
 
 class IASakLeveranseTest {
-    private val mockOAuth2Server = oauth2ServerContainer
-
     @Test
     fun `skal få tjenester sortert etter navn`() {
         hentIATjenester().map { it.navn } shouldBe hentIATjenesterFraDatabase().sorted()
@@ -141,7 +139,7 @@ class IASakLeveranseTest {
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
             frist = frist,
             modulId = TestData.AKTIV_MODUL.id,
-            token = oauth2ServerContainer.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         )
 
         leveranse.modul.id shouldBe TestData.AKTIV_MODUL.id
@@ -149,17 +147,17 @@ class IASakLeveranseTest {
         leveranse.status shouldBe IASakLeveranseStatus.UNDER_ARBEID
         leveranse.frist shouldBe frist
 
-        postgresContainer.hentEnkelKolonne<String>(
+        postgresContainerHelper.hentEnkelKolonne<String>(
             """
             select sist_endret_av_rolle from iasak_leveranse where id = ${leveranse.id}
             """.trimIndent(),
         ) shouldBe Rolle.SAKSBEHANDLER.name
 
-        postgresContainer.hentEnkelKolonne<String>(
+        postgresContainerHelper.hentEnkelKolonne<String>(
             """
             select sist_endret_av from iasak_leveranse where id = ${leveranse.id}
             """.trimIndent(),
-        ) shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+        ) shouldBe authContainerHelper.saksbehandler1.navIdent
     }
 
     @Test
@@ -198,11 +196,11 @@ class IASakLeveranseTest {
 
     @Test
     fun `kun eier av sak skal kunne slette leveranse`() {
-        val sakIStatusViBistår = nySakIViBistår(token = mockOAuth2Server.saksbehandler1.token)
+        val sakIStatusViBistår = nySakIViBistår(token = authContainerHelper.saksbehandler1.token)
         val leveranse = sakIStatusViBistår.opprettIASakLeveranse(
             frist = LocalDate.now().toKotlinLocalDate(),
             modulId = TestData.AKTIV_MODUL.id,
-            token = mockOAuth2Server.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         )
 
         hentIASakLeveranser(
@@ -213,7 +211,7 @@ class IASakLeveranseTest {
         shouldFail {
             leveranse.slettIASakLeveranse(
                 orgnr = sakIStatusViBistår.orgnr,
-                token = mockOAuth2Server.saksbehandler2.token,
+                token = authContainerHelper.saksbehandler2.token,
             )
         }
         hentIASakLeveranser(
@@ -221,7 +219,7 @@ class IASakLeveranseTest {
             saksnummer = sakIStatusViBistår.saksnummer,
         ) shouldHaveSize 1
 
-        leveranse.slettIASakLeveranse(orgnr = sakIStatusViBistår.orgnr, token = mockOAuth2Server.saksbehandler1.token)
+        leveranse.slettIASakLeveranse(orgnr = sakIStatusViBistår.orgnr, token = authContainerHelper.saksbehandler1.token)
         hentIASakLeveranser(
             orgnr = sakIStatusViBistår.orgnr,
             saksnummer = sakIStatusViBistår.saksnummer,
@@ -273,7 +271,7 @@ class IASakLeveranseTest {
         val response = SakHelper.nyHendelsePåSakMedRespons(
             sak = sakIViBistår,
             hendelsestype = FULLFØR_BISTAND,
-            token = mockOAuth2Server.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         )
         response.statuskode() shouldBe BadRequest.value
         response.second.body().asString("text/plain") shouldMatch "Kan ikke fullf.*re med gjenst.*ende leveranser"
@@ -398,7 +396,7 @@ class IASakLeveranseTest {
     fun `skal lagre opprettet-tidspunkt for leveranser`() {
         val sak = nySakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id)
-        val førFullført = postgresContainer.hentEnkelKolonne<Timestamp?>(
+        val førFullført = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
             """.trimIndent(),
@@ -406,7 +404,7 @@ class IASakLeveranseTest {
         førFullført shouldNotBe null
 
         leveranse.oppdaterIASakLeveranse(sak.orgnr, LEVERT)
-        val etterFullført = postgresContainer.hentEnkelKolonne<Timestamp?>(
+        val etterFullført = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
             """.trimIndent(),

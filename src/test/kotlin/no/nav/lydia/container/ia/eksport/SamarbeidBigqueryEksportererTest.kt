@@ -8,8 +8,8 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.forExactlyOne
@@ -22,13 +22,12 @@ import kotlin.test.Test
 
 class SamarbeidBigqueryEksportererTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.SAMARBEID_BIGQUERY_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.SAMARBEID_BIGQUERY_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -153,7 +152,7 @@ class SamarbeidBigqueryEksportererTest {
             }
         }
 
-        lydiaApiContainer.shouldNotContainLog("Klarte ikke å kjøre eksport av samarbeid".toRegex())
-        lydiaApiContainer.shouldContainLog("Jobb 'iaSakSamarbeidBigQueryEksport' ferdig".toRegex())
+        applikasjon.shouldNotContainLog("Klarte ikke å kjøre eksport av samarbeid".toRegex())
+        applikasjon.shouldContainLog("Jobb 'iaSakSamarbeidBigQueryEksport' ferdig".toRegex())
     }
 }

@@ -34,6 +34,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKateg
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.filterPåKategoriSektorOgGyldigSektor
 import no.nav.lydia.sykefraværsstatistikk.import.SykefraværsstatistikkPerKategoriImportDto.Companion.mapSektorNavnTilSektorKode
 import no.nav.lydia.virksomhet.VirksomhetRepository
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDate.now
 import kotlin.system.measureTimeMillis
@@ -46,7 +47,7 @@ class SykefraværsstatistikkService(
     val sistePubliseringService: SistePubliseringService,
     val virksomhetRepository: VirksomhetRepository,
 ) {
-    val log = LoggerFactory.getLogger(this.javaClass)
+    val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun lagreStatistikkMetadataVirksomhet(behandletImportMetadataVirksomhetListe: List<BehandletImportMetadataVirksomhet>) {
         if (behandletImportMetadataVirksomhetListe.isNotEmpty()) {

@@ -3,13 +3,14 @@ package no.nav.lydia.vedlikehold
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class IaSakhendelseStatusJobb(
     val iaSakRepository: IASakRepository,
     val iaSakshendelseRepository: IASakshendelseRepository,
 ) {
-    val log = LoggerFactory.getLogger(IaSakhendelseStatusJobb::class.java)
+    val log: Logger = LoggerFactory.getLogger(IaSakhendelseStatusJobb::class.java)
 
     fun kjør() {
         iaSakRepository.hentAlleSaker().forEach { sak ->

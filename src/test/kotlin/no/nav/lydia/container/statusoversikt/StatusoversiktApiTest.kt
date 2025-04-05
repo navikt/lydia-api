@@ -6,7 +6,7 @@ import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatusoversiktHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
@@ -16,8 +16,6 @@ import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
 
 class StatusoversiktApiTest {
-    private val mockOAuth2Server = TestContainerHelper.oauth2ServerContainer
-
     @Test
     fun `skal hente statusoversikt for de som ikke er aktive`() {
         VirksomhetHelper.lastInnNyVirksomhet(nyVirksomhet = TestVirksomhet.nyVirksomhet())
@@ -25,7 +23,7 @@ class StatusoversiktApiTest {
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
                 sektor = Sektor.KOMMUNAL.kode,
-                token = mockOAuth2Server.superbruker1.token,
+                token = authContainerHelper.superbruker1.token,
             ).third.get().data
 
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
@@ -37,13 +35,13 @@ class StatusoversiktApiTest {
     @Test
     fun `skal ikke kunne hente statusoversikt dersom man ikke er superbruker eller saksbehandler`() {
         StatusoversiktHelper.hentStatusoversikt(
-            token = mockOAuth2Server.lesebruker.token,
+            token = authContainerHelper.lesebruker.token,
         ).second.statusCode shouldBe 403
         StatusoversiktHelper.hentStatusoversikt(
-            token = mockOAuth2Server.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         ).second.statusCode shouldBe 200
         StatusoversiktHelper.hentStatusoversikt(
-            token = mockOAuth2Server.superbruker1.token,
+            token = authContainerHelper.superbruker1.token,
         ).second.statusCode shouldBe 200
     }
 
@@ -63,7 +61,7 @@ class StatusoversiktApiTest {
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
                 sektor = Sektor.KOMMUNAL.kode,
-                token = mockOAuth2Server.superbruker1.token,
+                token = authContainerHelper.superbruker1.token,
             ).third.get().data
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
         statusoversiktKommunalSektor.first { statusoversikt ->
@@ -93,7 +91,7 @@ class StatusoversiktApiTest {
             StatusoversiktHelper.hentStatusoversikt(
                 næringsgrupper = "41",
                 bransjeProgram = "BARNEHAGER",
-                token = mockOAuth2Server.superbruker1.token,
+                token = authContainerHelper.superbruker1.token,
             ).third.get().data
 
         statusoversiktResults.size shouldBeGreaterThan 1

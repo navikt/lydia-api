@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.exceptions.AzureException
 import no.nav.lydia.tilgangskontroll.TokenResponse
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.Date
@@ -17,7 +18,7 @@ class AzureTokenFetcher(
     val naisEnvironment: NaisEnvironment,
 ) {
     private companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val log: Logger = LoggerFactory.getLogger(this::class.java)
     }
 
     private val privateKey = RSAKey.parse(naisEnvironment.security.azureConfig.privateJwk)
@@ -52,7 +53,7 @@ class AzureTokenFetcher(
             .fold(success = {
                 deserializer.decodeFromString<TokenResponse>(it.toString(charset = Charsets.UTF_8)).access_token
             }, failure = {
-                logger.error("Azure token feilet. Response body ${it.errorData.toString(Charsets.UTF_8)}")
+                log.error("Azure token feilet. Response body ${it.errorData.toString(Charsets.UTF_8)}")
                 throw AzureException("Feilet under henting av Azure token: ${it.message}", it)
             })
     }

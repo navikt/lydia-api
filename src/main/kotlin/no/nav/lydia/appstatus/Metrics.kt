@@ -22,47 +22,47 @@ class Metrics {
     companion object {
         val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
-        val behovsvurderingerOpprettet = Counter.builder()
+        private val behovsvurderingerOpprettet: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_behovsvurdering_opprettet")
             .help("Antall behovsvurderinger opprettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val behovsvurderingerStartet = Counter.builder()
+        private val behovsvurderingerStartet: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_behovsvurdering_startet")
             .help("Antall behovsvurderinger startet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val behovsvurderingerFullført = Counter.builder()
+        private val behovsvurderingerFullført: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_behovsvurdering_fullfort")
             .help("Antall behovsvurderinger fullfort")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val behovsvurderingerSlettet = Counter.builder()
+        private val behovsvurderingerSlettet: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_behovsvurdering_slettet")
             .help("Antall behovsvurderinger slettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val evalueringerOpprettet = Counter.builder()
+        private val evalueringerOpprettet: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_evaluering_opprettet")
             .help("Antall evalueringer opprettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val evalueringerStartet = Counter.builder()
+        private val evalueringerStartet: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_evaluering_startet")
             .help("Antall evalueringer startet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val evalueringerFullført = Counter.builder()
+        private val evalueringerFullført: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_evaluering_fullfort")
             .help("Antall evalueringer fullfort")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val evalueringerSlettet = Counter.builder()
+        private val evalueringerSlettet: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_evaluering_slettet")
             .help("Antall evalueringer slettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val virksomheterPrioritert = Counter.builder()
+        val virksomheterPrioritert: Counter = Counter.builder()
             .name("${NAMESPACE}_ia_virksomheter_vurdert")
             .help("Antall virksomheter som blir vurdert for ia-samarbeid")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
@@ -87,7 +87,7 @@ class Metrics {
             .help("Antall saker som har blitt unfollowed")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)
 
-        val samarbeidsplanOpprettet = Counter.builder()
+        private val samarbeidsplanOpprettet: Counter = Counter.builder()
             .name("${NAMESPACE}_samarbeidsplan_opprettet")
             .help("Antall samarbeidsplan opprettet")
             .withoutExemplars().register(appMicrometerRegistry.prometheusRegistry)

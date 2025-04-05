@@ -39,13 +39,12 @@ import kotlin.test.Test
 
 class EvalueringApiTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.SPORREUNDERSOKELSE_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -187,7 +186,7 @@ class EvalueringApiTest {
                     spørreundersøkelse.temaer.forExactlyOne { tema ->
                         tema.navn shouldBe "Arbeidsmiljø"
                     }
-                    val temaArbeidsmiljø = spørreundersøkelse.temaer.filter { it.navn == "Arbeidsmiljø" }.first()
+                    val temaArbeidsmiljø = spørreundersøkelse.temaer.first { it.navn == "Arbeidsmiljø" }
 
                     temaArbeidsmiljø.spørsmål.forAtLeastOne { spørsmål ->
                         spørsmål.kategori shouldBe "Utvikle arbeidsmiljøet"

@@ -17,7 +17,6 @@ import no.nav.security.mock.oauth2.OAuth2Config
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
@@ -28,15 +27,15 @@ import java.util.TimeZone
 import java.util.UUID
 
 class AuthContainerHelper(
-    network: Network = Network.newNetwork(),
-    log: Logger = LoggerFactory.getLogger(AuthContainerHelper::class.java),
+    network: Network,
+    log: Logger,
 ) {
-    private val mockOauth2NetworkAlias: String = "mockoauth2container"
-    private val mockOauth2Port: String = "8100"
-    val mockOath2Server: GenericContainer<*>
+    private val port: String = "8100"
+    private val networkAlias: String = "mockoauth2container"
+    val container: GenericContainer<*>
     private val issuerName = "default"
     private val config = OAuth2Config()
-    private val tokenEndpointUrl = "http://$mockOauth2NetworkAlias:$mockOauth2Port"
+    private val tokenEndpointUrl = "http://$networkAlias:$port"
     private val issuerUrl = "$tokenEndpointUrl/$issuerName"
     private val jwksUri = "$issuerUrl/jwks"
     private val audience = "lydia-api"
@@ -57,22 +56,22 @@ class AuthContainerHelper(
     val brukerUtenTilgangsrolle: TestBruker
 
     init {
-        mockOath2Server = GenericContainer(
+        container = GenericContainer(
             ImageFromDockerfile().withDockerfileFromBuilder { builder ->
                 builder.from("ghcr.io/navikt/mock-oauth2-server:2.1.10")
                     .env(
                         mapOf(
                             "TZ" to TimeZone.getDefault().id,
-                            "SERVER_PORT" to mockOauth2Port,
-                            "SERVER_HOSTNAME" to mockOauth2NetworkAlias,
+                            "SERVER_PORT" to port,
+                            "SERVER_HOSTNAME" to networkAlias,
                         ),
                     )
             },
         )
             .withLogConsumer(Slf4jLogConsumer(log).withPrefix("oAuthContainer").withSeparateOutputStreams())
             .withNetwork(network)
-            .withNetworkAliases(mockOauth2NetworkAlias)
-            .withCreateContainerCmdModifier { cmd -> cmd.withName("$mockOauth2NetworkAlias-${System.currentTimeMillis()}") }
+            .withNetworkAliases(networkAlias)
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("$networkAlias-${System.currentTimeMillis()}") }
             .waitingFor(
                 HostPortWaitStrategy(),
             ).apply {

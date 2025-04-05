@@ -12,7 +12,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.PlanHelper
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
@@ -20,9 +19,9 @@ import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -39,13 +38,12 @@ import kotlin.test.Test
 
 class SamarbeidsplanProdusentTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe)
+        private val topic = Topic.SAMARBEIDSPLAN_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -81,7 +79,7 @@ class SamarbeidsplanProdusentTest {
 
     @Test
     fun `starter re-eksport av alle samarbeidsplaner til salesforce`() {
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+        val planMal: PlanMalDto = hentPlanMal()
         // Opprette noen saker med planer
         val sak1 = nySakIKartleggesMedEtSamarbeid()
         val samarbeid1 = sak1.hentAlleSamarbeid().first()
@@ -116,12 +114,12 @@ class SamarbeidsplanProdusentTest {
         runBlocking {
             konsummerOgSjekkKafkaMelding(sak1, samarbeid1, opprettetPlan1)
         }
-        lydiaApiContainer shouldContainLog "Jobb '${Jobb.iaSakSamarbeidsplanEksport.name}' ferdig".toRegex()
+        applikasjon shouldContainLog "Jobb '${Jobb.iaSakSamarbeidsplanEksport.name}' ferdig".toRegex()
     }
 
     @Test
     fun `re-eksport av samarbeidsplaner til salesforce hvor samarbeid har et tomt (null) navn`() {
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+        val planMal: PlanMalDto = hentPlanMal()
         val sak1 = nySakIKartlegges().opprettNyttSamarbeid(navn = null)
         val samarbeid1 = sak1.hentAlleSamarbeid().first()
         val opprettetPlan1 = sak1.opprettEnPlan(plan = planMal)
@@ -145,7 +143,7 @@ class SamarbeidsplanProdusentTest {
     fun `Nyopprettet samarbeidsplan skal sendes til salesforce`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+        val planMal: PlanMalDto = hentPlanMal()
 
         val startDato = LocalDate(2010, 1, 1)
         val sluttDato = LocalDate(2025, 2, 2)
@@ -186,11 +184,11 @@ class SamarbeidsplanProdusentTest {
     fun `Skal ikke kunne opprette duplisert plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val planMal: PlanMalDto = PlanHelper.hentPlanMal()
+        val planMal: PlanMalDto = hentPlanMal()
 
         sak.opprettEnPlan(plan = planMal)
         shouldFail { sak.opprettEnPlan(plan = planMal) }
-        postgresContainer.hentEnkelKolonne<Int>(
+        postgresContainerHelper.hentEnkelKolonne<Int>(
             """
             SELECT COUNT(*) FROM ia_sak_plan WHERE ia_prosess = '${samarbeid.id}'
             """.trimIndent(),

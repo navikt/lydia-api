@@ -161,7 +161,7 @@ class SpørreundersøkelseService(
 
                         val temaerMedUndertemaerSomIPlan = temaerSomSkalEvalueres.map {
                             it.copy(
-                                undertemaer = it.undertemaer.filter { undertemaerInkludertIPlan.contains(it.navn) } +
+                                undertemaer = it.undertemaer.filter { undertemaInfo -> undertemaerInkludertIPlan.contains(undertemaInfo.navn) } +
                                     spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaer(it.id),
                             )
                         }

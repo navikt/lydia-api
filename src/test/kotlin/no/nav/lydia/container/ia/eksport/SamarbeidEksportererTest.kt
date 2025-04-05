@@ -11,8 +11,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -25,13 +25,12 @@ import kotlin.test.Test
 
 class SamarbeidEksportererTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.SAMARBEIDSPLAN_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -82,7 +81,7 @@ class SamarbeidEksportererTest {
                 }
             }
         }
-        lydiaApiContainer shouldContainLog "Ferdig med eksport av samarbeid".toRegex()
+        applikasjon shouldContainLog "Ferdig med eksport av samarbeid".toRegex()
     }
 
     @Test
@@ -90,7 +89,7 @@ class SamarbeidEksportererTest {
         // Start jobben som skal sende en melding om nytt samarbeid på Kafka
         kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "1298765")
 
-        lydiaApiContainer shouldContainLog "Eksport av enkelt samarbeid, med ID: '1298765' feilet. Samarbeid ikke funnet".toRegex()
+        applikasjon shouldContainLog "Eksport av enkelt samarbeid, med ID: '1298765' feilet. Samarbeid ikke funnet".toRegex()
     }
 
     @Test
@@ -134,6 +133,6 @@ class SamarbeidEksportererTest {
                 }
             }
         }
-        lydiaApiContainer shouldContainLog "Ferdig med eksport av alle samarbeid".toRegex()
+        applikasjon shouldContainLog "Ferdig med eksport av alle samarbeid".toRegex()
     }
 }

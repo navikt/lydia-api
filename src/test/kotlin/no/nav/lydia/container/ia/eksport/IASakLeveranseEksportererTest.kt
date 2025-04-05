@@ -15,14 +15,14 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.opprettIASakLeveranse
 import no.nav.lydia.helper.SakHelper.Companion.slettIASakLeveranse
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
-import no.nav.lydia.helper.TestData
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.helper.TestData.Companion.AKTIV_MODUL
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent.IASakLeveranseValue
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.tilgangskontroll.fia.Rolle
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -31,13 +31,12 @@ import kotlin.test.Test
 
 class IASakLeveranseEksportererTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.IA_SAK_LEVERANSE_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.IA_SAK_LEVERANSE_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -51,8 +50,8 @@ class IASakLeveranseEksportererTest {
     fun `skal trigge kafka-eksport av IASakLeveranse`() {
         val sak = nySakIViBistår()
         val leveranse = sak.opprettIASakLeveranse(
-            modulId = TestData.AKTIV_MODUL.id,
-            token = oauth2ServerContainer.saksbehandler1.token,
+            modulId = AKTIV_MODUL.id,
+            token = authContainerHelper.saksbehandler1.token,
         )
 
         runBlocking {
@@ -67,15 +66,15 @@ class IASakLeveranseEksportererTest {
                 objektene.forAtLeastOne {
                     it.id shouldBe leveranse.id
                     it.saksnummer shouldBe sak.saksnummer
-                    it.opprettetAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
-                    it.sistEndretAv shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+                    it.opprettetAv shouldBe authContainerHelper.saksbehandler1.navIdent
+                    it.sistEndretAv shouldBe authContainerHelper.saksbehandler1.navIdent
                     it.iaModulNavn shouldBe leveranse.modul.navn
                     it.frist shouldBe leveranse.frist
                     it.status shouldBe leveranse.status
                     it.fullført shouldBe leveranse.fullført
                     it.enhetsnavn shouldBe "IT-avdelingen 2B"
                     it.enhetsnummer shouldBe "2900"
-                    it.opprettetTidspunkt shouldBe postgresContainer.hentEnkelKolonne<Timestamp?>(
+                    it.opprettetTidspunkt shouldBe postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
                         """
                         select opprettet_tidspunkt from iasak_leveranse where id = ${leveranse.id}
                         """.trimIndent(),
@@ -89,17 +88,17 @@ class IASakLeveranseEksportererTest {
     fun `skal trigge kafka-eksport av IASakLeveranse ved alle endringer`() {
         val sak = nySakIViBistår()
         val nyLeveranse = sak.opprettIASakLeveranse(
-            modulId = TestData.AKTIV_MODUL.id,
-            token = oauth2ServerContainer.saksbehandler1.token,
+            modulId = AKTIV_MODUL.id,
+            token = authContainerHelper.saksbehandler1.token,
         )
-        sak.nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
+        sak.nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
 
         val levertLeveranse = nyLeveranse.oppdaterIASakLeveranse(
             orgnr = sak.orgnr,
             status = IASakLeveranseStatus.LEVERT,
-            token = oauth2ServerContainer.saksbehandler2.token,
+            token = authContainerHelper.saksbehandler2.token,
         )
-        levertLeveranse.slettIASakLeveranse(sak.orgnr, token = oauth2ServerContainer.saksbehandler2.token)
+        levertLeveranse.slettIASakLeveranse(orgnr = sak.orgnr, token = authContainerHelper.saksbehandler2.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -110,7 +109,7 @@ class IASakLeveranseEksportererTest {
                 meldinger.forExactlyOne {
                     it shouldContain nyLeveranse.id.toString()
                     it shouldContain sak.saksnummer
-                    it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
+                    it shouldContain authContainerHelper.saksbehandler1.navIdent
                     it shouldContain Rolle.SAKSBEHANDLER.name
                     it shouldContain nyLeveranse.modul.navn
                     it shouldContain nyLeveranse.frist.toString()
@@ -119,7 +118,7 @@ class IASakLeveranseEksportererTest {
                 meldinger.forExactlyOne {
                     it shouldContain levertLeveranse.id.toString()
                     it shouldContain sak.saksnummer
-                    it shouldContain oauth2ServerContainer.saksbehandler2.navIdent
+                    it shouldContain authContainerHelper.saksbehandler2.navIdent
                     it shouldContain Rolle.SAKSBEHANDLER.name
                     it shouldContain levertLeveranse.modul.navn
                     it shouldContain levertLeveranse.frist.toString()
@@ -128,7 +127,7 @@ class IASakLeveranseEksportererTest {
                 meldinger.forExactlyOne {
                     it shouldContain levertLeveranse.id.toString()
                     it shouldContain sak.saksnummer
-                    it shouldContain oauth2ServerContainer.saksbehandler2.navIdent
+                    it shouldContain authContainerHelper.saksbehandler2.navIdent
                     it shouldContain Rolle.SAKSBEHANDLER.name
                     it shouldContain levertLeveranse.modul.navn
                     it shouldContain levertLeveranse.frist.toString()
@@ -142,8 +141,8 @@ class IASakLeveranseEksportererTest {
     fun `spille av leveranser burde gi samme resultat`() {
         val sak = nySakIViBistår()
         val nyLeveranse = sak.opprettIASakLeveranse(
-            modulId = TestData.AKTIV_MODUL.id,
-            token = oauth2ServerContainer.saksbehandler1.token,
+            modulId = AKTIV_MODUL.id,
+            token = authContainerHelper.saksbehandler1.token,
         )
 
         var melding: IASakLeveranseValue? = null

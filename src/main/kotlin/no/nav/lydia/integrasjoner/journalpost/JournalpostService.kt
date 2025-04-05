@@ -8,7 +8,6 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.core.extensions.jsonBody
 import com.github.kittinunf.fuel.httpPost
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import no.nav.lydia.NaisEnvironment
 import no.nav.lydia.ia.sak.api.Feil

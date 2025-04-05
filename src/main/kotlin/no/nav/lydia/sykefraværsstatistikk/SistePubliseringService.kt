@@ -10,20 +10,21 @@ import kotliquery.Row
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class SistePubliseringService(
     private val sistePubliseringRepository: SistePubliseringRepository,
 ) {
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val log: Logger = LoggerFactory.getLogger(this::class.java)
     }
 
     fun hentPubliseringsinfo(): Either<Feil, Publiseringsinfo> {
         val publiseringsinfo = try {
             sistePubliseringRepository.hentPubliseringsinfo()
         } catch (e: Exception) {
-            logger.warn(e.message, e)
+            log.warn(e.message, e)
             return Feil(
                 e.message ?: "Ukjent feil under henting av publiseringsinfo",
                 HttpStatusCode.InternalServerError,

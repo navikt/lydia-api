@@ -2,7 +2,8 @@ package no.nav.lydia.container.sykefraværsstatistikk.importering
 
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.sykefraværsstatistikk.import.Kategori
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 import no.nav.lydia.virksomhet.domene.Sektor
@@ -10,15 +11,13 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class SykefraværsstatistikkMetadataVirksomhetImportTest {
-    private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
-
     companion object {
         private val KVARTAL_2022_4 = Kvartal(2022, 4)
     }
 
     @BeforeTest
     fun cleanUp() {
-        TestContainerHelper.postgresContainer.performUpdate(
+        postgresContainerHelper.performUpdate(
             """
             delete from virksomhet_statistikk_metadata
             where orgnr in ('888888888', '999999999')
@@ -28,7 +27,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
 
     @Test
     fun `vi lagrer sykefraværsstatistikk metadata for virksomhet`() {
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "KOMMUNAL"),
             Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
@@ -41,12 +40,12 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
 
     @Test
     fun `sykefraværsstatistikk metadata for virksomhet med ukjent sektor blir ignorert`() {
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "STATLIG"),
             Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             jsonKey("888888888"),
             jsonValue(orgnr = "888888888", sektor = "EN_HELT_UKJENT_SEKTOR"),
             Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
@@ -63,7 +62,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
     @Test
     fun `bransje til en virksomhet kan være null`() {
         val value = jsonValue(orgnr = "999999999", sektor = "STATLIG", bransje = null)
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             value,
             Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
@@ -79,12 +78,12 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
 
     @Test
     fun `sykefraværsstatistikk metadata for virksomhet vil oppdateres dersom to meldinger på samme orgnr er mottatt`() {
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "STATLIG"),
             Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             jsonKey("999999999"),
             jsonValue(orgnr = "999999999", sektor = "PRIVAT"),
             Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC,
@@ -137,7 +136,7 @@ class SykefraværsstatistikkMetadataVirksomhetImportTest {
             select * from virksomhet_statistikk_metadata
             $filter
         """.trimMargin()
-        TestContainerHelper.postgresContainer.dataSource.connection.use { connection ->
+        postgresContainerHelper.dataSource.connection.use { connection ->
             val statement = connection.createStatement()
             statement.execute(query)
             val rs = statement.resultSet

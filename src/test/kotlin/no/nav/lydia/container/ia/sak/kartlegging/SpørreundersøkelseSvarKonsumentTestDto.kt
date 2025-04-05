@@ -16,10 +16,12 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarAlternativerTilEtFlervalgSpørsmål
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarAlternativerTilEtSpørsmål
 import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
@@ -37,25 +39,27 @@ import kotlin.test.Test
 
 class SpørreundersøkelseSvarKonsumentTestDto {
     companion object {
-        private val kartleggingKonsument = kafkaContainerHelper.nyKonsument(
-            consumerGroupId = Topic.SPORREUNDERSOKELSE_TOPIC.konsumentGruppe,
+        private val oppdateringTopic = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC
+        private val spørreundersøkelseTopic = Topic.SPORREUNDERSOKELSE_TOPIC
+        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(
+            consumerGroupId = spørreundersøkelseTopic.konsumentGruppe,
         )
         private val spørreundersøkelseOppdateringKonsument = kafkaContainerHelper.nyKonsument(
-            consumerGroupId = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.konsumentGruppe,
+            consumerGroupId = oppdateringTopic.konsumentGruppe,
         )
 
         @BeforeClass
         @JvmStatic
         fun setUp() {
-            kartleggingKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-            spørreundersøkelseOppdateringKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn))
+            spørreundersøkelseKonsument.subscribe(mutableListOf(spørreundersøkelseTopic.navn))
+            spørreundersøkelseOppdateringKonsument.subscribe(mutableListOf(oppdateringTopic.navn))
         }
 
         @AfterClass
         @JvmStatic
         fun tearDown() {
-            kartleggingKonsument.unsubscribe()
-            kartleggingKonsument.close()
+            spørreundersøkelseKonsument.unsubscribe()
+            spørreundersøkelseKonsument.close()
             spørreundersøkelseOppdateringKonsument.unsubscribe()
             spørreundersøkelseOppdateringKonsument.close()
         }
@@ -68,21 +72,19 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val kartleggingSvarDto = kartlegging.sendKartleggingSvarTilKafka()
 
-        TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
-            ) shouldBe kartleggingSvarDto.spørreundersøkelseId
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
+        ) shouldBe kartleggingSvarDto.spørreundersøkelseId
     }
 
     @Test
     fun `Skal ikke kunne svare på kartlegging som ikke eksisterer`() {
         val kartleggingSvarDto = sendKartleggingSvarTilKafka()
 
-        TestContainerHelper.postgresContainer
-            .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
-            ) shouldHaveSize 0
-        TestContainerHelper.lydiaApiContainer.shouldContainLog("Fant ikke kartlegging på denne iden".toRegex())
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
+        ) shouldHaveSize 0
+        applikasjon.shouldContainLog("Fant ikke kartlegging på denne iden".toRegex())
     }
 
     @Test
@@ -92,33 +94,28 @@ class SpørreundersøkelseSvarKonsumentTestDto {
 
         // OPRETTET
         kartlegging.sendKartleggingSvarTilKafka()
-        TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke svare på en kartlegging i status OPPRETTET".toRegex())
+        applikasjon.shouldContainLog("Kan ikke svare på en kartlegging i status OPPRETTET".toRegex())
 
         // PÅBEGYNT (ok å sende svar)
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         kartlegging.sendKartleggingSvarTilKafka()
-        TestContainerHelper.postgresContainer
-            .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartlegging.id}'",
-            ) shouldHaveSize 1
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartlegging.id}'",
+        ) shouldHaveSize 1
 
         // AVSLUTTET
-        TestContainerHelper.lydiaApiContainer.performPost(
-            "$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}/avslutt",
-        )
-            .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
+        applikasjon.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}/avslutt")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
         kartlegging.sendKartleggingSvarTilKafka()
-        TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke svare på en kartlegging i status AVSLUTTET".toRegex())
+        applikasjon.shouldContainLog("Kan ikke svare på en kartlegging i status AVSLUTTET".toRegex())
 
         // SLETTET
-        TestContainerHelper.lydiaApiContainer.performDelete(
-            "$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}",
-        )
-            .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
+        applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartlegging.id}")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
         kartlegging.sendKartleggingSvarTilKafka()
-        TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke svare på en kartlegging i status SLETTET".toRegex())
+        applikasjon.shouldContainLog("Kan ikke svare på en kartlegging i status SLETTET".toRegex())
     }
 
     @Test
@@ -137,12 +134,11 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             svarIder = svarIderHvorMinstEnIdErUkjent,
         )
 
-        val lagredeSvarIder = TestContainerHelper.postgresContainer
-            .hentAlleRaderTilEnkelKolonne<PGobject>(
-                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartlegging.id}'",
-            )
+        val lagredeSvarIder = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<PGobject>(
+            "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartlegging.id}'",
+        )
         lagredeSvarIder.size shouldBe 0
-        TestContainerHelper.lydiaApiContainer.shouldContainLog("Funnet noen ukjente svarIder".toRegex())
+        applikasjon.shouldContainLog("Funnet noen ukjente svarIder".toRegex())
     }
 
     @Test
@@ -159,13 +155,12 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             ),
         )
 
-        TestContainerHelper.lydiaApiContainer.shouldContainLog(
+        applikasjon.shouldContainLog(
             "Finner ikke spørsmål '$ukjentSpørsmålId' svaret er knyttet til, hopper over".toRegex(),
         )
-        val lagredeSvarIder = TestContainerHelper.postgresContainer
-            .hentAlleRaderTilEnkelKolonne<PGobject>(
-                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelse.id}'",
-            )
+        val lagredeSvarIder = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<PGobject>(
+            "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelse.id}'",
+        )
         lagredeSvarIder.size shouldBe 0
     }
 
@@ -182,11 +177,10 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             svarIder = spørsmålSomIkkeErFlervalg.svaralternativer.map { it.svarId },
         )
 
-        TestContainerHelper.lydiaApiContainer.shouldContainLog("Kan ikke lagre flere svar til et ikke flervalg spørsmål".toRegex())
-        val lagredeSvarIder = TestContainerHelper.postgresContainer
-            .hentAlleRaderTilEnkelKolonne<PGobject>(
-                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelse.id}'",
-            )
+        applikasjon.shouldContainLog("Kan ikke lagre flere svar til et ikke flervalg spørsmål".toRegex())
+        val lagredeSvarIder = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<PGobject>(
+            "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelse.id}'",
+        )
         lagredeSvarIder.size shouldBe 0
     }
 
@@ -200,17 +194,15 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             svarIder = kartleggingDto.svarAlternativerTilEtFlervalgSpørsmål(),
         )
 
-        val lagredeSvarIder = TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<PGobject>(
-                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
-            )
+        val lagredeSvarIder = postgresContainerHelper.hentEnkelKolonne<PGobject>(
+            "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
+        )
         lagredeSvarIder.value shouldNotBe null
         lagredeSvarIder.value?.let { Json.decodeFromString<List<String>>(it) shouldBe kartleggingSvarDto.svarIder }
 
-        TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
-            ) shouldBe null
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
+        ) shouldBe null
 
         val nyeSvarIder = listOf(kartleggingDto.svarAlternativerTilEtFlervalgSpørsmål().first())
         sendKartleggingSvarTilKafka(
@@ -220,17 +212,15 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             svarIder = nyeSvarIder,
         )
 
-        val oppdaterteSvarIderEtterNyttSvar = TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<PGobject>(
-                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
-            )
+        val oppdaterteSvarIderEtterNyttSvar = postgresContainerHelper.hentEnkelKolonne<PGobject>(
+            "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
+        )
         oppdaterteSvarIderEtterNyttSvar.value shouldNotBe null
         oppdaterteSvarIderEtterNyttSvar.value?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
 
-        TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
-            ) shouldNotBe null
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingSvarDto.spørreundersøkelseId}'",
+        ) shouldNotBe null
     }
 
     @Test
@@ -242,17 +232,15 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val spørreundersøkelseSvarDto = spørreundersøkelse.sendKartleggingSvarTilKafka(svarIder = listOf(førsteSvarId))
 
-        val lagredeSvarIder = TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<PGobject>(
-                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
-            )
+        val lagredeSvarIder = postgresContainerHelper.hentEnkelKolonne<PGobject>(
+            "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
+        )
         lagredeSvarIder.value shouldNotBe null
         lagredeSvarIder.value?.let { Json.decodeFromString<List<String>>(it) shouldBe spørreundersøkelseSvarDto.svarIder }
 
-        TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
-            ) shouldBe null
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
+        ) shouldBe null
 
         val nyeSvarIder = listOf(andreSvarId)
 
@@ -263,17 +251,15 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             svarIder = nyeSvarIder,
         )
 
-        val oppdaterteSvarIderEtterNyttSvar = TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<PGobject>(
-                "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
-            )
+        val oppdaterteSvarIderEtterNyttSvar = postgresContainerHelper.hentEnkelKolonne<PGobject>(
+            "select svar_ider from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
+        )
         oppdaterteSvarIderEtterNyttSvar.value shouldNotBe null
         oppdaterteSvarIderEtterNyttSvar.value?.let { Json.decodeFromString<List<String>>(it) shouldBe nyeSvarIder }
 
-        TestContainerHelper.postgresContainer
-            .hentEnkelKolonne<String>(
-                "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
-            ) shouldNotBe null
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select endret from ia_sak_kartlegging_svar where kartlegging_id = '${spørreundersøkelseSvarDto.spørreundersøkelseId}'",
+        ) shouldNotBe null
     }
 
     @Test
@@ -285,7 +271,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = opprettetSpørreundersøkelse.id,
-                konsument = kartleggingKonsument,
+                konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)

@@ -8,7 +8,8 @@ import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
@@ -26,23 +27,19 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
 
 class VirksomhetApiTest {
-    private val mockOAuthContainer = TestContainerHelper.oauth2ServerContainer
-    private val postgres = TestContainerHelper.postgresContainer
-
     @Test
     fun `sanity sjekk, test at vi har fått lastet inn virksomheter og næringer`() {
-        val id =
-            postgres.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${TestVirksomhet.BERGEN.orgnr}'")
-        val næringsKode =
-            postgres.hentEnkelKolonne<String>("select naringsundergruppe1 from virksomhet_naringsundergrupper where virksomhet = '$id'")
+        val id = postgresContainerHelper.hentEnkelKolonne<Int>("select id from virksomhet where orgnr = '${TestVirksomhet.BERGEN.orgnr}'")
+        val næringsKode = postgresContainerHelper.hentEnkelKolonne<String>(
+            "select naringsundergruppe1 from virksomhet_naringsundergrupper where virksomhet = '$id'",
+        )
         næringsKode shouldBe TestData.BEDRIFTSRÅDGIVNING.kode
-        val antallUtenPostnummer =
-            postgres.hentEnkelKolonne<Int>("select count(*) from virksomhet where orgnr = '${TestVirksomhet.UTENLANDSK.orgnr}'")
-        antallUtenPostnummer shouldBe 0
-        val antallUtenBeliggenhetsadresse =
-            postgres.hentEnkelKolonne<Int>(
-                "select count(*) from virksomhet where orgnr = '${TestVirksomhet.MANGLER_BELIGGENHETSADRESSE.orgnr}'",
-            )
+        postgresContainerHelper.hentEnkelKolonne<Int>(
+            "select count(*) from virksomhet where orgnr = '${TestVirksomhet.UTENLANDSK.orgnr}'",
+        ) shouldBe 0
+        val antallUtenBeliggenhetsadresse = postgresContainerHelper.hentEnkelKolonne<Int>(
+            "select count(*) from virksomhet where orgnr = '${TestVirksomhet.MANGLER_BELIGGENHETSADRESSE.orgnr}'",
+        )
         antallUtenBeliggenhetsadresse shouldBe 0
     }
 
@@ -50,7 +47,7 @@ class VirksomhetApiTest {
     fun `skal kunne hente ut opplysninger om en virksomhet`() {
         val virksomhet = hentVirksomhetsinformasjon(
             OSLO_FLERE_ADRESSER.orgnr,
-            token = mockOAuthContainer.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         )
         virksomhet.orgnr shouldBe OSLO_FLERE_ADRESSER.orgnr
         virksomhet.navn shouldBe OSLO_FLERE_ADRESSER.navn
@@ -74,7 +71,7 @@ class VirksomhetApiTest {
 
         val virksomhet = hentVirksomhetsinformasjon(
             orgnummer = orgnummer,
-            token = mockOAuthContainer.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         )
 
         virksomhet.orgnr shouldBe orgnummer

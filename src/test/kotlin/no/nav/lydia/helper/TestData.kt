@@ -77,7 +77,7 @@ class TestData(
 
         fun Periode.lagPerioder(antall: Int): List<Periode> = rekursivtLagPerioder(antall, mutableListOf(), this)
 
-        fun datoSentIGjeldendePeriode() = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal * 3), 30)
+        fun datoSentIGjeldendePeriode(): LocalDate = LocalDate.of(gjeldendePeriode.årstall, (gjeldendePeriode.kvartal * 3), 30)
 
         private fun rekursivtLagPerioder(
             perioderIgjen: Int,

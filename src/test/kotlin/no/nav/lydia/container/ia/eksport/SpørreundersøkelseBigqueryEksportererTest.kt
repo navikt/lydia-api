@@ -18,8 +18,8 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -33,13 +33,12 @@ import kotlin.test.Test
 
 class SpørreundersøkelseBigqueryEksportererTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(listOf(Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(listOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -234,6 +233,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
         )
+        // TODO: Flaky test?
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -328,7 +328,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
             kafkaContainerHelper.sendJobbMelding(Jobb.spørreundersøkelseBigQueryEksport)
         }
 
-        lydiaApiContainer.shouldNotContainLog("Klarte ikke å kjøre eksport av behovsvurderinger".toRegex())
-        lydiaApiContainer.shouldContainLog("Jobb 'spørreundersøkelseBigQueryEksport' ferdig".toRegex())
+        applikasjon.shouldNotContainLog("Klarte ikke å kjøre eksport av behovsvurderinger".toRegex())
+        applikasjon.shouldContainLog("Jobb 'spørreundersøkelseBigQueryEksport' ferdig".toRegex())
     }
 }

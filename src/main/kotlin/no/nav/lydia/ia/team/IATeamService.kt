@@ -7,12 +7,13 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class IATeamService(
     val iaTeamRepository: IATeamRepository,
 ) {
-    val log = LoggerFactory.getLogger(this.javaClass)
+    val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun hentBrukereITeam(
         iaSak: IASak,

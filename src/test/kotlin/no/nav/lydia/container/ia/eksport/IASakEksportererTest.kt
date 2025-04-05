@@ -8,8 +8,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -19,13 +19,12 @@ import kotlin.test.Test
 
 class IASakEksportererTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.IA_SAK_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.IA_SAK_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -40,7 +39,7 @@ class IASakEksportererTest {
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = VirksomhetHelper.nyttOrgnummer())
             .nyHendelse(
                 hendelsestype = IASakshendelseType.TA_EIERSKAP_I_SAK,
-                token = oauth2ServerContainer.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             )
 
         runBlocking {
@@ -53,7 +52,7 @@ class IASakEksportererTest {
                 meldinger shouldHaveAtLeastSize 1
                 meldinger.forAtLeastOne {
                     it shouldContain sak.saksnummer
-                    it shouldContain oauth2ServerContainer.saksbehandler1.navIdent
+                    it shouldContain authContainerHelper.saksbehandler1.navIdent
                     it shouldContain IAProsessStatus.VURDERES.name
                 }
             }

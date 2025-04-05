@@ -12,8 +12,9 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarT
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.stengTema
 import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -27,13 +28,12 @@ import kotlin.test.Test
 
 class SpørreundersøkelseHendelseKonsumentTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -50,7 +50,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = spørreundersøkelse.temaer.first()
         spørreundersøkelse.stengTema(temaId = tema.temaId)
-        TestContainerHelper.postgresContainer.hentEnkelKolonne<Boolean>(
+        postgresContainerHelper.hentEnkelKolonne<Boolean>(
             """
             SELECT stengt from ia_sak_kartlegging_kartlegging_til_tema
                 WHERE kartlegging_id = '${spørreundersøkelse.id}'
@@ -80,7 +80,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
         fullførtBehovsvurdering.status shouldBe SpørreundersøkelseStatus.AVSLUTTET
 
-        TestContainerHelper.lydiaApiContainer.shouldContainLog(
+        applikasjon.shouldContainLog(
             "Alle temaer i spørreundersøkelse '${behovsvurdering.id}' er fullført, spørreundersøkelse er avsluttet".toRegex(),
         )
     }
@@ -105,7 +105,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
 
         behovsvurderingMedEttStengtTema.status shouldBe SpørreundersøkelseStatus.PÅBEGYNT
 
-        TestContainerHelper.lydiaApiContainer.shouldContainLog(
+        applikasjon.shouldContainLog(
             "Mottok stenging av tema: ${førsteTema.temaId} i spørreundersøkelse ${behovsvurdering.id}".toRegex(),
         )
     }

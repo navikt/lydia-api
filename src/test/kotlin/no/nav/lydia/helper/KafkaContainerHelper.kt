@@ -49,9 +49,7 @@ class KafkaContainerHelper(
     private var adminClient: AdminClient
     private var kafkaProducer: KafkaProducer<String, String>
 
-    val kafkaContainer = ConfluentKafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.4.3"),
-    )
+    val container: ConfluentKafkaContainer = ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.3"))
         .withNetwork(network)
         .withNetworkAliases(kafkaNetworkAlias)
         .withLogConsumer(Slf4jLogConsumer(log).withPrefix(kafkaNetworkAlias).withSeparateOutputStreams())
@@ -74,7 +72,7 @@ class KafkaContainerHelper(
 
     fun nyKonsument(consumerGroupId: String) =
         Kafka(
-            brokers = kafkaContainer.bootstrapServers,
+            brokers = container.bootstrapServers,
             consumerLoopDelay = 1,
             credstorePassword = "",
             keystoreLocation = "",

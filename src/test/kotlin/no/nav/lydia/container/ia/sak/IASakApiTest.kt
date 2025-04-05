@@ -42,9 +42,9 @@ import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.TestVirksomhet
@@ -98,14 +98,11 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
-    private val mockOAuth2Server = oauth2ServerContainer
-    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
-
     @Test
     fun `skal lagre resulterende status i ia_sak_hendelse`() {
         val sak = nySakIKartlegges()
 
-        val resulterendeStatuser = postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+        val resulterendeStatuser = postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             select resulterende_status from ia_sak_hendelse where saksnummer = '${sak.saksnummer}'
             """.trimIndent(),
@@ -177,14 +174,14 @@ class IASakApiTest {
     @Test
     fun `skal ikke få feil ved journalføring av hendelser`() {
         nySakIViBistår()
-        lydiaApiContainer shouldNotContainLog "Noe gikk feil ved journalføring av hendelse".toRegex()
+        applikasjon shouldNotContainLog "Noe gikk feil ved journalføring av hendelse".toRegex()
     }
 
     @Test
     fun `skal lagre navenhet på hendelser`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
-        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             select nav_enhet_nummer from ia_sak_hendelse
               where saksnummer = '${sak.saksnummer}'
@@ -227,12 +224,12 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne slette sak dersom man ikke er superbruker`() {
         shouldFail {
-            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = mockOAuth2Server.superbruker1.token)
-                .nyHendelse(hendelsestype = SLETT_SAK, token = mockOAuth2Server.saksbehandler1.token)
+            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = authContainerHelper.superbruker1.token)
+                .nyHendelse(hendelsestype = SLETT_SAK, token = authContainerHelper.saksbehandler1.token)
         }
         shouldFail {
-            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = mockOAuth2Server.superbruker1.token)
-                .nyHendelse(hendelsestype = SLETT_SAK, token = mockOAuth2Server.lesebruker.token)
+            opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = authContainerHelper.superbruker1.token)
+                .nyHendelse(hendelsestype = SLETT_SAK, token = authContainerHelper.lesebruker.token)
         }
     }
 
@@ -325,12 +322,12 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhetRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.superbruker1.token,
+            token = authContainerHelper.superbruker1.token,
         ).statuskode() shouldBe 201
 
         opprettSakForVirksomhetRespons(
             orgnummer = orgnummer,
-            token = mockOAuth2Server.superbruker1.token,
+            token = authContainerHelper.superbruker1.token,
         ).statuskode() shouldBe 501
     }
 
@@ -349,7 +346,7 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
         sak.status shouldBe VI_BISTÅR
 
-        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
             .statuskode() shouldBe 501
 
         sak = sak.nyHendelse(
@@ -361,7 +358,7 @@ class IASakApiTest {
         )
         sak.status shouldBe IKKE_AKTUELL
 
-        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
             .statuskode() shouldBe 201
 
         hentSaker(orgnummer = orgnummer).size shouldBe 2
@@ -372,7 +369,7 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         val sak = nySakIViBistår(orgnummer = orgnummer)
 
-        postgresContainer.performUpdate(
+        postgresContainerHelper.performUpdate(
             """
             INSERT INTO ia_sak_hendelse (
                 id,
@@ -400,8 +397,8 @@ class IASakApiTest {
 
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.InternalServerError.value
-        lydiaApiContainer shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
-        postgresContainer.performUpdate("DELETE FROM ia_sak_hendelse WHERE id = '777'")
+        applikasjon shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
+        postgresContainerHelper.performUpdate("DELETE FROM ia_sak_hendelse WHERE id = '777'")
     }
 
     @Test
@@ -409,7 +406,7 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         val sak = nySakIViBistår(orgnummer = orgnummer)
 
-        postgresContainer.performUpdate(
+        postgresContainerHelper.performUpdate(
             """
             INSERT INTO ia_sak_hendelse (
                 id,
@@ -434,8 +431,8 @@ class IASakApiTest {
         sak.status shouldBe VI_BISTÅR
         shouldFail { sak.nyHendelse(TILBAKE) }
 
-        lydiaApiContainer shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
-        postgresContainer.performUpdate("DELETE FROM ia_sak_hendelse WHERE id = '888'")
+        applikasjon shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
+        postgresContainerHelper.performUpdate("DELETE FROM ia_sak_hendelse WHERE id = '888'")
     }
 
     @Test
@@ -459,8 +456,8 @@ class IASakApiTest {
     fun `skal takle dobbelt ta eierskap event`() {
         val orgnummer = nyttOrgnummer()
         val sak = nySakIViBistår(orgnummer = orgnummer)
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
         sak.status shouldBe VI_BISTÅR
 
         hentSaker(orgnummer = orgnummer).size shouldBe 1
@@ -503,13 +500,13 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
         sak.status shouldBe VI_BISTÅR
 
-        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
             .statuskode() shouldBe 501
         sak = sak.leggTilLeveranseOgFullførSak()
         sak.status shouldBe FULLFØRT
 
         val sak2Respons =
-            opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token)
+            opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
         sak2Respons.statuskode() shouldBe 201
         val sak2 = sak2Respons.third.get()
 
@@ -523,32 +520,32 @@ class IASakApiTest {
         val orgnr = nyttOrgnummer()
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.lesebruker.token,
+            token = authContainerHelper.lesebruker.token,
         ).statuskode() shouldBe 403
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         ).statuskode() shouldBe 403
         opprettSakForVirksomhetRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.superbruker1.token,
+            token = authContainerHelper.superbruker1.token,
         ).statuskode() shouldBe 201
     }
 
     @Test
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av brukere med lesetilgang`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also {
             nyHendelsePåSakMedRespons(
                 sak = it,
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = mockOAuth2Server.lesebrukerAudit.token,
+                token = authContainerHelper.lesebrukerAudit.token,
             ).statuskode() shouldBe 403
 
             nyHendelsePåSakMedRespons(
                 sak = it,
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = mockOAuth2Server.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             ).statuskode() shouldBe 201
         }
     }
@@ -556,22 +553,22 @@ class IASakApiTest {
     @Test
     fun `tilgangskontroll - en sak skal ikke kunne oppdateres av andre enn de som eier den`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also { sak ->
             nyHendelsePåSak(
                 sak = sak,
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = mockOAuth2Server.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             ).also { sakEtterTattEierskap ->
                 nyHendelsePåSakMedRespons(
                     sak = sakEtterTattEierskap,
                     hendelsestype = VIRKSOMHET_SKAL_KONTAKTES,
-                    token = mockOAuth2Server.saksbehandler2.token,
+                    token = authContainerHelper.saksbehandler2.token,
                 )
                     .statuskode() shouldBe 422
                 nyHendelsePåSakMedRespons(
                     sak = sakEtterTattEierskap,
                     hendelsestype = VIRKSOMHET_SKAL_KONTAKTES,
-                    token = mockOAuth2Server.saksbehandler1.token,
+                    token = authContainerHelper.saksbehandler1.token,
                 )
                     .statuskode() shouldBe 201
             }
@@ -581,36 +578,36 @@ class IASakApiTest {
     @Test
     fun `tilgangskontroll - alle brukere skal kunne se saker UTEN eier`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also {
-            hentSakerRespons(orgnummer = orgnummer, token = mockOAuth2Server.lesebruker.token).statuskode() shouldBe 200
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also {
+            hentSakerRespons(orgnummer = orgnummer, token = authContainerHelper.lesebruker.token).statuskode() shouldBe 200
             hentSakerRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             ).statuskode() shouldBe 200
             hentSakerRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.superbruker1.token,
+                token = authContainerHelper.superbruker1.token,
             ).statuskode() shouldBe 200
             hentSakerRespons(
                 orgnummer = orgnummer,
-                token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
+                token = authContainerHelper.brukerUtenTilgangsrolle.token,
             ).statuskode() shouldBe 403
 
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.lesebruker.token,
+                token = authContainerHelper.lesebruker.token,
             ).statuskode() shouldBe 200
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             ).statuskode() shouldBe 200
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.superbruker1.token,
+                token = authContainerHelper.superbruker1.token,
             ).statuskode() shouldBe 200
             hentSamarbeidshistorikkForOrgnrRespons(
                 orgnr = orgnummer,
-                token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
+                token = authContainerHelper.brukerUtenTilgangsrolle.token,
             ).statuskode() shouldBe 403
         }
     }
@@ -618,40 +615,40 @@ class IASakApiTest {
     @Test
     fun `tilgangskontroll - alle brukere skal kunne se saker MED eier`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
-            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also { sak ->
+            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also {
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.lesebruker.token,
+                    token = authContainerHelper.lesebruker.token,
                 ).statuskode() shouldBe 200
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.saksbehandler1.token,
+                    token = authContainerHelper.saksbehandler1.token,
                 ).statuskode() shouldBe 200
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.superbruker1.token,
+                    token = authContainerHelper.superbruker1.token,
                 ).statuskode() shouldBe 200
                 hentSakerRespons(
                     orgnummer = orgnummer,
-                    token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
+                    token = authContainerHelper.brukerUtenTilgangsrolle.token,
                 ).statuskode() shouldBe 403
 
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.lesebruker.token,
+                    token = authContainerHelper.lesebruker.token,
                 ).statuskode() shouldBe 200
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.saksbehandler1.token,
+                    token = authContainerHelper.saksbehandler1.token,
                 ).statuskode() shouldBe 200
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.superbruker1.token,
+                    token = authContainerHelper.superbruker1.token,
                 ).statuskode() shouldBe 200
                 hentSamarbeidshistorikkForOrgnrRespons(
                     orgnr = orgnummer,
-                    token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
+                    token = authContainerHelper.brukerUtenTilgangsrolle.token,
                 ).statuskode() shouldBe 403
             }
         }
@@ -660,33 +657,32 @@ class IASakApiTest {
     @Test
     fun `tilgangskontroll - man skal kunne se en sak man selv eier`() {
         nyttOrgnummer().also { orgnummer ->
-            opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker2.token)
-                .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
+            opprettSakForVirksomhet(orgnummer, token = authContainerHelper.superbruker2.token)
+                .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also {
                     hentSakerRespons(
                         orgnummer = orgnummer,
-                        token = mockOAuth2Server.saksbehandler1.token,
+                        token = authContainerHelper.saksbehandler1.token,
                     ).statuskode() shouldBe 200
                     hentSamarbeidshistorikkForOrgnrRespons(
                         orgnr = orgnummer,
-                        token = mockOAuth2Server.saksbehandler1.token,
+                        token = authContainerHelper.saksbehandler1.token,
                     ).statuskode() shouldBe 200
                 }
         }
 
         nyttOrgnummer().also { orgnummer ->
-            opprettSakForVirksomhet(orgnummer, token = mockOAuth2Server.superbruker2.token)
-                .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token).also {
+            opprettSakForVirksomhet(orgnummer, token = authContainerHelper.superbruker2.token)
+                .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.superbruker1.token).also {
                     hentSakerRespons(
                         orgnummer = orgnummer,
-                        token = mockOAuth2Server.superbruker1.token,
+                        token = authContainerHelper.superbruker1.token,
                     ).statuskode() shouldBe 200
                     hentSamarbeidshistorikkForOrgnrRespons(
                         orgnr = orgnummer,
-                        token = mockOAuth2Server.superbruker1.token,
+                        token = authContainerHelper.superbruker1.token,
                     ).statuskode() shouldBe 200
                 }
         }
-        // PS: lesebruker kan ikke eie en sak, derfor tester vi ikke dette tilfellet
     }
 
     @Test
@@ -697,15 +693,15 @@ class IASakApiTest {
         val aktivSak = hentAktivSak(orgnummer)
         aktivSak.orgnr shouldBe orgnummer
         aktivSak.status shouldBe VURDERES
-        aktivSak.opprettetAv shouldBe mockOAuth2Server.superbruker1.navIdent
+        aktivSak.opprettetAv shouldBe authContainerHelper.superbruker1.navIdent
         aktivSak.saksnummer shouldBe sak.saksnummer
 
-        nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token).also {
+        nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also {
             it.orgnr shouldBe orgnummer
             it.saksnummer shouldBe sak.saksnummer
             it.status shouldBe VURDERES
             it.opprettetAv shouldBe sak.opprettetAv
-            it.eidAv shouldBe mockOAuth2Server.saksbehandler1.navIdent
+            it.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
         }
     }
@@ -713,7 +709,7 @@ class IASakApiTest {
     @Test
     fun `skal kunne hente en oppsummering av alle hendelsene som har skjedd på en sak`() {
         val orgnummer = nyttOrgnummer()
-        val superbruker = oauth2ServerContainer.superbruker1
+        val superbruker = authContainerHelper.superbruker1
         opprettSakForVirksomhet(orgnummer = orgnummer, token = superbruker.token).also { sak ->
             val valgtÅrsak = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,
@@ -733,7 +729,7 @@ class IASakApiTest {
                 VIRKSOMHET_SKAL_KONTAKTES,
                 VIRKSOMHET_ER_IKKE_AKTUELL,
             )
-            hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).also { sakshistorikkForVirksomhet ->
+            hentSamarbeidshistorikk(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also { sakshistorikkForVirksomhet ->
                 val historikkForSak = sakshistorikkForVirksomhet.find { it.saksnummer == sakIkkeAktuell.saksnummer }
                 historikkForSak shouldNotBe null
                 historikkForSak!!.sakshendelser.map { it.hendelsestype } shouldContainExactly alleHendelsesTyper
@@ -791,13 +787,13 @@ class IASakApiTest {
             sak.eidAv shouldBe null
 
             val sakEtterTattEierskap = sak.nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK)
-            sakEtterTattEierskap.eidAv shouldBe mockOAuth2Server.saksbehandler1.navIdent
+            sakEtterTattEierskap.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
 
             sakEtterTattEierskap.nyHendelse(
                 hendelsestype = TA_EIERSKAP_I_SAK,
-                token = mockOAuth2Server.saksbehandler2.token,
+                token = authContainerHelper.saksbehandler2.token,
             ).also {
-                it.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
+                it.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
             }
         }
     }
@@ -805,10 +801,10 @@ class IASakApiTest {
     @Test
     fun `skal få gyldige neste hendelser i retur - avhengig av hvem man er`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer, token = mockOAuth2Server.superbruker1.token).also { sak ->
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also { sak ->
             hentAktivSak(
                 sak.orgnr,
-                token = mockOAuth2Server.superbruker1.token,
+                token = authContainerHelper.superbruker1.token,
             ).also { aktivSak ->
                 aktivSak.gyldigeNesteHendelser.map { it.saksHendelsestype }
                     .shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
@@ -816,14 +812,14 @@ class IASakApiTest {
 
             hentAktivSak(
                 sak.orgnr,
-                token = mockOAuth2Server.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             ).also { aktivSak ->
                 aktivSak.gyldigeNesteHendelser.forAll {
                     it.saksHendelsestype shouldBe TA_EIERSKAP_I_SAK
                 }
             }
 
-            hentAktivSak(orgnummer, token = mockOAuth2Server.lesebruker.token).also { aktivSak ->
+            hentAktivSak(orgnummer, token = authContainerHelper.lesebruker.token).also { aktivSak ->
                 aktivSak.gyldigeNesteHendelser.shouldBeEmpty()
             }
         }
@@ -875,7 +871,7 @@ class IASakApiTest {
                         begrunnelser = begrunnelser,
                     ).toJson(),
                 )
-            hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
+            hentSamarbeidshistorikk(orgnummer, authContainerHelper.superbruker1.token).first().sakshendelser
                 .forAtLeastOne { hendelseOppsummering ->
                     hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                     hendelseOppsummering.tidspunktForSnapshot shouldBe sakIkkeAktuell.endretTidspunkt
@@ -942,8 +938,8 @@ class IASakApiTest {
 
     @Test
     fun `tilgangskontroll - saksbehandler som ikke eier sak skal ikke kunne gå tilbake i prosessflyten`() {
-        val saksbehandler1 = mockOAuth2Server.saksbehandler1.token
-        val saksbehandler2 = mockOAuth2Server.saksbehandler2.token
+        val saksbehandler1 = authContainerHelper.saksbehandler1.token
+        val saksbehandler2 = authContainerHelper.saksbehandler2.token
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1)
             .nyHendelse(hendelsestype = VIRKSOMHET_SKAL_KONTAKTES, token = saksbehandler1)
@@ -1014,14 +1010,14 @@ class IASakApiTest {
             .nyIkkeAktuellHendelse()
         sak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TILBAKE)
 
-        hentAktivSak(sak.orgnr, token = oauth2ServerContainer.superbruker1.token)
+        hentAktivSak(sak.orgnr, token = authContainerHelper.superbruker1.token)
             .also { sakDto ->
                 sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TA_EIERSKAP_I_SAK)
             }
 
         sak.oppdaterHendelsesTidspunkter(
             antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1,
-            token = oauth2ServerContainer.superbruker1.token,
+            token = authContainerHelper.superbruker1.token,
         ).also { sakDto ->
             sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe emptyList()
         }
@@ -1038,16 +1034,15 @@ class IASakApiTest {
     @Test
     fun `skal kunne overta sak som står som fullført og deretter tilbake til vi bistår`() {
         val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
-        val sakEtterOvertakelse = sak.nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler2.token)
+        val sakEtterOvertakelse = sak.nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
 
         sakEtterOvertakelse.status shouldBe FULLFØRT
-        sakEtterOvertakelse.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
+        sakEtterOvertakelse.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
 
-        val sakEtterTilbake =
-            sakEtterOvertakelse.nyHendelse(TILBAKE, token = oauth2ServerContainer.saksbehandler2.token)
+        val sakEtterTilbake = sakEtterOvertakelse.nyHendelse(hendelsestype = TILBAKE, token = authContainerHelper.saksbehandler2.token)
 
         sakEtterTilbake.status shouldBe VI_BISTÅR
-        sakEtterTilbake.eidAv shouldBe oauth2ServerContainer.saksbehandler2.navIdent
+        sakEtterTilbake.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
     }
 
     @Test
@@ -1123,7 +1118,7 @@ class IASakApiTest {
         ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
-        hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
+        hentSamarbeidshistorikk(orgnummer, authContainerHelper.superbruker1.token).first().sakshendelser
             .forAtLeastOne { hendelseOppsummering ->
                 hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                 hendelseOppsummering.tidspunktForSnapshot shouldBe sakIkkeAktuell.endretTidspunkt
@@ -1155,7 +1150,7 @@ class IASakApiTest {
         ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
-        hentSamarbeidshistorikk(orgnummer, mockOAuth2Server.superbruker1.token).first().sakshendelser
+        hentSamarbeidshistorikk(orgnummer, authContainerHelper.superbruker1.token).first().sakshendelser
             .forAtLeastOne { hendelseOppsummering ->
                 hendelseOppsummering.hendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                 hendelseOppsummering.tidspunktForSnapshot shouldBe sakIkkeAktuell.endretTidspunkt
@@ -1166,8 +1161,8 @@ class IASakApiTest {
     @Test
     fun `skal vise bare èn riktig status gjennom livsløpet til en ny sak`() {
         // TODO Testrydding: Kva meines med "èn riktig status gjennom livsløpet til en ny sak"?
-        val superbruker = mockOAuth2Server.superbruker1.token
-        val saksbehandler = mockOAuth2Server.saksbehandler1.token
+        val superbruker = authContainerHelper.superbruker1.token
+        val saksbehandler = authContainerHelper.saksbehandler1.token
 
         hentSykefravær(
             token = superbruker,
@@ -1235,10 +1230,10 @@ class IASakApiTest {
 
     @Test
     fun `rolle til innlogget ansatt skal bli lagret på hendelsene`() {
-        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = oauth2ServerContainer.superbruker1.token)
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = authContainerHelper.superbruker1.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
 
-        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             "select opprettet_av_rolle from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by opprettet",
         ) shouldBe listOf(
             "SUPERBRUKER",

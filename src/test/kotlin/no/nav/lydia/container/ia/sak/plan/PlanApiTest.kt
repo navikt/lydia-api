@@ -41,9 +41,9 @@ import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
@@ -143,7 +143,7 @@ class PlanApiTest {
                 prosessId = samarbeid.id,
             )
         }
-        lydiaApiContainer shouldContainLog "Endring av plan med id '${plan.id}' kan ikke gjennomføres, da det finnes aktiviteter i SF".toRegex()
+        applikasjon shouldContainLog "Endring av plan med id '${plan.id}' kan ikke gjennomføres, da det finnes aktiviteter i SF".toRegex()
 
         // -- Send slette melding om SF aktivitet
         kafkaContainerHelper.sendOgVentTilKonsumert(
@@ -688,7 +688,7 @@ class PlanApiTest {
 
         val opprettetPlan = sak.opprettEnPlan()
 
-        val hentetPlan = sak.hentPlan(token = oauth2ServerContainer.lesebruker.token)
+        val hentetPlan = sak.hentPlan(token = authContainerHelper.lesebruker.token)
 
         opprettetPlan.id shouldBeEqual hentetPlan.id
     }

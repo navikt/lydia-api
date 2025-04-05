@@ -9,12 +9,12 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilListeRespons
@@ -29,13 +29,10 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 class IASakTeamApiTest {
-    private val mockOAuth2Server = oauth2ServerContainer
-    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
-
     private fun bliMedITeam(
         token: String,
         saksnummer: String,
-    ) = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/$saksnummer")
+    ) = applikasjon.performPost("$IA_SAK_TEAM_PATH/$saksnummer")
         .authentication().bearer(token)
         .tilSingelRespons<BrukerITeamDto>().third.fold(
             success = { respons -> respons },
@@ -57,8 +54,8 @@ class IASakTeamApiTest {
     fun `skal hente alle brukere i team på en sak`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
 
-        lydiaApiContainer.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        applikasjon.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilListeRespons<String>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
@@ -66,17 +63,17 @@ class IASakTeamApiTest {
             .shouldHaveSize(0)
 
         val userList = listOf(
-            mockOAuth2Server.superbruker1,
-            mockOAuth2Server.superbruker2,
-            mockOAuth2Server.saksbehandler1,
-            mockOAuth2Server.saksbehandler2,
+            authContainerHelper.superbruker1,
+            authContainerHelper.superbruker2,
+            authContainerHelper.saksbehandler1,
+            authContainerHelper.saksbehandler2,
         )
         userList.forEach {
             bliMedITeam(token = it.token, saksnummer = sak.saksnummer)
         }
 
-        val teamList = lydiaApiContainer.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        val teamList = applikasjon.performGet("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilListeRespons<String>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
@@ -89,15 +86,15 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal kunne bli med i team`() {
-        val (sak, res) = opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token)
+        val (sak, res) = opprettSakBliOgMedITeam(token = authContainerHelper.superbruker1.token)
 
         res.saksnummer shouldBe sak.saksnummer
-        res.ident shouldBe mockOAuth2Server.superbruker1.navIdent
+        res.ident shouldBe authContainerHelper.superbruker1.navIdent
 
-        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             select saksnummer from ia_sak_team
-            where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+            where ident = '${authContainerHelper.superbruker1.navIdent}'
             and saksnummer = '${sak.saksnummer}'
             """.trimIndent(),
         ) shouldHaveSize 1
@@ -105,7 +102,7 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal kunne bli med i flere team`() {
-        val bruker = mockOAuth2Server.superbruker1
+        val bruker = authContainerHelper.superbruker1
         val resList = listOf(
             opprettSakBliOgMedITeam(token = bruker.token).second,
             opprettSakBliOgMedITeam(token = bruker.token).second,
@@ -119,8 +116,8 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal ikke kunne bli med i team uten sak`() {
-        val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/ikkeetsaksnummer")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        val res = applikasjon.performPost("$IA_SAK_TEAM_PATH/ikkeetsaksnummer")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<BrukerITeamDto>().second
 
         res.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -129,28 +126,30 @@ class IASakTeamApiTest {
     @Test
     fun `skal bli følger av sak dersom man blir fratatt eierskap`() {
         // sanity
-        mockOAuth2Server.saksbehandler1.navIdent shouldNotBe mockOAuth2Server.saksbehandler2.navIdent
+        authContainerHelper.saksbehandler1.navIdent shouldNotBe authContainerHelper.saksbehandler2.navIdent
 
-        val sakFørEierskapsendring = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(
-            TA_EIERSKAP_I_SAK,
-            token = mockOAuth2Server.saksbehandler1.token,
-        )
+        val sakFørEierskapsendring = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.saksbehandler1.token,
+            )
 
-        val sakEtterEierskapBytte = sakFørEierskapsendring.nyHendelse(
-            TA_EIERSKAP_I_SAK,
-            token = mockOAuth2Server.saksbehandler2.token,
-        )
-        sakEtterEierskapBytte.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
+        val sakEtterEierskapBytte = sakFørEierskapsendring
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.saksbehandler2.token,
+            )
+        sakEtterEierskapBytte.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
 
-        val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
-            .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
+        val res = applikasjon.performGet(MINE_SAKER_PATH)
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
         res.forExactlyOne {
             it.iaSak.saksnummer shouldBe sakFørEierskapsendring.saksnummer
-            it.iaSak.eidAv shouldBe sakEtterEierskapBytte.eidAv shouldBe mockOAuth2Server.saksbehandler2.navIdent
+            it.iaSak.eidAv shouldBe sakEtterEierskapBytte.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
             it.iaSak.eidAv shouldNotBe sakFørEierskapsendring.eidAv
         }
     }
@@ -158,8 +157,8 @@ class IASakTeamApiTest {
     @Test
     fun `skal kunne bli med i team som lesebruker`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val res = lydiaApiContainer.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
-            .authentication().bearer(mockOAuth2Server.lesebruker.token)
+        val res = applikasjon.performPost("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(authContainerHelper.lesebruker.token)
             .tilSingelRespons<BrukerITeamDto>().second
 
         res.statusCode shouldBe HttpStatusCode.Created.value
@@ -167,30 +166,30 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal kunne fjernes fra team`() {
-        val (sak, _) = opprettSakBliOgMedITeam(token = mockOAuth2Server.superbruker1.token)
+        val (sak, _) = opprettSakBliOgMedITeam(token = authContainerHelper.superbruker1.token)
 
-        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             select saksnummer from ia_sak_team
-            where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+            where ident = '${authContainerHelper.superbruker1.navIdent}'
             and saksnummer = '${sak.saksnummer}'
             """.trimIndent(),
         ) shouldHaveSize 1
 
-        val deleteRes = lydiaApiContainer.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        val deleteRes = applikasjon.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<BrukerITeamDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
             )
 
         deleteRes.saksnummer shouldBe sak.saksnummer
-        deleteRes.ident shouldBe mockOAuth2Server.superbruker1.navIdent
+        deleteRes.ident shouldBe authContainerHelper.superbruker1.navIdent
 
-        postgresContainer.hentAlleRaderTilEnkelKolonne<String>(
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             """
             select saksnummer from ia_sak_team
-            where ident = '${mockOAuth2Server.superbruker1.navIdent}'
+            where ident = '${authContainerHelper.superbruker1.navIdent}'
             and saksnummer = '${sak.saksnummer}'
             """.trimIndent(),
         ) shouldHaveSize 0
@@ -198,8 +197,8 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal ikke kunne fjernes fra team uten sak`() {
-        val res = lydiaApiContainer.performDelete("$IA_SAK_TEAM_PATH/ikkeetsaksnummer")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        val res = applikasjon.performDelete("$IA_SAK_TEAM_PATH/ikkeetsaksnummer")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<BrukerITeamDto>().second
 
         res.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -208,8 +207,8 @@ class IASakTeamApiTest {
     @Test
     fun `skal ikke kunne fjernes fra team uten å være i teamet`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val res = lydiaApiContainer.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        val res = applikasjon.performDelete("$IA_SAK_TEAM_PATH/${sak.saksnummer}")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<BrukerITeamDto>().second
 
         res.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -221,17 +220,26 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal få alle saker man er eier av`() {
-        val bruker = mockOAuth2Server.superbruker1.token
+        val bruker = authContainerHelper.superbruker1.token
         val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = bruker,
+            )
         val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = bruker,
+            )
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.superbruker2.token,
+            )
 
         val iaSakListe = listOf(sak0, sak1).sortedBy { it.orgnr }
 
-        val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
+        val res = applikasjon.performGet(MINE_SAKER_PATH)
             .authentication().bearer(bruker)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
@@ -245,29 +253,44 @@ class IASakTeamApiTest {
 
     @Test
     fun `skal få alle saker man følger eller eier`() {
-        val bruker = mockOAuth2Server.superbruker1.token
+        val bruker = authContainerHelper.superbruker1.token
         val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = bruker,
+            )
         val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = bruker)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = bruker,
+            )
             .leggTilFolger(token = bruker)
-            .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
-            .leggTilFolger(token = mockOAuth2Server.saksbehandler1.token)
+            .leggTilFolger(token = authContainerHelper.superbruker2.token)
+            .leggTilFolger(token = authContainerHelper.saksbehandler1.token)
         val sak2 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.superbruker2.token,
+            )
             .leggTilFolger(token = bruker)
         val sak3 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.superbruker2.token,
+            )
             .leggTilFolger(token = bruker)
-            .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
-            .leggTilFolger(token = mockOAuth2Server.saksbehandler1.token)
+            .leggTilFolger(token = authContainerHelper.superbruker2.token)
+            .leggTilFolger(token = authContainerHelper.saksbehandler1.token)
 
         val sak4 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.superbruker2.token,
+            )
 
         val iaSakListe = listOf(sak0, sak1, sak2, sak3)
 
-        val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
+        val res = applikasjon.performGet(MINE_SAKER_PATH)
             .authentication().bearer(bruker)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
@@ -286,16 +309,25 @@ class IASakTeamApiTest {
     @Test
     fun `skal ikke få saker man ikke eier eller følger`() {
         val sak0 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.superbruker2.token,
+            )
         val sak1 = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.saksbehandler1.token)
-            .leggTilFolger(token = mockOAuth2Server.superbruker2.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.saksbehandler1.token,
+            )
+            .leggTilFolger(token = authContainerHelper.superbruker2.token)
 
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK, token = mockOAuth2Server.superbruker1.token)
+            .nyHendelse(
+                hendelsestype = TA_EIERSKAP_I_SAK,
+                token = authContainerHelper.superbruker1.token,
+            )
 
-        val res = lydiaApiContainer.performGet(MINE_SAKER_PATH)
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        val res = applikasjon.performGet(MINE_SAKER_PATH)
+            .authentication().bearer(token = authContainerHelper.superbruker1.token)
             .tilListeRespons<MineSakerDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },

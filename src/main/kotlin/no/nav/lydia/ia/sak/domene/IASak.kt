@@ -398,7 +398,7 @@ class IASak private constructor(
             return hendelsesRekkeMedHåndterteTilbakeHendelser.nestSiste()
         }
 
-        fun hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste: List<IASakshendelseType>): List<IASakshendelseType> {
+        private fun hendelsesRekkeMedHåndterteEldreTilbakeHendelser(liste: List<IASakshendelseType>): List<IASakshendelseType> {
             if (liste.siste() != TILBAKE && liste.nestSiste() != TILBAKE) {
                 return liste
             }
@@ -415,7 +415,7 @@ class IASak private constructor(
             throw IllegalStateException("Merkelig hendelsesrekke: $liste")
         }
 
-        fun List<IASakshendelseType>.nestSiste() = this.dropLast(1).last()
+        private fun List<IASakshendelseType>.nestSiste() = this.dropLast(1).last()
 
         fun List<IASakshendelseType>.siste() = this.last()
 

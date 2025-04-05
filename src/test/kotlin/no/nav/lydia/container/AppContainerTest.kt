@@ -3,18 +3,16 @@ package no.nav.lydia.container
 import com.github.kittinunf.fuel.core.isSuccessful
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.string.shouldContain
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import kotlin.test.Test
 import kotlin.test.fail
 
 class AppContainerTest {
-    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
-    private val postgresContainer = TestContainerHelper.postgresContainer
-
     @Test
     fun `kaller isAlive`() {
-        val (_, response, _) = lydiaApiContainer.performGet("internal/isalive")
+        val (_, response, _) = applikasjon.performGet("internal/isalive")
             .responseString()
 
         assert(response.isSuccessful)
@@ -22,7 +20,7 @@ class AppContainerTest {
 
     @Test
     fun `lydia skal ha satt opp databasen`() {
-        val databaseErSattOpp = postgresContainer.hentEnkelKolonne<Boolean>(
+        val databaseErSattOpp = postgresContainerHelper.hentEnkelKolonne<Boolean>(
             """
             SELECT EXISTS(
                 SELECT * 
@@ -37,7 +35,7 @@ class AppContainerTest {
 
     @Test
     fun `lydia skal kunne gi oss metrikker`() {
-        val (_, response, result) = lydiaApiContainer.performGet("metrics")
+        val (_, response, result) = applikasjon.performGet("metrics")
             .responseString()
 
         assert(response.isSuccessful)
@@ -56,7 +54,7 @@ class AppContainerTest {
 
     @Test
     fun `skal få egendefinerte metrikker`() {
-        val (_, response, result) = lydiaApiContainer.performGet("metrics")
+        val (_, response, result) = applikasjon.performGet("metrics")
             .responseString()
 
         assert(response.isSuccessful)

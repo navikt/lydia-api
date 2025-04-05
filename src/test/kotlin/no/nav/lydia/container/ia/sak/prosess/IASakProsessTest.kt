@@ -37,18 +37,18 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
-import no.nav.lydia.ia.sak.IAProsessService
+import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
@@ -66,13 +66,12 @@ import kotlin.test.Test
 
 class IASakProsessTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = Topic.SAMARBEIDSPLAN_TOPIC.konsumentGruppe)
+        private val topic = Topic.SAMARBEIDSPLAN_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.SAMARBEIDSPLAN_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -89,7 +88,7 @@ class IASakProsessTest {
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
         sak.fullførSamarbeid(samarbeid)
-        postgresContainer.hentEnkelKolonne<String>(
+        postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT status FROM ia_prosess WHERE id = ${samarbeid.id}",
         ) shouldBe no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT.name
     }
@@ -188,21 +187,21 @@ class IASakProsessTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         val manglerPlan = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
         manglerPlan.kanGjennomføres shouldBe false
-        manglerPlan.blokkerende shouldBe listOf(IAProsessService.StatusendringBegrunnelser.INGEN_PLAN)
-        manglerPlan.advarsler shouldBe listOf(IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING)
+        manglerPlan.blokkerende shouldBe listOf(StatusendringBegrunnelser.INGEN_PLAN)
+        manglerPlan.advarsler shouldBe listOf(StatusendringBegrunnelser.INGEN_EVALUERING)
 
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val kanFullføres = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
         kanFullføres.kanGjennomføres shouldBe true
         kanFullføres.advarsler shouldBe listOf(
-            IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING,
+            StatusendringBegrunnelser.INGEN_EVALUERING,
         )
 
         val evaluering = sak.opprettEvaluering()
         val aktivEvaluering = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")
         aktivEvaluering.kanGjennomføres shouldBe false
         aktivEvaluering.blokkerende shouldBe listOf(
-            IAProsessService.StatusendringBegrunnelser.AKTIV_EVALUERING,
+            StatusendringBegrunnelser.AKTIV_EVALUERING,
         )
 
         evaluering
@@ -221,22 +220,22 @@ class IASakProsessTest {
         val manglerPlan = sak.kanFullføreSamarbeid(samarbeid)
         manglerPlan.kanFullføres shouldBe false
         manglerPlan.begrunnelser shouldContainExactlyInAnyOrder listOf(
-            IAProsessService.StatusendringBegrunnelser.INGEN_PLAN,
-            IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING,
+            StatusendringBegrunnelser.INGEN_PLAN,
+            StatusendringBegrunnelser.INGEN_EVALUERING,
         )
 
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         val kanFullføres = sak.kanFullføreSamarbeid(samarbeid)
         kanFullføres.kanFullføres shouldBe true
         kanFullføres.begrunnelser shouldBe listOf(
-            IAProsessService.StatusendringBegrunnelser.INGEN_EVALUERING,
+            StatusendringBegrunnelser.INGEN_EVALUERING,
         )
 
         val evaluering = sak.opprettEvaluering()
         val aktivEvaluering = sak.kanFullføreSamarbeid(samarbeid)
         aktivEvaluering.kanFullføres shouldBe false
         aktivEvaluering.begrunnelser shouldBe listOf(
-            IAProsessService.StatusendringBegrunnelser.AKTIV_EVALUERING,
+            StatusendringBegrunnelser.AKTIV_EVALUERING,
         )
 
         evaluering
@@ -258,10 +257,10 @@ class IASakProsessTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
         val skalIkkeKunneSlettesPgaBehovsVurdering = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalIkkeKunneSlettesPgaBehovsVurdering.kanGjennomføres shouldBe false
-        skalIkkeKunneSlettesPgaBehovsVurdering.blokkerende shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
+        skalIkkeKunneSlettesPgaBehovsVurdering.blokkerende shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
 
-        lydiaApiContainer.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
-            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+        applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
         val skalKunneSlettesIgjen = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalKunneSlettesIgjen.kanGjennomføres shouldBe true
@@ -282,14 +281,14 @@ class IASakProsessTest {
         )
         val skalIkkeKunneSlettesPgaSfAktivitet = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalIkkeKunneSlettesPgaSfAktivitet.kanGjennomføres shouldBe false
-        skalIkkeKunneSlettesPgaSfAktivitet.blokkerende shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
+        skalIkkeKunneSlettesPgaSfAktivitet.blokkerende shouldBe listOf(StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
 
         sak.opprettEnPlan()
         val skalIallfallIkkeKunneSlettes = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalIallfallIkkeKunneSlettes.kanGjennomføres shouldBe false
         skalIallfallIkkeKunneSlettes.blokkerende shouldContainExactlyInAnyOrder listOf(
-            IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
-            IAProsessService.StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
+            StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
+            StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
         )
     }
 
@@ -304,10 +303,10 @@ class IASakProsessTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
         val skalIkkeKunneSlettesPgaBehovsVurdering = sak.kanSletteSamarbeid(samarbeid)
         skalIkkeKunneSlettesPgaBehovsVurdering.kanSlettes shouldBe false
-        skalIkkeKunneSlettesPgaBehovsVurdering.begrunnelser shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
+        skalIkkeKunneSlettesPgaBehovsVurdering.begrunnelser shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
 
-        lydiaApiContainer.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
-            .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
+        applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .tilSingelRespons<SpørreundersøkelseDto>()
         val skalKunneSlettesIgjen = sak.kanSletteSamarbeid(samarbeid)
         skalKunneSlettesIgjen.kanSlettes shouldBe true
@@ -328,14 +327,14 @@ class IASakProsessTest {
         )
         val skalIkkeKunneSlettesPgaSfAktivitet = sak.kanSletteSamarbeid(samarbeid)
         skalIkkeKunneSlettesPgaSfAktivitet.kanSlettes shouldBe false
-        skalIkkeKunneSlettesPgaSfAktivitet.begrunnelser shouldBe listOf(IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
+        skalIkkeKunneSlettesPgaSfAktivitet.begrunnelser shouldBe listOf(StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
 
         sak.opprettEnPlan()
         val skalIallfallIkkeKunneSlettes = sak.kanSletteSamarbeid(samarbeid)
         skalIallfallIkkeKunneSlettes.kanSlettes shouldBe false
         skalIallfallIkkeKunneSlettes.begrunnelser shouldContainExactlyInAnyOrder listOf(
-            IAProsessService.StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
-            IAProsessService.StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
+            StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
+            StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
         )
     }
 
@@ -362,14 +361,14 @@ class IASakProsessTest {
         )
 
         val samarbeid = sak.hentAlleSamarbeid().first()
-        postgresContainer.hentEnkelKolonne<String?>(
+        postgresContainerHelper.hentEnkelKolonne<String?>(
             """
             select navn from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
         ) shouldBe null
 
         sak.nyttNavnPåSamarbeid(samarbeid, " ")
-        postgresContainer.hentEnkelKolonne<String?>(
+        postgresContainerHelper.hentEnkelKolonne<String?>(
             """
             select navn from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -381,7 +380,7 @@ class IASakProsessTest {
         val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
         val samarbeid = sak.hentAlleSamarbeid().first()
 
-        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<Timestamp?>(
+        val endretTidspunktVedOpprettelse = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -389,7 +388,7 @@ class IASakProsessTest {
         endretTidspunktVedOpprettelse shouldNotBe null
 
         sak.nyttNavnPåSamarbeid(samarbeid, "Avdeling 1 - Fysio")
-        val endretTidspunktEtterUpdate = postgresContainer.hentEnkelKolonne<Timestamp?>(
+        val endretTidspunktEtterUpdate = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -403,7 +402,7 @@ class IASakProsessTest {
         val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Avdeling 1")
         val samarbeid = sak.hentAlleSamarbeid().first()
 
-        val endretTidspunktVedOpprettelse = postgresContainer.hentEnkelKolonne<Timestamp?>(
+        val endretTidspunktVedOpprettelse = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -411,7 +410,7 @@ class IASakProsessTest {
         endretTidspunktVedOpprettelse shouldNotBe null
 
         sak.slettSamarbeid(samarbeid)
-        val endretTidspunktEtterSlett = postgresContainer.hentEnkelKolonne<Timestamp?>(
+        val endretTidspunktEtterSlett = postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             """
             select endret_tidspunkt from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
@@ -707,7 +706,7 @@ class IASakProsessTest {
         val samarbeidEtterSlett = sak.hentAlleSamarbeid()
         samarbeidEtterSlett shouldHaveSize 1
 
-        val sisteHendelse = postgresContainer.hentEnkelKolonne<String>(
+        val sisteHendelse = postgresContainerHelper.hentEnkelKolonne<String>(
             """
             select id from ia_sak_hendelse where saksnummer = '${sak.saksnummer}' order by  opprettet desc limit 1
             """.trimIndent(),

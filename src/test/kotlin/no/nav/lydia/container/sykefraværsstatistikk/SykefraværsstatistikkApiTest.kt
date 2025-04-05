@@ -42,11 +42,12 @@ import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomh
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværForVirksomhetSiste4KvartalerRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefraværRespons
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentTotaltAntallTreffISykefravær
-import no.nav.lydia.helper.TestContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
@@ -99,13 +100,10 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 class SykefraværsstatistikkApiTest {
-    private val lydiaApiContainer = TestContainerHelper.lydiaApiContainer
-    private val mockOAuth2Server = oauth2ServerContainer
-
     // Denne testen bruker vi for å hente en dump lokalt (les README)
     @Test
     fun `Test for å hente datasource`() {
-        val jdbcUrl = postgresContainer.dataSource.jdbcUrl
+        val jdbcUrl = postgresContainerHelper.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
     }
 
@@ -285,7 +283,7 @@ class SykefraværsstatistikkApiTest {
         sykefraværstatistikkKommunalSektor.forAll { sykefraværstatistikk ->
             hentVirksomhetsinformasjon(
                 orgnummer = sykefraværstatistikk.orgnr,
-                token = mockOAuth2Server.saksbehandler1.token,
+                token = authContainerHelper.saksbehandler1.token,
             ).sektor shouldBe Sektor.KOMMUNAL.beskrivelse
         }
 
@@ -341,7 +339,7 @@ class SykefraværsstatistikkApiTest {
             },
             sorteringsnokkel = sorteringsnøkkel,
             sorteringsretning = "desc",
-            token = mockOAuth2Server.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         )
 
         hentSykefravær(success = { response ->
@@ -396,7 +394,7 @@ class SykefraværsstatistikkApiTest {
 
         val sykefraværsprosent = hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnummer).sykefraværsprosent
 
-        val sykefraværsprosentSiste4Kvartal = postgresContainer.hentEnkelKolonne<Double>(
+        val sykefraværsprosentSiste4Kvartal = postgresContainerHelper.hentEnkelKolonne<Double>(
             "select prosent from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr='$orgnummer' " +
                 "order by publisert_arstall desc, publisert_kvartal desc",
         )
@@ -430,7 +428,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `frontend skal kunne hente filterverdier til prioriteringssiden`() {
-        val saksbehandler1 = mockOAuth2Server.saksbehandler1
+        val saksbehandler1 = authContainerHelper.saksbehandler1
         val filterverdier = hentFilterverdier(token = saksbehandler1.token)
 
         filterverdier.fylker[0].fylke.navn shouldBe "Oslo"
@@ -453,24 +451,24 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `teamet skal få lesetilgang`() {
-        val teamPiaBruker = mockOAuth2Server.teamPiaBruker
+        val teamPiaBruker = authContainerHelper.teamPiaBruker
         hentFilterverdier(token = teamPiaBruker.token)
     }
 
     @Test
     fun `kun superbrukere skal få lov til å se alle saksbehandlere i systemet`() {
-        val lesebruker = mockOAuth2Server.lesebruker
+        val lesebruker = authContainerHelper.lesebruker
         hentFilterverdier(token = lesebruker.token)
             .filtrerbareEiere.map { it.navIdent } shouldBe listOf(lesebruker.navIdent)
 
-        val saksbehandler = mockOAuth2Server.saksbehandler1
+        val saksbehandler = authContainerHelper.saksbehandler1
         hentFilterverdier(token = saksbehandler.token).filtrerbareEiere
             .also { eiere ->
                 eiere.map { it.navIdent } shouldBe listOf(saksbehandler.navIdent)
                 eiere.map { it.navn } shouldBe listOf(saksbehandler.navn)
             }
 
-        val superbruker = mockOAuth2Server.superbruker1
+        val superbruker = authContainerHelper.superbruker1
         val alleFiltrerBareEiere = hentFilterverdier(token = superbruker.token).filtrerbareEiere
         alleFiltrerBareEiere.map { it.navIdent } shouldBe listOf(
             // -- SIDE 1
@@ -488,7 +486,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `uautorisert kall mot sykefraværendepunktet skal returnere 401`() {
-        val request = lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
+        val request = applikasjon.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/$FILTERVERDIER_PATH")
         val (_, response, _) = request.responseString()
 
         response.statusCode shouldBe 401
@@ -564,7 +562,7 @@ class SykefraværsstatistikkApiTest {
     fun `skal kunne hente alle virksomheter i en gitt næring`() {
         hentSykefravær(success = { response ->
             response.data.forAll {
-                postgresContainer.hentEnkelKolonne<Int>(
+                postgresContainerHelper.hentEnkelKolonne<Int>(
                     """
                     SELECT count(*) FROM virksomhet AS v JOIN virksomhet_naringsundergrupper AS vn ON (v.id = vn.virksomhet)
                     WHERE v.orgnr = '${it.orgnr}' AND (
@@ -581,13 +579,13 @@ class SykefraværsstatistikkApiTest {
     @Test
     fun `tomme søkeparametre skal ikke filtrere på noen parametre`() {
         val resultatMedTommeParametre =
-            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/?${Søkeparametere.NÆRINGSGRUPPER}=&fylker=&kommuner=")
-                .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
+            applikasjon.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/?${Søkeparametere.NÆRINGSGRUPPER}=&fylker=&kommuner=")
+                .authentication().bearer(authContainerHelper.saksbehandler1.token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
 
         val resultatUtenParametre =
-            lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/")
-                .authentication().bearer(mockOAuth2Server.saksbehandler1.token)
+            applikasjon.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/")
+                .authentication().bearer(authContainerHelper.saksbehandler1.token)
                 .tilSingelRespons<VirksomhetsoversiktResponsDto>().third
 
         resultatMedTommeParametre.get().data shouldContainAll resultatUtenParametre.get().data
@@ -611,7 +609,7 @@ class SykefraværsstatistikkApiTest {
             },
             kommuner = "$oslo,$nordreFollo",
             næringsgrupper = "${SCENEKUNST.tilTosifret()},${BEDRIFTSRÅDGIVNING.tilTosifret()}",
-            token = mockOAuth2Server.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         )
     }
 
@@ -726,10 +724,10 @@ class SykefraværsstatistikkApiTest {
     @Test
     fun `skal kunne filtrere virksomheter på status`() {
         val orgnummer = TESTVIRKSOMHET_FOR_STATUSFILTER.orgnr
-        postgresContainer.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
+        postgresContainerHelper.performUpdate("DELETE FROM ia_sak WHERE orgnr = '$orgnummer'")
 
-        lydiaApiContainer.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(mockOAuth2Server.superbruker1.token)
+        applikasjon.performPost("$IA_SAK_RADGIVER_PATH/$orgnummer")
+            .authentication().bearer(authContainerHelper.superbruker1.token)
             .tilSingelRespons<IASakDto>().third.fold(
                 success = { respons -> respons },
                 failure = { fail(it.message) },
@@ -755,8 +753,7 @@ class SykefraværsstatistikkApiTest {
         hentSykefravær(success = { response1 ->
             response1.data shouldHaveSize VIRKSOMHETER_PER_SIDE
 
-            val faktiskTotal =
-                postgresContainer.hentEnkelKolonne<Int>("SELECT count(*) AS faktiskTotal FROM virksomhet")
+            val faktiskTotal = postgresContainerHelper.hentEnkelKolonne<Int>("SELECT count(*) AS faktiskTotal FROM virksomhet")
             VIRKSOMHETER_PER_SIDE shouldBeLessThanOrEqual faktiskTotal
 
             hentSykefravær(success = { response2 ->
@@ -852,8 +849,8 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne filtrere på bare mine virksomheter`() {
-        val testBruker1 = oauth2ServerContainer.superbruker1
-        val testBruker2 = oauth2ServerContainer.superbruker2
+        val testBruker1 = authContainerHelper.superbruker1
+        val testBruker2 = authContainerHelper.superbruker2
         val ornummer1 = nyttOrgnummer()
         val ornummer2 = nyttOrgnummer()
 
@@ -895,8 +892,8 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `søk - skal kunne filtrere på seg selv`() {
-        val superbruker1 = oauth2ServerContainer.superbruker1
-        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+        val superbruker1 = authContainerHelper.superbruker1
+        val saksbehandler1 = authContainerHelper.saksbehandler1
 
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
@@ -924,9 +921,9 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `søk - superbruker skal kunne søke på flere eiere samtidig`() {
-        val superbruker1 = oauth2ServerContainer.superbruker1
-        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
-        val saksbehandler2 = oauth2ServerContainer.saksbehandler2
+        val superbruker1 = authContainerHelper.superbruker1
+        val saksbehandler1 = authContainerHelper.saksbehandler1
+        val saksbehandler2 = authContainerHelper.saksbehandler2
 
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
@@ -952,8 +949,8 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `søk - kun superbruker skal kunne filtrere på andre enn seg selv`() {
-        val superbruker1 = oauth2ServerContainer.superbruker1
-        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+        val superbruker1 = authContainerHelper.superbruker1
+        val saksbehandler1 = authContainerHelper.saksbehandler1
 
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
@@ -968,8 +965,8 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `søk - om saksbehandler velger en eier utenom seg selv skal det ikke påvirke resultatet`() {
-        val superbruker1 = oauth2ServerContainer.superbruker1
-        val saksbehandler1 = oauth2ServerContainer.saksbehandler1
+        val superbruker1 = authContainerHelper.superbruker1
+        val saksbehandler1 = authContainerHelper.saksbehandler1
 
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer(), token = superbruker1.token)
             .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = saksbehandler1.token)
@@ -992,18 +989,10 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `tilgangskontroll - alle med tilgangsroller skal kunne hente sykefraværsstatistikk`() {
-        hentSykefraværRespons(
-            token = mockOAuth2Server.lesebruker.token,
-        ).statuskode() shouldBe 200
-        hentSykefraværRespons(
-            token = mockOAuth2Server.saksbehandler1.token,
-        ).statuskode() shouldBe 200
-        hentSykefraværRespons(
-            token = mockOAuth2Server.superbruker1.token,
-        ).statuskode() shouldBe 200
-        hentSykefraværRespons(
-            token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
-        ).statuskode() shouldBe 403
+        hentSykefraværRespons(token = authContainerHelper.lesebruker.token).statuskode() shouldBe 200
+        hentSykefraværRespons(token = authContainerHelper.saksbehandler1.token).statuskode() shouldBe 200
+        hentSykefraværRespons(token = authContainerHelper.superbruker1.token).statuskode() shouldBe 200
+        hentSykefraværRespons(token = authContainerHelper.brukerUtenTilgangsrolle.token).statuskode() shouldBe 403
     }
 
     @Test
@@ -1011,19 +1000,19 @@ class SykefraværsstatistikkApiTest {
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.lesebruker.token,
+            token = authContainerHelper.lesebruker.token,
         ).statuskode() shouldBe 200
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.saksbehandler1.token,
+            token = authContainerHelper.saksbehandler1.token,
         ).statuskode() shouldBe 200
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.superbruker1.token,
+            token = authContainerHelper.superbruker1.token,
         ).statuskode() shouldBe 200
         hentSykefraværForVirksomhetSiste4KvartalerRespons(
             orgnummer = orgnr,
-            token = mockOAuth2Server.brukerUtenTilgangsrolle.token,
+            token = authContainerHelper.brukerUtenTilgangsrolle.token,
         ).statuskode() shouldBe 403
     }
 
@@ -1171,7 +1160,7 @@ class SykefraværsstatistikkApiTest {
                 siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
-            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 Topic.STATISTIKK_NARING_TOPIC,
@@ -1191,7 +1180,7 @@ class SykefraværsstatistikkApiTest {
                 siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
-            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 Topic.STATISTIKK_BRANSJE_TOPIC,
@@ -1211,7 +1200,7 @@ class SykefraværsstatistikkApiTest {
                 siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
-            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 Topic.STATISTIKK_SEKTOR_TOPIC,
@@ -1230,7 +1219,7 @@ class SykefraværsstatistikkApiTest {
                 siste4Kvartal = siste4Kvartal.copy(prosent = prosentSiste4Kvartal),
             )
 
-            TestContainerHelper.kafkaContainerHelper.sendOgVentTilKonsumert(
+            kafkaContainerHelper.sendOgVentTilKonsumert(
                 kafkaMelding.toJsonKey(),
                 kafkaMelding.toJsonValue(),
                 Topic.STATISTIKK_LAND_TOPIC,
@@ -1244,6 +1233,6 @@ private fun <T> VirksomhetsoversiktDto.matcher(
     test: (kolonne: T) -> Unit,
 ) {
     test(
-        postgresContainer.hentEnkelKolonne("select $kolonne from virksomhet where orgnr = '$orgnr'"),
+        postgresContainerHelper.hentEnkelKolonne("select $kolonne from virksomhet where orgnr = '$orgnr'"),
     )
 }

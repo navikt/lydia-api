@@ -32,10 +32,10 @@ class OboTokenUtveksler(
     ): Either<Feil, TokenResponse> {
         val cacheNøkkel = "$scope-$accessToken"
         val tokenFraCache = cache[cacheNøkkel]
-        if (tokenFraCache != null && !tokenFraCache.erUtløpt()) {
-            return tokenFraCache.right()
+        return if (tokenFraCache != null && !tokenFraCache.erUtløpt()) {
+            tokenFraCache.right()
         } else {
-            return veksleTokenTil(accessToken, scope).onRight {
+            veksleTokenTil(accessToken, scope).onRight {
                 cache[cacheNøkkel] = it
             }
         }

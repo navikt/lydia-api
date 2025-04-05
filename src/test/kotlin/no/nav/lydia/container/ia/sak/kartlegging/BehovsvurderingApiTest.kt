@@ -31,12 +31,12 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.lydiaApiContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.TestContainerHelper.Companion.performDelete
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -70,10 +70,9 @@ class BehovsvurderingApiTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse()
         behovsvurdering.id.length shouldBe 36
 
-        postgresContainer
-            .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
-            ) shouldNotBe null
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
+        ) shouldNotBe null
     }
 
     @Test
@@ -83,10 +82,9 @@ class BehovsvurderingApiTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse()
         behovsvurdering.id.length shouldBe 36
 
-        postgresContainer
-            .hentEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
-            ) shouldNotBe null
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
+        ) shouldNotBe null
     }
 
     @Test
@@ -205,19 +203,18 @@ class BehovsvurderingApiTest {
         val behovsvurdering = sak.opprettSpørreundersøkelse()
         behovsvurdering.temaer.shouldNotBeEmpty()
         behovsvurdering.temaer.forEach { spørsmålOgSvarPerTema ->
-            val temaId: Int =
-                postgresContainer.hentEnkelKolonne(
-                    "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV' and type = 'Behovsvurdering'",
-                )
-            postgresContainer.hentAlleRaderTilEnkelKolonne<Int>(
+            val temaId: Int = postgresContainerHelper.hentEnkelKolonne(
+                "select tema_id from ia_sak_kartlegging_tema where navn = '${spørsmålOgSvarPerTema.navn}' and status = 'AKTIV' and type = 'Behovsvurdering'",
+            )
+
+            postgresContainerHelper.hentAlleRaderTilEnkelKolonne<Int>(
                 """
                 select undertema_id from ia_sak_kartlegging_undertema where tema_id = $temaId
                 """.trimIndent(),
             ).forAll { undertemaId ->
-                val spørsmålIderForEtUndertema: List<String> =
-                    postgresContainer.hentAlleRaderTilEnkelKolonne(
-                        "select sporsmal_id from ia_sak_kartlegging_sporsmal_til_undertema where undertema_id = $undertemaId",
-                    )
+                val spørsmålIderForEtUndertema: List<String> = postgresContainerHelper.hentAlleRaderTilEnkelKolonne(
+                    "select sporsmal_id from ia_sak_kartlegging_sporsmal_til_undertema where undertema_id = $undertemaId",
+                )
                 spørsmålOgSvarPerTema.spørsmålOgSvaralternativer.map { spørsmålMedSvar ->
                     spørsmålMedSvar.id
                 }.toList() shouldContainAll spørsmålIderForEtUndertema
@@ -226,10 +223,9 @@ class BehovsvurderingApiTest {
 
         behovsvurdering.temaer.forEach { spørsmålMedSvarPerTema ->
             spørsmålMedSvarPerTema.spørsmålOgSvaralternativer.forEach { spørsmålMedSvar ->
-                val svarIderForEtSpørsmål: List<String> =
-                    postgresContainer.hentAlleRaderTilEnkelKolonne(
-                        "select svaralternativ_id from ia_sak_kartlegging_svaralternativer where sporsmal_id = '${spørsmålMedSvar.id}'",
-                    )
+                val svarIderForEtSpørsmål: List<String> = postgresContainerHelper.hentAlleRaderTilEnkelKolonne(
+                    "select svaralternativ_id from ia_sak_kartlegging_svaralternativer where sporsmal_id = '${spørsmålMedSvar.id}'",
+                )
                 spørsmålMedSvar.svaralternativer.map { it.svarId }.toList() shouldContainAll svarIderForEtSpørsmål
             }
         }
@@ -372,7 +368,7 @@ class BehovsvurderingApiTest {
         resultater.id shouldBe behovsvurdering.id
 
         val behovsvurderingResultat = hentKartleggingMedSvar(
-            token = oauth2ServerContainer.saksbehandler2.token,
+            token = authContainerHelper.saksbehandler2.token,
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             kartleggingId = behovsvurdering.id,
@@ -454,16 +450,13 @@ class BehovsvurderingApiTest {
         val kartleggingDto = sak.opprettSpørreundersøkelse()
         kartleggingDto.status shouldBe OPPRETTET
 
-        val response =
-            lydiaApiContainer.performPost(
-                "$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}/avslutt",
-            )
-                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-                .tilSingelRespons<SpørreundersøkelseDto>()
+        val response = applikasjon.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}/avslutt")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.Forbidden.value
 
-        lydiaApiContainer shouldContainLog "Spørreundersøkelse er ikke i status '${PÅBEGYNT.name}', kan ikke avslutte".toRegex()
+        applikasjon shouldContainLog "Spørreundersøkelse er ikke i status '${PÅBEGYNT.name}', kan ikke avslutte".toRegex()
     }
 
     @Test
@@ -484,15 +477,13 @@ class BehovsvurderingApiTest {
             ),
         )
 
-        postgresContainer
-            .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
-            ) shouldHaveSize 1
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
+        ) shouldHaveSize 1
 
-        val response =
-            lydiaApiContainer.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}")
-                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-                .tilSingelRespons<SpørreundersøkelseDto>()
+        val response = applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.OK.value
 
@@ -509,15 +500,13 @@ class BehovsvurderingApiTest {
             }
         }
 
-        postgresContainer
-            .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
-            ).shouldNotBeEmpty()
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
+        ).shouldNotBeEmpty()
 
-        postgresContainer
-            .hentAlleRaderTilEnkelKolonne<String>(
-                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
-            ).forAll { it shouldBe "SLETTET" }
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
+        ).forAll { it shouldBe "SLETTET" }
 
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
@@ -534,21 +523,18 @@ class BehovsvurderingApiTest {
         kartleggingDto.status shouldBe OPPRETTET
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val response =
-            lydiaApiContainer.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}")
-                .authentication().bearer(oauth2ServerContainer.saksbehandler1.token)
-                .tilSingelRespons<SpørreundersøkelseDto>()
+        val response = applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         response.second.statusCode shouldBe HttpStatusCode.OK.value
 
-        postgresContainer
-            .hentAlleRaderTilEnkelKolonne<String>(
-                "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
-            ) shouldHaveSize 0
-        postgresContainer
-            .hentAlleRaderTilEnkelKolonne<String>(
-                "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
-            ).forAll { it shouldBe "SLETTET" }
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
+        ) shouldHaveSize 0
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
+        ).forAll { it shouldBe "SLETTET" }
 
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
@@ -663,7 +649,7 @@ class BehovsvurderingApiTest {
                 behovsvurdering,
                 sak,
                 sak.hentAlleSamarbeid().first().id,
-                oauth2ServerContainer.lesebruker.token,
+                authContainerHelper.lesebruker.token,
             )
         }
 
@@ -749,14 +735,16 @@ class BehovsvurderingApiTest {
 
     companion object {
         const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01939c0b-21f2-728d-aa91-3c84fef3bb18"
-        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(Topic.SPORREUNDERSOKELSE_TOPIC.konsumentGruppe)
-        private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.konsumentGruppe)
+        private val spørreundersøkelseTopic = Topic.SPORREUNDERSOKELSE_TOPIC
+        private val fullførtBehovsvurderingTopic = Topic.FULLFØRT_BEHOVSVURDERING_TOPIC
+        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(spørreundersøkelseTopic.konsumentGruppe)
+        private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(fullførtBehovsvurderingTopic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
         fun setUp() {
-            spørreundersøkelseKonsument.subscribe(mutableListOf(Topic.SPORREUNDERSOKELSE_TOPIC.navn))
-            fullførtBehovsvurderingKonsument.subscribe(mutableListOf(Topic.FULLFØRT_BEHOVSVURDERING_TOPIC.navn))
+            spørreundersøkelseKonsument.subscribe(mutableListOf(spørreundersøkelseTopic.navn))
+            fullførtBehovsvurderingKonsument.subscribe(mutableListOf(fullførtBehovsvurderingTopic.navn))
         }
 
         @AfterClass

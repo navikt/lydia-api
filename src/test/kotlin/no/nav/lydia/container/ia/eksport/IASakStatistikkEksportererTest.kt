@@ -15,9 +15,9 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsespunkterTilDato
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.datoSentIGjeldendePeriode
 import no.nav.lydia.helper.TestData.Companion.lagPerioder
@@ -37,13 +37,12 @@ import kotlin.test.Test
 
 class IASakStatistikkEksportererTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.IA_SAK_STATISTIKK_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.IA_SAK_STATISTIKK_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -62,8 +61,8 @@ class IASakStatistikkEksportererTest {
         lastInnNyVirksomhet(virksomhet)
 
         val sak =
-            opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = oauth2ServerContainer.superbruker1.token)
-                .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = oauth2ServerContainer.saksbehandler1.token)
+            opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = authContainerHelper.superbruker1.token)
+                .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -76,7 +75,7 @@ class IASakStatistikkEksportererTest {
                 objektene shouldHaveSize 3
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
-                    it.eierAvSak shouldBe oauth2ServerContainer.saksbehandler1.navIdent
+                    it.eierAvSak shouldBe authContainerHelper.saksbehandler1.navIdent
                     it.status shouldBe IAProsessStatus.VURDERES
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
@@ -145,10 +144,11 @@ class IASakStatistikkEksportererTest {
     fun `det skal være mulig å eksportere fullførte saker uten leveranser selv om det ikke er mulig å fullføre en sak`() {
         // uten leveranser fra FIA
         val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
-        postgresContainer.performUpdate("DELETE from iasak_leveranse where saksnummer='${sak.saksnummer}'")
+        postgresContainerHelper.performUpdate("DELETE from iasak_leveranse where saksnummer='${sak.saksnummer}'")
 
         kafkaContainerHelper.sendJobbMelding(iaSakStatistikkEksport)
 
+        // TODO: Flaky test?
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = sak.saksnummer,
@@ -168,7 +168,7 @@ class IASakStatistikkEksportererTest {
     private fun hentFraKvartal(
         it: IASakStatistikkProdusent.IASakStatistikkValue,
         kolonne: String,
-    ) = postgresContainer.hentEnkelKolonne<Double>(
+    ) = postgresContainerHelper.hentEnkelKolonne<Double>(
         "select $kolonne from sykefravar_statistikk_virksomhet where orgnr = '${it.orgnr}' and kvartal = ${it.kvartal} and arstall = ${it.arstall}",
     )
         .plusOrMinus(0.01)
@@ -176,7 +176,7 @@ class IASakStatistikkEksportererTest {
     private fun hentFraSiste4Kvartaler(
         it: IASakStatistikkProdusent.IASakStatistikkValue,
         kolonne: String,
-    ) = postgresContainer.hentEnkelKolonne<Double>(
+    ) = postgresContainerHelper.hentEnkelKolonne<Double>(
         "select $kolonne from sykefravar_statistikk_virksomhet_siste_4_kvartal where orgnr = '${it.orgnr}'",
     )
         .plusOrMinus(0.01)

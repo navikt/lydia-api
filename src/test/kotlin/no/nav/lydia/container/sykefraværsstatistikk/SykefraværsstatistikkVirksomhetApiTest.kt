@@ -5,8 +5,11 @@ import ia.felles.definisjoner.bransjer.Bransje.TRANSPORT
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.StatistikkHelper
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.NÆRING_JORDBRUK
 import no.nav.lydia.helper.TestVirksomhet
@@ -32,8 +35,8 @@ class SykefraværsstatistikkVirksomhetApiTest {
         SykefraværsstatistikkApiTest.settSykefraværsprosentNæring(NÆRING_JORDBRUK, 4.5)
 
         val result =
-            TestContainerHelper.lydiaApiContainer.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
-                .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
+            applikasjon.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
+                .authentication().bearer(authContainerHelper.saksbehandler1.token)
                 .tilSingelRespons<NæringSykefraværsstatistikk>()
 
         result.second.statusCode shouldBe 200
@@ -52,8 +55,8 @@ class SykefraværsstatistikkVirksomhetApiTest {
         SykefraværsstatistikkApiTest.settSykefraværsprosentBransje(TRANSPORT, 9.9, 8.7)
 
         val url = "$SYKEFRAVÆRSSTATISTIKK_PATH/bransje/${TRANSPORT.name}"
-        val result = TestContainerHelper.lydiaApiContainer.performGet(url)
-            .authentication().bearer(TestContainerHelper.oauth2ServerContainer.saksbehandler1.token)
+        val result = applikasjon.performGet(url)
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
             .tilSingelRespons<BransjeSykefraværsstatistikk>()
 
         result.second.statusCode shouldBe 200
@@ -82,7 +85,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
             ),
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal =
-            TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
+            postgresContainerHelper.hentEnkelKolonne<Double>(
                 """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.kvartal}
@@ -109,12 +112,12 @@ class SykefraværsstatistikkVirksomhetApiTest {
             antallPersoner = 100,
             tapteDagsverk = 35.0,
         )
-        TestContainerHelper.kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
+        kafkaContainerHelper.sendSykefraværsstatistikkPerKategoriIBulkOgVentTilKonsumert(
             importDtoer = listOf(statistikk),
             topic = Topic.STATISTIKK_VIRKSOMHET_TOPIC,
         )
 
-        TestContainerHelper.kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
+        kafkaContainerHelper.sendStatistikkMetadataVirksomhetIBulkOgVentTilKonsumert(
             listOf(
                 SykefraværsstatistikkMetadataVirksomhetImportDto(
                     orgnr = virksomhet.orgnr,
@@ -181,7 +184,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 ),
             ),
         )
-        TestContainerHelper.kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
+        kafkaContainerHelper.sendStatistikkVirksomhetGraderingOgVentTilKonsumert(
             importDtoer = listOf(statistikk),
             topic = Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
@@ -205,7 +208,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
             ),
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal =
-            TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
+            postgresContainerHelper.hentEnkelKolonne<Double>(
                 """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.forrigePeriode().kvartal}
@@ -229,7 +232,7 @@ class SykefraværsstatistikkVirksomhetApiTest {
             ),
         )
         val sykefraværsprosentSisteTilgjengeligeKvartal =
-            TestContainerHelper.postgresContainer.hentEnkelKolonne<Double>(
+            postgresContainerHelper.hentEnkelKolonne<Double>(
                 """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
                 where orgnr='${virksomhet.orgnr}' 
                 and kvartal=${gjeldendePeriode.kvartal}

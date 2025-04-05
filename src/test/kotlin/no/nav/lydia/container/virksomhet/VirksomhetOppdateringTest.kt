@@ -6,7 +6,7 @@ import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
@@ -24,7 +24,7 @@ import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 
 class VirksomhetOppdateringTest {
-    private val token = TestContainerHelper.oauth2ServerContainer.superbruker1.token
+    private val token = authContainerHelper.superbruker1.token
 
     @Test
     fun `vi oppdaterer næringsgrupper til en bedrift`() {
@@ -149,7 +149,7 @@ private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(
 private fun TestVirksomhet.skalHaRiktigTilstand(
     status: VirksomhetStatus = VirksomhetStatus.AKTIV,
     navn: String = this.navn,
-    token: String = TestContainerHelper.oauth2ServerContainer.superbruker1.token,
+    token: String = authContainerHelper.superbruker1.token,
 ): VirksomhetDto {
     val virksomhetDto =
         hentVirksomhetsinformasjon(orgnummer = this.orgnr, token)

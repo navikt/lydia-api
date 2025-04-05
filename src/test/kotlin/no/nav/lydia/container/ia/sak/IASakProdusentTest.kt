@@ -8,8 +8,8 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.toJson
+import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.oauth2ServerContainer
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -22,13 +22,12 @@ import kotlin.test.Test
 
 class IASakProdusentTest {
     companion object {
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = this::class.java.name)
+        private val topic = Topic.IA_SAK_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
 
         @BeforeClass
         @JvmStatic
-        fun setUp() {
-            konsument.subscribe(mutableListOf(Topic.IA_SAK_TOPIC.navn))
-        }
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
 
         @AfterClass
         @JvmStatic
@@ -42,7 +41,7 @@ class IASakProdusentTest {
     fun `sletting av feilåpnet sak produserer en slett melding på topic`() {
         runBlocking {
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-                .nyHendelse(IASakshendelseType.SLETT_SAK, token = oauth2ServerContainer.superbruker1.token)
+                .nyHendelse(IASakshendelseType.SLETT_SAK, token = authContainerHelper.superbruker1.token)
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(sak.saksnummer, konsument) { meldinger ->
                 meldinger.forAll { hendelse ->
                     hendelse shouldContain sak.saksnummer

@@ -8,7 +8,7 @@ data class TokenResponse(
     val expires_in: Long?,
     val token_type: String?,
 ) {
-    val utløper = utløperFraExpiresIn(expires_in)
+    private val utløper = utløperFraExpiresIn(expires_in)
 
     fun erUtløpt() = System.currentTimeMillis() > utløper
 }

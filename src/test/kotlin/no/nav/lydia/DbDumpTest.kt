@@ -2,7 +2,7 @@ package no.nav.lydia
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper
 import org.junit.experimental.categories.Category
 import kotlin.test.Test
@@ -12,7 +12,7 @@ class DbDumpTest {
     @Test
     fun createTestDump() {
         VirksomhetHelper.lastInnStandardTestdata(500)
-        val jdbcUrl = TestContainerHelper.postgresContainer.dataSource.jdbcUrl
+        val jdbcUrl = postgresContainerHelper.dataSource.jdbcUrl
         jdbcUrl shouldStartWith "jdbc:postgresql"
         val portOgDbNavn = getPortAndDBnameFromJdbcUrl(jdbcUrl)
         val port = portOgDbNavn.first

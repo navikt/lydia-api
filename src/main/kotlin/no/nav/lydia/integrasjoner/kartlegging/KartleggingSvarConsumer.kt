@@ -116,7 +116,7 @@ class KartleggingSvarConsumer :
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-        fun String.erGyldigNøkkel() =
+        private fun String.erGyldigNøkkel() =
             try {
                 val sesjonIdOgSpørsmålId = this.split("_")
                 UUID.fromString(sesjonIdOgSpørsmålId[0])

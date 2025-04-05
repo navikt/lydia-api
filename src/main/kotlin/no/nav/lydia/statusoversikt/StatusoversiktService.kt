@@ -2,12 +2,13 @@ package no.nav.lydia.statusoversikt
 
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class StatusoversiktService(
     val statusoversiktRepository: StatusoversiktRepository,
 ) {
-    val log = LoggerFactory.getLogger(this.javaClass)
+    val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
     fun søkEtterStatusoversikt(søkeparametere: Søkeparametere): List<Statusoversikt> {
         val start = System.currentTimeMillis()

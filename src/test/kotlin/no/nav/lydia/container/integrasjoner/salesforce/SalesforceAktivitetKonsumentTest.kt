@@ -5,9 +5,9 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
-import no.nav.lydia.helper.TestContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainer
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.hentAlleSamarbeid
@@ -30,7 +30,7 @@ class SalesforceAktivitetKonsumentTest {
             Json.encodeToString(dto),
             Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        TestContainerHelper.lydiaApiContainer shouldNotContainLog "Lagrer.*aktivitet:.*id=${dto.Id__c}".toRegex()
+        applikasjon shouldNotContainLog "Lagrer.*aktivitet:.*id=${dto.Id__c}".toRegex()
     }
 
     @Test
@@ -43,7 +43,7 @@ class SalesforceAktivitetKonsumentTest {
             Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
 
-        TestContainerHelper.lydiaApiContainer shouldContainLog
+        applikasjon shouldContainLog
             "Lagrer IKKE aktivitet:.*id=${dto.Id__c},.* type=${dto.TaskEvent__c}, saksnummer=${dto.IACaseNumber__c}".toRegex()
     }
 
@@ -63,7 +63,7 @@ class SalesforceAktivitetKonsumentTest {
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
 
-        postgresContainer.hentEnkelKolonne<String>("SELECT saksnummer FROM salesforce_aktiviteter WHERE id = '${dto.Id__c}'") shouldBe sak.saksnummer
+        postgresContainerHelper.hentEnkelKolonne<String>("SELECT saksnummer FROM salesforce_aktiviteter WHERE id = '${dto.Id__c}'") shouldBe sak.saksnummer
     }
 
     @Test
@@ -81,21 +81,21 @@ class SalesforceAktivitetKonsumentTest {
             melding = Json.encodeToString(aktivitet),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        postgresContainer.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe false
+        postgresContainerHelper.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe false
 
         kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = aktivitet.Id__c,
             melding = Json.encodeToString(aktivitet.copy(EventType__c = "Deleted")),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        postgresContainer.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe true
+        postgresContainerHelper.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe true
 
         kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = aktivitet.Id__c,
             melding = Json.encodeToString(aktivitet.copy(EventType__c = "Undeleted")),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        postgresContainer.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe false
+        postgresContainerHelper.hentEnkelKolonne<Boolean>("SELECT slettet FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe false
     }
 
     @Test
@@ -113,7 +113,7 @@ class SalesforceAktivitetKonsumentTest {
             melding = Json.encodeToString(aktivitet),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        postgresContainer.hentEnkelKolonne<String?>("SELECT plan_id FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe null
+        postgresContainerHelper.hentEnkelKolonne<String?>("SELECT plan_id FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe null
 
         val planId = sak.opprettEnPlan(samarbeidId = samarbeid.id).id
         val sistEndretISalesforce = ZonedDateTime.now()
@@ -127,7 +127,7 @@ class SalesforceAktivitetKonsumentTest {
             melding = Json.encodeToString(oppdatertAktivitet),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        postgresContainer.hentEnkelKolonne<String>("SELECT plan_id FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe planId
+        postgresContainerHelper.hentEnkelKolonne<String>("SELECT plan_id FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'") shouldBe planId
 
         kafkaContainerHelper.sendOgVentTilKonsumert(
             nøkkel = aktivitet.Id__c,
@@ -139,7 +139,7 @@ class SalesforceAktivitetKonsumentTest {
             ),
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
-        postgresContainer.hentEnkelKolonne<String>(
+        postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT type FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
         ) shouldBe "Møte"
     }
@@ -169,16 +169,16 @@ class SalesforceAktivitetKonsumentTest {
             topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
         )
 
-        postgresContainer.hentEnkelKolonne<Timestamp>(
+        postgresContainerHelper.hentEnkelKolonne<Timestamp>(
             "SELECT mote_start FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
         ).time shouldBe møteStart.toEpochSecond() * 1000
-        postgresContainer.hentEnkelKolonne<Timestamp>(
+        postgresContainerHelper.hentEnkelKolonne<Timestamp>(
             "SELECT mote_slutt FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
         ).time shouldBe møteSlutt.toEpochSecond() * 1000
-        postgresContainer.hentEnkelKolonne<Timestamp>(
+        postgresContainerHelper.hentEnkelKolonne<Timestamp>(
             "SELECT oppgave_planlagt FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
         ).time shouldBe oppgavePlanlagt.toEpochSecond() * 1000
-        postgresContainer.hentEnkelKolonne<Timestamp?>(
+        postgresContainerHelper.hentEnkelKolonne<Timestamp?>(
             "SELECT oppgave_fullfort FROM salesforce_aktiviteter WHERE id = '${aktivitet.Id__c}'",
         ) shouldBe null
     }

@@ -211,8 +211,6 @@ class IASakService(
             }
     }
 
-    fun IASak.print() = "'$saksnummer', $status, ${hendelser.size}"
-
     fun tilbakeførSaker(tørrKjør: Boolean) =
         iaSakRepository.hentUrørteSakerIVurderesUtenEier().map {
             val tilbakeføringsHendelse = it.nyTilbakeføringsHendelse()
@@ -349,7 +347,7 @@ class IASakService(
 
     fun hentIASak(saksnummer: String) = iaSakRepository.hentIASak(saksnummer = saksnummer)?.right() ?: IASakError.`ugyldig saksnummer`.left()
 
-    fun <T> somEierAvSak(
+    private fun <T> somEierAvSak(
         saksnummer: String,
         saksbehandler: NavAnsattMedSaksbehandlerRolle,
         block: (IASak) -> Either<Feil, T>,
