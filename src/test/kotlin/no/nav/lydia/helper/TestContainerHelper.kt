@@ -132,34 +132,34 @@ class TestContainerHelper {
         val piaPdfgenContainerHelper = PiaPdfgenContainerHelper(network = network, log = log)
         private val wiremockContainerHelper = WiremockContainerHelper()
 
-        val applikasjon: GenericContainer<*> =
-            GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
-                .dependsOn(
-                    kafkaContainerHelper.container,
-                    postgresContainerHelper.container,
-                    authContainerHelper.container,
+        val applikasjon: GenericContainer<*> = GenericContainer(ImageFromDockerfile().withDockerfile(Path("./Dockerfile")))
+            .dependsOn(
+                authContainerHelper.container,
+                kafkaContainerHelper.container,
+                postgresContainerHelper.container,
+                piaPdfgenContainerHelper.container,
+            )
+            .withNetwork(network)
+            .withExposedPorts(8080)
+            .waitingFor(HttpWaitStrategy().forPath("/internal/isready"))
+            .withCreateContainerCmdModifier { cmd -> cmd.withName("lydia-${System.currentTimeMillis()}") }
+            .withLogConsumer(
+                Slf4jLogConsumer(log)
+                    .withPrefix("lydiaApiContainer")
+                    .withSeparateOutputStreams(),
+            )
+            .withEnv(
+                mapOf(
+                    "CONSUMER_LOOP_DELAY" to "1",
+                    "NAIS_CLUSTER_NAME" to "lokal",
                 )
-                .withNetwork(network)
-                .withExposedPorts(8080)
-                .waitingFor(HttpWaitStrategy().forPath("/internal/isready"))
-                .withCreateContainerCmdModifier { cmd -> cmd.withName("lydia-${System.currentTimeMillis()}") }
-                .withLogConsumer(
-                    Slf4jLogConsumer(log)
-                        .withPrefix("lydiaApiContainer")
-                        .withSeparateOutputStreams(),
-                )
-                .withEnv(
-                    mapOf(
-                        "CONSUMER_LOOP_DELAY" to "1",
-                        "NAIS_CLUSTER_NAME" to "lokal",
-                    )
-                        .plus(postgresContainerHelper.envVars())
-                        .plus(authContainerHelper.envVars())
-                        .plus(wiremockContainerHelper.envVars())
-                        .plus(kafkaContainerHelper.envVars())
-                        .plus(piaPdfgenContainerHelper.envVars()),
-                )
-                .apply { start() }
+                    .plus(authContainerHelper.envVars())
+                    .plus(kafkaContainerHelper.envVars())
+                    .plus(postgresContainerHelper.envVars())
+                    .plus(piaPdfgenContainerHelper.envVars())
+                    .plus(wiremockContainerHelper.envVars()),
+            )
+            .apply { start() }
 
         private val dataSource = postgresContainerHelper.nyDataSource()
         private val næringsRepository = NæringsRepository(dataSource = dataSource)

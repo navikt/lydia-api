@@ -14,6 +14,6 @@ data class TemaInfo(
 data class UndertemaInfo(
     val id: Int,
     val navn: String,
-    val status: TemaStatus, // TODO: burde kanskje ikke hete temastatus?
+    val status: TemaStatus,
     val rekkefølge: Int,
 )

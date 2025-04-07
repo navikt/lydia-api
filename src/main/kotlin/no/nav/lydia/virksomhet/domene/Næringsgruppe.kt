@@ -8,7 +8,7 @@ Ref https://www.ssb.no/a/publikasjoner/pdf/nos_d383/nos_d383.pdf
  */
 
 @Serializable
-data class Næringsgruppe( // TODO Rename
+data class Næringsgruppe(
     val navn: String,
     val kode: String,
 ) {

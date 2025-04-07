@@ -60,9 +60,8 @@ class IASakStatistikkEksportererTest {
         )
         lastInnNyVirksomhet(virksomhet)
 
-        val sak =
-            opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = authContainerHelper.superbruker1.token)
-                .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
+        val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr, token = authContainerHelper.superbruker1.token)
+            .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -148,7 +147,6 @@ class IASakStatistikkEksportererTest {
 
         kafkaContainerHelper.sendJobbMelding(iaSakStatistikkEksport)
 
-        // TODO: Flaky test?
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = sak.saksnummer,

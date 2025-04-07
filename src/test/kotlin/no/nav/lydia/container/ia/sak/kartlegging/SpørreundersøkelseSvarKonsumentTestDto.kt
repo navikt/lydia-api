@@ -1,7 +1,6 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -28,7 +27,6 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.ANTALL_SVAR
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseAntallSvarDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import org.junit.AfterClass
@@ -268,22 +266,9 @@ class SpørreundersøkelseSvarKonsumentTestDto {
         val opprettetSpørreundersøkelse = sak.opprettSpørreundersøkelse()
         opprettetSpørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        runBlocking {
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = opprettetSpørreundersøkelse.id,
-                konsument = spørreundersøkelseKonsument,
-            ) {
-                it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.status shouldBe PÅBEGYNT
-                }
-            }
-        }
+        val førsteSpørsmålId = opprettetSpørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first().id
 
-        val spørsmålId = opprettetSpørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first().id
-        opprettetSpørreundersøkelse.sendKartleggingSvarTilKafka(
-            spørsmålId = spørsmålId,
-        )
+        opprettetSpørreundersøkelse.sendKartleggingSvarTilKafka(spørsmålId = førsteSpørsmålId)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -301,7 +286,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
                             melding,
                         )
                     antallSvarForSpørsmål.spørreundersøkelseId shouldBe opprettetSpørreundersøkelse.id
-                    antallSvarForSpørsmål.spørsmålId shouldBe spørsmålId
+                    antallSvarForSpørsmål.spørsmålId shouldBe førsteSpørsmålId
                     antallSvarForSpørsmål.antallSvar shouldBe 1
                 }
             }

@@ -737,8 +737,12 @@ class BehovsvurderingApiTest {
         const val ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER = "01939c0b-21f2-728d-aa91-3c84fef3bb18"
         private val spørreundersøkelseTopic = Topic.SPORREUNDERSOKELSE_TOPIC
         private val fullførtBehovsvurderingTopic = Topic.FULLFØRT_BEHOVSVURDERING_TOPIC
-        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(spørreundersøkelseTopic.konsumentGruppe)
-        private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(fullførtBehovsvurderingTopic.konsumentGruppe)
+        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(
+            consumerGroupId = spørreundersøkelseTopic.konsumentGruppe,
+        )
+        private val fullførtBehovsvurderingKonsument = kafkaContainerHelper.nyKonsument(
+            consumerGroupId = fullførtBehovsvurderingTopic.konsumentGruppe,
+        )
 
         @BeforeClass
         @JvmStatic

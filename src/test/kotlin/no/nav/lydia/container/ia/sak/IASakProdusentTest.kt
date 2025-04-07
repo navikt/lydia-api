@@ -12,7 +12,10 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -41,8 +44,8 @@ class IASakProdusentTest {
     fun `sletting av feilåpnet sak produserer en slett melding på topic`() {
         runBlocking {
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-                .nyHendelse(IASakshendelseType.SLETT_SAK, token = authContainerHelper.superbruker1.token)
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(sak.saksnummer, konsument) { meldinger ->
+                .nyHendelse(hendelsestype = SLETT_SAK, token = authContainerHelper.superbruker1.token)
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(key = sak.saksnummer, konsument = konsument) { meldinger ->
                 meldinger.forAll { hendelse ->
                     hendelse shouldContain sak.saksnummer
                     hendelse shouldContain sak.orgnr
@@ -60,10 +63,10 @@ class IASakProdusentTest {
         runBlocking {
             val orgnr = nyttOrgnummer()
             val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnr)
-                .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK)
-                .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+                .nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK)
+                .nyHendelse(hendelsestype = VIRKSOMHET_SKAL_KONTAKTES)
                 .nyHendelse(
-                    hendelsestype = IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL,
+                    hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
                     payload = ValgtÅrsak(
                         type = ÅrsakType.VIRKSOMHETEN_TAKKET_NEI,
                         begrunnelser = listOf(

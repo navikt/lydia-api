@@ -233,7 +233,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
             orgnummer = sak.orgnr,
             saksnummer = sak.saksnummer,
         )
-        // TODO: Flaky test?
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

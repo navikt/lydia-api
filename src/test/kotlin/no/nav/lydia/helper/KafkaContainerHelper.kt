@@ -30,7 +30,6 @@ import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
@@ -41,18 +40,24 @@ import java.util.TimeZone
 import java.util.concurrent.atomic.AtomicBoolean
 
 class KafkaContainerHelper(
-    network: Network = Network.newNetwork(),
-    log: Logger = LoggerFactory.getLogger(KafkaContainerHelper::class.java),
+    network: Network,
+    log: Logger,
 ) {
     private val gson = GsonBuilder().create()
-    private val kafkaNetworkAlias = "kafkaContainer"
+    private val networkAlias = "kafkaContainer"
     private var adminClient: AdminClient
     private var kafkaProducer: KafkaProducer<String, String>
 
     val container: ConfluentKafkaContainer = ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.3"))
         .withNetwork(network)
-        .withNetworkAliases(kafkaNetworkAlias)
-        .withLogConsumer(Slf4jLogConsumer(log).withPrefix(kafkaNetworkAlias).withSeparateOutputStreams())
+        .withNetworkAliases(networkAlias)
+        .waitingFor(HostPortWaitStrategy())
+        .withCreateContainerCmdModifier { cmd -> cmd.withName("$networkAlias-${System.currentTimeMillis()}") }
+        .withLogConsumer(
+            Slf4jLogConsumer(log)
+                .withPrefix(networkAlias)
+                .withSeparateOutputStreams(),
+        )
         .withEnv(
             mapOf(
                 "KAFKA_LOG4J_LOGGERS" to "org.apache.kafka.image.loader.MetadataLoader=WARN",
@@ -61,8 +66,6 @@ class KafkaContainerHelper(
                 "TZ" to TimeZone.getDefault().id,
             ),
         )
-        .withCreateContainerCmdModifier { cmd -> cmd.withName("$kafkaNetworkAlias-${System.currentTimeMillis()}") }
-        .waitingFor(HostPortWaitStrategy())
         .apply {
             start()
             adminClient = AdminClient.create(mapOf(BOOTSTRAP_SERVERS_CONFIG to this.bootstrapServers))
@@ -84,7 +87,7 @@ class KafkaContainerHelper(
 
     fun envVars() =
         mapOf(
-            "KAFKA_BROKERS" to "BROKER://$kafkaNetworkAlias:9093,PLAINTEXT://$kafkaNetworkAlias:9093",
+            "KAFKA_BROKERS" to "BROKER://$networkAlias:9093,PLAINTEXT://$networkAlias:9093",
             "KAFKA_TRUSTSTORE_PATH" to "",
             "KAFKA_KEYSTORE_PATH" to "",
             "KAFKA_CREDSTORE_PASSWORD" to "",

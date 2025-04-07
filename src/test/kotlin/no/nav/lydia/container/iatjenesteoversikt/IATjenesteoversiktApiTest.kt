@@ -28,27 +28,37 @@ import org.junit.After
 import org.junit.Test
 
 class IATjenesteoversiktApiTest {
-    val saksbehandlerToken = authContainerHelper.saksbehandler1.token
+    private val saksbehandlerToken = authContainerHelper.saksbehandler1.token
 
     // lag to virksomheter og sett dei til Vi bistår
-    val virksomhet1 = VirksomhetHelper.lastInnNyVirksomhet()
-    val sakVirksomhet1 = SakHelper.nySakIViBistår(orgnummer = virksomhet1.orgnr, saksbehandlerToken)
+    private val virksomhet1 = VirksomhetHelper.lastInnNyVirksomhet()
+    private val sakVirksomhet1 = SakHelper.nySakIViBistår(orgnummer = virksomhet1.orgnr, saksbehandlerToken)
 
-    val virksomhet2 = VirksomhetHelper.lastInnNyVirksomhet()
-    val sakVirksomhet2 = SakHelper.nySakIViBistår(orgnummer = virksomhet2.orgnr, saksbehandlerToken)
+    private val virksomhet2 = VirksomhetHelper.lastInnNyVirksomhet()
+    private val sakVirksomhet2 = SakHelper.nySakIViBistår(orgnummer = virksomhet2.orgnr, saksbehandlerToken)
 
     // Lag leveransar på sakane
-    val leveranseFristIDag =
-        sakVirksomhet1.opprettIASakLeveranse(frist = java.time.LocalDate.now().toKotlinLocalDate(), AKTIV_MODUL.id)
-    val leveranseFristOm10Dager =
-        sakVirksomhet1.opprettIASakLeveranse(frist = java.time.LocalDate.now().plusDays(10).toKotlinLocalDate(), 16)
-    val leveranseFristFor10DagerSiden = sakVirksomhet2.opprettIASakLeveranse(
+    private val leveranseFristIDag = sakVirksomhet1.opprettIASakLeveranse(
+        frist = java.time.LocalDate.now().toKotlinLocalDate(),
+        AKTIV_MODUL.id,
+    )
+    private val leveranseFristOm10Dager = sakVirksomhet1.opprettIASakLeveranse(
+        frist = java.time.LocalDate.now().plusDays(10).toKotlinLocalDate(),
+        16,
+    )
+    private val leveranseFristFor10DagerSiden = sakVirksomhet2.opprettIASakLeveranse(
         frist = java.time.LocalDate.now().minusDays(10).toKotlinLocalDate(),
         AKTIV_MODUL.id,
     )
-    val fullførtLeveranse =
-        sakVirksomhet2.opprettIASakLeveranse(frist = java.time.LocalDate.now().toKotlinLocalDate(), 16)
-            .oppdaterIASakLeveranse(virksomhet2.orgnr, IASakLeveranseStatus.LEVERT, saksbehandlerToken)
+    private val fullførtLeveranse = sakVirksomhet2.opprettIASakLeveranse(
+        frist = java.time.LocalDate.now().toKotlinLocalDate(),
+        16,
+    )
+        .oppdaterIASakLeveranse(
+            orgnr = virksomhet2.orgnr,
+            status = IASakLeveranseStatus.LEVERT,
+            token = saksbehandlerToken,
+        )
 
     @After
     fun ryddOppLeveranser() {

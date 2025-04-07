@@ -34,10 +34,9 @@ class SykefraværsstatistikkVirksomhetApiTest {
     fun `skal hente sykefraværsstatistikk for næring`() {
         SykefraværsstatistikkApiTest.settSykefraværsprosentNæring(NÆRING_JORDBRUK, 4.5)
 
-        val result =
-            applikasjon.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
-                .authentication().bearer(authContainerHelper.saksbehandler1.token)
-                .tilSingelRespons<NæringSykefraværsstatistikk>()
+        val result = applikasjon.performGet("$SYKEFRAVÆRSSTATISTIKK_PATH/naring/${NÆRING_JORDBRUK}")
+            .authentication().bearer(authContainerHelper.saksbehandler1.token)
+            .tilSingelRespons<NæringSykefraværsstatistikk>()
 
         result.second.statusCode shouldBe 200
         val næringstatistikk: NæringSykefraværsstatistikk = result.third
@@ -207,14 +206,13 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 perioder = listOf(gjeldendePeriode.forrigePeriode()), // uten siste periode
             ),
         )
-        val sykefraværsprosentSisteTilgjengeligeKvartal =
-            postgresContainerHelper.hentEnkelKolonne<Double>(
-                """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
-                where orgnr='${virksomhet.orgnr}' 
-                and kvartal=${gjeldendePeriode.forrigePeriode().kvartal}
-                and arstall=${gjeldendePeriode.forrigePeriode().årstall}
-                """.trimMargin(),
-            )
+        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainerHelper.hentEnkelKolonne<Double>(
+            """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
+            where orgnr='${virksomhet.orgnr}' 
+            and kvartal=${gjeldendePeriode.forrigePeriode().kvartal}
+            and arstall=${gjeldendePeriode.forrigePeriode().årstall}
+            """.trimMargin(),
+        )
 
         val result =
             StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)
@@ -231,14 +229,13 @@ class SykefraværsstatistikkVirksomhetApiTest {
                 perioder = listOf(gjeldendePeriode, gjeldendePeriode.nestePeriode()), // med ekstra periode
             ),
         )
-        val sykefraværsprosentSisteTilgjengeligeKvartal =
-            postgresContainerHelper.hentEnkelKolonne<Double>(
-                """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
-                where orgnr='${virksomhet.orgnr}' 
-                and kvartal=${gjeldendePeriode.kvartal}
-                and arstall=${gjeldendePeriode.årstall}
-                """.trimMargin(),
-            )
+        val sykefraværsprosentSisteTilgjengeligeKvartal = postgresContainerHelper.hentEnkelKolonne<Double>(
+            """select sykefravarsprosent from sykefravar_statistikk_virksomhet 
+            where orgnr='${virksomhet.orgnr}' 
+            and kvartal=${gjeldendePeriode.kvartal}
+            and arstall=${gjeldendePeriode.årstall}
+            """.trimMargin(),
+        )
 
         val result =
             StatistikkHelper.hentSykefraværForVirksomhetSisteTilgjengeligKvartal(orgnummer = virksomhet.orgnr)

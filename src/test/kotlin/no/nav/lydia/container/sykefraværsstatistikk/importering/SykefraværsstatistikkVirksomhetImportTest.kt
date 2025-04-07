@@ -15,8 +15,8 @@ import no.nav.lydia.container.sykefraværsstatistikk.importering.Sykefraværssta
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.hentStatistikkVirksomhetGraderingSiste4Kvartal
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.siste4KvartalShouldBeEqual
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils.Companion.sistePubliserteKvartalShouldBeEqual
-import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.sykefraværsstatistikk.import.GraderingSiste4Kvartal
@@ -28,8 +28,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class SykefraværsstatistikkVirksomhetImportTest {
-    private val kafkaContainer = TestContainerHelper.kafkaContainerHelper
-
     private val sistePubliserteKvartal: SistePubliserteKvartal =
         SistePubliserteKvartal(
             årstall = KVARTAL_2023_1.årstall,
@@ -91,7 +89,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             ),
             siste4Kvartal = graderingSiste4Kvartal,
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
@@ -120,7 +118,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             ),
             sistePubliserteKvartal = graderingSistePubliserteKvartal,
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
@@ -154,7 +152,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
                 prosent = null,
             ),
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
@@ -186,7 +184,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
                 prosent = null,
             ),
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
@@ -211,7 +209,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             siste4Kvartal = siste4Kvartal,
         )
 
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_TOPIC,
@@ -236,7 +234,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             sistePubliserteKvartal = graderingSistePubliserteKvartal,
             siste4Kvartal = graderingSiste4Kvartal,
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
@@ -266,7 +264,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             sistePubliserteKvartal = graderingSistePubliserteKvartal,
             siste4Kvartal = graderingSiste4Kvartal,
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
@@ -292,7 +290,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
             sistePubliserteKvartal = graderingSistePubliserteKvartal,
             siste4Kvartal = graderingSiste4Kvartal,
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             kafkaMelding.toJsonKey(),
             kafkaMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
@@ -316,14 +314,13 @@ class SykefraværsstatistikkVirksomhetImportTest {
                 erMaskert = false,
             ),
         )
-        kafkaContainer.sendOgVentTilKonsumert(
+        kafkaContainerHelper.sendOgVentTilKonsumert(
             oppdatertStatistikkMelding.toJsonKey(),
             oppdatertStatistikkMelding.toJsonValue(),
             Topic.STATISTIKK_VIRKSOMHET_GRADERING_TOPIC,
         )
 
-        val resultatSistePubliserteKvartal =
-            hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
+        val resultatSistePubliserteKvartal = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
         resultatSistePubliserteKvartal.orgnr shouldBe "999999999"
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.årstall shouldBe graderingSistePubliserteKvartal.årstall
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.kvartal shouldBe graderingSistePubliserteKvartal.kvartal
@@ -333,8 +330,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.tapteDagsverk shouldBe 56.0
         resultatSistePubliserteKvartal.graderingSistePubliserteKvartal.antallPersoner shouldBe 200
 
-        val resultatSiste4Kvartal =
-            hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
+        val resultatSiste4Kvartal = hentStatistikkVirksomhetGraderingSiste4Kvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
         resultatSiste4Kvartal.orgnr shouldBe "999999999"
         resultatSiste4Kvartal.publisertÅrstall shouldBe graderingSistePubliserteKvartal.årstall
         resultatSiste4Kvartal.publisertKvartal shouldBe graderingSistePubliserteKvartal.kvartal

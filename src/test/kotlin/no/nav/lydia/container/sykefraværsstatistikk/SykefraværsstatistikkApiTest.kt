@@ -1112,10 +1112,10 @@ class SykefraværsstatistikkApiTest {
     }
 
     companion object {
-        private val NÆRING_JORDBRUK_PROSENT = 6.0
-        private val NÆRING_SKOGBRUK_PROSENT = 8.5
-        private val BRANSJE_SYKEHJEM_PROSENT = 6.0
-        private val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 8.0
+        private const val NÆRING_JORDBRUK_PROSENT = 6.0
+        private const val NÆRING_SKOGBRUK_PROSENT = 8.5
+        private const val BRANSJE_SYKEHJEM_PROSENT = 6.0
+        private const val NÆRING_PLEIE_OG_OMSORGSTJENESTER_I_INSTITUSJON_PROSENT = 8.0
 
         private val sistePubliserteKvartal: SistePubliserteKvartal =
             SistePubliserteKvartal(

@@ -5,33 +5,30 @@ import com.zaxxer.hikari.HikariDataSource
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.runMigration
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
 
 class PostgresContainerHelper(
-    network: Network = Network.newNetwork(),
-    log: Logger = LoggerFactory.getLogger(PostgresContainerHelper::class.java),
+    network: Network,
+    log: Logger,
 ) {
     private val postgresNetworkAlias = "postgrescontainer"
     private val lydiaDbName = "lydia-api-container-db"
     private var migreringErKjørt = false
-    val container: PostgreSQLContainer<*> =
-        PostgreSQLContainer("postgres:14")
-            .withNetwork(network)
-            .withLogConsumer(
-                Slf4jLogConsumer(log)
-                    .withPrefix(postgresNetworkAlias)
-                    .withSeparateOutputStreams(),
-            )
-            .withNetworkAliases(postgresNetworkAlias)
-            .withDatabaseName(lydiaDbName)
-            .withCreateContainerCmdModifier { cmd -> cmd.withName("$postgresNetworkAlias-${System.currentTimeMillis()}") }
-            .waitingFor(HostPortWaitStrategy()).apply {
-                start()
-            }
+    val container: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:14")
+        .withNetwork(network)
+        .withDatabaseName(lydiaDbName)
+        .waitingFor(HostPortWaitStrategy())
+        .withNetworkAliases(postgresNetworkAlias)
+        .withCreateContainerCmdModifier { cmd -> cmd.withName("$postgresNetworkAlias-${System.currentTimeMillis()}") }
+        .withLogConsumer(
+            Slf4jLogConsumer(log)
+                .withPrefix(postgresNetworkAlias)
+                .withSeparateOutputStreams(),
+        )
+        .apply { start() }
 
     val dataSource = nyDataSource()
 

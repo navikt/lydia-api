@@ -21,7 +21,7 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy
-import org.testcontainers.images.builder.ImageFromDockerfile
+import org.testcontainers.utility.DockerImageName
 import java.net.URI
 import java.util.TimeZone
 import java.util.UUID
@@ -30,21 +30,19 @@ class AuthContainerHelper(
     network: Network,
     log: Logger,
 ) {
-    private val port: String = "8100"
-    private val networkAlias: String = "mockoauth2container"
-    val container: GenericContainer<*>
-    private val issuerName = "default"
+    private val port = 8100
+    private val networkalias = "authserver"
+    private val baseEndpointUrl = "http://$networkalias:$port"
     private val config = OAuth2Config()
-    private val tokenEndpointUrl = "http://$networkAlias:$port"
-    private val issuerUrl = "$tokenEndpointUrl/$issuerName"
-    private val jwksUri = "$issuerUrl/jwks"
-    private val audience = "lydia-api"
 
-    private val superbrukerGroupId = "ensuperbrukerGroupId"
-    private val saksbehandlerGroupId = "ensaksbehandlerGroupId"
-    private val lesetilgangGroupId = "enlesetilgangGroupId"
-    private val teamPiaGroupId = "enTeamPiaGroupId"
-    private val ugyldigRolleGroupId = "enHeltAnnenRolleGroupId"
+    companion object {
+        private const val SUPERBRUKER_GROUP_ID = "ensuperbrukerGroupId"
+        private const val SAKSBEHANDLER_GROUP_ID = "ensaksbehandlerGroupId"
+        private const val LESETILGANG_GROUP_ID = "enlesetilgangGroupId"
+        private const val TEAM_PLA_GROUP_ID = "enTeamPiaGroupId"
+        private const val UGYILDIG_ROLLE_GROUP_ID = "enHeltAnnenRolleGroupId"
+        const val FNR = "12345678901"
+    }
 
     val lesebruker: TestBruker
     val lesebrukerAudit: TestBruker
@@ -55,43 +53,41 @@ class AuthContainerHelper(
     val teamPiaBruker: TestBruker
     val brukerUtenTilgangsrolle: TestBruker
 
-    init {
-        container = GenericContainer(
-            ImageFromDockerfile().withDockerfileFromBuilder { builder ->
-                builder.from("ghcr.io/navikt/mock-oauth2-server:2.1.10")
-                    .env(
-                        mapOf(
-                            "TZ" to TimeZone.getDefault().id,
-                            "SERVER_PORT" to port,
-                            "SERVER_HOSTNAME" to networkAlias,
-                        ),
-                    )
-            },
+    val container: GenericContainer<*> = GenericContainer(DockerImageName.parse("ghcr.io/navikt/mock-oauth2-server:2.1.10"))
+        .withNetwork(network)
+        .waitingFor(HostPortWaitStrategy())
+        .withNetworkAliases(networkalias)
+        .withCreateContainerCmdModifier { cmd -> cmd.withName("$networkalias-${System.currentTimeMillis()}") }
+        .withLogConsumer(
+            Slf4jLogConsumer(log)
+                .withPrefix("authContainer")
+                .withSeparateOutputStreams(),
         )
-            .withLogConsumer(Slf4jLogConsumer(log).withPrefix("oAuthContainer").withSeparateOutputStreams())
-            .withNetwork(network)
-            .withNetworkAliases(networkAlias)
-            .withCreateContainerCmdModifier { cmd -> cmd.withName("$networkAlias-${System.currentTimeMillis()}") }
-            .waitingFor(
-                HostPortWaitStrategy(),
-            ).apply {
-                start()
-
-                // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
-                lesebruker = TestBruker(navIdent = "L54321", lesetilgangGroupId)
-                lesebrukerAudit = TestBruker(navIdent = "A54321", lesetilgangGroupId)
-                saksbehandler1 = TestBruker(navIdent = "X12345", saksbehandlerGroupId)
-                saksbehandler2 = TestBruker(navIdent = "Y54321", saksbehandlerGroupId)
-                superbruker1 = TestBruker(navIdent = "S54321", superbrukerGroupId)
-                superbruker2 = TestBruker(navIdent = "S22222", superbrukerGroupId)
-                teamPiaBruker = TestBruker(navIdent = "P12345", teamPiaGroupId)
-                brukerUtenTilgangsrolle = TestBruker(navIdent = "U54321", ugyldigRolleGroupId)
-            }
-    }
+        .withEnv(
+            mapOf(
+                "TZ" to TimeZone.getDefault().id,
+                "SERVER_PORT" to "$port",
+                "SERVER_HOSTNAME" to networkalias,
+            ),
+        )
+        .apply { start() }
+        .also {
+            // Henter ut token tidlig, fordi det er litt klokkeforskjeller mellom containerne :/
+            lesebruker = TestBruker(navIdent = "L54321", LESETILGANG_GROUP_ID)
+            lesebrukerAudit = TestBruker(navIdent = "A54321", LESETILGANG_GROUP_ID)
+            saksbehandler1 = TestBruker(navIdent = "X12345", SAKSBEHANDLER_GROUP_ID)
+            saksbehandler2 = TestBruker(navIdent = "Y54321", SAKSBEHANDLER_GROUP_ID)
+            superbruker1 = TestBruker(navIdent = "S54321", SUPERBRUKER_GROUP_ID)
+            superbruker2 = TestBruker(navIdent = "S22222", SUPERBRUKER_GROUP_ID)
+            teamPiaBruker = TestBruker(navIdent = "P12345", TEAM_PLA_GROUP_ID)
+            brukerUtenTilgangsrolle = TestBruker(navIdent = "U54321", UGYILDIG_ROLLE_GROUP_ID)
+        }
 
     inner class TestBruker(
         val navIdent: String,
         gruppe: String,
+        audience: String = "lydia-api",
+        issuerId: String = "default",
     ) {
         val navn = "F_$navIdent E_$navIdent"
         val token: String = issueToken(
@@ -102,17 +98,18 @@ class AuthContainerHelper(
                 GROUPS_CLAIM to listOf(gruppe),
                 OBJECT_ID_CLAIM to UUID.randomUUID().toString(),
             ),
+            issuerId = issuerId,
         ).serialize()
     }
 
     private fun issueToken(
-        issuerId: String = issuerName,
+        issuerId: String,
         subject: String = UUID.randomUUID().toString(),
-        audience: String = this.audience,
+        audience: String,
         claims: Map<String, Any> = emptyMap(),
         expiry: Long = 3600,
     ): SignedJWT {
-        val clientId = "default"
+        val issuerUrl = "$baseEndpointUrl/$issuerId"
         val tokenCallback = DefaultOAuth2TokenCallback(
             issuerId,
             subject,
@@ -123,9 +120,9 @@ class AuthContainerHelper(
         )
 
         val tokenRequest = TokenRequest(
-            URI.create(tokenEndpointUrl),
-            ClientSecretBasic(ClientID(clientId), Secret("secret")),
-            AuthorizationCodeGrant(AuthorizationCode("123"), URI.create("http://localhost")),
+            URI.create(baseEndpointUrl),
+            ClientSecretBasic(ClientID(issuerId), Secret("secret")),
+            AuthorizationCodeGrant(AuthorizationCode(FNR), URI.create("http://localhost")),
             Scope(audience),
         )
         return config.tokenProvider.accessToken(tokenRequest, issuerUrl.toHttpUrl(), tokenCallback, null)
@@ -133,10 +130,10 @@ class AuthContainerHelper(
 
     fun envVars() =
         mapOf(
-            "AZURE_APP_CLIENT_ID" to audience,
+            "AZURE_APP_CLIENT_ID" to "lydia-api",
             "AZURE_APP_CLIENT_SECRET" to "AZURE_APP_CLIENT_SECRET",
-            "AZURE_OPENID_CONFIG_ISSUER" to issuerUrl,
-            "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "$issuerUrl/token",
+            "AZURE_OPENID_CONFIG_ISSUER" to "$baseEndpointUrl/default",
+            "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "$baseEndpointUrl/default/token",
             "AZURE_APP_JWK" to
                 """
                 {
@@ -153,10 +150,10 @@ class AuthContainerHelper(
                     "n": "s7mjPNyx4wtQ-ij0VIAvfooN9m2qgqidE7wJ50zAzmG2cS9Y9XpV09KJAAgP21RVQNqbxU3BCwltYD5bhsYSn-T5HZ7uXbjb9zgSY5XUM0TWGMV7qqdISWmHCH6-LYZGrJiN7ofDW3XGINsRlxj3gZbSuSNnXdbreOC97wT5i-qVxWt9xhobB60Jjf3gNiA3XMaOGyE47Ty-6WMH_zs_sENWXQ0eGoD58DROqbF1CUb_9ppubK9nU4Sjo0ih57J14n8aKZVEWg4uN02Gv0TL1ratvyDTwRZrtKprfgFBzylxtV2zkvhETsi7zkrzjsrv4v8hap6V32NgXc8E1xDj2Q"
                 }
                 """.trimIndent(),
-            "AZURE_OPENID_CONFIG_JWKS_URI" to jwksUri,
-            "FIA_SUPERBRUKER_GROUP_ID" to superbrukerGroupId,
-            "FIA_SAKSBEHANDLER_GROUP_ID" to saksbehandlerGroupId,
-            "FIA_LESETILGANG_GROUP_ID" to lesetilgangGroupId,
-            "TEAM_PIA_GROUP_ID" to teamPiaGroupId,
+            "AZURE_OPENID_CONFIG_JWKS_URI" to "$baseEndpointUrl/default/jwks",
+            "FIA_SUPERBRUKER_GROUP_ID" to SUPERBRUKER_GROUP_ID,
+            "FIA_SAKSBEHANDLER_GROUP_ID" to SAKSBEHANDLER_GROUP_ID,
+            "FIA_LESETILGANG_GROUP_ID" to LESETILGANG_GROUP_ID,
+            "TEAM_PIA_GROUP_ID" to TEAM_PLA_GROUP_ID,
         )
 }

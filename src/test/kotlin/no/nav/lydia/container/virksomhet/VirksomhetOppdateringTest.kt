@@ -24,8 +24,6 @@ import kotlin.test.Test
 import kotlin.time.Duration.Companion.seconds
 
 class VirksomhetOppdateringTest {
-    private val token = authContainerHelper.superbruker1.token
-
     @Test
     fun `vi oppdaterer næringsgrupper til en bedrift`() {
         val nyVirksomhet = nyVirksomhet(
@@ -109,7 +107,7 @@ class VirksomhetOppdateringTest {
         sendEndringForVirksomhet(virksomhet = virksomhetUtenAdresse)
         VirksomhetHelper.hentVirksomhetsinformasjonRespons(
             orgnummer = virksomhetUtenAdresse.orgnr,
-            token = token,
+            token = authContainerHelper.superbruker1.token,
         ).second.statusCode shouldBe HttpStatusCode.NotFound.value
     }
 
@@ -157,7 +155,6 @@ private fun TestVirksomhet.skalHaRiktigTilstand(
     virksomhetDto.orgnr shouldBe this.orgnr
     virksomhetDto.navn shouldBe navn
     virksomhetDto.status shouldBe status
-    // virksomhetDto.oppstartsdato shouldBe this.oppstartsdato TODO
     virksomhetDto.adresse shouldBe this.beliggenhet!!.adresse!!
     virksomhetDto.postnummer shouldBe this.beliggenhet.postnummer!!
     virksomhetDto.poststed shouldBe this.beliggenhet.poststed!!
