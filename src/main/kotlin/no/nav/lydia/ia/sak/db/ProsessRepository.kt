@@ -29,7 +29,6 @@ class ProsessRepository(
                 FROM ia_prosess
                 WHERE saksnummer = :saksnummer
                 AND id = :prosessId
-                AND status = 'AKTIV'
                 """.trimIndent(),
                 mapOf(
                     "saksnummer" to saksnummer,
