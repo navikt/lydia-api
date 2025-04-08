@@ -21,10 +21,8 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreunders
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
-import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
-import no.nav.lydia.helper.SakHelper.Companion.hentAktivSakRespons
-import no.nav.lydia.helper.SakHelper.Companion.hentSaker
-import no.nav.lydia.helper.SakHelper.Companion.hentSakerRespons
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
+import no.nav.lydia.helper.SakHelper.Companion.hentSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaksStatus
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
@@ -55,7 +53,6 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.ia.sak.api.ÅrsaksType
@@ -208,17 +205,17 @@ class IASakApiTest {
     fun `skal kunne åpne en ny sak etter at en sak er slettet`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer).slettSak()
-        hentAktivSakRespons(orgnummer = orgnummer).statuskode() shouldBe HttpStatusCode.NoContent.value
+        hentSakRespons(orgnummer = orgnummer).statuskode() shouldBe HttpStatusCode.NoContent.value
         opprettSakForVirksomhet(orgnummer = orgnummer).also {
             it.status shouldBe VURDERES
         }
-        hentAktivSak(orgnummer).status shouldBe VURDERES
+        hentSak(orgnummer).status shouldBe VURDERES
     }
 
     @Test
     fun `skal kunne slette en sak med status Vurderes (uten eier)`() {
         val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).slettSak()
-        hentAktivSakRespons(sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
+        hentSakRespons(sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
 
     @Test
@@ -358,10 +355,10 @@ class IASakApiTest {
         )
         sak.status shouldBe IKKE_AKTUELL
 
-        opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
-            .statuskode() shouldBe 201
+        val nySak = opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
 
-        hentSaker(orgnummer = orgnummer).size shouldBe 2
+        hentSak(orgnummer = orgnummer, saksnummer = sak.saksnummer).status shouldBe IKKE_AKTUELL
+        hentSak(orgnummer = orgnummer, saksnummer = nySak.saksnummer).status shouldBe VURDERES
     }
 
     @Test
@@ -392,8 +389,6 @@ class IASakApiTest {
             """.trimIndent(),
         )
         sak.status shouldBe VI_BISTÅR
-
-        hentSaker(orgnummer = orgnummer).size shouldBe 1
 
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.InternalServerError.value
@@ -443,8 +438,6 @@ class IASakApiTest {
             .nyHendelse(TILBAKE)
         sak.status shouldBe KONTAKTES
 
-        hentSaker(orgnummer = orgnummer).size shouldBe 1
-
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.OK.value
         val resultat = response.third.get()
@@ -459,8 +452,6 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
         sak.status shouldBe VI_BISTÅR
-
-        hentSaker(orgnummer = orgnummer).size shouldBe 1
 
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.OK.value
@@ -477,14 +468,14 @@ class IASakApiTest {
         sak.nyttNavnPåSamarbeid(iaProsessDto = førsteSamarbeid, nyttNavn = "Nytt navn")
         sak.status shouldBe KARTLEGGES
 
-        val oppdatertSak = hentAktivSak(orgnummer).nyHendelse(VIRKSOMHET_SKAL_BISTÅS).nyHendelse(TILBAKE)
+        val oppdatertSak = hentSak(orgnummer).nyHendelse(VIRKSOMHET_SKAL_BISTÅS).nyHendelse(TILBAKE)
 
         oppdatertSak.status shouldBe KARTLEGGES
     }
 
     @Test
-    fun `skal kunne opprette ny sak dersom de andre sakene regnes som ikke fullført`() {
-        // TODO Testrydding: Lag betre namn på testen, trur det manglar ein "ikkje" her.
+    fun `skal IKKE kunne opprette ny sak dersom de andre sakene regnes som ikke fullført`() {
+        // TODO Testrydding:
         //  Vi testar to ting: skal kun kunne fullføre sakar frå Vi Bistår, og ikkje kunne lage ny sak før status er fullført.
         //  Denne testen burde bu saman med dei andre som testar oppretting av ny sak.
         val orgnummer = nyttOrgnummer()
@@ -510,9 +501,8 @@ class IASakApiTest {
         sak2Respons.statuskode() shouldBe 201
         val sak2 = sak2Respons.third.get()
 
-        val sakerForVirksomheten = hentSaker(orgnummer = orgnummer)
-        sakerForVirksomheten.size shouldBe 2
-        sakerForVirksomheten.map(IASakDto::saksnummer) shouldContainExactly listOf(sak2.saksnummer, sak.saksnummer)
+        hentSak(orgnummer = orgnummer, saksnummer = sak.saksnummer).status shouldBe FULLFØRT
+        hentSak(orgnummer = orgnummer, saksnummer = sak2.saksnummer).status shouldBe VURDERES
     }
 
     @Test
@@ -578,18 +568,21 @@ class IASakApiTest {
     @Test
     fun `tilgangskontroll - alle brukere skal kunne se saker UTEN eier`() {
         val orgnummer = nyttOrgnummer()
-        opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also {
-            hentSakerRespons(orgnummer = orgnummer, token = authContainerHelper.lesebruker.token).statuskode() shouldBe 200
-            hentSakerRespons(
+        opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also { sak ->
+            hentSakRespons(orgnummer = orgnummer, saksnummer = sak.saksnummer, token = authContainerHelper.lesebruker.token).statuskode() shouldBe 200
+            hentSakRespons(
                 orgnummer = orgnummer,
+                saksnummer = sak.saksnummer,
                 token = authContainerHelper.saksbehandler1.token,
             ).statuskode() shouldBe 200
-            hentSakerRespons(
+            hentSakRespons(
                 orgnummer = orgnummer,
+                saksnummer = sak.saksnummer,
                 token = authContainerHelper.superbruker1.token,
             ).statuskode() shouldBe 200
-            hentSakerRespons(
+            hentSakRespons(
                 orgnummer = orgnummer,
+                saksnummer = sak.saksnummer,
                 token = authContainerHelper.brukerUtenTilgangsrolle.token,
             ).statuskode() shouldBe 403
 
@@ -616,21 +609,25 @@ class IASakApiTest {
     fun `tilgangskontroll - alle brukere skal kunne se saker MED eier`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also { sak ->
-            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also {
-                hentSakerRespons(
+            nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also { sakMedEier ->
+                hentSakRespons(
                     orgnummer = orgnummer,
+                    saksnummer = sakMedEier.saksnummer,
                     token = authContainerHelper.lesebruker.token,
                 ).statuskode() shouldBe 200
-                hentSakerRespons(
+                hentSakRespons(
                     orgnummer = orgnummer,
+                    saksnummer = sakMedEier.saksnummer,
                     token = authContainerHelper.saksbehandler1.token,
                 ).statuskode() shouldBe 200
-                hentSakerRespons(
+                hentSakRespons(
                     orgnummer = orgnummer,
+                    saksnummer = sakMedEier.saksnummer,
                     token = authContainerHelper.superbruker1.token,
                 ).statuskode() shouldBe 200
-                hentSakerRespons(
+                hentSakRespons(
                     orgnummer = orgnummer,
+                    saksnummer = sakMedEier.saksnummer,
                     token = authContainerHelper.brukerUtenTilgangsrolle.token,
                 ).statuskode() shouldBe 403
 
@@ -658,9 +655,10 @@ class IASakApiTest {
     fun `tilgangskontroll - man skal kunne se en sak man selv eier`() {
         nyttOrgnummer().also { orgnummer ->
             opprettSakForVirksomhet(orgnummer, token = authContainerHelper.superbruker2.token)
-                .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also {
-                    hentSakerRespons(
+                .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also { sakMedEier ->
+                    hentSakRespons(
                         orgnummer = orgnummer,
+                        saksnummer = sakMedEier.saksnummer,
                         token = authContainerHelper.saksbehandler1.token,
                     ).statuskode() shouldBe 200
                     hentSamarbeidshistorikkForOrgnrRespons(
@@ -672,9 +670,10 @@ class IASakApiTest {
 
         nyttOrgnummer().also { orgnummer ->
             opprettSakForVirksomhet(orgnummer, token = authContainerHelper.superbruker2.token)
-                .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.superbruker1.token).also {
-                    hentSakerRespons(
+                .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.superbruker1.token).also { sakMedEier ->
+                    hentSakRespons(
                         orgnummer = orgnummer,
+                        saksnummer = sakMedEier.saksnummer,
                         token = authContainerHelper.superbruker1.token,
                     ).statuskode() shouldBe 200
                     hentSamarbeidshistorikkForOrgnrRespons(
@@ -690,7 +689,7 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         val sak = opprettSakForVirksomhet(orgnummer = orgnummer)
 
-        val aktivSak = hentAktivSak(orgnummer)
+        val aktivSak = hentSak(orgnummer)
         aktivSak.orgnr shouldBe orgnummer
         aktivSak.status shouldBe VURDERES
         aktivSak.opprettetAv shouldBe authContainerHelper.superbruker1.navIdent
@@ -802,7 +801,7 @@ class IASakApiTest {
     fun `skal få gyldige neste hendelser i retur - avhengig av hvem man er`() {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also { sak ->
-            hentAktivSak(
+            hentSak(
                 sak.orgnr,
                 token = authContainerHelper.superbruker1.token,
             ).also { aktivSak ->
@@ -810,7 +809,7 @@ class IASakApiTest {
                     .shouldContainExactlyInAnyOrder(TA_EIERSKAP_I_SAK, SLETT_SAK)
             }
 
-            hentAktivSak(
+            hentSak(
                 sak.orgnr,
                 token = authContainerHelper.saksbehandler1.token,
             ).also { aktivSak ->
@@ -819,7 +818,7 @@ class IASakApiTest {
                 }
             }
 
-            hentAktivSak(orgnummer, token = authContainerHelper.lesebruker.token).also { aktivSak ->
+            hentSak(orgnummer, token = authContainerHelper.lesebruker.token).also { aktivSak ->
                 aktivSak.gyldigeNesteHendelser.shouldBeEmpty()
             }
         }
@@ -983,7 +982,7 @@ class IASakApiTest {
             sak.nyHendelse(TILBAKE)
         }
 
-        hentAktivSakRespons(orgnummer = sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
+        hentSakRespons(orgnummer = sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
 
     @Test
@@ -998,7 +997,7 @@ class IASakApiTest {
             sak.nyHendelse(TILBAKE)
         }
 
-        hentAktivSakRespons(orgnummer = sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
+        hentSakRespons(orgnummer = sak.orgnr).statuskode() shouldBe HttpStatusCode.NoContent.value
     }
 
     @Test
@@ -1010,7 +1009,7 @@ class IASakApiTest {
             .nyIkkeAktuellHendelse()
         sak.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TILBAKE)
 
-        hentAktivSak(sak.orgnr, token = authContainerHelper.superbruker1.token)
+        hentSak(sak.orgnr, token = authContainerHelper.superbruker1.token)
             .also { sakDto ->
                 sakDto.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldBe listOf(TA_EIERSKAP_I_SAK)
             }
@@ -1223,7 +1222,7 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .leggTilLeveranseOgFullførSak()
 
-        hentAktivSak(orgnummer = sak.orgnr).also { enSak ->
+        hentSak(orgnummer = sak.orgnr).also { enSak ->
             enSak.status shouldBe FULLFØRT
         }
     }

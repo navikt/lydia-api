@@ -268,28 +268,16 @@ class SakHelper {
                     },
                 )
 
-        fun hentSaker(
+        fun hentSak(
             orgnummer: String,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = hentSakerRespons(orgnummer = orgnummer, token = token).third.fold(
-            success = { respons -> respons },
-            failure = {
-                fail(it.stackTraceToString())
-            },
-        )
-
-        fun hentSakerRespons(
-            orgnummer: String,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer")
-            .authentication().bearer(token = token)
-            .tilListeRespons<IASakDto>()
-
-        fun hentAktivSak(
-            orgnummer: String,
+            saksnummer: String = "aktiv",
             token: String = authContainerHelper.saksbehandler1.token,
         ): IASakDto {
-            val triple = hentAktivSakRespons(orgnummer = orgnummer, token = token)
+            val triple = hentSakRespons(
+                orgnummer = orgnummer,
+                saksnummer = saksnummer,
+                token = token,
+            )
 
             if (triple.statuskode() == 200) {
                 return triple.third.get()
@@ -300,10 +288,11 @@ class SakHelper {
             }
         }
 
-        fun hentAktivSakRespons(
+        fun hentSakRespons(
             orgnummer: String,
+            saksnummer: String = "aktiv",
             token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer/aktiv")
+        ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/$orgnummer/$saksnummer")
             .authentication().bearer(token = token)
             .responseObject(IASakDto.serializer())
 
@@ -622,7 +611,7 @@ class SakHelper {
                     where saksnummer='${this.saksnummer}';
                 """.trimIndent(),
             )
-            return requireNotNull(hentSaker(this.orgnr, token = token).find { it.saksnummer == this.saksnummer })
+            return requireNotNull(hentSak(this.orgnr, saksnummer = this.saksnummer, token = token))
         }
 
         fun IASakDto.oppdaterHendelsespunkterTilDato(dato: java.time.LocalDate): IASakDto {

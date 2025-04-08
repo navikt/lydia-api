@@ -121,29 +121,6 @@ class AuditLogTest {
     }
 
     @Test
-    fun `auditlogger uthenting av IA-sak på orgnummer`() {
-        val orgnummer = "139139139"
-        SakHelper.hentSakerRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token).also {
-            applikasjon shouldContainLog auditLog(
-                request = it.first,
-                navIdent = authContainerHelper.superbruker1.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-                tillat = Tillat.Ja,
-            )
-        }
-        SakHelper.hentSakerRespons(orgnummer = orgnummer, token = authContainerHelper.brukerUtenTilgangsrolle.token).also {
-            applikasjon shouldContainLog auditLog(
-                request = it.first,
-                navIdent = authContainerHelper.brukerUtenTilgangsrolle.navIdent,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-                tillat = Tillat.Nei,
-            )
-        }
-    }
-
-    @Test
     fun `auditlogger uthenting av hendelser på IA-sak på et gyldig saksnummer`() {
         val orgnummer = nyttOrgnummer()
         val sak = SakHelper.opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)

@@ -2,7 +2,7 @@ package no.nav.lydia.container.statusoversikt
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.StatusoversiktHelper
@@ -55,7 +55,7 @@ class StatusoversiktApiTest {
         nySakIViBistår(orgnummer = virksomhet.orgnr)
             .leggTilLeveranseOgFullførSak()
 
-        val aktivSak = hentAktivSak(orgnummer = virksomhet.orgnr)
+        val aktivSak = hentSak(orgnummer = virksomhet.orgnr)
         aktivSak.status shouldBe IAProsessStatus.FULLFØRT
 
         val statusoversiktKommunalSektor =
@@ -78,7 +78,7 @@ class StatusoversiktApiTest {
         )
         nySakIViBistår(orgnummer = virksomhet.orgnr)
             .leggTilLeveranseOgFullførSak()
-        val aktivSak = hentAktivSak(orgnummer = virksomhet.orgnr)
+        val aktivSak = hentSak(orgnummer = virksomhet.orgnr)
         aktivSak.status shouldBe IAProsessStatus.FULLFØRT
 
         VirksomhetHelper.lastInnNyVirksomhet(

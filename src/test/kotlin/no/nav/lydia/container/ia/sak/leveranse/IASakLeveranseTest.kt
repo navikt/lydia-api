@@ -19,10 +19,10 @@ import no.nav.lydia.helper.LeveranseHelper.Companion.hentIATjenesterFraDatabase
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilIATjeneste
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilModul
 import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.hentAktivSak
 import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
 import no.nav.lydia.helper.SakHelper.Companion.hentModuler
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
@@ -377,7 +377,7 @@ class IASakLeveranseTest {
         sak.endretTidspunkt?.dayOfYear shouldBe LocalDateTime.now().minusDays(antallDagerSiden).dayOfYear
 
         sak.opprettIASakLeveranse(modulId = TestData.AKTIV_MODUL.id)
-        val etterOpprettetLeveranseTidspunkt = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
+        val etterOpprettetLeveranseTidspunkt = hentSak(orgnummer = sak.orgnr).endretTidspunkt
         etterOpprettetLeveranseTidspunkt?.dayOfYear shouldBe LocalDateTime.now().dayOfYear
     }
 
@@ -388,7 +388,7 @@ class IASakLeveranseTest {
         sak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 10)
 
         leveranse.oppdaterIASakLeveranse(sak.orgnr, LEVERT)
-        val etterOppdatertLeveranseTidspunkt = hentAktivSak(orgnummer = sak.orgnr).endretTidspunkt
+        val etterOppdatertLeveranseTidspunkt = hentSak(orgnummer = sak.orgnr).endretTidspunkt
         etterOppdatertLeveranseTidspunkt?.dayOfYear shouldBe LocalDateTime.now().dayOfYear
     }
 

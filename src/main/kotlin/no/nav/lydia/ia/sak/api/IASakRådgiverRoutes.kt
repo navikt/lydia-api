@@ -68,11 +68,19 @@ fun Route.iaSakRådgiver(
         }
     }
 
-    get("$IA_SAK_RADGIVER_PATH/{orgnummer}") {
+    get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}") {
         val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
-            iaSakService.hentSakerForOrgnummer(orgnummer).sortedByDescending { it.opprettetTidspunkt }
-                .toDto(navAnsatt = navAnsatt).right()
+            if (saksnummer == "aktiv") {
+                iaSakService.hentSakerForOrgnummer(orgnummer)
+                    .sortedByDescending { it.opprettetTidspunkt }
+                    .toDto(navAnsatt = navAnsatt)
+                    .firstOrNull { !it.lukket }
+                    .right()
+            } else {
+                iaSakService.hentIASak(saksnummer).map { it.toDto(navAnsatt) }
+            }
         }.also { either ->
             auditLog.auditloggEither(
                 call = call,
@@ -81,7 +89,8 @@ fun Route.iaSakRådgiver(
                 auditType = AuditType.access,
             )
         }.map {
-            call.respond(it)
+            val response = it ?: HttpStatusCode.NoContent
+            call.respond(response)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
@@ -93,29 +102,6 @@ fun Route.iaSakRådgiver(
             iaSakService.hentSaksStatus(saksnummer)
         }.map {
             call.respond(it)
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    get("$IA_SAK_RADGIVER_PATH/{orgnummer}/aktiv") {
-        val orgnummer = call.orgnummer ?: return@get call.respond(IASakError.`ugyldig orgnummer`)
-        call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
-            iaSakService.hentSakerForOrgnummer(orgnummer)
-                .sortedByDescending { it.opprettetTidspunkt }
-                .toDto(navAnsatt = navAnsatt)
-                .firstOrNull { !it.lukket }
-                .right()
-        }.also { either ->
-            auditLog.auditloggEither(
-                call = call,
-                either = either,
-                orgnummer = orgnummer,
-                auditType = AuditType.access,
-            )
-        }.map {
-            val response = it ?: HttpStatusCode.NoContent
-            call.respond(response)
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

@@ -1,10 +1,9 @@
 package no.nav.lydia.container.ia.sak
 
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.hentSaker
+import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
@@ -29,33 +28,27 @@ class UrørteSakerTest {
         val urørtGammelSak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
         urørtGammelSak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 365)
 
-        val sakerFørRydding = hentSaker(orgnummer = urørtGammelSak.orgnr)
-        sakerFørRydding shouldHaveSize 1
-        sakerFørRydding.forExactlyOne {
-            it.saksnummer shouldBe urørtGammelSak.saksnummer
-            it.status shouldBe IAProsessStatus.VURDERES
-            it.eidAv shouldBe null
-        }
+        val sakFørRydding = hentSak(orgnummer = urørtGammelSak.orgnr, saksnummer = urørtGammelSak.saksnummer)
+        sakFørRydding.saksnummer shouldBe urørtGammelSak.saksnummer
+        sakFørRydding.status shouldBe IAProsessStatus.VURDERES
+        sakFørRydding.eidAv shouldBe null
 
         kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
-        val sakerEtterRydding = hentSaker(orgnummer = urørtGammelSak.orgnr)
-        sakerEtterRydding shouldHaveSize 1
-        sakerEtterRydding.forExactlyOne { sak ->
-            sak.saksnummer shouldBe urørtGammelSak.saksnummer
-            sak.status shouldBe IAProsessStatus.IKKE_AKTUELL
-            sak.eidAv shouldBe null
+        val sakEtterRydding = hentSak(orgnummer = urørtGammelSak.orgnr, saksnummer = urørtGammelSak.saksnummer)
+        sakEtterRydding.saksnummer shouldBe urørtGammelSak.saksnummer
+        sakEtterRydding.status shouldBe IAProsessStatus.IKKE_AKTUELL
+        sakEtterRydding.eidAv shouldBe null
 
-            val tilbakeføringsHendelse = hentHendelse(sak.endretAvHendelseId)
-            tilbakeføringsHendelse.navEnhet shouldBe IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING
-            tilbakeføringsHendelse.opprettetAv shouldBe "Fia system"
+        val tilbakeføringsHendelse = hentHendelse(sakEtterRydding.endretAvHendelseId)
+        tilbakeføringsHendelse.navEnhet shouldBe IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING
+        tilbakeføringsHendelse.opprettetAv shouldBe "Fia system"
 
-            hentSamarbeidshistorikk(orgnummer = sak.orgnr).forExactlyOne { sakshistorikk ->
-                sakshistorikk.sakshendelser.forExactlyOne { snapshot ->
-                    snapshot.begrunnelser shouldBe listOf(
-                        BegrunnelseType.AUTOMATISK_LUKKET.navn,
-                    )
-                }
+        hentSamarbeidshistorikk(orgnummer = sakEtterRydding.orgnr).forExactlyOne { sakshistorikk ->
+            sakshistorikk.sakshendelser.forExactlyOne { snapshot ->
+                snapshot.begrunnelser shouldBe listOf(
+                    BegrunnelseType.AUTOMATISK_LUKKET.navn,
+                )
             }
         }
     }
@@ -69,22 +62,17 @@ class UrørteSakerTest {
             )
         sakMedEier.oppdaterHendelsesTidspunkter(antallDagerTilbake = 365)
 
-        val sakerFørRydding = hentSaker(orgnummer = sakMedEier.orgnr)
-        sakerFørRydding shouldHaveSize 1
-        sakerFørRydding.forExactlyOne {
-            it.saksnummer shouldBe sakMedEier.saksnummer
-            it.status shouldBe IAProsessStatus.VURDERES
-            it.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
-        }
+        val sakFørRydding = hentSak(orgnummer = sakMedEier.orgnr, saksnummer = sakMedEier.saksnummer)
+        sakFørRydding.saksnummer shouldBe sakMedEier.saksnummer
+        sakFørRydding.status shouldBe IAProsessStatus.VURDERES
+        sakFørRydding.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
 
         kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
-        val sakerEtterRydding = hentSaker(orgnummer = sakMedEier.orgnr)
-        sakerEtterRydding shouldHaveSize 1
-        sakerEtterRydding.forExactlyOne { sak ->
-            sak.saksnummer shouldBe sakMedEier.saksnummer
-            sak.status shouldBe IAProsessStatus.VURDERES
-        }
+        val sakEtterRydding = hentSak(orgnummer = sakMedEier.orgnr, saksnummer = sakMedEier.saksnummer)
+        sakEtterRydding.saksnummer shouldBe sakMedEier.saksnummer
+        sakEtterRydding.status shouldBe IAProsessStatus.VURDERES
+        sakEtterRydding.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
     }
 
     @Test
@@ -92,22 +80,17 @@ class UrørteSakerTest {
         val urørtNyereSak = SakHelper.opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
         urørtNyereSak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 20)
 
-        val sakerFørRydding = hentSaker(orgnummer = urørtNyereSak.orgnr)
-        sakerFørRydding shouldHaveSize 1
-        sakerFørRydding.forExactlyOne {
-            it.saksnummer shouldBe urørtNyereSak.saksnummer
-            it.status shouldBe IAProsessStatus.VURDERES
-            it.eidAv shouldBe null
-        }
+        val sakFørRydding = hentSak(orgnummer = urørtNyereSak.orgnr, saksnummer = urørtNyereSak.saksnummer)
+        sakFørRydding.saksnummer shouldBe urørtNyereSak.saksnummer
+        sakFørRydding.status shouldBe IAProsessStatus.VURDERES
+        sakFørRydding.eidAv shouldBe null
 
         kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
-        val sakerEtterRydding = hentSaker(orgnummer = urørtNyereSak.orgnr)
-        sakerEtterRydding shouldHaveSize 1
-        sakerEtterRydding.forExactlyOne { sak ->
-            sak.saksnummer shouldBe urørtNyereSak.saksnummer
-            sak.status shouldBe IAProsessStatus.VURDERES
-        }
+        val sakEtterRydding = hentSak(orgnummer = urørtNyereSak.orgnr, saksnummer = urørtNyereSak.saksnummer)
+        sakEtterRydding.saksnummer shouldBe urørtNyereSak.saksnummer
+        sakEtterRydding.status shouldBe IAProsessStatus.VURDERES
+        sakEtterRydding.eidAv shouldBe null
     }
 
     private fun hentHendelse(hendelsesId: String): IASakshendelse {
