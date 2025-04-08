@@ -47,7 +47,7 @@ class ProsessRepository(
                     SELECT *
                     FROM ia_prosess
                     WHERE saksnummer = :saksnummer
-                    AND status = 'AKTIV'
+                    AND status IN ('AKTIV', 'FULLFØRT')
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer,

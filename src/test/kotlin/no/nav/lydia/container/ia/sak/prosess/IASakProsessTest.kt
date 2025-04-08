@@ -53,6 +53,8 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_RO
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -88,17 +90,17 @@ class IASakProsessTest {
         sak.fullførSamarbeid(samarbeid)
         postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT status FROM ia_prosess WHERE id = ${samarbeid.id}",
-        ) shouldBe no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT.name
+        ) shouldBe FULLFØRT.name
     }
 
     @Test
-    fun `fullførte samarbeid skal ikke vises i listen over aktive samarbeid`() {
+    fun `fullførte samarbeid skal inkluderes i listen over samarbeid for en sak`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
 
         sak.fullførSamarbeid(samarbeid)
-        sak.hentAlleSamarbeid() shouldHaveSize 0
+        sak.hentAlleSamarbeid() shouldHaveSize 1
     }
 
     @Test
@@ -109,7 +111,7 @@ class IASakProsessTest {
 
         sak = sak.fullførSamarbeid(samarbeidSomFullføres)
         sak = sak.opprettNyttSamarbeid(navn = "Det andre samarbeid")
-        sak.hentAlleSamarbeid().map { it.navn } shouldBe listOf("Det andre samarbeid")
+        sak.hentAlleSamarbeid().filter { it.status == AKTIV }.map { it.navn } shouldBe listOf("Det andre samarbeid")
     }
 
     @Test
