@@ -29,9 +29,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
-import no.nav.lydia.helper.SakHelper.Companion.kanFullføreSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.kanGjennomføreStatusendring
-import no.nav.lydia.helper.SakHelper.Companion.kanSletteSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
@@ -214,39 +212,6 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal få riktige begrunnelser for om et samarbeid kan fullføres (GAMMEL)`() {
-        val sak = nySakIViBistår()
-        val samarbeid = sak.hentAlleSamarbeid().first()
-        val manglerPlan = sak.kanFullføreSamarbeid(samarbeid)
-        manglerPlan.kanFullføres shouldBe false
-        manglerPlan.begrunnelser shouldContainExactlyInAnyOrder listOf(
-            StatusendringBegrunnelser.INGEN_PLAN,
-            StatusendringBegrunnelser.INGEN_EVALUERING,
-        )
-
-        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        val kanFullføres = sak.kanFullføreSamarbeid(samarbeid)
-        kanFullføres.kanFullføres shouldBe true
-        kanFullføres.begrunnelser shouldBe listOf(
-            StatusendringBegrunnelser.INGEN_EVALUERING,
-        )
-
-        val evaluering = sak.opprettEvaluering()
-        val aktivEvaluering = sak.kanFullføreSamarbeid(samarbeid)
-        aktivEvaluering.kanFullføres shouldBe false
-        aktivEvaluering.begrunnelser shouldBe listOf(
-            StatusendringBegrunnelser.AKTIV_EVALUERING,
-        )
-
-        evaluering
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val kanFullføresUtenAdvarsler = sak.kanFullføreSamarbeid(samarbeid)
-        kanFullføresUtenAdvarsler.kanFullføres shouldBe true
-        kanFullføresUtenAdvarsler.begrunnelser shouldHaveSize 0
-    }
-
-    @Test
     fun `skal få riktige begrunnelser for om et samarbeid kan slettes (NY)`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
@@ -287,52 +252,6 @@ class IASakProsessTest {
         val skalIallfallIkkeKunneSlettes = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalIallfallIkkeKunneSlettes.kanGjennomføres shouldBe false
         skalIallfallIkkeKunneSlettes.blokkerende shouldContainExactlyInAnyOrder listOf(
-            StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
-            StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
-        )
-    }
-
-    @Test
-    fun `skal få riktige begrunnelser for om et samarbeid kan slettes (GAMMEL)`() {
-        val sak = nySakIViBistår()
-        val samarbeid = sak.hentAlleSamarbeid().first()
-        val skalKunneSlettes = sak.kanSletteSamarbeid(samarbeid)
-        skalKunneSlettes.kanSlettes shouldBe true
-        skalKunneSlettes.begrunnelser shouldHaveSize 0
-
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
-        val skalIkkeKunneSlettesPgaBehovsVurdering = sak.kanSletteSamarbeid(samarbeid)
-        skalIkkeKunneSlettesPgaBehovsVurdering.kanSlettes shouldBe false
-        skalIkkeKunneSlettesPgaBehovsVurdering.begrunnelser shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
-
-        applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${behovsvurdering.id}")
-            .authentication().bearer(authContainerHelper.saksbehandler1.token)
-            .tilSingelRespons<SpørreundersøkelseDto>()
-        val skalKunneSlettesIgjen = sak.kanSletteSamarbeid(samarbeid)
-        skalKunneSlettesIgjen.kanSlettes shouldBe true
-        skalKunneSlettesIgjen.begrunnelser shouldHaveSize 0
-
-        val salesforceAktivitet = SalesforceAktivitetDto(
-            Id__c = UUID.randomUUID().toString(),
-            IACaseNumber__c = sak.saksnummer,
-            IACooperationId__c = samarbeid.id.toString(),
-            LastModifiedDate__c = ZonedDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME),
-            EventType__c = "Created",
-            TaskEvent__c = "Møte",
-        )
-        kafkaContainerHelper.sendOgVentTilKonsumert(
-            nøkkel = salesforceAktivitet.Id__c,
-            melding = Json.encodeToString(salesforceAktivitet),
-            topic = Topic.SALESFORCE_AKTIVITET_TOPIC,
-        )
-        val skalIkkeKunneSlettesPgaSfAktivitet = sak.kanSletteSamarbeid(samarbeid)
-        skalIkkeKunneSlettesPgaSfAktivitet.kanSlettes shouldBe false
-        skalIkkeKunneSlettesPgaSfAktivitet.begrunnelser shouldBe listOf(StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET)
-
-        sak.opprettEnPlan()
-        val skalIallfallIkkeKunneSlettes = sak.kanSletteSamarbeid(samarbeid)
-        skalIallfallIkkeKunneSlettes.kanSlettes shouldBe false
-        skalIallfallIkkeKunneSlettes.begrunnelser shouldContainExactlyInAnyOrder listOf(
             StatusendringBegrunnelser.FINNES_SALESFORCE_AKTIVITET,
             StatusendringBegrunnelser.FINNES_SAMARBEIDSPLAN,
         )

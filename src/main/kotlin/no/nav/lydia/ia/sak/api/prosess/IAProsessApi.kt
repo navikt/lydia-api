@@ -16,8 +16,6 @@ import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.KanFullføreSamarbeidDto
-import no.nav.lydia.ia.sak.api.KanSletteSamarbeidDto
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
@@ -51,43 +49,6 @@ fun Route.iaProsessApi(
         }
     }
 
-    get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/{prosessId}/kanfullfores") {
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val samarbeid = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-        call.somSaksbehandler(adGrupper) {
-            iaSakService.hentIASak(saksnummer = saksnummer).map { iaSak ->
-                iaProsessService.kanFullføreProsess(iaSak, samarbeid)
-            }
-        }.map { kanGjennomføres ->
-            call.respond(
-                KanFullføreSamarbeidDto(
-                    kanFullføres = kanGjennomføres.kanGjennomføres,
-                    begrunnelser = kanGjennomføres.blokkerende + kanGjennomføres.advarsler,
-                ),
-            )
-        }.mapLeft {
-            call.respond(message = it.feilmelding, status = it.httpStatusCode)
-        }
-    }
-    get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/{prosessId}/kanslettes") {
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val samarbeid = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
-
-        call.somSaksbehandler(adGrupper) {
-            iaSakService.hentIASak(saksnummer = saksnummer).map { iaSak ->
-                iaProsessService.kanSletteProsess(iaSak, samarbeid)
-            }
-        }.map { kanGjennomføres ->
-            call.respond(
-                KanSletteSamarbeidDto(
-                    kanSlettes = kanGjennomføres.kanGjennomføres,
-                    begrunnelser = kanGjennomføres.blokkerende + kanGjennomføres.advarsler,
-                ),
-            )
-        }.mapLeft {
-            call.respond(message = it.feilmelding, status = it.httpStatusCode)
-        }
-    }
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/prosesser") {
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)

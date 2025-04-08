@@ -45,9 +45,7 @@ import no.nav.lydia.ia.sak.api.IA_MODULER_PATH
 import no.nav.lydia.ia.sak.api.IA_SAK_LEVERANSE_PATH
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.IA_TJENESTER_PATH
-import no.nav.lydia.ia.sak.api.KanFullføreSamarbeidDto
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
-import no.nav.lydia.ia.sak.api.KanSletteSamarbeidDto
 import no.nav.lydia.ia.sak.api.ModulDto
 import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
@@ -589,32 +587,6 @@ class SakHelper {
         ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/${this.orgnr}/${this.saksnummer}/${samarbeid.id}/kan/$statusEndring")
             .authentication().bearer(token)
             .tilSingelRespons<KanGjennomføreStatusendring>()
-            .third.fold(
-                success = { respons -> respons },
-                failure = {
-                    fail(it.stackTraceToString())
-                },
-            )
-
-        fun IASakDto.kanFullføreSamarbeid(
-            samarbeid: IAProsessDto,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/${this.orgnr}/${this.saksnummer}/${samarbeid.id}/kanfullfores")
-            .authentication().bearer(token)
-            .tilSingelRespons<KanFullføreSamarbeidDto>()
-            .third.fold(
-                success = { respons -> respons },
-                failure = {
-                    fail(it.stackTraceToString())
-                },
-            )
-
-        fun IASakDto.kanSletteSamarbeid(
-            samarbeid: IAProsessDto,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/${this.orgnr}/${this.saksnummer}/${samarbeid.id}/kanslettes")
-            .authentication().bearer(token)
-            .tilSingelRespons<KanSletteSamarbeidDto>()
             .third.fold(
                 success = { respons -> respons },
                 failure = {
