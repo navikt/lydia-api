@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak.api
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
@@ -15,6 +16,7 @@ class SakshistorikkDto(
     val opprettet: LocalDateTime,
     val sistEndret: LocalDateTime,
     val sakshendelser: List<SakSnapshotDto>,
+    val samarbeid: List<IAProsessDto>,
 )
 
 @Serializable
@@ -42,7 +44,7 @@ class SakSnapshotDto(
     }
 }
 
-fun IASak.tilSakshistorikk() =
+fun IASak.tilSakshistorikk(samarbeid: List<IAProsessDto>) =
     SakshistorikkDto(
         saksnummer = this.saksnummer,
         opprettet = this.opprettetTidspunkt.toKotlinLocalDateTime(),
@@ -51,6 +53,5 @@ fun IASak.tilSakshistorikk() =
         sakshendelser = hendelser.mapIndexed { index, hendelse ->
             SakSnapshotDto.from(hendelse)
         }.toList(),
+        samarbeid = samarbeid,
     )
-
-fun List<IASak>.tilSamarbeidshistorikk() = this.map(IASak::tilSakshistorikk)

@@ -15,12 +15,14 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.appstatus.Metrics
+import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.extensions.iaSakLeveranseId
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
+import no.nav.lydia.ia.sak.api.prosess.tilDto
 import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
@@ -39,6 +41,7 @@ const val IA_MODULER_PATH = "moduler"
 
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
+    iaProsessService: IAProsessService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
@@ -116,6 +119,10 @@ fun Route.iaSakRådgiver(
                     sak.addHendelser(hendelser.filter { hendelse -> hendelse.saksnummer == sak.saksnummer })
                 }
                 .sortedByDescending { it.opprettetTidspunkt }
+                .map { sak ->
+                    val samarbeid = iaProsessService.hentIAProsesser(sak).getOrElse { emptyList() }
+                    sak.tilSakshistorikk(samarbeid.tilDto())
+                }
                 .right()
         }.also { either ->
             if (either.isLeft()) {
@@ -137,8 +144,8 @@ fun Route.iaSakRådgiver(
                     )
                 }
             }
-        }.map { iaSaker ->
-            call.respond(iaSaker.tilSamarbeidshistorikk()).right()
+        }.map { historikk ->
+            call.respond(historikk).right()
         }.mapLeft {
             call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }

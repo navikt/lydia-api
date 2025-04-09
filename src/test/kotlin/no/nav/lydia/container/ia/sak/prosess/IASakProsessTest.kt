@@ -5,6 +5,7 @@ import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldHaveSize
@@ -168,8 +169,8 @@ class IASakProsessTest {
 
         sak = sak.fullførSamarbeid(samarbeidSomFullføres)
         val historikk = hentSamarbeidshistorikk(sak.orgnr)
-        historikk.forExactlyOne {
-            it.sakshendelser.map { it.hendelsestype } shouldContainInOrder listOf(
+        historikk.forExactlyOne { sakshistorikk ->
+            sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainInOrder listOf(
                 IASakshendelseType.VIRKSOMHET_VURDERES,
                 IASakshendelseType.TA_EIERSKAP_I_SAK,
                 IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES,
@@ -178,6 +179,10 @@ class IASakProsessTest {
                 IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS,
                 IASakshendelseType.FULLFØR_PROSESS,
             )
+            sakshistorikk.samarbeid.forExactlyOne { samarbeid ->
+                samarbeid.saksnummer shouldBe sak.saksnummer
+                samarbeid.status shouldBe FULLFØRT
+            }
         }
     }
 
@@ -468,6 +473,11 @@ class IASakProsessTest {
             sak.orgnr,
         )
         samarbeidshistorikk shouldHaveSize 1
+        samarbeidshistorikk.forExactlyOne { sakshistorikk ->
+            sakshistorikk.samarbeid.forExactlyOne { samarbeid ->
+                samarbeid.navn shouldBe "Tredje"
+            }
+        }
         val sakshendelser = samarbeidshistorikk.first().sakshendelser
         sakshendelser shouldHaveSize 9
         sakshendelser.map { it.hendelsestype } shouldBe listOf(
@@ -500,6 +510,9 @@ class IASakProsessTest {
             sak.orgnr,
         )
         samarbeidshistorikk shouldHaveSize 1
+        samarbeidshistorikk.forExactlyOne {
+            it.samarbeid shouldHaveSize 0
+        }
         val sakshendelser = samarbeidshistorikk.first().sakshendelser
         sakshendelser shouldHaveSize 9
         sakshendelser.map { it.hendelsestype } shouldBe listOf(
@@ -518,13 +531,13 @@ class IASakProsessTest {
 
     @Test
     fun `skal ikke få feil i historikken dersom man oppretter flere prosesser på rad`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
+        val sak = nySakIKartleggesMedEtSamarbeid(navnPåSamarbeid = "Navn 1")
 
         sak.hentAlleSamarbeid() shouldHaveSize 1
 
-        sak.opprettNyttSamarbeid(navn = "Navn 1")
-            .opprettNyttSamarbeid(navn = "Navn 2")
+        sak.opprettNyttSamarbeid(navn = "Navn 2")
             .opprettNyttSamarbeid(navn = "Navn 3")
+            .opprettNyttSamarbeid(navn = "Navn 4")
             .hentAlleSamarbeid() shouldHaveSize 4
 
         sak.hentAlleSamarbeid() shouldHaveSize 4
@@ -533,6 +546,16 @@ class IASakProsessTest {
             sak.orgnr,
         )
         samarbeidshistorikk shouldHaveSize 1
+        samarbeidshistorikk.forExactlyOne { sakshistorikk ->
+            sakshistorikk.samarbeid shouldHaveSize 4
+            sakshistorikk.samarbeid.map { it.navn } shouldContainAll listOf(
+                "Navn 1",
+                "Navn 2",
+                "Navn 3",
+                "Navn 4",
+            )
+        }
+
         val sakshendelser = samarbeidshistorikk.first().sakshendelser
         sakshendelser shouldHaveSize 9
         sakshendelser.map { it.hendelsestype } shouldBe listOf(

@@ -557,6 +557,7 @@ private fun Application.lydiaRestApi(
             )
             iaSakRådgiver(
                 iaSakService = iaSakService,
+                iaProsessService = iaProsessService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
