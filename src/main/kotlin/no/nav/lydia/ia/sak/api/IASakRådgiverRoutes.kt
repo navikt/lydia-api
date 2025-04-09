@@ -76,11 +76,7 @@ fun Route.iaSakRådgiver(
         val saksnummer = call.saksnummer ?: return@get call.respond(IASakError.`ugyldig saksnummer`)
         call.somHøyestTilgang(adGrupper = adGrupper) { navAnsatt ->
             if (saksnummer == "aktiv") {
-                iaSakService.hentSakerForOrgnummer(orgnummer)
-                    .sortedByDescending { it.opprettetTidspunkt }
-                    .toDto(navAnsatt = navAnsatt)
-                    .firstOrNull { !it.lukket }
-                    .right()
+                iaSakService.hentAktivSak(orgnummer = orgnummer, navAnsatt = navAnsatt).right()
             } else {
                 iaSakService.hentIASak(saksnummer).map { it.toDto(navAnsatt) }
             }

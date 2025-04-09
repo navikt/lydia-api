@@ -11,6 +11,7 @@ import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 @Serializable
 data class VirksomhetDto(
     val orgnr: String,
+    val aktivtSaksnummer: String? = null,
     val navn: String,
     val status: VirksomhetStatus,
     val oppstartsdato: LocalDate? = null,
@@ -28,9 +29,10 @@ data class VirksomhetDto(
     val bransje: Bransje?,
 )
 
-fun Virksomhet.toDto() =
+fun Virksomhet.toDto(saksnummer: String?) =
     VirksomhetDto(
         orgnr = this.orgnr,
+        aktivtSaksnummer = saksnummer,
         navn = this.navn,
         adresse = this.adresse,
         status = this.status,

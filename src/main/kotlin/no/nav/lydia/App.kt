@@ -591,6 +591,7 @@ private fun Application.lydiaRestApi(
                 salesforceClient = SalesforceClient(salesforce = naisEnv.integrasjoner.salesforce),
                 auditLog = auditLog,
                 adGrupper = naisEnv.security.adGrupper,
+                iaSakService = iaSakService,
             )
             iaTjenesteoversikt(
                 iaTjenesteoversiktService = IATjenesteoversiktService(

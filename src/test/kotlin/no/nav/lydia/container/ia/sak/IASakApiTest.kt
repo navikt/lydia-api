@@ -46,6 +46,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldNotContainLog
 import no.nav.lydia.helper.TestVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
@@ -95,6 +96,31 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
+    @Test
+    fun `skal få saksnummer på en aktiv sak`() {
+        val sak = nySakIKartlegges()
+        val virksomhet = hentVirksomhetsinformasjon(orgnummer = sak.orgnr)
+        virksomhet.aktivtSaksnummer shouldBe sak.saksnummer
+    }
+
+    @Test
+    fun `skal få riktig saksnummer dersom saken har en aktiv og en lukket sak`() {
+        val ikkeAktivSak = nySakIKartlegges().nyIkkeAktuellHendelse()
+        ikkeAktivSak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 30)
+
+        val aktivSak = nySakIKartlegges()
+        val virksomhet = hentVirksomhetsinformasjon(orgnummer = aktivSak.orgnr)
+        virksomhet.aktivtSaksnummer shouldBe aktivSak.saksnummer
+    }
+
+    @Test
+    fun `skal ikke få saksnummer hvis det finnes lukkede saker`() {
+        val ikkeAktivSak = nySakIKartlegges().nyIkkeAktuellHendelse()
+        ikkeAktivSak.oppdaterHendelsesTidspunkter(antallDagerTilbake = 30)
+        val virksomhet = hentVirksomhetsinformasjon(orgnummer = ikkeAktivSak.orgnr)
+        virksomhet.aktivtSaksnummer shouldBe null
+    }
+
     @Test
     fun `skal lagre resulterende status i ia_sak_hendelse`() {
         val sak = nySakIKartlegges()

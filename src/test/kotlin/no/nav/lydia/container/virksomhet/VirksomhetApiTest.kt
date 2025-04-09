@@ -75,6 +75,7 @@ class VirksomhetApiTest {
         )
 
         virksomhet.orgnr shouldBe orgnummer
+        virksomhet.aktivtSaksnummer shouldBe null
         virksomhet.næringsundergruppe1.navn shouldBe BARNEHAGER.navn
         virksomhet.næringsundergruppe2?.navn shouldBe NÆRING_MED_BINDESTREK.navn
     }

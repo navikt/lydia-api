@@ -14,6 +14,7 @@ import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.Feil.Companion.tilFeilMedHttpFeilkode
+import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
@@ -51,6 +52,7 @@ import no.nav.lydia.ia.årsak.domene.ÅrsakType
 import no.nav.lydia.ia.årsak.ÅrsakService
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle.Superbruker
 import no.nav.lydia.tilgangskontroll.fia.Rolle
@@ -210,6 +212,14 @@ class IASakService(
                     .mapLeft { it.tilFeilMedHttpFeilkode() }
             }
     }
+
+    fun hentAktivSak(
+        orgnummer: String,
+        navAnsatt: NavAnsatt,
+    ) = hentSakerForOrgnummer(orgnummer)
+        .sortedByDescending { it.opprettetTidspunkt }
+        .toDto(navAnsatt = navAnsatt)
+        .firstOrNull { !it.lukket }
 
     fun tilbakeførSaker(tørrKjør: Boolean) =
         iaSakRepository.hentUrørteSakerIVurderesUtenEier().map {

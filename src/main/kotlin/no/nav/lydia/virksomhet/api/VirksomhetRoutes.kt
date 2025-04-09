@@ -11,6 +11,7 @@ import kotlinx.datetime.Clock
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
+import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
@@ -22,6 +23,7 @@ const val SALESFORCE_INFO_PATH = "${VIRKSOMHET_PATH}/salesforce"
 
 fun Route.virksomhet(
     virksomhetService: VirksomhetService,
+    iaSakService: IASakService,
     salesforceClient: SalesforceClient,
     auditLog: AuditLog,
     adGrupper: ADGrupper,
@@ -29,8 +31,9 @@ fun Route.virksomhet(
     get("$VIRKSOMHET_PATH/{orgnummer}") {
         val orgnummer =
             call.parameters["orgnummer"] ?: return@get call.respond(SykefraværsstatistikkError.`ugyldig orgnummer`)
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto()
+        call.somLesebruker(adGrupper = adGrupper) { navAnsatt ->
+            val aktivSak = iaSakService.hentAktivSak(orgnummer = orgnummer, navAnsatt = navAnsatt)
+            virksomhetService.hentVirksomhet(orgnr = orgnummer)?.toDto(saksnummer = aktivSak?.saksnummer)
                 ?.right() ?: VirksomhetFeil.`fant ikke virksomhet`.left()
         }.also {
             auditLog.auditloggEither(call = call, either = it, orgnummer = orgnummer, auditType = AuditType.access)
