@@ -18,7 +18,7 @@ data class SpørreundersøkelseDto(
     @Deprecated("Bruk temaer")
     val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
     val opprettetAv: String,
-    val type: String,
+    val type: Spørreundersøkelse.Companion.Type,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,

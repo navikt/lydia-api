@@ -24,6 +24,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -66,10 +67,11 @@ class SpørreundersøkelseRepository(
                     SELECT *
                     FROM ia_sak_kartlegging
                     WHERE kartlegging_id = :sporreundersokelseId
-                    AND status != '$SLETTET'
+                    AND status != :slettetStatus
                     """.trimMargin(),
                     mapOf(
                         "sporreundersokelseId" to spørreundersøkelseId,
+                        "slettetStatus" to SLETTET.name,
                     ),
                 ).map(this::mapRowToSpørreundersøkelseUtenInnhold).asSingle,
             )
@@ -77,7 +79,7 @@ class SpørreundersøkelseRepository(
 
     fun hentSpørreundersøkelser(
         prosess: IAProsess,
-        type: String = "Behovsvurdering",
+        type: Spørreundersøkelse.Companion.Type = Behovsvurdering,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf(
@@ -85,11 +87,13 @@ class SpørreundersøkelseRepository(
                     SELECT *
                     FROM ia_sak_kartlegging
                     WHERE ia_prosess = :prosessId
-                    AND status != '$SLETTET'
-                    AND type = '$type'
+                    AND status != :slettetStatus
+                    AND type = :type
                 """.trimMargin(),
                 mapOf(
                     "prosessId" to prosess.id,
+                    "slettetStatus" to SLETTET.name,
+                    "type" to type.name,
                 ),
             ).map(this::mapRowToSpørreundersøkelseUtenInnhold).asList,
         )
@@ -124,7 +128,7 @@ class SpørreundersøkelseRepository(
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         temaer: List<TemaInfo>,
-        type: String,
+        type: Spørreundersøkelse.Companion.Type,
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -159,7 +163,7 @@ class SpørreundersøkelseRepository(
                             "prosessId" to prosessId,
                             "status" to "OPPRETTET",
                             "opprettet_av" to saksbehandler.navIdent,
-                            "sporreundersokelseType" to type,
+                            "sporreundersokelseType" to type.name,
                             "opprettet" to opprettet,
                             "gyldigTil" to opprettet.plusHours(ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG),
                         ),
@@ -253,7 +257,7 @@ class SpørreundersøkelseRepository(
             temaer = hentTemaer(spørreundersøkelseId),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet").toKotlinLocalDateTime(),
-            type = this.string("type"),
+            type = Spørreundersøkelse.Companion.Type.valueOf(this.string("type")),
             endretTidspunkt = this.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
             påbegyntTidspunkt = this.localDateTimeOrNull("pabegynt")?.toKotlinLocalDateTime(),
             fullførtTidspunkt = this.localDateTimeOrNull("fullfort")?.toKotlinLocalDateTime(),
@@ -527,15 +531,19 @@ class SpørreundersøkelseRepository(
         }
     }
 
-    fun hentAktiveTemaer(type: String): List<TemaInfo> =
+    fun hentAktiveTemaer(type: Spørreundersøkelse.Companion.Type): List<TemaInfo> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT * FROM ia_sak_kartlegging_tema
-                    WHERE status = '${TemaStatus.AKTIV}'
-                    AND type = '$type'
+                    WHERE status = :status
+                    AND type = :type
                     """.trimIndent(),
+                    mapOf(
+                        "status" to TemaStatus.AKTIV.name,
+                        "type" to type.name,
+                    ),
                 ).map(this::mapTilTema).asList,
             )
         }
@@ -546,10 +554,14 @@ class SpørreundersøkelseRepository(
                 queryOf(
                     """
                     SELECT * FROM ia_sak_kartlegging_undertema
-                    WHERE status = '${TemaStatus.AKTIV}'
+                    WHERE status = :status
                     AND obligatorisk = true
-                    AND tema_id = '$temaId'
+                    AND tema_id = :temaId
                     """.trimIndent(),
+                    mapOf(
+                        "status" to TemaStatus.AKTIV.name,
+                        "temaId" to temaId,
+                    ),
                 ).map(this::mapTilUndertema).asList,
             )
         }

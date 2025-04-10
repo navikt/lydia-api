@@ -9,6 +9,7 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
 
 class FullførtBehovsvurderingProdusent(
     kafka: Kafka,
@@ -16,7 +17,7 @@ class FullførtBehovsvurderingProdusent(
 ) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
     Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) {
-        if (input.type == "Behovsvurdering" && input.status == AVSLUTTET) sendPåKafka(input)
+        if (input.type == Behovsvurdering && input.status == AVSLUTTET) sendPåKafka(input)
     }
 
     override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {

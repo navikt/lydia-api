@@ -51,10 +51,6 @@ fun Route.iaSakSpørreundersøkelse(
         val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
         val type = call.type ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
-        if (type != "Evaluering" && type != "Behovsvurdering") {
-            return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
-        }
-
         call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             spørreundersøkelseService.opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
@@ -85,10 +81,6 @@ fun Route.iaSakSpørreundersøkelse(
         val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
         val type = call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
-        if (type != "Evaluering" && type != "Behovsvurdering") {
-            return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
-        }
-
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
                 spørreundersøkelseService.hentSpørreundersøkelser(
@@ -116,11 +108,7 @@ fun Route.iaSakSpørreundersøkelse(
         val id = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val type = call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
-
-        if (type != "Evaluering" && type != "Behovsvurdering") {
-            return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
-        }
+        call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
         call.somSaksbehandler(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { _ ->

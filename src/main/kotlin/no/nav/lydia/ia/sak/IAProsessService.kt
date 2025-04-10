@@ -32,6 +32,8 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 
 class IAProsessService(
     val prosessRepository: ProsessRepository,
@@ -108,8 +110,8 @@ class IAProsessService(
         samarbeidsId: Int,
     ): KanGjennomføreStatusendring {
         val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
-        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering")
-        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering")
+        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering)
+        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering)
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
@@ -149,10 +151,10 @@ class IAProsessService(
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Behovsvurdering").isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering).isNotEmpty()) {
             blokkerende.add(FINNES_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, "Evaluering").isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering).isNotEmpty()) {
             blokkerende.add(FINNES_EVALUERING)
         }
         if (planRepository.hentPlan(prosessId = prosess.id) != null) {

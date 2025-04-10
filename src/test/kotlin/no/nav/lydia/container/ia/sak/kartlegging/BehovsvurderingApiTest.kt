@@ -47,6 +47,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørre
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -91,7 +92,7 @@ class BehovsvurderingApiTest {
     fun `kan opprette en spørreundersøkelse av type behovsvurdering med flere temaer`() {
         val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettSpørreundersøkelse()
 
-        behovsvurdering.type shouldBe "Behovsvurdering"
+        behovsvurdering.type shouldBe Behovsvurdering
         behovsvurdering.temaer shouldHaveSize 3
         behovsvurdering.temaer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -184,7 +185,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         )
 
         alleKartlegginger shouldHaveSize 1
@@ -380,7 +381,7 @@ class BehovsvurderingApiTest {
     fun `kan starte en Spørreundersøkelse av type Behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val behovsvurdering = sak.opprettSpørreundersøkelse()
-        behovsvurdering.type shouldBe "Behovsvurdering"
+        behovsvurdering.type shouldBe Behovsvurdering
         behovsvurdering.status shouldBe OPPRETTET
 
         val påbegyntBehovsvurdering = behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -390,7 +391,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ).forExactlyOne {
             it.status shouldBe PÅBEGYNT
             it.endretTidspunkt shouldNotBe null
@@ -424,7 +425,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ).forExactlyOne {
             it.status shouldBe AVSLUTTET
             it.endretTidspunkt shouldNotBe null
@@ -512,7 +513,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ) shouldHaveSize 0
     }
 
@@ -540,7 +541,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ) shouldHaveSize 0
     }
 
@@ -559,7 +560,7 @@ class BehovsvurderingApiTest {
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
                 prosessId = samarbeid.id,
-                type = "Behovsvurdering",
+                type = Behovsvurdering,
             ) shouldHaveSize 1
         }
     }
@@ -575,7 +576,7 @@ class BehovsvurderingApiTest {
         val sisteSamarbeid = alleSamarbeid.last()
 
         val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
-        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = "Behovsvurdering")
+        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = Behovsvurdering)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -583,9 +584,9 @@ class BehovsvurderingApiTest {
         val oppdatertBehovsvurdering = oppdaterBehovsvurdering(behovsvurdering, sak, sisteSamarbeid.id)
         oppdatertBehovsvurdering.endretTidspunkt shouldNotBe oppdatertBehovsvurdering.fullførtTidspunkt
 
-        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = "Behovsvurdering")
+        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = Behovsvurdering)
             .map { it.id } shouldBe emptyList()
-        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, sisteSamarbeid.id, type = "Behovsvurdering")
+        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, sisteSamarbeid.id, type = Behovsvurdering)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
     }
 
@@ -682,7 +683,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = førsteSamarbeid.id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ).forExactlyOne {
             it.status shouldBe PÅBEGYNT
             it.samarbeidId shouldBe førsteSamarbeid.id
@@ -692,7 +693,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = andreSamarbeid.id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ) shouldHaveSize 0
     }
 

@@ -33,6 +33,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -60,7 +61,7 @@ class EvalueringApiTest {
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering()
 
-        evaluering.type shouldBe "Evaluering"
+        evaluering.type shouldBe Evaluering
         evaluering.temaer shouldHaveSize 3
         evaluering.temaer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -107,7 +108,7 @@ class EvalueringApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Evaluering",
+            type = Evaluering,
         )
 
         alleEvalueringer shouldHaveSize 1
@@ -123,7 +124,7 @@ class EvalueringApiTest {
     fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
         val sak = nySakIViBistår()
         val opprettetPlan = sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
-        val type = "Evaluering"
+        val type = Evaluering
         val evaluering = sak.opprettEvaluering()
 
         evaluering.type shouldBe type
@@ -151,7 +152,7 @@ class EvalueringApiTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
-                    spørreundersøkelse.type shouldBe type
+                    spørreundersøkelse.type shouldBe type.name
                     spørreundersøkelse.status shouldBe PÅBEGYNT
                     spørreundersøkelse.plan?.id shouldBe opprettetPlan.id
                 }
@@ -226,7 +227,7 @@ class EvalueringApiTest {
 
         val forhåndsvisning = sak.hentForhåndsvisning(
             prosessId = samarbeid.id,
-            type = "Evaluering",
+            type = Evaluering,
             spørreundersøkseId = evaluering.id,
         )
 
@@ -262,7 +263,7 @@ class EvalueringApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid1.id,
-            type = "Evaluering",
+            type = Evaluering,
         ).forExactlyOne {
             it.status shouldBe AVSLUTTET
             it.id shouldBe evaluering.id
@@ -276,7 +277,7 @@ class EvalueringApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid1.id,
-            type = "Evaluering",
+            type = Evaluering,
         ).forExactlyOne {
             it.status shouldBe AVSLUTTET
             it.id shouldBe evaluering.id

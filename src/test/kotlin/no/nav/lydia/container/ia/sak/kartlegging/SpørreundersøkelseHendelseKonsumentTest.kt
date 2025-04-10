@@ -21,6 +21,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.RESULTATER_FOR_TEMA
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -75,7 +76,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ).first()
 
         fullførtBehovsvurdering.status shouldBe SpørreundersøkelseStatus.AVSLUTTET
@@ -100,7 +101,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
-            type = "Behovsvurdering",
+            type = Behovsvurdering,
         ).first()
 
         behovsvurderingMedEttStengtTema.status shouldBe SpørreundersøkelseStatus.PÅBEGYNT

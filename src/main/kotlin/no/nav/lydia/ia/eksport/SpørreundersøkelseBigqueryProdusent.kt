@@ -27,7 +27,7 @@ class SpørreundersøkelseBigqueryProdusent(
             id = input.id.toString(),
             orgnr = input.orgnummer,
             status = input.status,
-            type = input.type,
+            type = input.type.name,
             samarbeidId = input.samarbeidId,
             saksnummer = input.saksnummer,
             opprettetAv = input.opprettetAv,

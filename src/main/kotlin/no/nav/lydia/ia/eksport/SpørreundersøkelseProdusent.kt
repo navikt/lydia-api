@@ -18,6 +18,7 @@ import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
@@ -38,7 +39,7 @@ class SpørreundersøkelseProdusent(
         )?.navn ?: input.virksomhetsNavn
 
         val plan = when (input.type) {
-            "Evaluering" -> planRepository.hentPlan(input.samarbeidId)?.tilDto()
+            Evaluering -> planRepository.hentPlan(input.samarbeidId)?.tilDto()
             else -> null
         }
 
@@ -49,7 +50,7 @@ class SpørreundersøkelseProdusent(
             virksomhetsNavn = input.virksomhetsNavn,
             samarbeidsNavn = samarbeidNavn,
             status = input.status,
-            type = input.type,
+            type = input.type.name,
             plan = plan,
             temaer = input.temaer.map { it.tilKafkaMelding() },
             opprettet = input.opprettetTidspunkt,

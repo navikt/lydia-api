@@ -71,6 +71,8 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -649,8 +651,8 @@ class IASakKartleggingHelper {
             saksnummer: String,
             prosessId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
-            type: String,
-        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/$type")
+            type: Spørreundersøkelse.Companion.Type,
+        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
                 success = { it },
@@ -708,11 +710,11 @@ class IASakKartleggingHelper {
 
         fun IASakDto.hentForhåndsvisning(
             prosessId: Int = hentAlleSamarbeid().first().id,
-            type: String = "Evaluering",
+            type: Spørreundersøkelse.Companion.Type = Evaluering,
             spørreundersøkseId: String,
             token: String = authContainerHelper.saksbehandler1.token,
         ): SpørreundersøkelseDto =
-            applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/$type/$spørreundersøkseId")
+            applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}/$spørreundersøkseId")
                 .authentication().bearer(token)
                 .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                     success = { it },

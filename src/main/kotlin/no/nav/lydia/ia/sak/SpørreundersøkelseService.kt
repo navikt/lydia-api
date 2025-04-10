@@ -25,6 +25,8 @@ import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.tilDto
@@ -119,10 +121,10 @@ class SpørreundersøkelseService(
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         iaSak: IASak,
         prosessId: Int,
-        type: String,
+        type: Spørreundersøkelse.Companion.Type,
     ): Either<Feil, Spørreundersøkelse> =
         when (type) {
-            "Behovsvurdering" -> {
+            Behovsvurdering -> {
                 iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { samarbeid ->
                     spørreundersøkelseRepository.opprettSpørreundersøkelse(
                         orgnummer = orgnummer,
@@ -137,7 +139,7 @@ class SpørreundersøkelseService(
                 }
             }
 
-            "Evaluering" -> {
+            Evaluering -> {
                 if (iaSak.status == VI_BISTÅR) {
                     planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
                         val temaerInkludertIPlan = plan.temaer.filter {
@@ -183,10 +185,6 @@ class SpørreundersøkelseService(
                     IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
                 }
             }
-
-            else -> {
-                IASakSpørreundersøkelseError.`ugyldig type`.left()
-            }
         }
 
     fun slettSpørreundersøkelse(spørreundersøkelseId: String): Either<Feil, Spørreundersøkelse> {
@@ -206,14 +204,14 @@ class SpørreundersøkelseService(
     fun hentSpørreundersøkelser(
         sak: IASak,
         prosessId: Int,
-        type: String,
+        type: Spørreundersøkelse.Companion.Type,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> =
         try {
             iaProsessService.hentIAProsess(sak, prosessId).map {
                 spørreundersøkelseRepository.hentSpørreundersøkelser(prosess = it, type = type)
             }
         } catch (e: Exception) {
-            log.error("Noe gikk feil ved henting av spørreundersøkelse av type $type: ${e.message}", e)
+            log.error("Noe gikk feil ved henting av spørreundersøkelse av type ${type.name}: ${e.message}", e)
             IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
         }
 
@@ -299,7 +297,7 @@ class SpørreundersøkelseService(
     ): Either<Feil, Spørreundersøkelse> {
         val behovsvurdering = spørreundersøkelseRepository.hentSpørreundersøkelse(behovsvurderingId)
             ?: return IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
-        if (behovsvurdering.type == "Evaluering") {
+        if (behovsvurdering.type == Evaluering) {
             return IASakSpørreundersøkelseError.`ugyldig type`.left()
         }
         if (behovsvurdering.orgnummer != oppdaterBehovsvurderingDto.orgnummer) {

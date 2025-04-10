@@ -11,7 +11,7 @@ data class Spørreundersøkelse(
     val orgnummer: String,
     val virksomhetsNavn: String,
     val status: SpørreundersøkelseStatus,
-    val type: String,
+    val type: Type,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
@@ -22,5 +22,10 @@ data class Spørreundersøkelse(
 ) {
     companion object {
         val ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG = 24L
+
+        enum class Type {
+            Evaluering,
+            Behovsvurdering,
+        }
     }
 }
