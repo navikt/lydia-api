@@ -23,6 +23,8 @@ class SamarbeidBigqueryProdusent(
             navn = input.navn,
             status = input.status?.name,
             opprettet = input.opprettet,
+            avbrutt = input.avbrutt,
+            fullført = input.fullført,
             sistEndret = input.sistEndret,
         )
         return nøkkel to Json.encodeToString(verdi)
@@ -33,6 +35,8 @@ class SamarbeidBigqueryProdusent(
         val id: Int,
         val saksnummer: String,
         val opprettet: LocalDateTime,
+        val avbrutt: LocalDateTime? = null,
+        val fullført: LocalDateTime? = null,
         val sistEndret: LocalDateTime? = null,
         val navn: String? = null,
         val status: String? = null,

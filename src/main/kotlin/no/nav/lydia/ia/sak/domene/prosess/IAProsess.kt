@@ -8,6 +8,8 @@ data class IAProsess(
     val navn: String?,
     val status: IAProsessStatus?,
     val opprettet: LocalDateTime,
+    val avbrutt: LocalDateTime?,
+    val fullført: LocalDateTime?,
     val sistEndret: LocalDateTime?,
 )
 
@@ -15,4 +17,5 @@ enum class IAProsessStatus {
     AKTIV,
     FULLFØRT,
     SLETTET,
+    AVBRUTT,
 }

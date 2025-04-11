@@ -11,6 +11,9 @@ import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AVBRUTT
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.SLETTET
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -114,31 +117,73 @@ class ProsessRepository(
             navn = row.stringOrNull("navn"),
             status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
             opprettet = row.localDateTime("opprettet").toKotlinLocalDateTime(),
+            avbrutt = row.localDateTimeOrNull("avbrutt_tidspunkt")?.toKotlinLocalDateTime(),
+            fullført = row.localDateTimeOrNull("fullfort_tidspunkt")?.toKotlinLocalDateTime(),
             sistEndret = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
         )
 
-    fun oppdaterStatus(
-        samarbeid: IAProsessDto,
-        status: IAProsessStatus,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                UPDATE ia_prosess
-                 SET status = :status, endret_tidspunkt = :endret_tidspunkt
-                 WHERE id = :prosessId
-                 AND saksnummer = :saksnummer
-                 returning *
-                """.trimIndent(),
-                mapOf(
-                    "prosessId" to samarbeid.id,
-                    "saksnummer" to samarbeid.saksnummer,
-                    "status" to status.name,
-                    "endret_tidspunkt" to LocalDateTime.now(),
-                ),
-            ).map(this::mapRowToIaProsessDto).asSingle,
-        )!!
-    }
+    fun slettSamarbeid(samarbeid: IAProsessDto) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_prosess
+                     SET status = :status, endret_tidspunkt = :endret_tidspunkt
+                     WHERE id = :prosessId
+                     AND saksnummer = :saksnummer
+                     returning *
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to samarbeid.id,
+                        "saksnummer" to samarbeid.saksnummer,
+                        "status" to SLETTET.name,
+                        "endret_tidspunkt" to LocalDateTime.now(),
+                    ),
+                ).map(this::mapRowToIaProsessDto).asSingle,
+            )!!
+        }
+
+    fun fullførSamarbeid(samarbeid: IAProsessDto) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_prosess
+                     SET status = :status, endret_tidspunkt = :tidspunkt, fullfort_tidspunkt = :tidspunkt
+                     WHERE id = :prosessId
+                     AND saksnummer = :saksnummer
+                     returning *
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to samarbeid.id,
+                        "saksnummer" to samarbeid.saksnummer,
+                        "status" to FULLFØRT.name,
+                        "tidspunkt" to LocalDateTime.now(),
+                    ),
+                ).map(this::mapRowToIaProsessDto).asSingle,
+            )!!
+        }
+
+    fun avbrytSamarbeid(samarbeid: IAProsessDto) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_prosess
+                     SET status = :status, endret_tidspunkt = :tidspunkt, fullfort_tidspunkt = :tidspunkt
+                     WHERE id = :prosessId
+                     AND saksnummer = :saksnummer
+                     returning *
+                    """.trimIndent(),
+                    mapOf(
+                        "prosessId" to samarbeid.id,
+                        "saksnummer" to samarbeid.saksnummer,
+                        "status" to AVBRUTT.name,
+                        "tidspunkt" to LocalDateTime.now(),
+                    ),
+                ).map(this::mapRowToIaProsessDto).asSingle,
+            )!!
+        }
 
     fun hentSamarbeidIVirksomhetDto(prosessId: Int): SamarbeidIVirksomhetDto? =
         using(sessionOf(dataSource)) { session: Session ->

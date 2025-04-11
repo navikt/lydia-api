@@ -12,6 +12,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeExactly
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
@@ -92,6 +93,19 @@ class IASakProsessTest {
         postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT status FROM ia_prosess WHERE id = ${samarbeid.id}",
         ) shouldBe FULLFØRT.name
+    }
+
+    @Test
+    fun `fullføring av samarbeid skal oppdatere fullført_tidspunkt`() {
+        // TODO: Lag test for avbryting av samarbeid også når det er implementert
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak.fullførSamarbeid(samarbeid)
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "SELECT fullfort_tidspunkt FROM ia_prosess WHERE id = ${samarbeid.id}",
+        ).shouldNotBeNull()
     }
 
     @Test

@@ -31,7 +31,6 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 
@@ -191,7 +190,7 @@ class IAProsessService(
                     }
                 }
             }
-            prosessRepository.oppdaterStatus(samarbeid, IAProsessStatus.FULLFØRT)
+            prosessRepository.fullførSamarbeid(samarbeid)
         } else {
             prosessRepository.hentProsess(
                 saksnummer = samarbeid.saksnummer,
@@ -207,7 +206,7 @@ class IAProsessService(
         val samarbeid = sakshendelse.prosessDto
 
         return if (kanSletteProsess(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
-            prosessRepository.oppdaterStatus(samarbeid, IAProsessStatus.SLETTET)
+            prosessRepository.slettSamarbeid(samarbeid)
         } else {
             prosessRepository.hentProsess(
                 saksnummer = samarbeid.saksnummer,
