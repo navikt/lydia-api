@@ -369,12 +369,17 @@ class SakHelper {
                 failure = { fail(it.message) },
             )
 
-        fun nySakIKartlegges(
+        fun nySakIKontaktes(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = authContainerHelper.saksbehandler1.token,
         ) = opprettSakForVirksomhet(orgnummer)
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+
+        fun nySakIKartlegges(
+            orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = nySakIKontaktes(orgnummer, token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
             .also {
                 it.status shouldBe IAProsessStatus.KARTLEGGES
@@ -559,13 +564,13 @@ class SakHelper {
             payload: String? = null,
         ) = nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
-        fun IASakDto.fullførSamarbeid(samarbeid: IAProsessDto) =
+        fun IASakDto.fullførSamarbeid(samarbeid: IAProsessDto = hentAlleSamarbeid().first()) =
             nyHendelse(
                 hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
                 payload = Json.encodeToString(samarbeid),
             )
 
-        fun IASakDto.slettSamarbeid(samarbeid: IAProsessDto) =
+        fun IASakDto.slettSamarbeid(samarbeid: IAProsessDto = hentAlleSamarbeid().first()) =
             nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
                 payload = Json.encodeToString(samarbeid),

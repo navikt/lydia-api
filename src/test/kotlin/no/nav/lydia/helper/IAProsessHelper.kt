@@ -14,7 +14,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.fail
 
 fun IASakDto.nyttNavnPåSamarbeid(
-    iaProsessDto: IAProsessDto,
+    iaProsessDto: IAProsessDto = hentAlleSamarbeid().first(),
     nyttNavn: String,
     token: String = authContainerHelper.saksbehandler1.token,
 ) = nyHendelse(

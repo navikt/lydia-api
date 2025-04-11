@@ -21,6 +21,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreunders
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
+import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaksStatus
@@ -33,11 +34,13 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelseRespons
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
+import no.nav.lydia.helper.SakHelper.Companion.nySakIKontaktes
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsesTidspunkter
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhetRespons
 import no.nav.lydia.helper.SakHelper.Companion.slettSak
+import no.nav.lydia.helper.SakHelper.Companion.slettSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.StatistikkHelper.Companion.hentSykefravær
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -96,6 +99,30 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
+    @Test
+    fun `skal gå tilbake til forrige status uavhengig av hendelsesrekke`() {
+        nySakIKontaktes()
+            .nyHendelse(TILBAKE).status shouldBe VURDERES
+
+        nySakIKontaktes()
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
+            .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
+            .nyHendelse(TILBAKE).status shouldBe VURDERES
+
+        nySakIKartlegges()
+            .opprettNyttSamarbeid()
+            .slettSamarbeid()
+            .opprettNyttSamarbeid()
+            .nyttNavnPåSamarbeid(nyttNavn = "Test")
+            .nyHendelse(TILBAKE).status shouldBe KONTAKTES
+
+        val sakIViBistårFørTilbake = nySakIViBistår()
+        sakIViBistårFørTilbake.opprettEnPlan()
+        sakIViBistårFørTilbake
+            .fullførSamarbeid()
+            .nyHendelse(TILBAKE).status shouldBe KARTLEGGES
+    }
+
     @Test
     fun `skal få saksnummer på en aktiv sak`() {
         val sak = nySakIKartlegges()
