@@ -58,6 +58,23 @@ class ProsessRepository(
             )
         }
 
+    fun hentAktiveProsesser(saksnummer: String) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_prosess
+                    WHERE saksnummer = :saksnummer
+                    AND status = 'AKTIV'
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                    ),
+                ).map(this::mapRowToIaProsessDto).asList,
+            )
+        }
+
     fun hentAlleProsesser() =
         using(sessionOf(dataSource)) { session ->
             session.run(

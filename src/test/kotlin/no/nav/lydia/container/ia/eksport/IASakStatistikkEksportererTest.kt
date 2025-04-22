@@ -10,7 +10,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
+import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.SakHelper.Companion.oppdaterHendelsespunkterTilDato
@@ -142,7 +142,7 @@ class IASakStatistikkEksportererTest {
     @Test
     fun `det skal være mulig å eksportere fullførte saker uten leveranser selv om det ikke er mulig å fullføre en sak`() {
         // uten leveranser fra FIA
-        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
+        val sak = nySakIViBistår().fullførSak()
         postgresContainerHelper.performUpdate("DELETE from iasak_leveranse where saksnummer='${sak.saksnummer}'")
 
         kafkaContainerHelper.sendJobbMelding(iaSakStatistikkEksport)

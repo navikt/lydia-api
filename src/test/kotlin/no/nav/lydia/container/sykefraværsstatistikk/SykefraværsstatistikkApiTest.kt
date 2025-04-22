@@ -26,7 +26,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.lydia.Topic
 import no.nav.lydia.container.sykefraværsstatistikk.importering.SykefraværsstatistikkImportTestUtils
-import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
+import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -1075,7 +1075,7 @@ class SykefraværsstatistikkApiTest {
         val virksomhet3 =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
         nySakIViBistår(orgnummer = virksomhet3.orgnr)
-            .leggTilLeveranseOgFullførSak()
+            .fullførSak()
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 8)
 
         // -- lag en virksomhet med en ViBistår sak

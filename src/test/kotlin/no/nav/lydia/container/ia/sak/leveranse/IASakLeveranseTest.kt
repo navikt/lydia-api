@@ -18,7 +18,11 @@ import no.nav.lydia.helper.LeveranseHelper.Companion.deaktiverModul
 import no.nav.lydia.helper.LeveranseHelper.Companion.hentIATjenesterFraDatabase
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilIATjeneste
 import no.nav.lydia.helper.LeveranseHelper.Companion.leggTilModul
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentIASakLeveranser
 import no.nav.lydia.helper.SakHelper.Companion.hentIATjenester
 import no.nav.lydia.helper.SakHelper.Companion.hentModuler
@@ -268,6 +272,8 @@ class IASakLeveranseTest {
             frist = LocalDate.now().toKotlinLocalDate(),
             modulId = TestData.AKTIV_MODUL.id,
         )
+        sakIViBistår.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        sakIViBistår.fullførSamarbeid()
         val response = SakHelper.nyHendelsePåSakMedRespons(
             sak = sakIViBistår,
             hendelsestype = FULLFØR_BISTAND,

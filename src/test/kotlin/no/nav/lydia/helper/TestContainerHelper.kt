@@ -24,6 +24,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -626,13 +627,15 @@ class SakHelper {
             return this.oppdaterHendelsesTidspunkter(antallDagerTilbake = dagerSomSkalTrekkesFra)
         }
 
-        fun IASakDto.leggTilLeveranseOgFullførSak(
+        fun IASakDto.fullførSak(
             modulId: Int = TestData.AKTIV_MODUL.id,
             token: String = authContainerHelper.saksbehandler1.token,
         ): IASakDto {
+            // TODO: Fjern leveranse ting
             val leveranse = this.opprettIASakLeveranse(modulId = modulId)
             leveranse.oppdaterIASakLeveranse(this.orgnr, IASakLeveranseStatus.LEVERT)
-            return nyHendelse(FULLFØR_BISTAND, token)
+            opprettEnPlan()
+            return fullførSamarbeid().nyHendelse(FULLFØR_BISTAND, token)
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)

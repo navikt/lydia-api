@@ -151,7 +151,7 @@ fun Route.iaSakRådgiver(
         val hendelseDto = call.receive<IASakshendelseDto>()
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
-                iaSakService.behandleHendelse(hendelseDto, saksbehandler = saksbehandler, navEnhet = navEnhet)
+                iaSakService.behandleHendelse(hendelseDto = hendelseDto, saksbehandler = saksbehandler, navEnhet = navEnhet)
                     .map { it.toDto(saksbehandler) }
                     .onRight { Metrics.loggHendelse(hendelseDto.hendelsesType) }
             }
@@ -316,4 +316,7 @@ object IASakError {
 
     val `kan ikke fullføre med gjenstående leveranser` =
         Feil("Kan ikke fullføre med gjenstående leveranser", HttpStatusCode.BadRequest)
+
+    val `kan ikke fullføre sak med aktive samarbeid` =
+        Feil("Kan ikke fullføre sak med aktive samarbeid", HttpStatusCode.BadRequest)
 }

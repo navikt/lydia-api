@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper
-import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
+import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
@@ -86,7 +86,7 @@ class IASakStatusEksportørTest {
     fun `sletting av feilåpnet sak produserer en slett melding på topic og spiller ut aktiv sak sin status`() {
         runBlocking {
             val eldsteSak = SakHelper.nySakIViBistår().nyIkkeAktuellHendelse()
-            val gammelSak = SakHelper.nySakIViBistår(orgnummer = eldsteSak.orgnr).leggTilLeveranseOgFullførSak()
+            val gammelSak = SakHelper.nySakIViBistår(orgnummer = eldsteSak.orgnr).fullførSak()
 
             // -- Slett en sak, for å teste om siste melding er den gjeldene aktive statusen
             opprettSakForVirksomhet(orgnummer = eldsteSak.orgnr)
@@ -96,11 +96,11 @@ class IASakStatusEksportørTest {
                 )
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger shouldHaveSize 20
+                meldinger shouldHaveSize 21
                 // -- Siste meldingen skal være den gamle fullførte saken
-                meldinger[19] shouldContain gammelSak.saksnummer
-                meldinger[19] shouldContain gammelSak.orgnr
-                meldinger[19] shouldContain FULLFØRT.name
+                meldinger[20] shouldContain gammelSak.saksnummer
+                meldinger[20] shouldContain gammelSak.orgnr
+                meldinger[20] shouldContain FULLFØRT.name
             }
         }
     }

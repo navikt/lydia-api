@@ -48,6 +48,8 @@ class IAProsessService(
             IAProsessFeil.`feil ved henting av prosess`
         }
 
+    fun hentAktiveIAProsesser(sak: IASak): List<IAProsess> = prosessRepository.hentAktiveProsesser(saksnummer = sak.saksnummer)
+
     fun hentIAProsess(
         sak: IASak,
         prosessId: Int,

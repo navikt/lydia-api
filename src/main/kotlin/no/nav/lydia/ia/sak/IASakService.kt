@@ -133,34 +133,39 @@ class IASakService(
         if (aktiveSaker.isNotEmpty() && hendelseDto.saksnummer != aktiveSaker.first().saksnummer) {
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
-        val førsteAktivSak = aktiveSaker.firstOrNull()
-        val sistEndretAvHendelseId = førsteAktivSak?.endretAvHendelseId
 
-        val alleLeveranserPåEnSak = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = hendelseDto.saksnummer)
-        val aktiveLeveranserPåEnSak = alleLeveranserPåEnSak.filter { it.status == IASakLeveranseStatus.UNDER_ARBEID }
+        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND) {
+            val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
+            val alleAktiveSamarbeidPåSak = iaProsessService.hentAktiveIAProsesser(sak = aktivSak)
+            if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
+                return IASakError.`kan ikke fullføre sak med aktive samarbeid`.left()
+            }
 
-        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND && aktiveLeveranserPåEnSak.isNotEmpty()) {
-            return IASakError.`kan ikke fullføre med gjenstående leveranser`.left()
+            val alleLeveranserPåEnSak = iaSakLeveranseRepository.hentIASakLeveranser(saksnummer = hendelseDto.saksnummer)
+            val aktiveLeveranserPåEnSak = alleLeveranserPåEnSak.filter { it.status == IASakLeveranseStatus.UNDER_ARBEID }
+            if (aktiveLeveranserPåEnSak.isNotEmpty()) {
+                return IASakError.`kan ikke fullføre med gjenstående leveranser`.left()
+            }
         }
 
         when (hendelseDto.hendelsesType) {
             SLETT_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
-                val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
+                val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 if (!iaProsessService.kanSletteProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
                 }
             }
             FULLFØR_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
-                val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
+                val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 if (!iaProsessService.kanFullføreProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke fullføre samarbeid`.left()
                 }
             }
             ENDRE_PROSESS, NY_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
-                val aktivSak = førsteAktivSak ?: return IASakError.`generell feil under uthenting`.left()
+                val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 val alleProsesser = iaProsessService.hentIAProsesser(aktivSak)
 
                 if (prosessDto.navn != null && prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
@@ -186,6 +191,7 @@ class IASakService(
 
                 val sak = iaSakRepository.hentIASak(hendelseDto.saksnummer)
                     .medHendelser(hendelser) ?: return IASakError.`generell feil under uthenting`.left()
+                val sistEndretAvHendelseId = sak.endretAvHendelseId
 
                 val umodifisertIaSak = sak.kopier() // siden vi muterer state i utførhende -> behandleHendelse
 

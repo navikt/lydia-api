@@ -2,6 +2,7 @@ package no.nav.lydia.container.ia.sak
 
 import com.github.guepardoapps.kulid.ULID
 import io.kotest.assertions.shouldFail
+import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.shouldForAtLeastOne
@@ -21,13 +22,13 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreunders
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
+import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
 import no.nav.lydia.helper.SakHelper.Companion.hentSakRespons
 import no.nav.lydia.helper.SakHelper.Companion.hentSaksStatus
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikkForOrgnrRespons
-import no.nav.lydia.helper.SakHelper.Companion.leggTilLeveranseOgFullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelsePåSakMedRespons
@@ -69,13 +70,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
@@ -99,6 +95,14 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class IASakApiTest {
+    @Test
+    fun `skal ikke kunne fullføre sak uten å fullføre alle samarbeid først`() {
+        val sak = nySakIKartlegges().opprettNyttSamarbeid().also { it.opprettEnPlan() }.nyHendelse(hendelsestype = VIRKSOMHET_SKAL_BISTÅS)
+        shouldFailWithMessage("HTTP Exception 400 Bad Request Kan ikke fullføre sak med aktive samarbeid") {
+            sak.nyHendelse(hendelsestype = FULLFØR_BISTAND)
+        }
+    }
+
     @Test
     fun `skal gå tilbake til forrige status uavhengig av hendelsesrekke`() {
         nySakIKontaktes()
@@ -284,36 +288,11 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal ikke kunne slette sak med annen status enn Vurderes (uten eier)`() {
-        var sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-        val hendelserDetIkkeSkalKunneSlettesEtter = IASakshendelseType.entries
-            .filter { it != OPPRETT_SAK_FOR_VIRKSOMHET && it != VIRKSOMHET_VURDERES && it != SLETT_SAK }
+    fun `skal ikke kunne slette sak etter at eierskap er tatt`() {
+        val sak = opprettSakForVirksomhet(orgnummer = nyttOrgnummer()).nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK)
 
-        hendelserDetIkkeSkalKunneSlettesEtter.forEach {
-            sak = when (it) {
-                VIRKSOMHET_ER_IKKE_AKTUELL ->
-                    sak.nyHendelse(
-                        it,
-                        payload = ValgtÅrsak(
-                            type = VIRKSOMHETEN_TAKKET_NEI,
-                            begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
-                        ).toJson(),
-                    )
-
-                FULLFØR_BISTAND ->
-                    sak.leggTilLeveranseOgFullførSak()
-
-                ENDRE_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
-                NY_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
-                SLETT_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
-                FULLFØR_PROSESS -> sak // TODO: Hva gjør denne testen? Hvordan virker den?
-
-                else ->
-                    sak.nyHendelse(it)
-            }
-            shouldFail {
-                sak.slettSak()
-            }
+        shouldFail {
+            sak.slettSak()
         }
     }
 
@@ -541,12 +520,13 @@ class IASakApiTest {
                     sak.nyHendelse(FULLFØR_BISTAND)
                 }
             }
+            .opprettNyttSamarbeid()
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
         sak.status shouldBe VI_BISTÅR
 
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
             .statuskode() shouldBe 501
-        sak = sak.leggTilLeveranseOgFullførSak()
+        sak = sak.fullførSak()
         sak.status shouldBe FULLFØRT
 
         val sak2Respons =
@@ -1027,8 +1007,7 @@ class IASakApiTest {
     @Test
     fun `skal IKKE kunne gå tilbake til vi bistår fra fullført etter fristen har gått`() {
         // TODO Testrydding: Kanskje presisere "saken er lukket" i staden for "fristen har gått"?  (+ capslock her på IKKE, i motsetning til resten av testane)
-        val sak = nySakIViBistår()
-            .leggTilLeveranseOgFullførSak()
+        val sak = nySakIViBistår().fullførSak()
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
         shouldFail {
@@ -1077,15 +1056,14 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
-        val sak = nySakIViBistår()
-            .leggTilLeveranseOgFullførSak()
+        val sak = nySakIViBistår().fullførSak()
             .nyHendelse(TILBAKE)
         sak.status shouldBe VI_BISTÅR
     }
 
     @Test
     fun `skal kunne overta sak som står som fullført og deretter tilbake til vi bistår`() {
-        val sak = nySakIViBistår().leggTilLeveranseOgFullførSak()
+        val sak = nySakIViBistår().fullførSak()
         val sakEtterOvertakelse = sak.nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
 
         sakEtterOvertakelse.status shouldBe FULLFØRT
@@ -1100,8 +1078,7 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne gå tilbake fra fullført status dersom virksomheten har en annen åpen sak`() {
         val virksomhet = lastInnNyVirksomhet()
-        val fullførtSak = nySakIViBistår(orgnummer = virksomhet.orgnr)
-            .leggTilLeveranseOgFullførSak()
+        val fullførtSak = nySakIViBistår(orgnummer = virksomhet.orgnr).fullførSak()
 
         // Dette skal kunne skje etter 10 dager på frontend (men sjekkes ikke backend)
         opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
@@ -1135,17 +1112,10 @@ class IASakApiTest {
 
     @Test
     fun `skal kunne fullføre en sak fra 'Vi Bistår' status`() {
-        opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .also { sak ->
-                shouldFail {
-                    sak.nyHendelse(FULLFØR_BISTAND)
-                }
-            }
-            .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-            .leggTilLeveranseOgFullførSak()
+        nySakIViBistår().also {
+            it.status shouldBe VI_BISTÅR
+        }
+            .fullførSak()
             .also { sak -> sak.status shouldBe FULLFØRT }
     }
 
@@ -1220,8 +1190,7 @@ class IASakApiTest {
             token = superbruker,
             success = { mainResponse ->
                 val org = mainResponse.data.filter { it.status == IKKE_AKTIV }.random()
-                val sak = nySakIViBistår(orgnummer = org.orgnr, token = saksbehandler)
-                    .leggTilLeveranseOgFullførSak(token = saksbehandler)
+                val sak = nySakIViBistår(orgnummer = org.orgnr, token = saksbehandler).fullførSak(token = saksbehandler)
                 hentSykefravær( // Tester at vi får se FULLFØRT intil fristen går ut
                     token = superbruker,
                     success = { response ->
@@ -1273,7 +1242,8 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .nyHendelse(TILBAKE)
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-            .leggTilLeveranseOgFullførSak()
+            .opprettNyttSamarbeid()
+            .fullførSak()
 
         hentSak(orgnummer = sak.orgnr).also { enSak ->
             enSak.status shouldBe FULLFØRT
