@@ -224,6 +224,7 @@ class IASakshendelseRepository(
                     siste.hendelsesType != IASakshendelseType.NY_PROSESS &&
                     siste.hendelsesType != IASakshendelseType.SLETT_PROSESS &&
                     siste.hendelsesType != IASakshendelseType.FULLFØR_PROSESS &&
+                    siste.hendelsesType != IASakshendelseType.AVBRYT_PROSESS &&
                     siste.hendelsesType == nestSiste.hendelsesType
                 ) {
                     logger.warn(

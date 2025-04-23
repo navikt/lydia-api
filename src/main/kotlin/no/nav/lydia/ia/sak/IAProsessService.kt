@@ -25,10 +25,7 @@ import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
@@ -64,6 +61,9 @@ class IAProsessService(
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
                     FULLFØR_PROSESS -> fullførProsess(sakshendelse, sak)?.let { samarbeid ->
+                        samarbeidObservers.forEach { it.receive(samarbeid) }
+                    }
+                    AVBRYT_PROSESS -> avbrytProsess(sakshendelse, sak)?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
                     ENDRE_PROSESS -> oppdaterNavnPåProsess(sakshendelse.prosessDto)
@@ -172,6 +172,27 @@ class IAProsessService(
         )
     }
 
+    fun kanAvbryteSamarbeid(
+        sak: IASak,
+        samarbeidsId: Int,
+    ): KanGjennomføreStatusendring {
+        val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
+        val blokkerende = mutableListOf<StatusendringBegrunnelser>()
+
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering).isNotEmpty()) {
+            blokkerende.add(FINNES_BEHOVSVURDERING)
+        }
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering).isNotEmpty()) {
+            blokkerende.add(FINNES_EVALUERING)
+        }
+
+        return KanGjennomføreStatusendring(
+            kanGjennomføres = blokkerende.isEmpty(),
+            blokkerende = blokkerende,
+            advarsler = emptyList(),
+        )
+    }
+
     private fun fullførProsess(
         sakshendelse: ProsessHendelse,
         sak: IASak,
@@ -193,6 +214,22 @@ class IAProsessService(
                 }
             }
             prosessRepository.fullførSamarbeid(samarbeid)
+        } else {
+            prosessRepository.hentProsess(
+                saksnummer = samarbeid.saksnummer,
+                prosessId = samarbeid.id,
+            )
+        }
+    }
+
+    private fun avbrytProsess(
+        sakshendelse: ProsessHendelse,
+        sak: IASak,
+    ): IAProsess? {
+        val samarbeid = sakshendelse.prosessDto
+
+        return if (kanAvbryteSamarbeid(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
+            prosessRepository.avbrytSamarbeid(samarbeid)
         } else {
             prosessRepository.hentProsess(
                 saksnummer = samarbeid.saksnummer,
@@ -230,4 +267,6 @@ object IAProsessFeil {
         Feil("kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan", HttpStatusCode.BadRequest)
     val `kan ikke fullføre samarbeid` =
         Feil("kan ikke fullføre samarbeid", HttpStatusCode.BadRequest)
+    val `kan ikke avbryte samarbeid` =
+        Feil("kan ikke avbryte samarbeid", HttpStatusCode.BadRequest)
 }

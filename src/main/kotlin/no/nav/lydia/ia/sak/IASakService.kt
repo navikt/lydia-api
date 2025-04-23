@@ -37,12 +37,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
@@ -134,7 +129,7 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
 
-        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND) {
+        if (hendelseDto.hendelsesType == FULLFØR_BISTAND) {
             val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
             val alleAktiveSamarbeidPåSak = iaProsessService.hentAktiveIAProsesser(sak = aktivSak)
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
@@ -149,6 +144,13 @@ class IASakService(
         }
 
         when (hendelseDto.hendelsesType) {
+            AVBRYT_PROSESS -> {
+                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
+                if (!iaProsessService.kanAvbryteSamarbeid(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
+                    return IAProsessFeil.`kan ikke avbryte samarbeid`.left()
+                }
+            }
             SLETT_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
@@ -202,7 +204,7 @@ class IASakService(
                         årsakService.lagreÅrsak(sakshendelse)
                         iaProsessService.oppdaterSamarbeid(sakshendelse, sak)
                         when (sakshendelse.hendelsesType) {
-                            IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
+                            VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
                                 sakshendelse,
                                 saksbehandler,
                             )

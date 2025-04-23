@@ -49,10 +49,11 @@ class ProsessRepository(
                     SELECT *
                     FROM ia_prosess
                     WHERE saksnummer = :saksnummer
-                    AND status IN ('AKTIV', 'FULLFØRT')
+                    AND status != :slettetStatus
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer,
+                        "slettetStatus" to SLETTET.name,
                     ),
                 ).map(this::mapRowToIaProsessDto).asList,
             )
@@ -187,7 +188,7 @@ class ProsessRepository(
                 queryOf(
                     """
                     UPDATE ia_prosess
-                     SET status = :status, endret_tidspunkt = :tidspunkt, fullfort_tidspunkt = :tidspunkt
+                     SET status = :status, endret_tidspunkt = :tidspunkt, avbrutt_tidspunkt = :tidspunkt
                      WHERE id = :prosessId
                      AND saksnummer = :saksnummer
                      returning *

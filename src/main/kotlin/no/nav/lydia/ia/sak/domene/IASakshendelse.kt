@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
@@ -49,6 +50,7 @@ open class IASakshendelse(
             ENDRE_PROSESS,
             SLETT_PROSESS,
             FULLFØR_PROSESS,
+            AVBRYT_PROSESS,
             -> ProsessHendelse.fromDto(dto, saksbehandler, navEnhet)
 
             else -> IASakshendelse(
@@ -274,6 +276,7 @@ enum class IASakshendelseType {
     ENDRE_PROSESS,
     SLETT_PROSESS,
     FULLFØR_PROSESS,
+    AVBRYT_PROSESS,
     // --
 
     TILBAKE,

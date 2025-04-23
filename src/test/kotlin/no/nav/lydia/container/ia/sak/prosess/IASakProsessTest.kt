@@ -4,6 +4,7 @@ import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
+import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -29,6 +30,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
+import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.kanGjennomføreStatusendring
@@ -56,6 +58,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AVBRUTT
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
@@ -80,6 +83,35 @@ class IASakProsessTest {
         fun tearDown() {
             konsument.unsubscribe()
             konsument.close()
+        }
+    }
+
+    @Test
+    fun `skal kunne avbryte et samarbeid fra både KARTLEGGES og VI BISTÅR`() {
+        val sakIKartlegges = nySakIKartlegges().opprettNyttSamarbeid()
+        sakIKartlegges.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe AVBRUTT
+
+        val sakIViBistår = nySakIViBistår()
+        sakIViBistår.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe AVBRUTT
+    }
+
+    @Test
+    fun `skal få avbrutte samarbeid i listen over alle samarbeid`() {
+        nySakIViBistår(navnPåSamarbeid = "Avbrutt samarbeid")
+            .avbrytSamarbeid()
+            .hentAlleSamarbeid().forExactlyOne { samarbeid ->
+                samarbeid.navn shouldBe "Avbrutt samarbeid"
+                samarbeid.status shouldBe AVBRUTT
+            }
+    }
+
+    @Test
+    fun `skal ikke kunne avbryte samarbeid som inne holder spørreundersøkelser`() {
+        val sak = nySakIViBistår()
+        sak.opprettSpørreundersøkelse()
+
+        shouldFailWithMessage("HTTP Exception 400 Bad Request kan ikke avbryte samarbeid") {
+            sak.avbrytSamarbeid()
         }
     }
 
