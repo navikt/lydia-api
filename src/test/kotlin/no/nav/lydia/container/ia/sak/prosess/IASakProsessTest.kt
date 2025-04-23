@@ -233,7 +233,17 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `skal få riktige begrunnelser for om et samarbeid kan fullføres (NY)`() {
+    fun `skal få riktige begrunnelser for om et samarbeid kan avbrytes`() {
+        val sak = nySakIViBistår()
+        sak.opprettSpørreundersøkelse()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val kanIkkeGjennomføres = sak.kanGjennomføreStatusendring(samarbeid, "avbrytes")
+        kanIkkeGjennomføres.kanGjennomføres shouldBe false
+        kanIkkeGjennomføres.blokkerende shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
+    }
+
+    @Test
+    fun `skal få riktige begrunnelser for om et samarbeid kan fullføres`() {
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val manglerPlan = sak.kanGjennomføreStatusendring(samarbeid, "fullfores")

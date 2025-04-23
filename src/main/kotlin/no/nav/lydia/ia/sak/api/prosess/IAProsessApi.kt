@@ -39,6 +39,7 @@ fun Route.iaProsessApi(
                 when (statusEndring) {
                     "fullfores" -> iaProsessService.kanFullføreProsess(sak = iaSak, samarbeidsId = samarbeid).right()
                     "slettes" -> iaProsessService.kanSletteProsess(sak = iaSak, samarbeidsId = samarbeid).right()
+                    "avbrytes" -> iaProsessService.kanAvbryteSamarbeid(sak = iaSak, samarbeidsId = samarbeid).right()
                     else -> Feil(feilmelding = "ugyldig statusendring", httpStatusCode = HttpStatusCode.BadRequest).left()
                 }
             }
