@@ -23,7 +23,7 @@ import no.nav.lydia.Salesforce
 import no.nav.lydia.ia.sak.api.Feil
 import org.slf4j.LoggerFactory.getLogger
 
-private const val QUERY_PATH = "/services/data/v59.0/query"
+private const val QUERY_PATH = "/services/data/v63.0/query"
 private const val TOKEN_TIMEOUT_MS = 50 * 60 * 1000 // 50 min i ms
 
 class SalesforceClient(
