@@ -9,7 +9,8 @@ limitsCpu: 2000m
 limitsMemory: 2Gi
 requestsCpu: 100m
 requestsMemory: 512Mi
-salesforceTokenHost: https://login.salesforce.com
+salesforceTokenBaseUrl: https://login.salesforce.com
+salesforceTokenHost: login.salesforce.com
 salesforceApiHost: navdialog.my.salesforce.com
 journalpostHost: dokarkiv.prod-fss-pub.nais.io
 journalpostApi: https://dokarkiv.prod-fss-pub.nais.io/rest/journalpostapi/v1/journalpost

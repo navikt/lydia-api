@@ -44,7 +44,7 @@ spec:
       external:
         - host: {{journalpostHost}}
         - host: data.ssb.no
-        - host: login.salesforce.com
+        - host: {{salesforceTokenHost}}
         - host: {{salesforceApiHost}}
     inbound:
       rules:
@@ -85,8 +85,8 @@ spec:
       value: {{fiaLesetilgangGroup}}
     - name: TEAM_PIA_GROUP_ID
       value: {{teamPiaGroup}}
-    - name: SALESFORCE_TOKEN_HOST
-      value: {{salesforceTokenHost}}
+    - name: SALESFORCE_TOKEN_BASE_URL
+      value: {{salesforceTokenBaseUrl}}
     - name: JOURNALPOST_V1_URL
       value: {{journalpostApi}}
     - name: PIA_PDFGEN_URL

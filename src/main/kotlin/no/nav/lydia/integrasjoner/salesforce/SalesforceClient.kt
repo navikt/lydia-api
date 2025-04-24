@@ -86,7 +86,7 @@ class SalesforceClient(
         }
 
     private suspend fun hentNyttTokenFraSalesforce(): Either<Feil, SalesforceAccessToken> {
-        val tokenUrl = "${salesforce.tokenHost}/services/oauth2/token"
+        val tokenUrl = "${salesforce.tokenBaseUrl}/services/oauth2/token"
         val response = httpClient.submitForm(
             url = tokenUrl,
             formParameters = parameters {

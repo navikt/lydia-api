@@ -129,7 +129,7 @@ class Kafka(
 }
 
 class Salesforce(
-    val tokenHost: String = getEnvVar("SALESFORCE_TOKEN_HOST"),
+    val tokenBaseUrl: String = getEnvVar("SALESFORCE_TOKEN_BASE_URL"),
     val clientId: String = getEnvVar("SALESFORCE_CLIENT_ID"),
     val clientSecret: String = getEnvVar("SALESFORCE_CLIENT_SECRET"),
     val username: String = getEnvVar("SALESFORCE_USERNAME"),
