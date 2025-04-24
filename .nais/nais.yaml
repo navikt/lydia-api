@@ -45,7 +45,7 @@ spec:
         - host: {{journalpostHost}}
         - host: data.ssb.no
         - host: login.salesforce.com
-        - host: navdialog.my.salesforce.com
+        - host: {{salesforceApiHost}}
     inbound:
       rules:
         - application: lydia-radgiver-frontend
