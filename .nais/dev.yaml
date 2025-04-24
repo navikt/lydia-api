@@ -10,6 +10,7 @@ limitsMemory: 1Gi
 requestsCpu: 100m
 requestsMemory: 256Mi
 salesforceTokenHost: https://test.salesforce.com
+salesforceApiHost: navdialog--sit2.sandbox.my.salesforce.com
 journalpostHost: dokarkiv-q2.dev-fss-pub.nais.io
 journalpostApi: https://dokarkiv-q2.dev-fss-pub.nais.io/rest/journalpostapi/v1/journalpost
 journalpostOboScope: api://dev-fss.teamdokumenthandtering.dokarkiv/.default
