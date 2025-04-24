@@ -239,7 +239,7 @@ class IASakProsessTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         val kanIkkeGjennomføres = sak.kanGjennomføreStatusendring(samarbeid, "avbrytes")
         kanIkkeGjennomføres.kanGjennomføres shouldBe false
-        kanIkkeGjennomføres.blokkerende shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
+        kanIkkeGjennomføres.blokkerende shouldBe listOf(StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING)
     }
 
     @Test

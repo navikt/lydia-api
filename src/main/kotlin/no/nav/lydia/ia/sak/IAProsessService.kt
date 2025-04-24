@@ -3,7 +3,7 @@ package no.nav.lydia.ia.sak
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
@@ -25,7 +25,11 @@ import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
@@ -120,7 +124,7 @@ class IAProsessService(
             blokkerende.add(SAK_I_FEIL_STATUS)
         }
 
-        if (behovsvurderinger.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
+        if (behovsvurderinger.any { it.status != AVSLUTTET }) {
             blokkerende.add(AKTIV_BEHOVSVURDERING)
         }
 
@@ -128,7 +132,7 @@ class IAProsessService(
             advarsler.add(INGEN_EVALUERING)
         }
 
-        if (evalueringer.any { it.status != SpørreundersøkelseStatus.AVSLUTTET }) {
+        if (evalueringer.any { it.status != AVSLUTTET }) {
             blokkerende.add(AKTIV_EVALUERING)
         }
 
@@ -179,11 +183,11 @@ class IAProsessService(
         val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering).isNotEmpty()) {
-            blokkerende.add(FINNES_BEHOVSVURDERING)
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering).any { it.status != AVSLUTTET }) {
+            blokkerende.add(AKTIV_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering).isNotEmpty()) {
-            blokkerende.add(FINNES_EVALUERING)
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering).any { it.status != AVSLUTTET }) {
+            blokkerende.add(AKTIV_EVALUERING)
         }
 
         return KanGjennomføreStatusendring(
