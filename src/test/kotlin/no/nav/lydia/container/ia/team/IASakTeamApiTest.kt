@@ -7,6 +7,8 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.helper.SakHelper.Companion.bliMedITeam
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.opprettSakForVirksomhet
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -29,19 +31,6 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 class IASakTeamApiTest {
-    private fun bliMedITeam(
-        token: String,
-        saksnummer: String,
-    ) = applikasjon.performPost("$IA_SAK_TEAM_PATH/$saksnummer")
-        .authentication().bearer(token)
-        .tilSingelRespons<BrukerITeamDto>().third.fold(
-            success = { respons -> respons },
-            failure = { fail(it.message) },
-        )
-        .also { it.saksnummer shouldBe saksnummer }
-
-    private fun IASakDto.leggTilFolger(token: String) = also { bliMedITeam(token = token, saksnummer) }
-
     private fun opprettSakBliOgMedITeam(
         token: String,
         orgnummer: String = nyttOrgnummer(),

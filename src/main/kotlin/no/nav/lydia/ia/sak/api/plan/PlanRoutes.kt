@@ -24,8 +24,9 @@ import no.nav.lydia.ia.sak.api.extensions.prosessId
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.temaId
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.somEierAvSakIProsess
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.somFølgerAvSakIProsess
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
 const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
@@ -33,6 +34,7 @@ const val PLAN_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/plan"
 fun Route.iaSakPlan(
     planService: PlanService,
     iaSakService: IASakService,
+    iaTeamService: IATeamService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
@@ -73,7 +75,7 @@ fun Route.iaSakPlan(
         val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
         val planMalDto = call.receive<PlanMalDto>()
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             planService.opprettPlan(
                 iaSak = iaSak,
                 saksbehandler = saksbehandler,
@@ -100,8 +102,9 @@ fun Route.iaSakPlan(
         val saksnummer = call.saksnummer ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
         val samarbeidId = call.prosessId ?: return@delete call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
 
-        call.somEierAvSakIProsess(
+        call.somFølgerAvSakIProsess(
             iaSakService = iaSakService,
+            iaTeamService = iaTeamService,
             adGrupper = adGrupper,
         ) { _, _ ->
             planService.slettPlan(samarbeidId)
@@ -126,7 +129,7 @@ fun Route.iaSakPlan(
         val samarbeidId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
         val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
             planService.hentPlan(samarbeidId = samarbeidId).flatMap { lagretPlan ->
                 planService.endreFlereTemaer(
                     lagretPlan = lagretPlan,
@@ -161,7 +164,7 @@ fun Route.iaSakPlan(
 
         val nyttInnholdListe = call.receive<List<EndreUndertemaRequest>>()
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
             planService.hentPlan(samarbeidId = prosessId).flatMap { lagretPlan ->
                 planService.endreEttTema(
                     lagretPlan = lagretPlan,
@@ -203,7 +206,7 @@ fun Route.iaSakPlan(
 
         val nyStatus = call.receive<InnholdStatus>()
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
             planService.hentPlan(samarbeidId = prosessId).flatMap { lagretPlan ->
                 planService.endreStatus(
                     temaId = temaId,

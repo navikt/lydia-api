@@ -15,15 +15,13 @@ class IATeamService(
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    fun hentBrukereITeam(
-        iaSak: IASak,
-        navAnsatt: NavAnsatt,
-    ) = try {
-        iaTeamRepository.brukereITeam(iaSak = iaSak, navAnsatt = navAnsatt).right()
-    } catch (e: Exception) {
-        log.error("Feil ved henting av en saks brukere. Feilmelding: ${e.message}", e)
-        Feil("Feil ved henting av brukere i team", httpStatusCode = HttpStatusCode.InternalServerError).left()
-    }
+    fun hentBrukereITeam(iaSak: IASak) =
+        try {
+            iaTeamRepository.brukereITeam(iaSak = iaSak).right()
+        } catch (e: Exception) {
+            log.error("Feil ved henting av en saks brukere. Feilmelding: ${e.message}", e)
+            Feil("Feil ved henting av brukere i team", httpStatusCode = HttpStatusCode.InternalServerError).left()
+        }
 
     fun knyttBrukerTilSak(
         iaSak: IASak,

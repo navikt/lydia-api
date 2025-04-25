@@ -585,6 +585,7 @@ private fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 planService = planService,
                 iaSakService = iaSakService,
+                iaTeamService = iaTeamService,
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
