@@ -11,26 +11,23 @@ import javax.sql.DataSource
 class IATeamRepository(
     val dataSource: DataSource,
 ) {
-    fun brukereITeam(
-        iaSak: IASak,
-        navAnsatt: NavAnsatt,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
+    fun brukereITeam(iaSak: IASak) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
                         SELECT saksnummer, ident 
                         FROM ia_sak_team
                         WHERE saksnummer = :saksnummer 
-                """.trimMargin(),
-                mapOf(
-                    "saksnummer" to iaSak.saksnummer,
-                    "ident" to navAnsatt.navIdent,
-                ),
-            ).map { row ->
-                row.string("ident")
-            }.asList,
-        )
-    }
+                    """.trimMargin(),
+                    mapOf(
+                        "saksnummer" to iaSak.saksnummer,
+                    ),
+                ).map { row ->
+                    row.string("ident")
+                }.asList,
+            )
+        }
 
     fun leggBrukerTilTeam(
         iaSak: IASak,

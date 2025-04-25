@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
@@ -33,6 +34,7 @@ import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
@@ -256,6 +258,37 @@ fun <T> ApplicationCall.somEierAvSakIProsess(
         IASakError.`ugyldig orgnummer`.left()
     } else if (iaSak.eidAv != saksbehandler.navIdent) {
         IASakError.`ikke eier av sak`.left()
+    } else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR) {
+        IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
+    } else {
+        block(saksbehandler, iaSak)
+    }
+}
+
+fun <T> ApplicationCall.somFølgerAvSakIProsess(
+    iaSakService: IASakService,
+    iaTeamService: IATeamService,
+    adGrupper: ADGrupper,
+    block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>,
+) = somSaksbehandler(adGrupper) { saksbehandler ->
+    val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+    val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
+    val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
+        ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+    val følgereAvSak = iaTeamService.hentBrukereITeam(iaSak = iaSak)
+    val erFølgerAvSak = følgereAvSak
+        .map { alleFølgere ->
+            alleFølgere.any { følgerAvSak ->
+                følgerAvSak == saksbehandler.navIdent
+            }
+        }.getOrElse {
+            false
+        }
+    val erEierAvSak = iaSak.eidAv == saksbehandler.navIdent
+    if (iaSak.orgnr != orgnummer) {
+        IASakError.`ugyldig orgnummer`.left()
+    } else if (!(erFølgerAvSak || erEierAvSak)) {
+        IASakError.`er ikke følger eller eier av sak`.left()
     } else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR) {
         IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
     } else {

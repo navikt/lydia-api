@@ -74,6 +74,8 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
+import no.nav.lydia.ia.team.BrukerITeamDto
+import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType.VIRKSOMHETEN_TAKKET_NEI
@@ -259,6 +261,19 @@ class TestContainerHelper {
 
 class SakHelper {
     companion object {
+        fun bliMedITeam(
+            token: String,
+            saksnummer: String,
+        ) = applikasjon.performPost("$IA_SAK_TEAM_PATH/$saksnummer")
+            .authentication().bearer(token)
+            .tilSingelRespons<BrukerITeamDto>().third.fold(
+                success = { respons -> respons },
+                failure = { fail(it.message) },
+            )
+            .also { it.saksnummer shouldBe saksnummer }
+
+        fun IASakDto.leggTilFolger(token: String) = also { bliMedITeam(token = token, saksnummer) }
+
         fun IASakDto.hentSaksStatus(token: String = authContainerHelper.saksbehandler1.token) =
             applikasjon
                 .performGet("$IA_SAK_RADGIVER_PATH/$orgnr/$saksnummer/status")

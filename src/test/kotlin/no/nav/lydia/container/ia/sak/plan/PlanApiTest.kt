@@ -38,6 +38,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.senesteSluttDato
 import no.nav.lydia.helper.PlanHelper.Companion.slettPlanForSamarbeid
 import no.nav.lydia.helper.PlanHelper.Companion.tidligstStartDato
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
@@ -50,7 +51,8 @@ import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.SLETTET
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import java.time.LocalDate.now
 import java.time.ZonedDateTime
@@ -65,7 +67,7 @@ class PlanApiTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(samarbeidId = samarbeid.id)
         val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
-        slettetPlan.status shouldBe IAProsessStatus.SLETTET
+        slettetPlan.status shouldBe SLETTET
 
         shouldFailWithMessage("HTTP Exception 404 Not Found") {
             sak.hentPlan(prosessId = samarbeid.id)
@@ -81,7 +83,7 @@ class PlanApiTest {
         val nyPlan = sak.opprettEnPlan(samarbeidId = samarbeid.id)
         val hentetPlan = sak.hentPlan(prosessId = samarbeid.id)
         hentetPlan.id shouldBe nyPlan.id
-        hentetPlan.status shouldBe IAProsessStatus.AKTIV
+        hentetPlan.status shouldBe AKTIV
         hentetPlan.id shouldNotBe slettetPlan.id
     }
 
@@ -91,7 +93,7 @@ class PlanApiTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(samarbeidId = samarbeid.id, plan = hentPlanMal().inkluderAlt())
         val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
-        slettetPlan.status shouldBe IAProsessStatus.SLETTET
+        slettetPlan.status shouldBe SLETTET
         slettetPlan.temaer.forAll { tema ->
             tema.inkludert shouldBe false
             tema.undertemaer.forAll { undertema ->
@@ -680,6 +682,103 @@ class PlanApiTest {
     fun `skal få feil når man henter plan uten å ha opprettet en plan`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         shouldFail { sak.hentPlan() }.message shouldBe "HTTP Exception 404 Not Found"
+    }
+
+    @Test
+    fun `følgere av sak som er saksbehandlere skal kunne opprette en plan`() {
+        val sak = nySakIViBistår(token = authContainerHelper.saksbehandler1.token)
+        sak.leggTilFolger(token = authContainerHelper.saksbehandler2.token)
+
+        val plan = sak.opprettEnPlan(token = authContainerHelper.saksbehandler2.token)
+        plan.status shouldBe AKTIV
+    }
+
+    @Test
+    fun `følgere av sak som er lesebrukere skal IKKE kunne opprette en plan`() {
+        val sak = nySakIViBistår(token = authContainerHelper.saksbehandler1.token)
+        sak.leggTilFolger(token = authContainerHelper.lesebruker.token)
+        shouldFail {
+            sak.opprettEnPlan(token = authContainerHelper.lesebruker.token)
+        }
+    }
+
+    @Test
+    fun `saksbehandlere som ikke er eier eller følger av sak skal IKKE kunne opprette en plan`() {
+        val sak = nySakIViBistår(token = authContainerHelper.saksbehandler1.token)
+        shouldFail {
+            sak.opprettEnPlan(token = authContainerHelper.saksbehandler2.token)
+        }
+    }
+
+    @Test
+    fun `følgere av sak som er saksbehandlere skal kunne slette plan`() {
+        val eierAvSak = authContainerHelper.saksbehandler1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val sak = nySakIViBistår(token = eierAvSak.token)
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.leggTilFolger(token = følgerAvSak.token)
+
+        val plan = sak.opprettEnPlan(token = følgerAvSak.token)
+        plan.status shouldBe AKTIV
+
+        val slettetPlan = sak.slettPlanForSamarbeid(token = følgerAvSak.token, samarbeidId = sak.hentAlleSamarbeid().first().id)
+        slettetPlan.status shouldBe SLETTET
+
+        shouldFailWithMessage("HTTP Exception 404 Not Found") {
+            sak.hentPlan(token = følgerAvSak.token, prosessId = samarbeid.id)
+        }
+    }
+
+    @Test
+    fun `følgere av sak som er saksbehandlere skal kunne redigere innhold i teamer i plan`() {
+        val eierAvSak = authContainerHelper.saksbehandler1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val sak = nySakIViBistår(token = eierAvSak.token)
+        val planMal = hentPlanMal().inkluderEttTemaOgEttInnhold(
+            temanummer = 3,
+            innholdnummer = 1,
+        )
+
+        val plan = sak.opprettEnPlan(token = eierAvSak.token, plan = planMal)
+        val førsteTema = plan.temaer.first()
+        val førsteUndertema = førsteTema.undertemaer.first()
+        plan.antallInnholdMedStatus(status = PLANLAGT) shouldBe 1
+
+        sak.leggTilFolger(token = følgerAvSak.token)
+
+        sak.endreStatusPåInnholdIPlan(
+            temaId = førsteTema.id,
+            innholdId = førsteUndertema.id,
+            status = PÅGÅR,
+        )
+
+        val endretPlan = sak.hentPlan(token = følgerAvSak.token)
+        endretPlan.antallTemaInkludert() shouldBe 1
+        endretPlan.antallInnholdMedStatus(status = PÅGÅR) shouldBe 1
+    }
+
+    @Test
+    fun `følgere av sak som er sakabehandlere skal kunne redigere plan`() {
+        val eierAvSak = authContainerHelper.saksbehandler1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val sak = nySakIViBistår(token = eierAvSak.token)
+        val planMal = hentPlanMal().inkluderEttTemaOgEttInnhold(
+            temanummer = 3,
+            innholdnummer = 1,
+        )
+        sak.leggTilFolger(token = følgerAvSak.token)
+        val plan = sak.opprettEnPlan(token = følgerAvSak.token, plan = planMal)
+
+        sak.endreEttTemaIPlan(
+            token = følgerAvSak.token,
+            temaId = plan.temaer.first().id,
+            endring = plan.inkluderAlt().tilRequest().first().undertemaer,
+            prosessId = sak.hentAlleSamarbeid().first().id,
+        )
+
+        val endretPlan = sak.hentPlan(token = følgerAvSak.token)
+        endretPlan.antallTemaInkludert() shouldBe plan.temaer.size
+        endretPlan.antallInnholdInkludert() shouldBe plan.temaer.first().undertemaer.size
     }
 
     @Test

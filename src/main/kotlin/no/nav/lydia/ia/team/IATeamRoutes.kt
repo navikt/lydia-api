@@ -34,7 +34,7 @@ fun Route.iaSakTeam(
         )
 
         call.somLesebruker(adGrupper = adGrupper) { lesebruker ->
-            iaTeamService.hentBrukereITeam(iaSak, lesebruker)
+            iaTeamService.hentBrukereITeam(iaSak)
         }.onLeft {
             call.application.log.error(it.feilmelding)
             call.sendFeil(it)
