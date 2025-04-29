@@ -901,10 +901,12 @@ class PlanHelper {
             )
 
         fun IASakDto.endreStatusPåInnholdIPlan(
+            token: String = authContainerHelper.saksbehandler1.token,
             temaId: Int,
             innholdId: Int,
             status: InnholdStatus,
         ) = endreStatus(
+            token = token,
             orgnr = orgnr,
             saksnummer = saksnummer,
             temaId = temaId,

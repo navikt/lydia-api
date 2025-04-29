@@ -46,6 +46,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
+import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
@@ -730,35 +731,72 @@ class PlanApiTest {
     }
 
     @Test
-    fun `følgere av sak som er saksbehandlere skal kunne redigere innhold i teamer i plan`() {
+    fun `følgere av sak som er saksbehandlere skal kunne endre status på innhold i plan`() {
         val eierAvSak = authContainerHelper.saksbehandler1
         val følgerAvSak = authContainerHelper.saksbehandler2
         val sak = nySakIViBistår(token = eierAvSak.token)
-        val planMal = hentPlanMal().inkluderEttTemaOgEttInnhold(
-            temanummer = 3,
-            innholdnummer = 1,
-        )
-
-        val plan = sak.opprettEnPlan(token = eierAvSak.token, plan = planMal)
-        val førsteTema = plan.temaer.first()
-        val førsteUndertema = førsteTema.undertemaer.first()
-        plan.antallInnholdMedStatus(status = PLANLAGT) shouldBe 1
-
         sak.leggTilFolger(token = følgerAvSak.token)
 
-        sak.endreStatusPåInnholdIPlan(
-            temaId = førsteTema.id,
-            innholdId = førsteUndertema.id,
-            status = PÅGÅR,
+        val plan = sak.opprettEnPlan(
+            token = følgerAvSak.token,
+            plan = hentPlanMal().inkluderEttTemaOgEttInnhold(
+                temanummer = 1,
+                innholdnummer = 1,
+            ),
         )
+        plan.antallInnholdMedStatus(status = PLANLAGT) shouldBe 1
 
-        val endretPlan = sak.hentPlan(token = følgerAvSak.token)
-        endretPlan.antallTemaInkludert() shouldBe 1
-        endretPlan.antallInnholdMedStatus(status = PÅGÅR) shouldBe 1
+        val tema = plan.temaer.first()
+        val innhold = tema.undertemaer.first()
+
+        val endretPlan = sak.endreStatusPåInnholdIPlan(
+            token = følgerAvSak.token,
+            temaId = tema.id,
+            innholdId = innhold.id,
+            status = FULLFØRT,
+        )
+        endretPlan.temaer.flatMap { it.undertemaer }.forExactlyOne { undertema ->
+            undertema.status shouldBe FULLFØRT
+        }
     }
 
     @Test
-    fun `følgere av sak som er sakabehandlere skal kunne redigere plan`() {
+    fun `følgere av sak som er saksbehandlere skal kunne redigere tema i plan`() {
+        val eierAvSak = authContainerHelper.saksbehandler1
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        val sak = nySakIViBistår(token = eierAvSak.token)
+        sak.leggTilFolger(token = følgerAvSak.token)
+
+        val plan = sak.opprettEnPlan(
+            token = følgerAvSak.token,
+            plan = hentPlanMal().inkluderEttTemaOgEttInnhold(
+                temanummer = 1,
+                innholdnummer = 1,
+            ),
+        )
+
+        val temaDto = plan.temaer.first()
+        val innholdDto = temaDto.undertemaer.first()
+        innholdDto.sluttDato shouldBe SLUTT_DATO
+
+        val nySluttdato = SLUTT_DATO.plus(1, DateTimeUnit.YEAR)
+        val endretPlan = sak.endreEttTemaIPlan(
+            token = følgerAvSak.token,
+            temaId = temaDto.id,
+            endring = listOf(
+                innholdDto.copy(
+                    sluttDato = SLUTT_DATO.plus(1, DateTimeUnit.YEAR),
+                ),
+            ).tilRequest(),
+        )
+
+        endretPlan.temaer.flatMap { it.undertemaer }.forExactlyOne { undertema ->
+            undertema.sluttDato shouldBe nySluttdato
+        }
+    }
+
+    @Test
+    fun `følgere av sak som er saksbehandlere skal kunne redigere plan`() {
         val eierAvSak = authContainerHelper.saksbehandler1
         val følgerAvSak = authContainerHelper.saksbehandler2
         val sak = nySakIViBistår(token = eierAvSak.token)
@@ -768,17 +806,17 @@ class PlanApiTest {
         )
         sak.leggTilFolger(token = følgerAvSak.token)
         val plan = sak.opprettEnPlan(token = følgerAvSak.token, plan = planMal)
+        plan.antallTemaInkludert() shouldBe 1
 
-        sak.endreEttTemaIPlan(
+        val planMedAltInkludert = plan.inkluderAlt()
+        sak.endreFlereTemaerIPlan(
             token = følgerAvSak.token,
-            temaId = plan.temaer.first().id,
-            endring = plan.inkluderAlt().tilRequest().first().undertemaer,
+            endring = planMedAltInkludert.tilRequest(),
             prosessId = sak.hentAlleSamarbeid().first().id,
         )
 
         val endretPlan = sak.hentPlan(token = følgerAvSak.token)
-        endretPlan.antallTemaInkludert() shouldBe plan.temaer.size
-        endretPlan.antallInnholdInkludert() shouldBe plan.temaer.first().undertemaer.size
+        endretPlan.antallTemaInkludert() shouldBe planMedAltInkludert.temaer.size
     }
 
     @Test
