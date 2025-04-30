@@ -688,26 +688,6 @@ class IASakKartleggingHelper {
                 failure = { fail(it.message) },
             )
 
-        fun oppdaterBehovsvurdering(
-            behovsvurdering: SpørreundersøkelseDto,
-            sak: IASakDto,
-            prosessId: Int,
-            token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performPut("$SPØRREUNDERSØKELSE_BASE_ROUTE/${behovsvurdering.id}")
-            .authentication().bearer(token)
-            .jsonBody(
-                Json.encodeToString(
-                    OppdaterBehovsvurderingDto(
-                        orgnummer = sak.orgnr,
-                        saksnummer = sak.saksnummer,
-                        prosessId = prosessId,
-                    ),
-                ),
-            ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                success = { it },
-                failure = { fail("${it.message}: ${it.response.body().asString("text/plain")}") },
-            )
-
         fun IASakDto.opprettSpørreundersøkelse(
             prosessId: Int = hentAlleSamarbeid().first().id,
             type: String = "Behovsvurdering",
@@ -771,6 +751,37 @@ class IASakKartleggingHelper {
             .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                 success = { it },
                 failure = { fail(it.message) },
+            )
+
+        fun SpørreundersøkelseDto.slett(
+            token: String = authContainerHelper.saksbehandler1.token,
+            orgnummer: String,
+            saksnummer: String,
+        ) = applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnummer/$saksnummer/$id")
+            .authentication().bearer(token)
+            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { it },
+                failure = { fail(it.message) },
+            )
+
+        fun SpørreundersøkelseDto.flytt(
+            token: String = authContainerHelper.saksbehandler1.token,
+            orgnummer: String,
+            saksnummer: String,
+            samarbeidId: Int,
+        ) = applikasjon.performPut("$SPØRREUNDERSØKELSE_BASE_ROUTE/$id")
+            .authentication().bearer(token)
+            .jsonBody(
+                Json.encodeToString(
+                    OppdaterBehovsvurderingDto(
+                        orgnummer = orgnummer,
+                        saksnummer = saksnummer,
+                        prosessId = samarbeidId,
+                    ),
+                ),
+            ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
+                success = { it },
+                failure = { fail("${it.message}: ${it.response.body().asString("text/plain")}") },
             )
 
         fun SpørreundersøkelseDto.svarAlternativerTilEtFlervalgSpørsmål(): List<String> =

@@ -17,9 +17,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.flytt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentForhåndsvisning
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.oppdaterBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
@@ -270,7 +270,11 @@ class EvalueringApiTest {
         }
 
         shouldFail {
-            oppdaterBehovsvurdering(behovsvurdering = evaluering, sak = sak, prosessId = samarbeid2.id)
+            evaluering.flytt(
+                orgnummer = sak.orgnr,
+                saksnummer = sak.saksnummer,
+                samarbeidId = samarbeid2.id,
+            )
         }.message shouldContain "Bad Request"
 
         hentSpørreundersøkelse(

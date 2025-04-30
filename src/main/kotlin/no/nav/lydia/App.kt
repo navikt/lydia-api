@@ -579,6 +579,7 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 spørreundersøkelseService = spørreundersøkelseService,
+                iaTeamService = iaTeamService,
             )
             iaSakPlan(
                 adGrupper = naisEnv.security.adGrupper,

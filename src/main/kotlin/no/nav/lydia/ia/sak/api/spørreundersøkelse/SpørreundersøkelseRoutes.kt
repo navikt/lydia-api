@@ -44,6 +44,7 @@ const val SPØRREUNDERSØKELSE_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/kartlegging"
 fun Route.iaSakSpørreundersøkelse(
     iaSakService: IASakService,
     spørreundersøkelseService: SpørreundersøkelseService,
+    iaTeamService: IATeamService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
 ) {
@@ -53,7 +54,7 @@ fun Route.iaSakSpørreundersøkelse(
         val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
         val type = call.type ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { saksbehandler, iaSak ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { saksbehandler, iaSak ->
             spørreundersøkelseService.opprettSpørreundersøkelse(
                 orgnummer = orgnummer,
                 saksbehandler = saksbehandler,
@@ -112,7 +113,7 @@ fun Route.iaSakSpørreundersøkelse(
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
-        call.somSaksbehandler(adGrupper = adGrupper) { _ ->
+        call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { _ ->
                 spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = id)
             }
@@ -154,7 +155,7 @@ fun Route.iaSakSpørreundersøkelse(
     post("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/avslutt") {
         val id = call.spørreundersøkelseId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = id,
                 statusViSkalEndreTil = AVSLUTTET,
@@ -178,7 +179,7 @@ fun Route.iaSakSpørreundersøkelse(
     delete("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}") {
         val id = call.spørreundersøkelseId ?: return@delete call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
-        call.somEierAvSakIProsess(iaSakService = iaSakService, adGrupper = adGrupper) { _, _ ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.slettSpørreundersøkelse(spørreundersøkelseId = id)
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
@@ -199,7 +200,7 @@ fun Route.iaSakSpørreundersøkelse(
     post("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/{sporreundersokelseId}/start") {
         val id = call.spørreundersøkelseId ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
-        call.somEierAvSakIProsess(iaSakService, adGrupper) { _, _ ->
+        call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = id,
                 statusViSkalEndreTil = PÅBEGYNT,
@@ -223,7 +224,13 @@ fun Route.iaSakSpørreundersøkelse(
         val id = call.spørreundersøkelseId ?: return@put call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
         val input = call.receive<OppdaterBehovsvurderingDto>()
 
-        call.somSaksbehandler(adGrupper) {
+        call.somSaksbehandler(adGrupper) { saksbehandler ->
+            val iaSak = iaSakService.hentIASak(saksnummer = input.saksnummer).getOrNull()
+                ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+
+            if (!erEierEllerFølgerAvSak(iaSak = iaSak, iaTeamService = iaTeamService, saksbehandler = saksbehandler)) {
+                return@somSaksbehandler IASakError.`er ikke følger eller eier av sak`.left()
+            }
             spørreundersøkelseService.oppdaterSamarbeidIdIBehovsvurdering(
                 behovsvurderingId = id,
                 oppdaterBehovsvurderingDto = input,
@@ -244,27 +251,6 @@ fun Route.iaSakSpørreundersøkelse(
     }
 }
 
-// TODO: bør endres til å returnere IASak og IAProsess i call-block?
-fun <T> ApplicationCall.somEierAvSakIProsess(
-    iaSakService: IASakService,
-    adGrupper: ADGrupper,
-    block: (NavAnsatt.NavAnsattMedSaksbehandlerRolle, IASak) -> Either<Feil, T>,
-) = somSaksbehandler(adGrupper) { saksbehandler ->
-    val saksnummer = saksnummer ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-    val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
-    val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
-        ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
-    if (iaSak.orgnr != orgnummer) {
-        IASakError.`ugyldig orgnummer`.left()
-    } else if (iaSak.eidAv != saksbehandler.navIdent) {
-        IASakError.`ikke eier av sak`.left()
-    } else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR) {
-        IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
-    } else {
-        block(saksbehandler, iaSak)
-    }
-}
-
 fun <T> ApplicationCall.somFølgerAvSakIProsess(
     iaSakService: IASakService,
     iaTeamService: IATeamService,
@@ -275,6 +261,22 @@ fun <T> ApplicationCall.somFølgerAvSakIProsess(
     val orgnummer = orgnummer ?: return@somSaksbehandler IASakError.`ugyldig orgnummer`.left()
     val iaSak = iaSakService.hentIASak(saksnummer = saksnummer).getOrNull()
         ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
+    if (iaSak.orgnr != orgnummer) {
+        IASakError.`ugyldig orgnummer`.left()
+    } else if (!erEierEllerFølgerAvSak(iaSak = iaSak, iaTeamService = iaTeamService, saksbehandler = saksbehandler)) {
+        IASakError.`er ikke følger eller eier av sak`.left()
+    } else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR) {
+        IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
+    } else {
+        block(saksbehandler, iaSak)
+    }
+}
+
+private fun erEierEllerFølgerAvSak(
+    iaSak: IASak,
+    iaTeamService: IATeamService,
+    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+): Boolean {
     val følgereAvSak = iaTeamService.hentBrukereITeam(iaSak = iaSak)
     val erFølgerAvSak = følgereAvSak
         .map { alleFølgere ->
@@ -285,15 +287,7 @@ fun <T> ApplicationCall.somFølgerAvSakIProsess(
             false
         }
     val erEierAvSak = iaSak.eidAv == saksbehandler.navIdent
-    if (iaSak.orgnr != orgnummer) {
-        IASakError.`ugyldig orgnummer`.left()
-    } else if (!(erFølgerAvSak || erEierAvSak)) {
-        IASakError.`er ikke følger eller eier av sak`.left()
-    } else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR) {
-        IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
-    } else {
-        block(saksbehandler, iaSak)
-    }
+    return erFølgerAvSak || erEierAvSak
 }
 
 object IASakSpørreundersøkelseError {
