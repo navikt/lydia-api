@@ -13,7 +13,8 @@ import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
+import no.nav.lydia.ia.sak.api.extensions.prosessId
+import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.sykefraværsstatistikk.api.SykefraværsstatistikkError
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.virksomhet.VirksomhetService
@@ -64,6 +65,19 @@ fun Route.virksomhet(
         salesforceClient.hentSalesforceInfo(orgnr = orgnummer).map { salesforceUrlResponse ->
             call.application.log.info("Hentet salesforce lenke for virksomhet på ${Clock.System.now() - nå} ms")
             call.respond(salesforceUrlResponse)
+        }.mapLeft {
+            call.respond(it.httpStatusCode, it.feilmelding)
+        }
+    }
+
+    get("$SALESFORCE_INFO_PATH/samarbeid/{prosessId}") {
+        val nå = Clock.System.now()
+        val samarbeidId = call.prosessId
+            ?: return@get call.respond(HttpStatusCode.BadRequest, "Mangler samarbeidsid")
+
+        salesforceClient.hentSamarbeidslenke(samarbeidId = samarbeidId).map { salesforceSamarbeidResponse ->
+            call.application.log.info("Hentet salesforce samarbeidslenke på ${Clock.System.now() - nå} ms")
+            call.respond(salesforceSamarbeidResponse)
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }

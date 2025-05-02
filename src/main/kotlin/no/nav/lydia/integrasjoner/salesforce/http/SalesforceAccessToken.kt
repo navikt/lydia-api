@@ -1,4 +1,4 @@
-package no.nav.lydia.integrasjoner.salesforce
+package no.nav.lydia.integrasjoner.salesforce.http
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable

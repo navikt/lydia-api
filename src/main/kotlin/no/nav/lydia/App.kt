@@ -91,10 +91,10 @@ import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
-import no.nav.lydia.integrasjoner.salesforce.SalesforceClient
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetKonsument
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetRepository
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetService
+import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
@@ -590,7 +590,7 @@ private fun Application.lydiaRestApi(
             )
             virksomhet(
                 virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
-                salesforceClient = SalesforceClient(salesforce = naisEnv.integrasjoner.salesforce),
+                salesforceClient = SalesforceClient(),
                 auditLog = auditLog,
                 adGrupper = naisEnv.security.adGrupper,
                 iaSakService = iaSakService,

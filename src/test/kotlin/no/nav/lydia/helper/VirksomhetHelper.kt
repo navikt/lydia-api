@@ -8,6 +8,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
@@ -15,7 +16,8 @@ import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhet
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.OppdateringVirksomhet
 import no.nav.lydia.integrasjoner.brreg.BrregVirksomhetDto
 import no.nav.lydia.integrasjoner.brreg.NæringsundergruppeBrreg
-import no.nav.lydia.integrasjoner.salesforce.SalesforceInfoResponse
+import no.nav.lydia.integrasjoner.salesforce.http.SalesforceInfo
+import no.nav.lydia.integrasjoner.salesforce.http.SalesforceSamarbeid
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.virksomhet.VirksomhetSøkeresultat
 import no.nav.lydia.virksomhet.api.SALESFORCE_INFO_PATH
@@ -66,12 +68,21 @@ class VirksomhetHelper {
                 failure = { fail(it.message) },
             )
 
+        fun IAProsessDto.hentSalesforceSamarbeidslenke(token: String = authContainerHelper.saksbehandler1.token) =
+            applikasjon.performGet("$SALESFORCE_INFO_PATH/samarbeid/$id")
+                .authentication().bearer(token)
+                .tilSingelRespons<SalesforceSamarbeid>()
+                .third.fold(
+                    success = { it },
+                    failure = { fail(it.message) },
+                )
+
         private fun hentSalesforceInfoRespons(
             orgnummer: String,
             token: String,
         ) = applikasjon.performGet("$SALESFORCE_INFO_PATH/$orgnummer")
             .authentication().bearer(token)
-            .tilSingelRespons<SalesforceInfoResponse>()
+            .tilSingelRespons<SalesforceInfo>()
 
         fun hentSalesforceInfo(
             orgnummer: String,

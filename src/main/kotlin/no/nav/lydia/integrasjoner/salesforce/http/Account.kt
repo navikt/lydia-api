@@ -1,13 +1,6 @@
-package no.nav.lydia.integrasjoner.salesforce
+package no.nav.lydia.integrasjoner.salesforce.http
 
 import kotlinx.serialization.Serializable
-
-@Serializable
-data class SalesforceQueryResponse(
-    val totalSize: Int,
-    val done: Boolean,
-    val records: List<Account>,
-)
 
 @Serializable
 data class Account(

@@ -8,6 +8,7 @@ import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
+import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
@@ -20,8 +21,10 @@ import no.nav.lydia.helper.TestVirksomhet.Companion.OSLO_FLERE_ADRESSER
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceInfo
+import no.nav.lydia.helper.VirksomhetHelper.Companion.hentSalesforceSamarbeidslenke
 import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.søkEtterVirksomheter
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import kotlin.test.Test
@@ -232,5 +235,15 @@ class VirksomhetApiTest {
         val strategiskPartner = hentSalesforceInfo(orgnummer = "777666555")
         strategiskPartner.orgnr shouldBe "777666555"
         strategiskPartner.partnerStatus shouldBe "Strategisk Partner"
+    }
+
+    @Test
+    fun `skal få lenke til samarbeid i salesforce`() {
+        val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val salesforceSamarbeid = samarbeid.hentSalesforceSamarbeidslenke()
+
+        salesforceSamarbeid.samarbeidsId shouldBe samarbeid.id
+        salesforceSamarbeid.salesforceLenke shouldMatch "http://host.testcontainers.internal:\\d+/a2Rds0000002myDEAQ"
     }
 }
