@@ -1,14 +1,14 @@
-val ktorVersion = "3.1.1"
+val ktorVersion = "3.1.3"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.10.2"
 val kotestVerstion = "5.9.1"
-val testcontainersVersion = "1.20.6"
+val testcontainersVersion = "1.21.0"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.1.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.1.10"
+    kotlin("plugin.serialization") version "2.1.20"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -36,8 +36,8 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("ch.qos.logback:logback-classic:1.5.17")
-    implementation("net.logstash.logback:logstash-logback-encoder:8.0")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
@@ -46,17 +46,17 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.14.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.14.6")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.5")
-    implementation("com.zaxxer:HikariCP:6.2.1")
-    implementation("org.flywaydb:flyway-database-postgresql:11.3.4")
+    implementation("com.zaxxer:HikariCP:6.3.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.8.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.12.1")
+    implementation("com.google.code.gson:gson:2.13.1")
 
     // Kafka
     implementation("org.apache.kafka:kafka-clients:3.9.0")
@@ -65,7 +65,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.0.1")
+    implementation("io.arrow-kt:arrow-core:2.1.1")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
@@ -75,7 +75,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.2")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -92,7 +92,7 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.12.1")
+    testImplementation("org.wiremock:wiremock-standalone:3.13.0")
 
     // -- validere pdfa
     testImplementation("org.verapdf:validation-model:1.26.5")
@@ -111,7 +111,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.1.119.Final")
+                require("4.2.0.Final")
             }
             because(
                 "Versjoner <4.1.117 er sårbare. Inkludert i ktor 3.1.0",
@@ -119,7 +119,7 @@ dependencies {
         }
         implementation("joda-time:joda-time") {
             version {
-                require("2.13.1")
+                require("2.14.0")
             }
             because("kotliquery har sårbar versjon på v2.11.0")
         }
