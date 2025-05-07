@@ -48,7 +48,7 @@ class KafkaContainerHelper(
     private var adminClient: AdminClient
     private var kafkaProducer: KafkaProducer<String, String>
 
-    val container: ConfluentKafkaContainer = ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.3"))
+    val container: ConfluentKafkaContainer = ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.8.2"))
         .withNetwork(network)
         .withNetworkAliases(networkAlias)
         .waitingFor(HostPortWaitStrategy())
@@ -301,6 +301,7 @@ class KafkaContainerHelper(
     ) {
         withTimeout(Duration.ofSeconds(5)) {
             launch {
+                delay(20) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
                 val funnetNoenMeldinger = AtomicBoolean()
                 val harPrøvdFlereGanger = AtomicBoolean()
                 val alleMeldinger = mutableListOf<String>()
@@ -332,6 +333,7 @@ class KafkaContainerHelper(
         withTimeout(Duration.ofSeconds(5)) {
             val nøklerProssesert = mutableMapOf<String, String>()
             launch {
+                delay(20) // -- vent noen millisec fordi vi vet at det er forventet at noe skal ligge i kafka
                 while (this.isActive && !nøklerProssesert.keys.containsAll(keys)) {
                     val records = konsument.poll(Duration.ofMillis(50))
                     records
