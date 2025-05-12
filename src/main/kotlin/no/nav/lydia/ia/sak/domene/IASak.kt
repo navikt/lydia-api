@@ -363,6 +363,7 @@ class IASak private constructor(
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 TILBAKE -> finnForrigeTilstand().right()
+                FULLFØR_PROSESS -> this.right()
                 else -> generellFeil()
             }
     }
@@ -382,6 +383,14 @@ class IASak private constructor(
             sak: IASak,
             hendelse: IASakshendelse,
         ) = sak.utførHendelseSomRådgiver(this, hendelse)
+
+        fun fullførSamarbeidPåFullførtSak(
+            iaSak: IASak,
+            hendelse: IASakshendelse,
+        ) = when (hendelse) {
+            is ProsessHendelse -> iaSak.behandleHendelse(hendelse)
+            else -> throw IllegalStateException("Kan ikke fullføre samarbeid på fullførte sak med hendelsestype ${hendelse.hendelsesType.name}")
+        }
 
         fun tilbakeførSak(
             iaSak: IASak,

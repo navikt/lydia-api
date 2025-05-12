@@ -64,7 +64,10 @@ class IAProsessService(
         when (sakshendelse) {
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
-                    FULLFØR_PROSESS -> fullførProsess(sakshendelse, sak)?.let { samarbeid ->
+                    FULLFØR_PROSESS -> fullførProsess(
+                        sakshendelse = sakshendelse,
+                        sak = sak,
+                    )?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
                     AVBRYT_PROSESS -> avbrytProsess(sakshendelse, sak)?.let { samarbeid ->

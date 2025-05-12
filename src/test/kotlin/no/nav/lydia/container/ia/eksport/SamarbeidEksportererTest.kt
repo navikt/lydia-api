@@ -21,6 +21,7 @@ import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import kotlin.test.Ignore
 import kotlin.test.Test
 
 class SamarbeidEksportererTest {
@@ -40,6 +41,7 @@ class SamarbeidEksportererTest {
         }
     }
 
+    @Ignore("Vi bruker engangsJobb til noe annet")
     @Test
     fun `skal trigge kafka-eksport av enkelt samarbeid`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
@@ -84,6 +86,7 @@ class SamarbeidEksportererTest {
         applikasjon shouldContainLog "Ferdig med eksport av samarbeid".toRegex()
     }
 
+    @Ignore("Vi bruker engangsJobb til noe annet")
     @Test
     fun `kafka-eksport av enkelt samarbeid logger warn dersom saken ikke er funnet`() {
         // Start jobben som skal sende en melding om nytt samarbeid på Kafka

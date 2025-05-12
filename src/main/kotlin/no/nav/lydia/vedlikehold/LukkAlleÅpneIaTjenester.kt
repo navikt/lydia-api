@@ -45,8 +45,8 @@ class LukkAlleÅpneIaTjenester(
                     sistEndretAv = "Fia system",
                     sistEndretAvRolle = Rolle.SUPERBRUKER,
                     fullført = LocalDateTime.now().toKotlinLocalDateTime(),
-                    enhetsnummer = IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnummer,
-                    enhetsnavn = IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING.enhetsnavn,
+                    enhetsnummer = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING.enhetsnummer,
+                    enhetsnavn = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING.enhetsnavn,
                     opprettetTidspunkt = iaTjeneste.opprettetTidspunkt?.toKotlinLocalDateTime(),
                 )
 

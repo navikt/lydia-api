@@ -208,6 +208,10 @@ class IASakRepository(
             )
         }
 
+    fun hentFullførteSakerMedAktiveSamarbeid(): List<IASak> {
+        TODO("Not yet implemented")
+    }
+
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
             saksnummer: String,

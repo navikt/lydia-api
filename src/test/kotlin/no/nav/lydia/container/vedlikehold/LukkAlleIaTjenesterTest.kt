@@ -14,7 +14,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakLeveranseProdusent
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.UNDER_ARBEID
-import no.nav.lydia.vedlikehold.IASakStatusOppdaterer.Companion.NAV_ENHET_FOR_TILBAKEFØRING
+import no.nav.lydia.vedlikehold.IASakStatusOppdaterer.Companion.NAV_ENHET_FOR_MASKINELT_OPPDATERING
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -62,7 +62,7 @@ class LukkAlleIaTjenesterTest {
                     kafkaMelding.id shouldBe leveranse.id
                     kafkaMelding.status shouldBe LEVERT
                     kafkaMelding.sistEndretAv shouldBe "Fia system"
-                    kafkaMelding.enhetsnummer shouldBe NAV_ENHET_FOR_TILBAKEFØRING.enhetsnummer
+                    kafkaMelding.enhetsnummer shouldBe NAV_ENHET_FOR_MASKINELT_OPPDATERING.enhetsnummer
                 }
             }
 

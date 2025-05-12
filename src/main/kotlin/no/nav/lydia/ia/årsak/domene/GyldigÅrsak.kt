@@ -68,6 +68,7 @@ enum class BegrunnelseType(
 
     // -- FOR SYSTEMET. Ikke bruk
     AUTOMATISK_LUKKET(navn = "Automatisk lukket: Ingen eierskap tatt på seks måneder"),
+    SAMARBEID_FULLFØRT_MASKINELT(navn = "Sak fullført. Samarbeid fullført maskinelt i etterkant"),
     // --
 
     // -- UTDATERT. Ikke bruk. Ikke slett heller, da knekker samarbeidshistorikken.
