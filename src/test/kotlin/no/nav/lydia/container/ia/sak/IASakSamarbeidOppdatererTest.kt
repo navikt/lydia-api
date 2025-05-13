@@ -36,7 +36,9 @@ class IASakSamarbeidOppdatererTest {
 
         // Start jobben som skal sende oppdatere samarbeid på fullført sak
         kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "ikke-tørrkjør")
+
         applikasjon shouldContainLog "Ferdig med å fullføre samarbeid i fullførte IA saker".toRegex()
-        sak.hentAlleSamarbeid().first().status shouldBe IAProsessStatus.FULLFØRT
+        val alleSamarbeid1 = sak.hentAlleSamarbeid()
+        alleSamarbeid1.first().status shouldBe IAProsessStatus.FULLFØRT
     }
 }

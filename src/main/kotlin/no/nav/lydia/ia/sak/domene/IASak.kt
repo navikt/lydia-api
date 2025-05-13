@@ -14,9 +14,11 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
@@ -123,7 +125,9 @@ class IASak private constructor(
             NY_PROSESS,
             SLETT_PROSESS,
             FULLFØR_PROSESS,
+            FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
             AVBRYT_PROSESS,
+            AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
             -> {
                 tilstand.behandleHendelse(hendelse)
                     .map { nyTilstand -> tilstand = nyTilstand }
@@ -363,7 +367,7 @@ class IASak private constructor(
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 TILBAKE -> finnForrigeTilstand().right()
-                FULLFØR_PROSESS -> this.right()
+                FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK, AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> this.right()
                 else -> generellFeil()
             }
     }
@@ -384,12 +388,12 @@ class IASak private constructor(
             hendelse: IASakshendelse,
         ) = sak.utførHendelseSomRådgiver(this, hendelse)
 
-        fun fullførSamarbeidPåFullførtSak(
+        fun oppdaterSamarbeidPåFullførtSak(
             iaSak: IASak,
             hendelse: IASakshendelse,
         ) = when (hendelse) {
             is ProsessHendelse -> iaSak.behandleHendelse(hendelse)
-            else -> throw IllegalStateException("Kan ikke fullføre samarbeid på fullførte sak med hendelsestype ${hendelse.hendelsesType.name}")
+            else -> throw IllegalStateException("Kan ikke oppdatere samarbeid på fullførte sak med hendelsestype ${hendelse.hendelsesType.name}")
         }
 
         fun tilbakeførSak(

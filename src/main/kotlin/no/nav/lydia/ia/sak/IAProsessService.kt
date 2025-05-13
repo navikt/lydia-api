@@ -26,8 +26,10 @@ import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
@@ -64,28 +66,46 @@ class IAProsessService(
         when (sakshendelse) {
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
+                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> fullførProsessMaskineltPåEnFullførtSak(
+                        sakshendelse = sakshendelse,
+                    )?.let { samarbeid ->
+                        samarbeidObservers.forEach { it.receive(samarbeid) }
+                    }
+
                     FULLFØR_PROSESS -> fullførProsess(
                         sakshendelse = sakshendelse,
                         sak = sak,
                     )?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
+
                     AVBRYT_PROSESS -> avbrytProsess(sakshendelse, sak)?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
+
+                    AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> avbryttProsessMaskineltPåEnFullførtSak(
+                        sakshendelse = sakshendelse,
+                    )?.let { samarbeid ->
+                        samarbeidObservers.forEach { it.receive(samarbeid) }
+                    }
+
                     ENDRE_PROSESS -> oppdaterNavnPåProsess(sakshendelse.prosessDto)
                         ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
+
                     SLETT_PROSESS -> slettProsess(sakshendelse, sak)
                         ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
+
                     NY_PROSESS -> prosessRepository.opprettNyProsess(
                         saksnummer = sakshendelse.saksnummer,
                         navn = sakshendelse.prosessDto.navn,
                     ).also { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
+
                     else -> {}
                 }
             }
+
             else -> {}
         }
     }
@@ -229,6 +249,8 @@ class IAProsessService(
         }
     }
 
+    private fun fullførProsessMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IAProsess? = prosessRepository.fullførSamarbeid(sakshendelse.prosessDto)
+
     private fun avbrytProsess(
         sakshendelse: ProsessHendelse,
         sak: IASak,
@@ -244,6 +266,8 @@ class IAProsessService(
             )
         }
     }
+
+    private fun avbryttProsessMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IAProsess? = prosessRepository.avbrytSamarbeid(sakshendelse.prosessDto)
 
     private fun slettProsess(
         sakshendelse: ProsessHendelse,

@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.AVBRUTT
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.ktor.http.HttpStatusCode
@@ -31,9 +32,9 @@ import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASak.Companion.fullførSamarbeidPåFullførtSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.kopier
 import no.nav.lydia.ia.sak.domene.IASak.Companion.medHendelser
+import no.nav.lydia.ia.sak.domene.IASak.Companion.oppdaterSamarbeidPåFullførtSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
@@ -277,23 +278,31 @@ class IASakService(
             val endretTidspunkt = iaSak.endretTidspunkt
 
             val alleIkkeFullførteSamarbeidPåSak = iaProsessService.hentIAProsesser(iaSak).getOrElse { emptyList() }
-                .filter { it.status == no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT }
-            if (!tørrKjør) {
-                if (alleIkkeFullførteSamarbeidPåSak.isNotEmpty()) {
-                    alleIkkeFullførteSamarbeidPåSak.forEach { iAProsess: IAProsess ->
-                        val maskineltFullførSamarbeidHendelse = iaSak.nyMaskineltFullførSamarbeidHendelse(
-                            iaProsessDto = iAProsess.tilDto(),
-                        )
-                        maskineltFullførSamarbeidHendelse.lagre(
+                .filter { it.status != no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT }
+
+            if (alleIkkeFullførteSamarbeidPåSak.isNotEmpty()) {
+                alleIkkeFullførteSamarbeidPåSak.forEach { iAProsess: IAProsess ->
+                    val erPlanAvbrutt = erPlanAvbrutt(prosess = iAProsess)
+
+                    val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = iaSak.nyMaskineltOppdaterSamarbeidHendelse(
+                        iaProsessDto = iAProsess.tilDto(),
+                        iASakshendelseType = if (erPlanAvbrutt) {
+                            IASakshendelseType.AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
+                        } else {
+                            IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
+                        },
+                    )
+
+                    if (!tørrKjør) {
+                        maskineltOppdaterSamarbeidHendelse.lagre(
                             sistEndretAvHendelseId = sistEndretAvHendelseId,
                             IAProsessStatus.FULLFØRT,
                         )
-                        årsakService.lagreÅrsak(maskineltFullførSamarbeidHendelse)
-                        val oppdatertSak = fullførSamarbeidPåFullførtSak(iaSak, maskineltFullførSamarbeidHendelse)
+                        iaProsessService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = iaSak)
+                        val oppdatertSak = oppdaterSamarbeidPåFullførtSak(iaSak, maskineltOppdaterSamarbeidHendelse)
+                        årsakService.lagreÅrsak(maskineltOppdaterSamarbeidHendelse)
                         oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
-                } else {
-                    return@map 0
                 }
             }
             log.info(
@@ -302,19 +311,21 @@ class IASakService(
             )
         }.size
 
-    private fun IASak.nyMaskineltFullførSamarbeidHendelse(iaProsessDto: IAProsessDto) =
-        ProsessHendelse(
-            id = ULID.random(),
-            opprettetTidspunkt = LocalDateTime.now(),
-            saksnummer = this.saksnummer,
-            orgnummer = this.orgnr,
-            opprettetAv = "Fia system",
-            opprettetAvRolle = Rolle.SUPERBRUKER,
-            navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
-            hendelsesType = IASakshendelseType.FULLFØR_PROSESS,
-            resulterendeStatus = IAProsessStatus.FULLFØRT,
-            prosessDto = iaProsessDto,
-        )
+    private fun IASak.nyMaskineltOppdaterSamarbeidHendelse(
+        iaProsessDto: IAProsessDto,
+        iASakshendelseType: IASakshendelseType,
+    ) = ProsessHendelse(
+        id = ULID.random(),
+        opprettetTidspunkt = LocalDateTime.now(),
+        saksnummer = this.saksnummer,
+        orgnummer = this.orgnr,
+        opprettetAv = "Fia system",
+        opprettetAvRolle = Rolle.SUPERBRUKER,
+        navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
+        hendelsesType = iASakshendelseType,
+        resulterendeStatus = IAProsessStatus.FULLFØRT,
+        prosessDto = iaProsessDto,
+    )
 
     private fun slettSak(
         sak: IASak,
@@ -499,6 +510,19 @@ class IASakService(
                 id = plan.id.toString(),
             )
         }
+    }
+
+    private fun erPlanAvbrutt(prosess: IAProsess): Boolean {
+        val plan = planRepository.hentPlan(prosessId = prosess.id) ?: return false
+
+        val temaerMedBareAvbryttUndertemaer = plan.temaer.map { tema ->
+            val inkluderteUndertemaer = tema.undertemaer.filter { it.inkludert }
+            inkluderteUndertemaer.isNotEmpty() &&
+                inkluderteUndertemaer.all { undertema ->
+                    undertema.status == AVBRUTT
+                }
+        }
+        return temaerMedBareAvbryttUndertemaer.isNotEmpty() and temaerMedBareAvbryttUndertemaer.all { it }
     }
 
     private fun sjekkBehovsvurderinger(prosess: IAProsess): List<ÅrsakTilAtSakIkkeKanAvsluttes> {

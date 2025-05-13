@@ -208,9 +208,20 @@ class IASakRepository(
             )
         }
 
-    fun hentFullførteSakerMedAktiveSamarbeid(): List<IASak> {
-        TODO("Not yet implemented")
-    }
+    fun hentFullførteSakerMedAktiveSamarbeid(): List<IASak> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT DISTINCT ia_sak.*
+                    FROM ia_sak
+                    JOIN ia_prosess ON ia_prosess.saksnummer = ia_sak.saksnummer
+                    WHERE ia_sak.status = '${IAProsessStatus.FULLFØRT.name}'
+                    AND ia_prosess.status = '${no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV.name}'
+                    """.trimIndent(),
+                ).map(this::mapRowToIASak).asList,
+            )
+        }
 
     companion object {
         fun TransactionalSession.validerAtSakHarRiktigEndretAvHendelse(
