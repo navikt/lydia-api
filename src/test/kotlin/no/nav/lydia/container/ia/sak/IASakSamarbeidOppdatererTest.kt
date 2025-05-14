@@ -74,7 +74,7 @@ class IASakSamarbeidOppdatererTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         samarbeid.status shouldBe IAProsessStatus.FULLFØRT
 
-        // 3. Sakshistorikk er oppdatert med begrunnelse for automatisk lukking
+        // 3. Sakshistorikk er oppdatert uten begrunnelse (pga ProsessHendelse)
         val samarbeidshistorikk = hentSamarbeidshistorikk(orgnummer = sak.orgnr)
         samarbeidshistorikk.forExactlyOne { sakshistorikk ->
             sakshistorikk.sakshendelser.forExactlyOne { snapshot ->
