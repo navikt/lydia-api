@@ -62,7 +62,7 @@ class IASakSamarbeidOppdatererTest {
         sak.hentAlleSamarbeid().first().status shouldBe IAProsessStatus.AKTIV
 
         // Start jobben som skal sende oppdatere samarbeid på fullført sak
-        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "ikke-tørrkjør")
+        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "GO!")
 
         // Verifikasjon:
         // 1. Vi får loggmelding om at jobben er ferdig
@@ -128,7 +128,7 @@ class IASakSamarbeidOppdatererTest {
         sak.hentAlleSamarbeid().first().status shouldBe IAProsessStatus.AKTIV
 
         // Start jobben som skal sende oppdatere samarbeid på fullført sak
-        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "tørrkjør")
+        kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "dummy")
 
         // Verifikasjon:
         // 1. Vi får loggmelding om at jobben er ferdig

@@ -149,7 +149,7 @@ object Jobblytter : CoroutineScope {
                                         if (jobInfo.parameter.isNullOrEmpty()) {
                                             logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
                                         } else {
-                                            val tørrKjør = jobInfo.parameter == "tørrkjør"
+                                            val tørrKjør = jobInfo.parameter != "GO!"
                                             iaSakSamarbeidOppdaterer.fullføreSamarbeidForFullførteIASaker(tørrKjør)
                                         }
                                     }
