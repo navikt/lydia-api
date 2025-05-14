@@ -69,7 +69,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/sjekk-sf-api-versjon-63'
+    if: github.ref == 'refs/heads/fullfore-samarbeid-i-fullforte-iasaker'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
