@@ -221,6 +221,7 @@ class IASak private constructor(
                 } else {
                     KontaktesTilstand().right()
                 }
+
                 SLETT_SAK -> if (eidAv !=
                     null
                 ) {
@@ -228,6 +229,7 @@ class IASak private constructor(
                 } else {
                     SlettetTilstand().right()
                 }
+
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
                 else -> generellFeil()
             }
@@ -404,7 +406,14 @@ class IASak private constructor(
 
         fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
             val hendelserSomEndrerStatus = hendelser.filter {
-                !listOf(TA_EIERSKAP_I_SAK, NY_PROSESS, ENDRE_PROSESS, SLETT_PROSESS, FULLFØR_PROSESS).contains(it)
+                !listOf(
+                    TA_EIERSKAP_I_SAK,
+                    NY_PROSESS,
+                    ENDRE_PROSESS,
+                    SLETT_PROSESS,
+                    AVBRYT_PROSESS,
+                    FULLFØR_PROSESS,
+                ).contains(it)
             }
 
             val hendelsesRekkeMedHåndterteTilbakeHendelser =
