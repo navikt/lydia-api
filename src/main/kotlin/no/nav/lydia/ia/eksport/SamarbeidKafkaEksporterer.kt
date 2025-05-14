@@ -29,7 +29,9 @@ class SamarbeidKafkaEksporterer(
     fun eksporterAlleSamarbeid() {
         prosessRepository.hentAlleSamarbeidIVirksomhetDto().forEach { samarbeidIVirksomhetDto ->
             samarbeidProdusent.sendPåKafka(samarbeidIVirksomhetDto)
-            log.info("Eksport av enkelt samarbeid, med ID: '${samarbeidIVirksomhetDto.samarbeid.id}' for virksomhet '${samarbeidIVirksomhetDto.orgnr}' er sendt på Kafka")
+            log.info(
+                "Eksport av enkelt samarbeid, med ID: '${samarbeidIVirksomhetDto.samarbeid.id}' for virksomhet '${samarbeidIVirksomhetDto.orgnr}' er sendt på Kafka",
+            )
         }
         log.info("Ferdig med eksport av alle samarbeid. Totalt '${prosessRepository.hentAlleSamarbeidIVirksomhetDto().size}' samarbeid")
     }
@@ -37,7 +39,7 @@ class SamarbeidKafkaEksporterer(
     fun hentOgSendSamarbeidTilKafka(samarbeidId: Int) {
         prosessRepository.hentSamarbeidIVirksomhetDto(samarbeidId)?.let { samarbeidIVirksomhetDto ->
             samarbeidProdusent.sendPåKafka(samarbeidIVirksomhetDto)
-            log.info("Eksport av enkelt samarbeid, med ID: '$samarbeidId' for virksomhet '${samarbeidIVirksomhetDto.orgnr}' er sendt på Kafka")
+            log.info("Eksport av enkelt samarbeid, med ID: '$samarbeidId' for virksomhet '${samarbeidIVirksomhetDto.orgnr}' har blitt sendt på Kafka")
         } ?: log.warn("Eksport av enkelt samarbeid, med ID: '$samarbeidId' feilet. Samarbeid ikke funnet")
     }
 }

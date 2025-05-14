@@ -11,7 +11,7 @@ class IASakStatusOppdaterer(
 ) {
     companion object {
         val KJØRER_RYDDE_I_URØRTE_SAKER = AtomicBoolean(false)
-        val NAV_ENHET_FOR_TILBAKEFØRING = NavEnhet(
+        val NAV_ENHET_FOR_MASKINELT_OPPDATERING = NavEnhet(
             enhetsnummer = "2840",
             enhetsnavn = "IA- og sykefraværskontoret",
         )

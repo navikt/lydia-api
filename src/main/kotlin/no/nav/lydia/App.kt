@@ -112,6 +112,7 @@ import no.nav.lydia.sykefraværsstatistikk.import.StatistikkMetadataVirksomhetCo
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkPerKategoriConsumer
 import no.nav.lydia.sykefraværsstatistikk.import.StatistikkVirksomhetGraderingConsumer
 import no.nav.lydia.tilgangskontroll.obo.OboTokenUtveksler
+import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
 import no.nav.lydia.vedlikehold.LukkAlleÅpneIaTjenester
@@ -326,6 +327,9 @@ fun startLydiaBackend() {
             prosessRepository = prosessRepository,
             samarbeidProdusent = samarbeidProdusent,
         ),
+        iaSakSamarbeidOppdaterer = IASakSamarbeidOppdaterer(
+            iaSakService = iaSakService,
+        ),
     )
 
     listOf(
@@ -441,6 +445,7 @@ private fun jobblytter(
     spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
     lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
     samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
+    iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
 ) {
     Jobblytter.apply {
         create(
@@ -459,6 +464,7 @@ private fun jobblytter(
             lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester,
             samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer,
             samarbeidKafkaEksporterer = samarbeidKafkaEksporterer,
+            iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer,
         )
         run()
     }

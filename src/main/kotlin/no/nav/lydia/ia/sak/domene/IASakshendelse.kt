@@ -276,6 +276,7 @@ enum class IASakshendelseType {
     ENDRE_PROSESS,
     SLETT_PROSESS,
     FULLFØR_PROSESS,
+    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
     AVBRYT_PROSESS,
     // --
 

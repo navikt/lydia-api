@@ -37,6 +37,7 @@ import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
+import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
 import no.nav.lydia.vedlikehold.LukkAlleÅpneIaTjenester
@@ -70,6 +71,7 @@ object Jobblytter : CoroutineScope {
     private lateinit var spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer
     private lateinit var lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester
     private lateinit var samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer
+    private lateinit var iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer
     private val topicNavn = Topic.JOBBLYTTER_TOPIC.navn
     private val konsumentGruppe = Topic.JOBBLYTTER_TOPIC.konsumentGruppe
 
@@ -96,6 +98,7 @@ object Jobblytter : CoroutineScope {
         spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
         lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
         samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
+        iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
     ) {
         logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
@@ -120,6 +123,7 @@ object Jobblytter : CoroutineScope {
         this.spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer
         this.lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester
         this.samarbeidKafkaEksporterer = samarbeidKafkaEksporterer
+        this.iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer
 
         logger.info("Created kafka consumer job for $topicNavn")
     }
@@ -145,7 +149,8 @@ object Jobblytter : CoroutineScope {
                                         if (jobInfo.parameter.isNullOrEmpty()) {
                                             logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
                                         } else {
-                                            samarbeidKafkaEksporterer.eksporterEnkeltSamarbeid(jobInfo.parameter)
+                                            val tørrKjør = jobInfo.parameter != "GO!"
+                                            iaSakSamarbeidOppdaterer.fullføreSamarbeidForFullførteIASaker(tørrKjør)
                                         }
                                     }
 

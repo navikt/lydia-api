@@ -41,7 +41,7 @@ class UrørteSakerTest {
         sakEtterRydding.eidAv shouldBe null
 
         val tilbakeføringsHendelse = hentHendelse(sakEtterRydding.endretAvHendelseId)
-        tilbakeføringsHendelse.navEnhet shouldBe IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING
+        tilbakeføringsHendelse.navEnhet shouldBe IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING
         tilbakeføringsHendelse.opprettetAv shouldBe "Fia system"
 
         hentSamarbeidshistorikk(orgnummer = sakEtterRydding.orgnr).forExactlyOne { sakshistorikk ->

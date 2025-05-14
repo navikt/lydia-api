@@ -2,6 +2,7 @@ package no.nav.lydia.ia.sak
 
 import arrow.core.Either
 import arrow.core.flatMap
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
@@ -21,6 +22,7 @@ import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.SaksStatusDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.tilDto
 import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.ia.sak.api.ÅrsaksType
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
@@ -31,13 +33,15 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.kopier
 import no.nav.lydia.ia.sak.domene.IASak.Companion.medHendelser
+import no.nav.lydia.ia.sak.domene.IASak.Companion.oppdaterSamarbeidPåFullførtSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.*
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
@@ -55,6 +59,8 @@ import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import kotlin.Int
+import kotlin.String
 
 class IASakService(
     private val iaSakRepository: IASakRepository,
@@ -107,7 +113,7 @@ class IASakService(
         val sistEndretAvHendelseId = sak.endretAvHendelseId
 
         return sak.nyHendelseBasertPåSak(
-            hendelsestype = VIRKSOMHET_VURDERES,
+            hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
             superbruker = superbruker,
             navEnhet = navEnhet,
         ).lagre(null, IAProsessStatus.VURDERES)
@@ -129,7 +135,7 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
 
-        if (hendelseDto.hendelsesType == FULLFØR_BISTAND) {
+        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND) {
             val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
             val alleAktiveSamarbeidPåSak = iaProsessService.hentAktiveIAProsesser(sak = aktivSak)
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
@@ -144,28 +150,31 @@ class IASakService(
         }
 
         when (hendelseDto.hendelsesType) {
-            AVBRYT_PROSESS -> {
+            IASakshendelseType.AVBRYT_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 if (!iaProsessService.kanAvbryteSamarbeid(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke avbryte samarbeid`.left()
                 }
             }
-            SLETT_PROSESS -> {
+
+            IASakshendelseType.SLETT_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 if (!iaProsessService.kanSletteProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
                 }
             }
-            FULLFØR_PROSESS -> {
+
+            IASakshendelseType.FULLFØR_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 if (!iaProsessService.kanFullføreProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke fullføre samarbeid`.left()
                 }
             }
-            ENDRE_PROSESS, NY_PROSESS -> {
+
+            IASakshendelseType.ENDRE_PROSESS, IASakshendelseType.NY_PROSESS -> {
                 val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 val alleProsesser = iaProsessService.hentIAProsesser(aktivSak)
@@ -178,6 +187,7 @@ class IASakService(
                     ?.find { it.navn.equals(prosessDto.navn, ignoreCase = true) }
                     ?.let { return IAProsessFeil.`samarbeidsnavn finnes allerede`.left() }
             }
+
             else -> {}
         }
 
@@ -204,7 +214,7 @@ class IASakService(
                         årsakService.lagreÅrsak(sakshendelse)
                         iaProsessService.oppdaterSamarbeid(sakshendelse, sak)
                         when (sakshendelse.hendelsesType) {
-                            VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
+                            IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
                                 sakshendelse,
                                 saksbehandler,
                             )
@@ -253,13 +263,69 @@ class IASakService(
             orgnummer = this.orgnr,
             opprettetAv = "Fia system",
             opprettetAvRolle = Rolle.SUPERBRUKER,
-            navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_TILBAKEFØRING,
+            navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
             valgtÅrsak = ValgtÅrsak(
                 type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
                 begrunnelser = listOf(BegrunnelseType.AUTOMATISK_LUKKET),
             ),
             resulterendeStatus = IAProsessStatus.IKKE_AKTUELL,
         )
+
+    fun fullførMaskineltSamarbeidIFulførteSaker(tørrKjør: Boolean) =
+        iaSakRepository.hentFullførteSakerMedAktiveSamarbeid().map { iaSak ->
+            val sistEndretAvHendelseId = iaSak.endretAvHendelseId
+            val endretTidspunkt = iaSak.endretTidspunkt
+
+            val alleIkkeFullførteSamarbeidPåSak = iaProsessService.hentIAProsesser(iaSak).getOrElse { emptyList() }
+                .filter { it.status != no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT }
+
+            if (alleIkkeFullførteSamarbeidPåSak.isNotEmpty()) {
+                alleIkkeFullførteSamarbeidPåSak.forEach { iAProsess: IAProsess ->
+                    val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = iaSak.nyMaskineltOppdaterSamarbeidHendelse(
+                        iaProsessDto = iAProsess.tilDto(),
+                        iASakshendelseType = IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
+                    )
+
+                    if (!tørrKjør) {
+                        maskineltOppdaterSamarbeidHendelse.lagre(
+                            sistEndretAvHendelseId = sistEndretAvHendelseId,
+                            IAProsessStatus.FULLFØRT,
+                        )
+                        iaProsessService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = iaSak)
+                        val oppdatertSak = oppdaterSamarbeidPåFullførtSak(iaSak, maskineltOppdaterSamarbeidHendelse)
+                        oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
+                    }
+                    log.info(
+                        "${if (tørrKjør) "Skulle fullføre" else "Fullførte"} " +
+                            "samarbeid med id ${iAProsess.id} og status ${iAProsess.status} på sak med saksnummer ${iaSak.saksnummer}, sist oppdatert: $endretTidspunkt",
+                    )
+                }
+            }
+            log.info(
+                "${if (tørrKjør) "Skulle oppdatere" else "Oppdaterte"} " +
+                    "${alleIkkeFullførteSamarbeidPåSak.size} samarbeid på sak med saksnummer ${iaSak.saksnummer}",
+            )
+        }.size.also { size ->
+            log.info(
+                "${if (tørrKjør) "Skulle oppdatere" else "Oppdaterte"} status til samarbeid i $size ${if (size > 1) "saker" else "sak"}",
+            )
+        }
+
+    private fun IASak.nyMaskineltOppdaterSamarbeidHendelse(
+        iaProsessDto: IAProsessDto,
+        iASakshendelseType: IASakshendelseType,
+    ) = ProsessHendelse(
+        id = ULID.random(),
+        opprettetTidspunkt = LocalDateTime.now(),
+        saksnummer = this.saksnummer,
+        orgnummer = this.orgnr,
+        opprettetAv = "Fia system",
+        opprettetAvRolle = Rolle.SUPERBRUKER,
+        navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
+        hendelsesType = iASakshendelseType,
+        resulterendeStatus = IAProsessStatus.FULLFØRT,
+        prosessDto = iaProsessDto,
+    )
 
     private fun slettSak(
         sak: IASak,

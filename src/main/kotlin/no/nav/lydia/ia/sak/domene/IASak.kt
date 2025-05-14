@@ -17,6 +17,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
+import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
@@ -123,6 +124,7 @@ class IASak private constructor(
             NY_PROSESS,
             SLETT_PROSESS,
             FULLFØR_PROSESS,
+            FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
             AVBRYT_PROSESS,
             -> {
                 tilstand.behandleHendelse(hendelse)
@@ -219,6 +221,7 @@ class IASak private constructor(
                 } else {
                     KontaktesTilstand().right()
                 }
+
                 SLETT_SAK -> if (eidAv !=
                     null
                 ) {
@@ -226,6 +229,7 @@ class IASak private constructor(
                 } else {
                     SlettetTilstand().right()
                 }
+
                 VIRKSOMHET_ER_IKKE_AKTUELL -> IkkeAktuellTilstand().right()
                 else -> generellFeil()
             }
@@ -363,6 +367,7 @@ class IASak private constructor(
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 TILBAKE -> finnForrigeTilstand().right()
+                FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> this.right()
                 else -> generellFeil()
             }
     }
@@ -383,6 +388,14 @@ class IASak private constructor(
             hendelse: IASakshendelse,
         ) = sak.utførHendelseSomRådgiver(this, hendelse)
 
+        fun oppdaterSamarbeidPåFullførtSak(
+            iaSak: IASak,
+            hendelse: IASakshendelse,
+        ) = when (hendelse) {
+            is ProsessHendelse -> iaSak.behandleHendelse(hendelse)
+            else -> throw IllegalStateException("Kan ikke oppdatere samarbeid på fullførte sak med hendelsestype ${hendelse.hendelsesType.name}")
+        }
+
         fun tilbakeførSak(
             iaSak: IASak,
             hendelse: IASakshendelse,
@@ -393,7 +406,15 @@ class IASak private constructor(
 
         fun finnForrigeTilstandBasertPåHendelsesrekke(hendelser: List<IASakshendelseType>): IASakshendelseType {
             val hendelserSomEndrerStatus = hendelser.filter {
-                !listOf(TA_EIERSKAP_I_SAK, NY_PROSESS, ENDRE_PROSESS, SLETT_PROSESS, FULLFØR_PROSESS).contains(it)
+                !listOf(
+                    TA_EIERSKAP_I_SAK,
+                    NY_PROSESS,
+                    ENDRE_PROSESS,
+                    SLETT_PROSESS,
+                    AVBRYT_PROSESS,
+                    FULLFØR_PROSESS,
+                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
+                ).contains(it)
             }
 
             val hendelsesRekkeMedHåndterteTilbakeHendelser =
