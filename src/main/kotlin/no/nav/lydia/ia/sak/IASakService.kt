@@ -6,7 +6,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.AVBRUTT
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
 import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.ktor.http.HttpStatusCode
@@ -282,15 +281,9 @@ class IASakService(
 
             if (alleIkkeFullførteSamarbeidPåSak.isNotEmpty()) {
                 alleIkkeFullførteSamarbeidPåSak.forEach { iAProsess: IAProsess ->
-                    val erPlanAvbrutt = erPlanAvbrutt(prosess = iAProsess)
-
                     val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = iaSak.nyMaskineltOppdaterSamarbeidHendelse(
                         iaProsessDto = iAProsess.tilDto(),
-                        iASakshendelseType = if (erPlanAvbrutt) {
-                            IASakshendelseType.AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
-                        } else {
-                            IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
-                        },
+                        iASakshendelseType = IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
                     )
 
                     if (!tørrKjør) {
@@ -303,13 +296,21 @@ class IASakService(
                         årsakService.lagreÅrsak(maskineltOppdaterSamarbeidHendelse)
                         oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
+                    log.info(
+                        "${if (tørrKjør) "Skulle fullføre" else "Fullførte"} " +
+                            "samarbeid med id ${iAProsess.id} og status ${iAProsess.status} på sak med saksnummer ${iaSak.saksnummer}, sist oppdatert: $endretTidspunkt",
+                    )
                 }
             }
             log.info(
-                "${if (tørrKjør) "Skulle fullføre" else "Fullførte"} " +
-                    "${alleIkkeFullførteSamarbeidPåSak.size} samarbeid på sak med saksnummer ${iaSak.saksnummer}, sist oppdatert: $endretTidspunkt",
+                "${if (tørrKjør) "Skulle oppdatere" else "Oppdaterte"} " +
+                    "${alleIkkeFullførteSamarbeidPåSak.size} samarbeid på sak med saksnummer ${iaSak.saksnummer}",
             )
-        }.size
+        }.size.also { size ->
+            log.info(
+                "${if (tørrKjør) "Skulle oppdatere" else "Oppdaterte"} status til samarbeid i $size ${if (size > 1) "saker" else "sak"}",
+            )
+        }
 
     private fun IASak.nyMaskineltOppdaterSamarbeidHendelse(
         iaProsessDto: IAProsessDto,
@@ -510,19 +511,6 @@ class IASakService(
                 id = plan.id.toString(),
             )
         }
-    }
-
-    private fun erPlanAvbrutt(prosess: IAProsess): Boolean {
-        val plan = planRepository.hentPlan(prosessId = prosess.id) ?: return false
-
-        val temaerMedBareAvbryttUndertemaer = plan.temaer.map { tema ->
-            val inkluderteUndertemaer = tema.undertemaer.filter { it.inkludert }
-            inkluderteUndertemaer.isNotEmpty() &&
-                inkluderteUndertemaer.all { undertema ->
-                    undertema.status == AVBRUTT
-                }
-        }
-        return temaerMedBareAvbryttUndertemaer.isNotEmpty() and temaerMedBareAvbryttUndertemaer.all { it }
     }
 
     private fun sjekkBehovsvurderinger(prosess: IAProsess): List<ÅrsakTilAtSakIkkeKanAvsluttes> {

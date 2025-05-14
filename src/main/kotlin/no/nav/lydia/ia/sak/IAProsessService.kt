@@ -26,7 +26,6 @@ import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
@@ -80,12 +79,6 @@ class IAProsessService(
                     }
 
                     AVBRYT_PROSESS -> avbrytProsess(sakshendelse, sak)?.let { samarbeid ->
-                        samarbeidObservers.forEach { it.receive(samarbeid) }
-                    }
-
-                    AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> avbryttProsessMaskineltPåEnFullførtSak(
-                        sakshendelse = sakshendelse,
-                    )?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
 

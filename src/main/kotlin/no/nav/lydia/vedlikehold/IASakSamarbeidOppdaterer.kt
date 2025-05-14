@@ -17,7 +17,10 @@ class IASakSamarbeidOppdaterer(
     fun fullføreSamarbeidForFullførteIASaker(tørrKjør: Boolean = false) {
         KJØRER_FULLFØRE_SAMARBEID_I_FULLFØRTE_IA_SAKER.set(true)
         val antallSaker = iaSakService.fullførMaskineltSamarbeidIFulførteSaker(tørrKjør = tørrKjør)
-        log.info("Ferdig med å fullføre samarbeid i fullførte IA saker. Ryddet opp i $antallSaker saker")
+        log.info(
+            "Ferdig med å fullføre samarbeid i fullførte IA saker. Ryddet opp i $antallSaker ${if (antallSaker > 1) "saker" else "sak"}. " +
+                "Tørr kjør: $tørrKjør",
+        )
         KJØRER_FULLFØRE_SAMARBEID_I_FULLFØRTE_IA_SAKER.set(false)
     }
 }

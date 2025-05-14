@@ -14,7 +14,6 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.valueOf
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
@@ -127,7 +126,6 @@ class IASak private constructor(
             FULLFØR_PROSESS,
             FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
             AVBRYT_PROSESS,
-            AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
             -> {
                 tilstand.behandleHendelse(hendelse)
                     .map { nyTilstand -> tilstand = nyTilstand }
@@ -367,7 +365,7 @@ class IASak private constructor(
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 TILBAKE -> finnForrigeTilstand().right()
-                FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK, AVBRYT_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> this.right()
+                FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> this.right()
                 else -> generellFeil()
             }
     }
