@@ -413,6 +413,7 @@ class IASak private constructor(
                     SLETT_PROSESS,
                     AVBRYT_PROSESS,
                     FULLFØR_PROSESS,
+                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
                 ).contains(it)
             }
 
