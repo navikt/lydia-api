@@ -260,8 +260,6 @@ class IAProsessService(
         }
     }
 
-    private fun avbryttProsessMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IAProsess? = prosessRepository.avbrytSamarbeid(sakshendelse.prosessDto)
-
     private fun slettProsess(
         sakshendelse: ProsessHendelse,
         sak: IASak,
