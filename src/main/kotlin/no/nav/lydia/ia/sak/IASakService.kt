@@ -293,7 +293,6 @@ class IASakService(
                         )
                         iaProsessService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = iaSak)
                         val oppdatertSak = oppdaterSamarbeidPåFullførtSak(iaSak, maskineltOppdaterSamarbeidHendelse)
-                        årsakService.lagreÅrsak(maskineltOppdaterSamarbeidHendelse)
                         oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
                     log.info(
