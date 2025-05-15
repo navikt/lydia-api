@@ -273,15 +273,16 @@ class IASakService(
 
     fun fullførMaskineltSamarbeidIFulførteSaker(tørrKjør: Boolean) =
         iaSakRepository.hentFullførteSakerMedAktiveSamarbeid().map { iaSak ->
-            val sistEndretAvHendelseId = iaSak.endretAvHendelseId
-            val endretTidspunkt = iaSak.endretTidspunkt
-
             val alleIkkeFullførteSamarbeidPåSak = iaProsessService.hentIAProsesser(iaSak).getOrElse { emptyList() }
                 .filter { it.status != no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT }
 
             if (alleIkkeFullførteSamarbeidPåSak.isNotEmpty()) {
                 alleIkkeFullførteSamarbeidPåSak.forEach { iAProsess: IAProsess ->
-                    val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = iaSak.nyMaskineltOppdaterSamarbeidHendelse(
+                    val oppdatertSakMedSisteHendelse = iaSakRepository.hentIASak(iaSak.saksnummer)!!
+                    val sistEndretAvHendelseId = oppdatertSakMedSisteHendelse.endretAvHendelseId
+                    val endretTidspunkt = oppdatertSakMedSisteHendelse.endretTidspunkt
+
+                    val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = oppdatertSakMedSisteHendelse.nyMaskineltOppdaterSamarbeidHendelse(
                         iaProsessDto = iAProsess.tilDto(),
                         iASakshendelseType = IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
                     )
@@ -291,13 +292,13 @@ class IASakService(
                             sistEndretAvHendelseId = sistEndretAvHendelseId,
                             IAProsessStatus.FULLFØRT,
                         )
-                        iaProsessService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = iaSak)
-                        val oppdatertSak = oppdaterSamarbeidPåFullførtSak(iaSak, maskineltOppdaterSamarbeidHendelse)
+                        iaProsessService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = oppdatertSakMedSisteHendelse)
+                        val oppdatertSak = oppdaterSamarbeidPåFullførtSak(oppdatertSakMedSisteHendelse, maskineltOppdaterSamarbeidHendelse)
                         oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
                     log.info(
                         "${if (tørrKjør) "Skulle fullføre" else "Fullførte"} " +
-                            "samarbeid med id ${iAProsess.id} og status ${iAProsess.status} på sak med saksnummer ${iaSak.saksnummer}, sist oppdatert: $endretTidspunkt",
+                            "samarbeid med id ${iAProsess.id} og status ${iAProsess.status} på sak med saksnummer ${oppdatertSakMedSisteHendelse.saksnummer}, sist oppdatert: $endretTidspunkt",
                     )
                 }
             }
