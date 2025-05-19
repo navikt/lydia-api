@@ -50,6 +50,7 @@ import no.nav.lydia.helper.nyttNavnPåSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
@@ -337,24 +338,21 @@ class IASakProsessTest {
     }
 
     @Test
-    fun `tomme samarbeidsnavn skal lagres som NULL i databasen`() {
-        val sak = nySakIKartleggesMedEtSamarbeid(
-            navnPåSamarbeid = "",
-        )
-
-        val samarbeid = sak.hentAlleSamarbeid().first()
+    fun `tomme samarbeidsnavn skal ikke kunne lagres`() {
+        val sak = nySakIKartlegges()
+        shouldFail {
+            sak.opprettNyttSamarbeid(navn = "")
+        }
+        val sakMedEttSamarbeid = sak.opprettNyttSamarbeid(navn = DEFAULT_SAMARBEID_NAVN)
+        val samarbeid = sakMedEttSamarbeid.hentAlleSamarbeid().first()
+        shouldFail {
+            sakMedEttSamarbeid.nyttNavnPåSamarbeid(samarbeid, " ")
+        }
         postgresContainerHelper.hentEnkelKolonne<String?>(
             """
             select navn from ia_prosess where id = ${samarbeid.id}
             """.trimIndent(),
-        ) shouldBe null
-
-        sak.nyttNavnPåSamarbeid(samarbeid, " ")
-        postgresContainerHelper.hentEnkelKolonne<String?>(
-            """
-            select navn from ia_prosess where id = ${samarbeid.id}
-            """.trimIndent(),
-        ) shouldBe null
+        ) shouldBe DEFAULT_SAMARBEID_NAVN
     }
 
     @Test
@@ -677,6 +675,7 @@ class IASakProsessTest {
                     IAProsessDto(
                         id = 1010000,
                         saksnummer = sak.saksnummer,
+                        navn = DEFAULT_SAMARBEID_NAVN,
                     ),
                 ),
             )
@@ -698,6 +697,7 @@ class IASakProsessTest {
                     IAProsessDto(
                         id = 1010000,
                         saksnummer = sak.saksnummer,
+                        navn = DEFAULT_SAMARBEID_NAVN,
                     ),
                 ),
             )

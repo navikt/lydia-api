@@ -16,7 +16,6 @@ import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
-import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -25,9 +24,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
-import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
@@ -115,28 +112,6 @@ class SamarbeidsplanProdusentTest {
             konsummerOgSjekkKafkaMelding(sak1, samarbeid1, opprettetPlan1)
         }
         applikasjon shouldContainLog "Jobb '${Jobb.iaSakSamarbeidsplanEksport.name}' ferdig".toRegex()
-    }
-
-    @Test
-    fun `re-eksport av samarbeidsplaner til salesforce hvor samarbeid har et tomt (null) navn`() {
-        val planMal: PlanMalDto = hentPlanMal()
-        val sak1 = nySakIKartlegges().opprettNyttSamarbeid(navn = null)
-        val samarbeid1 = sak1.hentAlleSamarbeid().first()
-        val opprettetPlan1 = sak1.opprettEnPlan(plan = planMal)
-        runBlocking {
-            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
-                konsument = konsument,
-            ) {
-                println("Fikk en kafka melding for ${sak1.orgnr} ")
-            }
-        }
-
-        kafkaContainerHelper.sendJobbMelding(Jobb.iaSakSamarbeidsplanEksport)
-
-        runBlocking {
-            konsummerOgSjekkKafkaMelding(sak1, samarbeid1, opprettetPlan1)
-        }
     }
 
     @Test
@@ -237,11 +212,7 @@ class SamarbeidsplanProdusentTest {
         if (sluttDato != null) {
             planTilSalesforce.samarbeid.sluttDato shouldBe sluttDato
         }
-        if (samarbeid.navn == null) {
-            planTilSalesforce.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
-        } else {
-            planTilSalesforce.samarbeid.navn shouldBe samarbeid.navn
-        }
+        planTilSalesforce.samarbeid.navn shouldBe samarbeid.navn
         planTilSalesforce.samarbeid.status shouldBe samarbeid.status
         planTilSalesforce.plan.id shouldBe opprettetPlan.id
         planTilSalesforce.plan.temaer.size shouldBeExactly opprettetPlan.temaer.size

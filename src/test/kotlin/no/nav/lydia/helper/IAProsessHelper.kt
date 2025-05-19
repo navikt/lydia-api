@@ -24,7 +24,7 @@ fun IASakDto.nyttNavnPåSamarbeid(
 )
 
 fun IASakDto.opprettNyttSamarbeid(
-    navn: String? = DEFAULT_SAMARBEID_NAVN,
+    navn: String = DEFAULT_SAMARBEID_NAVN,
     token: String = authContainerHelper.saksbehandler1.token,
 ) = nyHendelse(
     hendelsestype = IASakshendelseType.NY_PROSESS,

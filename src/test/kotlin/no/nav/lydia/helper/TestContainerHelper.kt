@@ -404,13 +404,13 @@ class SakHelper {
         fun nySakIKartleggesMedEtSamarbeid(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = authContainerHelper.saksbehandler1.token,
-            navnPåSamarbeid: String? = DEFAULT_SAMARBEID_NAVN,
+            navnPåSamarbeid: String = DEFAULT_SAMARBEID_NAVN,
         ) = nySakIKartlegges(orgnummer = orgnummer, token = token).opprettNyttSamarbeid(navn = navnPåSamarbeid)
 
         fun nySakIViBistår(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = authContainerHelper.saksbehandler1.token,
-            navnPåSamarbeid: String? = DEFAULT_SAMARBEID_NAVN,
+            navnPåSamarbeid: String = DEFAULT_SAMARBEID_NAVN,
         ) = opprettSakForVirksomhet(orgnummer)
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)

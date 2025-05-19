@@ -5,7 +5,7 @@ import kotlinx.datetime.LocalDateTime
 data class IAProsess(
     val id: Int,
     val saksnummer: String,
-    val navn: String?,
+    val navn: String,
     val status: IAProsessStatus?,
     val opprettet: LocalDateTime,
     val avbrutt: LocalDateTime?,

@@ -9,7 +9,7 @@ import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 data class IAProsessDto(
     val id: Int,
     val saksnummer: String,
-    val navn: String? = null,
+    val navn: String,
     val status: IAProsessStatus? = null,
     val opprettet: LocalDateTime? = null,
     val sistEndret: LocalDateTime? = null,

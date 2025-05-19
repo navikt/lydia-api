@@ -18,7 +18,6 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SAMARBEID_ID_PREFIKS
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
-import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Ignore
@@ -73,11 +72,7 @@ class SamarbeidEksportererTest {
                     samarbeidKafkaMelding.orgnr shouldBe sak.orgnr
                     samarbeidKafkaMelding.saksnummer shouldBe sak.saksnummer
                     samarbeidKafkaMelding.samarbeid.id shouldBe samarbeid.id
-                    if (samarbeid.navn == null) {
-                        samarbeidKafkaMelding.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
-                    } else {
-                        samarbeidKafkaMelding.samarbeid.navn shouldBe samarbeid.navn
-                    }
+                    samarbeidKafkaMelding.samarbeid.navn shouldBe samarbeid.navn
                     samarbeidKafkaMelding.samarbeid.status shouldBe samarbeid.status
                     samarbeidKafkaMelding.samarbeid.endretTidspunkt shouldNotBe null
                 }
@@ -126,11 +121,7 @@ class SamarbeidEksportererTest {
                     samarbeidKafkaMelding.orgnr shouldBe sak.orgnr
                     samarbeidKafkaMelding.saksnummer shouldBe sak.saksnummer
                     samarbeidKafkaMelding.samarbeid.id shouldBe samarbeid.id
-                    if (samarbeid.navn == null) {
-                        samarbeidKafkaMelding.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
-                    } else {
-                        samarbeidKafkaMelding.samarbeid.navn shouldBe samarbeid.navn
-                    }
+                    samarbeidKafkaMelding.samarbeid.navn shouldBe samarbeid.navn
                     samarbeidKafkaMelding.samarbeid.status shouldBe samarbeid.status
                     samarbeidKafkaMelding.samarbeid.endretTidspunkt shouldNotBe null
                 }

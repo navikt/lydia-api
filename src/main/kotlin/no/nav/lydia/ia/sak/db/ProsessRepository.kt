@@ -117,7 +117,7 @@ class ProsessRepository(
                     WHERE id = :prosessId
                     """.trimIndent(),
                     mapOf(
-                        "navn" to prosessDto.navn.nullIfEmpty(),
+                        "navn" to prosessDto.navn,
                         "prosessId" to prosessDto.id,
                         "endret_tidspunkt" to LocalDateTime.now(),
                     ),
@@ -132,7 +132,7 @@ class ProsessRepository(
         IAProsess(
             id = row.int("id"),
             saksnummer = row.string("saksnummer"),
-            navn = row.stringOrNull("navn"),
+            navn = row.string("navn"),
             status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
             opprettet = row.localDateTime("opprettet").toKotlinLocalDateTime(),
             avbrutt = row.localDateTimeOrNull("avbrutt_tidspunkt")?.toKotlinLocalDateTime(),

@@ -179,7 +179,7 @@ class IASakService(
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 val alleProsesser = iaProsessService.hentIAProsesser(aktivSak)
 
-                if (prosessDto.navn != null && prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
+                if (prosessDto.navn.trim().isEmpty() || prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
                     return IAProsessFeil.`ugyldig samarbeidsnavn`.left()
                 }
 
