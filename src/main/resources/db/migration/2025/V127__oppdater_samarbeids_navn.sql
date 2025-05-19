@@ -1,0 +1,1 @@
+UPDATE ia_prosess SET navn = 'Samarbeid uten navn' WHERE navn is null or navn = '';
