@@ -1,0 +1,1 @@
+UPDATE ia_prosess SET endret_tidspunkt = now() WHERE navn = 'Samarbeid uten navn';
