@@ -30,7 +30,7 @@ import kotlin.test.Test
 class SpørreundersøkelseHendelseKonsumentTest {
     companion object {
         private val topic = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
+        private val konsument = kafkaContainerHelper.nyKonsument(topic = topic)
 
         @BeforeClass
         @JvmStatic

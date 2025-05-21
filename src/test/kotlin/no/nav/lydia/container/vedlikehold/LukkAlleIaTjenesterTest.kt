@@ -22,7 +22,7 @@ import kotlin.test.Test
 class LukkAlleIaTjenesterTest {
     companion object {
         private val topic = Topic.IA_SAK_LEVERANSE_TOPIC
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
+        private val konsument = kafkaContainerHelper.nyKonsument(topic = topic)
 
         @BeforeClass
         @JvmStatic

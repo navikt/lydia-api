@@ -41,7 +41,7 @@ import kotlin.test.Test
 class EvalueringApiTest {
     companion object {
         private val topic = Topic.SPORREUNDERSOKELSE_TOPIC
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
+        private val konsument = kafkaContainerHelper.nyKonsument(topic = topic)
 
         @BeforeClass
         @JvmStatic

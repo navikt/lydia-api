@@ -36,7 +36,7 @@ import kotlin.test.Test
 class SamarbeidsplanProdusentTest {
     companion object {
         private val topic = Topic.SAMARBEIDSPLAN_TOPIC
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
+        private val konsument = kafkaContainerHelper.nyKonsument(topic = topic)
 
         @BeforeClass
         @JvmStatic
@@ -167,7 +167,7 @@ class SamarbeidsplanProdusentTest {
             """
             SELECT COUNT(*) FROM ia_sak_plan WHERE ia_prosess = '${samarbeid.id}'
             """.trimIndent(),
-        ).toInt() shouldBe 1
+        ) shouldBe 1
     }
 
     private suspend fun konsummerOgSjekkKafkaMelding(

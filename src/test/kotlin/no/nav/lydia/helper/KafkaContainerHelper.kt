@@ -73,14 +73,14 @@ class KafkaContainerHelper(
             kafkaProducer = producer()
         }
 
-    fun nyKonsument(consumerGroupId: String) =
+    fun nyKonsument(topic: Topic) =
         Kafka(
             brokers = container.bootstrapServers,
-            consumerLoopDelay = 1,
-            credstorePassword = "",
-            keystoreLocation = "",
             truststoreLocation = "",
-        ).consumerProperties(consumerGroupId = consumerGroupId)
+            keystoreLocation = "",
+            credstorePassword = "",
+            consumerLoopDelay = 1,
+        ).consumerProperties(consumerGroupId = topic.konsumentGruppe)
             .let { config ->
                 KafkaConsumer(config, StringDeserializer(), StringDeserializer())
             }

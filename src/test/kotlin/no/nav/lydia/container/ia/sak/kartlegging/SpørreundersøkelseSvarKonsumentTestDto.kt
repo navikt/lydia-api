@@ -39,12 +39,8 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     companion object {
         private val oppdateringTopic = Topic.SPORREUNDERSOKELSE_OPPDATERING_TOPIC
         private val spørreundersøkelseTopic = Topic.SPORREUNDERSOKELSE_TOPIC
-        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(
-            consumerGroupId = spørreundersøkelseTopic.konsumentGruppe,
-        )
-        private val spørreundersøkelseOppdateringKonsument = kafkaContainerHelper.nyKonsument(
-            consumerGroupId = oppdateringTopic.konsumentGruppe,
-        )
+        private val spørreundersøkelseKonsument = kafkaContainerHelper.nyKonsument(topic = spørreundersøkelseTopic)
+        private val spørreundersøkelseOppdateringKonsument = kafkaContainerHelper.nyKonsument(topic = oppdateringTopic)
 
         @BeforeClass
         @JvmStatic

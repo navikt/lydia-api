@@ -38,7 +38,7 @@ import kotlin.test.Test
 class IASakStatistikkEksportererTest {
     companion object {
         private val topic = Topic.IA_SAK_STATISTIKK_TOPIC
-        private val konsument = kafkaContainerHelper.nyKonsument(consumerGroupId = topic.konsumentGruppe)
+        private val konsument = kafkaContainerHelper.nyKonsument(topic = topic)
 
         @BeforeClass
         @JvmStatic
