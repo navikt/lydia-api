@@ -241,7 +241,7 @@ class SykefraværsstatistikkVirksomhetImportTest {
         )
 
         applikasjon shouldContainLog
-            "Lagret 1 meldinger i StatistikkVirksomhetGraderingConsumer \\(topic 'arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1'\\)"
+            "Lagret 1 meldinger i StatistikkVirksomhetGraderingConsumer \\(topic 'pia.sykefravarsstatistikk-virksomhet-gradert-v1'\\)"
                 .toRegex()
 
         val resultat = hentStatistikkVirksomhetGraderingGjeldendeKvartal(orgnr = "999999999", kvartal = KVARTAL_2023_1)
