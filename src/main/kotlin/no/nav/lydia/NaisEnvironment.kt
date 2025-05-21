@@ -206,35 +206,35 @@ enum class Topic(
         konsumentGruppe = "lydia-api-brreg-alle-virksomheter-consumer",
     ),
     STATISTIKK_METADATA_VIRKSOMHET_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-metadata-virksomhet-v1",
+        navn = "pia.sykefravarsstatistikk-metadata-virksomhet-v1",
         konsumentGruppe = "lydia-api-statistikk-metadata-virksomhet-consumer",
     ),
     STATISTIKK_LAND_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-land-v1",
+        navn = "pia.sykefravarsstatistikk-land-v1",
         konsumentGruppe = "lydia-api-statistikk-land-consumer",
     ),
     STATISTIKK_SEKTOR_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-sektor-v1",
+        navn = "pia.sykefravarsstatistikk-sektor-v1",
         konsumentGruppe = "lydia-api-statistikk-sektor-consumer",
     ),
     STATISTIKK_BRANSJE_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-bransje-v1",
+        navn = "pia.sykefravarsstatistikk-bransje-v1",
         konsumentGruppe = "lydia-api-statistikk-bransje-consumer",
     ),
     STATISTIKK_NARING_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-naring-v1",
+        navn = "pia.sykefravarsstatistikk-naring-v1",
         konsumentGruppe = "lydia-api-statistikk-naring-consumer",
     ),
     STATISTIKK_NARINGSKODE_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-naringskode-v1",
+        navn = "pia.sykefravarsstatistikk-naringskode-v1",
         konsumentGruppe = "lydia-api-statistikk-naringskode-consumer",
     ),
     STATISTIKK_VIRKSOMHET_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-virksomhet-v1",
+        navn = "pia.sykefravarsstatistikk-virksomhet-v1",
         konsumentGruppe = "lydia-api-statistikk-virksomhet-consumer",
     ),
     STATISTIKK_VIRKSOMHET_GRADERING_TOPIC(
-        navn = "arbeidsgiver.sykefravarsstatistikk-virksomhet-gradert-v1",
+        navn = "pia.sykefravarsstatistikk-virksomhet-gradert-v1",
         konsumentGruppe = "lydia-api-statistikk-virksomhet-gradering-consumer",
     ),
     JOBBLYTTER_TOPIC(
