@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
 class KartleggingSvarConsumer :
     CoroutineScope,
@@ -82,9 +83,11 @@ class KartleggingSvarConsumer :
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...")
+                    logger.info("$consumer (topic '${topic.navn}')  is waking up", e)
+                } catch (e: CancellationException) {
+                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...", e)
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner i $consumer (topic '${topic.navn}')", e)
+                    logger.error("Exception is shutting down kafka listener $consumer (topic '${topic.navn}')", e)
                     throw e
                 }
             }
@@ -122,7 +125,7 @@ class KartleggingSvarConsumer :
                 UUID.fromString(sesjonIdOgSpørsmålId[0])
                 UUID.fromString(sesjonIdOgSpørsmålId[1])
                 true
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 false
             }
 
@@ -133,7 +136,7 @@ class KartleggingSvarConsumer :
             try {
                 Json.decodeFromString<SpørreundersøkelseSvarDto>(verdi)
             } catch (e: Exception) {
-                logger.warn("Feil formatert Kafka melding (value) i topic ${kartleggingSvarRecord.topic()} for value '$verdi' ")
+                logger.warn("Feil formatert Kafka melding (value) i topic ${kartleggingSvarRecord.topic()} for value '$verdi'", e)
                 return false
             }
 
