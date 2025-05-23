@@ -23,7 +23,7 @@ import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
-class SalesforceAktivitetKonsument :
+class SalesforceAktivitetConsumer :
     CoroutineScope,
     Helsesjekk {
     private lateinit var job: Job
