@@ -70,9 +70,7 @@ object StatistikkVirksomhetGraderingConsumer : CoroutineScope, Helsesjekk {
                                 sykefraværsstatistikkService.lagreStatistikkVirksomhetGradering(
                                     records.tilGradertSykemeldingImportDto(),
                                 )
-                                logger.info(
-                                    "Lagret ${records.count()} meldinger i $consumer (topic '${topic.navn}') ",
-                                )
+                                logger.info("Lagret ${records.count()} meldinger i $consumer (topic '${topic.navn}') ")
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {

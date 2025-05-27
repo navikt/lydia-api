@@ -46,7 +46,7 @@ class StatistikkPerKategoriConsumer(
         kafka: Kafka,
         sykefraværsstatistikkService: SykefraværsstatistikkService,
     ) {
-        logger.info("Creating kafka consumer job i StatistikkPerKategoriConsumer i groupId '${topic.konsumentGruppe}'")
+        logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
@@ -55,7 +55,7 @@ class StatistikkPerKategoriConsumer(
             StringDeserializer(),
             StringDeserializer(),
         )
-        logger.info("Created kafka consumer job i StatistikkPerKategoriConsumer i groupId '${topic.konsumentGruppe}'")
+        logger.info("Created kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
     }
 
     fun run() {
@@ -63,9 +63,7 @@ class StatistikkPerKategoriConsumer(
             kafkaConsumer.use { consumer ->
                 try {
                     consumer.subscribe(listOf(topic.navn))
-                    logger.info(
-                        "Kafka consumer subscribed to topic '$topic' of groupId '${topic.konsumentGruppe}' )' in StatistikkPerKategoriConsumer",
-                    )
+                    logger.info("Kafka consumer subscribed to topic '${topic.navn}' of groupId '${topic.konsumentGruppe}' )' in $consumer")
 
                     while (job.isActive) {
                         try {
@@ -74,12 +72,12 @@ class StatistikkPerKategoriConsumer(
                                 sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
                                     records.toSykefravPerKategoriImportDto(),
                                 )
-                                logger.info("Lagret ${records.count()} meldinger i StatistikkPerKategoriConsumer (topic '$topic') ")
+                                logger.info("Lagret ${records.count()} meldinger i $consumer (topic '${topic.navn}') ")
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
                             logger.warn(
-                                "Had a retriable exception in StatistikkPerKategoriConsumer (topic '$topic'), retrying",
+                                "Had a retriable exception in $consumer (topic '${topic.navn}'), retrying",
                                 e,
                             )
                         }
