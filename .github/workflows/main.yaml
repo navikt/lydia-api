@@ -69,7 +69,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/drop_columns_endret_av_i_ia_prosess'
+    if: github.ref == 'refs/heads/nytt-namespace-for-statistikk-topics'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
