@@ -63,7 +63,7 @@ class VirksomhetsinformasjonRepository(
                     virksomhetsstatistikk_for_prioritering AS statistikk
                     LEFT JOIN ia_sak ON (
                         (ia_sak.orgnr = statistikk.orgnr) AND
-                        ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
+                        ia_sak.opprettet = (select max(opprettet) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                     )
                 WHERE true = true
                     
