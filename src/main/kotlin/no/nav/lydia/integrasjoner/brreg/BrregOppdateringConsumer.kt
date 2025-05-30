@@ -13,7 +13,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.exceptions.UgyldigAdresseException
-import no.nav.lydia.virksomhet.VirksomhetRepository
+import no.nav.lydia.virksomhet.VirksomhetService
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -29,7 +29,7 @@ object BrregOppdateringConsumer : CoroutineScope {
     private lateinit var job: Job
     private lateinit var kafka: Kafka
 
-    private lateinit var repository: VirksomhetRepository
+    private lateinit var virksomhetService: VirksomhetService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
     private val topicNavn = Topic.BRREG_OPPDATERING_TOPIC.navn
     private val konsumentGruppe = Topic.BRREG_OPPDATERING_TOPIC.konsumentGruppe
@@ -43,12 +43,12 @@ object BrregOppdateringConsumer : CoroutineScope {
 
     fun create(
         kafka: Kafka,
-        repository: VirksomhetRepository,
+        virksomhetService: VirksomhetService,
     ) {
         logger.info("Creating kafka consumer job for $topicNavn")
         job = Job()
         BrregOppdateringConsumer.kafka = kafka
-        BrregOppdateringConsumer.repository = repository
+        BrregOppdateringConsumer.virksomhetService = virksomhetService
         kafkaConsumer = KafkaConsumer(
             BrregOppdateringConsumer.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
             StringDeserializer(),
@@ -82,8 +82,8 @@ object BrregOppdateringConsumer : CoroutineScope {
                                                 status = oppdateringVirksomhet.endringstype.tilStatus(),
                                                 oppdateringsId = oppdateringVirksomhet.oppdateringsid,
                                             )
-                                            repository.insertVirksomhet(virksomhet)
-                                            repository.insertNæringsundergrupper(virksomhet)
+                                            virksomhetService.insertVirksomhet(virksomhet)
+                                            virksomhetService.insertNæringsundergrupper(virksomhet)
                                         } catch (e: UgyldigAdresseException) {
                                             antallIrrelevanteBedrifter += 1
                                         }
@@ -91,11 +91,7 @@ object BrregOppdateringConsumer : CoroutineScope {
 
                                     BrregVirksomhetEndringstype.Sletting,
                                     BrregVirksomhetEndringstype.Fjernet,
-                                    -> repository.oppdaterStatus(
-                                        orgnr = oppdateringVirksomhet.orgnummer,
-                                        status = oppdateringVirksomhet.endringstype.tilStatus(),
-                                        oppdatertAvBrregOppdateringsId = oppdateringVirksomhet.oppdateringsid,
-                                    )
+                                    -> virksomhetService.slettEllerFjernVirksomhet(oppdateringVirksomhet)
                                 }
                             }
                             logger.info("Lagret $antallMeldinger meldinger for $topicNavn")
