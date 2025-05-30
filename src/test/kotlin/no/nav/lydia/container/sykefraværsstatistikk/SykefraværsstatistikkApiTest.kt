@@ -48,7 +48,6 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
@@ -302,7 +301,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne hente sykefraværsstatistikk for en enkelt bedrift for de siste 4 kvartaler`() {
-        val gjeldendePeriode = TestData.gjeldendePeriode
+        val gjeldendePeriode = gjeldendePeriode
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr).also {
             it.orgnr shouldBe orgnr
@@ -315,7 +314,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal kunne hente statistikk for gradert sykmelding for de siste 4 kvartaler`() {
-        val gjeldendePeriode = TestData.gjeldendePeriode
+        val gjeldendePeriode = gjeldendePeriode
         val orgnr = BERGEN.orgnr
         hentSykefraværForVirksomhetSiste4Kvartaler(orgnummer = orgnr).also {
             it.orgnr shouldBe orgnr
@@ -615,7 +614,7 @@ class SykefraværsstatistikkApiTest {
 
     @Test
     fun `skal bare få statistikk for siste periode hvis periode er uspesifisert`() {
-        val gjeldendePeriode = TestData.gjeldendePeriode
+        val gjeldendePeriode = gjeldendePeriode
 
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
@@ -1037,19 +1036,22 @@ class SykefraværsstatistikkApiTest {
         val testKommune = Kommune(navn = "Yoloooo", nummer = "5555")
         val virksomhet =
             lastInnNyVirksomhet(nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)))
-        val sak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
-            .nyHendelse(TA_EIERSKAP_I_SAK)
-            .nyIkkeAktuellHendelse()
-            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
 
-        // -- lag en sak som er enda eldre
+        // -- lag en sak som skal være den eldste saken (den første)
         opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyIkkeAktuellHendelse()
             .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 10)
 
-        hentSykefravær(kommuner = testKommune.nummer).also {
-            it.data.single().sistEndret shouldBe sak.endretTidspunkt?.date
+        val nyereSak = opprettSakForVirksomhet(orgnummer = virksomhet.orgnr)
+            .nyHendelse(TA_EIERSKAP_I_SAK)
+            .nyIkkeAktuellHendelse()
+            .oppdaterHendelsesTidspunkter(antallDagerTilbake = ANTALL_DAGER_FØR_SAK_LÅSES + 1)
+
+        val virksomhetsoversiktResponsDto = hentSykefravær(kommuner = testKommune.nummer)
+        virksomhetsoversiktResponsDto.also {
+            it.data.single().status shouldBe IAProsessStatus.IKKE_AKTIV
+            it.data.single().sistEndret shouldBe nyereSak.endretTidspunkt?.date
         }
     }
 
