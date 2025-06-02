@@ -22,6 +22,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreunders
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
+import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSak
@@ -98,7 +99,7 @@ class IASakApiTest {
     @Test
     fun `skal ikke kunne fullføre sak uten å fullføre alle samarbeid først`() {
         val sak = nySakIKartlegges().opprettNyttSamarbeid().also { it.opprettEnPlan() }.nyHendelse(hendelsestype = VIRKSOMHET_SKAL_BISTÅS)
-        shouldFailWithMessage("HTTP Exception 400 Bad Request Kan ikke fullføre sak med aktive samarbeid") {
+        shouldFailWithMessage("HTTP Exception 400 Bad Request Kan ikke avslutte sak med aktive samarbeid") {
             sak.nyHendelse(hendelsestype = FULLFØR_BISTAND)
         }
     }
@@ -1120,7 +1121,7 @@ class IASakApiTest {
     }
 
     @Test
-    fun `skal kunne sette en sak til ikke aktuell fra 'Vi bistår'`() {
+    fun `skal ikke kunne sette en sak til ikke aktuell fra 'Vi bistår' uten å avslutte alle samarbeid`() {
         val orgnummer = nyttOrgnummer()
         val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
 
@@ -1130,8 +1131,22 @@ class IASakApiTest {
         // Sjekk at 'Ikke aktuell' er en gyldig neste hendelse
         sakIStatusViBistår.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContain VIRKSOMHET_ER_IKKE_AKTUELL
 
+        shouldFail {
+            sakIStatusViBistår.nyHendelse(
+                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                payload = ValgtÅrsak(
+                    type = VIRKSOMHETEN_TAKKET_NEI,
+                    begrunnelser = begrunnelser,
+                ).toJson(),
+            )
+        }
+
+        // -- Lukk aktivt samarbeid
+        val samarbeid = sakIStatusViBistår.hentAlleSamarbeid().first()
+        val sakEtterAvslutning = sakIStatusViBistår.avbrytSamarbeid(samarbeid)
+
         // Trykk på 'Ikke aktuell', med begrunnelse
-        val sakIkkeAktuell = sakIStatusViBistår.nyHendelse(
+        val sakIkkeAktuell = sakEtterAvslutning.nyHendelse(
             hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
             payload = ValgtÅrsak(
                 type = VIRKSOMHETEN_TAKKET_NEI,

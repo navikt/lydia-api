@@ -135,7 +135,10 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
 
-        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND) {
+        if (
+            hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND ||
+            hendelseDto.hendelsesType == IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+        ) {
             val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
             val alleAktiveSamarbeidPåSak = iaProsessService.hentAktiveIAProsesser(sak = aktivSak)
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {

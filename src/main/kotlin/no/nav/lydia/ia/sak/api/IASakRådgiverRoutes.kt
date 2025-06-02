@@ -319,5 +319,5 @@ object IASakError {
         Feil("Kan ikke fullføre med gjenstående leveranser", HttpStatusCode.BadRequest)
 
     val `kan ikke fullføre sak med aktive samarbeid` =
-        Feil("Kan ikke fullføre sak med aktive samarbeid", HttpStatusCode.BadRequest)
+        Feil("Kan ikke avslutte sak med aktive samarbeid", HttpStatusCode.BadRequest)
 }
