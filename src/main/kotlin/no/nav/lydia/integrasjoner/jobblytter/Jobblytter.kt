@@ -150,7 +150,7 @@ object Jobblytter : CoroutineScope {
                                             logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
                                         } else {
                                             val tørrKjør = jobInfo.parameter != "GO!"
-                                            iaSakSamarbeidOppdaterer.fullføreSamarbeidForFullførteIASaker(tørrKjør)
+                                            iaSakSamarbeidOppdaterer.avbryteSamarbeidForIkkeAktuelleIASaker(tørrKjør)
                                         }
                                     }
 

@@ -211,6 +211,13 @@ fun startLydiaBackend() {
         iaTeamService = iaTeamService,
     )
 
+    val spørreundersøkelseMetrikkObserver = SpørreundersøkelseMetrikkObserver()
+    val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
+        kafka = naisEnv.kafka,
+        iaProsessRepository = prosessRepository,
+        planRepository = planRepository,
+    )
+    val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(kafka = naisEnv.kafka)
     val iaSakService = IASakService(
         iaSakRepository = iaSakRepository,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
@@ -227,15 +234,14 @@ fun startLydiaBackend() {
         iaProsessService = iaProsessService,
         planRepository = planRepository,
         endringsObservers = listOf(eierskapsendringObserver),
+        spørreundersøkelseRepository = spørreundersøkelseRepository,
+        spørreundersøkelseObservers = listOf(
+            spørreundersøkelseProdusent,
+            spørreundersøkelseMetrikkObserver,
+            fullførtBehovsvurderingProdusent,
+            spørreundersøkelseBigqueryProdusent,
+        ),
     )
-
-    val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
-        kafka = naisEnv.kafka,
-        iaProsessRepository = prosessRepository,
-        planRepository = planRepository,
-    )
-    val spørreundersøkelseMetrikkObserver = SpørreundersøkelseMetrikkObserver()
-    val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(kafka = naisEnv.kafka)
 
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
 
