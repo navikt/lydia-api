@@ -6,6 +6,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 data class Virksomhetsoversikt(
     val virksomhetsnavn: String,
     val orgnr: String,
+    val saksnummer: String?,
     val arstall: Int,
     val kvartal: Int,
     val antallPersoner: Double,

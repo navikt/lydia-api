@@ -40,4 +40,26 @@ class UthentingAvPrioriteringslistaTest {
                 virksomhet.status shouldBe IAProsessStatus.KONTAKTES
             }
     }
+
+    @Test
+    fun `skal kunne hente saksnummer for virksomheter i prioriteringslista`() {
+        val testKommune = Kommune(navn = "Den skal også være unik", nummer = "1110")
+        val virksomhet = lastInnNyVirksomhet(
+            nyVirksomhet = nyVirksomhet(beliggenhet = beliggenhet(kommune = testKommune)),
+        )
+
+        val virksomheter = hentSykefravær(kommuner = testKommune.nummer)
+        virksomheter.data.first { it.orgnr == virksomhet.orgnr }
+            .also { virksomhet ->
+                virksomhet.saksnummer shouldBe null
+            }
+
+        val sak = nySakIViBistår(orgnummer = virksomhet.orgnr)
+
+        val oppdaterteVirksomheter = hentSykefravær(kommuner = testKommune.nummer)
+        oppdaterteVirksomheter.data.first { it.orgnr == virksomhet.orgnr }.also { virksomhet ->
+            virksomhet.saksnummer shouldBe sak.saksnummer
+            virksomhet.status shouldBe IAProsessStatus.VI_BISTÅR
+        }
+    }
 }

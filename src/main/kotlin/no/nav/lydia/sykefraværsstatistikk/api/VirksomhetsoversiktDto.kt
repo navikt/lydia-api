@@ -8,6 +8,7 @@ import no.nav.lydia.sykefraværsstatistikk.domene.Virksomhetsoversikt
 @Serializable
 data class VirksomhetsoversiktDto(
     val orgnr: String,
+    val saksnummer: String? = null,
     val virksomhetsnavn: String,
     val sektor: String,
     val neringsgruppe: String,
@@ -27,6 +28,7 @@ data class VirksomhetsoversiktDto(
         fun Virksomhetsoversikt.toDto(): VirksomhetsoversiktDto =
             VirksomhetsoversiktDto(
                 orgnr = this.orgnr,
+                saksnummer = this.saksnummer,
                 virksomhetsnavn = this.virksomhetsnavn,
                 sektor = "",
                 neringsgruppe = "",

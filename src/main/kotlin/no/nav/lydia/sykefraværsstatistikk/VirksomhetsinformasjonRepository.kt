@@ -57,6 +57,7 @@ class VirksomhetsinformasjonRepository(
                     statistikk.prosent,
                     statistikk.maskert,
                     ia_sak.status,
+                    ia_sak.saksnummer,
                     ia_sak.eid_av,
                     ia_sak.endret
                 FROM
@@ -309,6 +310,7 @@ class VirksomhetsinformasjonRepository(
         Virksomhetsoversikt(
             virksomhetsnavn = row.string("navn"),
             orgnr = row.string("orgnr"),
+            saksnummer = row.stringOrNull("saksnummer"),
             arstall = row.int("arstall"),
             kvartal = row.int("kvartal"),
             antallPersoner = row.double("antall_personer"),
