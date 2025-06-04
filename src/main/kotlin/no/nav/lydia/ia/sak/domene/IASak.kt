@@ -367,7 +367,7 @@ class IASak private constructor(
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
                 TILBAKE -> finnForrigeTilstand().right()
-                FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK, AVBRYT_PROSESS -> this.right()
+                FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> this.right()
                 else -> generellFeil()
             }
     }

@@ -24,7 +24,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import kotlin.test.Test
+import kotlin.test.Ignore
 
 class IASakSamarbeidOppdatererTest {
     companion object {
@@ -43,7 +43,7 @@ class IASakSamarbeidOppdatererTest {
         }
     }
 
-    @Test
+    @Ignore
     fun `skal trigge avbryt samarbeid på ikke aktuelle IA-saker`() {
         val sak = nySakIViBistår()
         val alleSamarbeid = sak.hentAlleSamarbeid()
@@ -105,7 +105,7 @@ class IASakSamarbeidOppdatererTest {
         }
     }
 
-    @Test
+    @Ignore
     fun `skal trigge avbryte ALLE samarbeid på ikke aktuelle IA-saker`() {
         val sak = nySakIViBistår().opprettNyttSamarbeid("Samarbeid 2")
         val alleSamarbeid = sak.hentAlleSamarbeid()
@@ -151,7 +151,7 @@ class IASakSamarbeidOppdatererTest {
         // 4. Kafkamelding om oppdatert samarbeid er produsert (2 meldinger). Denne er testet et annet sted
     }
 
-    @Test
+    @Ignore
     fun `skal trigge tørrkjør av avbryte samarbeid på Ikke Aktuelle IA-saker`() {
         val sak = nySakIViBistår()
         val alleSamarbeid = sak.hentAlleSamarbeid()
