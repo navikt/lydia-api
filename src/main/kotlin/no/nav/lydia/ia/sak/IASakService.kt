@@ -35,8 +35,8 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.kopier
+import no.nav.lydia.ia.sak.domene.IASak.Companion.maskineltBehandleSamarbeidsHendelse
 import no.nav.lydia.ia.sak.domene.IASak.Companion.medHendelser
-import no.nav.lydia.ia.sak.domene.IASak.Companion.oppdaterSamarbeidPåIkkeAktuellSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
@@ -280,7 +280,10 @@ class IASakService(
         val sistEndretAvHendelseId = this.endretAvHendelseId
         hendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, this.status)
         iaProsessService.oppdaterSamarbeid(sakshendelse = hendelse, sak = this)
-        val oppdatertSak = oppdaterSamarbeidPåFullførtSak(this, hendelse)
+        val oppdatertSak = maskineltBehandleSamarbeidsHendelse(
+            iaSak = this,
+            hendelse = hendelse,
+        )
         oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
     }
 
@@ -319,32 +322,31 @@ class IASakService(
 
                     val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelser(
                         prosess = iAProsess,
-                        type = Spørreundersøkelse.Companion.Type.Behovsvurdering
+                        type = Spørreundersøkelse.Companion.Type.Behovsvurdering,
                     ).plus(
                         spørreundersøkelseRepository.hentSpørreundersøkelser(
                             prosess = iAProsess,
-                            type = Spørreundersøkelse.Companion.Type.Evaluering
-                        )
+                            type = Spørreundersøkelse.Companion.Type.Evaluering,
+                        ),
                     ).filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }
 
                     if (!tørrKjør) {
                         spørreundersøkelser.forEach { spørreundersøkelse ->
                             spørreundersøkelseRepository.slettSpørreundersøkelse(
-                                spørreundersøkelseId = spørreundersøkelse.id.toString()
+                                spørreundersøkelseId = spørreundersøkelse.id.toString(),
                             )?.let { oppdatertSpørreundersøkelse ->
                                 spørreundersøkelseObservers.forEach {
                                     it.receive(oppdatertSpørreundersøkelse)
                                 }
                             }
-
                         }
 
                         maskineltOppdaterSamarbeidHendelse.lagre(
                             sistEndretAvHendelseId = sistEndretAvHendelseId,
-                            resulterendeStatus = IAProsessStatus.IKKE_AKTUELL,
+                            resulterendeStatus = IKKE_AKTUELL,
                         )
                         iaProsessService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = oppdatertSakMedSisteHendelse)
-                        val oppdatertSak = oppdaterSamarbeidPåIkkeAktuellSak(oppdatertSakMedSisteHendelse, maskineltOppdaterSamarbeidHendelse)
+                        val oppdatertSak = maskineltBehandleSamarbeidsHendelse(oppdatertSakMedSisteHendelse, maskineltOppdaterSamarbeidHendelse)
                         oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
                     log.info(
@@ -595,8 +597,8 @@ class IASakService(
         // avslutt alle samarbeid
         iaProsessService.hentAktiveIAProsesser(iaSak).forEach { samarbeid ->
             // avslutt eventuelle spørreundersøkelser i samarbeid
-            spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid, Behovsvurdering).plus(
-                spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid, Evaluering),
+            spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid, Spørreundersøkelse.Companion.Type.Behovsvurdering).plus(
+                spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid, Spørreundersøkelse.Companion.Type.Evaluering),
             ).filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }.forEach {
                 spørreundersøkelseRepository.slettSpørreundersøkelse(it.id.toString())
             }
