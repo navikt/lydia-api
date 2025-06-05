@@ -21,8 +21,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
-class SalesforceAktivitetKonsument :
+class SalesforceAktivitetConsumer :
     CoroutineScope,
     Helsesjekk {
     private lateinit var job: Job
@@ -73,10 +74,10 @@ class SalesforceAktivitetKonsument :
                                         try {
                                             json.decodeFromString<SalesforceAktivitetDto>(it.value())
                                         } catch (e: SerializationException) {
-                                            logger.error("Klarte ikke å dekode aktivitet med nøkkel ${it.key()}")
+                                            logger.error("Klarte ikke å dekode aktivitet med nøkkel ${it.key()}", e)
                                             null
                                         } catch (e: IllegalArgumentException) {
-                                            logger.error("Aktivitet med nøkkel ${it.key()} er feil formatert")
+                                            logger.error("Aktivitet med nøkkel ${it.key()} er feil formatert", e)
                                             null
                                         }
                                     }.filter { aktivitet ->
@@ -100,9 +101,11 @@ class SalesforceAktivitetKonsument :
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...")
+                    logger.info("$consumer (topic '${topic.navn}')  is waking up", e)
+                } catch (e: CancellationException) {
+                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...", e)
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner i $consumer (topic '${topic.navn}')", e)
+                    logger.error("Exception is shutting down kafka listener $consumer (topic '${topic.navn}')", e)
                     throw e
                 }
             }

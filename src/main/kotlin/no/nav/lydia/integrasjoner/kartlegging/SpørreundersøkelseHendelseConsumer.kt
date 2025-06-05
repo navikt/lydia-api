@@ -20,6 +20,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
 class SpørreundersøkelseHendelseConsumer :
     CoroutineScope,
@@ -81,9 +82,11 @@ class SpørreundersøkelseHendelseConsumer :
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...")
+                    logger.info("$consumer (topic '${topic.navn}')  is waking up", e)
+                } catch (e: CancellationException) {
+                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...", e)
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner i $consumer (topic '${topic.navn}')", e)
+                    logger.error("Exception is shutting down kafka listener $consumer (topic '${topic.navn}')", e)
                     throw e
                 }
             }

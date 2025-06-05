@@ -388,7 +388,7 @@ class IASak private constructor(
             hendelse: IASakshendelse,
         ) = sak.utførHendelseSomRådgiver(this, hendelse)
 
-        fun oppdaterSamarbeidPåFullførtSak(
+        fun oppdaterSamarbeidPåIkkeAktuellSak(
             iaSak: IASak,
             hendelse: IASakshendelse,
         ) = when (hendelse) {

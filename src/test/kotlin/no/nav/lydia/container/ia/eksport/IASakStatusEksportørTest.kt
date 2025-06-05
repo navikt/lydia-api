@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nyIkkeAktuellHendelse
@@ -18,6 +19,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
@@ -85,7 +87,10 @@ class IASakStatusEksportørTest {
     @Test
     fun `sletting av feilåpnet sak produserer en slett melding på topic og spiller ut aktiv sak sin status`() {
         runBlocking {
-            val eldsteSak = SakHelper.nySakIViBistår().nyIkkeAktuellHendelse()
+            val eldsteSak = SakHelper.nySakIViBistår()
+                .let { sak ->
+                    sak.avbrytSamarbeid(sak.hentAlleSamarbeid().first())
+                }.nyIkkeAktuellHendelse()
             val gammelSak = SakHelper.nySakIViBistår(orgnummer = eldsteSak.orgnr).fullførSak()
 
             // -- Slett en sak, for å teste om siste melding er den gjeldene aktive statusen
@@ -96,11 +101,11 @@ class IASakStatusEksportørTest {
                 )
 
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(eldsteSak.orgnr, konsument) { meldinger ->
-                meldinger shouldHaveSize 21
+                meldinger shouldHaveSize 22
                 // -- Siste meldingen skal være den gamle fullførte saken
-                meldinger[20] shouldContain gammelSak.saksnummer
-                meldinger[20] shouldContain gammelSak.orgnr
-                meldinger[20] shouldContain FULLFØRT.name
+                meldinger[21] shouldContain gammelSak.saksnummer
+                meldinger[21] shouldContain gammelSak.orgnr
+                meldinger[21] shouldContain FULLFØRT.name
             }
         }
     }

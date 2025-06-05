@@ -57,13 +57,14 @@ class VirksomhetsinformasjonRepository(
                     statistikk.prosent,
                     statistikk.maskert,
                     ia_sak.status,
+                    ia_sak.saksnummer,
                     ia_sak.eid_av,
                     ia_sak.endret
                 FROM
                     virksomhetsstatistikk_for_prioritering AS statistikk
                     LEFT JOIN ia_sak ON (
                         (ia_sak.orgnr = statistikk.orgnr) AND
-                        ia_sak.endret = (select max(endret) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
+                        ia_sak.opprettet = (select max(opprettet) from ia_sak iasak2 where iasak2.orgnr = statistikk.orgnr)
                     )
                 WHERE true = true
                     
@@ -309,6 +310,7 @@ class VirksomhetsinformasjonRepository(
         Virksomhetsoversikt(
             virksomhetsnavn = row.string("navn"),
             orgnr = row.string("orgnr"),
+            saksnummer = row.stringOrNull("saksnummer"),
             arstall = row.int("arstall"),
             kvartal = row.int("kvartal"),
             antallPersoner = row.double("antall_personer"),

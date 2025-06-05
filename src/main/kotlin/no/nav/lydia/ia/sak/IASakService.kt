@@ -36,7 +36,7 @@ import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.kopier
 import no.nav.lydia.ia.sak.domene.IASak.Companion.medHendelser
-import no.nav.lydia.ia.sak.domene.IASak.Companion.oppdaterSamarbeidPåFullførtSak
+import no.nav.lydia.ia.sak.domene.IASak.Companion.oppdaterSamarbeidPåIkkeAktuellSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
@@ -48,8 +48,7 @@ import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.prosess.IAProsess
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -77,6 +76,7 @@ class IASakService(
     private val planRepository: PlanRepository,
     private val endringsObservers: List<EndringsObserver<IASak, IASakshendelse>>,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
+    private val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -139,7 +139,10 @@ class IASakService(
             return Either.Left(IASakError.`det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet`)
         }
 
-        if (hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND) {
+        if (
+            hendelseDto.hendelsesType == IASakshendelseType.FULLFØR_BISTAND ||
+            hendelseDto.hendelsesType == IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
+        ) {
             val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
             val alleAktiveSamarbeidPåSak = iaProsessService.hentAktiveIAProsesser(sak = aktivSak)
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
@@ -297,41 +300,62 @@ class IASakService(
             resulterendeStatus = IKKE_AKTUELL,
         )
 
-    fun fullførMaskineltSamarbeidIFulførteSaker(tørrKjør: Boolean) =
-        iaSakRepository.hentFullførteSakerMedAktiveSamarbeid().map { iaSak ->
-            val alleIkkeFullførteSamarbeidPåSak = iaProsessService.hentIAProsesser(iaSak).getOrElse { emptyList() }
-                .filter { it.status != no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT }
+    fun avbrytMaskineltSamarbeidIIkkeAktuelleSaker(tørrKjør: Boolean) =
+        iaSakRepository.hentIkkeAktuelleSakerMedAktiveSamarbeid().map { iaSak ->
+            val alleAktiveSamarbeidPåSak = iaProsessService.hentIAProsesser(iaSak).getOrElse { emptyList() }
+                .filter { it.status == no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV }
 
-            if (alleIkkeFullførteSamarbeidPåSak.isNotEmpty()) {
-                alleIkkeFullførteSamarbeidPåSak.forEach { iAProsess: IAProsess ->
+            if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
+                alleAktiveSamarbeidPåSak.forEach { iAProsess: IAProsess ->
                     val oppdatertSakMedSisteHendelse = iaSakRepository.hentIASak(iaSak.saksnummer)!!
                     val sistEndretAvHendelseId = oppdatertSakMedSisteHendelse.endretAvHendelseId
                     val endretTidspunkt = oppdatertSakMedSisteHendelse.endretTidspunkt
 
                     val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = oppdatertSakMedSisteHendelse.nyMaskineltOppdaterSamarbeidHendelse(
                         iaProsessDto = iAProsess.tilDto(),
-                        iASakshendelseType = IASakshendelseType.FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK,
+                        iASakshendelseType = IASakshendelseType.AVBRYT_PROSESS,
                         resulterendeStatus = IAProsessStatus.FULLFØRT,
                     )
 
+                    val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelser(
+                        prosess = iAProsess,
+                        type = Spørreundersøkelse.Companion.Type.Behovsvurdering
+                    ).plus(
+                        spørreundersøkelseRepository.hentSpørreundersøkelser(
+                            prosess = iAProsess,
+                            type = Spørreundersøkelse.Companion.Type.Evaluering
+                        )
+                    ).filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }
+
                     if (!tørrKjør) {
+                        spørreundersøkelser.forEach { spørreundersøkelse ->
+                            spørreundersøkelseRepository.slettSpørreundersøkelse(
+                                spørreundersøkelseId = spørreundersøkelse.id.toString()
+                            )?.let { oppdatertSpørreundersøkelse ->
+                                spørreundersøkelseObservers.forEach {
+                                    it.receive(oppdatertSpørreundersøkelse)
+                                }
+                            }
+
+                        }
+
                         maskineltOppdaterSamarbeidHendelse.lagre(
                             sistEndretAvHendelseId = sistEndretAvHendelseId,
-                            IAProsessStatus.FULLFØRT,
+                            resulterendeStatus = IAProsessStatus.IKKE_AKTUELL,
                         )
                         iaProsessService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = oppdatertSakMedSisteHendelse)
-                        val oppdatertSak = oppdaterSamarbeidPåFullførtSak(oppdatertSakMedSisteHendelse, maskineltOppdaterSamarbeidHendelse)
+                        val oppdatertSak = oppdaterSamarbeidPåIkkeAktuellSak(oppdatertSakMedSisteHendelse, maskineltOppdaterSamarbeidHendelse)
                         oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
                     }
                     log.info(
-                        "${if (tørrKjør) "Skulle fullføre" else "Fullførte"} " +
+                        "${if (tørrKjør) "Skulle avbryte" else "Avbrøt"} " +
                             "samarbeid med id ${iAProsess.id} og status ${iAProsess.status} på sak med saksnummer ${oppdatertSakMedSisteHendelse.saksnummer}, sist oppdatert: $endretTidspunkt",
                     )
                 }
             }
             log.info(
                 "${if (tørrKjør) "Skulle oppdatere" else "Oppdaterte"} " +
-                    "${alleIkkeFullførteSamarbeidPåSak.size} samarbeid på sak med saksnummer ${iaSak.saksnummer}",
+                    "${alleAktiveSamarbeidPåSak.size} samarbeid på sak med saksnummer ${iaSak.saksnummer}",
             )
         }.size.also { size ->
             log.info(

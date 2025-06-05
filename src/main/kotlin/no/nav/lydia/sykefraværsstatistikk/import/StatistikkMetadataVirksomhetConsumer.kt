@@ -23,6 +23,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
 object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
@@ -30,8 +31,7 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
     private lateinit var kafka: Kafka
     private lateinit var sykefraværsstatistikkService: SykefraværsstatistikkService
     private lateinit var kafkaConsumer: KafkaConsumer<String, String>
-    private val topicNavn = Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC.navn
-    private val konsumentGruppe = Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC.konsumentGruppe
+    private val topic = Topic.STATISTIKK_METADATA_VIRKSOMHET_TOPIC
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + job
@@ -44,24 +44,24 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
         kafka: Kafka,
         sykefraværsstatistikkService: SykefraværsstatistikkService,
     ) {
-        logger.info("Creating kafka consumer job i StatistikkMetadataVirksomhetConsumer")
+        logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
         this.kafkaConsumer = KafkaConsumer(
-            StatistikkMetadataVirksomhetConsumer.kafka.consumerProperties(consumerGroupId = konsumentGruppe),
+            StatistikkMetadataVirksomhetConsumer.kafka.consumerProperties(consumerGroupId = topic.konsumentGruppe),
             StringDeserializer(),
             StringDeserializer(),
         )
-        logger.info("Created kafka consumer job i StatistikkMetadataVirksomhetConsumer")
+        logger.info("Created kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
     }
 
     fun run() {
         launch {
             kafkaConsumer.use { consumer ->
                 try {
-                    consumer.subscribe(listOf(topicNavn))
-                    logger.info("Kafka consumer subscribed to $topicNavn in StatistikkMetadataVirksomhetConsumer")
+                    consumer.subscribe(listOf(topic.navn))
+                    logger.info("Kafka consumer subscribed to topic '${topic.navn}' of groupId '${topic.konsumentGruppe}' )' in $consumer")
 
                     while (job.isActive) {
                         try {
@@ -71,21 +71,23 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
                                     records.toSykefraværsstatistikkMetadataVirksomhetImportDto()
                                         .tilBehandletImportMetadataVirksomhet(),
                                 )
-                                logger.info("Lagret ${records.count()} meldinger om i StatistikkMetadataVirksomhetConsumer")
+                                logger.info("Lagret ${records.count()} meldinger om i $consumer")
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
                             logger.warn(
-                                "Had a retriable exception in StatistikkMetadataVirksomhetConsumer, retrying",
+                                "Had a retriable exception in $consumer, retrying",
                                 e,
                             )
                         }
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("StatistikkMetadataVirksomhetConsumer is shutting down...")
+                    logger.info("$consumer (topic '${topic.navn}')  is waking up", e)
+                } catch (e: CancellationException) {
+                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...", e)
                 } catch (e: Exception) {
-                    logger.error("Exception is shutting down kafka listner i StatistikkMetadataVirksomhetConsumer", e)
+                    logger.error("Exception is shutting down kafka listener $consumer (topic '${topic.navn}')", e)
                     throw e
                 }
             }
@@ -94,10 +96,10 @@ object StatistikkMetadataVirksomhetConsumer : CoroutineScope, Helsesjekk {
 
     private fun cancel() =
         runBlocking {
-            logger.info("Stopping kafka consumer job i StatistikkMetadataVirksomhetConsumer")
+            logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
             kafkaConsumer.wakeup()
             job.cancelAndJoin()
-            logger.info("Stopped kafka consumer job i StatistikkMetadataVirksomhetConsumer")
+            logger.info("Stopped kafka consumer job for topic '${topic.navn}'")
         }
 
     private fun ConsumerRecords<String, String>.toSykefraværsstatistikkMetadataVirksomhetImportDto(): List<SykefraværsstatistikkMetadataVirksomhetImportDto> {

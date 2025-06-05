@@ -23,6 +23,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
 class StatistikkPerKategoriConsumer(
     val topic: Topic,
@@ -45,7 +46,7 @@ class StatistikkPerKategoriConsumer(
         kafka: Kafka,
         sykefraværsstatistikkService: SykefraværsstatistikkService,
     ) {
-        logger.info("Creating kafka consumer job i StatistikkPerKategoriConsumer i groupId '${topic.konsumentGruppe}'")
+        logger.info("Creating kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
         this.job = Job()
         this.sykefraværsstatistikkService = sykefraværsstatistikkService
         this.kafka = kafka
@@ -54,7 +55,7 @@ class StatistikkPerKategoriConsumer(
             StringDeserializer(),
             StringDeserializer(),
         )
-        logger.info("Created kafka consumer job i StatistikkPerKategoriConsumer i groupId '${topic.konsumentGruppe}'")
+        logger.info("Created kafka consumer job for topic '${topic.navn}' i groupId '${topic.konsumentGruppe}'")
     }
 
     fun run() {
@@ -62,9 +63,7 @@ class StatistikkPerKategoriConsumer(
             kafkaConsumer.use { consumer ->
                 try {
                     consumer.subscribe(listOf(topic.navn))
-                    logger.info(
-                        "Kafka consumer subscribed to topic '$topic' of groupId '${topic.konsumentGruppe}' )' in StatistikkPerKategoriConsumer",
-                    )
+                    logger.info("Kafka consumer subscribed to topic '${topic.navn}' of groupId '${topic.konsumentGruppe}' )' in $consumer")
 
                     while (job.isActive) {
                         try {
@@ -73,24 +72,23 @@ class StatistikkPerKategoriConsumer(
                                 sykefraværsstatistikkService.lagreSykefraværsstatistikkPerKategori(
                                     records.toSykefravPerKategoriImportDto(),
                                 )
-                                logger.info("Lagret ${records.count()} meldinger i StatistikkPerKategoriConsumer (topic '$topic') ")
+                                logger.info("Lagret ${records.count()} meldinger i $consumer (topic '${topic.navn}') ")
                                 consumer.commitSync()
                             }
                         } catch (e: RetriableException) {
                             logger.warn(
-                                "Had a retriable exception in StatistikkPerKategoriConsumer (topic '$topic'), retrying",
+                                "Had a retriable exception in $consumer (topic '${topic.navn}'), retrying",
                                 e,
                             )
                         }
                         delay(kafka.consumerLoopDelay)
                     }
                 } catch (e: WakeupException) {
-                    logger.info("StatistikkPerKategoriConsumer (topic '$topic')  is shutting down...")
+                    logger.info("$consumer (topic '${topic.navn}')  is waking up", e)
+                } catch (e: CancellationException) {
+                    logger.info("$consumer (topic '${topic.navn}')  is shutting down...", e)
                 } catch (e: Exception) {
-                    logger.error(
-                        "Exception is shutting down kafka listner i StatistikkPerKategoriConsumer (topic '$topic')",
-                        e,
-                    )
+                    logger.error("Exception is shutting down kafka listener $consumer (topic '${topic.navn}')", e)
                     throw e
                 }
             }
@@ -99,10 +97,10 @@ class StatistikkPerKategoriConsumer(
 
     private fun cancel() =
         runBlocking {
-            logger.info("Stopping kafka consumer job i StatistikkPerKategoriConsumer (topic '$topic')")
+            logger.info("Stopping kafka consumer job for topic '${topic.navn}'")
             kafkaConsumer.wakeup()
             job.cancelAndJoin()
-            logger.info("Stopped kafka consumer job i StatistikkPerKategoriConsumer (topic '$topic')")
+            logger.info("Stopped kafka consumer job for topic '${topic.navn}'")
         }
 
     private fun ConsumerRecords<String, String>.toSykefravPerKategoriImportDto(): List<SykefraværsstatistikkPerKategoriImportDto> {
