@@ -1,12 +1,26 @@
 package no.nav.lydia.container.virksomhet
 
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
+import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
+import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
+import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
+import no.nav.lydia.helper.SakHelper
+import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
@@ -16,6 +30,12 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.hentVirksomhetsinformasjon
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
+import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
+import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -130,6 +150,74 @@ class VirksomhetOppdateringTest {
         sendEndringForVirksomhet(virksomhet = virksomhetSomSkalFåNæringskodeOppdatert)
         virksomhetSomSkalFåNæringskodeOppdatert
             .skalHaRiktigTilstandEtterOppdatering(status = VirksomhetStatus.AKTIV)
+    }
+
+    @Test
+    fun `skal avslutte aktiv sak for virksomheter som blir slettet`() {
+        val virksomhet = lastInnNyVirksomhet()
+
+        val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+        val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select status from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
+        ) shouldBe SpørreundersøkelseStatus.SLETTET.name
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select status from ia_sak_kartlegging where kartlegging_id = '${evaluering.id}'",
+        ) shouldBe SpørreundersøkelseStatus.SLETTET.name
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select status from ia_sak_plan where plan_id = '${plan.id}'",
+        )
+        postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
+            "select status from ia_sak_plan_undertema where plan_id = '${plan.id}'",
+        ).forAll { it shouldBe InnholdStatus.AVBRUTT.name }
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select status from ia_prosess where id = ${samarbeid.id}",
+        ) shouldBe IAProsessStatus.AVBRUTT.name
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
+        ) shouldBe no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL.name
+    }
+
+    @Test
+    fun `skal ikke røre ikke aktive saker når vikrsomhet blir slettet`() {
+        val virksomhet = lastInnNyVirksomhet()
+
+        val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+        plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
+        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+        evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        evaluering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val sakEtterFullføring = sak.nyHendelse(
+            IASakshendelseType.FULLFØR_PROSESS,
+            payload = Json.encodeToString(
+                IAProsessDto(
+                    id = samarbeid.id,
+                    saksnummer = sak.saksnummer,
+                    navn = samarbeid.navn,
+                ),
+            ),
+        )
+            .nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
+
+        sendSlettingForVirksomhet(virksomhet)
+
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
+        ) shouldBe no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT.name
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
+        ) shouldBe sakEtterFullføring.endretAvHendelseId
     }
 }
 

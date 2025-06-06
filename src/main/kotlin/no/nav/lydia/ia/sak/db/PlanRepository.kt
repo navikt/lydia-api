@@ -505,6 +505,46 @@ class PlanRepository(
         }
     }
 
+    fun settPlanTilAvbrutt(plan: Plan) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                plan.temaer.forEach { tema ->
+                    tx.run(
+                        queryOf(
+                            """
+                            UPDATE ia_sak_plan_undertema
+                            SET status = :statusAvbrutt
+                            WHERE status != :statusFullfort
+                            AND tema_id = :temaId
+                            AND plan_id = :planId
+                            AND inkludert = true
+                            """.trimIndent(),
+                            mapOf(
+                                "statusFullfort" to InnholdStatus.FULLFØRT.name,
+                                "statusAvbrutt" to InnholdStatus.AVBRUTT.name,
+                                "temaId" to tema.id,
+                                "planId" to plan.id.toString(),
+                            ),
+                        ).asUpdate,
+                    )
+                }
+                tx.run(
+                    queryOf(
+                        """
+                        UPDATE ia_sak_plan
+                        SET status = :statusAvbrutt
+                        WHERE plan_id = :planId
+                        """.trimIndent(),
+                        mapOf(
+                            "statusAvbrutt" to IAProsessStatus.AVBRUTT.name,
+                            "planId" to plan.id.toString(),
+                        ),
+                    ).asUpdate,
+                )
+            }
+        }
+    }
+
     fun settPlanTilSlettet(plan: Plan) =
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->

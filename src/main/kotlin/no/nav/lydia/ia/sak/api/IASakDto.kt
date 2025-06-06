@@ -43,7 +43,9 @@ data class IASakDto(
                     is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt)
                     else -> listOf()
                 },
-                lukket = this.erEtterFristenForLåsingAvSak() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL),
+                lukket = this.erLukket(),
             )
+
+        fun IASak.erLukket() = this.erEtterFristenForLåsingAvSak() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL)
     }
 }

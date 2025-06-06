@@ -145,7 +145,6 @@ fun startLydiaBackend() {
     val samarbeidsplanProdusent = SamarbeidsplanProdusent(kafka = naisEnv.kafka)
     val samarbeidProdusent = SamarbeidProdusent(kafka = naisEnv.kafka)
 
-    val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository)
     val sykefraværsstatistikkService = SykefraværsstatistikkService(
         sykefraværsstatistikkRepository = SykefraværsstatistikkRepository(dataSource = dataSource),
         virksomhetsinformasjonRepository = VirksomhetsinformasjonRepository(dataSource = dataSource),
@@ -158,7 +157,7 @@ fun startLydiaBackend() {
     val iaSakProdusent = IASakProdusent(kafka = naisEnv.kafka)
     val iaSakStatistikkProdusent = IASakStatistikkProdusent(
         kafka = naisEnv.kafka,
-        virksomhetService = virksomhetService,
+        virksomhetRepository = virksomhetRepository,
         sykefraværsstatistikkService = sykefraværsstatistikkService,
         iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource),
         geografiService = GeografiService(),
@@ -257,6 +256,7 @@ fun startLydiaBackend() {
     )
 
     val spørreundersøkelseOppdateringProdusent = SpørreundersøkelseOppdateringProdusent(kafka = naisEnv.kafka)
+    val virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository, iaSakService = iaSakService)
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,
@@ -273,7 +273,7 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
-    brregConsumer(naisEnv = naisEnv, dataSource = dataSource)
+    brregConsumer(naisEnv = naisEnv, virksomhetService)
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     val iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)
@@ -394,7 +394,7 @@ fun startLydiaBackend() {
             auditLog = auditLog,
             azureService = azureService,
             sistePubliseringService = sistePubliseringService,
-            virksomhetRepository = virksomhetRepository,
+            virksomhetService = virksomhetService,
             iaSakService = iaSakService,
             iaTeamService = iaTeamService,
             iaProsessService = iaProsessService,
@@ -411,12 +411,12 @@ fun startLydiaBackend() {
 
 private fun brregConsumer(
     naisEnv: NaisEnvironment,
-    dataSource: DataSource,
+    virksomhetService: VirksomhetService,
 ) {
     BrregOppdateringConsumer.apply {
         create(
             kafka = naisEnv.kafka,
-            repository = VirksomhetRepository(dataSource),
+            virksomhetService = virksomhetService,
         )
         run()
     }
@@ -484,7 +484,7 @@ private fun Application.lydiaRestApi(
     auditLog: AuditLog,
     azureService: AzureService,
     sistePubliseringService: SistePubliseringService,
-    virksomhetRepository: VirksomhetRepository,
+    virksomhetService: VirksomhetService,
     iaSakService: IASakService,
     iaProsessService: IAProsessService,
     spørreundersøkelseService: SpørreundersøkelseService,
@@ -601,7 +601,7 @@ private fun Application.lydiaRestApi(
                 iaTeamService = iaTeamService,
             )
             virksomhet(
-                virksomhetService = VirksomhetService(virksomhetRepository = virksomhetRepository),
+                virksomhetService = virksomhetService,
                 salesforceClient = SalesforceClient(),
                 auditLog = auditLog,
                 adGrupper = naisEnv.security.adGrupper,

@@ -20,7 +20,7 @@ import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
 import no.nav.lydia.tilgangskontroll.fia.Rolle
-import no.nav.lydia.virksomhet.VirksomhetService
+import no.nav.lydia.virksomhet.VirksomhetRepository
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.Sektor
 import no.nav.lydia.virksomhet.domene.Virksomhet
@@ -28,7 +28,7 @@ import no.nav.lydia.virksomhet.domene.Virksomhet
 class IASakStatistikkProdusent(
     kafka: Kafka,
     topic: Topic = Topic.IA_SAK_STATISTIKK_TOPIC,
-    private val virksomhetService: VirksomhetService,
+    private val virksomhetRepository: VirksomhetRepository,
     private val sykefraværsstatistikkService: SykefraværsstatistikkService,
     private val iaSakshendelseRepository: IASakshendelseRepository,
     private val geografiService: GeografiService,
@@ -41,7 +41,7 @@ class IASakStatistikkProdusent(
     override fun receive(input: IASak) = sendPåKafka(input = input)
 
     override fun tilKafkaMelding(input: IASak): Pair<String, String> {
-        val virksomhet = virksomhetService.hentVirksomhet(input.orgnr)
+        val virksomhet = virksomhetRepository.hentVirksomhet(input.orgnr)
         val fylkesnummer = virksomhet?.let { geografiService.finnFylke(it.kommunenummer) }?.nummer
 
         val hendelse = iaSakshendelseRepository.hentHendelse(input.endretAvHendelseId)
