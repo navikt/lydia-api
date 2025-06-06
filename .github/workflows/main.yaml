@@ -69,7 +69,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/sorter-virksomhetslista-paa-opprettet'
+    if: github.ref == 'refs/heads/rydde-opp-i-bransje-koder'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
