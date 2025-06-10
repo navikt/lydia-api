@@ -34,7 +34,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
@@ -178,7 +178,7 @@ class VirksomhetOppdateringTest {
         ).forAll { it shouldBe InnholdStatus.AVBRUTT.name }
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_prosess where id = ${samarbeid.id}",
-        ) shouldBe IAProsessStatus.AVBRUTT.name
+        ) shouldBe IASamarbeid.Status.AVBRUTT.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
         ) shouldBe no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL.name

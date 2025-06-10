@@ -21,7 +21,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseErr
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
@@ -78,7 +78,7 @@ class SpørreundersøkelseRepository(
         }
 
     fun hentSpørreundersøkelser(
-        prosess: IAProsess,
+        prosess: IASamarbeid,
         type: Spørreundersøkelse.Companion.Type = Behovsvurdering,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(

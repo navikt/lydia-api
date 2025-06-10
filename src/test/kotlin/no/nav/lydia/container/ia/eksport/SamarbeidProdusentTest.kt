@@ -18,7 +18,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -54,7 +54,7 @@ class SamarbeidProdusentTest {
             ) { meldinger ->
                 meldinger.forAtLeastOne { melding ->
                     val samarbeidSentTilSalesforce = Json.decodeFromString<SamarbeidKafkaMeldingValue>(melding)
-                    samarbeidSentTilSalesforce.samarbeid.status shouldBe IAProsessStatus.FULLFØRT
+                    samarbeidSentTilSalesforce.samarbeid.status shouldBe IASamarbeid.Status.FULLFØRT
                 }
             }
         }

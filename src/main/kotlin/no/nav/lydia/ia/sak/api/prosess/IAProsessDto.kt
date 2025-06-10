@@ -2,22 +2,21 @@ package no.nav.lydia.ia.sak.api.prosess
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
 @Serializable
 data class IAProsessDto(
     val id: Int,
     val saksnummer: String,
     val navn: String,
-    val status: IAProsessStatus? = null,
+    val status: IASamarbeid.Status? = null,
     val opprettet: LocalDateTime? = null,
     val sistEndret: LocalDateTime? = null,
 )
 
-fun List<IAProsess>.tilDto() = map { it.tilDto() }
+fun List<IASamarbeid>.tilDto() = map { it.tilDto() }
 
-fun IAProsess.tilDto() =
+fun IASamarbeid.tilDto() =
     IAProsessDto(
         id = id,
         saksnummer = saksnummer,

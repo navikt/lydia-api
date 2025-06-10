@@ -2,20 +2,20 @@ package no.nav.lydia.ia.sak.domene.samarbeid
 
 import kotlinx.datetime.LocalDateTime
 
-data class IAProsess(
+data class IASamarbeid(
     val id: Int,
     val saksnummer: String,
     val navn: String,
-    val status: IAProsessStatus?,
+    val status: Status?,
     val opprettet: LocalDateTime,
     val avbrutt: LocalDateTime?,
     val fullført: LocalDateTime?,
     val sistEndret: LocalDateTime?,
-)
-
-enum class IAProsessStatus {
-    AKTIV,
-    FULLFØRT,
-    SLETTET,
-    AVBRUTT,
+) {
+    enum class Status {
+        AKTIV,
+        FULLFØRT,
+        SLETTET,
+        AVBRUTT,
+    }
 }

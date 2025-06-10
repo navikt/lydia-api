@@ -6,16 +6,16 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
 class SamarbeidBigqueryProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SAMARBEID_BIGQUERY_TOPIC,
-) : KafkaProdusent<IAProsess>(kafka, topic),
-    Observer<IAProsess> {
-    override fun receive(input: IAProsess) = sendPåKafka(input = input)
+) : KafkaProdusent<IASamarbeid>(kafka, topic),
+    Observer<IASamarbeid> {
+    override fun receive(input: IASamarbeid) = sendPåKafka(input = input)
 
-    override fun tilKafkaMelding(input: IAProsess): Pair<String, String> {
+    override fun tilKafkaMelding(input: IASamarbeid): Pair<String, String> {
         val nøkkel = input.saksnummer
         val verdi = SamarbeidValue(
             id = input.id,

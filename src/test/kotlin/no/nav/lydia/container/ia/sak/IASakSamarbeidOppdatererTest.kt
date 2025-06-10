@@ -21,7 +21,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Ignore
@@ -60,7 +60,7 @@ class IASakSamarbeidOppdatererTest {
                  AND saksnummer = '${sak.saksnummer}'            
             """.trimIndent(),
         )
-        sak.hentAlleSamarbeid().first().status shouldBe IAProsessStatus.AKTIV
+        sak.hentAlleSamarbeid().first().status shouldBe IASamarbeid.Status.AKTIV
 
         // Start jobben som skal sende oppdatere samarbeid på fullført sak
         kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "GO!")
@@ -73,7 +73,7 @@ class IASakSamarbeidOppdatererTest {
         applikasjon shouldContainLog "Ferdig med å avbryte samarbeid i ikke aktuelle IA saker. Ryddet opp i 1 sak\\. Tørr kjør: false".toRegex()
         // 2. Samarbeid er oppdatert til fullført
         val samarbeid = sak.hentAlleSamarbeid().first()
-        samarbeid.status shouldBe IAProsessStatus.AVBRUTT
+        samarbeid.status shouldBe IASamarbeid.Status.AVBRUTT
 
         // 3. Sakshistorikk er oppdatert uten begrunnelse (pga ProsessHendelse)
         val samarbeidshistorikk = hentSamarbeidshistorikk(orgnummer = sak.orgnr)
@@ -124,7 +124,7 @@ class IASakSamarbeidOppdatererTest {
                  WHERE saksnummer = '${sak.saksnummer}'            
             """.trimIndent(),
         )
-        sak.hentAlleSamarbeid().forAll { it.status shouldBe IAProsessStatus.AKTIV }
+        sak.hentAlleSamarbeid().forAll { it.status shouldBe IASamarbeid.Status.AKTIV }
 
         // Start jobben som skal sende oppdatere samarbeid på fullført sak
         kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "GO!")
@@ -140,7 +140,7 @@ class IASakSamarbeidOppdatererTest {
         applikasjon shouldContainLog "Ferdig med å avbryte samarbeid i ikke aktuelle IA saker. Ryddet opp i 1 sak\\. Tørr kjør: false".toRegex()
         // 2. Samarbeid er oppdatert til fullført
         val alleOppdaterteSamarbeid = sak.hentAlleSamarbeid()
-        alleOppdaterteSamarbeid.forAll { it.status shouldBe IAProsessStatus.AVBRUTT }
+        alleOppdaterteSamarbeid.forAll { it.status shouldBe IASamarbeid.Status.AVBRUTT }
 
         // 3. Sakshistorikk er oppdatert uten begrunnelse (pga ProsessHendelse)
         val samarbeidshistorikk = hentSamarbeidshistorikk(orgnummer = sak.orgnr)
@@ -168,7 +168,7 @@ class IASakSamarbeidOppdatererTest {
                  AND saksnummer = '${sak.saksnummer}'            
             """.trimIndent(),
         )
-        sak.hentAlleSamarbeid().first().status shouldBe IAProsessStatus.AKTIV
+        sak.hentAlleSamarbeid().first().status shouldBe IASamarbeid.Status.AKTIV
 
         // Start jobben som skal sende oppdatere samarbeid på fullført sak
         kafkaContainerHelper.sendJobbMelding(engangsJobb, parameter = "dummy")
@@ -182,6 +182,6 @@ class IASakSamarbeidOppdatererTest {
         applikasjon shouldContainLog "Ferdig med å avbryte samarbeid i ikke aktuelle IA saker. Ryddet opp i 1 sak\\. Tørr kjør: true".toRegex()
         // 2. Samarbeid er IKKE oppdatert til fullført
         val samarbeid = sak.hentAlleSamarbeid().first()
-        samarbeid.status shouldBe IAProsessStatus.AKTIV
+        samarbeid.status shouldBe IASamarbeid.Status.AKTIV
     }
 }

@@ -4,14 +4,14 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.plan.Plan
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
 @Serializable
 data class PlanDto(
     val id: String,
     val sistEndret: LocalDateTime,
     val sistPublisert: LocalDate?,
-    val status: IAProsessStatus,
+    val status: IASamarbeid.Status,
     val temaer: List<PlanTemaDto>,
 )
 
