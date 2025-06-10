@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_PROSESS
@@ -220,7 +220,7 @@ class ProsessHendelse(
     opprettetAvRolle: Rolle?,
     navEnhet: NavEnhet,
     resulterendeStatus: IAProsessStatus?,
-    val prosessDto: IAProsessDto,
+    val samarbeidDto: IASamarbeidDto,
 ) : IASakshendelse(
         id,
         opprettetTidspunkt,
@@ -247,7 +247,7 @@ class ProsessHendelse(
                     orgnummer = dto.orgnummer,
                     opprettetAv = navAnsatt.navIdent,
                     opprettetAvRolle = navAnsatt.rolle,
-                    prosessDto = Json.decodeFromString<IAProsessDto>(payload),
+                    samarbeidDto = Json.decodeFromString<IASamarbeidDto>(payload),
                     navEnhet = navEnhet,
                     resulterendeStatus = null,
                 ).right()

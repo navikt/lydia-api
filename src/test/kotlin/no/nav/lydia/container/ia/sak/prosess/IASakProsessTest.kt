@@ -53,7 +53,7 @@ import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser
 import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
@@ -657,7 +657,7 @@ class IASakProsessTest {
         sak.opprettEnPlan()
 
         shouldFail {
-            sak.slettSamarbeid(samarbeid = førsteSamarbeid)
+            sak.slettSamarbeid(samarbeidDto = førsteSamarbeid)
         }
         sak.hentAlleSamarbeid() shouldBe alleSamarbeidFørSletting
     }
@@ -670,7 +670,7 @@ class IASakProsessTest {
             sak.nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
                 payload = Json.encodeToString(
-                    IAProsessDto(
+                    IASamarbeidDto(
                         id = 1010000,
                         saksnummer = sak.saksnummer,
                         navn = DEFAULT_SAMARBEID_NAVN,
@@ -692,7 +692,7 @@ class IASakProsessTest {
             sak.nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
                 payload = Json.encodeToString(
-                    IAProsessDto(
+                    IASamarbeidDto(
                         id = 1010000,
                         saksnummer = sak.saksnummer,
                         navn = DEFAULT_SAMARBEID_NAVN,

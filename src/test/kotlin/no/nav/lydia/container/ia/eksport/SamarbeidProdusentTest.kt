@@ -17,7 +17,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
 import no.nav.lydia.ia.sak.api.IASakDto
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -67,26 +67,26 @@ class SamarbeidProdusentTest {
 
         runBlocking {
             konsummerOgSjekkKafkaMelding(
-                sak1 = sak,
-                samarbeid1 = samarbeid,
+                sakDto = sak,
+                samarbeidDto = samarbeid,
             )
         }
     }
 
     private suspend fun konsummerOgSjekkKafkaMelding(
-        sak1: IASakDto,
-        samarbeid1: IAProsessDto,
+        sakDto: IASakDto,
+        samarbeidDto: IASamarbeidDto,
     ) {
         kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-            key = "${sak1.saksnummer}-${samarbeid1.id}",
+            key = "${sakDto.saksnummer}-${samarbeidDto.id}",
             konsument = konsument,
         ) {
             it.forExactlyOne { melding ->
                 val samarbeidSentTilSalesforce = Json.decodeFromString<SamarbeidKafkaMeldingValue>(melding)
                 samarbeidIKafkaErRiktigPlan(
                     samarbeidKafkaMelding = samarbeidSentTilSalesforce,
-                    sak = sak1,
-                    samarbeid = samarbeid1,
+                    sak = sakDto,
+                    samarbeid = samarbeidDto,
                 )
             }
         }
@@ -95,7 +95,7 @@ class SamarbeidProdusentTest {
     private fun samarbeidIKafkaErRiktigPlan(
         samarbeidKafkaMelding: SamarbeidKafkaMeldingValue,
         sak: IASakDto,
-        samarbeid: IAProsessDto,
+        samarbeid: IASamarbeidDto,
     ) {
         samarbeidKafkaMelding.orgnr shouldBe sak.orgnr
         samarbeidKafkaMelding.saksnummer shouldBe sak.saksnummer

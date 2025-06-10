@@ -8,7 +8,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import java.time.LocalDateTime
@@ -104,7 +104,7 @@ class ProsessRepository(
             )!!
         }
 
-    fun oppdaterNavnPåProsess(prosessDto: IAProsessDto) {
+    fun oppdaterNavnPåProsess(samarbeidDto: IASamarbeidDto) {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -113,8 +113,8 @@ class ProsessRepository(
                     WHERE id = :prosessId
                     """.trimIndent(),
                     mapOf(
-                        "navn" to prosessDto.navn,
-                        "prosessId" to prosessDto.id,
+                        "navn" to samarbeidDto.navn,
+                        "prosessId" to samarbeidDto.id,
                         "endret_tidspunkt" to LocalDateTime.now(),
                     ),
                 ).asUpdate,
@@ -136,7 +136,7 @@ class ProsessRepository(
             sistEndret = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
         )
 
-    fun slettSamarbeid(samarbeid: IAProsessDto) =
+    fun slettSamarbeid(samarbeidDto: IASamarbeidDto) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -148,8 +148,8 @@ class ProsessRepository(
                      returning *
                     """.trimIndent(),
                     mapOf(
-                        "prosessId" to samarbeid.id,
-                        "saksnummer" to samarbeid.saksnummer,
+                        "prosessId" to samarbeidDto.id,
+                        "saksnummer" to samarbeidDto.saksnummer,
                         "status" to IASamarbeid.Status.SLETTET.name,
                         "endret_tidspunkt" to LocalDateTime.now(),
                     ),
@@ -157,7 +157,7 @@ class ProsessRepository(
             )!!
         }
 
-    fun fullførSamarbeid(samarbeid: IAProsessDto) =
+    fun fullførSamarbeid(samarbeidDto: IASamarbeidDto) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -169,8 +169,8 @@ class ProsessRepository(
                      returning *
                     """.trimIndent(),
                     mapOf(
-                        "prosessId" to samarbeid.id,
-                        "saksnummer" to samarbeid.saksnummer,
+                        "prosessId" to samarbeidDto.id,
+                        "saksnummer" to samarbeidDto.saksnummer,
                         "status" to IASamarbeid.Status.FULLFØRT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
@@ -178,7 +178,7 @@ class ProsessRepository(
             )!!
         }
 
-    fun avbrytSamarbeid(samarbeid: IAProsessDto) =
+    fun avbrytSamarbeid(samarbeidDto: IASamarbeidDto) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -190,8 +190,8 @@ class ProsessRepository(
                      returning *
                     """.trimIndent(),
                     mapOf(
-                        "prosessId" to samarbeid.id,
-                        "saksnummer" to samarbeid.saksnummer,
+                        "prosessId" to samarbeidDto.id,
+                        "saksnummer" to samarbeidDto.saksnummer,
                         "status" to IASamarbeid.Status.AVBRUTT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),

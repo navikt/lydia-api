@@ -22,7 +22,7 @@ import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.SaksStatusDto
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.prosess.tilDto
 import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.ia.sak.api.ÅrsaksType
@@ -158,40 +158,40 @@ class IASakService(
 
         when (hendelseDto.hendelsesType) {
             IASakshendelseType.AVBRYT_PROSESS -> {
-                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                if (!iaProsessService.kanAvbryteSamarbeid(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
+                if (!iaProsessService.kanAvbryteSamarbeid(sak = aktivSak, samarbeidsId = samarbeidDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke avbryte samarbeid`.left()
                 }
             }
 
             IASakshendelseType.SLETT_PROSESS -> {
-                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                if (!iaProsessService.kanSletteProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
+                if (!iaProsessService.kanSletteProsess(sak = aktivSak, samarbeidsId = samarbeidDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan`.left()
                 }
             }
 
             IASakshendelseType.FULLFØR_PROSESS -> {
-                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
-                if (!iaProsessService.kanFullføreProsess(sak = aktivSak, samarbeidsId = prosessDto.id).kanGjennomføres) {
+                if (!iaProsessService.kanFullføreProsess(sak = aktivSak, samarbeidsId = samarbeidDto.id).kanGjennomføres) {
                     return IAProsessFeil.`kan ikke fullføre samarbeid`.left()
                 }
             }
 
             IASakshendelseType.ENDRE_PROSESS, IASakshendelseType.NY_PROSESS -> {
-                val prosessDto = Json.decodeFromString<IAProsessDto>(hendelseDto.payload!!)
+                val samarbeidDto = Json.decodeFromString<IASamarbeidDto>(hendelseDto.payload!!)
                 val aktivSak = iaSakRepository.hentIASak(hendelseDto.saksnummer) ?: return IASakError.`generell feil under uthenting`.left()
                 val alleProsesser = iaProsessService.hentIAProsesser(aktivSak)
 
-                if (prosessDto.navn.trim().isEmpty() || prosessDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
+                if (samarbeidDto.navn.trim().isEmpty() || samarbeidDto.navn.length > MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN) {
                     return IAProsessFeil.`ugyldig samarbeidsnavn`.left()
                 }
 
                 alleProsesser.getOrNull()
-                    ?.find { it.navn.equals(prosessDto.navn, ignoreCase = true) }
+                    ?.find { it.navn.equals(samarbeidDto.navn, ignoreCase = true) }
                     ?.let { return IAProsessFeil.`samarbeidsnavn finnes allerede`.left() }
             }
 
@@ -271,9 +271,9 @@ class IASakService(
         )
     }
 
-    private fun IASak.maskineltAvsluttProsess(iaProsessDto: IAProsessDto) {
+    private fun IASak.maskineltAvsluttProsess(iaSamarbeidDto: IASamarbeidDto) {
         val hendelse = nyMaskineltOppdaterSamarbeidHendelse(
-            iaProsessDto = iaProsessDto,
+            iaSamarbeidDto = iaSamarbeidDto,
             iASakshendelseType = IASakshendelseType.AVBRYT_PROSESS,
             this.status,
         )
@@ -315,7 +315,7 @@ class IASakService(
                     val endretTidspunkt = oppdatertSakMedSisteHendelse.endretTidspunkt
 
                     val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = oppdatertSakMedSisteHendelse.nyMaskineltOppdaterSamarbeidHendelse(
-                        iaProsessDto = iASamarbeid.tilDto(),
+                        iaSamarbeidDto = iASamarbeid.tilDto(),
                         iASakshendelseType = IASakshendelseType.AVBRYT_PROSESS,
                         resulterendeStatus = IAProsessStatus.FULLFØRT,
                     )
@@ -366,7 +366,7 @@ class IASakService(
         }
 
     private fun IASak.nyMaskineltOppdaterSamarbeidHendelse(
-        iaProsessDto: IAProsessDto,
+        iaSamarbeidDto: IASamarbeidDto,
         iASakshendelseType: IASakshendelseType,
         resulterendeStatus: IAProsessStatus,
     ) = ProsessHendelse(
@@ -379,7 +379,7 @@ class IASakService(
         navEnhet = IASakStatusOppdaterer.NAV_ENHET_FOR_MASKINELT_OPPDATERING,
         hendelsesType = iASakshendelseType,
         resulterendeStatus = resulterendeStatus,
-        prosessDto = iaProsessDto,
+        samarbeidDto = iaSamarbeidDto,
     )
 
     private fun slettSak(

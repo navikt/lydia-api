@@ -8,7 +8,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.ADGrupper
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
@@ -500,7 +500,7 @@ class IASakTest {
                 orgnummer = orgnummer,
                 opprettetAv = opprettetAv,
                 opprettetAvRolle = opprettetAvRolle,
-                prosessDto = IAProsessDto(1, saksnummer, "Navn"),
+                samarbeidDto = IASamarbeidDto(1, saksnummer, "Navn"),
                 navEnhet = navEnhet,
                 resulterendeStatus = null,
             )
