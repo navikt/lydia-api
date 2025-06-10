@@ -22,8 +22,8 @@ import no.nav.lydia.ia.sak.api.IASakLeveranseOppdateringsDto
 import no.nav.lydia.ia.sak.api.IASakLeveranseOpprettelsesDto
 import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.SaksStatusDto
-import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
-import no.nav.lydia.ia.sak.api.prosess.tilDto
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.samarbeid.tilDto
 import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.ia.sak.api.ÅrsaksType
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
