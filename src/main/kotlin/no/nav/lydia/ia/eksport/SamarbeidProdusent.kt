@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.db.ProsessRepository.SamarbeidIVirksomhetDto
+import no.nav.lydia.ia.sak.db.IASamarbeidRepository.SamarbeidIVirksomhetDto
 
 class SamarbeidProdusent(
     kafka: Kafka,

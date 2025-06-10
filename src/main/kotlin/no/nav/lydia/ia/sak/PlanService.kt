@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class PlanService(
-    val iaProsessService: IAProsessService,
+    val samarbeidService: IASamarbeidService,
     val planObservers: List<Observer<ObservedPlan>>,
     val planRepository: PlanRepository,
 ) {
@@ -42,7 +42,7 @@ class PlanService(
         prosessId: Int,
         mal: PlanMalDto,
     ): Either<Feil, Plan> =
-        iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
+        samarbeidService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
             val planEksistererAllerede = hentPlan(samarbeidId = prosess.id).isRight()
 
             if (planEksistererAllerede) {

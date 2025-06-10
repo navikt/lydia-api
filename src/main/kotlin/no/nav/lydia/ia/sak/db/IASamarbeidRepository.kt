@@ -14,7 +14,7 @@ import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivit
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
-class ProsessRepository(
+class IASamarbeidRepository(
     val dataSource: DataSource,
 ) {
     fun hentProsess(
