@@ -52,8 +52,8 @@ import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.SLETTET
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.SLETTET
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import java.time.LocalDate.now
 import java.time.ZonedDateTime

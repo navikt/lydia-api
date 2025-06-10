@@ -217,7 +217,7 @@ class IASakRepository(
                     FROM ia_sak
                     JOIN ia_prosess ON ia_prosess.saksnummer = ia_sak.saksnummer
                     WHERE ia_sak.status = '${IAProsessStatus.IKKE_AKTUELL.name}'
-                    AND ia_prosess.status = '${no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV.name}'
+                    AND ia_prosess.status = '${no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV.name}'
                     """.trimIndent(),
                 ).map(this::mapRowToIASak).asList,
             )

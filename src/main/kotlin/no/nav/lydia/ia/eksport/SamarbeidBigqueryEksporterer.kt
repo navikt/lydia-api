@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.eksport
 
 import no.nav.lydia.ia.sak.db.ProsessRepository
-import no.nav.lydia.ia.sak.domene.prosess.IAProsess
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean

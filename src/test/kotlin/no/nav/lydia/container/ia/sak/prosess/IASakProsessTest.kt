@@ -58,9 +58,9 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_RO
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AVBRUTT
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AVBRUTT
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.FULLFØRT
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
