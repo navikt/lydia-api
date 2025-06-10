@@ -47,7 +47,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.prosess.IAProsess
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -306,7 +306,7 @@ class IASakService(
     fun avbrytMaskineltSamarbeidIIkkeAktuelleSaker(tørrKjør: Boolean) =
         iaSakRepository.hentIkkeAktuelleSakerMedAktiveSamarbeid().map { iaSak ->
             val alleAktiveSamarbeidPåSak = iaProsessService.hentIAProsesser(iaSak).getOrElse { emptyList() }
-                .filter { it.status == no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AKTIV }
+                .filter { it.status == no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV }
 
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
                 alleAktiveSamarbeidPåSak.forEach { iAProsess: IAProsess ->

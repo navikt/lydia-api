@@ -4,7 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.plan.Plan
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
 
 @Serializable
 data class PlanDto(

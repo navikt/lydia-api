@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.domene.prosess
+package no.nav.lydia.ia.sak.domene.samarbeid
 
 import kotlinx.datetime.LocalDateTime
 

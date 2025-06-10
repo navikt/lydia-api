@@ -9,11 +9,11 @@ import kotliquery.using
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.domene.prosess.IAProsess
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.AVBRUTT
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus.SLETTET
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AVBRUTT
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.SLETTET
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import java.time.LocalDateTime
 import javax.sql.DataSource

@@ -9,7 +9,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
 
 class SamarbeidsplanProdusent(
     kafka: Kafka,

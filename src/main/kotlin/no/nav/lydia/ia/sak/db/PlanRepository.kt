@@ -26,7 +26,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
-import no.nav.lydia.ia.sak.domene.prosess.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
