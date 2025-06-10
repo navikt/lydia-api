@@ -15,8 +15,8 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
 import no.nav.lydia.appstatus.Metrics
-import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
 import no.nav.lydia.ia.sak.api.extensions.iaSakLeveranseId
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
@@ -41,7 +41,7 @@ const val IA_MODULER_PATH = "moduler"
 
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
-    iaProsessService: IAProsessService,
+    samarbeidService: IASamarbeidService,
     adGrupper: ADGrupper,
     auditLog: AuditLog,
     azureService: AzureService,
@@ -116,7 +116,7 @@ fun Route.iaSakRådgiver(
                 }
                 .sortedByDescending { it.opprettetTidspunkt }
                 .map { sak ->
-                    val samarbeid = iaProsessService.hentIAProsesser(sak).getOrElse { emptyList() }
+                    val samarbeid = samarbeidService.hentIAProsesser(sak).getOrElse { emptyList() }
                     sak.tilSakshistorikk(samarbeid.tilDto())
                 }
                 .right()

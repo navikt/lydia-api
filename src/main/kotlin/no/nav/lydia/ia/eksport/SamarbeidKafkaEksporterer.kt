@@ -1,13 +1,13 @@
 package no.nav.lydia.ia.eksport
 
-import no.nav.lydia.ia.sak.db.ProsessRepository
+import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 const val SAMARBEID_ID_PREFIKS = "SAMARBEID_ID_"
 
 class SamarbeidKafkaEksporterer(
-    val prosessRepository: ProsessRepository,
+    val samarbeidRepository: IASamarbeidRepository,
     val samarbeidProdusent: SamarbeidProdusent,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -27,17 +27,17 @@ class SamarbeidKafkaEksporterer(
     }
 
     fun eksporterAlleSamarbeid() {
-        prosessRepository.hentAlleSamarbeidIVirksomhetDto().forEach { samarbeidIVirksomhetDto ->
+        samarbeidRepository.hentAlleSamarbeidIVirksomhetDto().forEach { samarbeidIVirksomhetDto ->
             samarbeidProdusent.sendPåKafka(samarbeidIVirksomhetDto)
             log.info(
                 "Eksport av enkelt samarbeid, med ID: '${samarbeidIVirksomhetDto.samarbeid.id}' for virksomhet '${samarbeidIVirksomhetDto.orgnr}' er sendt på Kafka",
             )
         }
-        log.info("Ferdig med eksport av alle samarbeid. Totalt '${prosessRepository.hentAlleSamarbeidIVirksomhetDto().size}' samarbeid")
+        log.info("Ferdig med eksport av alle samarbeid. Totalt '${samarbeidRepository.hentAlleSamarbeidIVirksomhetDto().size}' samarbeid")
     }
 
     fun hentOgSendSamarbeidTilKafka(samarbeidId: Int) {
-        prosessRepository.hentSamarbeidIVirksomhetDto(samarbeidId)?.let { samarbeidIVirksomhetDto ->
+        samarbeidRepository.hentSamarbeidIVirksomhetDto(samarbeidId)?.let { samarbeidIVirksomhetDto ->
             samarbeidProdusent.sendPåKafka(samarbeidIVirksomhetDto)
             log.info("Eksport av enkelt samarbeid, med ID: '$samarbeidId' for virksomhet '${samarbeidIVirksomhetDto.orgnr}' har blitt sendt på Kafka")
         } ?: log.warn("Eksport av enkelt samarbeid, med ID: '$samarbeidId' feilet. Samarbeid ikke funnet")

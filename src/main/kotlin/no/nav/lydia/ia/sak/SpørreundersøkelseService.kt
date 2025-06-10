@@ -43,7 +43,7 @@ const val MINIMUM_ANTALL_DELTAKERE = 3
 
 class SpørreundersøkelseService(
     val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-    val iaProsessService: IAProsessService,
+    val samarbeidService: IASamarbeidService,
     val iaSakService: IASakService,
     val planService: PlanService,
     val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
@@ -125,7 +125,7 @@ class SpørreundersøkelseService(
     ): Either<Feil, Spørreundersøkelse> =
         when (type) {
             Behovsvurdering -> {
-                iaProsessService.hentIAProsess(iaSak, prosessId).flatMap { samarbeid ->
+                samarbeidService.hentIAProsess(iaSak, prosessId).flatMap { samarbeid ->
                     spørreundersøkelseRepository.opprettSpørreundersøkelse(
                         orgnummer = orgnummer,
                         prosessId = samarbeid.id,
@@ -168,7 +168,7 @@ class SpørreundersøkelseService(
                             )
                         }
 
-                        iaProsessService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->
+                        samarbeidService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->
                             spørreundersøkelseRepository.opprettSpørreundersøkelse(
                                 orgnummer = orgnummer,
                                 prosessId = samarbeid.id,
@@ -207,7 +207,7 @@ class SpørreundersøkelseService(
         type: Spørreundersøkelse.Companion.Type,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> =
         try {
-            iaProsessService.hentIAProsess(sak, prosessId).map {
+            samarbeidService.hentIAProsess(sak, prosessId).map {
                 spørreundersøkelseRepository.hentSpørreundersøkelser(prosess = it, type = type)
             }
         } catch (e: Exception) {
@@ -311,7 +311,7 @@ class SpørreundersøkelseService(
         }
 
         val oppdatertBehovsvurdering = iaSakService.hentIASak(behovsvurdering.saksnummer).flatMap {
-            iaProsessService.hentIAProsesser(it)
+            samarbeidService.hentIAProsesser(it)
         }.map { prosess ->
             prosess.map { it.id }
         }.flatMap { prosesserISak ->

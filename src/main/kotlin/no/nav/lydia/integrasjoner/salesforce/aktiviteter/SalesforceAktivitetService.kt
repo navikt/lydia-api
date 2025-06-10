@@ -1,14 +1,14 @@
 package no.nav.lydia.integrasjoner.salesforce.aktiviteter
 
 import no.nav.lydia.ia.sak.db.IASakRepository
+import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.db.ProsessRepository
 import org.slf4j.LoggerFactory
 
 class SalesforceAktivitetService(
     private val salesforceAktivitetRepository: SalesforceAktivitetRepository,
     private val iaSakRepository: IASakRepository,
-    private val prosessRepository: ProsessRepository,
+    private val samarbeidRepository: IASamarbeidRepository,
     val planRepository: PlanRepository,
 ) {
     private val logger = LoggerFactory.getLogger(this.javaClass.name)
@@ -43,7 +43,7 @@ class SalesforceAktivitetService(
 
     private fun verifisertAktivitet(aktivitet: SalesforceAktivitet): Boolean {
         val iaSak = iaSakRepository.hentIASak(aktivitet.saksnummer)
-        val samarbeid = aktivitet.samarbeidsId?.let { prosessRepository.hentProsess(aktivitet.saksnummer, it) }
+        val samarbeid = aktivitet.samarbeidsId?.let { samarbeidRepository.hentProsess(aktivitet.saksnummer, it) }
         return iaSak != null && samarbeid != null
     }
 

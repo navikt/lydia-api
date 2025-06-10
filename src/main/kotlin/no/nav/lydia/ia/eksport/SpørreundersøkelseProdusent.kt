@@ -15,8 +15,8 @@ import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDto
+import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -26,14 +26,14 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
 class SpørreundersøkelseProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SPORREUNDERSOKELSE_TOPIC,
-    private val iaProsessRepository: ProsessRepository,
+    private val samarbeidRepository: IASamarbeidRepository,
     private val planRepository: PlanRepository,
 ) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
     Observer<Spørreundersøkelse> {
     override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
 
     override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
-        val samarbeidNavn = iaProsessRepository.hentProsess(
+        val samarbeidNavn = samarbeidRepository.hentProsess(
             saksnummer = input.saksnummer,
             prosessId = input.samarbeidId,
         )?.navn ?: input.virksomhetsNavn

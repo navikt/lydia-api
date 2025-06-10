@@ -1,6 +1,6 @@
 package no.nav.lydia.ia.eksport
 
-import no.nav.lydia.ia.sak.db.ProsessRepository
+import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class SamarbeidBigqueryEksporterer(
     val samarbeidBigqueryProdusent: SamarbeidBigqueryProdusent,
-    val samarbeidRepository: ProsessRepository,
+    val samarbeidRepository: IASamarbeidRepository,
 ) {
     companion object {
         val KJØRER_STATISTIKK_EKSPORT = AtomicBoolean(false)

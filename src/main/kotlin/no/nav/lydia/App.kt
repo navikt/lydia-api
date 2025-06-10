@@ -53,9 +53,9 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent
 import no.nav.lydia.ia.sak.EierskapsendringObserver
-import no.nav.lydia.ia.sak.IAProsessService
 import no.nav.lydia.ia.sak.IASakLeveranseObserver
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.OppdaterSistEndretPlanObserver
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.SamarbeidplanMetrikkObserver
@@ -71,8 +71,8 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
+import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.team.IATeamRepository
 import no.nav.lydia.ia.team.IATeamService
@@ -140,7 +140,7 @@ fun startLydiaBackend() {
     val iaSakRepository = IASakRepository(dataSource = dataSource)
     val iaTeamRepository = IATeamRepository(dataSource = dataSource)
     val spørreundersøkelseRepository = SpørreundersøkelseRepository(dataSource = dataSource)
-    val prosessRepository = ProsessRepository(dataSource = dataSource)
+    val samarbeidRepository = IASamarbeidRepository(dataSource = dataSource)
     val planRepository = PlanRepository(dataSource = dataSource)
     val samarbeidsplanProdusent = SamarbeidsplanProdusent(kafka = naisEnv.kafka)
     val samarbeidProdusent = SamarbeidProdusent(kafka = naisEnv.kafka)
@@ -188,7 +188,7 @@ fun startLydiaBackend() {
     )
     val sendSamarbeidPåKafkaObserver = SendSamarbeidPåKafkaObserver(
         samarbeidKafkaEksporterer = SamarbeidKafkaEksporterer(
-            prosessRepository = prosessRepository,
+            samarbeidRepository = samarbeidRepository,
             samarbeidProdusent = samarbeidProdusent,
         ),
     )
@@ -197,8 +197,8 @@ fun startLydiaBackend() {
         planRepository = planRepository,
     )
 
-    val iaProsessService = IAProsessService(
-        prosessRepository = prosessRepository,
+    val samarbeidService = IASamarbeidService(
+        samarbeidRepository = samarbeidRepository,
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         planRepository = planRepository,
         samarbeidObservers = listOf(samarbeidBigqueryProdusent, sendSamarbeidPåKafkaObserver),
@@ -213,7 +213,7 @@ fun startLydiaBackend() {
     val spørreundersøkelseMetrikkObserver = SpørreundersøkelseMetrikkObserver()
     val spørreundersøkelseProdusent = SpørreundersøkelseProdusent(
         kafka = naisEnv.kafka,
-        iaProsessRepository = prosessRepository,
+        samarbeidRepository = samarbeidRepository,
         planRepository = planRepository,
     )
     val fullførtBehovsvurderingProdusent = FullførtBehovsvurderingProdusent(kafka = naisEnv.kafka)
@@ -230,7 +230,7 @@ fun startLydiaBackend() {
         ),
         iaSakObservers = listOf(iaSakProdusent, iaSakStatistikkProdusent, iaSakStatusProdusent),
         iaSaksLeveranseObservers = listOf(iaSakLeveranseProdusent, iaSakLeveranseObserver),
-        iaProsessService = iaProsessService,
+        samarbeidService = samarbeidService,
         planRepository = planRepository,
         endringsObservers = listOf(eierskapsendringObserver),
         spørreundersøkelseRepository = spørreundersøkelseRepository,
@@ -245,7 +245,7 @@ fun startLydiaBackend() {
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
 
     val planService = PlanService(
-        iaProsessService = iaProsessService,
+        samarbeidService = samarbeidService,
         planRepository = planRepository,
         planObservers = listOf(
             oppdaterSistEndretPlanObserver,
@@ -260,7 +260,7 @@ fun startLydiaBackend() {
     val spørreundersøkelseService = SpørreundersøkelseService(
         spørreundersøkelseRepository = spørreundersøkelseRepository,
         iaSakService = iaSakService,
-        iaProsessService = iaProsessService,
+        samarbeidService = samarbeidService,
         planService = planService,
         spørreundersøkelseObservers = listOf(
             spørreundersøkelseProdusent,
@@ -315,7 +315,7 @@ fun startLydiaBackend() {
         ),
         samarbeidBigqueryEksporterer = SamarbeidBigqueryEksporterer(
             samarbeidBigqueryProdusent = samarbeidBigqueryProdusent,
-            samarbeidRepository = prosessRepository,
+            samarbeidRepository = samarbeidRepository,
         ),
         spørreundersøkelseBigqueryEksporterer = SpørreundersøkelseBigqueryEksporterer(
             spørreundersøkelseBigqueryProdusent = spørreundersøkelseBigqueryProdusent,
@@ -330,7 +330,7 @@ fun startLydiaBackend() {
             iaSakLeveranseProdusent = iaSakLeveranseProdusent,
         ),
         samarbeidKafkaEksporterer = SamarbeidKafkaEksporterer(
-            prosessRepository = prosessRepository,
+            samarbeidRepository = samarbeidRepository,
             samarbeidProdusent = samarbeidProdusent,
         ),
         iaSakSamarbeidOppdaterer = IASakSamarbeidOppdaterer(
@@ -376,10 +376,10 @@ fun startLydiaBackend() {
         create(
             kafka = naisEnv.kafka,
             salesforceAktivitetService = SalesforceAktivitetService(
-                SalesforceAktivitetRepository(dataSource = dataSource),
-                iaSakRepository,
-                prosessRepository,
-                planRepository,
+                salesforceAktivitetRepository = SalesforceAktivitetRepository(dataSource = dataSource),
+                iaSakRepository = iaSakRepository,
+                samarbeidRepository = samarbeidRepository,
+                planRepository = planRepository,
             ),
         )
         run()
@@ -397,7 +397,7 @@ fun startLydiaBackend() {
             virksomhetService = virksomhetService,
             iaSakService = iaSakService,
             iaTeamService = iaTeamService,
-            iaProsessService = iaProsessService,
+            samarbeidService = samarbeidService,
             spørreundersøkelseService = spørreundersøkelseService,
             planService = planService,
         )
@@ -486,7 +486,7 @@ private fun Application.lydiaRestApi(
     sistePubliseringService: SistePubliseringService,
     virksomhetService: VirksomhetService,
     iaSakService: IASakService,
-    iaProsessService: IAProsessService,
+    samarbeidService: IASamarbeidService,
     spørreundersøkelseService: SpørreundersøkelseService,
     iaTeamService: IATeamService,
     planService: PlanService,
@@ -569,7 +569,7 @@ private fun Application.lydiaRestApi(
             )
             iaSakRådgiver(
                 iaSakService = iaSakService,
-                iaProsessService = iaProsessService,
+                samarbeidService = samarbeidService,
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
                 azureService = azureService,
@@ -582,7 +582,7 @@ private fun Application.lydiaRestApi(
             )
             iaSamarbeid(
                 adGrupper = naisEnv.security.adGrupper,
-                iaProsessService = iaProsessService,
+                samarbeidService = samarbeidService,
                 iaSakService = iaSakService,
                 auditLog = auditLog,
             )
