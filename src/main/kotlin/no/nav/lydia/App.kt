@@ -66,7 +66,7 @@ import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
-import no.nav.lydia.ia.sak.api.prosess.iaProsessApi
+import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.iaSakSpørreundersøkelse
 import no.nav.lydia.ia.sak.db.IASakLeveranseRepository
 import no.nav.lydia.ia.sak.db.IASakRepository
@@ -580,7 +580,7 @@ private fun Application.lydiaRestApi(
                 adGrupper = naisEnv.security.adGrupper,
                 auditLog = auditLog,
             )
-            iaProsessApi(
+            iaSamarbeid(
                 adGrupper = naisEnv.security.adGrupper,
                 iaProsessService = iaProsessService,
                 iaSakService = iaSakService,

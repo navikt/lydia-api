@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.prosess
+package no.nav.lydia.ia.sak.api.samarbeid
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable

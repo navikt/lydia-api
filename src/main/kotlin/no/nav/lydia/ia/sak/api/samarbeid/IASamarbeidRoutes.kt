@@ -1,4 +1,4 @@
-package no.nav.lydia.ia.sak.api.prosess
+package no.nav.lydia.ia.sak.api.samarbeid
 
 import arrow.core.flatMap
 import arrow.core.left
@@ -23,7 +23,7 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
-fun Route.iaProsessApi(
+fun Route.iaSamarbeid(
     iaProsessService: IAProsessService,
     iaSakService: IASakService,
     adGrupper: ADGrupper,

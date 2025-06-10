@@ -8,7 +8,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.ADGrupper
-import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES

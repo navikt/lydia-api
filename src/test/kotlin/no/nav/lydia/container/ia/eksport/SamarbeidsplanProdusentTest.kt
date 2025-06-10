@@ -27,7 +27,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.plan.PlanDto
-import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.AfterClass
 import org.junit.BeforeClass

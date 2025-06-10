@@ -9,7 +9,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
-import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import kotlin.test.fail
 

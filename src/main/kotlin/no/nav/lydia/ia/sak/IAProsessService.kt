@@ -19,7 +19,7 @@ import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.INGEN_PLAN
 import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.SAK_I_FEIL_STATUS
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
-import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
+import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
