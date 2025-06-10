@@ -58,9 +58,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_RO
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AVBRUTT
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -90,10 +88,10 @@ class IASakProsessTest {
     @Test
     fun `skal kunne avbryte et samarbeid fra både KARTLEGGES og VI BISTÅR`() {
         val sakIKartlegges = nySakIKartlegges().opprettNyttSamarbeid()
-        sakIKartlegges.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe AVBRUTT
+        sakIKartlegges.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe IASamarbeid.Status.AVBRUTT
 
         val sakIViBistår = nySakIViBistår()
-        sakIViBistår.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe AVBRUTT
+        sakIViBistår.avbrytSamarbeid().hentAlleSamarbeid().first().status shouldBe IASamarbeid.Status.AVBRUTT
     }
 
     @Test
@@ -102,7 +100,7 @@ class IASakProsessTest {
             .avbrytSamarbeid()
             .hentAlleSamarbeid().forExactlyOne { samarbeid ->
                 samarbeid.navn shouldBe "Avbrutt samarbeid"
-                samarbeid.status shouldBe AVBRUTT
+                samarbeid.status shouldBe IASamarbeid.Status.AVBRUTT
             }
     }
 
@@ -125,7 +123,7 @@ class IASakProsessTest {
         sak.fullførSamarbeid(samarbeid)
         postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT status FROM ia_prosess WHERE id = ${samarbeid.id}",
-        ) shouldBe FULLFØRT.name
+        ) shouldBe IASamarbeid.Status.FULLFØRT.name
     }
 
     @Test
@@ -159,7 +157,7 @@ class IASakProsessTest {
 
         sak = sak.fullførSamarbeid(samarbeidSomFullføres)
         sak = sak.opprettNyttSamarbeid(navn = "Det andre samarbeid")
-        sak.hentAlleSamarbeid().filter { it.status == AKTIV }.map { it.navn } shouldBe listOf("Det andre samarbeid")
+        sak.hentAlleSamarbeid().filter { it.status == IASamarbeid.Status.AKTIV }.map { it.navn } shouldBe listOf("Det andre samarbeid")
     }
 
     @Test
@@ -228,7 +226,7 @@ class IASakProsessTest {
             )
             sakshistorikk.samarbeid.forExactlyOne { samarbeid ->
                 samarbeid.saksnummer shouldBe sak.saksnummer
-                samarbeid.status shouldBe FULLFØRT
+                samarbeid.status shouldBe IASamarbeid.Status.FULLFØRT
             }
         }
     }

@@ -26,7 +26,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanTema
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.hentInnholdsMålsetning
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
@@ -232,7 +232,7 @@ class PlanRepository(
             samarbeid = SamarbeidDto(
                 id = row.int("ia_prosess_id"),
                 navn = row.stringOrNull("navn") ?: DEFAULT_SAMARBEID_NAVN,
-                status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
+                status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
                 startDato = startDato,
                 sluttDato = sluttDato,
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
@@ -460,7 +460,7 @@ class PlanRepository(
             samarbeidId = row.int("ia_prosess"),
             sistEndret = row.localDateTime("sist_endret").toKotlinLocalDateTime(),
             sistPublisert = row.localDateOrNull("sist_publisert")?.toKotlinLocalDate(),
-            status = IAProsessStatus.valueOf(row.string("status")),
+            status = IASamarbeid.Status.valueOf(row.string("status")),
             temaer = hentTema(planIdLestFraDB, session),
         )
     }
@@ -496,7 +496,7 @@ class PlanRepository(
                         WHERE plan_id = :planId
                         """.trimIndent(),
                         mapOf(
-                            "statusFullfort" to IAProsessStatus.FULLFØRT.name,
+                            "statusFullfort" to IASamarbeid.Status.FULLFØRT.name,
                             "planId" to plan.id.toString(),
                         ),
                     ).asUpdate,
@@ -536,7 +536,7 @@ class PlanRepository(
                         WHERE plan_id = :planId
                         """.trimIndent(),
                         mapOf(
-                            "statusAvbrutt" to IAProsessStatus.AVBRUTT.name,
+                            "statusAvbrutt" to IASamarbeid.Status.AVBRUTT.name,
                             "planId" to plan.id.toString(),
                         ),
                     ).asUpdate,
@@ -556,7 +556,7 @@ class PlanRepository(
                         WHERE plan_id = :planId
                         """.trimIndent(),
                         mapOf(
-                            "statusSlettet" to IAProsessStatus.SLETTET.name,
+                            "statusSlettet" to IASamarbeid.Status.SLETTET.name,
                             "planId" to plan.id.toString(),
                         ),
                     ).asUpdate,

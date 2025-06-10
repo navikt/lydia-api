@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.eksport
 
 import no.nav.lydia.ia.sak.db.ProsessRepository
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -19,7 +19,7 @@ class SamarbeidBigqueryEksporterer(
     fun eksporter() {
         KJØRER_STATISTIKK_EKSPORT.set(true)
 
-        val alleSamarbeid: List<IAProsess> = samarbeidRepository.hentAlleProsesser()
+        val alleSamarbeid: List<IASamarbeid> = samarbeidRepository.hentAlleProsesser()
         log.info("Starter re-eksport av ${alleSamarbeid.size} samarbeid")
 
         try {

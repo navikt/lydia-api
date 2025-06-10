@@ -47,7 +47,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -306,26 +306,26 @@ class IASakService(
     fun avbrytMaskineltSamarbeidIIkkeAktuelleSaker(tørrKjør: Boolean) =
         iaSakRepository.hentIkkeAktuelleSakerMedAktiveSamarbeid().map { iaSak ->
             val alleAktiveSamarbeidPåSak = iaProsessService.hentIAProsesser(iaSak).getOrElse { emptyList() }
-                .filter { it.status == no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV }
+                .filter { it.status == IASamarbeid.Status.AKTIV }
 
             if (alleAktiveSamarbeidPåSak.isNotEmpty()) {
-                alleAktiveSamarbeidPåSak.forEach { iAProsess: IAProsess ->
+                alleAktiveSamarbeidPåSak.forEach { iASamarbeid: IASamarbeid ->
                     val oppdatertSakMedSisteHendelse = iaSakRepository.hentIASak(iaSak.saksnummer)!!
                     val sistEndretAvHendelseId = oppdatertSakMedSisteHendelse.endretAvHendelseId
                     val endretTidspunkt = oppdatertSakMedSisteHendelse.endretTidspunkt
 
                     val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = oppdatertSakMedSisteHendelse.nyMaskineltOppdaterSamarbeidHendelse(
-                        iaProsessDto = iAProsess.tilDto(),
+                        iaProsessDto = iASamarbeid.tilDto(),
                         iASakshendelseType = IASakshendelseType.AVBRYT_PROSESS,
                         resulterendeStatus = IAProsessStatus.FULLFØRT,
                     )
 
                     val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelser(
-                        prosess = iAProsess,
+                        prosess = iASamarbeid,
                         type = Spørreundersøkelse.Companion.Type.Behovsvurdering,
                     ).plus(
                         spørreundersøkelseRepository.hentSpørreundersøkelser(
-                            prosess = iAProsess,
+                            prosess = iASamarbeid,
                             type = Spørreundersøkelse.Companion.Type.Evaluering,
                         ),
                     ).filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }
@@ -351,7 +351,7 @@ class IASakService(
                     }
                     log.info(
                         "${if (tørrKjør) "Skulle avbryte" else "Avbrøt"} " +
-                            "samarbeid med id ${iAProsess.id} og status ${iAProsess.status} på sak med saksnummer ${oppdatertSakMedSisteHendelse.saksnummer}, sist oppdatert: $endretTidspunkt",
+                            "samarbeid med id ${iASamarbeid.id} og status ${iASamarbeid.status} på sak med saksnummer ${oppdatertSakMedSisteHendelse.saksnummer}, sist oppdatert: $endretTidspunkt",
                     )
                 }
             }
@@ -530,7 +530,7 @@ class IASakService(
         ).right()
     }
 
-    private fun sjekkPlan(prosess: IAProsess): ÅrsakTilAtSakIkkeKanAvsluttes? {
+    private fun sjekkPlan(prosess: IASamarbeid): ÅrsakTilAtSakIkkeKanAvsluttes? {
         val plan = planRepository.hentPlan(prosessId = prosess.id) ?: return ÅrsakTilAtSakIkkeKanAvsluttes(
             samarbeidsId = prosess.id,
             samarbeidsNavn = prosess.navn,
@@ -567,7 +567,7 @@ class IASakService(
         }
     }
 
-    private fun sjekkBehovsvurderinger(prosess: IAProsess): List<ÅrsakTilAtSakIkkeKanAvsluttes> {
+    private fun sjekkBehovsvurderinger(prosess: IASamarbeid): List<ÅrsakTilAtSakIkkeKanAvsluttes> {
         val årsaker = mutableListOf<ÅrsakTilAtSakIkkeKanAvsluttes>()
         val statusForBehovsvurderinger =
             iaSakRepository.hentStatusForBehovsvurderinger(prosess.id)

@@ -9,7 +9,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanTemaDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
 class SamarbeidsplanProdusent(
     kafka: Kafka,
@@ -37,7 +37,7 @@ data class PlanKafkaMeldingDto(
     val id: String,
     val sistEndret: LocalDateTime,
     val sistPublisert: LocalDate?,
-    val status: IAProsessStatus?,
+    val status: IASamarbeid.Status?,
     val temaer: List<PlanTemaKafkaMeldingDto>,
 )
 
@@ -53,7 +53,7 @@ data class PlanTemaKafkaMeldingDto(
 data class SamarbeidDto(
     val id: Int,
     val navn: String? = null,
-    val status: IAProsessStatus? = null,
+    val status: IASamarbeid.Status? = null,
     val startDato: LocalDate? = null,
     val sluttDato: LocalDate? = null,
     val endretTidspunkt: LocalDateTime? = null,

@@ -14,6 +14,7 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -217,7 +218,7 @@ class IASakRepository(
                     FROM ia_sak
                     JOIN ia_prosess ON ia_prosess.saksnummer = ia_sak.saksnummer
                     WHERE ia_sak.status = '${IAProsessStatus.IKKE_AKTUELL.name}'
-                    AND ia_prosess.status = '${no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV.name}'
+                    AND ia_prosess.status = '${IASamarbeid.Status.AKTIV.name}'
                     """.trimIndent(),
                 ).map(this::mapRowToIASak).asList,
             )

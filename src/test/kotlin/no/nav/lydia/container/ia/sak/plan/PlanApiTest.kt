@@ -52,8 +52,7 @@ import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AKTIV
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.SLETTET
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import java.time.LocalDate.now
 import java.time.ZonedDateTime
@@ -68,7 +67,7 @@ class PlanApiTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(samarbeidId = samarbeid.id)
         val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
-        slettetPlan.status shouldBe SLETTET
+        slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
         shouldFailWithMessage("HTTP Exception 404 Not Found") {
             sak.hentPlan(prosessId = samarbeid.id)
@@ -84,7 +83,7 @@ class PlanApiTest {
         val nyPlan = sak.opprettEnPlan(samarbeidId = samarbeid.id)
         val hentetPlan = sak.hentPlan(prosessId = samarbeid.id)
         hentetPlan.id shouldBe nyPlan.id
-        hentetPlan.status shouldBe AKTIV
+        hentetPlan.status shouldBe IASamarbeid.Status.AKTIV
         hentetPlan.id shouldNotBe slettetPlan.id
     }
 
@@ -94,7 +93,7 @@ class PlanApiTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(samarbeidId = samarbeid.id, plan = hentPlanMal().inkluderAlt())
         val slettetPlan = sak.slettPlanForSamarbeid(samarbeidId = samarbeid.id)
-        slettetPlan.status shouldBe SLETTET
+        slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
         slettetPlan.temaer.forAll { tema ->
             tema.inkludert shouldBe false
             tema.undertemaer.forAll { undertema ->
@@ -691,7 +690,7 @@ class PlanApiTest {
         sak.leggTilFolger(token = authContainerHelper.saksbehandler2.token)
 
         val plan = sak.opprettEnPlan(token = authContainerHelper.saksbehandler2.token)
-        plan.status shouldBe AKTIV
+        plan.status shouldBe IASamarbeid.Status.AKTIV
     }
 
     @Test
@@ -720,10 +719,10 @@ class PlanApiTest {
         sak.leggTilFolger(token = følgerAvSak.token)
 
         val plan = sak.opprettEnPlan(token = følgerAvSak.token)
-        plan.status shouldBe AKTIV
+        plan.status shouldBe IASamarbeid.Status.AKTIV
 
         val slettetPlan = sak.slettPlanForSamarbeid(token = følgerAvSak.token, samarbeidId = sak.hentAlleSamarbeid().first().id)
-        slettetPlan.status shouldBe SLETTET
+        slettetPlan.status shouldBe IASamarbeid.Status.SLETTET
 
         shouldFailWithMessage("HTTP Exception 404 Not Found") {
             sak.hentPlan(token = følgerAvSak.token, prosessId = samarbeid.id)

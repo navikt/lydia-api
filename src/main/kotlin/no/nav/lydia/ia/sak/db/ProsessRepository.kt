@@ -9,11 +9,7 @@ import kotliquery.using
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsess
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.AVBRUTT
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.samarbeid.IAProsessStatus.SLETTET
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -53,7 +49,7 @@ class ProsessRepository(
                     """.trimIndent(),
                     mapOf(
                         "saksnummer" to saksnummer,
-                        "slettetStatus" to SLETTET.name,
+                        "slettetStatus" to IASamarbeid.Status.SLETTET.name,
                     ),
                 ).map(this::mapRowToIaProsessDto).asList,
             )
@@ -91,7 +87,7 @@ class ProsessRepository(
     fun opprettNyProsess(
         saksnummer: String,
         navn: String? = DEFAULT_SAMARBEID_NAVN,
-    ): IAProsess =
+    ): IASamarbeid =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -129,11 +125,11 @@ class ProsessRepository(
     private fun String?.nullIfEmpty() = this?.trim()?.takeIf { it.isNotEmpty() }
 
     private fun mapRowToIaProsessDto(row: Row) =
-        IAProsess(
+        IASamarbeid(
             id = row.int("id"),
             saksnummer = row.string("saksnummer"),
             navn = row.string("navn"),
-            status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
+            status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
             opprettet = row.localDateTime("opprettet").toKotlinLocalDateTime(),
             avbrutt = row.localDateTimeOrNull("avbrutt_tidspunkt")?.toKotlinLocalDateTime(),
             fullført = row.localDateTimeOrNull("fullfort_tidspunkt")?.toKotlinLocalDateTime(),
@@ -154,7 +150,7 @@ class ProsessRepository(
                     mapOf(
                         "prosessId" to samarbeid.id,
                         "saksnummer" to samarbeid.saksnummer,
-                        "status" to SLETTET.name,
+                        "status" to IASamarbeid.Status.SLETTET.name,
                         "endret_tidspunkt" to LocalDateTime.now(),
                     ),
                 ).map(this::mapRowToIaProsessDto).asSingle,
@@ -175,7 +171,7 @@ class ProsessRepository(
                     mapOf(
                         "prosessId" to samarbeid.id,
                         "saksnummer" to samarbeid.saksnummer,
-                        "status" to FULLFØRT.name,
+                        "status" to IASamarbeid.Status.FULLFØRT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
                 ).map(this::mapRowToIaProsessDto).asSingle,
@@ -196,7 +192,7 @@ class ProsessRepository(
                     mapOf(
                         "prosessId" to samarbeid.id,
                         "saksnummer" to samarbeid.saksnummer,
-                        "status" to AVBRUTT.name,
+                        "status" to IASamarbeid.Status.AVBRUTT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
                 ).map(this::mapRowToIaProsessDto).asSingle,
@@ -272,7 +268,7 @@ class ProsessRepository(
             samarbeid = SamarbeidDto(
                 id = row.int("ia_prosess_id"),
                 navn = row.stringOrNull("navn"),
-                status = row.stringOrNull("status")?.let { IAProsessStatus.valueOf(it) },
+                status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },
                 endretTidspunkt = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
             ),
         )
