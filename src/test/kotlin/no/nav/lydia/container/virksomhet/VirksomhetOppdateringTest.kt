@@ -32,7 +32,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.sendEndringForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -201,7 +201,7 @@ class VirksomhetOppdateringTest {
         val sakEtterFullføring = sak.nyHendelse(
             IASakshendelseType.FULLFØR_PROSESS,
             payload = Json.encodeToString(
-                IAProsessDto(
+                IASamarbeidDto(
                     id = samarbeid.id,
                     saksnummer = sak.saksnummer,
                     navn = samarbeid.navn,

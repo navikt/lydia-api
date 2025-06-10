@@ -57,7 +57,7 @@ import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
@@ -580,29 +580,29 @@ class SakHelper {
             payload: String? = null,
         ) = nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
-        fun IASakDto.avbrytSamarbeid(samarbeid: IAProsessDto = hentAlleSamarbeid().first()) =
+        fun IASakDto.avbrytSamarbeid(samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first()) =
             nyHendelse(
                 hendelsestype = IASakshendelseType.AVBRYT_PROSESS,
-                payload = Json.encodeToString(samarbeid),
+                payload = Json.encodeToString(samarbeidDto),
             )
 
-        fun IASakDto.fullførSamarbeid(samarbeid: IAProsessDto = hentAlleSamarbeid().first()) =
+        fun IASakDto.fullførSamarbeid(samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first()) =
             nyHendelse(
                 hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
-                payload = Json.encodeToString(samarbeid),
+                payload = Json.encodeToString(samarbeidDto),
             )
 
-        fun IASakDto.slettSamarbeid(samarbeid: IAProsessDto = hentAlleSamarbeid().first()) =
+        fun IASakDto.slettSamarbeid(samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first()) =
             nyHendelse(
                 hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(samarbeid),
+                payload = Json.encodeToString(samarbeidDto),
             )
 
         fun IASakDto.kanGjennomføreStatusendring(
-            samarbeid: IAProsessDto,
+            samarbeidDto: IASamarbeidDto,
             statusEndring: String,
             token: String = authContainerHelper.saksbehandler1.token,
-        ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/${this.orgnr}/${this.saksnummer}/${samarbeid.id}/kan/$statusEndring")
+        ) = applikasjon.performGet("$IA_SAK_RADGIVER_PATH/${this.orgnr}/${this.saksnummer}/${samarbeidDto.id}/kan/$statusEndring")
             .authentication().bearer(token)
             .tilSingelRespons<KanGjennomføreStatusendring>()
             .third.fold(

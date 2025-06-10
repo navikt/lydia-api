@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 
 @Serializable
-data class IAProsessDto(
+data class IASamarbeidDto(
     val id: Int,
     val saksnummer: String,
     val navn: String,
@@ -17,7 +17,7 @@ data class IAProsessDto(
 fun List<IASamarbeid>.tilDto() = map { it.tilDto() }
 
 fun IASamarbeid.tilDto() =
-    IAProsessDto(
+    IASamarbeidDto(
         id = id,
         saksnummer = saksnummer,
         navn = navn,

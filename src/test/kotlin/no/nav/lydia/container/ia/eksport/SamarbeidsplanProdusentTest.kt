@@ -27,7 +27,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaMelding
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.plan.PlanDto
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -146,9 +146,9 @@ class SamarbeidsplanProdusentTest {
 
         runBlocking {
             konsummerOgSjekkKafkaMelding(
-                sak1 = sak,
-                samarbeid1 = samarbeid,
-                opprettetPlan1 = plan,
+                sakDto = sak,
+                samarbeidDto = samarbeid,
+                planDto = plan,
                 startDato = startDato,
                 sluttDato = sluttDato,
             )
@@ -171,23 +171,23 @@ class SamarbeidsplanProdusentTest {
     }
 
     private suspend fun konsummerOgSjekkKafkaMelding(
-        sak1: IASakDto,
-        samarbeid1: IAProsessDto,
-        opprettetPlan1: PlanDto,
+        sakDto: IASakDto,
+        samarbeidDto: IASamarbeidDto,
+        planDto: PlanDto,
         startDato: LocalDate? = null,
         sluttDato: LocalDate? = null,
     ) {
         kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-            key = "${sak1.saksnummer}-${samarbeid1.id}-${opprettetPlan1.id}",
+            key = "${sakDto.saksnummer}-${samarbeidDto.id}-${planDto.id}",
             konsument = konsument,
         ) {
             it.forExactlyOne { melding ->
                 val planTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
                 planIKafkaErRiktigPlan(
                     planTilSalesforce = planTilSalesforce,
-                    sak = sak1,
-                    samarbeid = samarbeid1,
-                    opprettetPlan = opprettetPlan1,
+                    sak = sakDto,
+                    samarbeid = samarbeidDto,
+                    opprettetPlan = planDto,
                     startDato = startDato,
                     sluttDato = sluttDato,
                 )
@@ -198,7 +198,7 @@ class SamarbeidsplanProdusentTest {
     private fun planIKafkaErRiktigPlan(
         planTilSalesforce: SamarbeidsplanKafkaMelding,
         sak: IASakDto,
-        samarbeid: IAProsessDto,
+        samarbeid: IASamarbeidDto,
         opprettetPlan: PlanDto,
         startDato: LocalDate?,
         sluttDato: LocalDate?,

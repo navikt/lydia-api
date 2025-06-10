@@ -19,7 +19,7 @@ import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.INGEN_PLAN
 import no.nav.lydia.ia.sak.IAProsessService.StatusendringBegrunnelser.SAK_I_FEIL_STATUS
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.KanGjennomføreStatusendring
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.ProsessRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
@@ -82,7 +82,7 @@ class IAProsessService(
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
 
-                    ENDRE_PROSESS -> oppdaterNavnPåProsess(sakshendelse.prosessDto)
+                    ENDRE_PROSESS -> oppdaterNavnPåSamarbeid(sakshendelse.samarbeidDto)
                         ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
 
                     SLETT_PROSESS -> slettProsess(sakshendelse, sak)
@@ -90,7 +90,7 @@ class IAProsessService(
 
                     NY_PROSESS -> prosessRepository.opprettNyProsess(
                         saksnummer = sakshendelse.saksnummer,
-                        navn = sakshendelse.prosessDto.navn,
+                        navn = sakshendelse.samarbeidDto.navn,
                     ).also { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
@@ -103,11 +103,11 @@ class IAProsessService(
         }
     }
 
-    private fun oppdaterNavnPåProsess(samarbeid: IAProsessDto): IASamarbeid? {
-        prosessRepository.oppdaterNavnPåProsess(samarbeid)
+    private fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid? {
+        prosessRepository.oppdaterNavnPåProsess(samarbeidDto = samarbeidDto)
         return prosessRepository.hentProsess(
-            saksnummer = samarbeid.saksnummer,
-            prosessId = samarbeid.id,
+            saksnummer = samarbeidDto.saksnummer,
+            prosessId = samarbeidDto.id,
         )
     }
 
@@ -217,7 +217,7 @@ class IAProsessService(
         sakshendelse: ProsessHendelse,
         sak: IASak,
     ): IASamarbeid? {
-        val samarbeid = sakshendelse.prosessDto
+        val samarbeid = sakshendelse.samarbeidDto
 
         return if (kanFullføreProsess(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
             planRepository.hentPlan(samarbeid.id)?.let { plan ->
@@ -243,13 +243,13 @@ class IAProsessService(
     }
 
     private fun fullførProsessMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid? =
-        prosessRepository.fullførSamarbeid(sakshendelse.prosessDto)
+        prosessRepository.fullførSamarbeid(sakshendelse.samarbeidDto)
 
     private fun avbrytProsess(
         sakshendelse: ProsessHendelse,
         sak: IASak,
     ): IASamarbeid? {
-        val samarbeid = sakshendelse.prosessDto
+        val samarbeid = sakshendelse.samarbeidDto
 
         return if (kanAvbryteSamarbeid(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
             prosessRepository.avbrytSamarbeid(samarbeid)
@@ -265,7 +265,7 @@ class IAProsessService(
         sakshendelse: ProsessHendelse,
         sak: IASak,
     ): IASamarbeid? {
-        val samarbeid = sakshendelse.prosessDto
+        val samarbeid = sakshendelse.samarbeidDto
 
         return if (kanSletteProsess(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
             prosessRepository.slettSamarbeid(samarbeid)

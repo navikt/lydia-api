@@ -8,7 +8,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
-import no.nav.lydia.ia.sak.api.prosess.IAProsessDto
+import no.nav.lydia.ia.sak.api.prosess.IASamarbeidDto
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Endring
 import no.nav.lydia.integrasjoner.brreg.BrregOppdateringConsumer.BrregVirksomhetEndringstype.Fjernet
@@ -68,7 +68,7 @@ class VirksomhetHelper {
                 failure = { fail(it.message) },
             )
 
-        fun IAProsessDto.hentSalesforceSamarbeidslenke(token: String = authContainerHelper.saksbehandler1.token) =
+        fun IASamarbeidDto.hentSalesforceSamarbeidslenke(token: String = authContainerHelper.saksbehandler1.token) =
             applikasjon.performGet("$SALESFORCE_INFO_PATH/samarbeid/$id")
                 .authentication().bearer(token)
                 .tilSingelRespons<SalesforceSamarbeid>()

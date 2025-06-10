@@ -498,7 +498,7 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         val sak = nySakIKartlegges(orgnummer = orgnummer).opprettNyttSamarbeid()
         val førsteSamarbeid = sak.hentAlleSamarbeid().first()
-        sak.nyttNavnPåSamarbeid(iaProsessDto = førsteSamarbeid, nyttNavn = "Nytt navn")
+        sak.nyttNavnPåSamarbeid(iaSamarbeidDto = førsteSamarbeid, nyttNavn = "Nytt navn")
         sak.status shouldBe KARTLEGGES
 
         val oppdatertSak = hentSak(orgnummer).nyHendelse(VIRKSOMHET_SKAL_BISTÅS).nyHendelse(TILBAKE)
