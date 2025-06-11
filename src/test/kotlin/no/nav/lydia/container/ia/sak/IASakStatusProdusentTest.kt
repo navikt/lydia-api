@@ -10,7 +10,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -59,7 +59,7 @@ class IASakStatusProdusentTest {
                     hendelse shouldContain sak.orgnr
                 }
                 meldinger shouldHaveSize 5
-                meldinger[4] shouldContain IASakStatus.IKKE_AKTUELL.name
+                meldinger[4] shouldContain IASak.Status.IKKE_AKTUELL.name
             }
         }
     }

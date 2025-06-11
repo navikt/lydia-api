@@ -1,9 +1,10 @@
 package no.nav.lydia.statusoversikt
 
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.domene.IASak
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class Statusoversikt(
-    val status: IASakStatus?,
+    val status: IASak.Status?,
     val antall: Int,
 )

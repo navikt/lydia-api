@@ -23,7 +23,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultat
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
@@ -140,7 +139,7 @@ class SpørreundersøkelseService(
             }
 
             Evaluering -> {
-                if (iaSak.status == VI_BISTÅR) {
+                if (iaSak.status == IASak.Status.VI_BISTÅR) {
                     planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
                         val temaerInkludertIPlan = plan.temaer.filter {
                             it.inkludert

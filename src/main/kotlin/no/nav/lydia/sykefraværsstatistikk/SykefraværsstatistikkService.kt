@@ -8,7 +8,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalDto.Companion.toDto
 import no.nav.lydia.sykefraværsstatistikk.api.KvartalerFraTilDto
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
@@ -139,7 +139,7 @@ class SykefraværsstatistikkService(
         return sykefravær.map {
             if (it.status.erAvsluttet() && it.sistEndret.erForeldet()) {
                 it.copy(
-                    status = IASakStatus.IKKE_AKTIV,
+                    status = IASak.Status.IKKE_AKTIV,
                 )
             } else {
                 it
@@ -168,7 +168,7 @@ class SykefraværsstatistikkService(
             }
         }
 
-    private fun IASakStatus?.erAvsluttet() =
+    private fun IASak.Status?.erAvsluttet() =
         when (this) {
             null -> true
             else -> regnesSomAvsluttet()

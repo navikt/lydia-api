@@ -5,9 +5,6 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.GyldigHendelse
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakStatus
-import no.nav.lydia.ia.sak.domene.IASakStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 
@@ -15,7 +12,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRoll
 data class IASakDto(
     val saksnummer: String,
     val orgnr: String,
-    var status: IASakStatus,
+    var status: IASak.Status,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,
@@ -46,6 +43,6 @@ data class IASakDto(
                 lukket = this.erLukket(),
             )
 
-        fun IASak.erLukket() = this.erEtterFristenForLåsingAvSak() && (this.status == FULLFØRT || this.status == IKKE_AKTUELL)
+        fun IASak.erLukket() = this.erEtterFristenForLåsingAvSak() && (this.status == IASak.Status.FULLFØRT || this.status == IASak.Status.IKKE_AKTUELL)
     }
 }

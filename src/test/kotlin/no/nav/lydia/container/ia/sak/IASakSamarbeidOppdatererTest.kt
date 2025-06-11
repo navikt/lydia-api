@@ -20,7 +20,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
-import no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -50,7 +50,7 @@ class IASakSamarbeidOppdatererTest {
         alleSamarbeid.size shouldBe 1
         sak.avbrytSamarbeid().nyIkkeAktuellHendelse()
 
-        hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).status shouldBe IKKE_AKTUELL
+        hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).status shouldBe IASak.Status.IKKE_AKTUELL
 
         postgresContainerHelper.performUpdate(
             """
@@ -115,7 +115,7 @@ class IASakSamarbeidOppdatererTest {
         val samarbeid2 = alleSamarbeid.last()
         sak.avbrytSamarbeid(samarbeid1).avbrytSamarbeid(samarbeid2).nyIkkeAktuellHendelse()
 
-        hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).status shouldBe IKKE_AKTUELL
+        hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).status shouldBe IASak.Status.IKKE_AKTUELL
 
         postgresContainerHelper.performUpdate(
             """
@@ -158,7 +158,7 @@ class IASakSamarbeidOppdatererTest {
         alleSamarbeid.size shouldBe 1
         sak.avbrytSamarbeid().nyIkkeAktuellHendelse()
 
-        hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).status shouldBe IKKE_AKTUELL
+        hentSak(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).status shouldBe IASak.Status.IKKE_AKTUELL
 
         postgresContainerHelper.performUpdate(
             """

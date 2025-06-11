@@ -1,6 +1,6 @@
 package no.nav.lydia.statusoversikt
 
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -21,13 +21,13 @@ class StatusoversiktService(
 
     private fun slåSammenTalleneForNullOgIkkeAktiv(statusoversikt: List<Statusoversikt>): MutableList<Statusoversikt> {
         val nullStatus = statusoversikt.firstOrNull { it.status == null }
-        val ikkeAktivStatus = statusoversikt.firstOrNull { it.status == IASakStatus.IKKE_AKTIV }
+        val ikkeAktivStatus = statusoversikt.firstOrNull { it.status == IASak.Status.IKKE_AKTIV }
 
         val ikkeAktiveAntall = (nullStatus?.antall ?: 0) + (ikkeAktivStatus?.antall ?: 0)
 
         val modifisertListe = mutableListOf<Statusoversikt>()
-        modifisertListe.addAll(statusoversikt.filter { it.status != null && it.status != IASakStatus.IKKE_AKTIV })
-        modifisertListe.add(Statusoversikt(IASakStatus.IKKE_AKTIV, ikkeAktiveAntall))
+        modifisertListe.addAll(statusoversikt.filter { it.status != null && it.status != IASak.Status.IKKE_AKTIV })
+        modifisertListe.add(Statusoversikt(IASak.Status.IKKE_AKTIV, ikkeAktiveAntall))
         return modifisertListe
     }
 }

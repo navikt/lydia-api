@@ -5,7 +5,6 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
@@ -21,7 +20,7 @@ class SakshistorikkDto(
 
 @Serializable
 class SakSnapshotDto(
-    val status: IASakStatus,
+    val status: IASak.Status,
     val hendelsestype: IASakshendelseType,
     val tidspunktForSnapshot: LocalDateTime,
     val begrunnelser: List<String>,
@@ -31,7 +30,7 @@ class SakSnapshotDto(
     companion object {
         fun from(iaSakshendelse: IASakshendelse) =
             SakSnapshotDto(
-                status = iaSakshendelse.resulterendeStatus ?: IASakStatus.IKKE_AKTIV,
+                status = iaSakshendelse.resulterendeStatus ?: IASak.Status.IKKE_AKTIV,
                 hendelsestype = iaSakshendelse.hendelsesType,
                 tidspunktForSnapshot = iaSakshendelse.opprettetTidspunkt.toKotlinLocalDateTime(),
                 eier = iaSakshendelse.opprettetAv,

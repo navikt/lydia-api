@@ -11,7 +11,7 @@ import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BOLIGBYGGELAG
 import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.virksomhet.domene.Sektor
 import kotlin.test.Test
 
@@ -28,7 +28,7 @@ class StatusoversiktApiTest {
 
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
         statusoversiktKommunalSektor.first { statusoversikt ->
-            statusoversikt.status == IASakStatus.IKKE_AKTIV
+            statusoversikt.status == IASak.Status.IKKE_AKTIV
         }.antall shouldBeGreaterThan 0
     }
 
@@ -56,7 +56,7 @@ class StatusoversiktApiTest {
             .fullførSak()
 
         val aktivSak = hentSak(orgnummer = virksomhet.orgnr)
-        aktivSak.status shouldBe IASakStatus.FULLFØRT
+        aktivSak.status shouldBe IASak.Status.FULLFØRT
 
         val statusoversiktKommunalSektor =
             StatusoversiktHelper.hentStatusoversikt(
@@ -65,7 +65,7 @@ class StatusoversiktApiTest {
             ).third.get().data
         statusoversiktKommunalSektor.size shouldBeGreaterThan 0
         statusoversiktKommunalSektor.first { statusoversikt ->
-            statusoversikt.status == IASakStatus.FULLFØRT
+            statusoversikt.status == IASak.Status.FULLFØRT
         }.antall shouldBeGreaterThan 0
     }
 
@@ -79,7 +79,7 @@ class StatusoversiktApiTest {
         nySakIViBistår(orgnummer = virksomhet.orgnr)
             .fullførSak()
         val aktivSak = hentSak(orgnummer = virksomhet.orgnr)
-        aktivSak.status shouldBe IASakStatus.FULLFØRT
+        aktivSak.status shouldBe IASak.Status.FULLFØRT
 
         VirksomhetHelper.lastInnNyVirksomhet(
             nyVirksomhet = TestVirksomhet.nyVirksomhet(
@@ -96,10 +96,10 @@ class StatusoversiktApiTest {
 
         statusoversiktResults.size shouldBeGreaterThan 1
         statusoversiktResults.first { statusoversikt ->
-            statusoversikt.status == IASakStatus.FULLFØRT
+            statusoversikt.status == IASak.Status.FULLFØRT
         }.antall shouldBeGreaterThan 0
         statusoversiktResults.first { statusoversikt ->
-            statusoversikt.status == IASakStatus.IKKE_AKTIV
+            statusoversikt.status == IASak.Status.IKKE_AKTIV
         }.antall shouldBeGreaterThan 0
     }
 }

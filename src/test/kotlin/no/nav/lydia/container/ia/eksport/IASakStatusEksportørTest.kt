@@ -21,8 +21,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
-import no.nav.lydia.ia.sak.domene.IASakStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IASakStatus.KONTAKTES
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES
@@ -77,9 +76,9 @@ class IASakStatusEksportørTest {
                 objektene.forAtLeastOne {
                     it.orgnr shouldBe sak.orgnr
                     it.saksnummer shouldBe sak.saksnummer
-                    it.status shouldBe KONTAKTES
+                    it.status shouldBe IASak.Status.KONTAKTES
                 }
-                objektene.filter { it.status == KONTAKTES } shouldHaveSize 2
+                objektene.filter { it.status == IASak.Status.KONTAKTES } shouldHaveSize 2
             }
         }
     }
@@ -105,7 +104,7 @@ class IASakStatusEksportørTest {
                 // -- Siste meldingen skal være den gamle fullførte saken
                 meldinger[21] shouldContain gammelSak.saksnummer
                 meldinger[21] shouldContain gammelSak.orgnr
-                meldinger[21] shouldContain FULLFØRT.name
+                meldinger[21] shouldContain IASak.Status.FULLFØRT.name
             }
         }
     }

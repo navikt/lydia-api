@@ -33,6 +33,7 @@ import no.nav.lydia.helper.VirksomhetHelper.Companion.sendFjerningForVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.sendSlettingForVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -181,7 +182,7 @@ class VirksomhetOppdateringTest {
         ) shouldBe IASamarbeid.Status.AVBRUTT.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL.name
+        ) shouldBe IASak.Status.IKKE_AKTUELL.name
     }
 
     @Test
@@ -214,7 +215,7 @@ class VirksomhetOppdateringTest {
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe no.nav.lydia.ia.sak.domene.IASakStatus.FULLFØRT.name
+        ) shouldBe IASak.Status.FULLFØRT.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
         ) shouldBe sakEtterFullføring.endretAvHendelseId

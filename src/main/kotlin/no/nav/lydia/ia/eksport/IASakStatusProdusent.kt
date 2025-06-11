@@ -9,7 +9,6 @@ import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.db.IASakRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakStatus.SLETTET
 
 class IASakStatusProdusent(
     kafka: Kafka,
@@ -20,9 +19,9 @@ class IASakStatusProdusent(
     override fun receive(input: IASak) {
         sendPåKafka(input = input)
 
-        if (input.status == SLETTET) {
+        if (input.status == IASak.Status.SLETTET) {
             iaSakRepository.hentSaker(input.orgnr)
-                .lastOrNull { it.status != SLETTET }
+                .lastOrNull { it.status != IASak.Status.SLETTET }
                 ?.let { aktivSak -> sendPåKafka(input = aktivSak) }
         }
     }
@@ -43,7 +42,7 @@ class IASakStatusProdusent(
     data class IASakStatus(
         val orgnr: String,
         val saksnummer: String,
-        val status: no.nav.lydia.ia.sak.domene.IASakStatus,
+        val status: IASak.Status,
         val sistOppdatert: LocalDateTime,
     )
 }

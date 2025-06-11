@@ -11,11 +11,6 @@ import no.nav.lydia.ADGrupper
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
-import no.nav.lydia.ia.sak.domene.IASakStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.IASakStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IASakStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IASakStatus.VURDERES
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyFørsteHendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -100,7 +95,7 @@ class IASakTest {
         sak.endretTidspunkt shouldBe vurderingsHendelse.opprettetTidspunkt
         sak.saksnummer shouldBe vurderingsHendelse.saksnummer
         sak.endretAvHendelseId shouldBe vurderingsHendelse.id
-        sak.status shouldBe VURDERES
+        sak.status shouldBe IASak.Status.VURDERES
     }
 
     @Test
@@ -119,7 +114,7 @@ class IASakTest {
             navAnsatt = superbruker2,
         )
         val sak = IASak.fraHendelser(listOf(h1, h2, h3))
-        sak.status shouldBe IKKE_AKTUELL
+        sak.status shouldBe IASak.Status.IKKE_AKTUELL
         sak.opprettetAv shouldBe h1.opprettetAv
         sak.endretAv shouldBe h3.opprettetAv
         sak.endretAvHendelseId shouldBe h3.id
@@ -198,19 +193,19 @@ class IASakTest {
         val hendelserPåSak =
             listOf(nySakHendelse, vurderes, eierskap, kontaktes, tilbakeMidtI, kontaktesAllikevel, ikkeAktuell)
         val sak = IASak.fraHendelser(hendelserPåSak)
-        sak.status shouldBe IKKE_AKTUELL
+        sak.status shouldBe IASak.Status.IKKE_AKTUELL
 
         val tilbakeTilKontaktes = ikkeAktuell.nesteHendelse(TILBAKE)
         superbruker1.utførHendelsePåSak(sak, tilbakeTilKontaktes)
         sak.endretAvHendelseId shouldBe tilbakeTilKontaktes.id
-        sak.status shouldBe KONTAKTES
+        sak.status shouldBe IASak.Status.KONTAKTES
         sak.hendelser shouldContain tilbakeTilKontaktes
 
         val tilbakeTilVurderes = tilbakeTilKontaktes.nesteHendelse(TILBAKE)
         superbruker1.utførHendelsePåSak(sak, tilbakeTilVurderes)
         sak.endretAvHendelseId shouldBe tilbakeTilVurderes.id
         sak.hendelser shouldContain tilbakeTilVurderes
-        sak.status shouldBe VURDERES
+        sak.status shouldBe IASak.Status.VURDERES
     }
 
     @Test
@@ -236,7 +231,7 @@ class IASakTest {
             ),
         )
 
-        sak.status shouldBe FULLFØRT
+        sak.status shouldBe IASak.Status.FULLFØRT
         sak.hendelser shouldContainInOrder listOf(
             nySakHendelse,
             vurderes,
@@ -397,7 +392,7 @@ class IASakTest {
         val hendelsesRekke =
             listOf(nySakHendelse, vurderes, medEier, kontaktes, kartlegges, førsteNavngivning, andreNavngivning)
         val sak = IASak.fraHendelser(hendelsesRekke)
-        sak.status shouldBe KARTLEGGES
+        sak.status shouldBe IASak.Status.KARTLEGGES
     }
 
     @Test
@@ -430,7 +425,7 @@ class IASakTest {
             bistå,
             fullfør,
         )
-        IASak.fraHendelser(liste).status shouldBe FULLFØRT
+        IASak.fraHendelser(liste).status shouldBe IASak.Status.FULLFØRT
     }
 
     @Test
@@ -454,7 +449,7 @@ class IASakTest {
             liste.add(viBistår)
             liste.add(hendelse)
         }
-        IASak.fraHendelser(liste).status shouldBe KARTLEGGES
+        IASak.fraHendelser(liste).status shouldBe IASak.Status.KARTLEGGES
     }
 
     private fun nyHendelse(
