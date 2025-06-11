@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -13,12 +12,12 @@ data class SpørreundersøkelseDto(
     val samarbeidId: Int,
     @Deprecated("Bruk samarbeidId")
     val prosessId: Int,
-    val status: SpørreundersøkelseStatus,
+    val status: Spørreundersøkelse.Status,
     val temaer: List<TemaDto>,
     @Deprecated("Bruk temaer")
     val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
     val opprettetAv: String,
-    val type: Spørreundersøkelse.Companion.Type,
+    val type: Spørreundersøkelse.Type,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,

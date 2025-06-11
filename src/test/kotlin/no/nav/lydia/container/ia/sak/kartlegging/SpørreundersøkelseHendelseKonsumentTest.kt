@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -21,7 +20,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.RESULTATER_FOR_TEMA
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -76,10 +75,10 @@ class SpørreundersøkelseHendelseKonsumentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
-            type = Behovsvurdering,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
         ).first()
 
-        fullførtBehovsvurdering.status shouldBe SpørreundersøkelseStatus.AVSLUTTET
+        fullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
 
         applikasjon.shouldContainLog(
             "Alle temaer i spørreundersøkelse '${behovsvurdering.id}' er fullført, spørreundersøkelse er avsluttet".toRegex(),
@@ -101,10 +100,10 @@ class SpørreundersøkelseHendelseKonsumentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
-            type = Behovsvurdering,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
         ).first()
 
-        behovsvurderingMedEttStengtTema.status shouldBe SpørreundersøkelseStatus.PÅBEGYNT
+        behovsvurderingMedEttStengtTema.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
 
         applikasjon.shouldContainLog(
             "Mottok stenging av tema: ${førsteTema.temaId} i spørreundersøkelse ${behovsvurdering.id}".toRegex(),

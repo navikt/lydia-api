@@ -11,7 +11,6 @@ import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
 import ia.felles.definisjoner.bransjer.Bransje
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -67,13 +66,10 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseUtenInnh
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
@@ -614,7 +610,7 @@ class SakHelper {
 
         fun IASakDto.nyIkkeAktuellHendelse(token: String = authContainerHelper.saksbehandler1.token) =
             nyHendelse(
-                hendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL,
+                hendelsestype = IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL,
                 token = token,
                 payload = ValgtÅrsak(
                     type = VIRKSOMHETEN_TAKKET_NEI,
@@ -656,7 +652,7 @@ class SakHelper {
             val leveranse = this.opprettIASakLeveranse(modulId = modulId)
             leveranse.oppdaterIASakLeveranse(this.orgnr, IASakLeveranseStatus.LEVERT)
             opprettEnPlan()
-            return fullførSamarbeid().nyHendelse(FULLFØR_BISTAND, token)
+            return fullførSamarbeid().nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND, token = token)
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
@@ -680,7 +676,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
             prosessId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
-            type: Spørreundersøkelse.Companion.Type,
+            type: Spørreundersøkelse.Type,
         ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
@@ -719,7 +715,7 @@ class IASakKartleggingHelper {
 
         fun IASakDto.hentForhåndsvisning(
             prosessId: Int = hentAlleSamarbeid().first().id,
-            type: Spørreundersøkelse.Companion.Type = Evaluering,
+            type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Evaluering,
             spørreundersøkseId: String,
             token: String = authContainerHelper.saksbehandler1.token,
         ): SpørreundersøkelseDto =
@@ -855,19 +851,20 @@ class IASakKartleggingHelper {
             orgnr: String,
             saksnummer: String,
             kartleggingId: String,
-        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
-            .authentication().bearer(token)
-            .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
-                success = { respons -> respons },
-                failure = { fail(it.message) },
-            )
+        ): SpørreundersøkelseResultatDto =
+            applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
+                .authentication().bearer(token)
+                .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
+                    success = { respons -> respons },
+                    failure = { fail(it.message) },
+                )
     }
 }
 
 class PlanHelper {
     companion object {
-        val START_DATO = LocalDate(2021, 1, 1)
-        val SLUTT_DATO = LocalDate(2022, 2, 2)
+        val START_DATO = LocalDate(year = 2021, monthNumber = 1, dayOfMonth = 1)
+        val SLUTT_DATO = LocalDate(year = 2022, monthNumber = 2, dayOfMonth = 2)
 
         fun PlanDto.antallTemaInkludert() = temaer.filter { it.inkludert }.size
 
@@ -1201,7 +1198,7 @@ class PlanHelper {
                     orgnr = orgnummer,
                     saksnummer = saksnummer,
                     prosessId = prosessId,
-                    status = FULLFØRT,
+                    status = InnholdStatus.FULLFØRT,
                     temaId = tema.id,
                     undertemaId = it.id,
                 )

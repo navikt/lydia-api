@@ -1,7 +1,6 @@
 package no.nav.lydia.container.virksomhet
 
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -159,18 +158,18 @@ class VirksomhetOppdateringTest {
 
         val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
 
         sendSlettingForVirksomhet(virksomhet)
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
-        ) shouldBe SpørreundersøkelseStatus.SLETTET.name
+        ) shouldBe Spørreundersøkelse.Status.SLETTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${evaluering.id}'",
-        ) shouldBe SpørreundersøkelseStatus.SLETTET.name
+        ) shouldBe Spørreundersøkelse.Status.SLETTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_plan where plan_id = '${plan.id}'",
         )
@@ -191,16 +190,16 @@ class VirksomhetOppdateringTest {
 
         val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
-        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Companion.Type.Behovsvurdering.name)
+        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
         evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         evaluering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val sakEtterFullføring = sak.nyHendelse(
-            IASakshendelseType.FULLFØR_PROSESS,
+            hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
             payload = Json.encodeToString(
                 IASamarbeidDto(
                     id = samarbeid.id,
@@ -209,7 +208,7 @@ class VirksomhetOppdateringTest {
                 ),
             ),
         )
-            .nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
+            .nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND)
 
         sendSlettingForVirksomhet(virksomhet)
 
@@ -222,7 +221,7 @@ class VirksomhetOppdateringTest {
     }
 }
 
-private fun genererOppdateringsid(testVirksomhet: TestVirksomhet) = testVirksomhet.orgnr.toLong() + 1L
+private fun genererOppdateringsid(testVirksomhet: TestVirksomhet): Long = testVirksomhet.orgnr.toLong() + 1L
 
 private fun TestVirksomhet.skalHaRiktigTilstandEtterOppdatering(
     status: VirksomhetStatus = VirksomhetStatus.AKTIV,

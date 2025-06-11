@@ -1,7 +1,5 @@
 package no.nav.lydia.container.ia.eksport
 
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldBeInteger
 import kotlinx.coroutines.runBlocking
@@ -14,6 +12,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -40,10 +39,10 @@ class FullførtBehovsvurderingProdusentTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettSpørreundersøkelse()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        påbegyntKartlegging.status shouldBe PÅBEGYNT
+        påbegyntKartlegging.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
 
         val avsluttetKartlegging = påbegyntKartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        avsluttetKartlegging.status shouldBe AVSLUTTET
+        avsluttetKartlegging.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

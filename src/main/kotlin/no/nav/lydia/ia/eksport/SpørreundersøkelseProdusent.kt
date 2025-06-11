@@ -1,10 +1,5 @@
 package no.nav.lydia.ia.eksport
 
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseMelding
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørsmålMelding
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SvaralternativMelding
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.TemaMelding
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
@@ -18,7 +13,6 @@ import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
@@ -39,7 +33,7 @@ class SpørreundersøkelseProdusent(
         )?.navn ?: input.virksomhetsNavn
 
         val plan = when (input.type) {
-            Evaluering -> planRepository.hentPlan(input.samarbeidId)?.tilDto()
+            Spørreundersøkelse.Type.Evaluering -> planRepository.hentPlan(samarbeidId = input.samarbeidId)?.tilDto()
             else -> null
         }
 
@@ -60,7 +54,7 @@ class SpørreundersøkelseProdusent(
         return nøkkel to Json.encodeToString(verdi)
     }
 
-    private fun Tema.tilKafkaMelding() =
+    private fun Tema.tilKafkaMelding(): SerializableTema =
         SerializableTema(
             id = this.tema.id,
             navn = this.tema.navn,
@@ -76,7 +70,7 @@ class SpørreundersøkelseProdusent(
             kategori = undertemanavn,
         )
 
-    private fun Svaralternativ.tilKafkaMelding() =
+    private fun Svaralternativ.tilKafkaMelding(): SerializableSvaralternativ =
         SerializableSvaralternativ(
             id = svarId.toString(),
             tekst = svartekst,
@@ -84,38 +78,38 @@ class SpørreundersøkelseProdusent(
 
     @Serializable
     data class SerializableSpørreundersøkelse(
-        override val id: String,
-        override val orgnummer: String,
-        override val samarbeidsNavn: String,
-        override val virksomhetsNavn: String,
-        override val status: SpørreundersøkelseStatus,
-        override val temaer: List<SerializableTema>,
-        override val type: String,
+        val id: String,
+        val orgnummer: String,
+        val samarbeidsNavn: String,
+        val virksomhetsNavn: String,
+        val status: Spørreundersøkelse.Status,
+        val temaer: List<SerializableTema>,
+        val type: String,
         val plan: PlanDto?,
         val opprettet: LocalDateTime,
         val endret: LocalDateTime?,
         val gyldigTil: LocalDateTime,
-    ) : SpørreundersøkelseMelding
+    )
 
     @Serializable
     data class SerializableTema(
-        override val id: Int,
-        override val navn: String,
-        override val spørsmål: List<SerializableSpørsmål>,
-    ) : TemaMelding
+        val id: Int,
+        val navn: String,
+        val spørsmål: List<SerializableSpørsmål>,
+    )
 
     @Serializable
     data class SerializableSpørsmål(
-        override val id: String,
-        override val tekst: String,
-        override val flervalg: Boolean,
-        override val svaralternativer: List<SerializableSvaralternativ>,
+        val id: String,
+        val tekst: String,
+        val flervalg: Boolean,
+        val svaralternativer: List<SerializableSvaralternativ>,
         val kategori: String,
-    ) : SpørsmålMelding
+    )
 
     @Serializable
     data class SerializableSvaralternativ(
-        override val id: String,
-        override val tekst: String,
-    ) : SvaralternativMelding
+        val id: String,
+        val tekst: String,
+    )
 }

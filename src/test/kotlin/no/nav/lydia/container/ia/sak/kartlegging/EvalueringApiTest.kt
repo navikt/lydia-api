@@ -1,8 +1,5 @@
 package no.nav.lydia.container.ia.sak.kartlegging
 
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -33,7 +30,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Evaluering
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -61,7 +58,7 @@ class EvalueringApiTest {
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering()
 
-        evaluering.type shouldBe Evaluering
+        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering
         evaluering.temaer shouldHaveSize 3
         evaluering.temaer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -108,7 +105,7 @@ class EvalueringApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = Evaluering,
+            type = Spørreundersøkelse.Type.Evaluering,
         )
 
         alleEvalueringer shouldHaveSize 1
@@ -117,21 +114,21 @@ class EvalueringApiTest {
         alleEvalueringer.first().opprettetAv shouldBe evaluering.opprettetAv
         alleEvalueringer.first().opprettetTidspunkt shouldBe evaluering.opprettetTidspunkt
         alleEvalueringer.first().endretTidspunkt shouldBe null
-        alleEvalueringer.first().status shouldBe OPPRETTET
+        alleEvalueringer.first().status shouldBe Spørreundersøkelse.Status.OPPRETTET
     }
 
     @Test
     fun `kan starte en Spørreundersøkelse av typen Evaluering`() {
         val sak = nySakIViBistår()
         val opprettetPlan = sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
-        val type = Evaluering
+        val type = Spørreundersøkelse.Type.Evaluering
         val evaluering = sak.opprettEvaluering()
 
         evaluering.type shouldBe type
-        evaluering.status shouldBe OPPRETTET
+        evaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
         val påbegyntEvaluering = evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        påbegyntEvaluering.status shouldBe PÅBEGYNT
+        påbegyntEvaluering.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
 
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
@@ -139,7 +136,7 @@ class EvalueringApiTest {
             prosessId = sak.hentAlleSamarbeid().first().id,
             type = type,
         ).forExactlyOne {
-            it.status shouldBe PÅBEGYNT
+            it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
             it.id shouldBe evaluering.id
             it.endretTidspunkt shouldNotBe null
         }
@@ -153,7 +150,7 @@ class EvalueringApiTest {
                     val spørreundersøkelse =
                         Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
                     spørreundersøkelse.type shouldBe type.name
-                    spørreundersøkelse.status shouldBe PÅBEGYNT
+                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
                     spørreundersøkelse.plan?.id shouldBe opprettetPlan.id
                 }
             }
@@ -217,7 +214,7 @@ class EvalueringApiTest {
         val evaluering = sak.opprettEvaluering(prosessId = samarbeid.id)
 
         evaluering.temaer shouldHaveSize 1
-        evaluering.status shouldBe OPPRETTET
+        evaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
         evaluering.temaer.forExactlyOne { tema ->
             tema.navn shouldBe "Arbeidsmiljø"
             tema.spørsmålOgSvaralternativer.forAll { spørsmål ->
@@ -227,7 +224,7 @@ class EvalueringApiTest {
 
         val forhåndsvisning = sak.hentForhåndsvisning(
             prosessId = samarbeid.id,
-            type = Evaluering,
+            type = Spørreundersøkelse.Type.Evaluering,
             spørreundersøkseId = evaluering.id,
         )
 
@@ -263,9 +260,9 @@ class EvalueringApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid1.id,
-            type = Evaluering,
+            type = Spørreundersøkelse.Type.Evaluering,
         ).forExactlyOne {
-            it.status shouldBe AVSLUTTET
+            it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
             it.id shouldBe evaluering.id
         }
 
@@ -281,9 +278,9 @@ class EvalueringApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid1.id,
-            type = Evaluering,
+            type = Spørreundersøkelse.Type.Evaluering,
         ).forExactlyOne {
-            it.status shouldBe AVSLUTTET
+            it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
             it.id shouldBe evaluering.id
         }
     }
