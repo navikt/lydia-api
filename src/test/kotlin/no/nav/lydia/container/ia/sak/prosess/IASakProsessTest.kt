@@ -56,7 +56,7 @@ import no.nav.lydia.ia.sak.MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
@@ -170,7 +170,7 @@ class IASakProsessTest {
         sak = sak.nyHendelse(IASakshendelseType.TILBAKE)
         sak = sak.nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
         sak = sak.nyHendelse(IASakshendelseType.FULLFØR_BISTAND)
-        sak.status shouldBe IAProsessStatus.FULLFØRT
+        sak.status shouldBe IASakStatus.FULLFØRT
     }
 
     @Test
@@ -543,7 +543,7 @@ class IASakProsessTest {
             IASakshendelseType.ENDRE_PROSESS,
             IASakshendelseType.ENDRE_PROSESS,
         )
-        sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
+        sakshendelser.last().status shouldBe IASakStatus.KARTLEGGES
     }
 
     @Test
@@ -578,7 +578,7 @@ class IASakProsessTest {
             IASakshendelseType.SLETT_PROSESS,
             IASakshendelseType.SLETT_PROSESS,
         )
-        sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
+        sakshendelser.last().status shouldBe IASakStatus.KARTLEGGES
     }
 
     @Test
@@ -621,7 +621,7 @@ class IASakProsessTest {
             IASakshendelseType.NY_PROSESS,
             IASakshendelseType.NY_PROSESS,
         )
-        sakshendelser.last().status shouldBe IAProsessStatus.KARTLEGGES
+        sakshendelser.last().status shouldBe IASakStatus.KARTLEGGES
     }
 
     @Test
@@ -752,9 +752,9 @@ class IASakProsessTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val sakEtterSlettetSamarbeid = sak.slettSamarbeid(samarbeid)
-        sakEtterSlettetSamarbeid.status shouldBe IAProsessStatus.KARTLEGGES
+        sakEtterSlettetSamarbeid.status shouldBe IASakStatus.KARTLEGGES
 
         val sakEtterTilbake = sakEtterSlettetSamarbeid.nyHendelse(IASakshendelseType.TILBAKE)
-        sakEtterTilbake.status shouldBe IAProsessStatus.KONTAKTES
+        sakEtterTilbake.status shouldBe IASakStatus.KONTAKTES
     }
 }

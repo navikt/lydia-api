@@ -11,9 +11,9 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -185,7 +185,7 @@ class IASakRepository(
                     """
                     SELECT * FROM ia_sak 
                     WHERE eid_av IS NULL
-                    AND status = '${IAProsessStatus.VURDERES.name}'
+                    AND status = '${IASakStatus.VURDERES.name}'
                     AND endret < (now() - INTERVAL '6 MONTH')
                     """.trimIndent(),
                 ).map(this::mapRowToIASak).asList,
@@ -217,7 +217,7 @@ class IASakRepository(
                     SELECT DISTINCT ia_sak.*
                     FROM ia_sak
                     JOIN ia_prosess ON ia_prosess.saksnummer = ia_sak.saksnummer
-                    WHERE ia_sak.status = '${IAProsessStatus.IKKE_AKTUELL.name}'
+                    WHERE ia_sak.status = '${IASakStatus.IKKE_AKTUELL.name}'
                     AND ia_prosess.status = '${IASamarbeid.Status.AKTIV.name}'
                     """.trimIndent(),
                 ).map(this::mapRowToIASak).asList,

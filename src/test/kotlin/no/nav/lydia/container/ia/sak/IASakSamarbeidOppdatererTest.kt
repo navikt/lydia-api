@@ -20,7 +20,7 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SamarbeidProdusent.SamarbeidKafkaMeldingValue
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
+import no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import org.junit.AfterClass
 import org.junit.BeforeClass

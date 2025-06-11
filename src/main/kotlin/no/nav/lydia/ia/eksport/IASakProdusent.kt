@@ -7,8 +7,8 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakStatus
 
 class IASakProdusent(
     kafka: Kafka,
@@ -38,7 +38,7 @@ class IASakProdusent(
         val orgnr: String,
         val eierAvSak: String?,
         val endretAvHendelseId: String,
-        val status: IAProsessStatus,
+        val status: IASakStatus,
         val opprettetTidspunkt: LocalDateTime,
         val endretTidspunkt: LocalDateTime,
     )

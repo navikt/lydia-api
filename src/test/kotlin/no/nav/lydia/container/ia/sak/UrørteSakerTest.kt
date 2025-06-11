@@ -12,7 +12,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.helper.forExactlyOne
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
@@ -30,14 +30,14 @@ class UrørteSakerTest {
 
         val sakFørRydding = hentSak(orgnummer = urørtGammelSak.orgnr, saksnummer = urørtGammelSak.saksnummer)
         sakFørRydding.saksnummer shouldBe urørtGammelSak.saksnummer
-        sakFørRydding.status shouldBe IAProsessStatus.VURDERES
+        sakFørRydding.status shouldBe IASakStatus.VURDERES
         sakFørRydding.eidAv shouldBe null
 
         kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakEtterRydding = hentSak(orgnummer = urørtGammelSak.orgnr, saksnummer = urørtGammelSak.saksnummer)
         sakEtterRydding.saksnummer shouldBe urørtGammelSak.saksnummer
-        sakEtterRydding.status shouldBe IAProsessStatus.IKKE_AKTUELL
+        sakEtterRydding.status shouldBe IASakStatus.IKKE_AKTUELL
         sakEtterRydding.eidAv shouldBe null
 
         val tilbakeføringsHendelse = hentHendelse(sakEtterRydding.endretAvHendelseId)
@@ -64,14 +64,14 @@ class UrørteSakerTest {
 
         val sakFørRydding = hentSak(orgnummer = sakMedEier.orgnr, saksnummer = sakMedEier.saksnummer)
         sakFørRydding.saksnummer shouldBe sakMedEier.saksnummer
-        sakFørRydding.status shouldBe IAProsessStatus.VURDERES
+        sakFørRydding.status shouldBe IASakStatus.VURDERES
         sakFørRydding.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
 
         kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakEtterRydding = hentSak(orgnummer = sakMedEier.orgnr, saksnummer = sakMedEier.saksnummer)
         sakEtterRydding.saksnummer shouldBe sakMedEier.saksnummer
-        sakEtterRydding.status shouldBe IAProsessStatus.VURDERES
+        sakEtterRydding.status shouldBe IASakStatus.VURDERES
         sakEtterRydding.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
     }
 
@@ -82,14 +82,14 @@ class UrørteSakerTest {
 
         val sakFørRydding = hentSak(orgnummer = urørtNyereSak.orgnr, saksnummer = urørtNyereSak.saksnummer)
         sakFørRydding.saksnummer shouldBe urørtNyereSak.saksnummer
-        sakFørRydding.status shouldBe IAProsessStatus.VURDERES
+        sakFørRydding.status shouldBe IASakStatus.VURDERES
         sakFørRydding.eidAv shouldBe null
 
         kafkaContainerHelper.sendJobbMelding(ryddeIUrørteSaker)
 
         val sakEtterRydding = hentSak(orgnummer = urørtNyereSak.orgnr, saksnummer = urørtNyereSak.saksnummer)
         sakEtterRydding.saksnummer shouldBe urørtNyereSak.saksnummer
-        sakEtterRydding.status shouldBe IAProsessStatus.VURDERES
+        sakEtterRydding.status shouldBe IASakStatus.VURDERES
         sakEtterRydding.eidAv shouldBe null
     }
 
@@ -112,7 +112,7 @@ class UrørteSakerTest {
                     enhetsnummer = rs.getString("nav_enhet_nummer"),
                     enhetsnavn = rs.getString("nav_enhet_navn"),
                 ),
-                resulterendeStatus = rs.getString("resulterende_status")?.let { IAProsessStatus.valueOf(it) },
+                resulterendeStatus = rs.getString("resulterende_status")?.let { IASakStatus.valueOf(it) },
             )
         }
     }

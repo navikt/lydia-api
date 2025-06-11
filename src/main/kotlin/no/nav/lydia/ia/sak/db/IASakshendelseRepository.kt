@@ -5,7 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.db.IASakRepository.Companion.validerAtSakHarRiktigEndretAvHendelse
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
@@ -88,7 +88,7 @@ class IASakshendelseRepository(
     fun lagreHendelse(
         hendelse: IASakshendelse,
         sistEndretAvHendelseId: String?,
-        resulterendeStatus: IAProsessStatus,
+        resulterendeStatus: IASakStatus,
     ) = using(sessionOf(dataSource)) { session ->
         session.transaction { tx ->
             tx.validerAtSakHarRiktigEndretAvHendelse(hendelse.saksnummer, sistEndretAvHendelseId)
@@ -182,7 +182,7 @@ class IASakshendelseRepository(
                     enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
                     enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
                 ),
-                resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IAProsessStatus.valueOf(it) },
+                resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IASakStatus.valueOf(it) },
             )
         return VirksomhetIkkeAktuellHendelse(
             id = row.string("id"),
@@ -196,7 +196,7 @@ class IASakshendelseRepository(
                 enhetsnummer = row.stringOrNull("nav_enhet_nummer") ?: "Ukjent",
                 enhetsnavn = row.stringOrNull("nav_enhet_navn") ?: "Ukjent",
             ),
-            resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IAProsessStatus.valueOf(it) },
+            resulterendeStatus = row.stringOrNull("resulterende_status")?.let { IASakStatus.valueOf(it) },
         )
     }
 
@@ -242,7 +242,7 @@ class IASakshendelseRepository(
 
     fun lagreResulterendeStatus(
         hendelse: IASakshendelse,
-        resulterendeStatus: IAProsessStatus,
+        resulterendeStatus: IASakStatus,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf(

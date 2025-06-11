@@ -31,9 +31,9 @@ import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.extensions.type
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakStatus.KARTLEGGES
+import no.nav.lydia.ia.sak.domene.IASakStatus.VI_BISTÅR
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
