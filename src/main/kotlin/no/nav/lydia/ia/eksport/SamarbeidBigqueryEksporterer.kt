@@ -19,7 +19,7 @@ class SamarbeidBigqueryEksporterer(
     fun eksporter() {
         KJØRER_STATISTIKK_EKSPORT.set(true)
 
-        val alleSamarbeid: List<IASamarbeid> = samarbeidRepository.hentAlleProsesser()
+        val alleSamarbeid: List<IASamarbeid> = samarbeidRepository.hentAlleSamarbeid()
         log.info("Starter re-eksport av ${alleSamarbeid.size} samarbeid")
 
         try {

@@ -33,9 +33,9 @@ class SpørreundersøkelseProdusent(
     override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
 
     override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
-        val samarbeidNavn = samarbeidRepository.hentProsess(
+        val samarbeidNavn = samarbeidRepository.hentSamarbeid(
             saksnummer = input.saksnummer,
-            prosessId = input.samarbeidId,
+            samarbeidId = input.samarbeidId,
         )?.navn ?: input.virksomhetsNavn
 
         val plan = when (input.type) {

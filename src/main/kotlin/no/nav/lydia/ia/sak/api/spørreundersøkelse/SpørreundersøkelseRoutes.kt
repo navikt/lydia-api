@@ -19,8 +19,8 @@ import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.ia.sak.IAProsessFeil
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
@@ -51,7 +51,7 @@ fun Route.iaSakSpørreundersøkelse(
     post("$SPØRREUNDERSØKELSE_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/type/{type}") {
         // Opprett spørreundersøkelse av en gitt type
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val prosessId = call.prosessId ?: return@post call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val type = call.type ?: return@post call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { saksbehandler, iaSak ->
@@ -81,7 +81,7 @@ fun Route.iaSakSpørreundersøkelse(
         // hent alle spørreundersøkelser av en gitt type
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val prosessId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val prosessId = call.prosessId ?: return@get call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val type = call.type ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig type`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->

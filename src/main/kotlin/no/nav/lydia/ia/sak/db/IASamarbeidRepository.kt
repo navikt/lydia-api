@@ -10,6 +10,7 @@ import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -17,27 +18,28 @@ import javax.sql.DataSource
 class IASamarbeidRepository(
     val dataSource: DataSource,
 ) {
-    fun hentProsess(
+    fun hentSamarbeid(
         saksnummer: String,
-        prosessId: Int,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                SELECT *
-                FROM ia_prosess
-                WHERE saksnummer = :saksnummer
-                AND id = :prosessId
-                """.trimIndent(),
-                mapOf(
-                    "saksnummer" to saksnummer,
-                    "prosessId" to prosessId,
-                ),
-            ).map(this::mapRowToIaProsessDto).asSingle,
-        )
-    }
+        samarbeidId: Int,
+    ): IASamarbeid? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT *
+                    FROM ia_prosess
+                    WHERE saksnummer = :saksnummer
+                    AND id = :prosessId
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                        "prosessId" to samarbeidId,
+                    ),
+                ).map(this::mapRowToIaSamarbeidDto).asSingle,
+            )
+        }
 
-    fun hentProsesser(saksnummer: String) =
+    fun hentSamarbeid(saksnummer: String): List<IASamarbeid> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -51,11 +53,11 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "slettetStatus" to IASamarbeid.Status.SLETTET.name,
                     ),
-                ).map(this::mapRowToIaProsessDto).asList,
+                ).map(this::mapRowToIaSamarbeidDto).asList,
             )
         }
 
-    fun hentAktiveProsesser(saksnummer: String) =
+    fun hentAktiveSamarbeid(saksnummer: String): List<IASamarbeid> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -68,11 +70,11 @@ class IASamarbeidRepository(
                     mapOf(
                         "saksnummer" to saksnummer,
                     ),
-                ).map(this::mapRowToIaProsessDto).asList,
+                ).map(this::mapRowToIaSamarbeidDto).asList,
             )
         }
 
-    fun hentAlleProsesser() =
+    fun hentAlleSamarbeid(): List<IASamarbeid> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -80,11 +82,11 @@ class IASamarbeidRepository(
                     SELECT *
                     FROM ia_prosess
                     """.trimIndent(),
-                ).map(this::mapRowToIaProsessDto).asList,
+                ).map(this::mapRowToIaSamarbeidDto).asList,
             )
         }
 
-    fun opprettNyProsess(
+    fun opprettNyttSamarbeid(
         saksnummer: String,
         navn: String? = DEFAULT_SAMARBEID_NAVN,
     ): IASamarbeid =
@@ -100,11 +102,11 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "navn" to navn.nullIfEmpty(),
                     ),
-                ).map(this::mapRowToIaProsessDto).asSingle,
+                ).map(this::mapRowToIaSamarbeidDto).asSingle,
             )!!
         }
 
-    fun oppdaterNavnPåProsess(samarbeidDto: IASamarbeidDto) {
+    fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto) {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -122,9 +124,9 @@ class IASamarbeidRepository(
         }
     }
 
-    private fun String?.nullIfEmpty() = this?.trim()?.takeIf { it.isNotEmpty() }
+    private fun String?.nullIfEmpty(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
 
-    private fun mapRowToIaProsessDto(row: Row) =
+    private fun mapRowToIaSamarbeidDto(row: Row): IASamarbeid =
         IASamarbeid(
             id = row.int("id"),
             saksnummer = row.string("saksnummer"),
@@ -136,7 +138,7 @@ class IASamarbeidRepository(
             sistEndret = row.localDateTimeOrNull("endret_tidspunkt")?.toKotlinLocalDateTime(),
         )
 
-    fun slettSamarbeid(samarbeidDto: IASamarbeidDto) =
+    fun slettSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -153,11 +155,11 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.SLETTET.name,
                         "endret_tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIaProsessDto).asSingle,
+                ).map(this::mapRowToIaSamarbeidDto).asSingle,
             )!!
         }
 
-    fun fullførSamarbeid(samarbeidDto: IASamarbeidDto) =
+    fun fullførSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -174,11 +176,11 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.FULLFØRT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIaProsessDto).asSingle,
+                ).map(this::mapRowToIaSamarbeidDto).asSingle,
             )!!
         }
 
-    fun avbrytSamarbeid(samarbeidDto: IASamarbeidDto) =
+    fun avbrytSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -195,11 +197,11 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.AVBRUTT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIaProsessDto).asSingle,
+                ).map(this::mapRowToIaSamarbeidDto).asSingle,
             )!!
         }
 
-    fun hentSamarbeidIVirksomhetDto(prosessId: Int): SamarbeidIVirksomhetDto? =
+    fun hentSamarbeidIVirksomhetDto(samarbeidId: Int): SamarbeidIVirksomhetDto? =
         using(sessionOf(dataSource)) { session: Session ->
             session.run(
                 queryOf(
@@ -216,7 +218,7 @@ class IASamarbeidRepository(
                         WHERE id = :prosessId
                     """.trimMargin(),
                     mapOf(
-                        "prosessId" to prosessId,
+                        "prosessId" to samarbeidId,
                     ),
                 ).map(this::mapTilSamarbeidVirksomhetDto).asSingle,
             )
@@ -244,22 +246,23 @@ class IASamarbeidRepository(
     fun hentSalesforceAktiviteter(
         saksnummer: String,
         samarbeidId: Int,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                SELECT * FROM salesforce_aktiviteter
-                WHERE saksnummer = :saksnummer 
-                AND samarbeid = :samarbeidId
-                AND slettet = false
-                """.trimIndent(),
-                mapOf(
-                    "saksnummer" to saksnummer,
-                    "samarbeidId" to samarbeidId,
-                ),
-            ).map(Row::mapTilSalesforceAktivitet).asList,
-        )
-    }
+    ): List<SalesforceAktivitet> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT * FROM salesforce_aktiviteter
+                    WHERE saksnummer = :saksnummer 
+                    AND samarbeid = :samarbeidId
+                    AND slettet = false
+                    """.trimIndent(),
+                    mapOf(
+                        "saksnummer" to saksnummer,
+                        "samarbeidId" to samarbeidId,
+                    ),
+                ).map(Row::mapTilSalesforceAktivitet).asList,
+            )
+        }
 
     private fun mapTilSamarbeidVirksomhetDto(row: Row): SamarbeidIVirksomhetDto =
         SamarbeidIVirksomhetDto(

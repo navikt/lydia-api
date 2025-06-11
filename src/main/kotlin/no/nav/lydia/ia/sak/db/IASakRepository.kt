@@ -62,7 +62,7 @@ class IASakRepository(
     ): Either<Feil, IASak> =
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                tx.validerAtSakHarRiktigEndretAvHendelse(iaSak.saksnummer, sistOppdatertAvHendelseId)
+                tx.validerAtSakHarRiktigEndretAvHendelse(saksnummer = iaSak.saksnummer, sistEndretAvHendelseId = sistOppdatertAvHendelseId)
                 tx.run(
                     queryOf(
                         """
@@ -178,7 +178,7 @@ class IASakRepository(
         }
     }
 
-    fun hentUrørteSakerIVurderesUtenEier() =
+    fun hentUrørteSakerIVurderesUtenEier(): List<IASak> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -192,7 +192,7 @@ class IASakRepository(
             )
         }
 
-    fun hentStatusForBehovsvurderinger(prosessId: Int) =
+    fun hentStatusForBehovsvurderinger(samarbeidId: Int): List<Pair<String, SpørreundersøkelseStatus>> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -201,7 +201,7 @@ class IASakRepository(
                     where ia_prosess = :prosessId
                     """.trimIndent(),
                     mapOf(
-                        "prosessId" to prosessId,
+                        "prosessId" to samarbeidId,
                     ),
                 ).map {
                     it.string("kartlegging_id") to SpørreundersøkelseStatus.valueOf(it.string("status"))

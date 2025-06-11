@@ -10,8 +10,8 @@ import io.ktor.server.routing.get
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.ia.sak.IAProsessFeil
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
@@ -31,15 +31,15 @@ fun Route.iaSamarbeid(
 ) {
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/{prosessId}/kan/{status}") {
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val samarbeid = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val samarbeid = call.prosessId ?: return@get call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val statusEndring = call.parameters["status"] ?: return@get call.sendFeil(Feil("mangler status", HttpStatusCode.BadRequest))
 
         call.somSaksbehandler(adGrupper) {
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
                 when (statusEndring) {
-                    "fullfores" -> samarbeidService.kanFullføreProsess(sak = iaSak, samarbeidsId = samarbeid).right()
-                    "slettes" -> samarbeidService.kanSletteProsess(sak = iaSak, samarbeidsId = samarbeid).right()
-                    "avbrytes" -> samarbeidService.kanAvbryteSamarbeid(sak = iaSak, samarbeidsId = samarbeid).right()
+                    "fullfores" -> samarbeidService.kanFullføreSamarbeid(sak = iaSak, samarbeidId = samarbeid).right()
+                    "slettes" -> samarbeidService.kanSletteSamarbeid(sak = iaSak, samarbeidId = samarbeid).right()
+                    "avbrytes" -> samarbeidService.kanAvbryteSamarbeid(sak = iaSak, samarbeidId = samarbeid).right()
                     else -> Feil(feilmelding = "ugyldig statusendring", httpStatusCode = HttpStatusCode.BadRequest).left()
                 }
             }
@@ -55,7 +55,7 @@ fun Route.iaSamarbeid(
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper) {
             iaSakService.hentIASak(saksnummer = saksnummer).flatMap { iaSak ->
-                samarbeidService.hentIAProsesser(sak = iaSak)
+                samarbeidService.hentSamarbeid(sak = iaSak)
             }
         }.also {
             auditLog.auditloggEither(

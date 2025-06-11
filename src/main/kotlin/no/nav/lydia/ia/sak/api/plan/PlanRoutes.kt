@@ -13,8 +13,8 @@ import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
-import no.nav.lydia.ia.sak.IAProsessFeil
 import no.nav.lydia.ia.sak.IASakService
+import no.nav.lydia.ia.sak.IASamarbeidFeil
 import no.nav.lydia.ia.sak.PlanService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.IASakError
@@ -51,7 +51,7 @@ fun Route.iaSakPlan(
     get("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
         val orgnummer = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val samarbeidId = call.prosessId ?: return@get call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val samarbeidId = call.prosessId ?: return@get call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             planService.hentPlan(samarbeidId = samarbeidId)
         }.also { planEither ->
@@ -72,7 +72,7 @@ fun Route.iaSakPlan(
     post("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/opprett") {
         val orgnummer = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val prosessId = call.prosessId ?: return@post call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val prosessId = call.prosessId ?: return@post call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val planMalDto = call.receive<PlanMalDto>()
 
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { saksbehandler, iaSak ->
@@ -100,7 +100,7 @@ fun Route.iaSakPlan(
     delete("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
         val orgnummer = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val samarbeidId = call.prosessId ?: return@delete call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val samarbeidId = call.prosessId ?: return@delete call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
 
         call.somFølgerAvSakIProsess(
             iaSakService = iaSakService,
@@ -126,7 +126,7 @@ fun Route.iaSakPlan(
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val samarbeidId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val samarbeidId = call.prosessId ?: return@put call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val endreTemaRequests = call.receive<List<EndreTemaRequest>>()
 
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
@@ -154,7 +154,7 @@ fun Route.iaSakPlan(
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val prosessId = call.prosessId ?: return@put call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val temaId = call.temaId ?: return@put call.sendFeil(
             Feil(
                 feilmelding = "Ugyldig temaId",
@@ -190,7 +190,7 @@ fun Route.iaSakPlan(
     put("$PLAN_BASE_ROUTE/{orgnummer}/{saksnummer}/prosess/{prosessId}/{temaId}/{undertemaId}") {
         val orgnummer = call.orgnummer ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
         val saksnummer = call.saksnummer ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
-        val prosessId = call.prosessId ?: return@put call.sendFeil(IAProsessFeil.`ugyldig prosessId`)
+        val prosessId = call.prosessId ?: return@put call.sendFeil(IASamarbeidFeil.`ugyldig samarbeidId`)
         val temaId = call.temaId ?: return@put call.sendFeil(
             Feil(
                 feilmelding = "Ugyldig temaId",

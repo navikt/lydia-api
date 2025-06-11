@@ -78,7 +78,7 @@ class SpørreundersøkelseRepository(
         }
 
     fun hentSpørreundersøkelser(
-        prosess: IASamarbeid,
+        samarbeid: IASamarbeid,
         type: Spørreundersøkelse.Companion.Type = Behovsvurdering,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
@@ -91,7 +91,7 @@ class SpørreundersøkelseRepository(
                     AND type = :type
                 """.trimMargin(),
                 mapOf(
-                    "prosessId" to prosess.id,
+                    "prosessId" to samarbeid.id,
                     "slettetStatus" to SLETTET.name,
                     "type" to type.name,
                 ),

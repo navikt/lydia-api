@@ -34,7 +34,7 @@ class PlanService(
 ) {
     private val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
-    fun hentPlan(samarbeidId: Int): Either<Feil, Plan> = planRepository.hentPlan(prosessId = samarbeidId)?.right() ?: PlanFeil.`fant ikke plan`.left()
+    fun hentPlan(samarbeidId: Int): Either<Feil, Plan> = planRepository.hentPlan(samarbeidId = samarbeidId)?.right() ?: PlanFeil.`fant ikke plan`.left()
 
     fun opprettPlan(
         iaSak: IASak,
@@ -42,7 +42,7 @@ class PlanService(
         prosessId: Int,
         mal: PlanMalDto,
     ): Either<Feil, Plan> =
-        samarbeidService.hentIAProsess(iaSak, prosessId).flatMap { prosess ->
+        samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { prosess ->
             val planEksistererAllerede = hentPlan(samarbeidId = prosess.id).isRight()
 
             if (planEksistererAllerede) {
