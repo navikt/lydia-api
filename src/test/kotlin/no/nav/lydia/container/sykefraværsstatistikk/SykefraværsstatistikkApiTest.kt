@@ -76,7 +76,7 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.sykefraværsstatistikk.LANDKODE_NO
 import no.nav.lydia.sykefraværsstatistikk.api.EierDTO
@@ -437,7 +437,7 @@ class SykefraværsstatistikkApiTest {
             .shouldNotBeNull()
         filterverdier.naringsgrupper.size shouldBeGreaterThan 1
         filterverdier.naringsgrupper.all { næringsgruppe -> næringsgruppe.kode.length == 2 }.shouldBeTrue()
-        filterverdier.statuser shouldBe IASakStatus.filtrerbareStatuser()
+        filterverdier.statuser shouldBe IASak.Status.filtrerbareStatuser()
         filterverdier.filtrerbareEiere shouldBe listOf(
             EierDTO(
                 navIdent = saksbehandler1.navIdent,
@@ -735,16 +735,16 @@ class SykefraværsstatistikkApiTest {
         hentSykefravær(success = { response ->
             response.data shouldHaveAtLeastSize 1
             response.data.forAll {
-                it.status shouldBe IASakStatus.VURDERES
+                it.status shouldBe IASak.Status.VURDERES
             }
-        }, iaStatus = IASakStatus.VURDERES.name)
+        }, iaStatus = IASak.Status.VURDERES.name)
 
         hentSykefravær(success = { response ->
             response.data.forAll {
-                it.status shouldBe IASakStatus.IKKE_AKTIV
+                it.status shouldBe IASak.Status.IKKE_AKTIV
                 it.orgnr shouldNotBe orgnummer
             }
-        }, iaStatus = IASakStatus.IKKE_AKTIV.name)
+        }, iaStatus = IASak.Status.IKKE_AKTIV.name)
     }
 
     @Test
@@ -873,7 +873,7 @@ class SykefraværsstatistikkApiTest {
         )
         hentSykefravær(
             token = testBruker1.token,
-            iaStatus = IASakStatus.VURDERES.name,
+            iaStatus = IASak.Status.VURDERES.name,
             success = { response ->
                 val sfStatistikk = response.data
                 sfStatistikk
@@ -1050,7 +1050,7 @@ class SykefraværsstatistikkApiTest {
 
         val virksomhetsoversiktResponsDto = hentSykefravær(kommuner = testKommune.nummer)
         virksomhetsoversiktResponsDto.also {
-            it.data.single().status shouldBe IASakStatus.IKKE_AKTIV
+            it.data.single().status shouldBe IASak.Status.IKKE_AKTIV
             it.data.single().sistEndret shouldBe nyereSak.endretTidspunkt?.date
         }
     }
@@ -1088,17 +1088,17 @@ class SykefraværsstatistikkApiTest {
 
         hentSykefravær(kommuner = testKommune.nummer).data
             .also { it.size shouldBe 4 }
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASakStatus.IKKE_AKTUELL.name).data
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASak.Status.IKKE_AKTUELL.name).data
             .also { it.size shouldBe 0 }
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASakStatus.FULLFØRT.name).data
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASak.Status.FULLFØRT.name).data
             .also { it.size shouldBe 0 }
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASakStatus.SLETTET.name).data
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASak.Status.SLETTET.name).data
             .also { it.size shouldBe 0 } // Ikke en bra test siden SLETTET blir borte fra databasen
 
-        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASakStatus.IKKE_AKTIV.name).data
+        hentSykefravær(kommuner = testKommune.nummer, iaStatus = IASak.Status.IKKE_AKTIV.name).data
             .also { it.size shouldBe 3 }
             .forEach {
-                it.status shouldBe IASakStatus.IKKE_AKTIV
+                it.status shouldBe IASak.Status.IKKE_AKTIV
             }
     }
 

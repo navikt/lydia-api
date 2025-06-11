@@ -2,7 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.api
 
 import ia.felles.definisjoner.bransjer.Bransje
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.Fylke
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -14,7 +14,7 @@ data class FilterverdierDto(
     val naringsgrupper: List<Næringsgruppe> = emptyList(),
     val bransjeprogram: List<Bransje> = emptyList(),
     val sorteringsnokler: List<String> = Sorteringsnøkkel.alleSorteringsNøkler(),
-    val statuser: List<IASakStatus> = IASakStatus.filtrerbareStatuser(),
+    val statuser: List<IASak.Status> = IASak.Status.filtrerbareStatuser(),
     val filtrerbareEiere: List<EierDTO> = emptyList(),
     val sektorer: List<SektorDto> = Sektor.entries
         .map { SektorDto(kode = it.kode, beskrivelse = it.beskrivelse) },

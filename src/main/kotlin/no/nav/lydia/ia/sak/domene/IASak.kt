@@ -3,7 +3,6 @@ package no.nav.lydia.ia.sak.domene
 import arrow.core.Either
 import arrow.core.right
 import kotliquery.Row
-import no.nav.lydia.ia.sak.domene.IASakStatus.valueOf
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
@@ -42,7 +41,7 @@ class IASak private constructor(
     var endretTidspunkt: LocalDateTime?,
     var endretAv: String?,
     var endretAvHendelseId: String,
-    status: IASakStatus,
+    status: Status,
 ) {
     private var tilstand: ProsessTilstand
     private val log = LoggerFactory.getLogger(this.javaClass)
@@ -54,20 +53,20 @@ class IASak private constructor(
         tilstand = tilstandFraStatus(status)
     }
 
-    val status: IASakStatus
+    val status: Status
         get() = tilstand.status
 
-    private fun tilstandFraStatus(status: IASakStatus): ProsessTilstand =
+    private fun tilstandFraStatus(status: Status): ProsessTilstand =
         when (status) {
-            IASakStatus.NY -> StartTilstand()
-            IASakStatus.VURDERES -> VurderesTilstand()
-            IASakStatus.IKKE_AKTUELL -> IkkeAktuellTilstand()
-            IASakStatus.KONTAKTES -> KontaktesTilstand()
-            IASakStatus.KARTLEGGES -> KartleggesTilstand()
-            IASakStatus.VI_BISTÅR -> ViBistårTilstand()
-            IASakStatus.FULLFØRT -> FullførtTilstand()
-            IASakStatus.IKKE_AKTIV -> throw IllegalStateException()
-            IASakStatus.SLETTET -> throw IllegalStateException()
+            Status.NY -> StartTilstand()
+            Status.VURDERES -> VurderesTilstand()
+            Status.IKKE_AKTUELL -> IkkeAktuellTilstand()
+            Status.KONTAKTES -> KontaktesTilstand()
+            Status.KARTLEGGES -> KartleggesTilstand()
+            Status.VI_BISTÅR -> ViBistårTilstand()
+            Status.FULLFØRT -> FullførtTilstand()
+            Status.IKKE_AKTIV -> throw IllegalStateException()
+            Status.SLETTET -> throw IllegalStateException()
         }
 
     fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) = tilstand.gyldigeNesteHendelser(navAnsatt)
@@ -160,7 +159,7 @@ class IASak private constructor(
     }
 
     private abstract inner class ProsessTilstand(
-        val status: IASakStatus,
+        val status: Status,
     ) {
         abstract fun behandleHendelse(hendelse: IASakshendelse): Either<TilstandsmaskinFeil, ProsessTilstand>
 
@@ -184,7 +183,7 @@ class IASak private constructor(
 
     private inner class StartTilstand :
         ProsessTilstand(
-            status = IASakStatus.NY,
+            status = Status.NY,
         ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
@@ -201,7 +200,7 @@ class IASak private constructor(
 
     private inner class VurderesTilstand :
         ProsessTilstand(
-            status = IASakStatus.VURDERES,
+            status = Status.VURDERES,
         ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
@@ -262,7 +261,7 @@ class IASak private constructor(
 
     private inner class KontaktesTilstand :
         ProsessTilstand(
-            status = IASakStatus.KONTAKTES,
+            status = Status.KONTAKTES,
         ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
@@ -286,7 +285,7 @@ class IASak private constructor(
 
     private inner class KartleggesTilstand :
         ProsessTilstand(
-            status = IASakStatus.KARTLEGGES,
+            status = Status.KARTLEGGES,
         ) {
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
@@ -315,7 +314,7 @@ class IASak private constructor(
 
     private inner class ViBistårTilstand :
         ProsessTilstand(
-            status = IASakStatus.VI_BISTÅR,
+            status = Status.VI_BISTÅR,
         ) {
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
             if (erEierAvSak(navAnsatt)) {
@@ -344,7 +343,7 @@ class IASak private constructor(
     }
 
     private abstract inner class EndeTilstand(
-        status: IASakStatus,
+        status: Status,
     ) : ProsessTilstand(status = status) {
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
             if (erEtterFristenForLåsingAvSak()) {
@@ -363,11 +362,11 @@ class IASak private constructor(
             }
     }
 
-    private inner class FullførtTilstand : EndeTilstand(status = IASakStatus.FULLFØRT)
+    private inner class FullførtTilstand : EndeTilstand(status = Status.FULLFØRT)
 
-    private inner class IkkeAktuellTilstand : EndeTilstand(status = IASakStatus.IKKE_AKTUELL)
+    private inner class IkkeAktuellTilstand : EndeTilstand(status = Status.IKKE_AKTUELL)
 
-    private inner class SlettetTilstand : ProsessTilstand(status = IASakStatus.SLETTET) {
+    private inner class SlettetTilstand : ProsessTilstand(status = Status.SLETTET) {
         override fun behandleHendelse(hendelse: IASakshendelse) = feil("Kan ikke utføre noen hendelser i en slettet tilstand")
 
         override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> = emptyList()
@@ -445,7 +444,7 @@ class IASak private constructor(
                 endretTidspunkt = null,
                 endretAv = null,
                 endretAvHendelseId = hendelse.id,
-                status = IASakStatus.NY,
+                status = Status.NY,
             )
                 .also { sak -> sak.sakshendelser.add(hendelse) }
 
@@ -473,7 +472,7 @@ class IASak private constructor(
                 opprettetAv = this.string("opprettet_av"),
                 endretTidspunkt = this.localDateTimeOrNull("endret"),
                 endretAv = this.stringOrNull("endret_av"),
-                status = valueOf(this.string("status")),
+                status = Status.valueOf(this.string("status")),
                 endretAvHendelseId = this.string("endret_av_hendelse"),
                 eidAv = this.stringOrNull("eid_av"),
             )
@@ -492,24 +491,24 @@ class IASak private constructor(
                 eidAv = this.eidAv,
             )
     }
-}
 
-enum class IASakStatus {
-    NY,
-    IKKE_AKTIV,
-    VURDERES,
-    KONTAKTES,
-    KARTLEGGES,
-    VI_BISTÅR,
-    IKKE_AKTUELL,
-    FULLFØRT,
-    SLETTET,
-    ;
+    enum class Status {
+        NY,
+        IKKE_AKTIV,
+        VURDERES,
+        KONTAKTES,
+        KARTLEGGES,
+        VI_BISTÅR,
+        IKKE_AKTUELL,
+        FULLFØRT,
+        SLETTET,
+        ;
 
-    fun regnesSomAvsluttet() = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
+        fun regnesSomAvsluttet(): Boolean = this == IKKE_AKTUELL || this == FULLFØRT || this == SLETTET
 
-    companion object {
-        fun filtrerbareStatuser() = entries.filterNot { it == NY || it == SLETTET }
+        companion object {
+            fun filtrerbareStatuser(): List<Status> = entries.filterNot { it == NY || it == SLETTET }
+        }
     }
 }
 
@@ -519,6 +518,6 @@ class TilstandsmaskinFeil(
     companion object {
         fun feil(feilmelding: String) = Either.Left(TilstandsmaskinFeil(feilmelding = feilmelding))
 
-        fun generellFeil() = feil("Forsøker å utføre en hendelse som ikke er implementert")
+        fun generellFeil() = feil(feilmelding = "Forsøker å utføre en hendelse som ikke er implementert")
     }
 }

@@ -25,7 +25,7 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.IASakStatistikkProdusent
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_VURDERES
@@ -75,7 +75,7 @@ class IASakStatistikkEksportererTest {
                 objektene.forExactlyOne {
                     it.saksnummer shouldBe sak.saksnummer
                     it.eierAvSak shouldBe authContainerHelper.saksbehandler1.navIdent
-                    it.status shouldBe IASakStatus.VURDERES
+                    it.status shouldBe IASak.Status.VURDERES
                     it.antallPersoner shouldBe hentFraKvartal(it, "antall_personer")
                     it.sykefraversprosent shouldBe hentFraKvartal(it, "sykefravarsprosent")
                     it.sykefraversprosentSiste4Kvartal shouldBe hentFraSiste4Kvartaler(it, "prosent")

@@ -40,8 +40,6 @@ import no.nav.lydia.ia.sak.domene.IASak.Companion.tilbakeførSak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.utførHendelsePåSak
 import no.nav.lydia.ia.sak.domene.IASakLeveranse
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
-import no.nav.lydia.ia.sak.domene.IASakStatus
-import no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelse.Companion.nyHendelseBasertPåSak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
@@ -85,14 +83,14 @@ class IASakService(
 
     private fun IASakshendelse.lagre(
         sistEndretAvHendelseId: String?,
-        resulterendeStatus: IASakStatus,
+        resulterendeStatus: IASak.Status,
     ): IASakshendelse =
         iaSakshendelseRepository.lagreHendelse(hendelse = this, sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = resulterendeStatus)
 
     private fun IASak.lagre(): IASak = iaSakRepository.opprettSak(iaSak = this).also(::varsleIASakObservers)
 
     private fun IASak.lagreOppdatering(sistEndretAvHendelseId: String?): Either<Feil, IASak> {
-        if (this.status == IASakStatus.SLETTET) {
+        if (this.status == IASak.Status.SLETTET) {
             return slettSak(sak = this, sistEndretAvHendelseId = sistEndretAvHendelseId).onRight(::varsleIASakObservers)
         }
         return iaSakRepository.oppdaterSak(iaSak = this, sistOppdatertAvHendelseId = sistEndretAvHendelseId).onRight(::varsleIASakObservers)
@@ -119,7 +117,7 @@ class IASakService(
                 orgnummer = orgnummer,
                 superbruker = superbruker,
                 navEnhet = navEnhet,
-            ).lagre(sistEndretAvHendelseId = null, resulterendeStatus = IASakStatus.NY),
+            ).lagre(sistEndretAvHendelseId = null, resulterendeStatus = IASak.Status.NY),
         ).lagre()
         val sistEndretAvHendelseId = sak.endretAvHendelseId
 
@@ -127,7 +125,7 @@ class IASakService(
             hendelsestype = IASakshendelseType.VIRKSOMHET_VURDERES,
             superbruker = superbruker,
             navEnhet = navEnhet,
-        ).lagre(sistEndretAvHendelseId = null, resulterendeStatus = IASakStatus.VURDERES)
+        ).lagre(sistEndretAvHendelseId = null, resulterendeStatus = IASak.Status.VURDERES)
             .let { vurderesHendelse -> superbruker.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
@@ -271,7 +269,7 @@ class IASakService(
         val sistEndretAvHendelseId = this.endretAvHendelseId
         val endretTidspunkt = this.endretTidspunkt
         if (!tørrKjør) {
-            tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = IKKE_AKTUELL)
+            tilbakeføringsHendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = IASak.Status.IKKE_AKTUELL)
             val oppdatertSak = tilbakeførSak(iaSak = this, hendelse = tilbakeføringsHendelse)
             årsakService.lagreÅrsak(sakshendelse = tilbakeføringsHendelse)
             oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
@@ -310,7 +308,7 @@ class IASakService(
                 type = ÅrsakType.NAV_IGANGSETTER_IKKE_TILTAK,
                 begrunnelser = listOf(BegrunnelseType.AUTOMATISK_LUKKET),
             ),
-            resulterendeStatus = IKKE_AKTUELL,
+            resulterendeStatus = IASak.Status.IKKE_AKTUELL,
         )
 
     fun avbrytMaskineltSamarbeidIIkkeAktuelleSaker(tørrKjør: Boolean): Int =
@@ -327,7 +325,7 @@ class IASakService(
                     val maskineltOppdaterSamarbeidHendelse: ProsessHendelse = oppdatertSakMedSisteHendelse.nyMaskineltOppdaterSamarbeidHendelse(
                         iaSamarbeidDto = samarbeid.tilDto(),
                         iASakshendelseType = IASakshendelseType.AVBRYT_PROSESS,
-                        resulterendeStatus = IASakStatus.FULLFØRT,
+                        resulterendeStatus = IASak.Status.FULLFØRT,
                     )
 
                     val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelser(
@@ -353,7 +351,7 @@ class IASakService(
 
                         maskineltOppdaterSamarbeidHendelse.lagre(
                             sistEndretAvHendelseId = sistEndretAvHendelseId,
-                            resulterendeStatus = IKKE_AKTUELL,
+                            resulterendeStatus = IASak.Status.IKKE_AKTUELL,
                         )
                         samarbeidService.oppdaterSamarbeid(sakshendelse = maskineltOppdaterSamarbeidHendelse, sak = oppdatertSakMedSisteHendelse)
                         val oppdatertSak = maskineltBehandleSamarbeidsHendelse(iaSak = oppdatertSakMedSisteHendelse, maskineltOppdaterSamarbeidHendelse)
@@ -378,7 +376,7 @@ class IASakService(
     private fun IASak.nyMaskineltOppdaterSamarbeidHendelse(
         iaSamarbeidDto: IASamarbeidDto,
         iASakshendelseType: IASakshendelseType,
-        resulterendeStatus: IASakStatus,
+        resulterendeStatus: IASak.Status,
     ) = ProsessHendelse(
         id = ULID.random(),
         opprettetTidspunkt = LocalDateTime.now(),
@@ -518,7 +516,7 @@ class IASakService(
         block: (IASak) -> Either<Feil, T>,
     ): Either<Feil, T> =
         somEierAvSak(saksnummer = saksnummer, saksbehandler = saksbehandler) { sak ->
-            if (sak.status == IASakStatus.VI_BISTÅR) {
+            if (sak.status == IASak.Status.VI_BISTÅR) {
                 block(sak)
             } else {
                 IASakError.`fikk ikke oppdatert leveranse`.left()

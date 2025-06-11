@@ -9,7 +9,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Periode
 import no.nav.lydia.sykefraværsstatistikk.api.Sorteringsnøkkel
 import no.nav.lydia.sykefraværsstatistikk.api.Sorteringsnøkkel.ANTALL_PERSONER
@@ -318,9 +318,7 @@ class VirksomhetsinformasjonRepository(
             muligeDagsverk = row.doubleOrNull("mulige_dagsverk") ?: 0.0,
             sykefraværsprosent = row.doubleOrNull("prosent") ?: 0.0,
             maskert = row.boolean("maskert"),
-            status = row.stringOrNull("status")?.let {
-                IASakStatus.valueOf(it)
-            },
+            status = row.stringOrNull("status")?.let { IASak.Status.valueOf(it) },
             eidAv = row.stringOrNull("eid_av"),
             sistEndret = row.localDateOrNull("endret")?.toKotlinLocalDate(),
         )

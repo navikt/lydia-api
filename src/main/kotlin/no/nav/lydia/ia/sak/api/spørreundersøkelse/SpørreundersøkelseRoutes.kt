@@ -32,8 +32,6 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IASakStatus.VI_BISTÅR
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -265,7 +263,7 @@ fun <T> ApplicationCall.somFølgerAvSakIProsess(
         IASakError.`ugyldig orgnummer`.left()
     } else if (!erEierEllerFølgerAvSak(iaSak = iaSak, iaTeamService = iaTeamService, saksbehandler = saksbehandler)) {
         IASakError.`er ikke følger eller eier av sak`.left()
-    } else if (iaSak.status != KARTLEGGES && iaSak.status != VI_BISTÅR) {
+    } else if (iaSak.status != IASak.Status.KARTLEGGES && iaSak.status != IASak.Status.VI_BISTÅR) {
         IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
     } else {
         block(saksbehandler, iaSak)

@@ -10,7 +10,7 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestVirksomhet.Companion.beliggenhet
 import no.nav.lydia.helper.TestVirksomhet.Companion.nyVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import kotlin.test.Test
 
@@ -37,7 +37,7 @@ class UthentingAvPrioriteringslistaTest {
 
         virksomheter.data.first { it.orgnr == fullførtSak.orgnr }
             .also { virksomhet ->
-                virksomhet.status shouldBe IASakStatus.KONTAKTES
+                virksomhet.status shouldBe IASak.Status.KONTAKTES
             }
     }
 
@@ -59,7 +59,7 @@ class UthentingAvPrioriteringslistaTest {
         val oppdaterteVirksomheter = hentSykefravær(kommuner = testKommune.nummer)
         oppdaterteVirksomheter.data.first { it.orgnr == virksomhet.orgnr }.also { virksomhet ->
             virksomhet.saksnummer shouldBe sak.saksnummer
-            virksomhet.status shouldBe IASakStatus.VI_BISTÅR
+            virksomhet.status shouldBe IASak.Status.VI_BISTÅR
         }
     }
 }

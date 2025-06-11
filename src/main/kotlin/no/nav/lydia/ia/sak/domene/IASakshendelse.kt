@@ -36,7 +36,7 @@ open class IASakshendelse(
     val opprettetAv: String,
     val opprettetAvRolle: Rolle?,
     val navEnhet: NavEnhet,
-    val resulterendeStatus: IASakStatus?,
+    val resulterendeStatus: IASak.Status?,
 ) {
     companion object {
         fun fromDto(
@@ -81,7 +81,7 @@ open class IASakshendelse(
                 opprettetAv = superbruker.navIdent,
                 opprettetAvRolle = superbruker.rolle,
                 navEnhet = navEnhet,
-                resulterendeStatus = IASakStatus.NY,
+                resulterendeStatus = IASak.Status.NY,
             )
         }
 
@@ -134,7 +134,7 @@ class VirksomhetIkkeAktuellHendelse(
     opprettetAv: String,
     opprettetAvRolle: Rolle?,
     navEnhet: NavEnhet,
-    resulterendeStatus: IASakStatus?,
+    resulterendeStatus: IASak.Status?,
     val valgtÅrsak: ValgtÅrsak,
 ) : IASakshendelse(
         id,
@@ -219,7 +219,7 @@ class ProsessHendelse(
     opprettetAv: String,
     opprettetAvRolle: Rolle?,
     navEnhet: NavEnhet,
-    resulterendeStatus: IASakStatus?,
+    resulterendeStatus: IASak.Status?,
     val samarbeidDto: IASamarbeidDto,
 ) : IASakshendelse(
         id,

@@ -8,7 +8,6 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakStatus
 
 class IASakProdusent(
     kafka: Kafka,
@@ -38,7 +37,7 @@ class IASakProdusent(
         val orgnr: String,
         val eierAvSak: String?,
         val endretAvHendelseId: String,
-        val status: IASakStatus,
+        val status: IASak.Status,
         val opprettetTidspunkt: LocalDateTime,
         val endretTidspunkt: LocalDateTime,
     )

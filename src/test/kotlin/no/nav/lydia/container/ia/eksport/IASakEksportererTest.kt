@@ -11,7 +11,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -53,7 +53,7 @@ class IASakEksportererTest {
                 meldinger.forAtLeastOne {
                     it shouldContain sak.saksnummer
                     it shouldContain authContainerHelper.saksbehandler1.navIdent
-                    it shouldContain IASakStatus.VURDERES.name
+                    it shouldContain IASak.Status.VURDERES.name
                 }
             }
         }

@@ -11,7 +11,6 @@ import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.db.IASakshendelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.sykefraværsstatistikk.SistePubliseringService
@@ -117,7 +116,7 @@ class IASakStatistikkProdusent(
         val saksnummer: String,
         val orgnr: String,
         val eierAvSak: String?,
-        val status: IASakStatus,
+        val status: IASak.Status,
         val endretAvHendelseId: String,
         val hendelse: IASakshendelseType?,
         val endretAv: String?,

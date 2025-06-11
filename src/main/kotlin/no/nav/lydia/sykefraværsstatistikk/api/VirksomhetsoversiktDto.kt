@@ -2,7 +2,7 @@ package no.nav.lydia.sykefraværsstatistikk.api
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.domene.Virksomhetsoversikt
 
 @Serializable
@@ -18,7 +18,7 @@ data class VirksomhetsoversiktDto(
     val antallPersoner: Int,
     val muligeDagsverk: Double,
     val tapteDagsverk: Double,
-    val status: IASakStatus,
+    val status: IASak.Status,
     val eidAv: String?,
     val sistEndret: LocalDate?,
 ) {
@@ -38,7 +38,7 @@ data class VirksomhetsoversiktDto(
                 antallPersoner = this.antallPersoner.toInt(),
                 muligeDagsverk = this.muligeDagsverk,
                 tapteDagsverk = this.tapteDagsverk,
-                status = this.status ?: IASakStatus.IKKE_AKTIV,
+                status = this.status ?: IASak.Status.IKKE_AKTIV,
                 eidAv = this.eidAv,
                 sistEndret = this.sistEndret,
             )

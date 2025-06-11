@@ -14,7 +14,7 @@ import io.ktor.http.Parameters
 import io.ktor.server.request.ApplicationRequest
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
-import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.sykefraværsstatistikk.api.Sykefraværsprosent.Companion.tilSykefraværsProsent
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.GeografiService
 import no.nav.lydia.sykefraværsstatistikk.import.Kvartal
@@ -35,7 +35,7 @@ data class Søkeparametere(
     val snittFilter: SnittFilter?,
     val ansatteFra: Int?,
     val ansatteTil: Int?,
-    val status: IASakStatus?,
+    val status: IASak.Status?,
     val side: Int,
     val navIdenter: Set<String>,
     val bransjeprogram: Set<Bransje>,
@@ -97,7 +97,7 @@ data class Søkeparametere(
                     næringsgruppeKoder = finnGyldigeNæringsgruppekoder(queryParameters),
                     sorteringsnøkkel = Sorteringsnøkkel.from(queryParameters[SORTERINGSNØKKEL]),
                     sorteringsretning = Sorteringsretning.from(queryParameters[SORTERINGSRETNING]),
-                    status = queryParameters[IA_STATUS].tomSomNull()?.let { IASakStatus.valueOf(it) },
+                    status = queryParameters[IA_STATUS].tomSomNull()?.let { IASak.Status.valueOf(it) },
                     navIdenter = navIdenter(navAnsatt = navAnsatt),
                     bransjeprogram = finnBransjeProgram(queryParameters[BRANSJEPROGRAM]),
                     sektor = finnSektor(queryParameters[SEKTOR]),
@@ -124,12 +124,12 @@ data class Søkeparametere(
         fun filtrerPåStatus(søkeparametere: Søkeparametere) =
             søkeparametere.status?.let { status ->
                 when (status) {
-                    IASakStatus.IKKE_AKTIV ->
+                    IASak.Status.IKKE_AKTIV ->
                         " AND (ia_sak.status IS NULL " +
                             "OR ((ia_sak.status = 'IKKE_AKTUELL' OR ia_sak.status = 'FULLFØRT' OR ia_sak.status = 'SLETTET') " +
                             "AND ia_sak.endret < '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'))"
 
-                    IASakStatus.IKKE_AKTUELL, IASakStatus.FULLFØRT, IASakStatus.SLETTET ->
+                    IASak.Status.IKKE_AKTUELL, IASak.Status.FULLFØRT, IASak.Status.SLETTET ->
                         " AND ia_sak.status = '$status' " +
                             "AND ia_sak.endret >= '${LocalDate.now().minusDays(ANTALL_DAGER_FØR_SAK_LÅSES)}'"
 
