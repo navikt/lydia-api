@@ -125,7 +125,7 @@ class SpørreundersøkelseService(
     ): Either<Feil, Spørreundersøkelse> =
         when (type) {
             Behovsvurdering -> {
-                samarbeidService.hentIAProsess(iaSak, prosessId).flatMap { samarbeid ->
+                samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
                     spørreundersøkelseRepository.opprettSpørreundersøkelse(
                         orgnummer = orgnummer,
                         prosessId = samarbeid.id,
@@ -168,7 +168,7 @@ class SpørreundersøkelseService(
                             )
                         }
 
-                        samarbeidService.hentIAProsess(sak = iaSak, prosessId = prosessId).flatMap { samarbeid ->
+                        samarbeidService.hentSamarbeid(sak = iaSak, samarbeidId = prosessId).flatMap { samarbeid ->
                             spørreundersøkelseRepository.opprettSpørreundersøkelse(
                                 orgnummer = orgnummer,
                                 prosessId = samarbeid.id,
@@ -207,8 +207,8 @@ class SpørreundersøkelseService(
         type: Spørreundersøkelse.Companion.Type,
     ): Either<Feil, List<SpørreundersøkelseUtenInnhold>> =
         try {
-            samarbeidService.hentIAProsess(sak, prosessId).map {
-                spørreundersøkelseRepository.hentSpørreundersøkelser(prosess = it, type = type)
+            samarbeidService.hentSamarbeid(sak, prosessId).map {
+                spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = it, type = type)
             }
         } catch (e: Exception) {
             log.error("Noe gikk feil ved henting av spørreundersøkelse av type ${type.name}: ${e.message}", e)
@@ -311,7 +311,7 @@ class SpørreundersøkelseService(
         }
 
         val oppdatertBehovsvurdering = iaSakService.hentIASak(behovsvurdering.saksnummer).flatMap {
-            samarbeidService.hentIAProsesser(it)
+            samarbeidService.hentSamarbeid(it)
         }.map { prosess ->
             prosess.map { it.id }
         }.flatMap { prosesserISak ->

@@ -132,14 +132,14 @@ class PlanRepository(
             }
         }
 
-        return hentPlan(prosessId = prosessId)?.right()
+        return hentPlan(samarbeidId = prosessId)?.right()
             ?: Feil(
                 feilmelding = "Kunne ikke opprette plan",
                 httpStatusCode = HttpStatusCode.InternalServerError,
             ).left()
     }
 
-    fun hentPlan(prosessId: Int): Plan? =
+    fun hentPlan(samarbeidId: Int): Plan? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -150,7 +150,7 @@ class PlanRepository(
                         AND status != 'SLETTET'
                     """.trimMargin(),
                     mapOf(
-                        "prosessId" to prosessId,
+                        "prosessId" to samarbeidId,
                     ),
                 ).map { tilPlan(it, session) }.asSingle,
             )

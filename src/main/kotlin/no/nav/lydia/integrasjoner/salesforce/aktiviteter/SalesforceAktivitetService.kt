@@ -43,7 +43,7 @@ class SalesforceAktivitetService(
 
     private fun verifisertAktivitet(aktivitet: SalesforceAktivitet): Boolean {
         val iaSak = iaSakRepository.hentIASak(aktivitet.saksnummer)
-        val samarbeid = aktivitet.samarbeidsId?.let { samarbeidRepository.hentProsess(aktivitet.saksnummer, it) }
+        val samarbeid = aktivitet.samarbeidsId?.let { samarbeidRepository.hentSamarbeid(aktivitet.saksnummer, it) }
         return iaSak != null && samarbeid != null
     }
 

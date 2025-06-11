@@ -54,7 +54,7 @@ fun Route.iaSakRådgiver(
                     orgnummer = orgnummer,
                     superbruker = superbruker,
                     navEnhet = navEnhet,
-                ).map { it.toDto(superbruker) }
+                ).map { it.toDto(navAnsatt = superbruker) }
             }
         }.also { iaSakEither ->
             auditLog.auditloggEither(
@@ -65,9 +65,9 @@ fun Route.iaSakRådgiver(
                 saksnummer = iaSakEither.map { iaSak -> iaSak.saksnummer }.getOrNull(),
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it)
+            call.respond(status = HttpStatusCode.Created, message = it)
         }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
 
@@ -96,7 +96,7 @@ fun Route.iaSakRådgiver(
     }
 
     get("$IA_SAK_RADGIVER_PATH/{orgnummer}/{saksnummer}/status") {
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper = adGrupper) { navAnsatt ->
             iaSakService.hentSaksStatus(saksnummer)
         }.map {
@@ -112,12 +112,12 @@ fun Route.iaSakRådgiver(
             val hendelser = iaSakService.hentHendelserForOrgnummer(orgnr = orgnummer)
             iaSakService.hentSakerForOrgnummer(orgnummer = orgnummer)
                 .map { sak ->
-                    sak.addHendelser(hendelser.filter { hendelse -> hendelse.saksnummer == sak.saksnummer })
+                    sak.addHendelser(hendelser = hendelser.filter { hendelse -> hendelse.saksnummer == sak.saksnummer })
                 }
                 .sortedByDescending { it.opprettetTidspunkt }
                 .map { sak ->
-                    val samarbeid = samarbeidService.hentIAProsesser(sak).getOrElse { emptyList() }
-                    sak.tilSakshistorikk(samarbeid.tilDto())
+                    val samarbeid = samarbeidService.hentSamarbeid(sak).getOrElse { emptyList() }
+                    sak.tilSakshistorikk(samarbeid = samarbeid.tilDto())
                 }
                 .right()
         }.also { either ->
@@ -152,8 +152,8 @@ fun Route.iaSakRådgiver(
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             azureService.hentNavenhet(call.objectId()).flatMap { navEnhet ->
                 iaSakService.behandleHendelse(hendelseDto = hendelseDto, saksbehandler = saksbehandler, navEnhet = navEnhet)
-                    .map { it.toDto(saksbehandler) }
-                    .onRight { Metrics.loggHendelse(hendelseDto.hendelsesType) }
+                    .map { it.toDto(navAnsatt = saksbehandler) }
+                    .onRight { Metrics.loggHendelse(hendelsesType = hendelseDto.hendelsesType) }
             }
         }.also {
             auditLog.auditloggEither(
@@ -164,15 +164,15 @@ fun Route.iaSakRådgiver(
                 saksnummer = hendelseDto.saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.Created, it)
+            call.respond(status = HttpStatusCode.Created, message = it)
         }.mapLeft {
-            call.respond(it.httpStatusCode, it.feilmelding)
+            call.respond(status = it.httpStatusCode, message = it.feilmelding)
         }
     }
 
     get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}") {
-        val orgnr = call.orgnummer ?: return@get call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@get call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnr = call.orgnummer ?: return@get call.sendFeil(feil = IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@get call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
         call.somLesebruker(adGrupper = adGrupper) { _ ->
             iaSakService.hentIASakLeveranser(saksnummer = saksnummer)
         }.also {
@@ -191,8 +191,8 @@ fun Route.iaSakRådgiver(
     }
 
     post("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}") {
-        val orgnr = call.orgnummer ?: return@post call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@post call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnr = call.orgnummer ?: return@post call.sendFeil(feil = IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@post call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
         val leveranse = call.receive<IASakLeveranseOpprettelsesDto>()
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
@@ -213,10 +213,10 @@ fun Route.iaSakRådgiver(
     }
 
     put("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}/{iaSakLeveranseId}") {
-        val orgnr = call.parameters["orgnr"] ?: return@put call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.parameters["saksnummer"] ?: return@put call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnr = call.parameters["orgnr"] ?: return@put call.sendFeil(feil = IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.parameters["saksnummer"] ?: return@put call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
         val iaSakLeveranseId =
-            call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
+            call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(feil = IASakError.`ugyldig iaSakLeveranseId`)
         val oppdateringsDto = call.receive<IASakLeveranseOppdateringsDto>()
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
@@ -241,10 +241,10 @@ fun Route.iaSakRådgiver(
     }
 
     delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}/{iaSakLeveranseId}") {
-        val orgnr = call.orgnummer ?: return@delete call.sendFeil(IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@delete call.sendFeil(IASakError.`ugyldig saksnummer`)
+        val orgnr = call.orgnummer ?: return@delete call.sendFeil(feil = IASakError.`ugyldig orgnummer`)
+        val saksnummer = call.saksnummer ?: return@delete call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
         val iaSakLeveranseId =
-            call.iaSakLeveranseId ?: return@delete call.sendFeil(IASakError.`ugyldig iaSakLeveranseId`)
+            call.iaSakLeveranseId ?: return@delete call.sendFeil(feil = IASakError.`ugyldig iaSakLeveranseId`)
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             iaSakService.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), saksbehandler)
@@ -289,35 +289,39 @@ class Feil(
     val httpStatusCode: HttpStatusCode,
 ) {
     companion object {
-        fun TilstandsmaskinFeil.tilFeilMedHttpFeilkode() = Feil(this.feilmelding, HttpStatusCode.UnprocessableEntity)
+        fun TilstandsmaskinFeil.tilFeilMedHttpFeilkode(): Feil = Feil(feilmelding = this.feilmelding, httpStatusCode = HttpStatusCode.UnprocessableEntity)
     }
 }
 
 object IASakError {
     val `prøvde å legge til en hendelse på en tom sak` =
-        Feil("Prøvde å legge til en hendelse på en tom sak", HttpStatusCode.Conflict)
-    val `prøvde å legge til en hendelse på en gammel sak` = Feil(
-        "Prøvde å legge til hendelse på gammel sak",
-        HttpStatusCode.Conflict,
-    )
-    val `fikk ikke oppdatert sak` = Feil("Fikk ikke oppdatert sak", HttpStatusCode.Conflict)
-    val `fikk ikke oppdatert leveranse` = Feil("Fikk ikke oppdatert leveranse", HttpStatusCode.Conflict)
-    val `fikk ikke slettet sak` = Feil("Fikk ikke slettet sak", HttpStatusCode.InternalServerError)
-    val `ugyldig orgnummer` = Feil("Ugyldig orgnummer", HttpStatusCode.BadRequest)
-    val `ugyldig saksnummer` = Feil("Ugyldig saksnummer", HttpStatusCode.BadRequest)
-    val `ugyldig iaSakLeveranseId` = Feil("Ugyldig leveranseId", HttpStatusCode.BadRequest)
-    val `ugyldig modul` = Feil("Ugyldig modul", HttpStatusCode.BadRequest)
-    val `ikke eier av sak` = Feil("Ikke eier av sak", HttpStatusCode.BadRequest)
-    val `er ikke følger eller eier av sak` = Feil("Er ikke følger eller eier av sak", HttpStatusCode.Forbidden)
-    val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` = Feil(
-        "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet",
-        HttpStatusCode.NotImplemented,
-    )
-    val `generell feil under uthenting` = Feil("Generell feil under uthenting", HttpStatusCode.InternalServerError)
-
+        Feil(feilmelding = "Prøvde å legge til en hendelse på en tom sak", httpStatusCode = HttpStatusCode.Conflict)
+    val `prøvde å legge til en hendelse på en gammel sak` =
+        Feil(feilmelding = "Prøvde å legge til hendelse på gammel sak", httpStatusCode = HttpStatusCode.Conflict)
+    val `fikk ikke oppdatert sak` =
+        Feil(feilmelding = "Fikk ikke oppdatert sak", httpStatusCode = HttpStatusCode.Conflict)
+    val `fikk ikke oppdatert leveranse` =
+        Feil(feilmelding = "Fikk ikke oppdatert leveranse", httpStatusCode = HttpStatusCode.Conflict)
+    val `fikk ikke slettet sak` =
+        Feil(feilmelding = "Fikk ikke slettet sak", httpStatusCode = HttpStatusCode.InternalServerError)
+    val `ugyldig orgnummer` =
+        Feil(feilmelding = "Ugyldig orgnummer", httpStatusCode = HttpStatusCode.BadRequest)
+    val `ugyldig saksnummer` =
+        Feil(feilmelding = "Ugyldig saksnummer", httpStatusCode = HttpStatusCode.BadRequest)
+    val `ugyldig iaSakLeveranseId` =
+        Feil(feilmelding = "Ugyldig leveranseId", httpStatusCode = HttpStatusCode.BadRequest)
+    val `ugyldig modul` =
+        Feil(feilmelding = "Ugyldig modul", httpStatusCode = HttpStatusCode.BadRequest)
+    val `ikke eier av sak` =
+        Feil(feilmelding = "Ikke eier av sak", httpStatusCode = HttpStatusCode.BadRequest)
+    val `er ikke følger eller eier av sak` =
+        Feil(feilmelding = "Er ikke følger eller eier av sak", httpStatusCode = HttpStatusCode.Forbidden)
+    val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` =
+        Feil(feilmelding = "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet", httpStatusCode = HttpStatusCode.NotImplemented)
+    val `generell feil under uthenting` =
+        Feil(feilmelding = "Generell feil under uthenting", httpStatusCode = HttpStatusCode.InternalServerError)
     val `kan ikke fullføre med gjenstående leveranser` =
-        Feil("Kan ikke fullføre med gjenstående leveranser", HttpStatusCode.BadRequest)
-
+        Feil(feilmelding = "Kan ikke fullføre med gjenstående leveranser", httpStatusCode = HttpStatusCode.BadRequest)
     val `kan ikke fullføre sak med aktive samarbeid` =
-        Feil("Kan ikke avslutte sak med aktive samarbeid", HttpStatusCode.BadRequest)
+        Feil(feilmelding = "Kan ikke avslutte sak med aktive samarbeid", httpStatusCode = HttpStatusCode.BadRequest)
 }

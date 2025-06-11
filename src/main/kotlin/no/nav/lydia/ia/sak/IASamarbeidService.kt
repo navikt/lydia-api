@@ -23,6 +23,7 @@ import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
+import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
@@ -43,20 +44,21 @@ class IASamarbeidService(
     val planRepository: PlanRepository,
     val planObservers: List<Observer<ObservedPlan>>,
 ) {
-    fun hentIAProsesser(sak: IASak) =
+    fun hentSamarbeid(sak: IASak): Either<Feil, List<IASamarbeid>> =
         Either.catch {
-            samarbeidRepository.hentProsesser(saksnummer = sak.saksnummer)
+            samarbeidRepository.hentSamarbeid(saksnummer = sak.saksnummer)
         }.mapLeft {
-            IAProsessFeil.`feil ved henting av prosess`
+            IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
-    fun hentAktiveIAProsesser(sak: IASak): List<IASamarbeid> = samarbeidRepository.hentAktiveProsesser(saksnummer = sak.saksnummer)
+    fun hentAktiveSamarbeid(sak: IASak): List<IASamarbeid> = samarbeidRepository.hentAktiveSamarbeid(saksnummer = sak.saksnummer)
 
-    fun hentIAProsess(
+    fun hentSamarbeid(
         sak: IASak,
-        prosessId: Int,
-    ) = samarbeidRepository.hentProsess(saksnummer = sak.saksnummer, prosessId = prosessId)?.right()
-        ?: IAProsessFeil.`ugyldig prosessId`.left()
+        samarbeidId: Int,
+    ): Either<Feil, IASamarbeid> =
+        samarbeidRepository.hentSamarbeid(saksnummer = sak.saksnummer, samarbeidId = samarbeidId)?.right()
+            ?: IASamarbeidFeil.`ugyldig samarbeidId`.left()
 
     fun oppdaterSamarbeid(
         sakshendelse: IASakshendelse,
@@ -65,30 +67,30 @@ class IASamarbeidService(
         when (sakshendelse) {
             is ProsessHendelse -> {
                 when (sakshendelse.hendelsesType) {
-                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> fullførProsessMaskineltPåEnFullførtSak(
+                    FULLFØR_PROSESS_MASKINELT_PÅ_EN_FULLFØRT_SAK -> fullførSamarbeidMaskineltPåEnFullførtSak(
                         sakshendelse = sakshendelse,
                     )?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
 
-                    FULLFØR_PROSESS -> fullførProsess(
+                    FULLFØR_PROSESS -> fullførSamarbeid(
                         sakshendelse = sakshendelse,
                         sak = sak,
                     )?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
 
-                    AVBRYT_PROSESS -> avbrytProsess(sakshendelse, sak)?.let { samarbeid ->
+                    AVBRYT_PROSESS -> avbrytSamarbeid(sakshendelse, sak)?.let { samarbeid ->
                         samarbeidObservers.forEach { it.receive(samarbeid) }
                     }
 
                     ENDRE_PROSESS -> oppdaterNavnPåSamarbeid(sakshendelse.samarbeidDto)
                         ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
 
-                    SLETT_PROSESS -> slettProsess(sakshendelse, sak)
+                    SLETT_PROSESS -> slettSamarbeid(sakshendelse, sak)
                         ?.let { samarbeid -> samarbeidObservers.forEach { it.receive(samarbeid) } }
 
-                    NY_PROSESS -> samarbeidRepository.opprettNyProsess(
+                    NY_PROSESS -> samarbeidRepository.opprettNyttSamarbeid(
                         saksnummer = sakshendelse.saksnummer,
                         navn = sakshendelse.samarbeidDto.navn,
                     ).also { samarbeid ->
@@ -104,10 +106,10 @@ class IASamarbeidService(
     }
 
     private fun oppdaterNavnPåSamarbeid(samarbeidDto: IASamarbeidDto): IASamarbeid? {
-        samarbeidRepository.oppdaterNavnPåProsess(samarbeidDto = samarbeidDto)
-        return samarbeidRepository.hentProsess(
+        samarbeidRepository.oppdaterNavnPåSamarbeid(samarbeidDto = samarbeidDto)
+        return samarbeidRepository.hentSamarbeid(
             saksnummer = samarbeidDto.saksnummer,
-            prosessId = samarbeidDto.id,
+            samarbeidId = samarbeidDto.id,
         )
     }
 
@@ -126,17 +128,18 @@ class IASamarbeidService(
         FINNES_EVALUERING,
     }
 
-    fun kanFullføreProsess(
+    fun kanFullføreSamarbeid(
         sak: IASak,
-        samarbeidsId: Int,
+        samarbeidId: Int,
     ): KanGjennomføreStatusendring {
-        val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
-        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering)
-        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering)
+        val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
+            ?: throw IllegalStateException("Fant ikke samarbeid")
+        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid, Behovsvurdering)
+        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid, Evaluering)
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        if (sak.status != no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR) {
+        if (sak.status != IAProsessStatus.VI_BISTÅR) {
             blokkerende.add(SAK_I_FEIL_STATUS)
         }
 
@@ -152,7 +155,7 @@ class IASamarbeidService(
             blokkerende.add(AKTIV_EVALUERING)
         }
 
-        val plan = planRepository.hentPlan(prosessId = prosess.id)
+        val plan = planRepository.hentPlan(samarbeidId = samarbeid.id)
         if (plan == null) {
             blokkerende.add(INGEN_PLAN)
         }
@@ -164,24 +167,25 @@ class IASamarbeidService(
         )
     }
 
-    fun kanSletteProsess(
+    fun kanSletteSamarbeid(
         sak: IASak,
-        samarbeidsId: Int,
+        samarbeidId: Int,
     ): KanGjennomføreStatusendring {
-        val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
+        val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
+            ?: throw IllegalStateException("Fant ikke samarbeid")
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering).isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Behovsvurdering).isNotEmpty()) {
             blokkerende.add(FINNES_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering).isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Evaluering).isNotEmpty()) {
             blokkerende.add(FINNES_EVALUERING)
         }
-        if (planRepository.hentPlan(prosessId = prosess.id) != null) {
+        if (planRepository.hentPlan(samarbeidId = samarbeid.id) != null) {
             blokkerende.add(FINNES_SAMARBEIDSPLAN)
         }
-        if (samarbeidRepository.hentSalesforceAktiviteter(sak.saksnummer, prosess.id).isNotEmpty()) {
+        if (samarbeidRepository.hentSalesforceAktiviteter(saksnummer = sak.saksnummer, samarbeidId = samarbeid.id).isNotEmpty()) {
             blokkerende.add(FINNES_SALESFORCE_AKTIVITET)
         }
 
@@ -194,15 +198,16 @@ class IASamarbeidService(
 
     fun kanAvbryteSamarbeid(
         sak: IASak,
-        samarbeidsId: Int,
+        samarbeidId: Int,
     ): KanGjennomføreStatusendring {
-        val prosess = hentIAProsess(sak, samarbeidsId).getOrNull() ?: throw IllegalStateException("Fant ikke samarbeid")
+        val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
+            ?: throw IllegalStateException("Fant ikke samarbeid")
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Behovsvurdering).any { it.status != AVSLUTTET }) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Behovsvurdering).any { it.status != AVSLUTTET }) {
             blokkerende.add(AKTIV_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(prosess, Evaluering).any { it.status != AVSLUTTET }) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Evaluering).any { it.status != AVSLUTTET }) {
             blokkerende.add(AKTIV_EVALUERING)
         }
 
@@ -213,13 +218,13 @@ class IASamarbeidService(
         )
     }
 
-    private fun fullførProsess(
+    private fun fullførSamarbeid(
         sakshendelse: ProsessHendelse,
         sak: IASak,
     ): IASamarbeid? {
         val samarbeid = sakshendelse.samarbeidDto
 
-        return if (kanFullføreProsess(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
+        return if (kanFullføreSamarbeid(sak = sak, samarbeidId = samarbeid.id).kanGjennomføres) {
             planRepository.hentPlan(samarbeid.id)?.let { plan ->
                 planRepository.settPlanTilFullført(plan)
                 planRepository.hentPlan(samarbeid.id)?.let { oppdatertPlan ->
@@ -235,44 +240,44 @@ class IASamarbeidService(
             }
             samarbeidRepository.fullførSamarbeid(samarbeid)
         } else {
-            samarbeidRepository.hentProsess(
+            samarbeidRepository.hentSamarbeid(
                 saksnummer = samarbeid.saksnummer,
-                prosessId = samarbeid.id,
+                samarbeidId = samarbeid.id,
             )
         }
     }
 
-    private fun fullførProsessMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid? =
-        samarbeidRepository.fullførSamarbeid(sakshendelse.samarbeidDto)
+    private fun fullførSamarbeidMaskineltPåEnFullførtSak(sakshendelse: ProsessHendelse): IASamarbeid? =
+        samarbeidRepository.fullførSamarbeid(samarbeidDto = sakshendelse.samarbeidDto)
 
-    private fun avbrytProsess(
+    private fun avbrytSamarbeid(
         sakshendelse: ProsessHendelse,
         sak: IASak,
     ): IASamarbeid? {
         val samarbeid = sakshendelse.samarbeidDto
 
-        return if (kanAvbryteSamarbeid(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
+        return if (kanAvbryteSamarbeid(sak = sak, samarbeidId = samarbeid.id).kanGjennomføres) {
             samarbeidRepository.avbrytSamarbeid(samarbeid)
         } else {
-            samarbeidRepository.hentProsess(
+            samarbeidRepository.hentSamarbeid(
                 saksnummer = samarbeid.saksnummer,
-                prosessId = samarbeid.id,
+                samarbeidId = samarbeid.id,
             )
         }
     }
 
-    private fun slettProsess(
+    private fun slettSamarbeid(
         sakshendelse: ProsessHendelse,
         sak: IASak,
     ): IASamarbeid? {
         val samarbeid = sakshendelse.samarbeidDto
 
-        return if (kanSletteProsess(sak = sak, samarbeidsId = samarbeid.id).kanGjennomføres) {
+        return if (kanSletteSamarbeid(sak = sak, samarbeidId = samarbeid.id).kanGjennomføres) {
             samarbeidRepository.slettSamarbeid(samarbeid)
         } else {
-            samarbeidRepository.hentProsess(
+            samarbeidRepository.hentSamarbeid(
                 saksnummer = samarbeid.saksnummer,
-                prosessId = samarbeid.id,
+                samarbeidId = samarbeid.id,
             )
         }
     }
@@ -281,11 +286,15 @@ class IASamarbeidService(
 const val DEFAULT_SAMARBEID_NAVN = "Samarbeid uten navn"
 const val MAKS_ANTALL_TEGN_I_SAMARBEIDSNAVN = 50
 
-object IAProsessFeil {
+object IASamarbeidFeil {
     val `ugyldig samarbeidsnavn` = Feil("Ugyldig samarbeidsnavn", HttpStatusCode.BadRequest)
     val `samarbeidsnavn finnes allerede` = Feil("Samarbeidsnavn finnes allerede", HttpStatusCode.Conflict)
-    val `feil ved henting av prosess` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
-    val `ugyldig prosessId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
+
+    // TODO: Endre feilmelding fra prosess til samarbeid
+    val `feil ved henting av samarbeid` = Feil("Feil ved henting av prosess", HttpStatusCode.InternalServerError)
+
+    // TODO: Endre feilmelding fra prosess til samarbeid
+    val `ugyldig samarbeidId` = Feil("Ugyldig prosess", HttpStatusCode.BadRequest)
     val `kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan` =
         Feil("kan ikke slette samarbeid som inneholder behovsvurdering eller samarbeidsplan", HttpStatusCode.BadRequest)
     val `kan ikke fullføre samarbeid` =
