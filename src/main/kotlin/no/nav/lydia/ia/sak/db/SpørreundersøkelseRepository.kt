@@ -6,10 +6,6 @@ import arrow.core.right
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
@@ -24,7 +20,6 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.Type.Behovsvurdering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
@@ -71,7 +66,7 @@ class SpørreundersøkelseRepository(
                     """.trimMargin(),
                     mapOf(
                         "sporreundersokelseId" to spørreundersøkelseId,
-                        "slettetStatus" to SLETTET.name,
+                        "slettetStatus" to Spørreundersøkelse.Status.SLETTET.name,
                     ),
                 ).map(this::mapRowToSpørreundersøkelseUtenInnhold).asSingle,
             )
@@ -79,7 +74,7 @@ class SpørreundersøkelseRepository(
 
     fun hentSpørreundersøkelser(
         samarbeid: IASamarbeid,
-        type: Spørreundersøkelse.Companion.Type = Behovsvurdering,
+        type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Behovsvurdering,
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
             queryOf(
@@ -92,7 +87,7 @@ class SpørreundersøkelseRepository(
                 """.trimMargin(),
                 mapOf(
                     "prosessId" to samarbeid.id,
-                    "slettetStatus" to SLETTET.name,
+                    "slettetStatus" to Spørreundersøkelse.Status.SLETTET.name,
                     "type" to type.name,
                 ),
             ).map(this::mapRowToSpørreundersøkelseUtenInnhold).asList,
@@ -128,7 +123,7 @@ class SpørreundersøkelseRepository(
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         temaer: List<TemaInfo>,
-        type: Spørreundersøkelse.Companion.Type,
+        type: Spørreundersøkelse.Type,
     ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -233,7 +228,7 @@ class SpørreundersøkelseRepository(
         return SpørreundersøkelseUtenInnhold(
             id = spørreundersøkelseId,
             samarbeidId = this.int("ia_prosess"),
-            status = SpørreundersøkelseStatus.valueOf(this.string("status")),
+            status = Spørreundersøkelse.Status.valueOf(this.string("status")),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
             endretTidspunkt = this.localDateTimeOrNull("endret"),
@@ -253,11 +248,11 @@ class SpørreundersøkelseRepository(
             samarbeidId = this.int("prosessId"),
             orgnummer = this.string("orgnr"),
             virksomhetsNavn = this.string("navn"),
-            status = SpørreundersøkelseStatus.valueOf(this.string("status")),
+            status = Spørreundersøkelse.Status.valueOf(this.string("status")),
             temaer = hentTemaer(spørreundersøkelseId),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet").toKotlinLocalDateTime(),
-            type = Spørreundersøkelse.Companion.Type.valueOf(this.string("type")),
+            type = Spørreundersøkelse.Type.valueOf(this.string("type")),
             endretTidspunkt = this.localDateTimeOrNull("endret")?.toKotlinLocalDateTime(),
             påbegyntTidspunkt = this.localDateTimeOrNull("pabegynt")?.toKotlinLocalDateTime(),
             fullførtTidspunkt = this.localDateTimeOrNull("fullfort")?.toKotlinLocalDateTime(),
@@ -444,7 +439,7 @@ class SpørreundersøkelseRepository(
             queryOf(
                 """
                 UPDATE ia_sak_kartlegging SET
-                    status = '$SLETTET',
+                    status = '${Spørreundersøkelse.Status.SLETTET}',
                     endret = :sistEndret
                 WHERE kartlegging_id = :kartleggingId
                 """.trimIndent(),
@@ -463,7 +458,7 @@ class SpørreundersøkelseRepository(
                 queryOf(
                     """
                     UPDATE ia_sak_kartlegging SET
-                        status = '${PÅBEGYNT.name}',
+                        status = '${Spørreundersøkelse.Status.PÅBEGYNT.name}',
                         endret = :navaerendeTidspunkt,
                         pabegynt = :navaerendeTidspunkt
                     WHERE kartlegging_id = :kartleggingId
@@ -483,7 +478,7 @@ class SpørreundersøkelseRepository(
                 queryOf(
                     """
                     UPDATE ia_sak_kartlegging SET
-                        status = '${AVSLUTTET.name}',
+                        status = '${Spørreundersøkelse.Status.AVSLUTTET.name}',
                         endret = :navaerendeTidspunkt,
                         fullfort = :navaerendeTidspunkt
                         WHERE kartlegging_id = :kartleggingId
@@ -531,7 +526,7 @@ class SpørreundersøkelseRepository(
         }
     }
 
-    fun hentAktiveTemaer(type: Spørreundersøkelse.Companion.Type): List<TemaInfo> =
+    fun hentAktiveTemaer(type: Spørreundersøkelse.Type): List<TemaInfo> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(

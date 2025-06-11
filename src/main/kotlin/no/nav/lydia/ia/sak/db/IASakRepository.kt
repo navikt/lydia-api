@@ -3,7 +3,6 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -14,6 +13,7 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -191,7 +191,7 @@ class IASakRepository(
             )
         }
 
-    fun hentStatusForBehovsvurderinger(samarbeidId: Int): List<Pair<String, SpørreundersøkelseStatus>> =
+    fun hentStatusForBehovsvurderinger(samarbeidId: Int): List<Pair<String, Spørreundersøkelse.Status>> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -203,7 +203,7 @@ class IASakRepository(
                         "prosessId" to samarbeidId,
                     ),
                 ).map {
-                    it.string("kartlegging_id") to SpørreundersøkelseStatus.valueOf(it.string("status"))
+                    it.string("kartlegging_id") to Spørreundersøkelse.Status.valueOf(it.string("status"))
                 }.asList,
             )
         }

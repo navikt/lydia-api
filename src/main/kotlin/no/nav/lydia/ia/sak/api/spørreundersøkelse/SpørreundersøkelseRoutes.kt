@@ -4,8 +4,6 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.getOrElse
 import arrow.core.left
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.log
@@ -32,6 +30,7 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -156,7 +155,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = id,
-                statusViSkalEndreTil = AVSLUTTET,
+                statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
             )
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
@@ -201,7 +200,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = id,
-                statusViSkalEndreTil = PÅBEGYNT,
+                statusViSkalEndreTil = Spørreundersøkelse.Status.PÅBEGYNT,
             )
         }.also { spørreundersøkelse ->
             auditLog.auditloggEither(
@@ -292,17 +291,17 @@ object IASakSpørreundersøkelseError {
     val `ikke støttet statusendring` =
         Feil("Ikke en støttet statusendring", HttpStatusCode.Forbidden)
     val `ikke påbegynt` =
-        Feil("Spørreundersøkelse er ikke i status '${PÅBEGYNT.name}', kan ikke avslutte", HttpStatusCode.Forbidden)
+        Feil("Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.PÅBEGYNT.name}', kan ikke avslutte", HttpStatusCode.Forbidden)
     val `feil status kan ikke starte` =
         Feil("Kan ikke starte spørreundersøkelse, feil status", HttpStatusCode.Forbidden)
     val `ikke avsluttet` =
         Feil(
-            "Spørreundersøkelse er ikke i status '${AVSLUTTET.name}', kan ikke hente resultat",
+            "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke hente resultat",
             HttpStatusCode.Forbidden,
         )
     val `ikke avsluttet, kan ikke bytte samarbeid` =
         Feil(
-            "Spørreundersøkelse er ikke i status '${AVSLUTTET.name}', kan ikke bytte samarbeid",
+            "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke bytte samarbeid",
             HttpStatusCode.BadRequest,
         )
     val `generell feil under uthenting` =

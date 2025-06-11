@@ -10,9 +10,7 @@ val ApplicationCall.orgnummer
 val ApplicationCall.saksnummer
     get() = parameters["saksnummer"]
 val ApplicationCall.type
-    get() = parameters["type"]?.let { type ->
-        Spørreundersøkelse.Companion.Type.valueOf(type)
-    }
+    get() = parameters["type"]?.let { Spørreundersøkelse.Type.valueOf(it) }
 val ApplicationCall.spørreundersøkelseId
     get() = parameters["sporreundersokelseId"]
 val ApplicationCall.iaSakLeveranseId

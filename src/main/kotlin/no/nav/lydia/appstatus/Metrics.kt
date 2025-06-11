@@ -1,10 +1,5 @@
 package no.nav.lydia.appstatus
 
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.AVSLUTTET
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.OPPRETTET
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.PÅBEGYNT
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus.SLETTET
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
@@ -12,9 +7,8 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.core.metrics.Counter
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
-import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS
 import no.nav.lydia.ia.sak.domene.plan.Plan
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 private const val NAMESPACE = "pia"
 
@@ -94,27 +88,27 @@ class Metrics {
 
         fun loggHendelse(hendelsesType: IASakshendelseType) {
             when (hendelsesType) {
-                VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
-                FULLFØR_BISTAND -> virksomheterFulført.inc()
+                IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> virksomheterSattTilBistår.inc()
+                IASakshendelseType.FULLFØR_BISTAND -> virksomheterFulført.inc()
                 else -> {}
             }
         }
 
-        fun loggBehovsvurdering(status: SpørreundersøkelseStatus) {
+        fun loggBehovsvurdering(status: Spørreundersøkelse.Status) {
             when (status) {
-                OPPRETTET -> behovsvurderingerOpprettet.inc()
-                PÅBEGYNT -> behovsvurderingerStartet.inc()
-                AVSLUTTET -> behovsvurderingerFullført.inc()
-                SLETTET -> behovsvurderingerSlettet.inc()
+                Spørreundersøkelse.Status.OPPRETTET -> behovsvurderingerOpprettet.inc()
+                Spørreundersøkelse.Status.PÅBEGYNT -> behovsvurderingerStartet.inc()
+                Spørreundersøkelse.Status.AVSLUTTET -> behovsvurderingerFullført.inc()
+                Spørreundersøkelse.Status.SLETTET -> behovsvurderingerSlettet.inc()
             }
         }
 
-        fun loggEvaluering(status: SpørreundersøkelseStatus) {
+        fun loggEvaluering(status: Spørreundersøkelse.Status) {
             when (status) {
-                OPPRETTET -> evalueringerOpprettet.inc()
-                PÅBEGYNT -> evalueringerStartet.inc()
-                AVSLUTTET -> evalueringerFullført.inc()
-                SLETTET -> evalueringerSlettet.inc()
+                Spørreundersøkelse.Status.OPPRETTET -> evalueringerOpprettet.inc()
+                Spørreundersøkelse.Status.PÅBEGYNT -> evalueringerStartet.inc()
+                Spørreundersøkelse.Status.AVSLUTTET -> evalueringerFullført.inc()
+                Spørreundersøkelse.Status.SLETTET -> evalueringerSlettet.inc()
             }
         }
 

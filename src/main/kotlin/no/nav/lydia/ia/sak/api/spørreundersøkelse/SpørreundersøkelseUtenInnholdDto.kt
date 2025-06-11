@@ -1,16 +1,16 @@
 package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 
 @Serializable
 data class SpørreundersøkelseUtenInnholdDto(
     val id: String,
     val samarbeidId: Int,
-    val status: SpørreundersøkelseStatus,
+    val status: Spørreundersøkelse.Status,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
@@ -19,9 +19,9 @@ data class SpørreundersøkelseUtenInnholdDto(
     val gyldigTilTidspunkt: LocalDateTime,
 )
 
-fun List<SpørreundersøkelseUtenInnhold>.tilDto() = map { it.tilDto() }
+fun List<SpørreundersøkelseUtenInnhold>.tilDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilDto() }
 
-fun SpørreundersøkelseUtenInnhold.tilDto() =
+fun SpørreundersøkelseUtenInnhold.tilDto(): SpørreundersøkelseUtenInnholdDto =
     SpørreundersøkelseUtenInnholdDto(
         id = id.toString(),
         samarbeidId = samarbeidId,

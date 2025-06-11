@@ -6,8 +6,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
+import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import no.nav.lydia.EndringsObserver
@@ -330,13 +329,13 @@ class IASakService(
 
                     val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelser(
                         samarbeid = samarbeid,
-                        type = Spørreundersøkelse.Companion.Type.Behovsvurdering,
+                        type = Spørreundersøkelse.Type.Behovsvurdering,
                     ).plus(
                         spørreundersøkelseRepository.hentSpørreundersøkelser(
                             samarbeid = samarbeid,
-                            type = Spørreundersøkelse.Companion.Type.Evaluering,
+                            type = Spørreundersøkelse.Type.Evaluering,
                         ),
-                    ).filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }
+                    ).filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
 
                     if (!tørrKjør) {
                         spørreundersøkelser.forEach { spørreundersøkelse ->
@@ -397,7 +396,7 @@ class IASakService(
         try {
             iaSakRepository.slettSak(saksnummer = sak.saksnummer, sistEndretAvHendelseId = sistEndretAvHendelseId)
             Either.Right(sak)
-        } catch (exception: Exception) {
+        } catch (_: Exception) {
             Either.Left(IASakError.`fikk ikke slettet sak`)
         }
 
@@ -564,7 +563,7 @@ class IASakService(
 
         val erPlanFullført = plan.temaer.map { tema ->
             tema.undertemaer.filter { it.inkludert }.all { undertema ->
-                undertema.status == FULLFØRT
+                undertema.status == InnholdStatus.FULLFØRT
             }
         }.all { it }
 
@@ -589,8 +588,8 @@ class IASakService(
 
         statusForBehovsvurderinger.forEach {
             when (it.second) {
-                SpørreundersøkelseStatus.AVSLUTTET,
-                SpørreundersøkelseStatus.SLETTET,
+                Spørreundersøkelse.Status.AVSLUTTET,
+                Spørreundersøkelse.Status.SLETTET,
                 -> {}
                 else -> årsaker.add(
                     ÅrsakTilAtSakIkkeKanAvsluttes(
@@ -609,9 +608,9 @@ class IASakService(
         // avslutt alle samarbeid
         samarbeidService.hentAktiveSamarbeid(iaSak).forEach { samarbeid ->
             // avslutt eventuelle spørreundersøkelser i samarbeid
-            spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Companion.Type.Behovsvurdering)
-                .plus(spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Companion.Type.Evaluering))
-                .filter { it.status != SpørreundersøkelseStatus.AVSLUTTET }
+            spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
+                .plus(spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering))
+                .filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
                 .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id.toString()) }
 
             // slett eventuell plan for samarbeid

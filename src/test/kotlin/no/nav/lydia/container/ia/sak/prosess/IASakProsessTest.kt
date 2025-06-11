@@ -2,7 +2,6 @@ package no.nav.lydia.container.ia.sak.prosess
 
 import com.github.kittinunf.fuel.core.extensions.authentication
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
-import ia.felles.integrasjoner.kafkameldinger.spørreundersøkelse.SpørreundersøkelseStatus
 import io.kotest.assertions.shouldFail
 import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
@@ -59,6 +58,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -430,7 +430,7 @@ class IASakProsessTest {
         sakMedFlereSamarbeid.hentAlleSamarbeid() shouldHaveSize 2
 
         val behovsvurdering = sakMedFlereSamarbeid.opprettSpørreundersøkelse()
-        behovsvurdering.status shouldBe SpørreundersøkelseStatus.OPPRETTET
+        behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
     }
 
     @Test
