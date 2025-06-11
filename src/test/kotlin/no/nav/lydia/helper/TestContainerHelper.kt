@@ -64,8 +64,8 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseUtenInnholdDto
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
@@ -398,7 +398,7 @@ class SakHelper {
         ) = nySakIKontaktes(orgnummer, token)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
             .also {
-                it.status shouldBe IAProsessStatus.KARTLEGGES
+                it.status shouldBe IASakStatus.KARTLEGGES
             }
 
         fun nySakIKartleggesMedEtSamarbeid(
@@ -418,7 +418,7 @@ class SakHelper {
             .opprettNyttSamarbeid(navn = navnPåSamarbeid)
             .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
             .also {
-                it.status shouldBe IAProsessStatus.VI_BISTÅR
+                it.status shouldBe IASakStatus.VI_BISTÅR
             }
 
         fun nyHendelse(

@@ -181,7 +181,7 @@ class VirksomhetOppdateringTest {
         ) shouldBe IASamarbeid.Status.AVBRUTT.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL.name
+        ) shouldBe no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL.name
     }
 
     @Test
@@ -214,7 +214,7 @@ class VirksomhetOppdateringTest {
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak where saksnummer = '${sak.saksnummer}'",
-        ) shouldBe no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT.name
+        ) shouldBe no.nav.lydia.ia.sak.domene.IASakStatus.FULLFØRT.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select endret_av_hendelse from ia_sak where saksnummer = '${sak.saksnummer}'",
         ) shouldBe sakEtterFullføring.endretAvHendelseId

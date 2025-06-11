@@ -63,14 +63,7 @@ import no.nav.lydia.ia.sak.api.IASakshendelseDto
 import no.nav.lydia.ia.sak.api.ÅrsakTilAtSakIkkeKanAvsluttes
 import no.nav.lydia.ia.sak.api.ÅrsaksType
 import no.nav.lydia.ia.sak.domene.ANTALL_DAGER_FØR_SAK_LÅSES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTIV
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KARTLEGGES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.NY
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VURDERES
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.OPPRETT_SAK_FOR_VIRKSOMHET
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
@@ -107,25 +100,25 @@ class IASakApiTest {
     @Test
     fun `skal gå tilbake til forrige status uavhengig av hendelsesrekke`() {
         nySakIKontaktes()
-            .nyHendelse(TILBAKE).status shouldBe VURDERES
+            .nyHendelse(TILBAKE).status shouldBe IASakStatus.VURDERES
 
         nySakIKontaktes()
             .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
-            .nyHendelse(TILBAKE).status shouldBe VURDERES
+            .nyHendelse(TILBAKE).status shouldBe IASakStatus.VURDERES
 
         nySakIKartlegges()
             .opprettNyttSamarbeid()
             .slettSamarbeid()
             .opprettNyttSamarbeid()
             .nyttNavnPåSamarbeid(nyttNavn = "Test")
-            .nyHendelse(TILBAKE).status shouldBe KONTAKTES
+            .nyHendelse(TILBAKE).status shouldBe IASakStatus.KONTAKTES
 
         val sakIViBistårFørTilbake = nySakIViBistår()
         sakIViBistårFørTilbake.opprettEnPlan()
         sakIViBistårFørTilbake
             .fullførSamarbeid()
-            .nyHendelse(TILBAKE).status shouldBe KARTLEGGES
+            .nyHendelse(TILBAKE).status shouldBe IASakStatus.KARTLEGGES
     }
 
     @Test
@@ -165,11 +158,11 @@ class IASakApiTest {
 
         resulterendeStatuser shouldHaveSize 5
         resulterendeStatuser shouldBe listOf(
-            NY.name,
-            VURDERES.name,
-            VURDERES.name,
-            KONTAKTES.name,
-            KARTLEGGES.name,
+            IASakStatus.NY.name,
+            IASakStatus.VURDERES.name,
+            IASakStatus.VURDERES.name,
+            IASakStatus.KONTAKTES.name,
+            IASakStatus.KARTLEGGES.name,
         )
     }
 
@@ -264,10 +257,8 @@ class IASakApiTest {
         val orgnummer = nyttOrgnummer()
         opprettSakForVirksomhet(orgnummer = orgnummer).slettSak()
         hentSakRespons(orgnummer = orgnummer).statuskode() shouldBe HttpStatusCode.NoContent.value
-        opprettSakForVirksomhet(orgnummer = orgnummer).also {
-            it.status shouldBe VURDERES
-        }
-        hentSak(orgnummer).status shouldBe VURDERES
+        opprettSakForVirksomhet(orgnummer = orgnummer).also { it.status shouldBe IASakStatus.VURDERES }
+        hentSak(orgnummer).status shouldBe IASakStatus.VURDERES
     }
 
     @Test
@@ -302,24 +293,16 @@ class IASakApiTest {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .also {
-                it.status shouldBe KONTAKTES
-            }
+            .also { it.status shouldBe IASakStatus.KONTAKTES }
     }
 
     @Test
     fun `en virksomhet skal ikke kunne kontaktes før saken har et eierskap`() {
         opprettSakForVirksomhet(orgnummer = nyttOrgnummer())
-            .also {
-                shouldFail {
-                    it.nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-                }
-            }
+            .also { shouldFail { it.nyHendelse(VIRKSOMHET_SKAL_KONTAKTES) } }
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
-            .also {
-                it.status shouldBe KONTAKTES
-            }
+            .also { it.status shouldBe IASakStatus.KONTAKTES }
     }
 
     @Test
@@ -331,7 +314,7 @@ class IASakApiTest {
             listeFørVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeFørVirksomhetVurderes.data.shouldForAtLeastOne { sykefraværsstatistikkVirksomhetDto ->
                 sykefraværsstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
-                sykefraværsstatistikkVirksomhetDto.status shouldBe IKKE_AKTIV
+                sykefraværsstatistikkVirksomhetDto.status shouldBe IASakStatus.IKKE_AKTIV
                 sykefraværsstatistikkVirksomhetDto.sistEndret shouldBe null
             }
         }, kommuner = utsiraKommune.nummer)
@@ -341,7 +324,7 @@ class IASakApiTest {
             listeEtterVirksomhetVurderes.data shouldHaveAtLeastSize 1
             listeEtterVirksomhetVurderes.data.shouldForAtLeastOne { sykefraværsstatistikkVirksomhetDto ->
                 sykefraværsstatistikkVirksomhetDto.orgnr shouldBe virksomhet.orgnr
-                sykefraværsstatistikkVirksomhetDto.status shouldBe VURDERES
+                sykefraværsstatistikkVirksomhetDto.status shouldBe IASakStatus.VURDERES
                 sykefraværsstatistikkVirksomhetDto.sistEndret shouldBe java.time.LocalDate.now().toKotlinLocalDate()
             }
         }, kommuner = utsiraKommune.nummer)
@@ -368,13 +351,10 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .also { sak ->
-                shouldFail {
-                    sak.nyHendelse(FULLFØR_BISTAND)
-                }
-            }
+            .also { sak -> shouldFail { sak.nyHendelse(FULLFØR_BISTAND) } }
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-        sak.status shouldBe VI_BISTÅR
+
+        sak.status shouldBe IASakStatus.VI_BISTÅR
 
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
             .statuskode() shouldBe 501
@@ -386,12 +366,12 @@ class IASakApiTest {
                 begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID),
             ).toJson(),
         )
-        sak.status shouldBe IKKE_AKTUELL
+        sak.status shouldBe IASakStatus.IKKE_AKTUELL
 
         val nySak = opprettSakForVirksomhet(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
 
-        hentSak(orgnummer = orgnummer, saksnummer = sak.saksnummer).status shouldBe IKKE_AKTUELL
-        hentSak(orgnummer = orgnummer, saksnummer = nySak.saksnummer).status shouldBe VURDERES
+        hentSak(orgnummer = orgnummer, saksnummer = sak.saksnummer).status shouldBe IASakStatus.IKKE_AKTUELL
+        hentSak(orgnummer = orgnummer, saksnummer = nySak.saksnummer).status shouldBe IASakStatus.VURDERES
     }
 
     @Test
@@ -421,7 +401,7 @@ class IASakApiTest {
             ) 
             """.trimIndent(),
         )
-        sak.status shouldBe VI_BISTÅR
+        sak.status shouldBe IASakStatus.VI_BISTÅR
 
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.InternalServerError.value
@@ -456,7 +436,7 @@ class IASakApiTest {
             ) 
             """.trimIndent(),
         )
-        sak.status shouldBe VI_BISTÅR
+        sak.status shouldBe IASakStatus.VI_BISTÅR
         shouldFail { sak.nyHendelse(TILBAKE) }
 
         applikasjon shouldContainLog ("Feil! IASak ${sak.saksnummer} har doble hendelser i databasen med følgende ider:").toRegex()
@@ -469,7 +449,8 @@ class IASakApiTest {
         val sak = nySakIViBistår(orgnummer = orgnummer)
             .nyHendelse(TILBAKE)
             .nyHendelse(TILBAKE)
-        sak.status shouldBe KONTAKTES
+
+        sak.status shouldBe IASakStatus.KONTAKTES
 
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.OK.value
@@ -484,7 +465,8 @@ class IASakApiTest {
         val sak = nySakIViBistår(orgnummer = orgnummer)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
             .nyHendelse(TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token)
-        sak.status shouldBe VI_BISTÅR
+
+        sak.status shouldBe IASakStatus.VI_BISTÅR
 
         val response = hentSamarbeidshistorikkForOrgnrRespons(orgnr = orgnummer)
         response.statuskode() shouldBe HttpStatusCode.OK.value
@@ -499,11 +481,11 @@ class IASakApiTest {
         val sak = nySakIKartlegges(orgnummer = orgnummer).opprettNyttSamarbeid()
         val førsteSamarbeid = sak.hentAlleSamarbeid().first()
         sak.nyttNavnPåSamarbeid(iaSamarbeidDto = førsteSamarbeid, nyttNavn = "Nytt navn")
-        sak.status shouldBe KARTLEGGES
+        sak.status shouldBe IASakStatus.KARTLEGGES
 
         val oppdatertSak = hentSak(orgnummer).nyHendelse(VIRKSOMHET_SKAL_BISTÅS).nyHendelse(TILBAKE)
 
-        oppdatertSak.status shouldBe KARTLEGGES
+        oppdatertSak.status shouldBe IASakStatus.KARTLEGGES
     }
 
     @Test
@@ -523,20 +505,20 @@ class IASakApiTest {
             }
             .opprettNyttSamarbeid()
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-        sak.status shouldBe VI_BISTÅR
+        sak.status shouldBe IASakStatus.VI_BISTÅR
 
         opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
             .statuskode() shouldBe 501
         sak = sak.fullførSak()
-        sak.status shouldBe FULLFØRT
+        sak.status shouldBe IASakStatus.FULLFØRT
 
         val sak2Respons =
             opprettSakForVirksomhetRespons(orgnummer = orgnummer, token = authContainerHelper.superbruker1.token)
         sak2Respons.statuskode() shouldBe 201
         val sak2 = sak2Respons.third.get()
 
-        hentSak(orgnummer = orgnummer, saksnummer = sak.saksnummer).status shouldBe FULLFØRT
-        hentSak(orgnummer = orgnummer, saksnummer = sak2.saksnummer).status shouldBe VURDERES
+        hentSak(orgnummer = orgnummer, saksnummer = sak.saksnummer).status shouldBe IASakStatus.FULLFØRT
+        hentSak(orgnummer = orgnummer, saksnummer = sak2.saksnummer).status shouldBe IASakStatus.VURDERES
     }
 
     @Test
@@ -725,14 +707,14 @@ class IASakApiTest {
 
         val aktivSak = hentSak(orgnummer)
         aktivSak.orgnr shouldBe orgnummer
-        aktivSak.status shouldBe VURDERES
+        aktivSak.status shouldBe IASakStatus.VURDERES
         aktivSak.opprettetAv shouldBe authContainerHelper.superbruker1.navIdent
         aktivSak.saksnummer shouldBe sak.saksnummer
 
         nyHendelsePåSak(sak, TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler1.token).also {
             it.orgnr shouldBe orgnummer
             it.saksnummer shouldBe sak.saksnummer
-            it.status shouldBe VURDERES
+            it.status shouldBe IASakStatus.VURDERES
             it.opprettetAv shouldBe sak.opprettetAv
             it.eidAv shouldBe authContainerHelper.saksbehandler1.navIdent
             it.endretAvHendelseId shouldNotBe sak.endretAvHendelseId
@@ -794,11 +776,11 @@ class IASakApiTest {
             samarbeidshistorikk shouldHaveSize 1
             val sakshistorikk = samarbeidshistorikk.first()
             sakshistorikk.sakshendelser.map { it.status } shouldContainExactly listOf(
-                NY,
-                VURDERES,
-                VURDERES,
-                KONTAKTES,
-                IKKE_AKTUELL,
+                IASakStatus.NY,
+                IASakStatus.VURDERES,
+                IASakStatus.VURDERES,
+                IASakStatus.KONTAKTES,
+                IASakStatus.IKKE_AKTUELL,
             )
             sakshistorikk.sakshendelser.map { it.hendelsestype } shouldContainExactly listOf(
                 OPPRETT_SAK_FOR_VIRKSOMHET,
@@ -966,7 +948,7 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(TILBAKE)
-        sak.status shouldBe VURDERES
+        sak.status shouldBe IASakStatus.VURDERES
     }
 
     @Test
@@ -1002,7 +984,7 @@ class IASakApiTest {
                 ).toJson(),
             )
             .nyHendelse(TILBAKE)
-        sak.status shouldBe VURDERES
+        sak.status shouldBe IASakStatus.VURDERES
     }
 
     @Test
@@ -1059,7 +1041,7 @@ class IASakApiTest {
     fun `skal kunne gå tilbake til vi bistår fra fullført`() {
         val sak = nySakIViBistår().fullførSak()
             .nyHendelse(TILBAKE)
-        sak.status shouldBe VI_BISTÅR
+        sak.status shouldBe IASakStatus.VI_BISTÅR
     }
 
     @Test
@@ -1067,12 +1049,12 @@ class IASakApiTest {
         val sak = nySakIViBistår().fullførSak()
         val sakEtterOvertakelse = sak.nyHendelse(hendelsestype = TA_EIERSKAP_I_SAK, token = authContainerHelper.saksbehandler2.token)
 
-        sakEtterOvertakelse.status shouldBe FULLFØRT
+        sakEtterOvertakelse.status shouldBe IASakStatus.FULLFØRT
         sakEtterOvertakelse.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
 
         val sakEtterTilbake = sakEtterOvertakelse.nyHendelse(hendelsestype = TILBAKE, token = authContainerHelper.saksbehandler2.token)
 
-        sakEtterTilbake.status shouldBe VI_BISTÅR
+        sakEtterTilbake.status shouldBe IASakStatus.VI_BISTÅR
         sakEtterTilbake.eidAv shouldBe authContainerHelper.saksbehandler2.navIdent
     }
 
@@ -1095,9 +1077,9 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .also { sak -> shouldFail { sak.nyHendelse(VIRKSOMHET_SKAL_BISTÅS) } }
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .also { sak -> sak.status shouldBe KARTLEGGES }
+            .also { sak -> sak.status shouldBe IASakStatus.KARTLEGGES }
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
-            .also { sak -> sak.status shouldBe VI_BISTÅR }
+            .also { sak -> sak.status shouldBe IASakStatus.VI_BISTÅR }
     }
 
     @Test
@@ -1108,16 +1090,16 @@ class IASakApiTest {
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
             .nyHendelse(VIRKSOMHET_SKAL_BISTÅS)
             .nyHendelse(FULLFØR_BISTAND)
-        sak.status shouldBe FULLFØRT
+        sak.status shouldBe IASakStatus.FULLFØRT
     }
 
     @Test
     fun `skal kunne fullføre en sak fra 'Vi Bistår' status`() {
         nySakIViBistår().also {
-            it.status shouldBe VI_BISTÅR
+            it.status shouldBe IASakStatus.VI_BISTÅR
         }
             .fullførSak()
-            .also { sak -> sak.status shouldBe FULLFØRT }
+            .also { sak -> sak.status shouldBe IASakStatus.FULLFØRT }
     }
 
     @Test
@@ -1126,7 +1108,7 @@ class IASakApiTest {
         val begrunnelser = listOf(VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID)
 
         val sakIStatusViBistår = nySakIViBistår(orgnummer)
-            .also { sak -> sak.status shouldBe VI_BISTÅR }
+            .also { sak -> sak.status shouldBe IASakStatus.VI_BISTÅR }
 
         // Sjekk at 'Ikke aktuell' er en gyldig neste hendelse
         sakIStatusViBistår.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContain VIRKSOMHET_ER_IKKE_AKTUELL
@@ -1152,7 +1134,7 @@ class IASakApiTest {
                 type = VIRKSOMHETEN_TAKKET_NEI,
                 begrunnelser = begrunnelser,
             ).toJson(),
-        ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
+        ).also { sak -> sak.status shouldBe IASakStatus.IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
         hentSamarbeidshistorikk(orgnummer, authContainerHelper.superbruker1.token).first().sakshendelser
@@ -1172,7 +1154,7 @@ class IASakApiTest {
             .nyHendelse(TA_EIERSKAP_I_SAK)
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
-            .also { sak -> sak.status shouldBe KARTLEGGES }
+            .also { sak -> sak.status shouldBe IASakStatus.KARTLEGGES }
 
         // Sjekk at 'Ikke aktuell' er en gyldig neste hendelse
         sakIStatusKartlegges.gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContain VIRKSOMHET_ER_IKKE_AKTUELL
@@ -1184,7 +1166,7 @@ class IASakApiTest {
                 type = VIRKSOMHETEN_TAKKET_NEI,
                 begrunnelser = begrunnelser,
             ).toJson(),
-        ).also { sak -> sak.status shouldBe IKKE_AKTUELL }
+        ).also { sak -> sak.status shouldBe IASakStatus.IKKE_AKTUELL }
 
         // Sjekk at begrunnelsen blir lagret
         hentSamarbeidshistorikk(orgnummer, authContainerHelper.superbruker1.token).first().sakshendelser
@@ -1204,12 +1186,12 @@ class IASakApiTest {
         hentSykefravær(
             token = superbruker,
             success = { mainResponse ->
-                val org = mainResponse.data.filter { it.status == IKKE_AKTIV }.random()
+                val org = mainResponse.data.filter { it.status == IASakStatus.IKKE_AKTIV }.random()
                 val sak = nySakIViBistår(orgnummer = org.orgnr, token = saksbehandler).fullførSak(token = saksbehandler)
                 hentSykefravær( // Tester at vi får se FULLFØRT intil fristen går ut
                     token = superbruker,
                     success = { response ->
-                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe FULLFØRT }
+                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IASakStatus.FULLFØRT }
                     },
                 )
 
@@ -1217,7 +1199,7 @@ class IASakApiTest {
                 hentSykefravær( // Tester at vi faller tilbake til IKKE_AKTIV når fristen har gått ut
                     token = superbruker,
                     success = { response ->
-                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IKKE_AKTIV }
+                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IASakStatus.IKKE_AKTIV }
                     },
                 )
 
@@ -1229,7 +1211,7 @@ class IASakApiTest {
                 hentSykefravær( // Viser siste status når vi har fått en ny sak
                     token = superbruker,
                     success = { response ->
-                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe KARTLEGGES }
+                        response.data.filter { it.orgnr == org.orgnr }.forExactlyOne { it.status shouldBe IASakStatus.KARTLEGGES }
                     },
                 )
             },
@@ -1261,7 +1243,7 @@ class IASakApiTest {
             .fullførSak()
 
         hentSak(orgnummer = sak.orgnr).also { enSak ->
-            enSak.status shouldBe FULLFØRT
+            enSak.status shouldBe IASakStatus.FULLFØRT
         }
     }
 

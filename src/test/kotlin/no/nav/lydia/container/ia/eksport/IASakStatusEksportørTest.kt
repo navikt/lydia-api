@@ -21,8 +21,8 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper.Companion.lastInnNyVirksomhet
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.IASakStatusProdusent
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.KONTAKTES
+import no.nav.lydia.ia.sak.domene.IASakStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.IASakStatus.KONTAKTES
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES

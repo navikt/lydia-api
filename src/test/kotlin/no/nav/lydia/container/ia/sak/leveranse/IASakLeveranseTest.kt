@@ -42,10 +42,10 @@ import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IATjenesteDto
 import no.nav.lydia.ia.sak.api.ModulDto
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus.LEVERT
+import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus.VI_BISTÅR
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.FULLFØR_BISTAND
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TILBAKE
@@ -125,7 +125,7 @@ class IASakLeveranseTest {
             .nyHendelse(VIRKSOMHET_SKAL_KONTAKTES)
             .nyHendelse(VIRKSOMHET_KARTLEGGES)
 
-        sakIStatusKartlegges.status shouldBe IAProsessStatus.KARTLEGGES
+        sakIStatusKartlegges.status shouldBe IASakStatus.KARTLEGGES
         opprettIASakLeveranse(
             orgnr = sakIStatusKartlegges.orgnr,
             saksnummer = sakIStatusKartlegges.saksnummer,

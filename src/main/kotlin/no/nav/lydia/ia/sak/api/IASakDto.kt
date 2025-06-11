@@ -4,10 +4,10 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.GyldigHendelse
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.FULLFØRT
-import no.nav.lydia.ia.sak.domene.IAProsessStatus.IKKE_AKTUELL
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus.FULLFØRT
+import no.nav.lydia.ia.sak.domene.IASakStatus.IKKE_AKTUELL
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRolle
 
@@ -15,7 +15,7 @@ import no.nav.lydia.tilgangskontroll.fia.NavAnsatt.NavAnsattMedSaksbehandlerRoll
 data class IASakDto(
     val saksnummer: String,
     val orgnr: String,
-    var status: IAProsessStatus,
+    var status: IASakStatus,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretAv: String?,

@@ -11,7 +11,7 @@ import no.nav.lydia.helper.SakHelper.Companion.toJson
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.TA_EIERSKAP_I_SAK
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.VIRKSOMHET_ER_IKKE_AKTUELL
@@ -51,9 +51,9 @@ class IASakProdusentTest {
                     hendelse shouldContain sak.orgnr
                 }
                 meldinger shouldHaveSize 3
-                meldinger[0] shouldContain IAProsessStatus.NY.name
-                meldinger[1] shouldContain IAProsessStatus.VURDERES.name
-                meldinger[2] shouldContain IAProsessStatus.SLETTET.name
+                meldinger[0] shouldContain IASakStatus.NY.name
+                meldinger[1] shouldContain IASakStatus.VURDERES.name
+                meldinger[2] shouldContain IASakStatus.SLETTET.name
             }
         }
     }
@@ -81,13 +81,13 @@ class IASakProdusentTest {
                     hendelse shouldContain sak.orgnr
                 }
                 meldinger shouldHaveSize 5
-                meldinger[0] shouldContain IAProsessStatus.NY.name
-                meldinger[1] shouldContain IAProsessStatus.VURDERES.name
+                meldinger[0] shouldContain IASakStatus.NY.name
+                meldinger[1] shouldContain IASakStatus.VURDERES.name
                 meldinger[1] shouldContain """"eierAvSak":null"""
-                meldinger[2] shouldContain IAProsessStatus.VURDERES.name
+                meldinger[2] shouldContain IASakStatus.VURDERES.name
                 meldinger[2] shouldContain """"eierAvSak":"X12345""""
-                meldinger[3] shouldContain IAProsessStatus.KONTAKTES.name
-                meldinger[4] shouldContain IAProsessStatus.IKKE_AKTUELL.name
+                meldinger[3] shouldContain IASakStatus.KONTAKTES.name
+                meldinger[4] shouldContain IASakStatus.IKKE_AKTUELL.name
             }
         }
     }

@@ -23,8 +23,8 @@ import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
 import no.nav.lydia.ia.sak.domene.IASak
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelse
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.AVBRYT_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.ENDRE_PROSESS
@@ -139,7 +139,7 @@ class IASamarbeidService(
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        if (sak.status != IAProsessStatus.VI_BISTÅR) {
+        if (sak.status != IASakStatus.VI_BISTÅR) {
             blokkerende.add(SAK_I_FEIL_STATUS)
         }
 

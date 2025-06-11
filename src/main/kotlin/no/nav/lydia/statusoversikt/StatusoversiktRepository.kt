@@ -4,7 +4,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåBransjeOgNæring
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.filtrerPåEiere
@@ -57,7 +57,7 @@ class StatusoversiktRepository(
     private fun mapRowToStatusoversikt(rad: Row): Statusoversikt =
         Statusoversikt(
             status = rad.stringOrNull("status")?.let {
-                IAProsessStatus.valueOf(it)
+                IASakStatus.valueOf(it)
             },
             antall = rad.int("antall"),
         )

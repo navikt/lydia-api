@@ -1,7 +1,7 @@
 package no.nav.lydia.sykefraværsstatistikk.domene
 
 import kotlinx.datetime.LocalDate
-import no.nav.lydia.ia.sak.domene.IAProsessStatus
+import no.nav.lydia.ia.sak.domene.IASakStatus
 
 data class Virksomhetsoversikt(
     val virksomhetsnavn: String,
@@ -14,7 +14,7 @@ data class Virksomhetsoversikt(
     val muligeDagsverk: Double,
     val sykefraværsprosent: Double,
     val maskert: Boolean,
-    val status: IAProsessStatus?,
+    val status: IASakStatus?,
     val eidAv: String?,
     val sistEndret: LocalDate?,
 )
