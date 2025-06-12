@@ -65,7 +65,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.1")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.9.0")
+    implementation("org.apache.kafka:kafka-clients:3.9.1")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
