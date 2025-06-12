@@ -10,7 +10,7 @@ import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.Observer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companion.tilDto
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -344,7 +344,7 @@ class SpørreundersøkelseService(
     private fun hentSvarForTema(
         spørreundersøkelseId: UUID,
         temaId: Int,
-    ): Either<Feil, SerializableTemaResultat> {
+    ): Either<Feil, TemaResultatKafkaDto> {
         val spørreundersøkelse =
             spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId.toString())
                 ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()

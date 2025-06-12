@@ -24,8 +24,8 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.tilSingelRespons
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.ANTALL_SVAR
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseAntallSvarDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.AntallSvarKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdatering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
@@ -270,15 +270,15 @@ class SpørreundersøkelseSvarKonsumentTestDto {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
-                        opprettetSpørreundersøkelse.id,
-                        ANTALL_SVAR,
+                        spørreundersøkelseId = opprettetSpørreundersøkelse.id,
+                        oppdateringsType = SpørreundersøkelseOppdatering.Type.ANTALL_SVAR,
                     ),
                 ),
                 konsument = spørreundersøkelseOppdateringKonsument,
             ) {
                 it.forExactlyOne { melding ->
                     val antallSvarForSpørsmål =
-                        Json.decodeFromString<SpørreundersøkelseAntallSvarDto>(
+                        Json.decodeFromString<AntallSvarKafkaDto>(
                             melding,
                         )
                     antallSvarForSpørsmål.spørreundersøkelseId shouldBe opprettetSpørreundersøkelse.id

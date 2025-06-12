@@ -17,9 +17,9 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.OppdateringsType.RESULTATER_FOR_TEMA
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdatering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -134,13 +134,13 @@ class SpørreundersøkelseHendelseKonsumentTest {
                 key = Json.encodeToString(
                     SpørreundersøkelseOppdateringNøkkel(
                         spørreundersøkelseId = spørreundersøkelse.id,
-                        oppdateringsType = RESULTATER_FOR_TEMA,
+                        oppdateringsType = SpørreundersøkelseOppdatering.Type.RESULTATER_FOR_TEMA,
                     ),
                 ),
                 konsument = konsument,
             ) { meldinger ->
                 meldinger.forEach { melding ->
-                    val resultaterForTema = Json.decodeFromString<SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat>(melding)
+                    val resultaterForTema = Json.decodeFromString<TemaResultatKafkaDto>(melding)
                     resultaterForTema.navn shouldBe tema.navn
                     resultaterForTema.spørsmålMedSvar.forExactlyOne { spørsmål ->
                         spørsmål.id shouldBe førsteSpørsmål.id

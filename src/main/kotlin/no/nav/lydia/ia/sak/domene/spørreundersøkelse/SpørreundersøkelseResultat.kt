@@ -53,7 +53,7 @@ fun SpørreundersøkelseResultat.tilDto(): SpørreundersøkelseResultatDto =
                                 antallSvar = svar.antallSvar,
                             )
                         },
-                        kategori = spørsmål.undertemanavn
+                        kategori = spørsmål.undertemanavn,
                     )
                 },
             )

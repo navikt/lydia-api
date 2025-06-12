@@ -1,8 +1,5 @@
 package no.nav.lydia.ia.eksport
 
-import ia.felles.integrasjoner.kafkameldinger.oppdatering.SpørsmålResultatMelding
-import ia.felles.integrasjoner.kafkameldinger.oppdatering.SvarResultatMelding
-import ia.felles.integrasjoner.kafkameldinger.oppdatering.TemaResultatMelding
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
@@ -40,7 +37,7 @@ class SpørreundersøkelseOppdateringProdusent(
 
     companion object {
         fun SpørreundersøkelseAntallSvar.tilDto() =
-            SpørreundersøkelseAntallSvarDto(
+            AntallSvarKafkaDto(
                 spørreundersøkelseId = spørreundersøkelseId.toString(),
                 spørsmålId = spørsmålId.toString(),
                 antallSvar = antallSvar,
@@ -49,26 +46,26 @@ class SpørreundersøkelseOppdateringProdusent(
 
     class ResultaterForTema(
         spørreundersøkelseId: String,
-        resultaterForTema: SerializableTemaResultat,
-    ) : SpørreundersøkelseOppdatering<SerializableTemaResultat>(
+        resultaterForTema: TemaResultatKafkaDto,
+    ) : SpørreundersøkelseOppdatering<TemaResultatKafkaDto>(
             spørreundersøkelseId = spørreundersøkelseId,
-            oppdateringsType = OppdateringsType.RESULTATER_FOR_TEMA,
+            oppdateringsType = Type.RESULTATER_FOR_TEMA,
             data = resultaterForTema,
         )
 
     class AntallSvar(
         spørreundersøkelseId: String,
-        antallSvar: SpørreundersøkelseAntallSvarDto,
-    ) : SpørreundersøkelseOppdatering<SpørreundersøkelseAntallSvarDto>(
+        antallSvar: AntallSvarKafkaDto,
+    ) : SpørreundersøkelseOppdatering<AntallSvarKafkaDto>(
             spørreundersøkelseId = spørreundersøkelseId,
-            oppdateringsType = OppdateringsType.ANTALL_SVAR,
+            oppdateringsType = Type.ANTALL_SVAR,
             data = antallSvar,
         )
 
     @Serializable
     sealed class SpørreundersøkelseOppdatering<T>(
         val spørreundersøkelseId: String,
-        val oppdateringsType: OppdateringsType,
+        val oppdateringsType: Type,
         val data: T,
     ) {
         fun tilKafkaMelding(): Pair<String, String> {
@@ -76,38 +73,43 @@ class SpørreundersøkelseOppdateringProdusent(
                 Json.encodeToString(SpørreundersøkelseOppdateringNøkkel(spørreundersøkelseId, oppdateringsType))
 
             val verdi = when (this) {
-                is ResultaterForTema -> Json.encodeToString<SerializableTemaResultat>(data)
-                is AntallSvar -> Json.encodeToString<SpørreundersøkelseAntallSvarDto>(data)
+                is ResultaterForTema -> Json.encodeToString<TemaResultatKafkaDto>(data)
+                is AntallSvar -> Json.encodeToString<AntallSvarKafkaDto>(data)
             }
             return nøkkel to verdi
+        }
+
+        enum class Type {
+            RESULTATER_FOR_TEMA,
+            ANTALL_SVAR,
         }
     }
 
     @Serializable
-    data class SerializableTemaResultat(
-        override val id: Int,
-        override val navn: String,
-        override val spørsmålMedSvar: List<SerializableSpørsmålResultat>,
-    ) : TemaResultatMelding
+    data class TemaResultatKafkaDto(
+        val id: Int,
+        val navn: String,
+        val spørsmålMedSvar: List<SpørsmålResultatKafkaDto>,
+    )
 
     @Serializable
-    data class SerializableSpørsmålResultat(
-        override val id: String,
-        override val tekst: String,
-        override val flervalg: Boolean,
-        override val svarListe: List<SerializableSvarResultat>,
+    data class SpørsmålResultatKafkaDto(
+        val id: String,
+        val tekst: String,
+        val flervalg: Boolean,
+        val svarListe: List<SvarResultatKafkaDto>,
         val kategori: String,
-    ) : SpørsmålResultatMelding
+    )
 
     @Serializable
-    data class SerializableSvarResultat(
-        override val id: String,
-        override val tekst: String,
-        override val antallSvar: Int,
-    ) : SvarResultatMelding
+    data class SvarResultatKafkaDto(
+        val id: String,
+        val tekst: String,
+        val antallSvar: Int,
+    )
 
     @Serializable
-    data class SpørreundersøkelseAntallSvarDto(
+    data class AntallSvarKafkaDto(
         val spørreundersøkelseId: String,
         val spørsmålId: String,
         val antallSvar: Int,
@@ -116,11 +118,6 @@ class SpørreundersøkelseOppdateringProdusent(
     @Serializable
     data class SpørreundersøkelseOppdateringNøkkel(
         val spørreundersøkelseId: String,
-        val oppdateringsType: OppdateringsType,
+        val oppdateringsType: SpørreundersøkelseOppdatering.Type,
     )
-
-    enum class OppdateringsType {
-        RESULTATER_FOR_TEMA,
-        ANTALL_SVAR,
-    }
 }

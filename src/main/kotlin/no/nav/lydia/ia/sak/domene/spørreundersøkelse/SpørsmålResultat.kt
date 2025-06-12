@@ -40,7 +40,7 @@ fun Spørsmål.tilResultat(alleSvar: List<SpørreundersøkelseSvar>): Spørsmål
                 }.size,
             )
         },
-        undertemanavn = undertemanavn
+        undertemanavn = undertemanavn,
     )
 }
 

@@ -1,9 +1,9 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import kotlinx.datetime.toJavaLocalDateTime
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableSpørsmålResultat
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableSvarResultat
-import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SerializableTemaResultat
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import java.time.LocalDateTime
 
@@ -26,23 +26,23 @@ fun Tema.tilResultat(alleSvar: List<SpørreundersøkelseSvar>): TemaResultat =
         spørsmål = this.spørsmål.map { it.tilResultat(alleSvar) },
     )
 
-fun TemaResultat.tilKafkaMelding(): SerializableTemaResultat =
-    SerializableTemaResultat(
+fun TemaResultat.tilKafkaMelding(): TemaResultatKafkaDto =
+    TemaResultatKafkaDto(
         id = id,
         navn = navn,
         spørsmålMedSvar = spørsmål.map { spørsmål ->
-            SerializableSpørsmålResultat(
+            SpørsmålResultatKafkaDto(
                 id = spørsmål.spørsmålId.toString(),
                 tekst = spørsmål.spørsmåltekst,
                 flervalg = spørsmål.flervalg,
                 svarListe = spørsmål.svaralternativer.map { svar ->
-                    SerializableSvarResultat(
+                    SvarResultatKafkaDto(
                         id = svar.svarId.toString(),
                         tekst = svar.svartekst,
                         antallSvar = svar.antallSvar,
                     )
                 },
-                kategori = spørsmål.undertemanavn
+                kategori = spørsmål.undertemanavn,
             )
         },
     )
