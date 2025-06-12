@@ -1,6 +1,7 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PÅGÅR
+import io.kotest.inspectors.shouldForAll
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -16,7 +17,7 @@ import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.tilRequest
 import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent
+import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent.InnholdIPlanMelding
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -51,9 +52,9 @@ class SamarbeidsplanBigqueryEksportererTest {
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
-                val planer = meldinger.map { Json.decodeFromString<SamarbeidsplanBigqueryProdusent.PlanValue>(it) }
+                val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
-                sistePlan.id shouldBe plan.id
+                sistePlan.shouldForAll { it.planId shouldBe plan.id }
                 sistePlan.planlagteTemaer() shouldBe plan.temaer.size
                 sistePlan.planlagtInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
             }
@@ -77,9 +78,9 @@ class SamarbeidsplanBigqueryEksportererTest {
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 2
-                val planer = meldinger.map { Json.decodeFromString<SamarbeidsplanBigqueryProdusent.PlanValue>(it) }
+                val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
-                sistePlan.id shouldBe plan.id
+                sistePlan.shouldForAll { it.planId shouldBe plan.id }
                 sistePlan.planlagteTemaer() shouldBe plan.temaer.size
                 sistePlan.planlagtInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
             }
@@ -108,9 +109,9 @@ class SamarbeidsplanBigqueryEksportererTest {
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 2
-                val planer = meldinger.map { Json.decodeFromString<SamarbeidsplanBigqueryProdusent.PlanValue>(it) }
+                val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
-                sistePlan.id shouldBe plan.id
+                sistePlan.shouldForAll { it.planId shouldBe plan.id }
                 sistePlan.planlagteTemaer() shouldBe 1
                 sistePlan.planlagtInnhold() shouldBe plan.temaer.last().undertemaer.size
             }
@@ -140,16 +141,17 @@ class SamarbeidsplanBigqueryEksportererTest {
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 2
-                val planer = meldinger.map { Json.decodeFromString<SamarbeidsplanBigqueryProdusent.PlanValue>(it) }
+                val planer = meldinger.map { Json.decodeFromString<List<InnholdIPlanMelding>>(it) }
                 val sistePlan = planer.last()
-                sistePlan.id shouldBe plan.id
+                sistePlan.shouldForAll { it.planId shouldBe plan.id }
                 sistePlan.planlagteTemaer() shouldBe 3
                 sistePlan.planlagtInnhold() shouldBe plan.temaer.sumOf { it.undertemaer.size }
             }
         }
     }
 
-    private fun SamarbeidsplanBigqueryProdusent.PlanValue.planlagteTemaer(): Int = this.temaer.filter { it.inkludert }.size
+    private fun List<InnholdIPlanMelding>.planlagteTemaer(): Int =
+        this.groupBy { it.temaId }.filter { innholdITema -> innholdITema.value.any { it.inkludert } }.size
 
-    private fun SamarbeidsplanBigqueryProdusent.PlanValue.planlagtInnhold(): Int = this.temaer.flatMap { it.innhold }.filter { it.inkludert }.size
+    private fun List<InnholdIPlanMelding>.planlagtInnhold(): Int = this.filter { it.inkludert }.size
 }
