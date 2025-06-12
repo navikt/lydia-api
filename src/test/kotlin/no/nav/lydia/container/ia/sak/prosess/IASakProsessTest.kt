@@ -1,7 +1,6 @@
 package no.nav.lydia.container.ia.sak.prosess
 
 import com.github.kittinunf.fuel.core.extensions.authentication
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import io.kotest.assertions.shouldFail
 import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
@@ -57,6 +56,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_RO
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
@@ -182,7 +182,7 @@ class IASakProsessTest {
         val plan = sak.hentPlan(prosessId = samarbeidSomFullføres.id)
         plan.temaer.forAll { tema ->
             tema.undertemaer.forAll { undertema ->
-                undertema.status shouldBe InnholdStatus.FULLFØRT
+                undertema.status shouldBe PlanUndertema.Status.FULLFØRT
             }
         }
     }
@@ -197,12 +197,12 @@ class IASakProsessTest {
         sak.endreStatusPåInnholdIPlan(
             temaId = tema.id,
             innholdId = undertema.id,
-            status = InnholdStatus.AVBRUTT,
+            status = PlanUndertema.Status.AVBRUTT,
         )
         sak = sak.fullførSamarbeid(samarbeidSomFullføres)
         val planEtterFullføring = sak.hentPlan(prosessId = samarbeidSomFullføres.id)
         planEtterFullføring.temaer.flatMap { it.undertemaer }.forExactlyOne {
-            it.status shouldBe InnholdStatus.AVBRUTT
+            it.status shouldBe PlanUndertema.Status.AVBRUTT
         }
     }
 

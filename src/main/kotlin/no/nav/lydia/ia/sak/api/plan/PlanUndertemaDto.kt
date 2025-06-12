@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.sak.api.plan
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
@@ -11,7 +10,7 @@ data class PlanUndertemaDto(
     val navn: String,
     val målsetning: String,
     val inkludert: Boolean,
-    val status: InnholdStatus?,
+    val status: PlanUndertema.Status?,
     val startDato: LocalDate?,
     val sluttDato: LocalDate?,
     val harAktiviteterISalesforce: Boolean,

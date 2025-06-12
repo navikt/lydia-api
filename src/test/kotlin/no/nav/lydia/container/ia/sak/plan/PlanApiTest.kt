@@ -1,9 +1,5 @@
 package no.nav.lydia.container.ia.sak.plan
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.AVBRUTT
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.FULLFØRT
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PLANLAGT
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PÅGÅR
 import io.kotest.assertions.shouldFail
 import io.kotest.assertions.shouldFailWithMessage
 import io.kotest.inspectors.forAll
@@ -51,6 +47,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
@@ -277,14 +274,14 @@ class PlanApiTest {
         sak.endreStatusPåInnholdIPlan(
             temaId = plan.temaer.first().id,
             innholdId = plan.temaer.first().undertemaer.first().id,
-            status = FULLFØRT,
+            status = PlanUndertema.Status.FULLFØRT,
         )
 
         val endretPlan = sak.hentPlan()
 
         endretPlan.antallTemaInkludert() shouldBe plan.temaer.size
         endretPlan.antallInnholdInkludert() shouldBe plan.temaer.sumOf { it.undertemaer.size }
-        endretPlan.antallInnholdMedStatus(FULLFØRT) shouldBe 1
+        endretPlan.antallInnholdMedStatus(status = PlanUndertema.Status.FULLFØRT) shouldBe 1
     }
 
     @Test
@@ -297,7 +294,7 @@ class PlanApiTest {
             sak.endreStatusPåInnholdIPlan(
                 temaId = plan.temaer.first().id,
                 innholdId = plan.temaer.first().undertemaer.first().id,
-                status = FULLFØRT,
+                status = PlanUndertema.Status.FULLFØRT,
             )
         }.message shouldBe "HTTP Exception 400 Bad Request"
 
@@ -457,10 +454,10 @@ class PlanApiTest {
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
 
-        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
+        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = PlanUndertema.Status.AVBRUTT)
 
         val planMedNyStatus = sak.hentPlan()
-        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe AVBRUTT
+        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
         planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe omEnMåned
     }
 
@@ -493,13 +490,13 @@ class PlanApiTest {
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = førsteTema.undertemaer.first()
 
-        førsteUndertema.status shouldBe PLANLAGT
+        førsteUndertema.status shouldBe PlanUndertema.Status.PLANLAGT
         førsteUndertema.sluttDato shouldBe iGår
 
-        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT)
+        sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = PlanUndertema.Status.AVBRUTT)
 
         val planMedNyStatus = sak.hentPlan()
-        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe AVBRUTT
+        planMedNyStatus.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.AVBRUTT
         planMedNyStatus.temaer.first().undertemaer.first().sluttDato shouldBe iGår
     }
 
@@ -531,11 +528,11 @@ class PlanApiTest {
         val planDto = sak.opprettEnPlan(plan = enNyPlan)
         val førsteTema = planDto.temaer.first()
         val førsteUndertema = planDto.temaer.first().undertemaer.first()
-        planDto.temaer.first().undertemaer.first().status shouldBe PLANLAGT
+        planDto.temaer.first().undertemaer.first().status shouldBe PlanUndertema.Status.PLANLAGT
         planDto.temaer.first().undertemaer.first().sluttDato shouldBe om6Måneder
         planDto.temaer.first().undertemaer.first().startDato shouldBe iMorgen
 
-        shouldFail { sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = AVBRUTT) }
+        shouldFail { sak.endreStatusPåInnholdIPlan(temaId = førsteTema.id, innholdId = førsteUndertema.id, status = PlanUndertema.Status.AVBRUTT) }
             .message shouldBe "HTTP Exception 400 Bad Request"
     }
 
@@ -548,9 +545,9 @@ class PlanApiTest {
 
         opprettetPlan.antallTemaInkludert() shouldBe 1
         opprettetPlan.antallInnholdInkludert() shouldBe 1
-        opprettetPlan.antallInnholdMedStatus(status = PLANLAGT) shouldBe 1
+        opprettetPlan.antallInnholdMedStatus(status = PlanUndertema.Status.PLANLAGT) shouldBe 1
 
-        val nyStatus = PÅGÅR
+        val nyStatus = PlanUndertema.Status.PÅGÅR
 
         shouldFail {
             sak.endreStatusPåInnholdIPlan(
@@ -579,8 +576,8 @@ class PlanApiTest {
         planMedAltInnhold.antallTemaInkludert() shouldBe 3
         planMedAltInnhold.antallInnholdInkludert() shouldBe opprettetPlan.temaer.sumOf { it.undertemaer.size }
         planMedAltInnhold.antallInnholdMedStatus(status = nyStatus) shouldBe 1
-        planMedAltInnhold.antallInnholdMedStatus(status = PLANLAGT) shouldBe opprettetPlan.temaer.sumOf { it.undertemaer.size } - 1
-        planMedAltInnhold.antallInnholdMedStatus(status = PÅGÅR) shouldBe 1
+        planMedAltInnhold.antallInnholdMedStatus(status = PlanUndertema.Status.PLANLAGT) shouldBe opprettetPlan.temaer.sumOf { it.undertemaer.size } - 1
+        planMedAltInnhold.antallInnholdMedStatus(status = PlanUndertema.Status.PÅGÅR) shouldBe 1
     }
 
     @Test
@@ -603,7 +600,7 @@ class PlanApiTest {
 
         opprettetPlan.antallTemaInkludert() shouldBe 1
         opprettetPlan.antallInnholdInkludert() shouldBe gyldigPlan.tema.last().innhold.size
-        opprettetPlan.antallInnholdMedStatus(PLANLAGT) shouldBe gyldigPlan.tema.last().innhold.size
+        opprettetPlan.antallInnholdMedStatus(status = PlanUndertema.Status.PLANLAGT) shouldBe gyldigPlan.tema.last().innhold.size
         opprettetPlan.tidligstStartDato() shouldBe START_DATO
         opprettetPlan.senesteSluttDato() shouldBe SLUTT_DATO
         // det siste temaet er inkludert
@@ -627,7 +624,7 @@ class PlanApiTest {
 
         uendretPlan.antallTemaInkludert() shouldBe 1
         uendretPlan.antallInnholdInkludert() shouldBe sisteTema.undertemaer.size
-        uendretPlan.antallInnholdMedStatus(PLANLAGT) shouldBe sisteTema.undertemaer.size
+        uendretPlan.antallInnholdMedStatus(status = PlanUndertema.Status.PLANLAGT) shouldBe sisteTema.undertemaer.size
         uendretPlan.tidligstStartDato() shouldBe START_DATO
         uendretPlan.senesteSluttDato() shouldBe SLUTT_DATO
         // det siste temaet er inkludert samme som opprettetPlan
@@ -637,7 +634,7 @@ class PlanApiTest {
         val endretPlan = sak.hentPlan()
         endretPlan.antallTemaInkludert() shouldBe 2
         endretPlan.antallInnholdInkludert() shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
-        endretPlan.antallInnholdMedStatus(PLANLAGT) shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
+        endretPlan.antallInnholdMedStatus(status = PlanUndertema.Status.PLANLAGT) shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
         endretPlan.tidligstStartDato() shouldBe START_DATO
         endretPlan.senesteSluttDato() shouldBe SLUTT_DATO
         // det første og siste temaet er inkludert
@@ -670,7 +667,7 @@ class PlanApiTest {
 
         endretPlan2.antallTemaInkludert() shouldBe 2
         endretPlan2.antallInnholdInkludert() shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
-        endretPlan2.antallInnholdMedStatus(PLANLAGT) shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
+        endretPlan2.antallInnholdMedStatus(status = PlanUndertema.Status.PLANLAGT) shouldBe førsteTema.undertemaer.size + sisteTema.undertemaer.size
         endretPlan2.tidligstStartDato() shouldBe START_DATO
         endretPlan2.senesteSluttDato() shouldBe SLUTT_DATO.plus(DatePeriod(years = 1))
         // Alle temaer og alt innhold er inkludert, seneste sluttdato
@@ -743,7 +740,7 @@ class PlanApiTest {
                 innholdnummer = 1,
             ),
         )
-        plan.antallInnholdMedStatus(status = PLANLAGT) shouldBe 1
+        plan.antallInnholdMedStatus(status = PlanUndertema.Status.PLANLAGT) shouldBe 1
 
         val tema = plan.temaer.first()
         val innhold = tema.undertemaer.first()
@@ -752,10 +749,10 @@ class PlanApiTest {
             token = følgerAvSak.token,
             temaId = tema.id,
             innholdId = innhold.id,
-            status = FULLFØRT,
+            status = PlanUndertema.Status.FULLFØRT,
         )
         endretPlan.temaer.flatMap { it.undertemaer }.forExactlyOne { undertema ->
-            undertema.status shouldBe FULLFØRT
+            undertema.status shouldBe PlanUndertema.Status.FULLFØRT
         }
     }
 
@@ -850,7 +847,7 @@ class PlanApiTest {
         sak.endreStatusPåInnholdIPlan(
             temaId = førsteTema.id,
             innholdId = førsteUndertema.id,
-            status = PÅGÅR,
+            status = PlanUndertema.Status.PÅGÅR,
         )
 
         sak.hentPlan().sistEndret shouldBeGreaterThan opprettetPlan.sistEndret

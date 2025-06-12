@@ -1,6 +1,5 @@
 package no.nav.lydia.container.ia.eksport
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PÅGÅR
 import io.kotest.inspectors.shouldForAll
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
@@ -19,6 +18,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryProdusent.InnholdIPlanMelding
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -127,7 +127,7 @@ class SamarbeidsplanBigqueryEksportererTest {
         val sisteTema = plan.temaer.last()
         val sisteInnhold = sisteTema.undertemaer.last()
 
-        val nyStatus = PÅGÅR
+        val nyStatus = PlanUndertema.Status.PÅGÅR
 
         sak.endreStatusPåInnholdIPlan(
             temaId = sisteTema.id,

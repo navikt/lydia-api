@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.sak.domene.plan
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toJavaLocalDate
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
@@ -10,7 +9,7 @@ data class PlanUndertema(
     val navn: String,
     val målsetning: String,
     val inkludert: Boolean,
-    val status: InnholdStatus?,
+    val status: Status?,
     val startDato: LocalDate?,
     val sluttDato: LocalDate?,
     val aktiviteterISalesforce: List<SalesforceAktivitet>,
@@ -21,5 +20,12 @@ data class PlanUndertema(
             startDato.toJavaLocalDate().isAfter(iDag) &&
             sluttDato != null &&
             sluttDato.toJavaLocalDate().isAfter(iDag)
+    }
+
+    enum class Status {
+        PLANLAGT,
+        PÅGÅR,
+        FULLFØRT,
+        AVBRUTT,
     }
 }

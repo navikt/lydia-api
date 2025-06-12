@@ -1,6 +1,5 @@
 package no.nav.lydia.ia.eksport
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
@@ -83,7 +82,7 @@ class SamarbeidsplanBigqueryProdusent(
         val temanavn: String,
         val inkludert: Boolean,
         val sistEndretTidspunktPlan: LocalDateTime,
-        val status: InnholdStatus?,
+        val status: PlanUndertema.Status?,
         val startDato: LocalDate?,
         val sluttDato: LocalDate?,
     )

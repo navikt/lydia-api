@@ -1,7 +1,6 @@
 package no.nav.lydia.container.ia.eksport
 
 import ia.felles.integrasjoner.jobbsender.Jobb
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import io.kotest.assertions.shouldFail
 import io.kotest.inspectors.forAll
 import io.kotest.inspectors.forAtLeastOne
@@ -29,6 +28,7 @@ import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -66,7 +66,7 @@ class SamarbeidsplanProdusentTest {
                     val samarbeidsplanProdusentTestSentTilSalesforce = Json.decodeFromString<SamarbeidsplanKafkaMelding>(melding)
                     samarbeidsplanProdusentTestSentTilSalesforce.plan.temaer.forAll { tema ->
                         tema.undertemaer.forAll { undertema ->
-                            undertema.status shouldBe InnholdStatus.FULLFØRT
+                            undertema.status shouldBe PlanUndertema.Status.FULLFØRT
                         }
                     }
                 }

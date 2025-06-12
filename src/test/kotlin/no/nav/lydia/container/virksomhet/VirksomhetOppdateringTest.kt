@@ -1,6 +1,5 @@
 package no.nav.lydia.container.virksomhet
 
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.comparables.shouldBeGreaterThan
@@ -34,6 +33,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
@@ -175,7 +175,7 @@ class VirksomhetOppdateringTest {
         )
         postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
             "select status from ia_sak_plan_undertema where plan_id = '${plan.id}'",
-        ).forAll { it shouldBe InnholdStatus.AVBRUTT.name }
+        ).forAll { it shouldBe PlanUndertema.Status.AVBRUTT.name }
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_prosess where id = ${samarbeid.id}",
         ) shouldBe IASamarbeid.Status.AVBRUTT.name

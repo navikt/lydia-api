@@ -10,7 +10,6 @@ import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.httpPut
 import com.github.kittinunf.fuel.serialization.responseObject
 import ia.felles.definisjoner.bransjer.Bransje
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -68,6 +67,7 @@ import no.nav.lydia.ia.sak.domene.IASakLeveranseStatus
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.BrukerITeamDto
@@ -870,7 +870,7 @@ class PlanHelper {
 
         fun PlanDto.antallInnholdInkludert() = temaer.flatMap { it.undertemaer }.filter { it.inkludert }.size
 
-        fun PlanDto.antallInnholdMedStatus(status: InnholdStatus) =
+        fun PlanDto.antallInnholdMedStatus(status: PlanUndertema.Status) =
             temaer.flatMap { it.undertemaer }.filter {
                 it.inkludert &&
                     it.status == status
@@ -912,7 +912,7 @@ class PlanHelper {
             token: String = authContainerHelper.saksbehandler1.token,
             temaId: Int,
             innholdId: Int,
-            status: InnholdStatus,
+            status: PlanUndertema.Status,
         ) = endreStatus(
             token = token,
             orgnr = orgnr,
@@ -1127,7 +1127,7 @@ class PlanHelper {
             orgnr: String,
             saksnummer: String,
             prosessId: Int,
-            status: InnholdStatus,
+            status: PlanUndertema.Status,
             temaId: Int,
             undertemaId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
@@ -1198,7 +1198,7 @@ class PlanHelper {
                     orgnr = orgnummer,
                     saksnummer = saksnummer,
                     prosessId = prosessId,
-                    status = InnholdStatus.FULLFØRT,
+                    status = PlanUndertema.Status.FULLFØRT,
                     temaId = tema.id,
                     undertemaId = it.id,
                 )

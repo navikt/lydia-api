@@ -4,9 +4,6 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.left
 import arrow.core.right
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.AVBRUTT
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PLANLAGT
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
@@ -187,7 +184,7 @@ class PlanService(
     private fun PlanUndertema.endreInnhold(nyttInnhold: EndreUndertemaRequest) =
         this.copy(
             inkludert = nyttInnhold.inkludert,
-            status = if (nyttInnhold.inkludert) this.status ?: PLANLAGT else null,
+            status = if (nyttInnhold.inkludert) this.status ?: PlanUndertema.Status.PLANLAGT else null,
             startDato = if (nyttInnhold.inkludert) nyttInnhold.startDato else null,
             sluttDato = if (nyttInnhold.inkludert) nyttInnhold.sluttDato else null,
         )
@@ -196,7 +193,7 @@ class PlanService(
         temaId: Int,
         undertemaId: Int,
         lagretPlan: Plan,
-        nyStatus: InnholdStatus,
+        nyStatus: PlanUndertema.Status,
     ): Either<Feil, Plan> {
         val lagretInnhold = lagretPlan.temaer.firstOrNull { it.id == temaId }?.undertemaer?.firstOrNull { it.id == undertemaId }
             ?: return PlanFeil.`fant ikke undertema`.left()
@@ -205,7 +202,7 @@ class PlanService(
             return PlanFeil.`innhold er ikke inkludert`.left()
         }
 
-        if (nyStatus == AVBRUTT && lagretInnhold.starterIFremtiden()) {
+        if (nyStatus == PlanUndertema.Status.AVBRUTT && lagretInnhold.starterIFremtiden()) {
             return PlanFeil.`innhold starter i fremtiden`.left()
         }
 

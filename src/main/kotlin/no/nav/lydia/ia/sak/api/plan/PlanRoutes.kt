@@ -1,7 +1,6 @@
 package no.nav.lydia.ia.sak.api.plan
 
 import arrow.core.flatMap
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -26,6 +25,7 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.temaId
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.somFølgerAvSakIProsess
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.somLesebruker
 
@@ -204,7 +204,7 @@ fun Route.iaSakPlan(
             ),
         )
 
-        val nyStatus = call.receive<InnholdStatus>()
+        val nyStatus = call.receive<PlanUndertema.Status>()
 
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
             planService.hentPlan(samarbeidId = prosessId).flatMap { lagretPlan ->

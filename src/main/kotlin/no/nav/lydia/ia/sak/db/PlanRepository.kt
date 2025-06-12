@@ -3,8 +3,6 @@ package no.nav.lydia.ia.sak.db
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus.PLANLAGT
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toKotlinLocalDate
@@ -119,7 +117,7 @@ class PlanRepository(
                                 mapOf(
                                     "navn" to innhold.navn,
                                     "inkludert" to innhold.inkludert,
-                                    "status" to if (innhold.inkludert) PLANLAGT.name else null,
+                                    "status" to if (innhold.inkludert) PlanUndertema.Status.PLANLAGT.name else null,
                                     "start_dato" to innhold.startDato?.toJavaLocalDate(),
                                     "slutt_dato" to innhold.sluttDato?.toJavaLocalDate(),
                                     "tema_id" to temaId,
@@ -333,7 +331,7 @@ class PlanRepository(
                     navn = innholdsNavn,
                     målsetning = hentInnholdsMålsetning(innholdsNavn) ?: "",
                     inkludert = row.boolean("inkludert"),
-                    status = row.stringOrNull("status")?.let { InnholdStatus.valueOf(it) },
+                    status = row.stringOrNull("status")?.let { PlanUndertema.Status.valueOf(it) },
                     startDato = row.localDateOrNull("start_dato")?.toKotlinLocalDate(),
                     sluttDato = row.localDateOrNull("slutt_dato")?.toKotlinLocalDate(),
                     aktiviteterISalesforce = hentAktiviterISalesforce(
@@ -480,8 +478,8 @@ class PlanRepository(
                             AND inkludert = true
                             """.trimIndent(),
                             mapOf(
-                                "statusFullfort" to InnholdStatus.FULLFØRT.name,
-                                "statusAvbrutt" to InnholdStatus.AVBRUTT.name,
+                                "statusFullfort" to PlanUndertema.Status.FULLFØRT.name,
+                                "statusAvbrutt" to PlanUndertema.Status.AVBRUTT.name,
                                 "temaId" to tema.id,
                                 "planId" to plan.id.toString(),
                             ),
@@ -520,8 +518,8 @@ class PlanRepository(
                             AND inkludert = true
                             """.trimIndent(),
                             mapOf(
-                                "statusFullfort" to InnholdStatus.FULLFØRT.name,
-                                "statusAvbrutt" to InnholdStatus.AVBRUTT.name,
+                                "statusFullfort" to PlanUndertema.Status.FULLFØRT.name,
+                                "statusAvbrutt" to PlanUndertema.Status.AVBRUTT.name,
                                 "temaId" to tema.id,
                                 "planId" to plan.id.toString(),
                             ),

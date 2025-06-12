@@ -6,7 +6,6 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.github.guepardoapps.kulid.ULID
-import ia.felles.integrasjoner.kafkameldinger.eksport.InnholdStatus
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import no.nav.lydia.EndringsObserver
@@ -47,6 +46,7 @@ import no.nav.lydia.ia.sak.domene.Modul
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
@@ -563,7 +563,7 @@ class IASakService(
 
         val erPlanFullført = plan.temaer.map { tema ->
             tema.undertemaer.filter { it.inkludert }.all { undertema ->
-                undertema.status == InnholdStatus.FULLFØRT
+                undertema.status == PlanUndertema.Status.FULLFØRT
             }
         }.all { it }
 
