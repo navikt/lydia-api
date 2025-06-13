@@ -64,6 +64,9 @@ import no.nav.lydia.ia.sak.SendSamarbeidPåKafkaObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseMetrikkObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
+import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
 import no.nav.lydia.ia.sak.api.iaSakRådgiver
 import no.nav.lydia.ia.sak.api.plan.iaSakPlan
 import no.nav.lydia.ia.sak.api.samarbeid.iaSamarbeid
@@ -606,6 +609,12 @@ private fun Application.lydiaRestApi(
                 auditLog = auditLog,
                 adGrupper = naisEnv.security.adGrupper,
                 iaSakService = iaSakService,
+            )
+            dokumentPublisering(
+                adGrupper = naisEnv.security.adGrupper,
+                dokumentPubliseringService = DokumentPubliseringService(
+                    dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource),
+                ),
             )
             iaTjenesteoversikt(
                 iaTjenesteoversiktService = IATjenesteoversiktService(
