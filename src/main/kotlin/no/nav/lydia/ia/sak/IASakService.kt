@@ -49,6 +49,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
 import no.nav.lydia.ia.årsak.domene.ÅrsakType
@@ -77,6 +78,7 @@ class IASakService(
     private val endringsObservers: List<EndringsObserver<IASak, IASakshendelse>>,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
     private val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
+    private val iaTeamService: IATeamService,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -125,7 +127,7 @@ class IASakService(
             superbruker = superbruker,
             navEnhet = navEnhet,
         ).lagre(sistEndretAvHendelseId = null, resulterendeStatus = IASak.Status.VURDERES)
-            .let { vurderesHendelse -> superbruker.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse) }
+            .let { vurderesHendelse -> superbruker.utførHendelsePåSak(sak = sak, hendelse = vurderesHendelse, false) }
             .mapLeft { tilstandsmaskinFeil -> tilstandsmaskinFeil.tilFeilMedHttpFeilkode() }
             .flatMap { oppdatertSak ->
                 oppdatertSak.lagreOppdatering(sistEndretAvHendelseId)
@@ -218,28 +220,33 @@ class IASakService(
 
                 val umodifisertIaSak = sak.kopier() // siden vi muterer state i utførhende -> behandleHendelse
 
-                saksbehandler.utførHendelsePåSak(sak = sak, hendelse = sakshendelse)
-                    .map { oppdatertSak ->
-                        val nyStatus = oppdatertSak.status
-                        sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = nyStatus)
-                        årsakService.lagreÅrsak(sakshendelse)
-                        samarbeidService.oppdaterSamarbeid(sakshendelse, sak)
-                        when (sakshendelse.hendelsesType) {
-                            IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
-                                sakshendelse = sakshendelse,
-                                navAnsattMedSaksbehandlerRolle = saksbehandler,
-                            )
-                                .onLeft {
-                                    log.error("Feil ved journalføring av hendelseid: '${sakshendelse.id}'. Feil: ${it.feilmelding}")
-                                }
+                val følgerSak = iaTeamService.erFølgerAvSak(sak, saksbehandler)
 
-                            else -> {}
-                        }
-                        return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
-                            .onRight { lagretSak ->
-                                endringsObservers.forEach { it.receive(før = umodifisertIaSak, endring = sakshendelse, etter = lagretSak) }
+                saksbehandler.utførHendelsePåSak(
+                    sak = sak,
+                    hendelse = sakshendelse,
+                    følgerSak = følgerSak,
+                ).map { oppdatertSak ->
+                    val nyStatus = oppdatertSak.status
+                    sakshendelse.lagre(sistEndretAvHendelseId = sistEndretAvHendelseId, resulterendeStatus = nyStatus)
+                    årsakService.lagreÅrsak(sakshendelse)
+                    samarbeidService.oppdaterSamarbeid(sakshendelse, sak)
+                    when (sakshendelse.hendelsesType) {
+                        IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS -> journalpostService.journalfør(
+                            sakshendelse = sakshendelse,
+                            navAnsattMedSaksbehandlerRolle = saksbehandler,
+                        )
+                            .onLeft {
+                                log.error("Feil ved journalføring av hendelseid: '${sakshendelse.id}'. Feil: ${it.feilmelding}")
                             }
+
+                        else -> {}
                     }
+                    return oppdatertSak.lagreOppdatering(sistEndretAvHendelseId = sistEndretAvHendelseId)
+                        .onRight { lagretSak ->
+                            endringsObservers.forEach { it.receive(før = umodifisertIaSak, endring = sakshendelse, etter = lagretSak) }
+                        }
+                }
                     .mapLeft { it.tilFeilMedHttpFeilkode() }
             }
     }

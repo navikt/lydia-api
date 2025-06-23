@@ -576,23 +576,32 @@ class SakHelper {
             payload: String? = null,
         ) = nyHendelsePåSakMedRespons(sak = this, hendelsestype = hendelsestype, payload = payload, token = token)
 
-        fun IASakDto.avbrytSamarbeid(samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first()) =
-            nyHendelse(
-                hendelsestype = IASakshendelseType.AVBRYT_PROSESS,
-                payload = Json.encodeToString(samarbeidDto),
-            )
+        fun IASakDto.avbrytSamarbeid(
+            samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first(),
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = nyHendelse(
+            hendelsestype = IASakshendelseType.AVBRYT_PROSESS,
+            payload = Json.encodeToString(samarbeidDto),
+            token = token,
+        )
 
-        fun IASakDto.fullførSamarbeid(samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first()) =
-            nyHendelse(
-                hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
-                payload = Json.encodeToString(samarbeidDto),
-            )
+        fun IASakDto.fullførSamarbeid(
+            samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first(),
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = nyHendelse(
+            hendelsestype = IASakshendelseType.FULLFØR_PROSESS,
+            payload = Json.encodeToString(samarbeidDto),
+            token = token,
+        )
 
-        fun IASakDto.slettSamarbeid(samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first()) =
-            nyHendelse(
-                hendelsestype = IASakshendelseType.SLETT_PROSESS,
-                payload = Json.encodeToString(samarbeidDto),
-            )
+        fun IASakDto.slettSamarbeid(
+            samarbeidDto: IASamarbeidDto = hentAlleSamarbeid().first(),
+            token: String = authContainerHelper.saksbehandler1.token,
+        ) = nyHendelse(
+            hendelsestype = IASakshendelseType.SLETT_PROSESS,
+            payload = Json.encodeToString(samarbeidDto),
+            token = token,
+        )
 
         fun IASakDto.kanGjennomføreStatusendring(
             samarbeidDto: IASamarbeidDto,

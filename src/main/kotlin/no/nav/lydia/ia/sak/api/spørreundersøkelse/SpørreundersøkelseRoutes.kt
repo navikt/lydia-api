@@ -2,7 +2,6 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import arrow.core.Either
 import arrow.core.flatMap
-import arrow.core.getOrElse
 import arrow.core.left
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -225,7 +224,7 @@ fun Route.iaSakSpørreundersøkelse(
             val iaSak = iaSakService.hentIASak(saksnummer = input.saksnummer).getOrNull()
                 ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
 
-            if (!erEierEllerFølgerAvSak(iaSak = iaSak, iaTeamService = iaTeamService, saksbehandler = saksbehandler)) {
+            if (!iaTeamService.erEierEllerFølgerAvSak(iaSak = iaSak, saksbehandler = saksbehandler)) {
                 return@somSaksbehandler IASakError.`er ikke følger eller eier av sak`.left()
             }
             spørreundersøkelseService.oppdaterSamarbeidIdIBehovsvurdering(
@@ -260,31 +259,13 @@ fun <T> ApplicationCall.somFølgerAvSakIProsess(
         ?: return@somSaksbehandler IASakError.`ugyldig saksnummer`.left()
     if (iaSak.orgnr != orgnummer) {
         IASakError.`ugyldig orgnummer`.left()
-    } else if (!erEierEllerFølgerAvSak(iaSak = iaSak, iaTeamService = iaTeamService, saksbehandler = saksbehandler)) {
+    } else if (!iaTeamService.erEierEllerFølgerAvSak(iaSak = iaSak, saksbehandler = saksbehandler)) {
         IASakError.`er ikke følger eller eier av sak`.left()
     } else if (iaSak.status != IASak.Status.KARTLEGGES && iaSak.status != IASak.Status.VI_BISTÅR) {
         IASakSpørreundersøkelseError.`sak ikke i rett status`.left()
     } else {
         block(saksbehandler, iaSak)
     }
-}
-
-private fun erEierEllerFølgerAvSak(
-    iaSak: IASak,
-    iaTeamService: IATeamService,
-    saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
-): Boolean {
-    val følgereAvSak = iaTeamService.hentBrukereITeam(iaSak = iaSak)
-    val erFølgerAvSak = følgereAvSak
-        .map { alleFølgere ->
-            alleFølgere.any { følgerAvSak ->
-                følgerAvSak == saksbehandler.navIdent
-            }
-        }.getOrElse {
-            false
-        }
-    val erEierAvSak = iaSak.eidAv == saksbehandler.navIdent
-    return erFølgerAvSak || erEierAvSak
 }
 
 object IASakSpørreundersøkelseError {

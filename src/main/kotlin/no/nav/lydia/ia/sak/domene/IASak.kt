@@ -69,13 +69,17 @@ class IASak private constructor(
             Status.SLETTET -> throw IllegalStateException()
         }
 
-    fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) = tilstand.gyldigeNesteHendelser(navAnsatt)
+    fun gyldigeNesteHendelser(
+        navAnsatt: NavAnsattMedSaksbehandlerRolle,
+        følgerSak: Boolean,
+    ) = tilstand.gyldigeNesteHendelser(navAnsatt, følgerSak)
 
     private fun kanUtføreHendelse(
         hendelse: IASakshendelse,
         navAnsatt: NavAnsattMedSaksbehandlerRolle,
+        eierEllerFølgerSak: Boolean,
     ) = when (hendelse) {
-        is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(navAnsatt)
+        is VirksomhetIkkeAktuellHendelse -> gyldigeNesteHendelser(navAnsatt, eierEllerFølgerSak)
             .first { gyldigHendelse -> gyldigHendelse.saksHendelsestype == hendelse.hendelsesType }.gyldigeÅrsaker
             .filter { it.type == hendelse.valgtÅrsak.type }
             .any {
@@ -84,7 +88,7 @@ class IASak private constructor(
             }
 
         else ->
-            gyldigeNesteHendelser(navAnsatt)
+            gyldigeNesteHendelser(navAnsatt, eierEllerFølgerSak)
                 .map { gyldigHendelse -> gyldigHendelse.saksHendelsestype }
                 .contains(hendelse.hendelsesType)
     }
@@ -94,7 +98,8 @@ class IASak private constructor(
     private fun utførHendelseSomRådgiver(
         navAnsatt: NavAnsattMedSaksbehandlerRolle,
         hendelse: IASakshendelse,
-    ) = if (kanUtføreHendelse(hendelse = hendelse, navAnsatt = navAnsatt)) {
+        følgerSak: Boolean,
+    ) = if (kanUtføreHendelse(hendelse = hendelse, navAnsatt = navAnsatt, følgerSak)) {
         behandleHendelse(hendelse = hendelse).right()
     } else {
         generellFeil()
@@ -178,7 +183,10 @@ class IASak private constructor(
                 else -> throw IllegalStateException("Ugyldig forrige tilstand for hendelsesrekke ${hendelser.map { it.hendelsesType }}}")
             }
 
-        abstract fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse>
+        abstract fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ): List<GyldigHendelse>
     }
 
     private inner class StartTilstand :
@@ -191,7 +199,10 @@ class IASak private constructor(
                 else -> generellFeil()
             }
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
+        override fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ): List<GyldigHendelse> =
             when (navAnsatt) {
                 is Superbruker -> listOf(GyldigHendelse(VIRKSOMHET_VURDERES))
                 is Saksbehandler -> emptyList()
@@ -224,39 +235,41 @@ class IASak private constructor(
                 else -> generellFeil()
             }
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-            when (navAnsatt) {
-                is Saksbehandler -> {
-                    if (erEierAvSak(navAnsatt)) {
-                        listOf(
-                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
-                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                        )
-                    } else {
-                        listOf(
-                            GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
-                        )
-                    }
-                }
-
-                is Superbruker -> {
-                    if (eidAv == null) {
-                        listOf(
-                            GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
-                            GyldigHendelse(saksHendelsestype = SLETT_SAK),
-                        )
-                    } else if (erEierAvSak(navAnsatt)) {
-                        listOf(
-                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
-                            GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                        )
-                    } else {
-                        listOf(
-                            GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
-                        )
-                    }
+        override fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ) = when (navAnsatt) {
+            is Saksbehandler -> {
+                if (erEierAvSak(navAnsatt)) {
+                    listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                    )
+                } else {
+                    listOf(
+                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                    )
                 }
             }
+
+            is Superbruker -> {
+                if (eidAv == null) {
+                    listOf(
+                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                        GyldigHendelse(saksHendelsestype = SLETT_SAK),
+                    )
+                } else if (erEierAvSak(navAnsatt)) {
+                    listOf(
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_KONTAKTES),
+                        GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                    )
+                } else {
+                    listOf(
+                        GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+                    )
+                }
+            }
+        }
     }
 
     private inner class KontaktesTilstand :
@@ -271,16 +284,18 @@ class IASak private constructor(
                 else -> generellFeil()
             }
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-            if (erEierAvSak(navAnsatt)) {
-                listOf(
-                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_KARTLEGGES),
-                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                    GyldigHendelse(saksHendelsestype = TILBAKE),
-                )
-            } else {
-                listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
-            }
+        override fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ) = if (erEierAvSak(navAnsatt)) {
+            listOf(
+                GyldigHendelse(saksHendelsestype = VIRKSOMHET_KARTLEGGES),
+                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                GyldigHendelse(saksHendelsestype = TILBAKE),
+            )
+        } else {
+            listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+        }
     }
 
     private inner class KartleggesTilstand :
@@ -296,41 +311,63 @@ class IASak private constructor(
                 else -> generellFeil()
             }
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-            if (erEierAvSak(navAnsatt)) {
-                listOf(
-                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
-                    GyldigHendelse(saksHendelsestype = TILBAKE),
-                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                    GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
-                    GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
-                    GyldigHendelse(saksHendelsestype = NY_PROSESS),
-                    GyldigHendelse(saksHendelsestype = AVBRYT_PROSESS),
-                )
-            } else {
-                listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
-            }
+        override fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ) = if (erEierAvSak(navAnsatt)) {
+            listOf(
+                GyldigHendelse(saksHendelsestype = VIRKSOMHET_SKAL_BISTÅS),
+                GyldigHendelse(saksHendelsestype = TILBAKE),
+                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
+                GyldigHendelse(saksHendelsestype = NY_PROSESS),
+                GyldigHendelse(saksHendelsestype = AVBRYT_PROSESS),
+            )
+        } else if (følgerSak) {
+            listOf(
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
+                GyldigHendelse(saksHendelsestype = NY_PROSESS),
+                GyldigHendelse(saksHendelsestype = FULLFØR_PROSESS),
+                GyldigHendelse(saksHendelsestype = AVBRYT_PROSESS),
+                GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+            )
+        } else {
+            listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+        }
     }
 
     private inner class ViBistårTilstand :
         ProsessTilstand(
             status = Status.VI_BISTÅR,
         ) {
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle) =
-            if (erEierAvSak(navAnsatt)) {
-                listOf(
-                    GyldigHendelse(saksHendelsestype = TILBAKE),
-                    GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND),
-                    GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
-                    GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
-                    GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
-                    GyldigHendelse(saksHendelsestype = NY_PROSESS),
-                    GyldigHendelse(saksHendelsestype = FULLFØR_PROSESS),
-                    GyldigHendelse(saksHendelsestype = AVBRYT_PROSESS),
-                )
-            } else {
-                listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
-            }
+        override fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ) = if (erEierAvSak(navAnsatt)) {
+            listOf(
+                GyldigHendelse(saksHendelsestype = TILBAKE),
+                GyldigHendelse(saksHendelsestype = FULLFØR_BISTAND),
+                GyldigHendelse(saksHendelsestype = VIRKSOMHET_ER_IKKE_AKTUELL),
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
+                GyldigHendelse(saksHendelsestype = NY_PROSESS),
+                GyldigHendelse(saksHendelsestype = FULLFØR_PROSESS),
+                GyldigHendelse(saksHendelsestype = AVBRYT_PROSESS),
+            )
+        } else if (følgerSak) {
+            listOf(
+                GyldigHendelse(saksHendelsestype = ENDRE_PROSESS),
+                GyldigHendelse(saksHendelsestype = SLETT_PROSESS),
+                GyldigHendelse(saksHendelsestype = NY_PROSESS),
+                GyldigHendelse(saksHendelsestype = FULLFØR_PROSESS),
+                GyldigHendelse(saksHendelsestype = AVBRYT_PROSESS),
+                GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK),
+            )
+        } else {
+            listOf(GyldigHendelse(saksHendelsestype = TA_EIERSKAP_I_SAK))
+        }
 
         override fun behandleHendelse(hendelse: IASakshendelse) =
             when (hendelse.hendelsesType) {
@@ -345,7 +382,10 @@ class IASak private constructor(
     private abstract inner class EndeTilstand(
         status: Status,
     ) : ProsessTilstand(status = status) {
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> =
+        override fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ): List<GyldigHendelse> =
             if (erEtterFristenForLåsingAvSak()) {
                 emptyList()
             } else if (erEierAvSak(navAnsatt = navAnsatt)) {
@@ -369,14 +409,18 @@ class IASak private constructor(
     private inner class SlettetTilstand : ProsessTilstand(status = Status.SLETTET) {
         override fun behandleHendelse(hendelse: IASakshendelse) = feil("Kan ikke utføre noen hendelser i en slettet tilstand")
 
-        override fun gyldigeNesteHendelser(navAnsatt: NavAnsattMedSaksbehandlerRolle): List<GyldigHendelse> = emptyList()
+        override fun gyldigeNesteHendelser(
+            navAnsatt: NavAnsattMedSaksbehandlerRolle,
+            følgerSak: Boolean,
+        ): List<GyldigHendelse> = emptyList()
     }
 
     companion object {
         fun NavAnsattMedSaksbehandlerRolle.utførHendelsePåSak(
             sak: IASak,
             hendelse: IASakshendelse,
-        ) = sak.utførHendelseSomRådgiver(this, hendelse)
+            følgerSak: Boolean,
+        ) = sak.utførHendelseSomRådgiver(this, hendelse, følgerSak)
 
         fun maskineltBehandleSamarbeidsHendelse(
             iaSak: IASak,

@@ -90,7 +90,7 @@ class IASakTest {
             orgnummer = sak.orgnr,
             navAnsatt = superbruker2,
         )
-        superbruker1.utførHendelsePåSak(sak, vurderingsHendelse)
+        superbruker1.utførHendelsePåSak(sak, vurderingsHendelse, false)
         sak.endretAv shouldBe vurderingsHendelse.opprettetAv
         sak.endretTidspunkt shouldBe vurderingsHendelse.opprettetTidspunkt
         sak.saksnummer shouldBe vurderingsHendelse.saksnummer
@@ -136,7 +136,7 @@ class IASakTest {
             navAnsatt = saksbehandler1,
         )
         val sak = IASak.fraHendelser(listOf(nySakHendelse, vurderesHendelse, taEierskapHendelse))
-        sak.gyldigeNesteHendelser(navAnsatt = saksbehandler1)
+        sak.gyldigeNesteHendelser(navAnsatt = saksbehandler1, false)
             .shouldForAtLeastOne { gyldigHendelse ->
                 gyldigHendelse.saksHendelsestype shouldBe VIRKSOMHET_ER_IKKE_AKTUELL
                 gyldigHendelse.gyldigeÅrsaker.shouldForAtLeastOne { gyldigÅrsak ->
@@ -196,13 +196,13 @@ class IASakTest {
         sak.status shouldBe IASak.Status.IKKE_AKTUELL
 
         val tilbakeTilKontaktes = ikkeAktuell.nesteHendelse(TILBAKE)
-        superbruker1.utførHendelsePåSak(sak, tilbakeTilKontaktes)
+        superbruker1.utførHendelsePåSak(sak, tilbakeTilKontaktes, false)
         sak.endretAvHendelseId shouldBe tilbakeTilKontaktes.id
         sak.status shouldBe IASak.Status.KONTAKTES
         sak.hendelser shouldContain tilbakeTilKontaktes
 
         val tilbakeTilVurderes = tilbakeTilKontaktes.nesteHendelse(TILBAKE)
-        superbruker1.utførHendelsePåSak(sak, tilbakeTilVurderes)
+        superbruker1.utførHendelsePåSak(sak, tilbakeTilVurderes, false)
         sak.endretAvHendelseId shouldBe tilbakeTilVurderes.id
         sak.hendelser shouldContain tilbakeTilVurderes
         sak.status shouldBe IASak.Status.VURDERES
@@ -241,7 +241,7 @@ class IASakTest {
             viBistår,
             fullfør,
         )
-        val gyldigeNesteHendelser = sak.gyldigeNesteHendelser(superbruker1)
+        val gyldigeNesteHendelser = sak.gyldigeNesteHendelser(superbruker1, false)
         gyldigeNesteHendelser.size shouldBe 1
         gyldigeNesteHendelser.map { it.saksHendelsestype } shouldContainAll listOf(TILBAKE)
     }

@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.team
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
@@ -14,6 +15,25 @@ class IATeamService(
     val iaTeamRepository: IATeamRepository,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
+
+    fun erFølgerAvSak(
+        iaSak: IASak,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+    ) = hentBrukereITeam(iaSak = iaSak).map { alleFølgere ->
+        alleFølgere.any { følgerAvSak ->
+            følgerAvSak == saksbehandler.navIdent
+        }
+    }.getOrElse {
+        false
+    }
+
+    fun erEierEllerFølgerAvSak(
+        iaSak: IASak,
+        saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
+    ): Boolean {
+        val erEierAvSak = iaSak.eidAv == saksbehandler.navIdent
+        return erFølgerAvSak(iaSak, saksbehandler) || erEierAvSak
+    }
 
     fun hentBrukereITeam(iaSak: IASak) =
         try {

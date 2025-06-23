@@ -37,7 +37,7 @@ data class IASakDto(
                 eidAv = this.eidAv,
                 endretAvHendelseId = this.endretAvHendelseId,
                 gyldigeNesteHendelser = when (navAnsatt) {
-                    is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt)
+                    is NavAnsattMedSaksbehandlerRolle -> this.gyldigeNesteHendelser(navAnsatt, false)
                     else -> listOf()
                 },
                 lukket = this.erLukket(),

@@ -32,6 +32,7 @@ import no.nav.lydia.helper.SakHelper.Companion.avbrytSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.fullførSamarbeid
 import no.nav.lydia.helper.SakHelper.Companion.hentSamarbeidshistorikk
 import no.nav.lydia.helper.SakHelper.Companion.kanGjennomføreStatusendring
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nyHendelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
@@ -82,6 +83,30 @@ class IASakProsessTest {
         fun tearDown() {
             konsument.unsubscribe()
             konsument.close()
+        }
+    }
+
+    @Test
+    fun `følger av sak skal kunne opprette og endre samarbeid`() {
+        val eierAvSak = authContainerHelper.saksbehandler1
+        val sakIKartlegges = nySakIKartlegges(token = eierAvSak.token)
+
+        val følgerAvSak = authContainerHelper.saksbehandler2
+        sakIKartlegges.leggTilFolger(token = følgerAvSak.token)
+
+        val sakMedEndretSamarbeid = sakIKartlegges.opprettNyttSamarbeid(
+            navn = "Første",
+            token = følgerAvSak.token,
+        ).nyttNavnPåSamarbeid(
+            nyttNavn = "Nytt navn",
+            token = følgerAvSak.token,
+        ).avbrytSamarbeid(
+            samarbeidDto = sakIKartlegges.hentAlleSamarbeid().first(),
+            token = følgerAvSak.token,
+        )
+        sakMedEndretSamarbeid.hentAlleSamarbeid().forExactlyOne {
+            it.status shouldBe IASamarbeid.Status.AVBRUTT
+            it.navn shouldBe "Nytt navn"
         }
     }
 

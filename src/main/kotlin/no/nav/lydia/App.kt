@@ -240,6 +240,7 @@ fun startLydiaBackend() {
             fullførtBehovsvurderingProdusent,
             spørreundersøkelseBigqueryProdusent,
         ),
+        iaTeamService = iaTeamService,
     )
 
     val samarbeidplanMetrikkObserver = SamarbeidplanMetrikkObserver()
