@@ -1,10 +1,15 @@
 package no.nav.lydia.ia.sak.api.dokument
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.ia.sak.api.Feil
 import java.util.UUID
 import javax.sql.DataSource
 import kotlin.text.trimIndent
@@ -14,7 +19,7 @@ import kotlin.to
 class DokumentPubliseringRepository(
     val dataSource: DataSource,
 ) {
-    fun opprettDokument(dokumentPublisering: DokumentPublisering) =
+    fun opprettDokument(dokumentPublisering: DokumentPublisering): Either<Feil, DokumentPubliseringDto> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 action = queryOf(
@@ -47,7 +52,11 @@ class DokumentPubliseringRepository(
                 ).map { row ->
                     row.tilDokumentDto()
                 }.asSingle,
-            )
+            )?.right()
+                ?: Feil(
+                    feilmelding = "Kunne ikke opprette dokument med id: ${dokumentPublisering.dokumentId} og referanseId: ${dokumentPublisering.referanseId}",
+                    httpStatusCode = HttpStatusCode.InternalServerError,
+                ).left()
         }
 
     fun hentDokument(

@@ -4,7 +4,10 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,6 +16,8 @@ import kotlin.jvm.javaClass
 
 class DokumentPubliseringService(
     val dokumentPubliseringRepository: DokumentPubliseringRepository,
+    val spørreundersøkelseService: SpørreundersøkelseService,
+    val dokumentPubliseringProdusent: DokumentPubliseringProdusent,
 ) {
     val log: Logger = LoggerFactory.getLogger(this.javaClass)
 
@@ -22,12 +27,10 @@ class DokumentPubliseringService(
     ): Either<Feil, DokumentPubliseringDto> =
         try {
             val liste = dokumentPubliseringRepository.hentDokument(dokumentReferanseId = dokumentReferanseId, dokumentType = dokumentType)
-            liste.firstOrNull()
-                ?.right()
-                ?: Feil(
-                    feilmelding = "Ingen dokument funnet for referanseId: $dokumentReferanseId og type: $dokumentType",
-                    httpStatusCode = HttpStatusCode.NotFound,
-                ).left()
+            liste.firstOrNull()?.right() ?: Feil(
+                feilmelding = "Ingen dokument funnet for referanseId: $dokumentReferanseId og type: $dokumentType",
+                httpStatusCode = HttpStatusCode.NotFound,
+            ).left()
         } catch (e: Exception) {
             val melding = "Feil ved henting av en dokument til publisering"
             log.warn("$melding. Feilmelding: '${e.message}'", e)
@@ -38,19 +41,40 @@ class DokumentPubliseringService(
         dokumentReferanseId: UUID,
         dokumentType: DokumentPublisering.Type,
         navAnsatt: NavAnsatt,
-    ): Either<Feil, DokumentPubliseringDto?> =
-        try {
-            val dokumentPublisering = DokumentPublisering(
-                dokumentId = UUID.randomUUID(),
-                referanseId = dokumentReferanseId,
+    ): Either<Feil, DokumentPubliseringDto?> {
+        val dokumentPublisering = DokumentPublisering(
+            dokumentId = UUID.randomUUID(),
+            referanseId = dokumentReferanseId,
+            dokumentType = dokumentType,
+            status = DokumentPublisering.Status.OPPRETTET,
+            opprettetAv = navAnsatt,
+        )
+
+        if (hentDokumentPublisering(
+                dokumentReferanseId = dokumentReferanseId,
                 dokumentType = dokumentType,
-                status = DokumentPublisering.Status.OPPRETTET,
-                opprettetAv = navAnsatt,
-            )
-            dokumentPubliseringRepository.opprettDokument(dokumentPublisering = dokumentPublisering).right()
-        } catch (e: Exception) {
-            val melding = "Feil ved opprettelse av en dokument til publisering"
-            log.warn("$melding. Feilmelding: '${e.message}'", e)
-            Feil(feilmelding = melding, httpStatusCode = HttpStatusCode.InternalServerError).left()
+            ).isRight()
+        ) {
+            return Feil(
+                feilmelding = "Dokument med referanseId: $dokumentReferanseId og type: $dokumentType finnes allerede",
+                httpStatusCode = HttpStatusCode.Conflict,
+            ).left()
         }
+
+        val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId.toString()).onRight {
+            if (it.type != Spørreundersøkelse.Type.Behovsvurdering) {
+                return Feil(
+                    feilmelding = "Spørreundersøkelse med id: $dokumentReferanseId er ikke av type ${dokumentType.name}",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                ).left()
+            }
+        }.getOrNull() ?: return Feil(
+            feilmelding = "Innhold dokumentet refererer til, med referanseId: '$dokumentReferanseId' og type: '${dokumentType.name}', ble ikke funnet",
+            httpStatusCode = HttpStatusCode.NotFound,
+        ).left()
+
+        return dokumentPubliseringRepository.opprettDokument(dokumentPublisering = dokumentPublisering).onRight { dokumentPubliseringDto ->
+            dokumentPubliseringProdusent.sendPåKafka(dokumentPubliseringDto.medTilsvarendeInnhold(spørreundersøkelse = spørreundersøkelse))
+        }
+    }
 }

@@ -245,6 +245,10 @@ enum class Topic(
         navn = "team-dialog.employer-activity",
         konsumentGruppe = "lydia-api-salesforce-aktivitet-consumer",
     ),
+    DOKUMENT_PUBLISERING_TOPIC(
+        navn = "pia.dokument-publisering-v1",
+        konsumentGruppe = "dokument-publisering-producer",
+    ),
 
     @Deprecated("Bruk SPORREUNDERSOKELSE_HENDELSE_TOPIC")
     SPORREUNDERSOKELSE_SVAR_TOPIC(
