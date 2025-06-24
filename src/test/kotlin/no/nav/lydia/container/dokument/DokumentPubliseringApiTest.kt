@@ -1,15 +1,20 @@
 package no.nav.lydia.container.dokument
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
+import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.TestContainerHelper.Companion.performPost
 import no.nav.lydia.helper.statuskode
@@ -17,13 +22,33 @@ import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import java.util.UUID
 import kotlin.test.Test
 
 class DokumentPubliseringApiTest {
+    companion object {
+        private val topic = Topic.DOKUMENT_PUBLISERING_TOPIC
+        private val konsument = kafkaContainerHelper.nyKonsument(topic = topic)
+
+        @BeforeClass
+        @JvmStatic
+        fun setUp() = konsument.subscribe(mutableListOf(topic.navn))
+
+        @AfterClass
+        @JvmStatic
+        fun tearDown() {
+            konsument.unsubscribe()
+            konsument.close()
+        }
+    }
+
     @Test
-    fun `uthenting av dokument returnerer 404 Not Found hvis ikke funnet`() {
+    fun `uthenting av et dokument til publisering returnerer 404 Not Found hvis ikke funnet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val dokumentType = DokumentPublisering.Type.BEHOVSVURDERING
         val spørreundersøkelseType = Spørreundersøkelse.Type.Behovsvurdering.name
@@ -40,27 +65,97 @@ class DokumentPubliseringApiTest {
     }
 
     @Test
-    fun `opprettelese av dokument til publisering returnerer 201 Created`() {
+    fun `opprettelese av et dokument til publisering returnerer 404 Not Found dersom referanse ikke er funnet`() {
+        nySakIKartleggesMedEtSamarbeid()
+        val dokumentRefId = UUID.randomUUID().toString()
+
+        val response = opprettDokumentPubliseringRespons(
+            dokumentReferanseId = dokumentRefId,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.NotFound.value
+        response.second.body()
+            .asString(contentType = "text/plain") shouldBe
+            "Innhold dokumentet refererer til, med referanseId: '$dokumentRefId' og type: 'BEHOVSVURDERING', ble ikke funnet"
+    }
+
+    @Test
+    fun `opprettelese av dokument til publisering returnerer 409 Conflict dersom dokument allerede er opprettet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val type = "Behovsvurdering"
         val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val dokumentRefId = fullførtBehovsvurdering.id
 
+        // 1- verifiser at et dokument har blitt opprettet
         val response = opprettDokumentPubliseringRespons(
-            dokumentReferanseId = fullførtBehovsvurdering.id,
+            dokumentReferanseId = dokumentRefId,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+
+        // 2- verifiser at samme POST request returneres en 409 Conflict
+        val responseDuplisertRequest = opprettDokumentPubliseringRespons(
+            dokumentReferanseId = dokumentRefId,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        responseDuplisertRequest.statuskode() shouldBe HttpStatusCode.Conflict.value
+        responseDuplisertRequest.second.body()
+            .asString(contentType = "text/plain") shouldBe "Dokument med referanseId: $dokumentRefId og type: BEHOVSVURDERING finnes allerede"
+    }
+
+    @Test
+    fun `opprettelese av dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val type = "Behovsvurdering"
+        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val samarbeidId = fullførtBehovsvurdering.samarbeidId
+        val dokumentRefId = fullførtBehovsvurdering.id
+
+        // 1- verifiser at et dokument har blitt opprettet
+        val response = opprettDokumentPubliseringRespons(
+            dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
 
         response.statuskode() shouldBe HttpStatusCode.Created.value
         val dokumentPubliseringDto: DokumentPubliseringDto = response.third.get()
-        dokumentPubliseringDto.referanseId shouldBe fullførtBehovsvurdering.id
+        dokumentPubliseringDto.referanseId shouldBe dokumentRefId
         dokumentPubliseringDto.dokumentType shouldBe DokumentPublisering.Type.BEHOVSVURDERING
         dokumentPubliseringDto.opprettetAv shouldBe authContainerHelper.saksbehandler1.navIdent
         dokumentPubliseringDto.status shouldBe DokumentPublisering.Status.OPPRETTET
         dokumentPubliseringDto.dokumentId shouldNotBe null
         dokumentPubliseringDto.opprettetTidspunkt shouldNotBe null
         dokumentPubliseringDto.publisertTidspunkt shouldBe null
+
+        // 2- verifiser at dokumentet + innhold er sent til Kafka
+        val dokumentId = dokumentPubliseringDto.dokumentId
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                key = "$samarbeidId-$dokumentId",
+                konsument = konsument,
+            ) { meldinger ->
+                meldinger shouldHaveAtLeastSize 1
+                Json.decodeFromString<DokumentPubliseringMedInnhold>(meldinger.first())
+                    .also { dokumentPubliseringMedInnhold ->
+                        dokumentPubliseringMedInnhold.dokumentId shouldBe dokumentPubliseringDto.dokumentId
+                        dokumentPubliseringMedInnhold.referanseId shouldBe dokumentRefId
+                        dokumentPubliseringMedInnhold.orgnr shouldBe sak.orgnr
+                        dokumentPubliseringMedInnhold.saksnummer shouldBe sak.saksnummer
+                        dokumentPubliseringMedInnhold.samarbeidId shouldBe samarbeidId
+                        Json.decodeFromString<SpørreundersøkelseDto>(dokumentPubliseringMedInnhold.innhold).also { spørreundersøkelseDto ->
+                            spørreundersøkelseDto.id shouldBe dokumentRefId
+                            spørreundersøkelseDto.samarbeidId shouldBe fullførtBehovsvurdering.samarbeidId
+                            spørreundersøkelseDto.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
+                            spørreundersøkelseDto.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
+                        }
+                    }
+            }
+        }
     }
 
     @Test

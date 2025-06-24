@@ -64,6 +64,7 @@ import no.nav.lydia.ia.sak.SendSamarbeidPåKafkaObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseMetrikkObserver
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringRepository
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringService
 import no.nav.lydia.ia.sak.api.dokument.dokumentPublisering
@@ -273,6 +274,11 @@ fun startLydiaBackend() {
         ),
         spørreundersøkelseOppdateringProdusent = spørreundersøkelseOppdateringProdusent,
     )
+    val dokumentPubliseringService = DokumentPubliseringService(
+        dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource),
+        spørreundersøkelseService = spørreundersøkelseService,
+        dokumentPubliseringProdusent = DokumentPubliseringProdusent(kafka = naisEnv.kafka, topic = Topic.DOKUMENT_PUBLISERING_TOPIC),
+    )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
@@ -403,6 +409,7 @@ fun startLydiaBackend() {
             samarbeidService = samarbeidService,
             spørreundersøkelseService = spørreundersøkelseService,
             planService = planService,
+            dokumentPubliseringService = dokumentPubliseringService,
         )
     }.also {
         // https://doc.nais.io/nais-application/good-practices/#handles-termination-gracefully
@@ -493,6 +500,7 @@ private fun Application.lydiaRestApi(
     spørreundersøkelseService: SpørreundersøkelseService,
     iaTeamService: IATeamService,
     planService: PlanService,
+    dokumentPubliseringService: DokumentPubliseringService,
 ) {
     install(ContentNegotiation) {
         json()
@@ -612,9 +620,7 @@ private fun Application.lydiaRestApi(
             )
             dokumentPublisering(
                 adGrupper = naisEnv.security.adGrupper,
-                dokumentPubliseringService = DokumentPubliseringService(
-                    dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource),
-                ),
+                dokumentPubliseringService = dokumentPubliseringService,
             )
             iaTjenesteoversikt(
                 iaTjenesteoversiktService = IATjenesteoversiktService(
