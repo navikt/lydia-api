@@ -115,6 +115,7 @@ class DokumentPubliseringApiTest {
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val samarbeidId = fullførtBehovsvurdering.samarbeidId
         val dokumentRefId = fullførtBehovsvurdering.id
+        val navIdent = authContainerHelper.saksbehandler1.navIdent
 
         // 1- verifiser at et dokument har blitt opprettet
         val response = opprettDokumentPubliseringRespons(
@@ -126,7 +127,7 @@ class DokumentPubliseringApiTest {
         val dokumentPubliseringDto: DokumentPubliseringDto = response.third.get()
         dokumentPubliseringDto.referanseId shouldBe dokumentRefId
         dokumentPubliseringDto.dokumentType shouldBe DokumentPublisering.Type.BEHOVSVURDERING
-        dokumentPubliseringDto.opprettetAv shouldBe authContainerHelper.saksbehandler1.navIdent
+        dokumentPubliseringDto.opprettetAv shouldBe navIdent
         dokumentPubliseringDto.status shouldBe DokumentPublisering.Status.OPPRETTET
         dokumentPubliseringDto.dokumentId shouldNotBe null
         dokumentPubliseringDto.opprettetTidspunkt shouldNotBe null
@@ -147,6 +148,7 @@ class DokumentPubliseringApiTest {
                         dokumentPubliseringMedInnhold.orgnr shouldBe sak.orgnr
                         dokumentPubliseringMedInnhold.saksnummer shouldBe sak.saksnummer
                         dokumentPubliseringMedInnhold.samarbeidId shouldBe samarbeidId
+                        dokumentPubliseringMedInnhold.opprettetAv shouldBe navIdent
                         Json.decodeFromString<SpørreundersøkelseDto>(dokumentPubliseringMedInnhold.innhold).also { spørreundersøkelseDto ->
                             spørreundersøkelseDto.id shouldBe dokumentRefId
                             spørreundersøkelseDto.samarbeidId shouldBe fullførtBehovsvurdering.samarbeidId
