@@ -611,25 +611,29 @@ class IASakService(
         return årsaker
     }
 
-    fun avsluttSakForSlettetVirksomhet(iaSak: IASak) {
-        // avslutt alle samarbeid
-        samarbeidService.hentAktiveSamarbeid(iaSak).forEach { samarbeid ->
-            // avslutt eventuelle spørreundersøkelser i samarbeid
-            spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
-                .plus(spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering))
-                .filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
-                .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id.toString()) }
+    fun avsluttSakForSlettetVirksomhet(orgnr: String) {
+        hentAktivSak(orgnummer = orgnr)?.let { iaSak ->
+            if (iaSak.status != IASak.Status.FULLFØRT && iaSak.status != IASak.Status.IKKE_AKTUELL) {
+                // avslutt alle samarbeid
+                samarbeidService.hentAktiveSamarbeid(iaSak).forEach { samarbeid ->
+                    // avslutt eventuelle spørreundersøkelser i samarbeid
+                    spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
+                        .plus(spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering))
+                        .filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
+                        .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id.toString()) }
 
-            // slett eventuell plan for samarbeid
-            planRepository.hentPlan(samarbeidId = samarbeid.id)
-                ?.let { planRepository.settPlanTilAvbrutt(it) }
+                    // slett eventuell plan for samarbeid
+                    planRepository.hentPlan(samarbeidId = samarbeid.id)
+                        ?.let { planRepository.settPlanTilAvbrutt(it) }
 
-            // sett samarbeid til AVBRYTT
-            val oppdatertSak = iaSakRepository.hentIASak(saksnummer = iaSak.saksnummer)!!
-            oppdatertSak.maskineltAvsluttProsess(iaSamarbeidDto = samarbeid.tilDto())
+                    // sett samarbeid til AVBRYTT
+                    val oppdatertSak = iaSakRepository.hentIASak(saksnummer = iaSak.saksnummer)!!
+                    oppdatertSak.maskineltAvsluttProsess(iaSamarbeidDto = samarbeid.tilDto())
+                }
+                val oppdatertSak = iaSakRepository.hentIASak(saksnummer = iaSak.saksnummer)!!
+                // sett sak til Ikke aktuell
+                oppdatertSak.maskineltSettSakTilIkkeAktuell(tørrKjør = false)
+            }
         }
-        val oppdatertSak = iaSakRepository.hentIASak(saksnummer = iaSak.saksnummer)!!
-        // sett sak til Ikke aktuell
-        oppdatertSak.maskineltSettSakTilIkkeAktuell(tørrKjør = false)
     }
 }

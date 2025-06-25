@@ -281,6 +281,23 @@ class VirksomhetRepository(
             }
         }
     }
+
+    fun finnSlettedeVirksomheterMedAktivSak() =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT orgnr, saksnummer 
+                    FROM virksomhet JOIN ia_sak USING (orgnr)
+                    WHERE virksomhet.status IN ('SLETTET', 'FJERNET')
+                    AND ia_sak.status NOT IN ('FULLFØRT', 'IKKE_AKTUELL');  
+                    """.trimIndent(),
+                    mapOf(),
+                ).map {
+                    it.string("orgnr")
+                }.asList,
+            )
+        }
 }
 
 @Serializable

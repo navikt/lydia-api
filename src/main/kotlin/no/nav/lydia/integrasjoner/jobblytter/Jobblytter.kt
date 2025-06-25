@@ -36,12 +36,14 @@ import no.nav.lydia.ia.eksport.SamarbeidKafkaEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanBigqueryEksporterer
 import no.nav.lydia.ia.eksport.SamarbeidsplanKafkaEksporterer
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryEksporterer
+import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
 import no.nav.lydia.vedlikehold.LukkAlleÅpneIaTjenester
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
+import no.nav.lydia.virksomhet.VirksomhetService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import org.apache.kafka.common.errors.WakeupException
@@ -73,6 +75,8 @@ object Jobblytter : CoroutineScope {
     private lateinit var lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester
     private lateinit var samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer
     private lateinit var iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer
+    private lateinit var virksomhetService: VirksomhetService
+    private lateinit var iaSakService: IASakService
     private val topic = Topic.JOBBLYTTER_TOPIC
 
     override val coroutineContext: CoroutineContext
@@ -99,6 +103,8 @@ object Jobblytter : CoroutineScope {
         lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
         samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
         iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
+        virksomhetService: VirksomhetService,
+        iaSakService: IASakService,
     ) {
         logger.info("Creating kafka consumer job for ${topic.navn}")
         job = Job()
@@ -124,6 +130,8 @@ object Jobblytter : CoroutineScope {
         this.lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester
         this.samarbeidKafkaEksporterer = samarbeidKafkaEksporterer
         this.iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer
+        this.virksomhetService = virksomhetService
+        this.iaSakService = iaSakService
 
         logger.info("Created kafka consumer job for ${topic.navn}")
     }
@@ -150,7 +158,12 @@ object Jobblytter : CoroutineScope {
                                             logger.warn("Forsøkte å starte jobb 'engangsJobb' med null/empty parameter. Avslutter")
                                         } else {
                                             val tørrKjør = jobInfo.parameter != "GO!"
-                                            iaSakSamarbeidOppdaterer.avbryteSamarbeidForIkkeAktuelleIASaker(tørrKjør)
+                                            virksomhetService.finnSlettedeVirksomheterMedAktivSak().forEach { virksomhet ->
+                                                logger.info("Virksomhet $virksomhet")
+                                                if (!tørrKjør) {
+                                                    iaSakService.avsluttSakForSlettetVirksomhet(virksomhet)
+                                                }
+                                            }
                                         }
                                     }
 

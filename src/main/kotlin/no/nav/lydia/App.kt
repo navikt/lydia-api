@@ -337,6 +337,8 @@ fun startLydiaBackend() {
         iaSakSamarbeidOppdaterer = IASakSamarbeidOppdaterer(
             iaSakService = iaSakService,
         ),
+        virksomhetService = virksomhetService,
+        iaSakService = iaSakService,
     )
 
     listOf(
@@ -453,6 +455,8 @@ private fun jobblytter(
     lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
     samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
     iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
+    virksomhetService: VirksomhetService,
+    iaSakService: IASakService,
 ) {
     Jobblytter.apply {
         create(
@@ -472,6 +476,8 @@ private fun jobblytter(
             samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer,
             samarbeidKafkaEksporterer = samarbeidKafkaEksporterer,
             iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer,
+            virksomhetService = virksomhetService,
+            iaSakService = iaSakService,
         )
         run()
     }
