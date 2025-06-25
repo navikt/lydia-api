@@ -23,6 +23,7 @@ class DokumentPubliseringProdusent(
             DokumentPubliseringMedInnhold(
                 dokumentId = this.dokumentId,
                 referanseId = this.referanseId,
+                opprettetAv = this.opprettetAv,
                 orgnr = spørreundersøkelse.orgnummer,
                 saksnummer = spørreundersøkelse.saksnummer,
                 samarbeidId = spørreundersøkelse.samarbeidId,
@@ -35,6 +36,7 @@ class DokumentPubliseringProdusent(
 data class DokumentPubliseringMedInnhold(
     val dokumentId: String,
     val referanseId: String,
+    val opprettetAv: String,
     val orgnr: String,
     val saksnummer: String,
     val samarbeidId: Int,
