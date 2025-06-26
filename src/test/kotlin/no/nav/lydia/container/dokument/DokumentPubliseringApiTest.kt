@@ -23,6 +23,7 @@ import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
@@ -129,21 +130,20 @@ class DokumentPubliseringApiTest {
         dokumentPubliseringDto.dokumentType shouldBe DokumentPublisering.Type.BEHOVSVURDERING
         dokumentPubliseringDto.opprettetAv shouldBe navIdent
         dokumentPubliseringDto.status shouldBe DokumentPublisering.Status.OPPRETTET
-        dokumentPubliseringDto.dokumentId shouldNotBe null
+        dokumentPubliseringDto.dokumentId shouldBe null
         dokumentPubliseringDto.opprettetTidspunkt shouldNotBe null
         dokumentPubliseringDto.publisertTidspunkt shouldBe null
 
         // 2- verifiser at dokumentet + innhold er sent til Kafka
-        val dokumentId = dokumentPubliseringDto.dokumentId
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = "$samarbeidId-$dokumentId",
+                // key: '1-f44fee5f-cc38-41e5-bb59-ab4a7c83051d-BEHOVSVURDERING'
+                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPublisering.Type.BEHOVSVURDERING.name),
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
                 Json.decodeFromString<DokumentPubliseringMedInnhold>(meldinger.first())
                     .also { dokumentPubliseringMedInnhold ->
-                        dokumentPubliseringMedInnhold.dokumentId shouldBe dokumentPubliseringDto.dokumentId
                         dokumentPubliseringMedInnhold.referanseId shouldBe dokumentRefId
                         dokumentPubliseringMedInnhold.orgnr shouldBe sak.orgnr
                         dokumentPubliseringMedInnhold.saksnummer shouldBe sak.saksnummer
@@ -174,14 +174,13 @@ class DokumentPubliseringApiTest {
         )
         postResponse.statuskode() shouldBe HttpStatusCode.Created.value
         val getResponse = hentDokumentPubliseringRespons(dokumentReferanseId = fullførtBehovsvurdering.id)
-
+        getResponse.statuskode() shouldBe HttpStatusCode.OK.value
         val dokumentPubliseringDto: DokumentPubliseringDto = getResponse.third.get()
-        dokumentPubliseringDto.dokumentId.length shouldBe UUID.randomUUID().toString().length
         dokumentPubliseringDto.referanseId shouldBe fullførtBehovsvurdering.id
         dokumentPubliseringDto.dokumentType shouldBe DokumentPublisering.Type.BEHOVSVURDERING
         dokumentPubliseringDto.opprettetAv shouldBe authContainerHelper.saksbehandler1.navIdent
         dokumentPubliseringDto.status shouldBe DokumentPublisering.Status.OPPRETTET
-        dokumentPubliseringDto.dokumentId shouldNotBe null
+        dokumentPubliseringDto.dokumentId shouldBe null
         dokumentPubliseringDto.opprettetTidspunkt shouldNotBe null
         dokumentPubliseringDto.publisertTidspunkt shouldBe null
     }
