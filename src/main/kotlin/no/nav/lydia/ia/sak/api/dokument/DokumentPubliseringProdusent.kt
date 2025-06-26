@@ -13,16 +13,22 @@ class DokumentPubliseringProdusent(
     topic: Topic = Topic.DOKUMENT_PUBLISERING_TOPIC,
 ) : KafkaProdusent<DokumentPubliseringMedInnhold>(kafka = kafka, topic = topic) {
     override fun tilKafkaMelding(input: DokumentPubliseringMedInnhold): Pair<String, String> {
-        val key = "${input.samarbeidId}-${input.dokumentId}"
+        val key = getKafkaMeldingKey(samarbeidId = input.samarbeidId, referanseId = input.referanseId, type = input.type)
         val value = Json.encodeToString<DokumentPubliseringMedInnhold>(input)
         return key to value
     }
 
     companion object {
+        fun getKafkaMeldingKey(
+            samarbeidId: Int,
+            referanseId: String,
+            type: String,
+        ): String = "$samarbeidId-$referanseId-$type"
+
         fun DokumentPubliseringDto.medTilsvarendeInnhold(spørreundersøkelse: Spørreundersøkelse): DokumentPubliseringMedInnhold =
             DokumentPubliseringMedInnhold(
-                dokumentId = this.dokumentId,
                 referanseId = this.referanseId,
+                type = this.dokumentType.name,
                 opprettetAv = this.opprettetAv,
                 orgnr = spørreundersøkelse.orgnummer,
                 saksnummer = spørreundersøkelse.saksnummer,
@@ -34,8 +40,8 @@ class DokumentPubliseringProdusent(
 
 @Serializable
 data class DokumentPubliseringMedInnhold(
-    val dokumentId: String,
     val referanseId: String,
+    val type: String,
     val opprettetAv: String,
     val orgnr: String,
     val saksnummer: String,

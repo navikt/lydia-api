@@ -24,29 +24,26 @@ class DokumentPubliseringRepository(
             session.run(
                 action = queryOf(
                     paramMap = mapOf(
-                        "dokumentId" to dokumentPublisering.dokumentId.toString(),
                         "referanseId" to dokumentPublisering.referanseId.toString(),
-                        "opprettetAv" to dokumentPublisering.opprettetAv.navIdent,
                         "type" to dokumentPublisering.dokumentType.name,
+                        "opprettetAv" to dokumentPublisering.opprettetAv.navIdent,
                         "status" to dokumentPublisering.status.name,
                     ),
                     statement =
                         """
                         INSERT INTO dokument_til_publisering (
-                          dokument_id, 
                           referanse_id, 
-                          opprettet_av, 
                           type, 
+                          opprettet_av, 
                           status
                         ) 
                         VALUES (
-                          :dokumentId, 
                           :referanseId, 
-                          :opprettetAv, 
                           :type, 
+                          :opprettetAv, 
                           :status
                         )
-                        ON CONFLICT (dokument_id) DO NOTHING
+                        ON CONFLICT (referanse_id, type) DO NOTHING
                         RETURNING *
                         """.trimIndent(),
                 ).map { row ->
@@ -54,7 +51,8 @@ class DokumentPubliseringRepository(
                 }.asSingle,
             )?.right()
                 ?: Feil(
-                    feilmelding = "Kunne ikke opprette dokument med id: ${dokumentPublisering.dokumentId} og referanseId: ${dokumentPublisering.referanseId}",
+                    feilmelding = "Kunne ikke opprette dokument med referanseId: ${dokumentPublisering.referanseId} " +
+                        "og type: ${dokumentPublisering.dokumentType}",
                     httpStatusCode = HttpStatusCode.InternalServerError,
                 ).left()
         }
@@ -83,7 +81,7 @@ class DokumentPubliseringRepository(
 
     fun Row.tilDokumentDto(): DokumentPubliseringDto =
         DokumentPubliseringDto(
-            dokumentId = this.string(columnLabel = "dokument_id"),
+            dokumentId = this.stringOrNull(columnLabel = "dokument_id"),
             referanseId = this.string(columnLabel = "referanse_id"),
             opprettetAv = this.string(columnLabel = "opprettet_av"),
             status = DokumentPublisering.Status.valueOf(this.string(columnLabel = "status")),

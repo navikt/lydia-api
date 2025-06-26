@@ -7,7 +7,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Type
 
 @Serializable
 data class DokumentPubliseringDto(
-    val dokumentId: String,
+    val dokumentId: String? = null,
     val referanseId: String,
     val opprettetAv: String,
     val status: Status,
