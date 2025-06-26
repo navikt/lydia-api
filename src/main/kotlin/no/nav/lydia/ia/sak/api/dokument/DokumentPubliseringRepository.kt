@@ -10,6 +10,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 import javax.sql.DataSource
 import kotlin.text.trimIndent
@@ -19,15 +20,19 @@ import kotlin.to
 class DokumentPubliseringRepository(
     val dataSource: DataSource,
 ) {
-    fun opprettDokument(dokumentPublisering: DokumentPublisering): Either<Feil, DokumentPubliseringDto> =
+    fun opprettDokument(
+        referanseId: UUID,
+        dokumentType: DokumentPublisering.Type,
+        opprettetAv: NavAnsatt,
+    ): Either<Feil, DokumentPubliseringDto> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 action = queryOf(
                     paramMap = mapOf(
-                        "referanseId" to dokumentPublisering.referanseId.toString(),
-                        "type" to dokumentPublisering.dokumentType.name,
-                        "opprettetAv" to dokumentPublisering.opprettetAv.navIdent,
-                        "status" to dokumentPublisering.status.name,
+                        "referanseId" to referanseId.toString(),
+                        "type" to dokumentType.name,
+                        "opprettetAv" to opprettetAv.navIdent,
+                        "status" to DokumentPublisering.Status.OPPRETTET.name,
                     ),
                     statement =
                         """
@@ -51,8 +56,8 @@ class DokumentPubliseringRepository(
                 }.asSingle,
             )?.right()
                 ?: Feil(
-                    feilmelding = "Kunne ikke opprette dokument med referanseId: ${dokumentPublisering.referanseId} " +
-                        "og type: ${dokumentPublisering.dokumentType}",
+                    feilmelding = "Kunne ikke opprette dokument med referanseId: $referanseId " +
+                        "og type: $dokumentType",
                     httpStatusCode = HttpStatusCode.InternalServerError,
                 ).left()
         }
