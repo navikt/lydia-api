@@ -43,7 +43,7 @@ fun Route.dokumentPublisering(
             dokumentPubliseringService.opprettDokumentPublisering(
                 dokumentReferanseId = dokumentReferanseId,
                 dokumentType = dokumentType,
-                navAnsatt = saksbehandler,
+                opprettetAv = saksbehandler,
             )
         }.onRight {
             if (it == null) {

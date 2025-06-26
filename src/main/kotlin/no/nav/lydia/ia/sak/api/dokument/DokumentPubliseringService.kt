@@ -40,16 +40,8 @@ class DokumentPubliseringService(
     fun opprettDokumentPublisering(
         dokumentReferanseId: UUID,
         dokumentType: DokumentPublisering.Type,
-        navAnsatt: NavAnsatt,
+        opprettetAv: NavAnsatt,
     ): Either<Feil, DokumentPubliseringDto?> {
-        val dokumentPublisering = DokumentPublisering(
-            dokumentId = UUID.randomUUID(),
-            referanseId = dokumentReferanseId,
-            dokumentType = dokumentType,
-            status = DokumentPublisering.Status.OPPRETTET,
-            opprettetAv = navAnsatt,
-        )
-
         if (hentDokumentPublisering(
                 dokumentReferanseId = dokumentReferanseId,
                 dokumentType = dokumentType,
@@ -73,7 +65,11 @@ class DokumentPubliseringService(
             httpStatusCode = HttpStatusCode.NotFound,
         ).left()
 
-        return dokumentPubliseringRepository.opprettDokument(dokumentPublisering = dokumentPublisering).onRight { dokumentPubliseringDto ->
+        return dokumentPubliseringRepository.opprettDokument(
+            referanseId = dokumentReferanseId,
+            dokumentType = dokumentType,
+            opprettetAv = opprettetAv,
+        ).onRight { dokumentPubliseringDto ->
             dokumentPubliseringProdusent.sendPåKafka(dokumentPubliseringDto.medTilsvarendeInnhold(spørreundersøkelse = spørreundersøkelse))
         }
     }
