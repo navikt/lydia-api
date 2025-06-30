@@ -81,6 +81,23 @@ class DokumentPubliseringApiTest {
     }
 
     @Test
+    fun `opprettelese av et dokument av type Behovsvurdering returnerer 400 Bad Request dersom status ikke er FULLFØRT`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val startetBehovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val dokumentRefId = startetBehovsvurdering.id
+
+        val response = opprettDokumentPubliseringRespons(
+            dokumentReferanseId = dokumentRefId,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.BadRequest.value
+        response.second.body()
+            .asString(contentType = "text/plain; charset=utf-8") shouldBe
+            "Spørreundersøkelse med id: '$dokumentRefId' har ikke status AVSLUTTET, og dermed ikke kan lagres som dokument. Status var: 'PÅBEGYNT'"
+    }
+
+    @Test
     fun `opprettelese av dokument til publisering returnerer 409 Conflict dersom dokument allerede er opprettet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val type = "Behovsvurdering"

@@ -60,6 +60,13 @@ class DokumentPubliseringService(
                     httpStatusCode = HttpStatusCode.BadRequest,
                 ).left()
             }
+            if (it.status != Spørreundersøkelse.Status.AVSLUTTET) {
+                return Feil(
+                    feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ikke status AVSLUTTET, " +
+                        "og dermed ikke kan lagres som dokument. Status var: '${it.status.name}'",
+                    httpStatusCode = HttpStatusCode.BadRequest,
+                ).left()
+            }
         }.getOrNull() ?: return Feil(
             feilmelding = "Innhold dokumentet refererer til, med referanseId: '$dokumentReferanseId' og type: '${dokumentType.name}', ble ikke funnet",
             httpStatusCode = HttpStatusCode.NotFound,
