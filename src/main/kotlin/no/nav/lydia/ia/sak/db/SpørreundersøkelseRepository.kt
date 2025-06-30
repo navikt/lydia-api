@@ -13,6 +13,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Companion.tilDokumentTilPubliseringStatus
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
@@ -59,10 +60,14 @@ class SpørreundersøkelseRepository(
             session.run(
                 queryOf(
                     """
-                    SELECT *
+                    SELECT 
+                         ia_sak_kartlegging.*,
+                         dokument_til_publisering.status AS publisering_status
                     FROM ia_sak_kartlegging
+                    LEFT JOIN dokument_til_publisering 
+                        ON dokument_til_publisering.referanse_id = ia_sak_kartlegging.kartlegging_id
                     WHERE kartlegging_id = :sporreundersokelseId
-                    AND status != :slettetStatus
+                        AND ia_sak_kartlegging.status != :slettetStatus
                     """.trimMargin(),
                     mapOf(
                         "sporreundersokelseId" to spørreundersøkelseId,
@@ -79,11 +84,15 @@ class SpørreundersøkelseRepository(
         session.run(
             queryOf(
                 """
-                    SELECT *
+                    SELECT 
+                         ia_sak_kartlegging.*,
+                         dokument_til_publisering.status AS publisering_status
                     FROM ia_sak_kartlegging
-                    WHERE ia_prosess = :prosessId
-                    AND status != :slettetStatus
-                    AND type = :type
+                    LEFT JOIN dokument_til_publisering 
+                        ON dokument_til_publisering.referanse_id = ia_sak_kartlegging.kartlegging_id
+                    WHERE ia_sak_kartlegging.ia_prosess = :prosessId
+                        AND ia_sak_kartlegging.status != :slettetStatus
+                        AND ia_sak_kartlegging.type = :type
                 """.trimMargin(),
                 mapOf(
                     "prosessId" to samarbeid.id,
@@ -229,6 +238,7 @@ class SpørreundersøkelseRepository(
             id = spørreundersøkelseId,
             samarbeidId = this.int("ia_prosess"),
             status = Spørreundersøkelse.Status.valueOf(this.string("status")),
+            publiseringStatus = this.stringOrNull("publisering_status").tilDokumentTilPubliseringStatus(),
             opprettetAv = this.string("opprettet_av"),
             opprettetTidspunkt = this.localDateTime("opprettet"),
             endretTidspunkt = this.localDateTimeOrNull("endret"),

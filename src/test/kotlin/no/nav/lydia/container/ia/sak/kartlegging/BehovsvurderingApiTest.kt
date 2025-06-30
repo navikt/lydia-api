@@ -17,6 +17,7 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.opprettDokumentPubliseringRespons
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.flytt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
@@ -38,9 +39,11 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.shouldContainLog
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -292,7 +295,32 @@ class BehovsvurderingApiTest {
         alleKartlegginger.first().opprettetAv shouldBe behvosvurdering.opprettetAv
         alleKartlegginger.first().opprettetTidspunkt shouldBe behvosvurdering.opprettetTidspunkt
         alleKartlegginger.first().status shouldBe Spørreundersøkelse.Status.OPPRETTET
+        alleKartlegginger.first().publiseringStatus shouldBe DokumentPublisering.Status.IKKE_PUBLISERT
         alleKartlegginger.first().endretTidspunkt shouldBe null
+    }
+
+    @Test
+    fun `skal returnere publiseringsstatus for behovsvurdering`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val spørreundersøkelseType = Spørreundersøkelse.Type.Behovsvurdering.name
+        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = spørreundersøkelseType)
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val response = opprettDokumentPubliseringRespons(
+            dokumentReferanseId = fullførtBehovsvurdering.id,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+
+        val alleSpørreundersøkelser = hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = fullførtBehovsvurdering.samarbeidId,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        )
+
+        alleSpørreundersøkelser.first().publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
     }
 
     @Test

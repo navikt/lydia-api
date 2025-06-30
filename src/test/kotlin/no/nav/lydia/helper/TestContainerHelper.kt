@@ -50,6 +50,8 @@ import no.nav.lydia.ia.sak.api.SAK_HENDELSE_SUB_PATH
 import no.nav.lydia.ia.sak.api.SAMARBEIDSHISTORIKK_PATH
 import no.nav.lydia.ia.sak.api.SaksStatusDto
 import no.nav.lydia.ia.sak.api.SakshistorikkDto
+import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.plan.EndreTemaRequest
 import no.nav.lydia.ia.sak.api.plan.EndreUndertemaRequest
 import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
@@ -665,6 +667,17 @@ class SakHelper {
         }
 
         fun ValgtÅrsak.toJson() = Json.encodeToString(value = this)
+    }
+}
+
+class DokumentPubliseringHelper {
+    companion object {
+        fun opprettDokumentPubliseringRespons(
+            dokumentReferanseId: String,
+            token: String,
+        ) = applikasjon.performPost(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/Behovsvurdering/ref/$dokumentReferanseId")
+            .authentication().bearer(token = token)
+            .tilSingelRespons<DokumentPubliseringDto>()
     }
 }
 

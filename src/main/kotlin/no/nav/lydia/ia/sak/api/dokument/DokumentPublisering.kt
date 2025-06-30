@@ -18,11 +18,20 @@ data class DokumentPublisering(
                 "Samarbeidsplan" -> Type.SAMARBEIDSPLAN
                 else -> throw kotlin.IllegalArgumentException("Ugyldig type: $this")
             }
+
+        fun String?.tilDokumentTilPubliseringStatus(): Status =
+            when (this) {
+                "OPPRETTET" -> Status.OPPRETTET
+                "PUBLISERT" -> Status.PUBLISERT
+                "IKKE_PUBLISERT" -> Status.IKKE_PUBLISERT
+                else -> Status.IKKE_PUBLISERT
+            }
     }
 
     enum class Status {
         OPPRETTET,
         PUBLISERT,
+        IKKE_PUBLISERT,
     }
 
     enum class Type {
