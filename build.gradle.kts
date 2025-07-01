@@ -1,4 +1,4 @@
-val ktorVersion = "3.1.3"
+val ktorVersion = "3.2.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.11.0"
 val kotestVerstion = "5.9.1"
