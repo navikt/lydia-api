@@ -53,7 +53,7 @@ class AuthContainerHelper(
     val teamPiaBruker: TestBruker
     val brukerUtenTilgangsrolle: TestBruker
 
-    val container: GenericContainer<*> = GenericContainer(DockerImageName.parse("ghcr.io/navikt/mock-oauth2-server:2.1.10"))
+    val container: GenericContainer<*> = GenericContainer(DockerImageName.parse("ghcr.io/navikt/mock-oauth2-server:2.2.1"))
         .withNetwork(network)
         .waitingFor(HostPortWaitStrategy())
         .withNetworkAliases(networkalias)

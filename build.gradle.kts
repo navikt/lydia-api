@@ -2,7 +2,7 @@ val ktorVersion = "3.2.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.11.0"
 val kotestVerstion = "5.9.1"
-val testcontainersVersion = "1.21.0"
+val testcontainersVersion = "1.21.3"
 val logbackVersion = "1.5.18"
 val logstashLogbackEncoderVersion = "8.1"
 val opentelemetryLogbackMdcVersion = "2.16.0-alpha"
@@ -52,12 +52,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.14.6")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.1")
 
     // Database
-    implementation("org.postgresql:postgresql:42.7.5")
+    implementation("org.postgresql:postgresql:42.7.7")
     implementation("com.zaxxer:HikariCP:6.3.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.8.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.10.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -71,7 +71,7 @@ dependencies {
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
 
     // Funksjonelle operatorer
-    implementation("io.arrow-kt:arrow-core:2.1.1")
+    implementation("io.arrow-kt:arrow-core:2.1.2")
 
     // audit log
     implementation("com.papertrailapp:logback-syslog4j:1.0.0")
@@ -81,7 +81,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.2")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.3")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -98,13 +98,13 @@ dependencies {
 
     // Http-mocking
     testImplementation("com.github.kittinunf.fuel:fuel-kotlinx-serialization:$fuelVersion")
-    testImplementation("org.wiremock:wiremock-standalone:3.13.0")
+    testImplementation("org.wiremock:wiremock-standalone:3.13.1")
 
     // -- validere pdfa
-    testImplementation("org.verapdf:validation-model:1.26.5")
+    testImplementation("org.verapdf:validation-model:1.28.1")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.1.10")
+    testImplementation("no.nav.security:mock-oauth2-server:2.2.1")
 
     constraints {
         implementation("net.minidev:json-smart") {
@@ -117,7 +117,7 @@ dependencies {
         }
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.0.Final")
+                require("4.2.2.Final")
             }
             because(
                 "Versjoner <4.1.117 er sårbare. Inkludert i ktor 3.1.0",
