@@ -22,7 +22,7 @@ class PiaPdfgenContainerHelper(
     private val port = 8080
     private val baseUrl = "http://$networkAlias:$port"
 
-    val container: GenericContainer<*> = GenericContainer(DockerImageName.parse("ghcr.io/navikt/pia-pdfgen:latest"))
+    val container: GenericContainer<*> = GenericContainer(DockerImageName.parse("ghcr.io/navikt/pia-pdfgen:v1.0.1"))
         .withNetwork(network)
         .withExposedPorts(port)
         .withNetworkAliases(networkAlias)
