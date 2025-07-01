@@ -107,22 +107,6 @@ dependencies {
     testImplementation("no.nav.security:mock-oauth2-server:2.2.1")
 
     constraints {
-        implementation("net.minidev:json-smart") {
-            version {
-                require("2.5.2")
-            }
-            because(
-                "versjoner < 2.5.2 har diverse sårbarheter",
-            )
-        }
-        implementation("io.netty:netty-codec-http2") {
-            version {
-                require("4.2.2.Final")
-            }
-            because(
-                "Versjoner <4.1.117 er sårbare. Inkludert i ktor 3.1.0",
-            )
-        }
         implementation("joda-time:joda-time") {
             version {
                 require("2.14.0")
