@@ -19,6 +19,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
@@ -162,9 +163,10 @@ class DokumentPubliseringApiTest {
                 Json.decodeFromString<DokumentPubliseringMedInnhold>(meldinger.first())
                     .also { dokumentPubliseringMedInnhold ->
                         dokumentPubliseringMedInnhold.referanseId shouldBe dokumentRefId
-                        dokumentPubliseringMedInnhold.orgnr shouldBe sak.orgnr
-                        dokumentPubliseringMedInnhold.saksnummer shouldBe sak.saksnummer
-                        dokumentPubliseringMedInnhold.samarbeidId shouldBe samarbeidId
+                        dokumentPubliseringMedInnhold.virksomhet.orgnummer shouldBe sak.orgnr
+                        dokumentPubliseringMedInnhold.sak.saksnummer shouldBe sak.saksnummer
+                        dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeidId
+                        dokumentPubliseringMedInnhold.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
                         dokumentPubliseringMedInnhold.opprettetAv shouldBe navIdent
                         Json.decodeFromString<SpørreundersøkelseDto>(dokumentPubliseringMedInnhold.innhold).also { spørreundersøkelseDto ->
                             spørreundersøkelseDto.id shouldBe dokumentRefId
