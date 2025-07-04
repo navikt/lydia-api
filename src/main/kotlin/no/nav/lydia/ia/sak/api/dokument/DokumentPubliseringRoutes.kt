@@ -1,5 +1,6 @@
 package no.nav.lydia.ia.sak.api.dokument
 
+import arrow.core.flatMap
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.log
 import io.ktor.server.response.respond
@@ -12,6 +13,9 @@ import no.nav.lydia.ia.sak.api.IA_SAK_RADGIVER_PATH
 import no.nav.lydia.ia.sak.api.extensions.dokumentReferanseId
 import no.nav.lydia.ia.sak.api.extensions.dokumentType
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
+import no.nav.lydia.integrasjoner.azure.AzureService
+import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.tilgangskontroll.fia.objectId
 import no.nav.lydia.tilgangskontroll.somLesebruker
 import no.nav.lydia.tilgangskontroll.somSaksbehandler
 
@@ -19,6 +23,7 @@ const val DOKUMENT_PUBLISERING_BASE_ROUTE = "$IA_SAK_RADGIVER_PATH/dokument"
 
 fun Route.dokumentPublisering(
     adGrupper: ADGrupper,
+    azureService: AzureService,
     dokumentPubliseringService: DokumentPubliseringService,
 ) {
     get(path = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/{dokumentType}/ref/{dokumentReferanseId}") {
@@ -40,18 +45,15 @@ fun Route.dokumentPublisering(
         val dokumentReferanseId = call.dokumentReferanseId ?: return@post call.sendFeil(DokumentPubliseringError.`ugyldig id`)
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            dokumentPubliseringService.opprettDokumentPublisering(
-                dokumentReferanseId = dokumentReferanseId,
-                dokumentType = dokumentType,
-                opprettetAv = saksbehandler,
-            )
-        }.onRight {
-            if (it == null) {
-                return@post call.respond(
-                    status = HttpStatusCode.InternalServerError,
-                    message = "Ingen dokument opprettet for referanseId: $dokumentReferanseId og type: $dokumentType",
+            azureService.hentNavenhet(objectId = call.objectId()).flatMap { navEnhet: NavEnhet ->
+                dokumentPubliseringService.opprettOgSendTilPublisering(
+                    dokumentReferanseId = dokumentReferanseId,
+                    dokumentType = dokumentType,
+                    opprettetAv = saksbehandler,
+                    navEnhet = navEnhet,
                 )
             }
+        }.onRight {
             call.respond(status = HttpStatusCode.Created, message = it)
         }.onLeft {
             call.application.log.warn(it.feilmelding)
