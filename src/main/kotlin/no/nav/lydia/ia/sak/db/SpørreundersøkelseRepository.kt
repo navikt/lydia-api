@@ -22,12 +22,17 @@ import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseUtenInnhold
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålDomene
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SvaralternativDomene
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaDomene
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaInfo
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
@@ -100,6 +105,223 @@ class SpørreundersøkelseRepository(
                     "type" to type.name,
                 ),
             ).map(this::mapRowToSpørreundersøkelseUtenInnhold).asList,
+        )
+    }
+
+    fun hentFullSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT virksomhet.navn,
+                           virksomhet.orgnr,
+                           sak.saksnummer,
+                           samarbeid.id                                          AS samarbeid_id,
+                           sporreundersokelse.kartlegging_id                     AS sporreundersokelse_id,
+                           sporreundersokelse.type                               AS type,
+                           sporreundersokelse.status                             AS status,
+                           sporreundersokelse.opprettet_av,
+                           sporreundersokelse.opprettet,
+                           sporreundersokelse.gyldig_til,
+                           sporreundersokelse.endret,
+                           sporreundersokelse.pabegynt,
+                           sporreundersokelse.fullfort,
+                           sporreundersokelse_tema.tema_id,
+                           tema.navn                                             AS tema_navn,
+                           tema.status                                           AS tema_status,
+                           tema.rekkefolge                                       AS tema_rekkefolge,
+                           tema.sist_endret                                      AS tema_endret,
+                           sporreundersokelse_tema.stengt                        AS tema_stengt,
+                           undertema.undertema_id,
+                           undertema.navn                                        AS undertema_navn,
+                           undertema.status                                      AS undertema_status,
+                           undertema.rekkefolge                                  AS undertema_rekkefolge,
+                           sporsmal.sporsmal_id,
+                           sporsmal.sporsmal_tekst,
+                           sporsmal_undertema.rekkefolge                         AS sporsmal_rekkefolge,
+                           sporsmal.flervalg,
+                           svaralternativ.svaralternativ_id,
+                           svaralternativ.svaralternativ_tekst,
+                           COALESCE(
+                                   (SELECT CASE
+                    --                            WHEN sporreundersokelse.status <> 'AVSLUTTET'
+                    --                                THEN 0
+                                               WHEN (SELECT COUNT(DISTINCT us.sesjon_id)
+                                                     FROM ia_sak_kartlegging_svar us
+                                                     WHERE us.kartlegging_id = sporreundersokelse.kartlegging_id
+                                                       AND us.sporsmal_id = sporsmal.sporsmal_id) < 3
+                                                   THEN 0 -- Hvis mindre enn 3 unike svar, 0
+                                               ELSE COUNT(DISTINCT svar.sesjon_id)
+                                               END
+                                    FROM ia_sak_kartlegging_svar svar
+                                    WHERE svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                                      AND svar.sporsmal_id = sporsmal.sporsmal_id
+                                      AND svar.svar_ider @> ('["' || svaralternativ.svaralternativ_id || '"]')::jsonb), 0
+                           )                                                     AS antall_svar,
+                           (SELECT COUNT(DISTINCT unike_svar.sesjon_id)
+                            FROM ia_sak_kartlegging_svar unike_svar
+                            WHERE unike_svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                              AND unike_svar.sporsmal_id = sporsmal.sporsmal_id) AS antall_svar_per_sporsmal
+                    FROM ia_sak_kartlegging sporreundersokelse
+                             JOIN ia_prosess samarbeid
+                                  ON sporreundersokelse.ia_prosess = samarbeid.id
+                             JOIN ia_sak sak USING (saksnummer, orgnr)
+                             JOIN virksomhet USING (orgnr)
+                             JOIN ia_sak_kartlegging_kartlegging_til_undertema sporreundersokelse_undertema
+                                  ON sporreundersokelse.kartlegging_id = sporreundersokelse_undertema.kartlegging_id
+                             JOIN ia_sak_kartlegging_undertema undertema
+                                  ON sporreundersokelse_undertema.undertema_id = undertema.undertema_id
+                             JOIN ia_sak_kartlegging_sporsmal_til_undertema sporsmal_undertema
+                                  ON undertema.undertema_id = sporsmal_undertema.undertema_id
+                             JOIN ia_sak_kartlegging_sporsmal sporsmal
+                                  ON sporsmal_undertema.sporsmal_id = sporsmal.sporsmal_id
+                             LEFT JOIN ia_sak_kartlegging_svaralternativer svaralternativ
+                                       ON sporsmal.sporsmal_id = svaralternativ.sporsmal_id
+                             LEFT JOIN ia_sak_kartlegging_kartlegging_til_tema sporreundersokelse_tema
+                                       ON sporreundersokelse_tema.kartlegging_id = sporreundersokelse.kartlegging_id
+                                           AND sporreundersokelse_tema.tema_id = undertema.tema_id
+                             LEFT JOIN ia_sak_kartlegging_tema tema
+                                       ON tema.tema_id = sporreundersokelse_tema.tema_id
+                    WHERE sporreundersokelse.kartlegging_id = :kartleggingId
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId,
+                    ),
+                ).map {
+                    SpørreundersøkelseDatabaseRad(
+                        virksomhetsNavn = it.string("navn"),
+                        orgnummer = it.string("orgnr"),
+                        saksnummer = it.string("saksnummer"),
+                        samarbeidId = it.int("samarbeid_id"),
+                        spørreundersøkelseId = UUID.fromString(it.string("sporreundersokelse_id")),
+                        type = SpørreundersøkelseDomene.Type.valueOf(it.string("type")),
+                        status = SpørreundersøkelseDomene.Status.valueOf(it.string("status")),
+                        opprettetAv = it.string("opprettet_av"),
+                        opprettet = it.localDateTime("opprettet"),
+                        gyldigTil = it.localDateTime("gyldig_til"),
+                        endret = it.localDateTimeOrNull("endret"),
+                        påbegynt = it.localDateTimeOrNull("pabegynt"),
+                        fullført = it.localDateTimeOrNull("fullfort"),
+                        temaId = it.int("tema_id"),
+                        temaNavn = it.string("tema_navn"),
+                        temaStatus = TemaDomene.Status.valueOf(it.string("tema_status")),
+                        temaRekkefølge = it.int("tema_rekkefolge"),
+                        temaStengt = it.boolean("tema_stengt"),
+                        temaEndret = it.localDateTime("tema_endret"),
+                        undertemaId = it.int("undertema_id"),
+                        undertemaNavn = it.string("undertema_navn"),
+                        undertemaStatus = UndertemaDomene.Status.valueOf(it.string("undertema_status")),
+                        undertemaRekkefølge = it.int("undertema_rekkefolge"),
+                        spørsmålId = UUID.fromString(it.string("sporsmal_id")),
+                        spørsmålTekst = it.string("sporsmal_tekst"),
+                        spørsmålRekkefølge = it.int("sporsmal_rekkefolge"),
+                        flervalg = it.boolean("flervalg"),
+                        svaralternativId = UUID.fromString(it.string("svaralternativ_id")),
+                        svaralternativTekst = it.string("svaralternativ_tekst"),
+                        antallSvar = it.intOrNull("antall_svar") ?: 0,
+                        antallSvarPerSpørsmål = it.intOrNull("antall_svar_per_sporsmal") ?: 0,
+                    )
+                }.asList,
+            ).tilSpørreundersøkelseDomeneRad()
+        }
+
+    private data class SpørreundersøkelseDatabaseRad(
+        val virksomhetsNavn: String,
+        val orgnummer: String,
+        val saksnummer: String,
+        val samarbeidId: Int,
+        val spørreundersøkelseId: UUID,
+        val type: SpørreundersøkelseDomene.Type,
+        val status: SpørreundersøkelseDomene.Status,
+        val opprettetAv: String,
+        val opprettet: LocalDateTime,
+        val gyldigTil: LocalDateTime,
+        val endret: LocalDateTime?,
+        val påbegynt: LocalDateTime?,
+        val fullført: LocalDateTime?,
+        val temaId: Int,
+        val temaNavn: String,
+        val temaStatus: TemaDomene.Status,
+        val temaRekkefølge: Int,
+        val temaStengt: Boolean,
+        val temaEndret: LocalDateTime,
+        val undertemaId: Int,
+        val undertemaNavn: String,
+        val undertemaStatus: UndertemaDomene.Status,
+        val undertemaRekkefølge: Int,
+        val spørsmålId: UUID,
+        val spørsmålTekst: String,
+        val spørsmålRekkefølge: Int,
+        val flervalg: Boolean,
+        val svaralternativId: UUID,
+        val svaralternativTekst: String,
+        val antallSvar: Int,
+        val antallSvarPerSpørsmål: Int,
+    )
+
+    private fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelseDomeneRad(): SpørreundersøkelseDomene {
+        val spørreundersøkelse = this.first()
+
+        return SpørreundersøkelseDomene(
+            virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
+            orgnummer = spørreundersøkelse.orgnummer,
+            saksnummer = spørreundersøkelse.saksnummer,
+            samarbeidId = spørreundersøkelse.samarbeidId,
+            id = spørreundersøkelse.spørreundersøkelseId,
+            type = spørreundersøkelse.type,
+            status = spørreundersøkelse.status,
+            opprettetAv = spørreundersøkelse.opprettetAv,
+            opprettetTidspunkt = spørreundersøkelse.opprettet.toKotlinLocalDateTime(),
+            gyldigTilTidspunkt = spørreundersøkelse.gyldigTil.toKotlinLocalDateTime(),
+            endretTidspunkt = spørreundersøkelse.endret?.toKotlinLocalDateTime(),
+            påbegyntTidspunkt = spørreundersøkelse.påbegynt?.toKotlinLocalDateTime(),
+            fullførtTidspunkt = spørreundersøkelse.fullført?.toKotlinLocalDateTime(),
+            temaer = this.groupBy { it.temaId }.map { (_, temaRader) ->
+
+                val tema = temaRader.first()
+
+                TemaDomene(
+                    id = tema.temaId,
+                    navn = tema.temaNavn,
+                    status = tema.temaStatus,
+                    rekkefølge = tema.temaRekkefølge,
+                    stengtForSvar = tema.temaStengt,
+                    sistEndret = tema.temaEndret.toKotlinLocalDateTime(),
+                    undertemaer = temaRader.groupBy { it.undertemaId }.map { (_, undertemaRader) ->
+
+                        val undertema = temaRader.first()
+
+                        UndertemaDomene(
+                            id = undertema.undertemaId,
+                            navn = undertema.undertemaNavn,
+                            status = undertema.undertemaStatus,
+                            rekkefølge = undertema.undertemaRekkefølge,
+                            spørsmål = undertemaRader.groupBy { it.spørsmålId }.map { (_, spørsmålRader) ->
+
+                                val spørsmål = temaRader.first()
+
+                                SpørsmålDomene(
+                                    id = spørsmål.spørsmålId,
+                                    tekst = spørsmål.spørsmålTekst,
+                                    rekkefølge = spørsmål.spørsmålRekkefølge,
+                                    flervalg = spørsmål.flervalg,
+                                    antallSvar = spørsmål.antallSvarPerSpørsmål,
+                                    svaralternativer = spørsmålRader.groupBy { it.svaralternativId }.map { (_, svaralternativRader) ->
+
+                                        val svaralternativ = svaralternativRader.first()
+
+                                        SvaralternativDomene(
+                                            id = svaralternativ.svaralternativId,
+                                            tekst = svaralternativ.svaralternativTekst,
+                                            antallSvar = svaralternativ.antallSvar,
+                                        )
+                                    },
+                                )
+                            },
+                        )
+                    },
+                )
+            },
         )
     }
 
