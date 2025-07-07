@@ -25,7 +25,6 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -95,7 +94,7 @@ class DokumentPubliseringApiTest {
         response.statuskode() shouldBe HttpStatusCode.BadRequest.value
         response.second.body()
             .asString(contentType = "text/plain; charset=utf-8") shouldBe
-            "Spørreundersøkelse med id: '$dokumentRefId' har ikke status AVSLUTTET, og dermed ikke kan lagres som dokument. Status var: 'PÅBEGYNT'"
+            "Spørreundersøkelse med id: '$dokumentRefId' har status 'PÅBEGYNT' (forventet AVSLUTTET) og/eller mangler fullført tidspunkt, og dermed ikke kan lagres som dokument. "
     }
 
     @Test
@@ -156,7 +155,7 @@ class DokumentPubliseringApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 // key: '1-f44fee5f-cc38-41e5-bb59-ab4a7c83051d-BEHOVSVURDERING'
-                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPublisering.Type.BEHOVSVURDERING.name),
+                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPublisering.Type.BEHOVSVURDERING),
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
@@ -167,12 +166,18 @@ class DokumentPubliseringApiTest {
                         dokumentPubliseringMedInnhold.sak.saksnummer shouldBe sak.saksnummer
                         dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeidId
                         dokumentPubliseringMedInnhold.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
-                        dokumentPubliseringMedInnhold.opprettetAv shouldBe navIdent
-                        Json.decodeFromString<SpørreundersøkelseDto>(dokumentPubliseringMedInnhold.innhold).also { spørreundersøkelseDto ->
-                            spørreundersøkelseDto.id shouldBe dokumentRefId
-                            spørreundersøkelseDto.samarbeidId shouldBe fullførtBehovsvurdering.samarbeidId
-                            spørreundersøkelseDto.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-                            spørreundersøkelseDto.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
+                        dokumentPubliseringMedInnhold.dokumentOpprettetAv shouldBe navIdent
+                        dokumentPubliseringMedInnhold.innhold.id shouldBe dokumentRefId
+                        dokumentPubliseringMedInnhold.innhold.fullførtTidspunkt shouldNotBe null
+                        dokumentPubliseringMedInnhold.innhold.spørreundersøkelseOpprettetAv shouldBe "X12345"
+                        dokumentPubliseringMedInnhold.type shouldBe DokumentPublisering.Type.BEHOVSVURDERING
+                        dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach { it.navn shouldNotBe null }
+                        dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach {
+                            it.spørsmålMedSvar.forEach {
+                                it.svarListe.forEach {
+                                    it.antallSvar shouldNotBe null
+                                }
+                            }
                         }
                     }
             }
