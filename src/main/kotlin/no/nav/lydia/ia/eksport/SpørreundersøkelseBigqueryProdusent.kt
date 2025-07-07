@@ -7,17 +7,17 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 
 class SpørreundersøkelseBigqueryProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
-    Observer<Spørreundersøkelse> {
-    override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
+) : KafkaProdusent<SpørreundersøkelseDomene>(kafka, topic),
+    Observer<SpørreundersøkelseDomene> {
+    override fun receive(input: SpørreundersøkelseDomene) = sendPåKafka(input = input)
 
-    override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
+    override fun tilKafkaMelding(input: SpørreundersøkelseDomene): Pair<String, String> {
         val alleSvar = spørreundersøkelseRepository.hentAlleSvar(spørreundersøkelseId = input.id.toString())
 
         val nøkkel = input.saksnummer
@@ -47,7 +47,7 @@ class SpørreundersøkelseBigqueryProdusent(
         val id: String,
         val orgnr: String,
         val type: String,
-        val status: Spørreundersøkelse.Status,
+        val status: SpørreundersøkelseDomene.Status,
         val samarbeidId: Int,
         val saksnummer: String,
         val opprettetAv: String,

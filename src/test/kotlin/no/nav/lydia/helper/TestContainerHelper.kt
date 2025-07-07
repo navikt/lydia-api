@@ -58,7 +58,7 @@ import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.EndreSamarbeidTilSpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -71,7 +71,7 @@ import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
@@ -698,7 +698,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
             prosessId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
-            type: Spørreundersøkelse.Type,
+            type: SpørreundersøkelseDomene.Type,
         ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
@@ -737,7 +737,7 @@ class IASakKartleggingHelper {
 
         fun IASakDto.hentForhåndsvisning(
             prosessId: Int = hentAlleSamarbeid().first().id,
-            type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Evaluering,
+            type: SpørreundersøkelseDomene.Type,
             spørreundersøkseId: String,
             token: String = authContainerHelper.saksbehandler1.token,
         ): SpørreundersøkelseDto =
@@ -791,7 +791,7 @@ class IASakKartleggingHelper {
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
-                    OppdaterBehovsvurderingDto(
+                    EndreSamarbeidTilSpørreundersøkelseDto(
                         orgnummer = orgnummer,
                         saksnummer = saksnummer,
                         prosessId = samarbeidId,

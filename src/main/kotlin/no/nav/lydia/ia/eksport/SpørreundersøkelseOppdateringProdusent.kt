@@ -4,7 +4,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SvaralternativDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaDomene
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -86,6 +93,12 @@ class SpørreundersøkelseOppdateringProdusent(
     }
 
     @Serializable
+    data class SpørreundersøkelseOppdateringNøkkel(
+        val spørreundersøkelseId: String,
+        val oppdateringsType: SpørreundersøkelseOppdatering.Type,
+    )
+
+    @Serializable
     data class TemaResultatKafkaDto(
         val id: Int,
         val navn: String,
@@ -114,10 +127,32 @@ class SpørreundersøkelseOppdateringProdusent(
         val spørsmålId: String,
         val antallSvar: Int,
     )
-
-    @Serializable
-    data class SpørreundersøkelseOppdateringNøkkel(
-        val spørreundersøkelseId: String,
-        val oppdateringsType: SpørreundersøkelseOppdatering.Type,
-    )
 }
+
+fun TemaDomene.TemaResultatKafkaDto(): TemaResultatKafkaDto =
+    TemaResultatKafkaDto(
+        id = id,
+        navn = navn,
+        spørsmålMedSvar = undertemaer.tilResultatKafkaDto(),
+    )
+
+fun List<UndertemaDomene>.tilResultatKafkaDto(): List<SpørsmålResultatKafkaDto> =
+    flatMap { undertema ->
+        undertema.spørsmål.map { it.tilResultatKafkaDto(undertemanavn = undertema.navn) }
+    }
+
+fun SpørsmålDomene.tilResultatKafkaDto(undertemanavn: String): SpørsmålResultatKafkaDto =
+    SpørsmålResultatKafkaDto(
+        id = id.toString(),
+        tekst = tekst,
+        flervalg = flervalg,
+        svarListe = svaralternativer.map { it.tilResultatKafkaDto() },
+        kategori = undertemanavn,
+    )
+
+fun SvaralternativDomene.tilResultatKafkaDto(): SvarResultatKafkaDto =
+    SvarResultatKafkaDto(
+        id = id.toString(),
+        tekst = tekst,
+        antallSvar = antallSvar,
+    )

@@ -6,6 +6,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørsmålResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SvarResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene.Companion.MINIMUM_ANTALL_DELTAKERE
 import java.util.UUID
 
 data class SpørreundersøkelseResultat(
@@ -41,16 +42,17 @@ fun SpørreundersøkelseResultat.tilDto(): SpørreundersøkelseResultatDto =
                 id = tema.id,
                 navn = tema.navn,
                 spørsmålMedSvar = tema.spørsmål.map { spørsmål ->
+                    val antallSvarPåSpørsmål = spørsmål.antallDeltakereSomHarSvart
                     SpørsmålResultatDto(
                         id = spørsmål.spørsmålId.toString(),
                         tekst = spørsmål.spørsmåltekst,
                         flervalg = spørsmål.flervalg,
-                        antallDeltakereSomHarSvart = spørsmål.antallDeltakereSomHarSvart,
+                        antallDeltakereSomHarSvart = if (antallSvarPåSpørsmål >= MINIMUM_ANTALL_DELTAKERE) antallSvarPåSpørsmål else 0,
                         svarListe = spørsmål.svaralternativer.map { svar ->
                             SvarResultatDto(
                                 id = svar.svarId.toString(),
                                 tekst = svar.svartekst,
-                                antallSvar = svar.antallSvar,
+                                antallSvar = if (antallSvarPåSpørsmål >= MINIMUM_ANTALL_DELTAKERE) svar.antallSvar else 0,
                             )
                         },
                         kategori = spørsmål.undertemanavn,

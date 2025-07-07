@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
-import no.nav.lydia.ia.sak.MINIMUM_ANTALL_DELTAKERE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene.Companion.MINIMUM_ANTALL_DELTAKERE
 import java.util.UUID
 
 data class SpørsmålResultat(

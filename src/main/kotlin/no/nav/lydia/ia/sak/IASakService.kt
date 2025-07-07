@@ -49,6 +49,7 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
 import no.nav.lydia.ia.årsak.domene.ValgtÅrsak
@@ -77,7 +78,7 @@ class IASakService(
     private val planRepository: PlanRepository,
     private val endringsObservers: List<EndringsObserver<IASak, IASakshendelse>>,
     private val spørreundersøkelseRepository: SpørreundersøkelseRepository,
-    private val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
+    private val spørreundersøkelseObservers: List<Observer<SpørreundersøkelseDomene>>,
     private val iaTeamService: IATeamService,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -334,11 +335,11 @@ class IASakService(
                         resulterendeStatus = IASak.Status.FULLFØRT,
                     )
 
-                    val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelser(
+                    val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(
                         samarbeid = samarbeid,
                         type = Spørreundersøkelse.Type.Behovsvurdering,
                     ).plus(
-                        spørreundersøkelseRepository.hentSpørreundersøkelser(
+                        spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(
                             samarbeid = samarbeid,
                             type = Spørreundersøkelse.Type.Evaluering,
                         ),
@@ -347,7 +348,7 @@ class IASakService(
                     if (!tørrKjør) {
                         spørreundersøkelser.forEach { spørreundersøkelse ->
                             spørreundersøkelseRepository.slettSpørreundersøkelse(
-                                spørreundersøkelseId = spørreundersøkelse.id.toString(),
+                                spørreundersøkelseId = spørreundersøkelse.id,
                             )?.let { oppdatertSpørreundersøkelse ->
                                 spørreundersøkelseObservers.forEach {
                                     it.receive(input = oppdatertSpørreundersøkelse)
@@ -617,10 +618,10 @@ class IASakService(
                 // avslutt alle samarbeid
                 samarbeidService.hentAktiveSamarbeid(iaSak).forEach { samarbeid ->
                     // avslutt eventuelle spørreundersøkelser i samarbeid
-                    spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
-                        .plus(spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering))
+                    spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
+                        .plus(spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering))
                         .filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
-                        .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id.toString()) }
+                        .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id) }
 
                     // slett eventuell plan for samarbeid
                     planRepository.hentPlan(samarbeidId = samarbeid.id)

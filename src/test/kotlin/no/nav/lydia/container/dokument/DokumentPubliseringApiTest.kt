@@ -26,6 +26,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -169,8 +170,8 @@ class DokumentPubliseringApiTest {
                         Json.decodeFromString<SpørreundersøkelseDto>(dokumentPubliseringMedInnhold.innhold).also { spørreundersøkelseDto ->
                             spørreundersøkelseDto.id shouldBe dokumentRefId
                             spørreundersøkelseDto.samarbeidId shouldBe fullførtBehovsvurdering.samarbeidId
-                            spørreundersøkelseDto.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-                            spørreundersøkelseDto.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
+                            spørreundersøkelseDto.status shouldBe SpørreundersøkelseDomene.Status.AVSLUTTET
+                            spørreundersøkelseDto.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering
                         }
                     }
             }

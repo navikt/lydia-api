@@ -12,7 +12,7 @@ import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import kotlin.test.Test
@@ -39,10 +39,10 @@ class FullførtBehovsvurderingProdusentTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettSpørreundersøkelse()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        påbegyntKartlegging.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
+        påbegyntKartlegging.status shouldBe SpørreundersøkelseDomene.Status.PÅBEGYNT
 
         val avsluttetKartlegging = påbegyntKartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        avsluttetKartlegging.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
+        avsluttetKartlegging.status shouldBe SpørreundersøkelseDomene.Status.AVSLUTTET
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(

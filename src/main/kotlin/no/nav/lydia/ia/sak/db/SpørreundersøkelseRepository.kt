@@ -13,9 +13,10 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Companion.tilDokumentTilPubliseringStatus
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.EndreSamarbeidTilSpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvar
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
@@ -82,7 +83,7 @@ class SpørreundersøkelseRepository(
             )
         }
 
-    fun hentSpørreundersøkelser(
+    fun hentSpørreundersøkelserLegacy(
         samarbeid: IASamarbeid,
         type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Behovsvurdering,
     ) = using(sessionOf(dataSource)) { session ->
@@ -108,121 +109,89 @@ class SpørreundersøkelseRepository(
         )
     }
 
-    fun hentFullSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene =
+    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                    SELECT virksomhet.navn,
-                           virksomhet.orgnr,
-                           sak.saksnummer,
-                           samarbeid.id                                          AS samarbeid_id,
-                           sporreundersokelse.kartlegging_id                     AS sporreundersokelse_id,
-                           sporreundersokelse.type                               AS type,
-                           sporreundersokelse.status                             AS status,
-                           sporreundersokelse.opprettet_av,
-                           sporreundersokelse.opprettet,
-                           sporreundersokelse.gyldig_til,
-                           sporreundersokelse.endret,
-                           sporreundersokelse.pabegynt,
-                           sporreundersokelse.fullfort,
-                           sporreundersokelse_tema.tema_id,
-                           tema.navn                                             AS tema_navn,
-                           tema.status                                           AS tema_status,
-                           tema.rekkefolge                                       AS tema_rekkefolge,
-                           tema.sist_endret                                      AS tema_endret,
-                           sporreundersokelse_tema.stengt                        AS tema_stengt,
-                           undertema.undertema_id,
-                           undertema.navn                                        AS undertema_navn,
-                           undertema.status                                      AS undertema_status,
-                           undertema.rekkefolge                                  AS undertema_rekkefolge,
-                           sporsmal.sporsmal_id,
-                           sporsmal.sporsmal_tekst,
-                           sporsmal_undertema.rekkefolge                         AS sporsmal_rekkefolge,
-                           sporsmal.flervalg,
-                           svaralternativ.svaralternativ_id,
-                           svaralternativ.svaralternativ_tekst,
-                           COALESCE(
-                                   (SELECT CASE
-                    --                            WHEN sporreundersokelse.status <> 'AVSLUTTET'
-                    --                                THEN 0
-                                               WHEN (SELECT COUNT(DISTINCT us.sesjon_id)
-                                                     FROM ia_sak_kartlegging_svar us
-                                                     WHERE us.kartlegging_id = sporreundersokelse.kartlegging_id
-                                                       AND us.sporsmal_id = sporsmal.sporsmal_id) < 3
-                                                   THEN 0 -- Hvis mindre enn 3 unike svar, 0
-                                               ELSE COUNT(DISTINCT svar.sesjon_id)
-                                               END
-                                    FROM ia_sak_kartlegging_svar svar
-                                    WHERE svar.kartlegging_id = sporreundersokelse.kartlegging_id
-                                      AND svar.sporsmal_id = sporsmal.sporsmal_id
-                                      AND svar.svar_ider @> ('["' || svaralternativ.svaralternativ_id || '"]')::jsonb), 0
-                           )                                                     AS antall_svar,
-                           (SELECT COUNT(DISTINCT unike_svar.sesjon_id)
-                            FROM ia_sak_kartlegging_svar unike_svar
-                            WHERE unike_svar.kartlegging_id = sporreundersokelse.kartlegging_id
-                              AND unike_svar.sporsmal_id = sporsmal.sporsmal_id) AS antall_svar_per_sporsmal
-                    FROM ia_sak_kartlegging sporreundersokelse
-                             JOIN ia_prosess samarbeid
-                                  ON sporreundersokelse.ia_prosess = samarbeid.id
-                             JOIN ia_sak sak USING (saksnummer, orgnr)
-                             JOIN virksomhet USING (orgnr)
-                             JOIN ia_sak_kartlegging_kartlegging_til_undertema sporreundersokelse_undertema
-                                  ON sporreundersokelse.kartlegging_id = sporreundersokelse_undertema.kartlegging_id
-                             JOIN ia_sak_kartlegging_undertema undertema
-                                  ON sporreundersokelse_undertema.undertema_id = undertema.undertema_id
-                             JOIN ia_sak_kartlegging_sporsmal_til_undertema sporsmal_undertema
-                                  ON undertema.undertema_id = sporsmal_undertema.undertema_id
-                             JOIN ia_sak_kartlegging_sporsmal sporsmal
-                                  ON sporsmal_undertema.sporsmal_id = sporsmal.sporsmal_id
-                             LEFT JOIN ia_sak_kartlegging_svaralternativer svaralternativ
-                                       ON sporsmal.sporsmal_id = svaralternativ.sporsmal_id
-                             LEFT JOIN ia_sak_kartlegging_kartlegging_til_tema sporreundersokelse_tema
-                                       ON sporreundersokelse_tema.kartlegging_id = sporreundersokelse.kartlegging_id
-                                           AND sporreundersokelse_tema.tema_id = undertema.tema_id
-                             LEFT JOIN ia_sak_kartlegging_tema tema
-                                       ON tema.tema_id = sporreundersokelse_tema.tema_id
-                    WHERE sporreundersokelse.kartlegging_id = :kartleggingId
+                SELECT virksomhet.navn,
+                       virksomhet.orgnr,
+                       sak.saksnummer,
+                       samarbeid.id                                          AS samarbeid_id,
+                       sporreundersokelse.kartlegging_id                     AS sporreundersokelse_id,
+                       sporreundersokelse.type                               AS type,
+                       sporreundersokelse.status                             AS status,
+                       sporreundersokelse.opprettet_av,
+                       sporreundersokelse.opprettet,
+                       sporreundersokelse.gyldig_til,
+                       sporreundersokelse.endret,
+                       sporreundersokelse.pabegynt,
+                       sporreundersokelse.fullfort,
+                       sporreundersokelse_tema.tema_id,
+                       sporreundersokelse_tema.stengt                        AS tema_stengt,
+                       tema.navn                                             AS tema_navn,
+                       tema.status                                           AS tema_status,
+                       tema.rekkefolge                                       AS tema_rekkefolge,
+                       tema.sist_endret                                      AS tema_endret,
+                       undertema.undertema_id,
+                       undertema.navn                                        AS undertema_navn,
+                       undertema.status                                      AS undertema_status,
+                       undertema.rekkefolge                                  AS undertema_rekkefolge,
+                       undertema.sist_endret                                 AS undertema_endret,
+                       sporsmal.sporsmal_id,
+                       sporsmal.sporsmal_tekst,
+                       sporsmal_undertema.rekkefolge                         AS sporsmal_rekkefolge,
+                       sporsmal.flervalg,
+                       svaralternativ.svaralternativ_id,
+                       svaralternativ.svaralternativ_tekst,
+                       dokument_til_publisering.status                       AS publisering_status,
+                       COALESCE(
+                               (SELECT CASE
+                                           WHEN (SELECT COUNT(DISTINCT us.sesjon_id)
+                                                 FROM ia_sak_kartlegging_svar us
+                                                 WHERE us.kartlegging_id = sporreundersokelse.kartlegging_id
+                                                   AND us.sporsmal_id = sporsmal.sporsmal_id) < 3
+                                               THEN 0
+                                           ELSE COUNT(DISTINCT svar.sesjon_id)
+                                           END
+                                FROM ia_sak_kartlegging_svar svar
+                                WHERE svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                                  AND svar.sporsmal_id = sporsmal.sporsmal_id
+                                  AND svar.svar_ider @> ('["' || svaralternativ.svaralternativ_id || '"]')::jsonb), 0
+                       )                                                     AS antall_svar,
+                       (SELECT COUNT(DISTINCT unike_svar.sesjon_id)
+                        FROM ia_sak_kartlegging_svar unike_svar
+                        WHERE unike_svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                          AND unike_svar.sporsmal_id = sporsmal.sporsmal_id) AS antall_svar_per_sporsmal
+                FROM ia_sak_kartlegging sporreundersokelse
+                         JOIN ia_prosess samarbeid
+                              ON sporreundersokelse.ia_prosess = samarbeid.id
+                         JOIN ia_sak sak USING (saksnummer, orgnr)
+                         JOIN virksomhet USING (orgnr)
+                         JOIN ia_sak_kartlegging_kartlegging_til_undertema sporreundersokelse_undertema
+                              ON sporreundersokelse.kartlegging_id = sporreundersokelse_undertema.kartlegging_id
+                         JOIN ia_sak_kartlegging_undertema undertema
+                              ON sporreundersokelse_undertema.undertema_id = undertema.undertema_id
+                         JOIN ia_sak_kartlegging_sporsmal_til_undertema sporsmal_undertema
+                              ON undertema.undertema_id = sporsmal_undertema.undertema_id
+                         JOIN ia_sak_kartlegging_sporsmal sporsmal
+                              ON sporsmal_undertema.sporsmal_id = sporsmal.sporsmal_id
+                         LEFT JOIN ia_sak_kartlegging_svaralternativer svaralternativ
+                                   ON sporsmal.sporsmal_id = svaralternativ.sporsmal_id
+                         LEFT JOIN ia_sak_kartlegging_kartlegging_til_tema sporreundersokelse_tema
+                                   ON sporreundersokelse_tema.kartlegging_id = sporreundersokelse.kartlegging_id
+                                       AND sporreundersokelse_tema.tema_id = undertema.tema_id
+                         LEFT JOIN ia_sak_kartlegging_tema tema
+                                   ON tema.tema_id = sporreundersokelse_tema.tema_id
+                         LEFT JOIN dokument_til_publisering
+                                   ON dokument_til_publisering.referanse_id = sporreundersokelse.kartlegging_id
+                WHERE sporreundersokelse.kartlegging_id = :kartleggingId
                     """.trimMargin(),
                     mapOf(
-                        "kartleggingId" to spørreundersøkelseId,
+                        "kartleggingId" to spørreundersøkelseId.toString(),
                     ),
-                ).map {
-                    SpørreundersøkelseDatabaseRad(
-                        virksomhetsNavn = it.string("navn"),
-                        orgnummer = it.string("orgnr"),
-                        saksnummer = it.string("saksnummer"),
-                        samarbeidId = it.int("samarbeid_id"),
-                        spørreundersøkelseId = UUID.fromString(it.string("sporreundersokelse_id")),
-                        type = SpørreundersøkelseDomene.Type.valueOf(it.string("type")),
-                        status = SpørreundersøkelseDomene.Status.valueOf(it.string("status")),
-                        opprettetAv = it.string("opprettet_av"),
-                        opprettet = it.localDateTime("opprettet"),
-                        gyldigTil = it.localDateTime("gyldig_til"),
-                        endret = it.localDateTimeOrNull("endret"),
-                        påbegynt = it.localDateTimeOrNull("pabegynt"),
-                        fullført = it.localDateTimeOrNull("fullfort"),
-                        temaId = it.int("tema_id"),
-                        temaNavn = it.string("tema_navn"),
-                        temaStatus = TemaDomene.Status.valueOf(it.string("tema_status")),
-                        temaRekkefølge = it.int("tema_rekkefolge"),
-                        temaStengt = it.boolean("tema_stengt"),
-                        temaEndret = it.localDateTime("tema_endret"),
-                        undertemaId = it.int("undertema_id"),
-                        undertemaNavn = it.string("undertema_navn"),
-                        undertemaStatus = UndertemaDomene.Status.valueOf(it.string("undertema_status")),
-                        undertemaRekkefølge = it.int("undertema_rekkefolge"),
-                        spørsmålId = UUID.fromString(it.string("sporsmal_id")),
-                        spørsmålTekst = it.string("sporsmal_tekst"),
-                        spørsmålRekkefølge = it.int("sporsmal_rekkefolge"),
-                        flervalg = it.boolean("flervalg"),
-                        svaralternativId = UUID.fromString(it.string("svaralternativ_id")),
-                        svaralternativTekst = it.string("svaralternativ_tekst"),
-                        antallSvar = it.intOrNull("antall_svar") ?: 0,
-                        antallSvarPerSpørsmål = it.intOrNull("antall_svar_per_sporsmal") ?: 0,
-                    )
-                }.asList,
-            ).tilSpørreundersøkelseDomeneRad()
+                ).map(this::mapRowToSpørreundersøkelseDbRad).asList,
+            ).tilDomene()
         }
 
     private data class SpørreundersøkelseDatabaseRad(
@@ -257,11 +226,15 @@ class SpørreundersøkelseRepository(
         val svaralternativTekst: String,
         val antallSvar: Int,
         val antallSvarPerSpørsmål: Int,
+        val publiseringStatus: DokumentPublisering.Status,
     )
 
-    private fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelseDomeneRad(): SpørreundersøkelseDomene {
-        val spørreundersøkelse = this.first()
+    private fun List<SpørreundersøkelseDatabaseRad>.tilDomene(): SpørreundersøkelseDomene? {
+        if (this.isEmpty()) {
+            return null
+        }
 
+        val spørreundersøkelse = first()
         return SpørreundersøkelseDomene(
             virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
             orgnummer = spørreundersøkelse.orgnummer,
@@ -276,10 +249,9 @@ class SpørreundersøkelseRepository(
             endretTidspunkt = spørreundersøkelse.endret?.toKotlinLocalDateTime(),
             påbegyntTidspunkt = spørreundersøkelse.påbegynt?.toKotlinLocalDateTime(),
             fullførtTidspunkt = spørreundersøkelse.fullført?.toKotlinLocalDateTime(),
-            temaer = this.groupBy { it.temaId }.map { (_, temaRader) ->
-
+            publiseringStatus = spørreundersøkelse.publiseringStatus,
+            temaer = groupBy { it.temaId }.map { (_, temaRader) ->
                 val tema = temaRader.first()
-
                 TemaDomene(
                     id = tema.temaId,
                     navn = tema.temaNavn,
@@ -288,34 +260,29 @@ class SpørreundersøkelseRepository(
                     stengtForSvar = tema.temaStengt,
                     sistEndret = tema.temaEndret.toKotlinLocalDateTime(),
                     undertemaer = temaRader.groupBy { it.undertemaId }.map { (_, undertemaRader) ->
-
-                        val undertema = temaRader.first()
-
+                        val undertema = undertemaRader.first()
                         UndertemaDomene(
                             id = undertema.undertemaId,
                             navn = undertema.undertemaNavn,
                             status = undertema.undertemaStatus,
                             rekkefølge = undertema.undertemaRekkefølge,
                             spørsmål = undertemaRader.groupBy { it.spørsmålId }.map { (_, spørsmålRader) ->
-
-                                val spørsmål = temaRader.first()
-
+                                val spørsmål = spørsmålRader.first()
                                 SpørsmålDomene(
                                     id = spørsmål.spørsmålId,
                                     tekst = spørsmål.spørsmålTekst,
                                     rekkefølge = spørsmål.spørsmålRekkefølge,
                                     flervalg = spørsmål.flervalg,
                                     antallSvar = spørsmål.antallSvarPerSpørsmål,
-                                    svaralternativer = spørsmålRader.groupBy { it.svaralternativId }.map { (_, svaralternativRader) ->
-
-                                        val svaralternativ = svaralternativRader.first()
-
-                                        SvaralternativDomene(
-                                            id = svaralternativ.svaralternativId,
-                                            tekst = svaralternativ.svaralternativTekst,
-                                            antallSvar = svaralternativ.antallSvar,
-                                        )
-                                    },
+                                    svaralternativer = spørsmålRader.groupBy { it.svaralternativId }
+                                        .map { (_, svaralternativRader) ->
+                                            val svaralternativ = svaralternativRader.first()
+                                            SvaralternativDomene(
+                                                id = svaralternativ.svaralternativId,
+                                                tekst = svaralternativ.svaralternativTekst,
+                                                antallSvar = svaralternativ.antallSvar,
+                                            )
+                                        },
                                 )
                             },
                         )
@@ -325,7 +292,225 @@ class SpørreundersøkelseRepository(
         )
     }
 
-    fun hentSpørreundersøkelse(spørreundersøkelseId: String) =
+    fun hentSpørreundersøkelser(
+        samarbeid: IASamarbeid,
+        type: SpørreundersøkelseDomene.Type,
+    ): List<SpørreundersøkelseDomene> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                SELECT virksomhet.navn,
+                       virksomhet.orgnr,
+                       sak.saksnummer,
+                       samarbeid.id                                          AS samarbeid_id,
+                       sporreundersokelse.kartlegging_id                     AS sporreundersokelse_id,
+                       sporreundersokelse.type                               AS type,
+                       sporreundersokelse.status                             AS status,
+                       sporreundersokelse.opprettet_av,
+                       sporreundersokelse.opprettet,
+                       sporreundersokelse.gyldig_til,
+                       sporreundersokelse.endret,
+                       sporreundersokelse.pabegynt,
+                       sporreundersokelse.fullfort,
+                       sporreundersokelse_tema.tema_id,
+                       sporreundersokelse_tema.stengt                        AS tema_stengt,
+                       tema.navn                                             AS tema_navn,
+                       tema.status                                           AS tema_status,
+                       tema.rekkefolge                                       AS tema_rekkefolge,
+                       tema.sist_endret                                      AS tema_endret,
+                       undertema.undertema_id,
+                       undertema.navn                                        AS undertema_navn,
+                       undertema.status                                      AS undertema_status,
+                       undertema.rekkefolge                                  AS undertema_rekkefolge,
+                       undertema.sist_endret                                 AS undertema_endret,
+                       sporsmal.sporsmal_id,
+                       sporsmal.sporsmal_tekst,
+                       sporsmal_undertema.rekkefolge                         AS sporsmal_rekkefolge,
+                       sporsmal.flervalg,
+                       svaralternativ.svaralternativ_id,
+                       svaralternativ.svaralternativ_tekst,
+                       dokument_til_publisering.status                       AS publisering_status,
+                       COALESCE(
+                               (SELECT CASE
+                                           WHEN (SELECT COUNT(DISTINCT us.sesjon_id)
+                                                 FROM ia_sak_kartlegging_svar us
+                                                 WHERE us.kartlegging_id = sporreundersokelse.kartlegging_id
+                                                   AND us.sporsmal_id = sporsmal.sporsmal_id) < 3
+                                               THEN 0
+                                           ELSE COUNT(DISTINCT svar.sesjon_id)
+                                           END
+                                FROM ia_sak_kartlegging_svar svar
+                                WHERE svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                                  AND svar.sporsmal_id = sporsmal.sporsmal_id
+                                  AND svar.svar_ider @> ('["' || svaralternativ.svaralternativ_id || '"]')::jsonb), 0
+                       )                                                     AS antall_svar,
+                       (SELECT COUNT(DISTINCT unike_svar.sesjon_id)
+                        FROM ia_sak_kartlegging_svar unike_svar
+                        WHERE unike_svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                          AND unike_svar.sporsmal_id = sporsmal.sporsmal_id) AS antall_svar_per_sporsmal
+                FROM ia_sak_kartlegging sporreundersokelse
+                         JOIN ia_prosess samarbeid
+                              ON sporreundersokelse.ia_prosess = samarbeid.id
+                         JOIN ia_sak sak USING (saksnummer, orgnr)
+                         JOIN virksomhet USING (orgnr)
+                         JOIN ia_sak_kartlegging_kartlegging_til_undertema sporreundersokelse_undertema
+                              ON sporreundersokelse.kartlegging_id = sporreundersokelse_undertema.kartlegging_id
+                         JOIN ia_sak_kartlegging_undertema undertema
+                              ON sporreundersokelse_undertema.undertema_id = undertema.undertema_id
+                         JOIN ia_sak_kartlegging_sporsmal_til_undertema sporsmal_undertema
+                              ON undertema.undertema_id = sporsmal_undertema.undertema_id
+                         JOIN ia_sak_kartlegging_sporsmal sporsmal
+                              ON sporsmal_undertema.sporsmal_id = sporsmal.sporsmal_id
+                         LEFT JOIN ia_sak_kartlegging_svaralternativer svaralternativ
+                                   ON sporsmal.sporsmal_id = svaralternativ.sporsmal_id
+                         LEFT JOIN ia_sak_kartlegging_kartlegging_til_tema sporreundersokelse_tema
+                                   ON sporreundersokelse_tema.kartlegging_id = sporreundersokelse.kartlegging_id
+                                       AND sporreundersokelse_tema.tema_id = undertema.tema_id
+                         LEFT JOIN ia_sak_kartlegging_tema tema
+                                   ON tema.tema_id = sporreundersokelse_tema.tema_id
+                         LEFT JOIN dokument_til_publisering
+                                   ON dokument_til_publisering.referanse_id = sporreundersokelse.kartlegging_id
+                    WHERE samarbeid.id = :samarbeidId
+                        AND sporreundersokelse.status != :slettetStatus
+                        AND sporreundersokelse.type = :type
+                    """.trimMargin(),
+                    mapOf(
+                        "samarbeidId" to samarbeid.id,
+                        "slettetStatus" to SpørreundersøkelseDomene.Status.SLETTET.name,
+                        "type" to type.name,
+                    ),
+                ).map(this::mapRowToSpørreundersøkelseDbRad).asList,
+            ).tilSpørreundersøkelser()
+        }
+
+    fun hentAlleSpørreundersøkelser(): List<SpørreundersøkelseDomene> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                SELECT virksomhet.navn,
+                       virksomhet.orgnr,
+                       sak.saksnummer,
+                       samarbeid.id                                          AS samarbeid_id,
+                       sporreundersokelse.kartlegging_id                     AS sporreundersokelse_id,
+                       sporreundersokelse.type                               AS type,
+                       sporreundersokelse.status                             AS status,
+                       sporreundersokelse.opprettet_av,
+                       sporreundersokelse.opprettet,
+                       sporreundersokelse.gyldig_til,
+                       sporreundersokelse.endret,
+                       sporreundersokelse.pabegynt,
+                       sporreundersokelse.fullfort,
+                       sporreundersokelse_tema.tema_id,
+                       sporreundersokelse_tema.stengt                        AS tema_stengt,
+                       tema.navn                                             AS tema_navn,
+                       tema.status                                           AS tema_status,
+                       tema.rekkefolge                                       AS tema_rekkefolge,
+                       tema.sist_endret                                      AS tema_endret,
+                       undertema.undertema_id,
+                       undertema.navn                                        AS undertema_navn,
+                       undertema.status                                      AS undertema_status,
+                       undertema.rekkefolge                                  AS undertema_rekkefolge,
+                       undertema.sist_endret                                 AS undertema_endret,
+                       sporsmal.sporsmal_id,
+                       sporsmal.sporsmal_tekst,
+                       sporsmal_undertema.rekkefolge                         AS sporsmal_rekkefolge,
+                       sporsmal.flervalg,
+                       svaralternativ.svaralternativ_id,
+                       svaralternativ.svaralternativ_tekst,
+                       dokument_til_publisering.status                       AS publisering_status,
+                       COALESCE(
+                               (SELECT CASE
+                                           WHEN (SELECT COUNT(DISTINCT us.sesjon_id)
+                                                 FROM ia_sak_kartlegging_svar us
+                                                 WHERE us.kartlegging_id = sporreundersokelse.kartlegging_id
+                                                   AND us.sporsmal_id = sporsmal.sporsmal_id) < 3
+                                               THEN 0
+                                           ELSE COUNT(DISTINCT svar.sesjon_id)
+                                           END
+                                FROM ia_sak_kartlegging_svar svar
+                                WHERE svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                                  AND svar.sporsmal_id = sporsmal.sporsmal_id
+                                  AND svar.svar_ider @> ('["' || svaralternativ.svaralternativ_id || '"]')::jsonb), 0
+                       ) AS antall_svar,
+                       (SELECT COUNT(DISTINCT unike_svar.sesjon_id)
+                        FROM ia_sak_kartlegging_svar unike_svar
+                        WHERE unike_svar.kartlegging_id = sporreundersokelse.kartlegging_id
+                          AND unike_svar.sporsmal_id = sporsmal.sporsmal_id) AS antall_svar_per_sporsmal
+                FROM ia_sak_kartlegging sporreundersokelse
+                         JOIN ia_prosess samarbeid
+                              ON sporreundersokelse.ia_prosess = samarbeid.id
+                         JOIN ia_sak sak USING (saksnummer, orgnr)
+                         JOIN virksomhet USING (orgnr)
+                         JOIN ia_sak_kartlegging_kartlegging_til_undertema sporreundersokelse_undertema
+                              ON sporreundersokelse.kartlegging_id = sporreundersokelse_undertema.kartlegging_id
+                         JOIN ia_sak_kartlegging_undertema undertema
+                              ON sporreundersokelse_undertema.undertema_id = undertema.undertema_id
+                         JOIN ia_sak_kartlegging_sporsmal_til_undertema sporsmal_undertema
+                              ON undertema.undertema_id = sporsmal_undertema.undertema_id
+                         JOIN ia_sak_kartlegging_sporsmal sporsmal
+                              ON sporsmal_undertema.sporsmal_id = sporsmal.sporsmal_id
+                         LEFT JOIN ia_sak_kartlegging_svaralternativer svaralternativ
+                                   ON sporsmal.sporsmal_id = svaralternativ.sporsmal_id
+                         LEFT JOIN ia_sak_kartlegging_kartlegging_til_tema sporreundersokelse_tema
+                                   ON sporreundersokelse_tema.kartlegging_id = sporreundersokelse.kartlegging_id
+                                       AND sporreundersokelse_tema.tema_id = undertema.tema_id
+                         LEFT JOIN ia_sak_kartlegging_tema tema
+                                   ON tema.tema_id = sporreundersokelse_tema.tema_id
+                         LEFT JOIN dokument_til_publisering
+                                   ON dokument_til_publisering.referanse_id = sporreundersokelse.kartlegging_id
+                    """.trimMargin(),
+                ).map(this::mapRowToSpørreundersøkelseDbRad).asList,
+            ).tilSpørreundersøkelser()
+        }
+
+    private fun mapRowToSpørreundersøkelseDbRad(row: Row): SpørreundersøkelseDatabaseRad = row.mapTilSpørreundersøkelseDbRad()
+
+    private fun Row.mapTilSpørreundersøkelseDbRad(): SpørreundersøkelseDatabaseRad =
+        SpørreundersøkelseDatabaseRad(
+            virksomhetsNavn = this.string("navn"),
+            orgnummer = this.string("orgnr"),
+            saksnummer = this.string("saksnummer"),
+            samarbeidId = this.int("samarbeid_id"),
+            spørreundersøkelseId = UUID.fromString(this.string("sporreundersokelse_id")),
+            type = SpørreundersøkelseDomene.Type.valueOf(this.string("type")),
+            status = SpørreundersøkelseDomene.Status.valueOf(this.string("status")),
+            opprettetAv = this.string("opprettet_av"),
+            opprettet = this.localDateTime("opprettet"),
+            gyldigTil = this.localDateTime("gyldig_til"),
+            endret = this.localDateTimeOrNull("endret"),
+            påbegynt = this.localDateTimeOrNull("pabegynt"),
+            fullført = this.localDateTimeOrNull("fullfort"),
+            temaId = this.int("tema_id"),
+            temaNavn = this.string("tema_navn"),
+            temaStatus = TemaDomene.Status.valueOf(this.string("tema_status")),
+            temaRekkefølge = this.int("tema_rekkefolge"),
+            temaStengt = this.boolean("tema_stengt"),
+            temaEndret = this.localDateTime("tema_endret"),
+            undertemaId = this.int("undertema_id"),
+            undertemaNavn = this.string("undertema_navn"),
+            undertemaStatus = UndertemaDomene.Status.valueOf(this.string("undertema_status")),
+            undertemaRekkefølge = this.int("undertema_rekkefolge"),
+            spørsmålId = UUID.fromString(this.string("sporsmal_id")),
+            spørsmålTekst = this.string("sporsmal_tekst"),
+            spørsmålRekkefølge = this.int("sporsmal_rekkefolge"),
+            flervalg = this.boolean("flervalg"),
+            svaralternativId = UUID.fromString(this.string("svaralternativ_id")),
+            svaralternativTekst = this.string("svaralternativ_tekst"),
+            antallSvar = this.intOrNull("antall_svar") ?: 0,
+            antallSvarPerSpørsmål = this.intOrNull("antall_svar_per_sporsmal") ?: 0,
+            publiseringStatus = this.stringOrNull("publisering_status").tilDokumentTilPubliseringStatus(),
+        )
+
+    private fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelser(): List<SpørreundersøkelseDomene> =
+        this.groupBy {
+            it.spørreundersøkelseId
+        }.mapNotNull { (_, spørreundersøkelseRad) ->
+            spørreundersøkelseRad.tilDomene()
+        }
+
+    fun hentSpørreundersøkelseLegacy(spørreundersøkelseId: String) =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -354,8 +539,8 @@ class SpørreundersøkelseRepository(
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         temaer: List<TemaInfo>,
-        type: Spørreundersøkelse.Type,
-    ): Either<Feil, Spørreundersøkelse> {
+        type: SpørreundersøkelseDomene.Type,
+    ): Either<Feil, SpørreundersøkelseDomene> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 val opprettet = LocalDateTime.now()
@@ -445,7 +630,7 @@ class SpørreundersøkelseRepository(
             }
         }
 
-        return hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId.toString())?.right()
+        return hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)?.right()
             ?: Feil(
                 feilmelding = "Kunne ikke opprette kartlegging",
                 httpStatusCode = HttpStatusCode.InternalServerError,
@@ -664,7 +849,7 @@ class SpørreundersøkelseRepository(
         }
 
     fun slettSpørreundersøkelse(
-        spørreundersøkelseId: String,
+        spørreundersøkelseId: UUID,
         sistEndret: LocalDateTime = LocalDateTime.now(),
     ) = using(sessionOf(dataSource)) { session ->
         session.run(
@@ -676,7 +861,7 @@ class SpørreundersøkelseRepository(
                 WHERE kartlegging_id = :kartleggingId
                 """.trimIndent(),
                 mapOf(
-                    "kartleggingId" to spørreundersøkelseId,
+                    "kartleggingId" to spørreundersøkelseId.toString(),
                     "sistEndret" to sistEndret,
                 ),
             ).asUpdate,
@@ -684,7 +869,7 @@ class SpørreundersøkelseRepository(
         hentSpørreundersøkelse(spørreundersøkelseId)
     }
 
-    fun startSpørreundersøkelse(spørreundersøkelseId: String) =
+    fun startSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -696,7 +881,7 @@ class SpørreundersøkelseRepository(
                     WHERE kartlegging_id = :kartleggingId
                     """.trimIndent(),
                     mapOf(
-                        "kartleggingId" to spørreundersøkelseId,
+                        "kartleggingId" to spørreundersøkelseId.toString(),
                         "navaerendeTidspunkt" to LocalDateTime.now(),
                     ),
                 ).asUpdate,
@@ -704,7 +889,7 @@ class SpørreundersøkelseRepository(
             hentSpørreundersøkelse(spørreundersøkelseId)
         }
 
-    fun avsluttSpørreundersøkelse(spørreundersøkelseId: String) =
+    fun avsluttSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -716,7 +901,7 @@ class SpørreundersøkelseRepository(
                         WHERE kartlegging_id = :kartleggingId
                     """.trimIndent(),
                     mapOf(
-                        "kartleggingId" to spørreundersøkelseId,
+                        "kartleggingId" to spørreundersøkelseId.toString(),
                         "navaerendeTidspunkt" to LocalDateTime.now(),
                     ),
                 ).asUpdate,
@@ -737,7 +922,7 @@ class SpørreundersøkelseRepository(
     }
 
     fun stengTema(
-        spørreundersøkelseId: String,
+        spørreundersøkelseId: UUID,
         temaId: Int,
     ) {
         using(sessionOf(dataSource)) { session ->
@@ -750,7 +935,7 @@ class SpørreundersøkelseRepository(
                       AND tema_id = :temaId 
                     """.trimIndent(),
                     mapOf(
-                        "kartleggingId" to spørreundersøkelseId,
+                        "kartleggingId" to spørreundersøkelseId.toString(),
                         "temaId" to temaId,
                     ),
                 ).asUpdate,
@@ -758,7 +943,7 @@ class SpørreundersøkelseRepository(
         }
     }
 
-    fun hentAktiveTemaer(type: Spørreundersøkelse.Type): List<TemaInfo> =
+    fun hentAktiveTemaer(type: SpørreundersøkelseDomene.Type): List<TemaInfo> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -814,46 +999,28 @@ class SpørreundersøkelseRepository(
             status = TemaStatus.valueOf(row.string("status")),
         )
 
-    fun oppdaterBehovsvurdering(
-        behovsvurderingId: String,
-        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto,
-    ): Either<Feil, Spørreundersøkelse> {
+    fun endreSamarbeidTilSpørreundersøkelse(
+        spørreundersøkelseId: UUID,
+        oppdaterSpørreundersøkelseDto: EndreSamarbeidTilSpørreundersøkelseDto,
+    ): Either<Feil, SpørreundersøkelseDomene> {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     UPDATE ia_sak_kartlegging SET 
-                    ia_prosess = :prosessId,
+                    ia_prosess = :samarbeidId,
                     endret = now()
-                    WHERE kartlegging_id = :behovsvurderingId
+                    WHERE kartlegging_id = :sporreundersokelseId
                     """.trimIndent(),
                     mapOf(
-                        "prosessId" to oppdaterBehovsvurderingDto.prosessId,
-                        "behovsvurderingId" to behovsvurderingId,
+                        "samarbeidId" to oppdaterSpørreundersøkelseDto.prosessId,
+                        "sporreundersokelseId" to spørreundersøkelseId.toString(),
                     ),
                 ).asUpdate,
             )
         }
-        return hentSpørreundersøkelse(behovsvurderingId)?.right()
+
+        return hentSpørreundersøkelse(spørreundersøkelseId)?.right()
             ?: IASakSpørreundersøkelseError.`feil under oppdatering`.left()
     }
-
-    fun hentAlleSpørreundersøkelser(): List<Spørreundersøkelse> =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                        SELECT ia_sak_kartlegging.*,
-                         ia_sak.saksnummer,
-                         virksomhet.orgnr,
-                         virksomhet.navn,
-                         ia_prosess.id AS prosessId
-                        FROM ia_sak_kartlegging
-                        JOIN ia_prosess on (ia_sak_kartlegging.ia_prosess = ia_prosess.id)
-                        JOIN ia_sak using (saksnummer, orgnr)
-                        JOIN virksomhet using (orgnr)
-                    """.trimMargin(),
-                ).map(this::mapRowToSpørreundersøkelse).asList,
-            )
-        }
 }

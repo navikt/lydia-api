@@ -12,28 +12,28 @@ import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SvaralternativDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene
 
 class SpørreundersøkelseProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SPORREUNDERSOKELSE_TOPIC,
     private val samarbeidRepository: IASamarbeidRepository,
     private val planRepository: PlanRepository,
-) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
-    Observer<Spørreundersøkelse> {
-    override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
+) : KafkaProdusent<SpørreundersøkelseDomene>(kafka, topic),
+    Observer<SpørreundersøkelseDomene> {
+    override fun receive(input: SpørreundersøkelseDomene) = sendPåKafka(input = input)
 
-    override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
+    override fun tilKafkaMelding(input: SpørreundersøkelseDomene): Pair<String, String> {
         val samarbeidNavn = samarbeidRepository.hentSamarbeid(
             saksnummer = input.saksnummer,
             samarbeidId = input.samarbeidId,
         )?.navn ?: input.virksomhetsNavn
 
         val plan = when (input.type) {
-            Spørreundersøkelse.Type.Evaluering -> planRepository.hentPlan(samarbeidId = input.samarbeidId)?.tilDto()
+            SpørreundersøkelseDomene.Type.Evaluering -> planRepository.hentPlan(samarbeidId = input.samarbeidId)?.tilDto()
             else -> null
         }
 
@@ -54,26 +54,28 @@ class SpørreundersøkelseProdusent(
         return nøkkel to Json.encodeToString(verdi)
     }
 
-    private fun Tema.tilKafkaMelding(): SerializableTema =
+    private fun TemaDomene.tilKafkaMelding(): SerializableTema =
         SerializableTema(
-            id = this.tema.id,
-            navn = this.tema.navn,
-            spørsmål = this.spørsmål.map { it.tilKafkaMelding() },
+            id = this.id,
+            navn = this.navn,
+            spørsmål = this.undertemaer.flatMap { undertema ->
+                undertema.spørsmål.map { spørsmål -> spørsmål.tilKafkaMelding(undertemanavn = undertema.navn) }
+            },
         )
 
-    private fun Spørsmål.tilKafkaMelding() =
+    private fun SpørsmålDomene.tilKafkaMelding(undertemanavn: String) =
         SerializableSpørsmål(
-            id = spørsmålId.toString(),
-            tekst = spørsmåltekst,
+            id = id.toString(),
+            tekst = tekst,
             svaralternativer = svaralternativer.map { it.tilKafkaMelding() },
             flervalg = flervalg,
             kategori = undertemanavn,
         )
 
-    private fun Svaralternativ.tilKafkaMelding(): SerializableSvaralternativ =
+    private fun SvaralternativDomene.tilKafkaMelding(): SerializableSvaralternativ =
         SerializableSvaralternativ(
-            id = svarId.toString(),
-            tekst = svartekst,
+            id = id.toString(),
+            tekst = tekst,
         )
 
     @Serializable
@@ -82,7 +84,7 @@ class SpørreundersøkelseProdusent(
         val orgnummer: String,
         val samarbeidsNavn: String,
         val virksomhetsNavn: String,
-        val status: Spørreundersøkelse.Status,
+        val status: SpørreundersøkelseDomene.Status,
         val temaer: List<SerializableTema>,
         val type: String,
         val plan: PlanDto?,

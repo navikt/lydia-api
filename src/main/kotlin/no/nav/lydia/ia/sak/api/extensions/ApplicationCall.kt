@@ -4,7 +4,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Companion.tilDokumentTilPubliseringType
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import java.util.UUID
 
 val ApplicationCall.orgnummer
@@ -12,9 +12,9 @@ val ApplicationCall.orgnummer
 val ApplicationCall.saksnummer
     get() = parameters["saksnummer"]
 val ApplicationCall.type
-    get() = parameters["type"]?.let { Spørreundersøkelse.Type.valueOf(it) }
+    get() = parameters["type"]?.let { SpørreundersøkelseDomene.Type.valueOf(it) }
 val ApplicationCall.spørreundersøkelseId
-    get() = parameters["sporreundersokelseId"]
+    get() = parameters["sporreundersokelseId"]?.toUUID("spørreundersøkelseId")
 val ApplicationCall.iaSakLeveranseId
     get() = parameters["iaSakLeveranseId"]
 val ApplicationCall.temaId
@@ -24,7 +24,14 @@ val ApplicationCall.prosessId
 val ApplicationCall.dokumentType
     get() = parameters["dokumentType"]?.tilDokumentTilPubliseringType()
 val ApplicationCall.dokumentReferanseId
-    get() = parameters["dokumentReferanseId"]?.let { UUID.fromString(it) }
-
+    get() = parameters["dokumentReferanseId"]?.toUUID("dokumentReferanseId")
 
 suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)
+
+fun String.toUUID(hvaErJeg: String): UUID? =
+    try {
+        UUID.fromString(this)
+    } catch (e: Exception) {
+        // TODO burde logge om det ikke går?
+        null
+    }

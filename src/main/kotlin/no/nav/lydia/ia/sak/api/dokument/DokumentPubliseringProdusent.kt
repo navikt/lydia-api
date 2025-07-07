@@ -6,7 +6,7 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.KafkaProdusent
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 
 class DokumentPubliseringProdusent(
     kafka: Kafka,
@@ -25,7 +25,7 @@ class DokumentPubliseringProdusent(
             type: String,
         ): String = "$samarbeidId-$referanseId-$type"
 
-        fun DokumentPubliseringDto.medTilsvarendeInnhold(spørreundersøkelse: Spørreundersøkelse): DokumentPubliseringMedInnhold =
+        fun DokumentPubliseringDto.medTilsvarendeInnhold(spørreundersøkelse: SpørreundersøkelseDomene): DokumentPubliseringMedInnhold =
             DokumentPubliseringMedInnhold(
                 referanseId = this.referanseId,
                 type = this.dokumentType.name,

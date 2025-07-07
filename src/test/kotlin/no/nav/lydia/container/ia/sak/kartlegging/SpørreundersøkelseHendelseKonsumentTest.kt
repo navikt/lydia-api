@@ -20,7 +20,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdatering
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørreundersøkelseOppdateringNøkkel
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -75,10 +75,10 @@ class SpørreundersøkelseHendelseKonsumentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
+            type = SpørreundersøkelseDomene.Type.Behovsvurdering,
         ).first()
 
-        fullførtBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
+        fullførtBehovsvurdering.status shouldBe SpørreundersøkelseDomene.Status.AVSLUTTET
 
         applikasjon.shouldContainLog(
             "Alle temaer i spørreundersøkelse '${behovsvurdering.id}' er fullført, spørreundersøkelse er avsluttet".toRegex(),
@@ -100,10 +100,10 @@ class SpørreundersøkelseHendelseKonsumentTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = samarbeid.id,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
+            type = SpørreundersøkelseDomene.Type.Behovsvurdering,
         ).first()
 
-        behovsvurderingMedEttStengtTema.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
+        behovsvurderingMedEttStengtTema.status shouldBe SpørreundersøkelseDomene.Status.PÅBEGYNT
 
         applikasjon.shouldContainLog(
             "Mottok stenging av tema: ${førsteTema.temaId} i spørreundersøkelse ${behovsvurdering.id}".toRegex(),

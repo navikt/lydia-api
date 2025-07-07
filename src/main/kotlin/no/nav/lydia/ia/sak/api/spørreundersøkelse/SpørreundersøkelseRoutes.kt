@@ -30,6 +30,7 @@ import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import no.nav.lydia.tilgangskontroll.somLesebruker
@@ -97,7 +98,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
+            call.respond(HttpStatusCode.OK, it.tilMetaDto())
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -154,7 +155,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService = iaTeamService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = id,
-                statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
+                statusViSkalEndreTil = SpørreundersøkelseDomene.Status.AVSLUTTET,
             )
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
@@ -199,7 +200,7 @@ fun Route.iaSakSpørreundersøkelse(
         call.somFølgerAvSakIProsess(iaSakService = iaSakService, iaTeamService, adGrupper = adGrupper) { _, _ ->
             spørreundersøkelseService.endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = id,
-                statusViSkalEndreTil = Spørreundersøkelse.Status.PÅBEGYNT,
+                statusViSkalEndreTil = SpørreundersøkelseDomene.Status.PÅBEGYNT,
             )
         }.also { spørreundersøkelse ->
             auditLog.auditloggEither(
@@ -218,7 +219,7 @@ fun Route.iaSakSpørreundersøkelse(
 
     put("$SPØRREUNDERSØKELSE_BASE_ROUTE/{sporreundersokelseId}") {
         val id = call.spørreundersøkelseId ?: return@put call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
-        val input = call.receive<OppdaterBehovsvurderingDto>()
+        val input = call.receive<EndreSamarbeidTilSpørreundersøkelseDto>()
 
         call.somSaksbehandler(adGrupper) { saksbehandler ->
             val iaSak = iaSakService.hentIASak(saksnummer = input.saksnummer).getOrNull()
@@ -227,9 +228,9 @@ fun Route.iaSakSpørreundersøkelse(
             if (!iaTeamService.erEierEllerFølgerAvSak(iaSak = iaSak, saksbehandler = saksbehandler)) {
                 return@somSaksbehandler IASakError.`er ikke følger eller eier av sak`.left()
             }
-            spørreundersøkelseService.oppdaterSamarbeidIdIBehovsvurdering(
-                behovsvurderingId = id,
-                oppdaterBehovsvurderingDto = input,
+            spørreundersøkelseService.endreSamarbeidTilSpørreundersøkelse(
+                spørreundersøkelseId = id,
+                endreSamarbeidTilSpørreundersøkelseDto = input,
             )
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(

@@ -2,7 +2,11 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SvaralternativDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaDomene
 
 @Serializable
 data class SpørreundersøkelseDto(
@@ -12,12 +16,12 @@ data class SpørreundersøkelseDto(
     val samarbeidId: Int,
     @Deprecated("Bruk samarbeidId")
     val prosessId: Int,
-    val status: Spørreundersøkelse.Status,
+    val status: SpørreundersøkelseDomene.Status,
     val temaer: List<TemaDto>,
     @Deprecated("Bruk temaer")
     val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
     val opprettetAv: String,
-    val type: Spørreundersøkelse.Type,
+    val type: SpørreundersøkelseDomene.Type,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
@@ -25,7 +29,23 @@ data class SpørreundersøkelseDto(
     val gyldigTilTidspunkt: LocalDateTime,
 )
 
-fun Spørreundersøkelse.tilDto() =
+@Serializable
+data class TemaDto(
+    val temaId: Int,
+    val navn: String,
+    val spørsmålOgSvaralternativer: List<SpørsmålDto>,
+)
+
+@Serializable
+data class SpørsmålDto(
+    val id: String,
+    val undertemanavn: String,
+    val spørsmål: String,
+    val svaralternativer: List<SvaralternativDto>,
+    val flervalg: Boolean,
+)
+
+fun SpørreundersøkelseDomene.tilDto(): SpørreundersøkelseDto =
     SpørreundersøkelseDto(
         id = id.toString(),
         kartleggingId = id.toString(),
@@ -41,4 +61,34 @@ fun Spørreundersøkelse.tilDto() =
         påbegyntTidspunkt = påbegyntTidspunkt,
         fullførtTidspunkt = fullførtTidspunkt,
         gyldigTilTidspunkt = gyldigTilTidspunkt,
+    )
+
+fun TemaDomene.toDto(): TemaDto =
+    TemaDto(
+        temaId = this.id,
+        navn = this.navn,
+        spørsmålOgSvaralternativer = this.undertemaer.tilDto(),
+    )
+
+fun List<UndertemaDomene>.tilDto(): List<SpørsmålDto> = flatMap { undertema -> undertema.spørsmål.map { it.tilDto(undertemanavn = undertema.navn) } }
+
+fun SpørsmålDomene.tilDto(undertemanavn: String): SpørsmålDto =
+    SpørsmålDto(
+        id = id.toString(),
+        undertemanavn = undertemanavn,
+        spørsmål = tekst,
+        svaralternativer = svaralternativer.map { it.tilDto() },
+        flervalg = flervalg,
+    )
+
+@Serializable
+data class SvaralternativDto(
+    val svarId: String,
+    val svartekst: String,
+)
+
+fun SvaralternativDomene.tilDto(): SvaralternativDto =
+    SvaralternativDto(
+        svarId = id.toString(),
+        svartekst = tekst,
     )

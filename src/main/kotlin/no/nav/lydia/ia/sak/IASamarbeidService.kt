@@ -131,8 +131,11 @@ class IASamarbeidService(
     ): KanGjennomføreStatusendring {
         val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
             ?: throw IllegalStateException("Fant ikke samarbeid")
-        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
-        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
+        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(
+            samarbeid = samarbeid,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        )
+        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
@@ -173,10 +176,10 @@ class IASamarbeidService(
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering).isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering).isNotEmpty()) {
             blokkerende.add(FINNES_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering).isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering).isNotEmpty()) {
             blokkerende.add(FINNES_EVALUERING)
         }
         if (planRepository.hentPlan(samarbeidId = samarbeid.id) != null) {
@@ -201,12 +204,12 @@ class IASamarbeidService(
             ?: throw IllegalStateException("Fant ikke samarbeid")
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
+        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
                 .any { it.status != Spørreundersøkelse.Status.AVSLUTTET }
         ) {
             blokkerende.add(AKTIV_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
+        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
                 .any { it.status != Spørreundersøkelse.Status.AVSLUTTET }
         ) {
             blokkerende.add(AKTIV_EVALUERING)
