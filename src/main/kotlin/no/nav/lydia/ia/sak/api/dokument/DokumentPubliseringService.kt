@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.LocalDateTime
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
@@ -59,12 +60,13 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(dokumentReferanseId.toString()).getOrElse {
-            return Feil(
-                feilmelding = "Innhold dokumentet refererer til, med referanseId: '$dokumentReferanseId' og type: '${dokumentType.name}', ble ikke funnet",
-                httpStatusCode = HttpStatusCode.NotFound,
-            ).left()
-        }
+        val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId.toString())
+            .getOrElse {
+                return Feil(
+                    feilmelding = "Innhold dokumentet refererer til, med referanseId: '$dokumentReferanseId' og type: '${dokumentType.name}', ble ikke funnet",
+                    httpStatusCode = HttpStatusCode.NotFound,
+                ).left()
+            }
 
         if (spørreundersøkelse.type != Spørreundersøkelse.Type.Behovsvurdering) {
             return Feil(
@@ -73,13 +75,32 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        if (spørreundersøkelse.status != Spørreundersøkelse.Status.AVSLUTTET) {
+        if (spørreundersøkelse.status != Spørreundersøkelse.Status.AVSLUTTET || spørreundersøkelse.fullførtTidspunkt == null) {
             return Feil(
-                feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ikke status AVSLUTTET, " +
-                    "og dermed ikke kan lagres som dokument. Status var: '${spørreundersøkelse.status.name}'",
+                feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har status '${spørreundersøkelse.status}' " +
+                    "(forventet ${Spørreundersøkelse.Status.AVSLUTTET}) og/eller mangler fullført tidspunkt, " +
+                    "og dermed ikke kan lagres som dokument. ",
                 httpStatusCode = HttpStatusCode.BadRequest,
             ).left()
         }
+
+        val spørreundersøkelseResultat = spørreundersøkelseService.hentSpørreundersøkelseResultat(spørreundersøkelseId = dokumentReferanseId.toString())
+            .getOrElse {
+                return Feil(
+                    feilmelding = "Ingen resultat funnet for referanseId '$dokumentReferanseId' og type: '${dokumentType.name}'",
+                    httpStatusCode = HttpStatusCode.NotFound,
+                ).left()
+            }
+
+        if (spørreundersøkelseResultat.spørsmålMedSvarPerTema.isEmpty()) {
+            return Feil(
+                feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ingen resultat , og dermed ikke kan lagres som dokument. ",
+                httpStatusCode = HttpStatusCode.BadRequest,
+            ).left()
+        }
+
+        val fullførtTidspunkt: LocalDateTime = spørreundersøkelse.fullførtTidspunkt
+        val spørreundersøkelseOpprettetAv: String = spørreundersøkelse.opprettetAv
 
         val samarbeid: IASamarbeid =
             samarbeidService.hentSamarbeid(saksnummer = spørreundersøkelse.saksnummer, samarbeidId = spørreundersøkelse.samarbeidId).getOrElse {
@@ -96,9 +117,13 @@ class DokumentPubliseringService(
         ).onRight { dokumentPubliseringDto ->
             dokumentPubliseringProdusent.sendPåKafka(
                 input = dokumentPubliseringDto.medTilsvarendeInnhold(
-                    spørreundersøkelse = spørreundersøkelse,
+                    orgnr = spørreundersøkelse.orgnummer,
+                    virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
                     samarbeid = samarbeid,
                     navEnhet = navEnhet,
+                    spørreundersøkelseOpprettetAv = spørreundersøkelseOpprettetAv,
+                    spørreundersøkelseResultat = spørreundersøkelseResultat,
+                    fullførtTidspunkt = fullførtTidspunkt,
                 ),
             )
         }
