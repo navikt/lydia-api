@@ -17,12 +17,12 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.EndreSamarbeidTilSpørreunde
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene.Companion.tilSpørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene.Companion.tilSpørreundersøkelser
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.tilSpørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.tilSpørreundersøkelser
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.time.LocalDateTime
 import java.util.UUID
@@ -31,7 +31,7 @@ import javax.sql.DataSource
 class SpørreundersøkelseRepository(
     private val dataSource: DataSource,
 ) {
-    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene? =
+    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -118,8 +118,8 @@ class SpørreundersøkelseRepository(
 
     fun hentSpørreundersøkelser(
         samarbeid: IASamarbeid,
-        type: SpørreundersøkelseDomene.Type,
-    ): List<SpørreundersøkelseDomene> =
+        type: Spørreundersøkelse.Type,
+    ): List<Spørreundersøkelse> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -196,7 +196,7 @@ class SpørreundersøkelseRepository(
                          LEFT JOIN dokument_til_publisering
                                    ON dokument_til_publisering.referanse_id = sporreundersokelse.kartlegging_id
                     WHERE samarbeid.id = :samarbeidId
-                        AND sporreundersokelse.status != '${SpørreundersøkelseDomene.Status.SLETTET}'
+                        AND sporreundersokelse.status != '${Spørreundersøkelse.Status.SLETTET}'
                         AND sporreundersokelse.type = :type
                     """.trimMargin(),
                     mapOf(
@@ -207,7 +207,7 @@ class SpørreundersøkelseRepository(
             ).tilSpørreundersøkelser()
         }
 
-    fun hentAlleSpørreundersøkelser(): List<SpørreundersøkelseDomene> =
+    fun hentAlleSpørreundersøkelser(): List<Spørreundersøkelse> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -294,8 +294,8 @@ class SpørreundersøkelseRepository(
         prosessId: Int,
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         temaer: List<TemaMetadata>,
-        type: SpørreundersøkelseDomene.Type,
-    ): Either<Feil, SpørreundersøkelseDomene> {
+        type: Spørreundersøkelse.Type,
+    ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 val opprettet = LocalDateTime.now()
@@ -392,13 +392,13 @@ class SpørreundersøkelseRepository(
             ).left()
     }
 
-    fun startSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene? =
+    fun startSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     UPDATE ia_sak_kartlegging SET
-                        status = '${SpørreundersøkelseDomene.Status.PÅBEGYNT.name}',
+                        status = '${Spørreundersøkelse.Status.PÅBEGYNT.name}',
                         endret = :navaerendeTidspunkt,
                         pabegynt = :navaerendeTidspunkt
                     WHERE kartlegging_id = :kartleggingId
@@ -415,23 +415,24 @@ class SpørreundersøkelseRepository(
     fun slettSpørreundersøkelse(
         spørreundersøkelseId: UUID,
         sistEndret: LocalDateTime = LocalDateTime.now(),
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                UPDATE ia_sak_kartlegging SET
-                    status = '${SpørreundersøkelseDomene.Status.SLETTET}',
-                    endret = :sistEndret
-                WHERE kartlegging_id = :kartleggingId
-                """.trimIndent(),
-                mapOf(
-                    "kartleggingId" to spørreundersøkelseId.toString(),
-                    "sistEndret" to sistEndret,
-                ),
-            ).asUpdate,
-        )
-        hentSpørreundersøkelse(spørreundersøkelseId)
-    }
+    ): Spørreundersøkelse? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '${Spørreundersøkelse.Status.SLETTET}',
+                        endret = :sistEndret
+                    WHERE kartlegging_id = :kartleggingId
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "sistEndret" to sistEndret,
+                    ),
+                ).asUpdate,
+            )
+            hentSpørreundersøkelse(spørreundersøkelseId)
+        }
 
     fun stengTema(
         spørreundersøkelseId: UUID,
@@ -455,13 +456,13 @@ class SpørreundersøkelseRepository(
         }
     }
 
-    fun avsluttSpørreundersøkelse(spørreundersøkelseId: UUID): SpørreundersøkelseDomene? =
+    fun avsluttSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     UPDATE ia_sak_kartlegging SET
-                        status = '${SpørreundersøkelseDomene.Status.AVSLUTTET.name}',
+                        status = '${Spørreundersøkelse.Status.AVSLUTTET.name}',
                         endret = :navaerendeTidspunkt,
                         fullfort = :navaerendeTidspunkt
                         WHERE kartlegging_id = :kartleggingId
@@ -537,13 +538,13 @@ class SpørreundersøkelseRepository(
             )
         }
 
-    fun hentAktiveTemaMetadata(type: SpørreundersøkelseDomene.Type): List<TemaMetadata> =
+    fun hentAktiveTemaMetadata(type: Spørreundersøkelse.Type): List<TemaMetadata> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
                     SELECT * FROM ia_sak_kartlegging_tema
-                    WHERE status = '${TemaDomene.Status.AKTIV}'
+                    WHERE status = '${Tema.Status.AKTIV}'
                     AND type = :type
                     """.trimIndent(),
                     mapOf(
@@ -559,7 +560,7 @@ class SpørreundersøkelseRepository(
                 queryOf(
                     """
                     SELECT * FROM ia_sak_kartlegging_undertema
-                    WHERE status = '${TemaDomene.Status.AKTIV}'
+                    WHERE status = '${Tema.Status.AKTIV}'
                     AND tema_id = '$temaId'
                     """.trimIndent(),
                 ).map(this::mapTilUndertema).asList,
@@ -572,7 +573,7 @@ class SpørreundersøkelseRepository(
                 queryOf(
                     """
                     SELECT * FROM ia_sak_kartlegging_undertema
-                    WHERE status = '${TemaDomene.Status.AKTIV}'
+                    WHERE status = '${Tema.Status.AKTIV}'
                     AND obligatorisk = true
                     AND tema_id = :temaId
                     """.trimIndent(),
@@ -586,7 +587,7 @@ class SpørreundersøkelseRepository(
     fun endreSamarbeidTilSpørreundersøkelse(
         spørreundersøkelseId: UUID,
         oppdaterSpørreundersøkelseDto: EndreSamarbeidTilSpørreundersøkelseDto,
-    ): Either<Feil, SpørreundersøkelseDomene> {
+    ): Either<Feil, Spørreundersøkelse> {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -614,8 +615,8 @@ class SpørreundersøkelseRepository(
         val saksnummer: String,
         val samarbeidId: Int,
         val spørreundersøkelseId: UUID,
-        val type: SpørreundersøkelseDomene.Type,
-        val status: SpørreundersøkelseDomene.Status,
+        val type: Spørreundersøkelse.Type,
+        val status: Spørreundersøkelse.Status,
         val opprettetAv: String,
         val opprettet: LocalDateTime,
         val gyldigTil: LocalDateTime,
@@ -624,13 +625,13 @@ class SpørreundersøkelseRepository(
         val fullført: LocalDateTime?,
         val temaId: Int,
         val temaNavn: String,
-        val temaStatus: TemaDomene.Status,
+        val temaStatus: Tema.Status,
         val temaRekkefølge: Int,
         val temaStengt: Boolean,
         val temaEndret: LocalDateTime,
         val undertemaId: Int,
         val undertemaNavn: String,
-        val undertemaStatus: UndertemaDomene.Status,
+        val undertemaStatus: Undertema.Status,
         val undertemaRekkefølge: Int,
         val spørsmålId: UUID,
         val spørsmålTekst: String,
@@ -652,8 +653,8 @@ class SpørreundersøkelseRepository(
             saksnummer = string("saksnummer"),
             samarbeidId = int("samarbeid_id"),
             spørreundersøkelseId = string("sporreundersokelse_id").tilUUID("spørreundersøkelseId"),
-            type = SpørreundersøkelseDomene.Type.valueOf(string("type")),
-            status = SpørreundersøkelseDomene.Status.valueOf(string("status")),
+            type = Spørreundersøkelse.Type.valueOf(string("type")),
+            status = Spørreundersøkelse.Status.valueOf(string("status")),
             opprettetAv = string("opprettet_av"),
             opprettet = localDateTime("opprettet"),
             gyldigTil = localDateTime("gyldig_til"),
@@ -662,13 +663,13 @@ class SpørreundersøkelseRepository(
             fullført = localDateTimeOrNull("fullfort"),
             temaId = int("tema_id"),
             temaNavn = string("tema_navn"),
-            temaStatus = TemaDomene.Status.valueOf(string("tema_status")),
+            temaStatus = Tema.Status.valueOf(string("tema_status")),
             temaRekkefølge = int("tema_rekkefolge"),
             temaStengt = boolean("tema_stengt"),
             temaEndret = localDateTime("tema_endret"),
             undertemaId = int("undertema_id"),
             undertemaNavn = string("undertema_navn"),
-            undertemaStatus = UndertemaDomene.Status.valueOf(string("undertema_status")),
+            undertemaStatus = Undertema.Status.valueOf(string("undertema_status")),
             undertemaRekkefølge = int("undertema_rekkefolge"),
             spørsmålId = string("sporsmal_id").tilUUID("spørsmålId"),
             spørsmålTekst = string("sporsmal_tekst"),

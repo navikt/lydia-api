@@ -1,7 +1,7 @@
 package no.nav.lydia.ia.eksport
 
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -19,7 +19,7 @@ class SpørreundersøkelseBigqueryEksporterer(
     fun eksporter() {
         KJØRER_STATISTIKK_EKSPORT.set(true)
 
-        val alleSpørreundersøkelser: List<SpørreundersøkelseDomene> = spørreundersøkelseRepository.hentAlleSpørreundersøkelser()
+        val alleSpørreundersøkelser: List<Spørreundersøkelse> = spørreundersøkelseRepository.hentAlleSpørreundersøkelser()
         log.info("Starter re-eksport av ${alleSpørreundersøkelser.size} spørreudnersøkelser")
 
         try {

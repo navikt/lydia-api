@@ -6,16 +6,16 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 class SpørreundersøkelseBigqueryProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SPØRREUNDERSØKELSE_BIGQUERY_TOPIC,
-) : KafkaProdusent<SpørreundersøkelseDomene>(kafka, topic),
-    Observer<SpørreundersøkelseDomene> {
-    override fun receive(input: SpørreundersøkelseDomene) = sendPåKafka(input = input)
+) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
+    Observer<Spørreundersøkelse> {
+    override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
 
-    override fun tilKafkaMelding(input: SpørreundersøkelseDomene): Pair<String, String> {
+    override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
         val nøkkel = input.saksnummer
         val verdi = SpørreundersøkelseEksport(
             id = input.id.toString(),
@@ -40,7 +40,7 @@ class SpørreundersøkelseBigqueryProdusent(
         val id: String,
         val orgnr: String,
         val type: String,
-        val status: SpørreundersøkelseDomene.Status,
+        val status: Spørreundersøkelse.Status,
         val samarbeidId: Int,
         val saksnummer: String,
         val opprettetAv: String,

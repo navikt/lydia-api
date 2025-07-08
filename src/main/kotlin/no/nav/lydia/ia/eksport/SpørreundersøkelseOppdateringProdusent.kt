@@ -8,10 +8,10 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Spørsm�
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.SpørreundersøkelseAntallSvar
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SvaralternativDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.UndertemaDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -129,19 +129,19 @@ class SpørreundersøkelseOppdateringProdusent(
     )
 }
 
-fun TemaDomene.TemaResultatKafkaDto(): TemaResultatKafkaDto =
+fun Tema.TemaResultatKafkaDto(): TemaResultatKafkaDto =
     TemaResultatKafkaDto(
         id = id,
         navn = navn,
         spørsmålMedSvar = undertemaer.tilResultatKafkaDto(),
     )
 
-fun List<UndertemaDomene>.tilResultatKafkaDto(): List<SpørsmålResultatKafkaDto> =
+fun List<Undertema>.tilResultatKafkaDto(): List<SpørsmålResultatKafkaDto> =
     flatMap { undertema ->
         undertema.spørsmål.map { it.tilResultatKafkaDto(undertemanavn = undertema.navn) }
     }
 
-fun SpørsmålDomene.tilResultatKafkaDto(undertemanavn: String): SpørsmålResultatKafkaDto =
+fun Spørsmål.tilResultatKafkaDto(undertemanavn: String): SpørsmålResultatKafkaDto =
     SpørsmålResultatKafkaDto(
         id = id.toString(),
         tekst = tekst,
@@ -150,7 +150,7 @@ fun SpørsmålDomene.tilResultatKafkaDto(undertemanavn: String): SpørsmålResul
         kategori = undertemanavn,
     )
 
-fun SvaralternativDomene.tilResultatKafkaDto(): SvarResultatKafkaDto =
+fun Svaralternativ.tilResultatKafkaDto(): SvarResultatKafkaDto =
     SvarResultatKafkaDto(
         id = id.toString(),
         tekst = tekst,

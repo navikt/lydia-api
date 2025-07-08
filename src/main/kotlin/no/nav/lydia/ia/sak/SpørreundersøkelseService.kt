@@ -21,7 +21,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -34,7 +34,7 @@ class SpørreundersøkelseService(
     val samarbeidService: IASamarbeidService,
     val iaSakService: IASakService,
     val planService: PlanService,
-    val spørreundersøkelseObservers: List<Observer<SpørreundersøkelseDomene>>,
+    val spørreundersøkelseObservers: List<Observer<Spørreundersøkelse>>,
     private val spørreundersøkelseOppdateringProdusent: SpørreundersøkelseOppdateringProdusent,
 ) {
     private val log: Logger = LoggerFactory.getLogger(this.javaClass)
@@ -47,7 +47,7 @@ class SpørreundersøkelseService(
                     log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
                     return@forEach
                 }
-            if (spørreundersøkelse.status != SpørreundersøkelseDomene.Status.PÅBEGYNT) {
+            if (spørreundersøkelse.status != Spørreundersøkelse.Status.PÅBEGYNT) {
                 log.warn("Kan ikke svare på en kartlegging i status ${spørreundersøkelse.status}, hopper over")
                 return@forEach
             }
@@ -92,7 +92,7 @@ class SpørreundersøkelseService(
         val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
             ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
 
-        if (spørreundersøkelse.status != SpørreundersøkelseDomene.Status.AVSLUTTET) {
+        if (spørreundersøkelse.status != Spørreundersøkelse.Status.AVSLUTTET) {
             return IASakSpørreundersøkelseError.`ikke avsluttet`.left()
         }
 
@@ -104,10 +104,10 @@ class SpørreundersøkelseService(
         saksbehandler: NavAnsatt.NavAnsattMedSaksbehandlerRolle,
         iaSak: IASak,
         prosessId: Int,
-        type: SpørreundersøkelseDomene.Type,
-    ): Either<Feil, SpørreundersøkelseDomene> =
+        type: Spørreundersøkelse.Type,
+    ): Either<Feil, Spørreundersøkelse> =
         when (type) {
-            SpørreundersøkelseDomene.Type.Behovsvurdering -> {
+            Spørreundersøkelse.Type.Behovsvurdering -> {
                 samarbeidService.hentSamarbeid(iaSak, prosessId).flatMap { samarbeid ->
                     spørreundersøkelseRepository.opprettSpørreundersøkelse(
                         orgnummer = orgnummer,
@@ -122,7 +122,7 @@ class SpørreundersøkelseService(
                 }
             }
 
-            SpørreundersøkelseDomene.Type.Evaluering -> {
+            Spørreundersøkelse.Type.Evaluering -> {
                 if (iaSak.status == IASak.Status.VI_BISTÅR) {
                     planService.hentPlan(samarbeidId = prosessId).flatMap { plan ->
                         val temaerInkludertIPlan = plan.temaer.filter {
@@ -170,7 +170,7 @@ class SpørreundersøkelseService(
             }
         }
 
-    fun slettSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, SpørreundersøkelseDomene> {
+    fun slettSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> {
         val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)
             ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
 
@@ -178,7 +178,7 @@ class SpørreundersøkelseService(
 
         val oppdatertKartlegging =
             spørreundersøkelse.copy(
-                status = SpørreundersøkelseDomene.Status.SLETTET,
+                status = Spørreundersøkelse.Status.SLETTET,
                 endretTidspunkt = LocalDateTime.now().toKotlinLocalDateTime(),
             )
 
@@ -190,8 +190,8 @@ class SpørreundersøkelseService(
     fun hentSpørreundersøkelser(
         sak: IASak,
         prosessId: Int,
-        type: SpørreundersøkelseDomene.Type,
-    ): Either<Feil, List<SpørreundersøkelseDomene>> =
+        type: Spørreundersøkelse.Type,
+    ): Either<Feil, List<Spørreundersøkelse>> =
         try {
             samarbeidService.hentSamarbeid(sak, prosessId).map {
                 spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = it, type = type)
@@ -201,37 +201,37 @@ class SpørreundersøkelseService(
             IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
         }
 
-    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, SpørreundersøkelseDomene> =
+    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> =
         spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)?.right()
             ?: IASakSpørreundersøkelseError.`ugyldig id`.left()
 
     fun endreSpørreundersøkelseStatus(
         spørreundersøkelseId: UUID,
-        statusViSkalEndreTil: SpørreundersøkelseDomene.Status,
-    ): Either<Feil, SpørreundersøkelseDomene> {
+        statusViSkalEndreTil: Spørreundersøkelse.Status,
+    ): Either<Feil, Spørreundersøkelse> {
         val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(
             spørreundersøkelseId = spørreundersøkelseId,
         ) ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
 
-        val oppdatertSpørreundersøkelse: SpørreundersøkelseDomene =
+        val oppdatertSpørreundersøkelse: Spørreundersøkelse =
             when (statusViSkalEndreTil) {
-                SpørreundersøkelseDomene.Status.PÅBEGYNT ->
-                    if (spørreundersøkelse.status != SpørreundersøkelseDomene.Status.OPPRETTET) {
+                Spørreundersøkelse.Status.PÅBEGYNT ->
+                    if (spørreundersøkelse.status != Spørreundersøkelse.Status.OPPRETTET) {
                         return IASakSpørreundersøkelseError.`feil status kan ikke starte`.left()
                     } else {
                         spørreundersøkelseRepository.startSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                             ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
                     }
-                SpørreundersøkelseDomene.Status.AVSLUTTET ->
-                    if (spørreundersøkelse.status != SpørreundersøkelseDomene.Status.PÅBEGYNT) {
+                Spørreundersøkelse.Status.AVSLUTTET ->
+                    if (spørreundersøkelse.status != Spørreundersøkelse.Status.PÅBEGYNT) {
                         return IASakSpørreundersøkelseError.`ikke påbegynt`.left()
                     } else {
                         spørreundersøkelseRepository.avsluttSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                             ?: return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
                     }
-                SpørreundersøkelseDomene.Status.OPPRETTET ->
+                Spørreundersøkelse.Status.OPPRETTET ->
                     return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
-                SpørreundersøkelseDomene.Status.SLETTET ->
+                Spørreundersøkelse.Status.SLETTET ->
                     return IASakSpørreundersøkelseError.`ikke støttet statusendring`.left()
             }
 
@@ -280,7 +280,7 @@ class SpørreundersøkelseService(
         if (alleTemaErFullført) {
             endreSpørreundersøkelseStatus(
                 spørreundersøkelseId = spørreundersøkelseId,
-                statusViSkalEndreTil = SpørreundersøkelseDomene.Status.AVSLUTTET,
+                statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
             )
             log.info("Alle temaer i spørreundersøkelse '${hendelse.spørreundersøkelseId}' er fullført, spørreundersøkelse er avsluttet")
         }
@@ -294,10 +294,10 @@ class SpørreundersøkelseService(
     fun endreSamarbeidTilSpørreundersøkelse(
         spørreundersøkelseId: UUID,
         endreSamarbeidTilSpørreundersøkelseDto: EndreSamarbeidTilSpørreundersøkelseDto,
-    ): Either<Feil, SpørreundersøkelseDomene> {
+    ): Either<Feil, Spørreundersøkelse> {
         val behovsvurdering = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)
             ?: return IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
-        if (behovsvurdering.type == SpørreundersøkelseDomene.Type.Evaluering) {
+        if (behovsvurdering.type == Spørreundersøkelse.Type.Evaluering) {
             return IASakSpørreundersøkelseError.`ugyldig type`.left()
         }
         if (behovsvurdering.orgnummer != endreSamarbeidTilSpørreundersøkelseDto.orgnummer) {
@@ -306,7 +306,7 @@ class SpørreundersøkelseService(
         if (behovsvurdering.saksnummer != endreSamarbeidTilSpørreundersøkelseDto.saksnummer) {
             return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
         }
-        if (behovsvurdering.status != SpørreundersøkelseDomene.Status.AVSLUTTET) {
+        if (behovsvurdering.status != Spørreundersøkelse.Status.AVSLUTTET) {
             return IASakSpørreundersøkelseError.`ikke avsluttet, kan ikke bytte samarbeid`.left()
         }
 

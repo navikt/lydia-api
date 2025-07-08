@@ -8,7 +8,7 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.core.metrics.Counter
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.Plan
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 private const val NAMESPACE = "pia"
 
@@ -94,21 +94,21 @@ class Metrics {
             }
         }
 
-        fun loggBehovsvurdering(status: SpørreundersøkelseDomene.Status) {
+        fun loggBehovsvurdering(status: Spørreundersøkelse.Status) {
             when (status) {
-                SpørreundersøkelseDomene.Status.OPPRETTET -> behovsvurderingerOpprettet.inc()
-                SpørreundersøkelseDomene.Status.PÅBEGYNT -> behovsvurderingerStartet.inc()
-                SpørreundersøkelseDomene.Status.AVSLUTTET -> behovsvurderingerFullført.inc()
-                SpørreundersøkelseDomene.Status.SLETTET -> behovsvurderingerSlettet.inc()
+                Spørreundersøkelse.Status.OPPRETTET -> behovsvurderingerOpprettet.inc()
+                Spørreundersøkelse.Status.PÅBEGYNT -> behovsvurderingerStartet.inc()
+                Spørreundersøkelse.Status.AVSLUTTET -> behovsvurderingerFullført.inc()
+                Spørreundersøkelse.Status.SLETTET -> behovsvurderingerSlettet.inc()
             }
         }
 
-        fun loggEvaluering(status: SpørreundersøkelseDomene.Status) {
+        fun loggEvaluering(status: Spørreundersøkelse.Status) {
             when (status) {
-                SpørreundersøkelseDomene.Status.OPPRETTET -> evalueringerOpprettet.inc()
-                SpørreundersøkelseDomene.Status.PÅBEGYNT -> evalueringerStartet.inc()
-                SpørreundersøkelseDomene.Status.AVSLUTTET -> evalueringerFullført.inc()
-                SpørreundersøkelseDomene.Status.SLETTET -> evalueringerSlettet.inc()
+                Spørreundersøkelse.Status.OPPRETTET -> evalueringerOpprettet.inc()
+                Spørreundersøkelse.Status.PÅBEGYNT -> evalueringerStartet.inc()
+                Spørreundersøkelse.Status.AVSLUTTET -> evalueringerFullført.inc()
+                Spørreundersøkelse.Status.SLETTET -> evalueringerSlettet.inc()
             }
         }
 

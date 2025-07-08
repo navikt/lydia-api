@@ -7,18 +7,18 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 class FullførtBehovsvurderingProdusent(
     kafka: Kafka,
     topic: Topic = Topic.FULLFØRT_BEHOVSVURDERING_TOPIC,
-) : KafkaProdusent<SpørreundersøkelseDomene>(kafka, topic),
-    Observer<SpørreundersøkelseDomene> {
-    override fun receive(input: SpørreundersøkelseDomene) {
-        if (input.type == SpørreundersøkelseDomene.Type.Behovsvurdering && input.status == SpørreundersøkelseDomene.Status.AVSLUTTET) sendPåKafka(input)
+) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
+    Observer<Spørreundersøkelse> {
+    override fun receive(input: Spørreundersøkelse) {
+        if (input.type == Spørreundersøkelse.Type.Behovsvurdering && input.status == Spørreundersøkelse.Status.AVSLUTTET) sendPåKafka(input)
     }
 
-    override fun tilKafkaMelding(input: SpørreundersøkelseDomene): Pair<String, String> {
+    override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
         val nøkkel = input.id.toString()
         val verdi = FullførtBehovsvurdering(
             behovsvurderingId = input.id.toString(),

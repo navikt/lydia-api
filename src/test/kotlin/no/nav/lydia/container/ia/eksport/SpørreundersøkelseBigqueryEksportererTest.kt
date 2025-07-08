@@ -26,7 +26,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent.SpørreundersøkelseEksport
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -65,7 +65,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe opprettetBehovsvurdering.id
-                sisteBehovsvurdering.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
+                sisteBehovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
                 sisteBehovsvurdering.status shouldBe opprettetBehovsvurdering.status
                 sisteBehovsvurdering.opprettetAv shouldBe opprettetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe opprettetBehovsvurdering.opprettetTidspunkt
@@ -129,7 +129,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe startetBehovsvurdering.id
-                sisteBehovsvurdering.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
+                sisteBehovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
                 sisteBehovsvurdering.status shouldBe startetBehovsvurdering.status
                 sisteBehovsvurdering.samarbeidId shouldBe startetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe startetBehovsvurdering.opprettetAv
@@ -201,7 +201,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status
-                sisteBehovsvurdering.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
+                sisteBehovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
                 sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe avsluttetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe avsluttetBehovsvurdering.opprettetTidspunkt
@@ -237,7 +237,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 val sisteSpørreundersøkelse = behovsvurderingerUtenSvar.last()
                 sisteSpørreundersøkelse.id shouldBe avsluttetEvaluering.id
                 sisteSpørreundersøkelse.status shouldBe avsluttetEvaluering.status
-                sisteSpørreundersøkelse.type shouldBe SpørreundersøkelseDomene.Type.Evaluering.name
+                sisteSpørreundersøkelse.type shouldBe Spørreundersøkelse.Type.Evaluering.name
                 sisteSpørreundersøkelse.samarbeidId shouldBe avsluttetEvaluering.samarbeidId
                 sisteSpørreundersøkelse.opprettetAv shouldBe avsluttetEvaluering.opprettetAv
                 sisteSpørreundersøkelse.opprettet shouldBe avsluttetEvaluering.opprettetTidspunkt
@@ -288,7 +288,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
                 sisteSpørreundersøkelse.id shouldBe avsluttetSpørreundersøkelse.id
                 sisteSpørreundersøkelse.status shouldBe avsluttetSpørreundersøkelse.status
-                sisteSpørreundersøkelse.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
+                sisteSpørreundersøkelse.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
                 sisteSpørreundersøkelse.samarbeidId shouldBe avsluttetSpørreundersøkelse.samarbeidId
                 sisteSpørreundersøkelse.opprettetAv shouldBe avsluttetSpørreundersøkelse.opprettetAv
                 sisteSpørreundersøkelse.opprettet shouldBe avsluttetSpørreundersøkelse.opprettetTidspunkt

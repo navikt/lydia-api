@@ -3,13 +3,13 @@ package no.nav.lydia.ia.sak.api.spørreundersøkelse
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 
 @Serializable
 data class SpørreundersøkelseUtenInnholdDto(
     val id: String,
     val samarbeidId: Int,
-    val status: SpørreundersøkelseDomene.Status,
+    val status: Spørreundersøkelse.Status,
     val publiseringStatus: DokumentPublisering.Status,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
@@ -20,9 +20,9 @@ data class SpørreundersøkelseUtenInnholdDto(
     val harMinstEttSvar: Boolean,
 )
 
-fun List<SpørreundersøkelseDomene>.tilMetaDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilMetaDto() }
+fun List<Spørreundersøkelse>.tilMetaDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilMetaDto() }
 
-fun SpørreundersøkelseDomene.tilMetaDto(): SpørreundersøkelseUtenInnholdDto =
+fun Spørreundersøkelse.tilMetaDto(): SpørreundersøkelseUtenInnholdDto =
     SpørreundersøkelseUtenInnholdDto(
         id = id.toString(),
         samarbeidId = samarbeidId,

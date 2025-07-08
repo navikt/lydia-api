@@ -36,7 +36,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -167,10 +167,10 @@ class VirksomhetOppdateringTest {
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
-        ) shouldBe SpørreundersøkelseDomene.Status.SLETTET.name
+        ) shouldBe Spørreundersøkelse.Status.SLETTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${evaluering.id}'",
-        ) shouldBe SpørreundersøkelseDomene.Status.SLETTET.name
+        ) shouldBe Spørreundersøkelse.Status.SLETTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_plan where plan_id = '${plan.id}'",
         )

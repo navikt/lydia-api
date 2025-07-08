@@ -7,7 +7,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -54,13 +54,13 @@ class DokumentPubliseringService(
         }
 
         val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId).onRight {
-            if (it.type != SpørreundersøkelseDomene.Type.Behovsvurdering) {
+            if (it.type != Spørreundersøkelse.Type.Behovsvurdering) {
                 return Feil(
                     feilmelding = "Spørreundersøkelse med id: $dokumentReferanseId er ikke av type ${dokumentType.name}",
                     httpStatusCode = HttpStatusCode.BadRequest,
                 ).left()
             }
-            if (it.status != SpørreundersøkelseDomene.Status.AVSLUTTET) {
+            if (it.status != Spørreundersøkelse.Status.AVSLUTTET) {
                 return Feil(
                     feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ikke status AVSLUTTET, " +
                         "og dermed ikke kan lagres som dokument. Status var: '${it.status.name}'",

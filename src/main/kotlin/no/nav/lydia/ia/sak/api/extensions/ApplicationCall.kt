@@ -4,7 +4,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering.Companion.tilDokumentTilPubliseringType
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import java.util.UUID
 
 val ApplicationCall.orgnummer
@@ -12,7 +12,7 @@ val ApplicationCall.orgnummer
 val ApplicationCall.saksnummer
     get() = parameters["saksnummer"]
 val ApplicationCall.type
-    get() = parameters["type"]?.let { SpørreundersøkelseDomene.Type.valueOf(it) }
+    get() = parameters["type"]?.let { Spørreundersøkelse.Type.valueOf(it) }
 val ApplicationCall.spørreundersøkelseId
     get() = parameters["sporreundersokelseId"]?.tilUUID("spørreundersøkelseId")
 val ApplicationCall.iaSakLeveranseId

@@ -71,7 +71,7 @@ import no.nav.lydia.ia.sak.domene.plan.InnholdMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.plan.TemaMalDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.team.BrukerITeamDto
 import no.nav.lydia.ia.team.IA_SAK_TEAM_PATH
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType.VIRKSOMHETEN_ØNSKER_IKKE_SAMARBEID
@@ -688,7 +688,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
             prosessId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
-            type: SpørreundersøkelseDomene.Type,
+            type: Spørreundersøkelse.Type,
         ) = applikasjon.performPost(
             "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}",
         ).authentication().bearer(token)
@@ -698,7 +698,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
             samarbeidId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
-            type: SpørreundersøkelseDomene.Type,
+            type: Spørreundersøkelse.Type,
         ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/type/${type.name}")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
@@ -714,7 +714,7 @@ class IASakKartleggingHelper {
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
-            type = SpørreundersøkelseDomene.Type.Behovsvurdering,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
@@ -728,7 +728,7 @@ class IASakKartleggingHelper {
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
-            type = SpørreundersøkelseDomene.Type.Evaluering,
+            type = Spørreundersøkelse.Type.Evaluering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
@@ -736,7 +736,7 @@ class IASakKartleggingHelper {
 
         fun IASakDto.hentForhåndsvisning(
             prosessId: Int = hentAlleSamarbeid().first().id,
-            type: SpørreundersøkelseDomene.Type,
+            type: Spørreundersøkelse.Type,
             spørreundersøkseId: String,
             token: String = authContainerHelper.saksbehandler1.token,
         ): SpørreundersøkelseDto =

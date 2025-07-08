@@ -59,7 +59,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetDto
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -455,7 +455,7 @@ class IASakProsessTest {
         sakMedFlereSamarbeid.hentAlleSamarbeid() shouldHaveSize 2
 
         val behovsvurdering = sakMedFlereSamarbeid.opprettBehovsvurdering()
-        behovsvurdering.status shouldBe SpørreundersøkelseDomene.Status.OPPRETTET
+        behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
     }
 
     @Test

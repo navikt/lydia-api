@@ -6,41 +6,41 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.SpørreundersøkelseDatabaseRad
 import java.util.UUID
 
-data class SpørreundersøkelseDomene(
+data class Spørreundersøkelse(
     val virksomhetsNavn: String,
     val orgnummer: String,
     val saksnummer: String,
     val samarbeidId: Int,
     val id: UUID,
     val type: Type,
-    val status: Status, // Bruke denne til å programmatisk skjule avsluttet?
+    val status: Status,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
     val gyldigTilTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
-    val temaer: List<TemaDomene>,
     val publiseringStatus: DokumentPublisering.Status,
+    val temaer: List<Tema>,
 ) {
     companion object {
         const val ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG = 24L
         const val MINIMUM_ANTALL_DELTAKERE = 3
 
-        fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelser(): List<SpørreundersøkelseDomene> =
+        fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelser(): List<Spørreundersøkelse> =
             this.groupBy {
                 it.spørreundersøkelseId
             }.mapNotNull { (_, spørreundersøkelseRad) ->
                 spørreundersøkelseRad.tilSpørreundersøkelse()
             }
 
-        fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelse(): SpørreundersøkelseDomene? {
+        fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelse(): Spørreundersøkelse? {
             if (this.isEmpty()) {
                 return null
             }
 
             val spørreundersøkelse = first()
-            return SpørreundersøkelseDomene(
+            return Spørreundersøkelse(
                 virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
                 orgnummer = spørreundersøkelse.orgnummer,
                 saksnummer = spørreundersøkelse.saksnummer,
@@ -57,7 +57,7 @@ data class SpørreundersøkelseDomene(
                 publiseringStatus = spørreundersøkelse.publiseringStatus,
                 temaer = groupBy { it.temaId }.map { (_, temaRader) ->
                     val tema = temaRader.first()
-                    TemaDomene(
+                    Tema(
                         id = tema.temaId,
                         navn = tema.temaNavn,
                         status = tema.temaStatus,
@@ -66,14 +66,14 @@ data class SpørreundersøkelseDomene(
                         sistEndret = tema.temaEndret.toKotlinLocalDateTime(),
                         undertemaer = temaRader.groupBy { it.undertemaId }.map { (_, undertemaRader) ->
                             val undertema = undertemaRader.first()
-                            UndertemaDomene(
+                            Undertema(
                                 id = undertema.undertemaId,
                                 navn = undertema.undertemaNavn,
                                 status = undertema.undertemaStatus,
                                 rekkefølge = undertema.undertemaRekkefølge,
                                 spørsmål = undertemaRader.groupBy { it.spørsmålId }.map { (_, spørsmålRader) ->
                                     val spørsmål = spørsmålRader.first()
-                                    SpørsmålDomene(
+                                    Spørsmål(
                                         id = spørsmål.spørsmålId,
                                         tekst = spørsmål.spørsmålTekst,
                                         rekkefølge = spørsmål.spørsmålRekkefølge,
@@ -82,7 +82,7 @@ data class SpørreundersøkelseDomene(
                                         svaralternativer = spørsmålRader.groupBy { it.svaralternativId }
                                             .map { (_, svaralternativRader) ->
                                                 val svaralternativ = svaralternativRader.first()
-                                                SvaralternativDomene(
+                                                Svaralternativ(
                                                     id = svaralternativ.svaralternativId,
                                                     tekst = svaralternativ.svaralternativTekst,
                                                     antallSvar = svaralternativ.antallSvar,
@@ -113,17 +113,17 @@ data class SpørreundersøkelseDomene(
     fun harMinstEttResultat(): Boolean =
         status == Status.AVSLUTTET && temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.any { it.antallSvar >= MINIMUM_ANTALL_DELTAKERE }
 
-    fun finnSpørsmål(spørsmålId: UUID): SpørsmålDomene? = temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.firstOrNull { it.id == spørsmålId }
+    fun finnSpørsmål(spørsmålId: UUID): Spørsmål? = temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.firstOrNull { it.id == spørsmålId }
 }
 
-class TemaDomene(
+class Tema(
     val id: Int,
     val navn: String,
     val status: Status,
     val rekkefølge: Int,
     val stengtForSvar: Boolean,
     val sistEndret: LocalDateTime,
-    val undertemaer: List<UndertemaDomene>,
+    val undertemaer: List<Undertema>,
 ) {
     enum class Status {
         AKTIV,
@@ -131,12 +131,12 @@ class TemaDomene(
     }
 }
 
-class UndertemaDomene(
+class Undertema(
     val id: Int,
     val navn: String,
     val status: Status,
     val rekkefølge: Int,
-    val spørsmål: List<SpørsmålDomene>,
+    val spørsmål: List<Spørsmål>,
 ) {
     enum class Status {
         AKTIV,
@@ -144,18 +144,18 @@ class UndertemaDomene(
     }
 }
 
-class SpørsmålDomene(
+class Spørsmål(
     val id: UUID,
     val tekst: String,
     val rekkefølge: Int,
     val flervalg: Boolean,
     val antallSvar: Int,
-    val svaralternativer: List<SvaralternativDomene>,
+    val svaralternativer: List<Svaralternativ>,
 ) {
     fun svaralternativerHørerTilSpørsmål(svarIder: List<UUID>): Boolean = svaralternativer.map { it.id }.toList().containsAll(svarIder)
 }
 
-class SvaralternativDomene(
+class Svaralternativ(
     val id: UUID,
     val tekst: String,
     val antallSvar: Int,

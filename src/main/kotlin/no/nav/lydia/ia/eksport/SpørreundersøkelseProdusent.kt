@@ -12,105 +12,110 @@ import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.tilDto
 import no.nav.lydia.ia.sak.db.IASamarbeidRepository
 import no.nav.lydia.ia.sak.db.PlanRepository
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SvaralternativDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
+import kotlin.collections.flatMap
 
 class SpørreundersøkelseProdusent(
     kafka: Kafka,
     topic: Topic = Topic.SPORREUNDERSOKELSE_TOPIC,
     private val samarbeidRepository: IASamarbeidRepository,
     private val planRepository: PlanRepository,
-) : KafkaProdusent<SpørreundersøkelseDomene>(kafka, topic),
-    Observer<SpørreundersøkelseDomene> {
-    override fun receive(input: SpørreundersøkelseDomene) = sendPåKafka(input = input)
+) : KafkaProdusent<Spørreundersøkelse>(kafka, topic),
+    Observer<Spørreundersøkelse> {
+    override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
 
-    override fun tilKafkaMelding(input: SpørreundersøkelseDomene): Pair<String, String> {
+    override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
         val samarbeidNavn = samarbeidRepository.hentSamarbeid(
             saksnummer = input.saksnummer,
             samarbeidId = input.samarbeidId,
         )?.navn ?: input.virksomhetsNavn
 
         val plan = when (input.type) {
-            SpørreundersøkelseDomene.Type.Evaluering -> planRepository.hentPlan(samarbeidId = input.samarbeidId)?.tilDto()
+            Spørreundersøkelse.Type.Evaluering -> planRepository.hentPlan(samarbeidId = input.samarbeidId)?.tilDto()
             else -> null
         }
 
         val nøkkel = input.id.toString()
-        val verdi = SerializableSpørreundersøkelse(
+        val verdi = SpørreundersøkelseKafkaDto(
             id = input.id.toString(),
             orgnummer = input.orgnummer,
             virksomhetsNavn = input.virksomhetsNavn,
             samarbeidsNavn = samarbeidNavn,
-            status = input.status,
+            status = input.status.name,
             type = input.type.name,
-            plan = plan,
-            temaer = input.temaer.map { it.tilKafkaMelding() },
             opprettet = input.opprettetTidspunkt,
-            endret = input.endretTidspunkt,
             gyldigTil = input.opprettetTidspunkt.toJavaLocalDateTime().plusDays(1).toKotlinLocalDateTime(),
+            endret = input.endretTidspunkt,
+            plan = plan,
+            temaer = input.temaer.map { it.tilKafkaDto() },
         )
         return nøkkel to Json.encodeToString(verdi)
     }
 
-    private fun TemaDomene.tilKafkaMelding(): SerializableTema =
-        SerializableTema(
-            id = this.id,
-            navn = this.navn,
-            spørsmål = this.undertemaer.flatMap { undertema ->
-                undertema.spørsmål.map { spørsmål -> spørsmål.tilKafkaMelding(undertemanavn = undertema.navn) }
-            },
+    private fun Tema.tilKafkaDto(): TemaKafkaDto =
+        TemaKafkaDto(
+            id = id,
+            navn = navn,
+            spørsmål = undertemaer.tilKafkaDto(),
         )
 
-    private fun SpørsmålDomene.tilKafkaMelding(undertemanavn: String) =
-        SerializableSpørsmål(
+    private fun List<Undertema>.tilKafkaDto(): List<SpørsmålKafkaDto> =
+        this.flatMap { undertema -> undertema.spørsmål.tilKafkaDto(undertemanavn = undertema.navn) }
+
+    private fun List<Spørsmål>.tilKafkaDto(undertemanavn: String): List<SpørsmålKafkaDto> = map { it.tilKafkaDto(undertemanavn = undertemanavn) }
+
+    private fun Spørsmål.tilKafkaDto(undertemanavn: String): SpørsmålKafkaDto =
+        SpørsmålKafkaDto(
             id = id.toString(),
             tekst = tekst,
-            svaralternativer = svaralternativer.map { it.tilKafkaMelding() },
+            svaralternativer = svaralternativer.map { it.tilKafkaDto() },
             flervalg = flervalg,
             kategori = undertemanavn,
         )
 
-    private fun SvaralternativDomene.tilKafkaMelding(): SerializableSvaralternativ =
-        SerializableSvaralternativ(
+    private fun Svaralternativ.tilKafkaDto(): SvaralternativKafkaDto =
+        SvaralternativKafkaDto(
             id = id.toString(),
             tekst = tekst,
         )
 
     @Serializable
-    data class SerializableSpørreundersøkelse(
+    data class SpørreundersøkelseKafkaDto(
         val id: String,
         val orgnummer: String,
         val samarbeidsNavn: String,
         val virksomhetsNavn: String,
-        val status: SpørreundersøkelseDomene.Status,
-        val temaer: List<SerializableTema>,
+        val status: String,
         val type: String,
         val plan: PlanDto?,
         val opprettet: LocalDateTime,
         val endret: LocalDateTime?,
         val gyldigTil: LocalDateTime,
+        val temaer: List<TemaKafkaDto>,
     )
 
     @Serializable
-    data class SerializableTema(
+    data class TemaKafkaDto(
         val id: Int,
         val navn: String,
-        val spørsmål: List<SerializableSpørsmål>,
+        val spørsmål: List<SpørsmålKafkaDto>,
     )
 
     @Serializable
-    data class SerializableSpørsmål(
+    data class SpørsmålKafkaDto(
         val id: String,
         val tekst: String,
         val flervalg: Boolean,
-        val svaralternativer: List<SerializableSvaralternativ>,
         val kategori: String,
+        val svaralternativer: List<SvaralternativKafkaDto>,
     )
 
     @Serializable
-    data class SerializableSvaralternativ(
+    data class SvaralternativKafkaDto(
         val id: String,
         val tekst: String,
     )
