@@ -18,8 +18,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
@@ -132,7 +132,7 @@ class IASakProsessTest {
     @Test
     fun `skal ikke kunne avbryte samarbeid som inne holder spørreundersøkelser`() {
         val sak = nySakIViBistår()
-        sak.opprettSpørreundersøkelse()
+        sak.opprettBehovsvurdering()
 
         shouldFailWithMessage("HTTP Exception 400 Bad Request kan ikke avbryte samarbeid") {
             sak.avbrytSamarbeid()
@@ -259,7 +259,7 @@ class IASakProsessTest {
     @Test
     fun `skal få riktige begrunnelser for om et samarbeid kan avbrytes`() {
         val sak = nySakIViBistår()
-        sak.opprettSpørreundersøkelse()
+        sak.opprettBehovsvurdering()
         val samarbeid = sak.hentAlleSamarbeid().first()
         val kanIkkeGjennomføres = sak.kanGjennomføreStatusendring(samarbeid, "avbrytes")
         kanIkkeGjennomføres.kanGjennomføres shouldBe false
@@ -306,7 +306,7 @@ class IASakProsessTest {
         skalKunneSlettes.kanGjennomføres shouldBe true
         skalKunneSlettes.blokkerende shouldHaveSize 0
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
+        val behovsvurdering = sak.opprettBehovsvurdering()
         val skalIkkeKunneSlettesPgaBehovsVurdering = sak.kanGjennomføreStatusendring(samarbeid, "slettes")
         skalIkkeKunneSlettesPgaBehovsVurdering.kanGjennomføres shouldBe false
         skalIkkeKunneSlettesPgaBehovsVurdering.blokkerende shouldBe listOf(StatusendringBegrunnelser.FINNES_BEHOVSVURDERING)
@@ -454,7 +454,7 @@ class IASakProsessTest {
         val sakMedFlereSamarbeid = sakMedEttSamarbeid.opprettNyttSamarbeid(navn = "Annet samarbeidsnavn")
         sakMedFlereSamarbeid.hentAlleSamarbeid() shouldHaveSize 2
 
-        val behovsvurdering = sakMedFlereSamarbeid.opprettSpørreundersøkelse()
+        val behovsvurdering = sakMedFlereSamarbeid.opprettBehovsvurdering()
         behovsvurdering.status shouldBe SpørreundersøkelseDomene.Status.OPPRETTET
     }
 
@@ -667,7 +667,7 @@ class IASakProsessTest {
         val sak = nySakIKartlegges().opprettNyttSamarbeid()
         val alleSamarbeidFørSletting = sak.hentAlleSamarbeid()
         val samarbeidSomSkalSlettes = alleSamarbeidFørSletting.first()
-        sak.opprettSpørreundersøkelse(prosessId = samarbeidSomSkalSlettes.id)
+        sak.opprettBehovsvurdering(prosessId = samarbeidSomSkalSlettes.id)
         shouldFail {
             sak.slettSamarbeid(samarbeidSomSkalSlettes)
         }
@@ -711,7 +711,7 @@ class IASakProsessTest {
         val samarbeid = sak.hentAlleSamarbeid()
         samarbeid shouldHaveSize 1
 
-        sak.opprettSpørreundersøkelse()
+        sak.opprettBehovsvurdering()
 
         shouldFail {
             sak.nyHendelse(

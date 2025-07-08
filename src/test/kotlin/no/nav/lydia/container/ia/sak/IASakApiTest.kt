@@ -18,7 +18,7 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.toKotlinLocalDate
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.PlanHelper.Companion.planleggOgFullførAlleUndertemaer
@@ -179,19 +179,19 @@ class IASakApiTest {
         )
 
         val førsteSamarbeid = alleSamarbeid.first()
-        val kartlegging = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
-        val saksStatusMedEnKartlegging = sak.hentSaksStatus()
-        saksStatusMedEnKartlegging.kanFullføres shouldBe false
-        saksStatusMedEnKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val saksStatusMedBehovsvurdering = sak.hentSaksStatus()
+        saksStatusMedBehovsvurdering.kanFullføres shouldBe false
+        saksStatusMedBehovsvurdering.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
             ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
             ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
         )
-        saksStatusMedEnKartlegging.årsaker.forExactlyOne {
+        saksStatusMedBehovsvurdering.årsaker.forExactlyOne {
             it shouldBe ÅrsakTilAtSakIkkeKanAvsluttes(
                 samarbeidsId = førsteSamarbeid.id,
                 samarbeidsNavn = førsteSamarbeid.navn,
                 type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
-                id = kartlegging.id,
+                id = behovsvurdering.id,
             )
         }
 
@@ -211,8 +211,8 @@ class IASakApiTest {
             )
         }
 
-        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, førsteSamarbeid.id)
         val sakstatusFullførtBehovsvurderingOgPlan = sak.hentSaksStatus()
         sakstatusFullførtBehovsvurderingOgPlan.kanFullføres shouldBe true

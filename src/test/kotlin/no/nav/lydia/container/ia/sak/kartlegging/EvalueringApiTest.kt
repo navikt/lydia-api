@@ -104,7 +104,7 @@ class EvalueringApiTest {
         val alleEvalueringer = hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
+            samarbeidId = sak.hentAlleSamarbeid().first().id,
             type = SpørreundersøkelseDomene.Type.Evaluering,
         )
 
@@ -133,7 +133,7 @@ class EvalueringApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
+            samarbeidId = sak.hentAlleSamarbeid().first().id,
             type = type,
         ).forExactlyOne {
             it.status shouldBe SpørreundersøkelseDomene.Status.PÅBEGYNT
@@ -259,7 +259,7 @@ class EvalueringApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid1.id,
+            samarbeidId = samarbeid1.id,
             type = SpørreundersøkelseDomene.Type.Evaluering,
         ).forExactlyOne {
             it.status shouldBe SpørreundersøkelseDomene.Status.AVSLUTTET
@@ -277,7 +277,7 @@ class EvalueringApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid1.id,
+            samarbeidId = samarbeid1.id,
             type = SpørreundersøkelseDomene.Type.Evaluering,
         ).forExactlyOne {
             it.status shouldBe SpørreundersøkelseDomene.Status.AVSLUTTET

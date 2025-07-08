@@ -20,23 +20,6 @@ data class SpørreundersøkelseUtenInnholdDto(
     val harMinstEttSvar: Boolean,
 )
 
-// fun List<SpørreundersøkelseUtenInnhold>.tilDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilDto() }
-//
-// fun SpørreundersøkelseUtenInnhold.tilDto(): SpørreundersøkelseUtenInnholdDto =
-//    SpørreundersøkelseUtenInnholdDto(
-//        id = id.toString(),
-//        samarbeidId = samarbeidId,
-//        status = status,
-//        publiseringStatus = publiseringStatus,
-//        opprettetAv = opprettetAv,
-//        opprettetTidspunkt = opprettetTidspunkt.toKotlinLocalDateTime(),
-//        endretTidspunkt = endretTidspunkt?.toKotlinLocalDateTime(),
-//        påbegyntTidspunkt = påbegyntTidspunkt?.toKotlinLocalDateTime(),
-//        fullførtTidspunkt = fullførtTidspunkt?.toKotlinLocalDateTime(),
-//        gyldigTilTidspunkt = gyldigTilTidspunkt.toKotlinLocalDateTime(),
-//        harMinstEttSvar = false,
-//    )
-
 fun List<SpørreundersøkelseDomene>.tilMetaDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilMetaDto() }
 
 fun SpørreundersøkelseDomene.tilMetaDto(): SpørreundersøkelseUtenInnholdDto =

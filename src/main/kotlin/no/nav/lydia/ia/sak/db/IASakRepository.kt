@@ -13,7 +13,7 @@ import no.nav.lydia.ia.sak.api.IASakError
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASak.Companion.tilIASak
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
@@ -191,7 +191,7 @@ class IASakRepository(
             )
         }
 
-    fun hentStatusForBehovsvurderinger(samarbeidId: Int): List<Pair<String, Spørreundersøkelse.Status>> =
+    fun hentStatusForBehovsvurderinger(samarbeidId: Int): List<Pair<String, SpørreundersøkelseDomene.Status>> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -203,7 +203,7 @@ class IASakRepository(
                         "prosessId" to samarbeidId,
                     ),
                 ).map {
-                    it.string("kartlegging_id") to Spørreundersøkelse.Status.valueOf(it.string("status"))
+                    it.string("kartlegging_id") to SpørreundersøkelseDomene.Status.valueOf(it.string("status"))
                 }.asList,
             )
         }

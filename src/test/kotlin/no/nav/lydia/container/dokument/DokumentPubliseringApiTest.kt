@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.opprettDokumentPubliseringRespons
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -25,7 +25,6 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -53,8 +52,7 @@ class DokumentPubliseringApiTest {
     fun `uthenting av et dokument til publisering returnerer 404 Not Found hvis ikke funnet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val dokumentType = DokumentPublisering.Type.BEHOVSVURDERING
-        val spørreundersøkelseType = Spørreundersøkelse.Type.Behovsvurdering.name
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = spørreundersøkelseType)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -84,7 +82,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av et dokument av type Behovsvurdering returnerer 400 Bad Request dersom status ikke er FULLFØRT`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val startetBehovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
+        val startetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val dokumentRefId = startetBehovsvurdering.id
 
@@ -101,8 +99,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av dokument til publisering returnerer 409 Conflict dersom dokument allerede er opprettet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val type = "Behovsvurdering"
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val dokumentRefId = fullførtBehovsvurdering.id
@@ -128,8 +125,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val type = "Behovsvurdering"
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val samarbeidId = fullførtBehovsvurdering.samarbeidId
@@ -181,8 +177,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `uthenting av dokument til publisering returnerer 200 OK og selve dokumentet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val type = "Behovsvurdering"
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 

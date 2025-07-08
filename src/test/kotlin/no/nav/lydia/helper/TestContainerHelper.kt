@@ -688,34 +688,33 @@ class IASakKartleggingHelper {
             saksnummer: String,
             prosessId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
-            type: String,
+            type: SpørreundersøkelseDomene.Type,
         ) = applikasjon.performPost(
-            "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/$type",
+            "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}",
         ).authentication().bearer(token)
 
         fun hentSpørreundersøkelse(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int,
+            samarbeidId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
             type: SpørreundersøkelseDomene.Type,
-        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}")
+        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/type/${type.name}")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
                 success = { it },
                 failure = { fail(it.message) },
             )
 
-        fun IASakDto.opprettSpørreundersøkelse(
+        fun IASakDto.opprettBehovsvurdering(
             prosessId: Int = hentAlleSamarbeid().first().id,
-            type: String = "Behovsvurdering",
             token: String = authContainerHelper.saksbehandler1.token,
         ) = opprettSpørreundersøkelse(
             orgnr = orgnr,
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
-            type = type,
+            type = SpørreundersøkelseDomene.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
@@ -729,7 +728,7 @@ class IASakKartleggingHelper {
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
-            type = "Evaluering",
+            type = SpørreundersøkelseDomene.Type.Evaluering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },

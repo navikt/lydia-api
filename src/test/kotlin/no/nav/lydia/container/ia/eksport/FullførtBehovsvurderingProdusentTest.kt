@@ -6,7 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
@@ -37,7 +37,7 @@ class FullførtBehovsvurderingProdusentTest {
     @Test
     fun `fullført behovsvurdering skal sendes til salesforce`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         påbegyntKartlegging.status shouldBe SpørreundersøkelseDomene.Status.PÅBEGYNT
 

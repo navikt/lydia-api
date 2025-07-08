@@ -7,7 +7,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.SpørreundersøkelseAntallSvar
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørsmålDomene
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SvaralternativDomene
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaDomene

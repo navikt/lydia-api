@@ -1,29 +1,22 @@
 package no.nav.lydia.ia.sak.domene
 
 import io.kotest.matchers.collections.shouldContainInOrder
-import kotlinx.datetime.toKotlinLocalDateTime
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaStatus.AKTIV
-import java.time.LocalDateTime.now
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.TemaMetadata
 import kotlin.test.Test
 
 class TemaTest {
     @Test
     fun `skal kunne sortere temaer på 'rekkefølge'`() {
-        val tema2 = TemaInfo(
+        val tema2 = TemaMetadata(
             id = 2,
             navn = "tema 2",
-            status = AKTIV,
             rekkefølge = 2,
-            sistEndret = now().toKotlinLocalDateTime(),
             undertemaer = emptyList(),
         )
-        val tema3 = TemaInfo(
+        val tema3 = TemaMetadata(
             id = 3,
             rekkefølge = 1,
             navn = "tema 3",
-            status = AKTIV,
-            sistEndret = now().toKotlinLocalDateTime(),
             undertemaer = emptyList(),
         )
 

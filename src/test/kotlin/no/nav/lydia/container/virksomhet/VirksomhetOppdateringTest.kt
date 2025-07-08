@@ -9,7 +9,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
@@ -35,7 +36,7 @@ import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
@@ -158,18 +159,18 @@ class VirksomhetOppdateringTest {
 
         val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val behovsvurdering = sak.opprettBehovsvurdering()
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val evaluering = sak.opprettEvaluering()
 
         sendSlettingForVirksomhet(virksomhet)
 
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${behovsvurdering.id}'",
-        ) shouldBe Spørreundersøkelse.Status.SLETTET.name
+        ) shouldBe SpørreundersøkelseDomene.Status.SLETTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_kartlegging where kartlegging_id = '${evaluering.id}'",
-        ) shouldBe Spørreundersøkelse.Status.SLETTET.name
+        ) shouldBe SpørreundersøkelseDomene.Status.SLETTET.name
         postgresContainerHelper.hentEnkelKolonne<String>(
             "select status from ia_sak_plan where plan_id = '${plan.id}'",
         )
@@ -185,17 +186,17 @@ class VirksomhetOppdateringTest {
     }
 
     @Test
-    fun `skal ikke røre ikke aktive saker når vikrsomhet blir slettet`() {
+    fun `skal ikke røre ikke aktive saker når virksomhet blir slettet`() {
         val virksomhet = lastInnNyVirksomhet()
 
         val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
-        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val evaluering = sak.opprettEvaluering()
         evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         evaluering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val sakEtterFullføring = sak.nyHendelse(
@@ -207,8 +208,7 @@ class VirksomhetOppdateringTest {
                     navn = samarbeid.navn,
                 ),
             ),
-        )
-            .nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND)
+        ).nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND)
 
         sendSlettingForVirksomhet(virksomhet)
 

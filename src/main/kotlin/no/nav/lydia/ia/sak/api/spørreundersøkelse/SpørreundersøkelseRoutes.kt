@@ -29,7 +29,6 @@ import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.extensions.spørreundersøkelseId
 import no.nav.lydia.ia.sak.api.extensions.type
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
@@ -273,17 +272,17 @@ object IASakSpørreundersøkelseError {
     val `ikke støttet statusendring` =
         Feil("Ikke en støttet statusendring", HttpStatusCode.Forbidden)
     val `ikke påbegynt` =
-        Feil("Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.PÅBEGYNT.name}', kan ikke avslutte", HttpStatusCode.Forbidden)
+        Feil("Spørreundersøkelse er ikke i status '${SpørreundersøkelseDomene.Status.PÅBEGYNT.name}', kan ikke avslutte", HttpStatusCode.Forbidden)
     val `feil status kan ikke starte` =
         Feil("Kan ikke starte spørreundersøkelse, feil status", HttpStatusCode.Forbidden)
     val `ikke avsluttet` =
         Feil(
-            "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke hente resultat",
+            "Spørreundersøkelse er ikke i status '${SpørreundersøkelseDomene.Status.AVSLUTTET.name}', kan ikke hente resultat",
             HttpStatusCode.Forbidden,
         )
     val `ikke avsluttet, kan ikke bytte samarbeid` =
         Feil(
-            "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke bytte samarbeid",
+            "Spørreundersøkelse er ikke i status '${SpørreundersøkelseDomene.Status.AVSLUTTET.name}', kan ikke bytte samarbeid",
             HttpStatusCode.BadRequest,
         )
     val `generell feil under uthenting` =

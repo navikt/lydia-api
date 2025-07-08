@@ -9,8 +9,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
@@ -26,6 +26,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.ia.eksport.SpørreundersøkelseBigqueryProdusent.SpørreundersøkelseEksport
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -51,7 +52,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
     @Test
     fun `Oppretting av en spørreundersøkelse med typen 'Behovsvurdering' skal trigge kafka-eksport`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val opprettetBehovsvurdering = sak.opprettSpørreundersøkelse()
+        val opprettetBehovsvurdering = sak.opprettBehovsvurdering()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -64,7 +65,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe opprettetBehovsvurdering.id
-                sisteBehovsvurdering.type shouldBe "Behovsvurdering"
+                sisteBehovsvurdering.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
                 sisteBehovsvurdering.status shouldBe opprettetBehovsvurdering.status
                 sisteBehovsvurdering.opprettetAv shouldBe opprettetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe opprettetBehovsvurdering.opprettetTidspunkt
@@ -72,8 +73,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 sisteBehovsvurdering.endret shouldBe null
                 sisteBehovsvurdering.fullført shouldBe null
                 sisteBehovsvurdering.harMinstEttSvar shouldBe false
-                sisteBehovsvurdering.førsteSvarMotatt shouldBe null
-                sisteBehovsvurdering.sisteSvarMottatt shouldBe null
                 sisteBehovsvurdering.samarbeidId shouldBe opprettetBehovsvurdering.samarbeidId
             }
         }
@@ -104,8 +103,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 sisteBehovsvurdering.endret shouldBe null
                 sisteBehovsvurdering.fullført shouldBe null
                 sisteBehovsvurdering.harMinstEttSvar shouldBe false
-                sisteBehovsvurdering.førsteSvarMotatt shouldBe null
-                sisteBehovsvurdering.sisteSvarMottatt shouldBe null
                 sisteBehovsvurdering.samarbeidId shouldBe opprettetEvaluering.samarbeidId
             }
         }
@@ -114,7 +111,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
     @Test
     fun `Start av en spørreundersøkelse med typen 'Behovsvurdering' skal trigge kafka-eksport`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val startetBehovsvurdering = sak.opprettSpørreundersøkelse()
+        val startetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
@@ -132,7 +129,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 }
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe startetBehovsvurdering.id
-                sisteBehovsvurdering.type shouldBe "Behovsvurdering"
+                sisteBehovsvurdering.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
                 sisteBehovsvurdering.status shouldBe startetBehovsvurdering.status
                 sisteBehovsvurdering.samarbeidId shouldBe startetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe startetBehovsvurdering.opprettetAv
@@ -141,8 +138,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 sisteBehovsvurdering.endret shouldNotBe null
                 sisteBehovsvurdering.fullført shouldBe null
                 sisteBehovsvurdering.harMinstEttSvar shouldBe false
-                sisteBehovsvurdering.førsteSvarMotatt shouldBe null
-                sisteBehovsvurdering.sisteSvarMottatt shouldBe null
             }
         }
     }
@@ -177,8 +172,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 sisteSpørreundersøkelse.endret shouldNotBe null
                 sisteSpørreundersøkelse.fullført shouldBe null
                 sisteSpørreundersøkelse.harMinstEttSvar shouldBe false
-                sisteSpørreundersøkelse.førsteSvarMotatt shouldBe null
-                sisteSpørreundersøkelse.sisteSvarMottatt shouldBe null
             }
         }
     }
@@ -186,7 +179,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
     @Test
     fun `Avslutting av en spørreundersøkelse med typen 'Behovsvurdering' skal trigge kafka-eksport`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val avsluttetBehovsvurdering = sak.opprettSpørreundersøkelse()
+        val avsluttetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
@@ -208,7 +201,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 val sisteBehovsvurdering = behovsvurderingerUtenSvar.last()
                 sisteBehovsvurdering.id shouldBe avsluttetBehovsvurdering.id
                 sisteBehovsvurdering.status shouldBe avsluttetBehovsvurdering.status
-                sisteBehovsvurdering.type shouldBe "Behovsvurdering"
+                sisteBehovsvurdering.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
                 sisteBehovsvurdering.samarbeidId shouldBe avsluttetBehovsvurdering.samarbeidId
                 sisteBehovsvurdering.opprettetAv shouldBe avsluttetBehovsvurdering.opprettetAv
                 sisteBehovsvurdering.opprettet shouldBe avsluttetBehovsvurdering.opprettetTidspunkt
@@ -216,8 +209,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 sisteBehovsvurdering.endret shouldNotBe null
                 sisteBehovsvurdering.fullført shouldNotBe null
                 sisteBehovsvurdering.harMinstEttSvar shouldBe false
-                sisteBehovsvurdering.førsteSvarMotatt shouldBe null
-                sisteBehovsvurdering.sisteSvarMottatt shouldBe null
             }
         }
     }
@@ -246,7 +237,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 val sisteSpørreundersøkelse = behovsvurderingerUtenSvar.last()
                 sisteSpørreundersøkelse.id shouldBe avsluttetEvaluering.id
                 sisteSpørreundersøkelse.status shouldBe avsluttetEvaluering.status
-                sisteSpørreundersøkelse.type shouldBe "Evaluering"
+                sisteSpørreundersøkelse.type shouldBe SpørreundersøkelseDomene.Type.Evaluering.name
                 sisteSpørreundersøkelse.samarbeidId shouldBe avsluttetEvaluering.samarbeidId
                 sisteSpørreundersøkelse.opprettetAv shouldBe avsluttetEvaluering.opprettetAv
                 sisteSpørreundersøkelse.opprettet shouldBe avsluttetEvaluering.opprettetTidspunkt
@@ -254,8 +245,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 sisteSpørreundersøkelse.endret shouldNotBe null
                 sisteSpørreundersøkelse.fullført shouldNotBe null
                 sisteSpørreundersøkelse.harMinstEttSvar shouldBe false
-                sisteSpørreundersøkelse.førsteSvarMotatt shouldBe null
-                sisteSpørreundersøkelse.sisteSvarMottatt shouldBe null
             }
         }
     }
@@ -263,27 +252,27 @@ class SpørreundersøkelseBigqueryEksportererTest {
     @Test
     fun `Behovsvurdering med info om besvarelse skal kunne sendes før fullføring`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val påbegyntSpørreundersøkelse = sak.opprettSpørreundersøkelse()
+        val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
             .start(
                 orgnummer = sak.orgnr,
                 saksnummer = sak.saksnummer,
             )
 
-        val førsteSpørsmål = påbegyntSpørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first()
+        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
         val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
 
         val antallSvar = 3
         repeat(antallSvar) {
             val sesjonId = UUID.randomUUID()
             sendKartleggingSvarTilKafka(
-                kartleggingId = påbegyntSpørreundersøkelse.id,
+                kartleggingId = påbegyntBehovsvurdering.id,
                 spørsmålId = førsteSpørsmål.id,
                 sesjonId = sesjonId.toString(),
                 svarIder = listOf(førsteSvaralternativ.svarId),
             )
         }
 
-        val avsluttetSpørreundersøkelse = påbegyntSpørreundersøkelse.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val avsluttetSpørreundersøkelse = påbegyntBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -299,7 +288,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
 
                 sisteSpørreundersøkelse.id shouldBe avsluttetSpørreundersøkelse.id
                 sisteSpørreundersøkelse.status shouldBe avsluttetSpørreundersøkelse.status
-                sisteSpørreundersøkelse.type shouldBe "Behovsvurdering"
+                sisteSpørreundersøkelse.type shouldBe SpørreundersøkelseDomene.Type.Behovsvurdering.name
                 sisteSpørreundersøkelse.samarbeidId shouldBe avsluttetSpørreundersøkelse.samarbeidId
                 sisteSpørreundersøkelse.opprettetAv shouldBe avsluttetSpørreundersøkelse.opprettetAv
                 sisteSpørreundersøkelse.opprettet shouldBe avsluttetSpørreundersøkelse.opprettetTidspunkt
@@ -307,8 +296,6 @@ class SpørreundersøkelseBigqueryEksportererTest {
                 sisteSpørreundersøkelse.endret shouldNotBe null
                 sisteSpørreundersøkelse.fullført shouldNotBe null
                 sisteSpørreundersøkelse.harMinstEttSvar shouldBe true
-                sisteSpørreundersøkelse.førsteSvarMotatt shouldNotBe null
-                sisteSpørreundersøkelse.sisteSvarMottatt shouldNotBe null
                 sisteSpørreundersøkelse.fullført shouldBe sisteSpørreundersøkelse.endret
             }
         }
@@ -318,14 +305,12 @@ class SpørreundersøkelseBigqueryEksportererTest {
     fun `jobb starter re-eksport av alle behovsvurderinger til bigquery`() {
         val sak1 = nySakIKartlegges()
         val samarbeid1 = sak1.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak1.opprettSpørreundersøkelse(prosessId = samarbeid1.id)
+        sak1.opprettBehovsvurdering(prosessId = samarbeid1.id)
         val sak2 = nySakIKartlegges()
         val samarbeid2 = sak2.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak2.opprettSpørreundersøkelse(prosessId = samarbeid2.id)
+        sak2.opprettBehovsvurdering(prosessId = samarbeid2.id)
 
-        runBlocking {
-            kafkaContainerHelper.sendJobbMelding(Jobb.spørreundersøkelseBigQueryEksport)
-        }
+        runBlocking { kafkaContainerHelper.sendJobbMelding(Jobb.spørreundersøkelseBigQueryEksport) }
 
         applikasjon.shouldNotContainLog("Klarte ikke å kjøre eksport av behovsvurderinger".toRegex())
         applikasjon.shouldContainLog("Jobb 'spørreundersøkelseBigQueryEksport' ferdig".toRegex())

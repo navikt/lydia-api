@@ -8,7 +8,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.container.ia.sak.kartlegging.BehovsvurderingApiTest.Companion.ID_TIL_SPØRSMÅL_MED_FLERVALG_MULIGHETER
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingFlervalgSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
@@ -62,7 +62,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `skal lagre svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettSpørreundersøkelse()
+        val kartlegging = sak.opprettBehovsvurdering()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val kartleggingSvarDto = kartlegging.sendKartleggingSvarTilKafka()
 
@@ -84,7 +84,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal bare kunne svare på kartlegging dersom den er i pågående status`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettSpørreundersøkelse()
+        val kartlegging = sak.opprettBehovsvurdering()
 
         // OPRETTET
         kartlegging.sendKartleggingSvarTilKafka()
@@ -115,7 +115,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal ikke lagre svar som ikke er et svaralternativ til spørsmål`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartlegging = sak.opprettSpørreundersøkelse()
+        val kartlegging = sak.opprettBehovsvurdering()
         kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val svarIderHvorMinstEnIdErUkjent = listOf(
@@ -138,7 +138,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal ikke lagre svar dersom spørsmål ikke er funnet i behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
+        val spørreundersøkelse = sak.opprettBehovsvurdering()
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val ukjentSpørsmålId = UUID.randomUUID().toString()
@@ -161,7 +161,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `Skal ikke lagre svar med flere svarIder på et enkeltvalg spørsmål i en kartlegging`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
+        val spørreundersøkelse = sak.opprettBehovsvurdering()
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val spørsmålSomIkkeErFlervalg = spørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first()
         spørsmålSomIkkeErFlervalg.flervalg shouldBe false
@@ -181,7 +181,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `svar skal overskrives i DB ved nytt svar til et flervalg spørsmål mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val kartleggingSvarDto = kartleggingDto.sendKartleggingFlervalgSvarTilKafka(
@@ -220,7 +220,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     @Test
     fun `svar skal overskrives i DB ved nytt svar mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
+        val spørreundersøkelse = sak.opprettBehovsvurdering()
         val førsteSvarId = spørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
         val andreSvarId = spørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -257,9 +257,9 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     }
 
     @Test
-    fun `skal få oppdatert antall som har svart på et spørsmål i en kartlegging`() {
+    fun `skal få oppdatert antall som har svart på et spørsmål i en behovsvurdering`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val opprettetSpørreundersøkelse = sak.opprettSpørreundersøkelse()
+        val opprettetSpørreundersøkelse = sak.opprettBehovsvurdering()
         opprettetSpørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val førsteSpørsmålId = opprettetSpørreundersøkelse.temaer.first().spørsmålOgSvaralternativer.first().id

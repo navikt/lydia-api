@@ -13,7 +13,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companio
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.eksport.TemaResultatKafkaDto
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.api.extensions.toUUID
+import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.EndreSamarbeidTilSpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -21,9 +21,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.integrasjoner.kartlegging.StengTema
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -43,28 +41,29 @@ class SpørreundersøkelseService(
 
     fun lagreSvar(svarliste: List<SpørreundersøkelseSvarDto>) {
         svarliste.forEach { besvarelse ->
-            val spørreundersøkelse =
-                spørreundersøkelseRepository.hentSpørreundersøkelseLegacy(besvarelse.spørreundersøkelseId)
-                    ?: run {
-                        log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
-                        return@forEach
-                    }
-            if (spørreundersøkelse.status != Spørreundersøkelse.Status.PÅBEGYNT) {
+            val spørreundersøkelseId: UUID = besvarelse.spørreundersøkelseId.tilUUID("spørreundersøkelseId")
+            val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)
+                ?: run {
+                    log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
+                    return@forEach
+                }
+            if (spørreundersøkelse.status != SpørreundersøkelseDomene.Status.PÅBEGYNT) {
                 log.warn("Kan ikke svare på en kartlegging i status ${spørreundersøkelse.status}, hopper over")
                 return@forEach
             }
 
-            val spørsmål = spørreundersøkelse.finnSpørsmål(UUID.fromString(besvarelse.spørsmålId)) ?: run {
-                log.warn("Finner ikke spørsmål '${besvarelse.spørsmålId}' svaret er knyttet til, hopper over")
-                return@forEach
-            }
+            val spørsmål = spørreundersøkelse.finnSpørsmål(besvarelse.spørsmålId.tilUUID("spørsmålId"))
+                ?: run {
+                    log.warn("Finner ikke spørsmål '${besvarelse.spørsmålId}' svaret er knyttet til, hopper over")
+                    return@forEach
+                }
 
             if (besvarelse.svarIder.size > 1 && !spørsmål.flervalg) {
                 log.warn("Kan ikke lagre flere svar til et ikke flervalg spørsmål '${besvarelse.spørsmålId}', hopper over")
                 return@forEach
             }
 
-            if (!spørsmål.svaralternativerHørerTilSpørsmål(besvarelser = besvarelse)) {
+            if (!spørsmål.svaralternativerHørerTilSpørsmål(besvarelse.svarIder.map { it.tilUUID("svarId") })) {
                 log.warn(
                     "Funnet noen ukjente svarIder ('${besvarelse.svarIder}') i svar til spørsmål '${besvarelse.spørsmålId}', hopper over",
                 )
@@ -88,9 +87,6 @@ class SpørreundersøkelseService(
             log.info("Lagret svar for kartlegging med id: '${besvarelse.spørreundersøkelseId}'")
         }
     }
-
-    private fun Spørsmål.svaralternativerHørerTilSpørsmål(besvarelser: SpørreundersøkelseSvarDto) =
-        svaralternativer.map { (svarId: UUID) -> svarId.toString() }.toList().containsAll(besvarelser.svarIder)
 
     fun hentSpørreundersøkelseResultat(spørreundersøkelseId: UUID): Either<Feil, SpørreundersøkelseResultatDto> {
         val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
@@ -118,7 +114,7 @@ class SpørreundersøkelseService(
                         prosessId = samarbeid.id,
                         saksbehandler = saksbehandler,
                         spørreundersøkelseId = UUID.randomUUID(),
-                        temaer = spørreundersøkelseRepository.hentAktiveTemaer(type),
+                        temaer = spørreundersøkelseRepository.hentAktiveTemaMetadata(type),
                         type = type,
                     )
                 }.onRight { behovsvurdering ->
@@ -139,7 +135,7 @@ class SpørreundersøkelseService(
                         }.map {
                             it.navn
                         }
-                        val aktiveTemaer = spørreundersøkelseRepository.hentAktiveTemaer(type)
+                        val aktiveTemaer = spørreundersøkelseRepository.hentAktiveTemaMetadata(type)
                         val temaerSomSkalEvalueres = aktiveTemaer.filter {
                             temaerInkludertIPlan.contains(it.navn)
                         }
@@ -151,7 +147,7 @@ class SpørreundersøkelseService(
                         val temaerMedUndertemaerSomIPlan = temaerSomSkalEvalueres.map {
                             it.copy(
                                 undertemaer = it.undertemaer.filter { undertemaInfo -> undertemaerInkludertIPlan.contains(undertemaInfo.navn) } +
-                                    spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaer(it.id),
+                                    spørreundersøkelseRepository.hentObligatoriskeAktiveUndertemaerMetadata(it.id),
                             )
                         }
 
@@ -246,7 +242,7 @@ class SpørreundersøkelseService(
 
     fun stengTema(hendelse: StengTema) {
         log.info("Mottok stenging av tema: ${hendelse.temaId} i spørreundersøkelse ${hendelse.spørreundersøkelseId}")
-        val spørreundersøkelseId: UUID? = hendelse.spørreundersøkelseId.toUUID("spørreundersøkelseId")
+        val spørreundersøkelseId: UUID? = hendelse.spørreundersøkelseId.tilUUID("spørreundersøkelseId")
         if (spørreundersøkelseId == null) {
             log.error(
                 "Ikke gyldig UUID for spørreundersøkelseId: '${hendelse.spørreundersøkelseId}', kan ikke stenge tema med id: '${hendelse.temaId}'",
@@ -358,10 +354,4 @@ class SpørreundersøkelseService(
 
         return tema.TemaResultatKafkaDto().right()
     }
-
-    private fun Spørreundersøkelse.finnSpørsmål(spørsmålId: UUID): Spørsmål? =
-        temaer.flatMap { it.spørsmål }.firstOrNull {
-            it.spørsmålId ==
-                spørsmålId
-        }
 }

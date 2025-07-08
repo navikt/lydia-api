@@ -32,7 +32,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.NY_PROSESS
 import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 
 class IASamarbeidService(
     val samarbeidRepository: IASamarbeidRepository,
@@ -131,11 +131,11 @@ class IASamarbeidService(
     ): KanGjennomføreStatusendring {
         val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
             ?: throw IllegalStateException("Fant ikke samarbeid")
-        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(
+        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(
             samarbeid = samarbeid,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
+            type = SpørreundersøkelseDomene.Type.Behovsvurdering,
         )
-        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
+        val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = SpørreundersøkelseDomene.Type.Evaluering)
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
@@ -143,7 +143,7 @@ class IASamarbeidService(
             blokkerende.add(SAK_I_FEIL_STATUS)
         }
 
-        if (behovsvurderinger.any { it.status != Spørreundersøkelse.Status.AVSLUTTET }) {
+        if (behovsvurderinger.any { it.status != SpørreundersøkelseDomene.Status.AVSLUTTET }) {
             blokkerende.add(AKTIV_BEHOVSVURDERING)
         }
 
@@ -151,7 +151,7 @@ class IASamarbeidService(
             advarsler.add(INGEN_EVALUERING)
         }
 
-        if (evalueringer.any { it.status != Spørreundersøkelse.Status.AVSLUTTET }) {
+        if (evalueringer.any { it.status != SpørreundersøkelseDomene.Status.AVSLUTTET }) {
             blokkerende.add(AKTIV_EVALUERING)
         }
 
@@ -176,10 +176,10 @@ class IASamarbeidService(
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering).isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = SpørreundersøkelseDomene.Type.Behovsvurdering).isNotEmpty()) {
             blokkerende.add(FINNES_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering).isNotEmpty()) {
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = SpørreundersøkelseDomene.Type.Evaluering).isNotEmpty()) {
             blokkerende.add(FINNES_EVALUERING)
         }
         if (planRepository.hentPlan(samarbeidId = samarbeid.id) != null) {
@@ -204,13 +204,13 @@ class IASamarbeidService(
             ?: throw IllegalStateException("Fant ikke samarbeid")
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
 
-        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
-                .any { it.status != Spørreundersøkelse.Status.AVSLUTTET }
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = SpørreundersøkelseDomene.Type.Behovsvurdering)
+                .any { it.status != SpørreundersøkelseDomene.Status.AVSLUTTET }
         ) {
             blokkerende.add(AKTIV_BEHOVSVURDERING)
         }
-        if (spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
-                .any { it.status != Spørreundersøkelse.Status.AVSLUTTET }
+        if (spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = SpørreundersøkelseDomene.Type.Evaluering)
+                .any { it.status != SpørreundersøkelseDomene.Status.AVSLUTTET }
         ) {
             blokkerende.add(AKTIV_EVALUERING)
         }

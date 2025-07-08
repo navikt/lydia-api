@@ -6,7 +6,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.stengTema
@@ -46,7 +46,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     @Test
     fun `skal oppdatere tema til stengt i databasen`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
+        val spørreundersøkelse = sak.opprettBehovsvurdering()
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = spørreundersøkelse.temaer.first()
         spørreundersøkelse.stengTema(temaId = tema.temaId)
@@ -63,7 +63,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     fun `skal oppdatere spørreundersøkelse til stengt i databasen om alle temaer har blitt stengt`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = samarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = samarbeid.id)
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -74,7 +74,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         val fullførtBehovsvurdering = IASakKartleggingHelper.hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
             type = SpørreundersøkelseDomene.Type.Behovsvurdering,
         ).first()
 
@@ -89,7 +89,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     fun `steng tema skal ikke avslutte spørreundersøkelse før alle temaer er stengt`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = samarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = samarbeid.id)
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -99,7 +99,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         val behovsvurderingMedEttStengtTema = IASakKartleggingHelper.hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            prosessId = samarbeid.id,
+            samarbeidId = samarbeid.id,
             type = SpørreundersøkelseDomene.Type.Behovsvurdering,
         ).first()
 
@@ -113,7 +113,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     @Test
     fun `skal sende resultater for stengt tema på kafka`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelse = sak.opprettSpørreundersøkelse()
+        val spørreundersøkelse = sak.opprettBehovsvurdering()
         spørreundersøkelse.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val tema = spørreundersøkelse.temaer.first()
         val førsteSpørsmål = tema.spørsmålOgSvaralternativer.first()

@@ -109,7 +109,7 @@ fun Row.mapTilSalesforceAktivitet() =
     SalesforceAktivitet(
         id = this.string("id"),
         sistEndretISalesforce = this.zonedDateTime("sist_endret"),
-        type = no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet.Companion.AktivitetsType.valueOf(this.string("type")),
+        type = SalesforceAktivitet.Companion.AktivitetsType.valueOf(this.string("type")),
         saksnummer = this.string("saksnummer"),
         samarbeidsId = this.int("samarbeid"),
         planId = this.stringOrNull("plan_id"),
@@ -119,7 +119,5 @@ fun Row.mapTilSalesforceAktivitet() =
         fullført = this.zonedDateTimeOrNull("oppgave_fullfort"),
         møteStart = this.zonedDateTimeOrNull("mote_start"),
         møteSlutt = this.zonedDateTimeOrNull("mote_slutt"),
-        status = this.stringOrNull("status")?.let {
-            no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it)
-        },
+        status = this.stringOrNull("status")?.let { SalesforceAktivitet.Companion.AktivitetsStatus.valueOf(it) },
     )

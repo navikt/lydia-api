@@ -48,7 +48,6 @@ import no.nav.lydia.ia.sak.domene.VirksomhetIkkeAktuellHendelse
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseDomene
 import no.nav.lydia.ia.team.IATeamService
 import no.nav.lydia.ia.årsak.domene.BegrunnelseType
@@ -335,15 +334,15 @@ class IASakService(
                         resulterendeStatus = IASak.Status.FULLFØRT,
                     )
 
-                    val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(
+                    val spørreundersøkelser = spørreundersøkelseRepository.hentSpørreundersøkelser(
                         samarbeid = samarbeid,
-                        type = Spørreundersøkelse.Type.Behovsvurdering,
+                        type = SpørreundersøkelseDomene.Type.Behovsvurdering,
                     ).plus(
-                        spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(
+                        spørreundersøkelseRepository.hentSpørreundersøkelser(
                             samarbeid = samarbeid,
-                            type = Spørreundersøkelse.Type.Evaluering,
+                            type = SpørreundersøkelseDomene.Type.Evaluering,
                         ),
-                    ).filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
+                    ).filter { it.status != SpørreundersøkelseDomene.Status.AVSLUTTET }
 
                     if (!tørrKjør) {
                         spørreundersøkelser.forEach { spørreundersøkelse ->
@@ -596,8 +595,8 @@ class IASakService(
 
         statusForBehovsvurderinger.forEach {
             when (it.second) {
-                Spørreundersøkelse.Status.AVSLUTTET,
-                Spørreundersøkelse.Status.SLETTET,
+                SpørreundersøkelseDomene.Status.AVSLUTTET,
+                SpørreundersøkelseDomene.Status.SLETTET,
                 -> {}
                 else -> årsaker.add(
                     ÅrsakTilAtSakIkkeKanAvsluttes(
@@ -618,9 +617,9 @@ class IASakService(
                 // avslutt alle samarbeid
                 samarbeidService.hentAktiveSamarbeid(iaSak).forEach { samarbeid ->
                     // avslutt eventuelle spørreundersøkelser i samarbeid
-                    spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
-                        .plus(spørreundersøkelseRepository.hentSpørreundersøkelserLegacy(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering))
-                        .filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
+                    spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = SpørreundersøkelseDomene.Type.Behovsvurdering)
+                        .plus(spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = SpørreundersøkelseDomene.Type.Evaluering))
+                        .filter { it.status != SpørreundersøkelseDomene.Status.AVSLUTTET }
                         .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id) }
 
                     // slett eventuell plan for samarbeid
