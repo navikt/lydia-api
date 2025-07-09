@@ -131,10 +131,7 @@ class IASamarbeidService(
     ): KanGjennomføreStatusendring {
         val samarbeid = hentSamarbeid(sak = sak, samarbeidId = samarbeidId).getOrNull()
             ?: throw IllegalStateException("Fant ikke samarbeid")
-        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(
-            samarbeid = samarbeid,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
-        )
+        val behovsvurderinger = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
         val evalueringer = spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering)
         val blokkerende = mutableListOf<StatusendringBegrunnelser>()
         val advarsler = mutableListOf<StatusendringBegrunnelser>()

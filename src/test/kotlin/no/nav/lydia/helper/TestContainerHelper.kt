@@ -58,7 +58,7 @@ import no.nav.lydia.ia.sak.api.plan.PLAN_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.plan.PlanDto
 import no.nav.lydia.ia.sak.api.plan.PlanUndertemaDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.EndreSamarbeidTilSpørreundersøkelseDto
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
@@ -696,10 +696,10 @@ class IASakKartleggingHelper {
         fun hentSpørreundersøkelse(
             orgnr: String,
             saksnummer: String,
-            samarbeidId: Int,
+            prosessId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
             type: Spørreundersøkelse.Type,
-        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/type/${type.name}")
+        ) = applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}")
             .authentication().bearer(token)
             .tilListeRespons<SpørreundersøkelseUtenInnholdDto>().third.fold(
                 success = { it },
@@ -790,7 +790,7 @@ class IASakKartleggingHelper {
             .authentication().bearer(token)
             .jsonBody(
                 Json.encodeToString(
-                    EndreSamarbeidTilSpørreundersøkelseDto(
+                    OppdaterBehovsvurderingDto(
                         orgnummer = orgnummer,
                         saksnummer = saksnummer,
                         prosessId = samarbeidId,

@@ -16,7 +16,6 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 import kotlin.collections.flatMap
 
 class SpørreundersøkelseProdusent(
@@ -45,13 +44,13 @@ class SpørreundersøkelseProdusent(
             orgnummer = input.orgnummer,
             virksomhetsNavn = input.virksomhetsNavn,
             samarbeidsNavn = samarbeidNavn,
-            status = input.status.name,
+            status = input.status,
             type = input.type.name,
-            opprettet = input.opprettetTidspunkt,
-            gyldigTil = input.opprettetTidspunkt.toJavaLocalDateTime().plusDays(1).toKotlinLocalDateTime(),
-            endret = input.endretTidspunkt,
             plan = plan,
             temaer = input.temaer.map { it.tilKafkaDto() },
+            opprettet = input.opprettetTidspunkt,
+            endret = input.endretTidspunkt,
+            gyldigTil = input.opprettetTidspunkt.toJavaLocalDateTime().plusDays(1).toKotlinLocalDateTime(),
         )
         return nøkkel to Json.encodeToString(verdi)
     }
@@ -60,13 +59,8 @@ class SpørreundersøkelseProdusent(
         TemaKafkaDto(
             id = id,
             navn = navn,
-            spørsmål = undertemaer.tilKafkaDto(),
+            spørsmål = undertemaer.flatMap { it.spørsmål.tilKafkaDto(undertemanavn = it.navn) },
         )
-
-    private fun List<Undertema>.tilKafkaDto(): List<SpørsmålKafkaDto> =
-        this.flatMap { undertema -> undertema.spørsmål.tilKafkaDto(undertemanavn = undertema.navn) }
-
-    private fun List<Spørsmål>.tilKafkaDto(undertemanavn: String): List<SpørsmålKafkaDto> = map { it.tilKafkaDto(undertemanavn = undertemanavn) }
 
     private fun Spørsmål.tilKafkaDto(undertemanavn: String): SpørsmålKafkaDto =
         SpørsmålKafkaDto(
@@ -83,19 +77,21 @@ class SpørreundersøkelseProdusent(
             tekst = tekst,
         )
 
+    private fun List<Spørsmål>.tilKafkaDto(undertemanavn: String): List<SpørsmålKafkaDto> = map { it.tilKafkaDto(undertemanavn = undertemanavn) }
+
     @Serializable
     data class SpørreundersøkelseKafkaDto(
         val id: String,
         val orgnummer: String,
         val samarbeidsNavn: String,
         val virksomhetsNavn: String,
-        val status: String,
+        val status: Spørreundersøkelse.Status,
+        val temaer: List<TemaKafkaDto>,
         val type: String,
         val plan: PlanDto?,
         val opprettet: LocalDateTime,
         val endret: LocalDateTime?,
         val gyldigTil: LocalDateTime,
-        val temaer: List<TemaKafkaDto>,
     )
 
     @Serializable
@@ -110,8 +106,8 @@ class SpørreundersøkelseProdusent(
         val id: String,
         val tekst: String,
         val flervalg: Boolean,
-        val kategori: String,
         val svaralternativer: List<SvaralternativKafkaDto>,
+        val kategori: String,
     )
 
     @Serializable

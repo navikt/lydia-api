@@ -93,12 +93,6 @@ class SpørreundersøkelseOppdateringProdusent(
     }
 
     @Serializable
-    data class SpørreundersøkelseOppdateringNøkkel(
-        val spørreundersøkelseId: String,
-        val oppdateringsType: SpørreundersøkelseOppdatering.Type,
-    )
-
-    @Serializable
     data class TemaResultatKafkaDto(
         val id: Int,
         val navn: String,
@@ -127,9 +121,15 @@ class SpørreundersøkelseOppdateringProdusent(
         val spørsmålId: String,
         val antallSvar: Int,
     )
+
+    @Serializable
+    data class SpørreundersøkelseOppdateringNøkkel(
+        val spørreundersøkelseId: String,
+        val oppdateringsType: SpørreundersøkelseOppdatering.Type,
+    )
 }
 
-fun Tema.TemaResultatKafkaDto(): TemaResultatKafkaDto =
+fun Tema.tilTemaResultatKafkaDto(): TemaResultatKafkaDto =
     TemaResultatKafkaDto(
         id = id,
         navn = navn,

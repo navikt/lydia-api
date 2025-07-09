@@ -104,7 +104,7 @@ class EvalueringApiTest {
         val alleEvalueringer = hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = sak.hentAlleSamarbeid().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Evaluering,
         )
 
@@ -133,7 +133,7 @@ class EvalueringApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = sak.hentAlleSamarbeid().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             type = type,
         ).forExactlyOne {
             it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
@@ -150,7 +150,7 @@ class EvalueringApiTest {
                     val spørreundersøkelse =
                         Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.type shouldBe type.name
-                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT.name
+                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
                     spørreundersøkelse.plan?.id shouldBe opprettetPlan.id
                 }
             }
@@ -259,7 +259,7 @@ class EvalueringApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = samarbeid1.id,
+            prosessId = samarbeid1.id,
             type = Spørreundersøkelse.Type.Evaluering,
         ).forExactlyOne {
             it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
@@ -277,7 +277,7 @@ class EvalueringApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = samarbeid1.id,
+            prosessId = samarbeid1.id,
             type = Spørreundersøkelse.Type.Evaluering,
         ).forExactlyOne {
             it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET

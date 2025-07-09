@@ -74,7 +74,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         val fullførtBehovsvurdering = IASakKartleggingHelper.hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = samarbeid.id,
+            prosessId = samarbeid.id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ).first()
 
@@ -99,7 +99,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
         val behovsvurderingMedEttStengtTema = IASakKartleggingHelper.hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = samarbeid.id,
+            prosessId = samarbeid.id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ).first()
 

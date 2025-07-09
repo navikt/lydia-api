@@ -179,19 +179,19 @@ class IASakApiTest {
         )
 
         val førsteSamarbeid = alleSamarbeid.first()
-        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
-        val saksStatusMedBehovsvurdering = sak.hentSaksStatus()
-        saksStatusMedBehovsvurdering.kanFullføres shouldBe false
-        saksStatusMedBehovsvurdering.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
+        val kartlegging = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val saksStatusMedEnKartlegging = sak.hentSaksStatus()
+        saksStatusMedEnKartlegging.kanFullføres shouldBe false
+        saksStatusMedEnKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(
             ÅrsaksType.INGEN_FULLFØRT_SAMARBEIDSPLAN,
             ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
         )
-        saksStatusMedBehovsvurdering.årsaker.forExactlyOne {
+        saksStatusMedEnKartlegging.årsaker.forExactlyOne {
             it shouldBe ÅrsakTilAtSakIkkeKanAvsluttes(
                 samarbeidsId = førsteSamarbeid.id,
                 samarbeidsNavn = førsteSamarbeid.navn,
                 type = ÅrsaksType.BEHOVSVURDERING_IKKE_FULLFØRT,
-                id = behovsvurdering.id,
+                id = kartlegging.id,
             )
         }
 
@@ -211,8 +211,8 @@ class IASakApiTest {
             )
         }
 
-        behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        kartlegging.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        kartlegging.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, førsteSamarbeid.id)
         val sakstatusFullførtBehovsvurderingOgPlan = sak.hentSaksStatus()
         sakstatusFullførtBehovsvurderingOgPlan.kanFullføres shouldBe true

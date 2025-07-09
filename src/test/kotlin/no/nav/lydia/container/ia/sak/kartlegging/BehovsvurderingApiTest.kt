@@ -260,7 +260,7 @@ class BehovsvurderingApiTest {
                     spørreundersøkelse.id shouldBe behovsvurdering.id
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
-                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.OPPRETTET.name
+                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.OPPRETTET
                     spørreundersøkelse.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
                     spørreundersøkelse.temaer shouldHaveSize 3
                     spørreundersøkelse.temaer.forAll { tema ->
@@ -283,7 +283,7 @@ class BehovsvurderingApiTest {
         val alleKartlegginger = hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = sak.hentAlleSamarbeid().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         )
 
@@ -313,7 +313,7 @@ class BehovsvurderingApiTest {
         val alleSpørreundersøkelser = hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = fullførtBehovsvurdering.samarbeidId,
+            prosessId = fullførtBehovsvurdering.samarbeidId,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         )
 
@@ -508,7 +508,7 @@ class BehovsvurderingApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = sak.hentAlleSamarbeid().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ).forExactlyOne {
             it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
@@ -523,7 +523,7 @@ class BehovsvurderingApiTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT.name
+                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
                 }
             }
         }
@@ -542,7 +542,7 @@ class BehovsvurderingApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = sak.hentAlleSamarbeid().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ).forExactlyOne {
             it.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
@@ -557,7 +557,7 @@ class BehovsvurderingApiTest {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.AVSLUTTET.name
+                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
                 }
             }
         }
@@ -611,7 +611,7 @@ class BehovsvurderingApiTest {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
                         Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.SLETTET.name
+                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.SLETTET
                 }
             }
         }
@@ -627,7 +627,7 @@ class BehovsvurderingApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = sak.hentAlleSamarbeid().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ) shouldHaveSize 0
     }
@@ -651,7 +651,7 @@ class BehovsvurderingApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = sak.hentAlleSamarbeid().first().id,
+            prosessId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ) shouldHaveSize 0
     }
@@ -670,7 +670,7 @@ class BehovsvurderingApiTest {
             hentSpørreundersøkelse(
                 orgnr = sak.orgnr,
                 saksnummer = sak.saksnummer,
-                samarbeidId = samarbeid.id,
+                prosessId = samarbeid.id,
                 type = Spørreundersøkelse.Type.Behovsvurdering,
             ) shouldHaveSize 1
         }
@@ -688,7 +688,7 @@ class BehovsvurderingApiTest {
 
         val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
         val type = Spørreundersøkelse.Type.Behovsvurdering
-        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = førsteSamarbeid.id, type = type)
+        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id, type = type)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -700,9 +700,9 @@ class BehovsvurderingApiTest {
         )
         oppdatertBehovsvurdering.endretTidspunkt shouldNotBe oppdatertBehovsvurdering.fullførtTidspunkt
 
-        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = førsteSamarbeid.id, type = type)
+        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id, type = type)
             .map { it.id } shouldBe emptyList()
-        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = sisteSamarbeid.id, type = type)
+        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = sisteSamarbeid.id, type = type)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
     }
 
@@ -808,16 +808,17 @@ class BehovsvurderingApiTest {
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = førsteSamarbeid.id,
+            prosessId = førsteSamarbeid.id,
             type = type,
         ).forExactlyOne {
             it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
             it.samarbeidId shouldBe førsteSamarbeid.id
         }
+
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            samarbeidId = andreSamarbeid.id,
+            prosessId = andreSamarbeid.id,
             type = type,
         ) shouldHaveSize 0
     }
@@ -853,7 +854,7 @@ class BehovsvurderingApiTest {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
-                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.AVSLUTTET.name
+                    spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
                 }
             }
         }

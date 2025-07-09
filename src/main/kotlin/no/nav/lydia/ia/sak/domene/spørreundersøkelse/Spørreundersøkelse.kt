@@ -7,21 +7,21 @@ import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.Spørreundersøkels
 import java.util.UUID
 
 data class Spørreundersøkelse(
-    val virksomhetsNavn: String,
-    val orgnummer: String,
+    val id: UUID,
     val saksnummer: String,
     val samarbeidId: Int,
-    val id: UUID,
-    val type: Type,
+    val orgnummer: String,
+    val virksomhetsNavn: String,
     val status: Status,
+    val type: Type,
     val opprettetAv: String,
     val opprettetTidspunkt: LocalDateTime,
-    val gyldigTilTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
     val publiseringStatus: DokumentPublisering.Status,
     val temaer: List<Tema>,
+    val gyldigTilTidspunkt: LocalDateTime,
 ) {
     companion object {
         const val ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG = 24L
@@ -115,48 +115,3 @@ data class Spørreundersøkelse(
 
     fun finnSpørsmål(spørsmålId: UUID): Spørsmål? = temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.firstOrNull { it.id == spørsmålId }
 }
-
-class Tema(
-    val id: Int,
-    val navn: String,
-    val status: Status,
-    val rekkefølge: Int,
-    val stengtForSvar: Boolean,
-    val sistEndret: LocalDateTime,
-    val undertemaer: List<Undertema>,
-) {
-    enum class Status {
-        AKTIV,
-        INAKTIV,
-    }
-}
-
-class Undertema(
-    val id: Int,
-    val navn: String,
-    val status: Status,
-    val rekkefølge: Int,
-    val spørsmål: List<Spørsmål>,
-) {
-    enum class Status {
-        AKTIV,
-        INAKTIV,
-    }
-}
-
-class Spørsmål(
-    val id: UUID,
-    val tekst: String,
-    val rekkefølge: Int,
-    val flervalg: Boolean,
-    val antallSvar: Int,
-    val svaralternativer: List<Svaralternativ>,
-) {
-    fun svaralternativerHørerTilSpørsmål(svarIder: List<UUID>): Boolean = svaralternativer.map { it.id }.toList().containsAll(svarIder)
-}
-
-class Svaralternativ(
-    val id: UUID,
-    val tekst: String,
-    val antallSvar: Int,
-)

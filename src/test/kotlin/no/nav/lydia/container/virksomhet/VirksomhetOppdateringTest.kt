@@ -208,7 +208,8 @@ class VirksomhetOppdateringTest {
                     navn = samarbeid.navn,
                 ),
             ),
-        ).nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND)
+        )
+            .nyHendelse(hendelsestype = IASakshendelseType.FULLFØR_BISTAND)
 
         sendSlettingForVirksomhet(virksomhet)
 

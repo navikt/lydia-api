@@ -17,7 +17,7 @@ data class SpørreundersøkelseUtenInnholdDto(
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
     val gyldigTilTidspunkt: LocalDateTime,
-    val harMinstEttSvar: Boolean,
+    val harMinstEttResultat: Boolean,
 )
 
 fun List<Spørreundersøkelse>.tilMetaDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilMetaDto() }
@@ -34,5 +34,5 @@ fun Spørreundersøkelse.tilMetaDto(): SpørreundersøkelseUtenInnholdDto =
         påbegyntTidspunkt = påbegyntTidspunkt,
         fullførtTidspunkt = fullførtTidspunkt,
         gyldigTilTidspunkt = gyldigTilTidspunkt,
-        harMinstEttSvar = harMinstEttResultat(),
+        harMinstEttResultat = harMinstEttResultat(),
     )

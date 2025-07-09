@@ -218,7 +218,7 @@ fun Route.iaSakSpørreundersøkelse(
 
     put("$SPØRREUNDERSØKELSE_BASE_ROUTE/{sporreundersokelseId}") {
         val id = call.spørreundersøkelseId ?: return@put call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
-        val input = call.receive<EndreSamarbeidTilSpørreundersøkelseDto>()
+        val input = call.receive<OppdaterBehovsvurderingDto>()
 
         call.somSaksbehandler(adGrupper) { saksbehandler ->
             val iaSak = iaSakService.hentIASak(saksnummer = input.saksnummer).getOrNull()
@@ -227,9 +227,9 @@ fun Route.iaSakSpørreundersøkelse(
             if (!iaTeamService.erEierEllerFølgerAvSak(iaSak = iaSak, saksbehandler = saksbehandler)) {
                 return@somSaksbehandler IASakError.`er ikke følger eller eier av sak`.left()
             }
-            spørreundersøkelseService.endreSamarbeidTilSpørreundersøkelse(
-                spørreundersøkelseId = id,
-                endreSamarbeidTilSpørreundersøkelseDto = input,
+            spørreundersøkelseService.oppdaterSamarbeidIdIBehovsvurdering(
+                behovsvurderingId = id,
+                oppdaterBehovsvurderingDto = input,
             )
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
