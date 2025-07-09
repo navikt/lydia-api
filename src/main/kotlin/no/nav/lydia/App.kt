@@ -277,6 +277,7 @@ fun startLydiaBackend() {
     val dokumentPubliseringService = DokumentPubliseringService(
         dokumentPubliseringRepository = DokumentPubliseringRepository(dataSource),
         spørreundersøkelseService = spørreundersøkelseService,
+        samarbeidService = samarbeidService,
         dokumentPubliseringProdusent = DokumentPubliseringProdusent(kafka = naisEnv.kafka, topic = Topic.DOKUMENT_PUBLISERING_TOPIC),
     )
 
@@ -627,6 +628,7 @@ private fun Application.lydiaRestApi(
             dokumentPublisering(
                 adGrupper = naisEnv.security.adGrupper,
                 dokumentPubliseringService = dokumentPubliseringService,
+                azureService = azureService,
             )
             iaTjenesteoversikt(
                 iaTjenesteoversiktService = IATjenesteoversiktService(

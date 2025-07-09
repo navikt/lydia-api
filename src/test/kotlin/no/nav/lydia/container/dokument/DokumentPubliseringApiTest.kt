@@ -19,12 +19,12 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
+import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -93,7 +93,7 @@ class DokumentPubliseringApiTest {
         response.statuskode() shouldBe HttpStatusCode.BadRequest.value
         response.second.body()
             .asString(contentType = "text/plain; charset=utf-8") shouldBe
-            "Spørreundersøkelse med id: '$dokumentRefId' har ikke status AVSLUTTET, og dermed ikke kan lagres som dokument. Status var: 'PÅBEGYNT'"
+            "Spørreundersøkelse med id: '$dokumentRefId' har status '${Spørreundersøkelse.Status.PÅBEGYNT}' (forventet ${Spørreundersøkelse.Status.AVSLUTTET}) og/eller mangler fullført tidspunkt, og dermed ikke kan lagres som dokument. "
     }
 
     @Test
@@ -152,22 +152,29 @@ class DokumentPubliseringApiTest {
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
                 // key: '1-f44fee5f-cc38-41e5-bb59-ab4a7c83051d-BEHOVSVURDERING'
-                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPublisering.Type.BEHOVSVURDERING.name),
+                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPublisering.Type.BEHOVSVURDERING),
                 konsument = konsument,
             ) { meldinger ->
                 meldinger shouldHaveAtLeastSize 1
                 Json.decodeFromString<DokumentPubliseringMedInnhold>(meldinger.first())
                     .also { dokumentPubliseringMedInnhold ->
                         dokumentPubliseringMedInnhold.referanseId shouldBe dokumentRefId
-                        dokumentPubliseringMedInnhold.orgnr shouldBe sak.orgnr
-                        dokumentPubliseringMedInnhold.saksnummer shouldBe sak.saksnummer
-                        dokumentPubliseringMedInnhold.samarbeidId shouldBe samarbeidId
-                        dokumentPubliseringMedInnhold.opprettetAv shouldBe navIdent
-                        Json.decodeFromString<SpørreundersøkelseDto>(dokumentPubliseringMedInnhold.innhold).also { spørreundersøkelseDto ->
-                            spørreundersøkelseDto.id shouldBe dokumentRefId
-                            spørreundersøkelseDto.samarbeidId shouldBe fullførtBehovsvurdering.samarbeidId
-                            spørreundersøkelseDto.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
-                            spørreundersøkelseDto.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
+                        dokumentPubliseringMedInnhold.virksomhet.orgnummer shouldBe sak.orgnr
+                        dokumentPubliseringMedInnhold.sak.saksnummer shouldBe sak.saksnummer
+                        dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeidId
+                        dokumentPubliseringMedInnhold.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
+                        dokumentPubliseringMedInnhold.dokumentOpprettetAv shouldBe navIdent
+                        dokumentPubliseringMedInnhold.innhold.id shouldBe dokumentRefId
+                        dokumentPubliseringMedInnhold.innhold.fullførtTidspunkt shouldNotBe null
+                        dokumentPubliseringMedInnhold.innhold.spørreundersøkelseOpprettetAv shouldBe "X12345"
+                        dokumentPubliseringMedInnhold.type shouldBe DokumentPublisering.Type.BEHOVSVURDERING
+                        dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach { it.navn shouldNotBe null }
+                        dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach {
+                            it.spørsmålMedSvar.forEach {
+                                it.svarListe.forEach {
+                                    it.antallSvar shouldNotBe null
+                                }
+                            }
                         }
                     }
             }
