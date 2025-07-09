@@ -25,7 +25,6 @@ enum class Variantformat {
 }
 
 enum class Kanal {
-    NAV_NO, // <-- ikke bruk
     NAV_NO_UTEN_VARSLING,
 }
 
