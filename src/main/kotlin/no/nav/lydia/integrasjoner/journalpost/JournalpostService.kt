@@ -76,7 +76,7 @@ class JournalpostService(
             tema = JournalpostTema.IAR,
             journalposttype = JournalpostType.UTGAAENDE,
             journalfoerendeEnhet = sakshendelse.navEnhet.enhetsnummer,
-            kanal = Kanal.NAV_NO,
+            kanal = Kanal.NAV_NO_UTEN_VARSLING,
             avsenderMottaker = AvsenderMottaker(
                 id = sakshendelse.orgnummer,
                 idType = IdType.ORGNR,

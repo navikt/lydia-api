@@ -25,7 +25,7 @@ enum class Variantformat {
 }
 
 enum class Kanal {
-    NAV_NO,
+    NAV_NO_UTEN_VARSLING,
 }
 
 enum class JournalpostTema {
