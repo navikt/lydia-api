@@ -1,19 +1,19 @@
 package no.nav.lydia.ia.sak.domene
 
 import io.kotest.matchers.collections.shouldContainInOrder
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.TemaMetadata
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.TemaInfo
 import kotlin.test.Test
 
 class TemaTest {
     @Test
     fun `skal kunne sortere temaer på 'rekkefølge'`() {
-        val tema2 = TemaMetadata(
+        val tema2 = TemaInfo(
             id = 2,
             navn = "tema 2",
             rekkefølge = 2,
             undertemaer = emptyList(),
         )
-        val tema3 = TemaMetadata(
+        val tema3 = TemaInfo(
             id = 3,
             rekkefølge = 1,
             navn = "tema 3",

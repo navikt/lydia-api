@@ -21,20 +21,20 @@ data class SpørreundersøkelseUtenInnholdDto(
     val harMinstEttResultat: Boolean,
 )
 
-fun List<Spørreundersøkelse>.tilMetaDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilMetaDto() }
+fun List<Spørreundersøkelse>.tilUtenInnholdDto(): List<SpørreundersøkelseUtenInnholdDto> = map { it.tilUtenInnholdDto() }
 
-fun Spørreundersøkelse.tilMetaDto(): SpørreundersøkelseUtenInnholdDto =
+fun Spørreundersøkelse.tilUtenInnholdDto(): SpørreundersøkelseUtenInnholdDto =
     SpørreundersøkelseUtenInnholdDto(
         id = id.toString(),
         samarbeidId = samarbeidId,
         status = status,
         publiseringStatus = publiseringStatus,
         opprettetAv = opprettetAv,
-        type = type,
         opprettetTidspunkt = opprettetTidspunkt,
         endretTidspunkt = endretTidspunkt,
         påbegyntTidspunkt = påbegyntTidspunkt,
         fullførtTidspunkt = fullførtTidspunkt,
         gyldigTilTidspunkt = gyldigTilTidspunkt,
         harMinstEttResultat = harMinstEttResultat(),
+        type = type,
     )

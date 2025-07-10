@@ -10,7 +10,7 @@ data class TemaDto(
     val spørsmålOgSvaralternativer: List<SpørsmålDto>,
 )
 
-fun Tema.tilDto(): TemaDto =
+fun Tema.tilDto() =
     TemaDto(
         temaId = id,
         navn = navn,

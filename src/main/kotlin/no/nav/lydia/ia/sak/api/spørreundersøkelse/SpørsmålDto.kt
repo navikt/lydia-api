@@ -12,9 +12,9 @@ data class SpørsmålDto(
     val flervalg: Boolean,
 )
 
-fun List<Spørsmål>.tilDto(undertemanavn: String): List<SpørsmålDto> = map { it.tilDto(undertemanavn) }
+fun List<Spørsmål>.tilDto(undertemanavn: String) = map { it.tilDto(undertemanavn) }
 
-fun Spørsmål.tilDto(undertemanavn: String): SpørsmålDto =
+fun Spørsmål.tilDto(undertemanavn: String) =
     SpørsmålDto(
         id = id.toString(),
         undertemanavn = undertemanavn,
