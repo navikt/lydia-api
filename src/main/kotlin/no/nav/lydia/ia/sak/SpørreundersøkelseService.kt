@@ -42,7 +42,7 @@ class SpørreundersøkelseService(
     fun lagreSvar(svarliste: List<SpørreundersøkelseSvarDto>) {
         svarliste.forEach { besvarelse ->
             val spørreundersøkelse =
-                spørreundersøkelseRepository.hentSpørreundersøkelse(besvarelse.spørreundersøkelseId.tilUUID("spørreundersøkelseId"))
+                spørreundersøkelseRepository.hentSpørreundersøkelse(besvarelse.spørreundersøkelseId.tilUUID(hvaErJeg = "spørreundersøkelseId"))
                     ?: run {
                         log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
                         return@forEach
@@ -52,7 +52,7 @@ class SpørreundersøkelseService(
                 return@forEach
             }
 
-            val spørsmål = spørreundersøkelse.finnSpørsmål(besvarelse.spørsmålId.tilUUID("spørsmålId")) ?: run {
+            val spørsmål = spørreundersøkelse.finnSpørsmål(besvarelse.spørsmålId.tilUUID(hvaErJeg = "spørsmålId")) ?: run {
                 log.warn("Finner ikke spørsmål '${besvarelse.spørsmålId}' svaret er knyttet til, hopper over")
                 return@forEach
             }
@@ -62,7 +62,7 @@ class SpørreundersøkelseService(
                 return@forEach
             }
 
-            if (!spørsmål.svaralternativerHørerTilSpørsmål(besvarelse.svarIder.map { it.tilUUID("svarId") })) {
+            if (!spørsmål.svaralternativerHørerTilSpørsmål(besvarelse.svarIder.map { it.tilUUID(hvaErJeg = "svarId") })) {
                 log.warn(
                     "Funnet noen ukjente svarIder ('${besvarelse.svarIder}') i svar til spørsmål '${besvarelse.spørsmålId}', hopper over",
                 )
@@ -239,7 +239,7 @@ class SpørreundersøkelseService(
     }
 
     fun stengTema(hendelse: StengTema) {
-        val spørreundersøkelseId = hendelse.spørreundersøkelseId.tilUUID("spørreundersøkelseId")
+        val spørreundersøkelseId = hendelse.spørreundersøkelseId.tilUUID(hvaErJeg = "spørreundersøkelseId")
         log.info("Mottok stenging av tema: ${hendelse.temaId} i spørreundersøkelse $spørreundersøkelseId")
 
         val spørreundersøkelse =
