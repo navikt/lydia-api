@@ -49,9 +49,9 @@ class DokumentPubliseringProdusent(
                     saksnummer = samarbeid.saksnummer,
                     navenhet = navEnhet.enhetsnavn,
                 ),
-                referanseId = this.referanseId,
-                type = this.dokumentType,
-                dokumentOpprettetAv = this.opprettetAv,
+                referanseId = referanseId,
+                type = dokumentType,
+                dokumentOpprettetAv = opprettetAv,
                 virksomhet = VirksomhetDto(
                     orgnummer = orgnr,
                     navn = virksomhetsNavn,

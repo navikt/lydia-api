@@ -60,7 +60,7 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId.toString())
+        val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId)
             .getOrElse {
                 return Feil(
                     feilmelding = "Innhold dokumentet refererer til, med referanseId: '$dokumentReferanseId' og type: '${dokumentType.name}', ble ikke funnet",
@@ -84,7 +84,7 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        val spørreundersøkelseResultat = spørreundersøkelseService.hentSpørreundersøkelseResultat(spørreundersøkelseId = dokumentReferanseId.toString())
+        val spørreundersøkelseResultat = spørreundersøkelseService.hentSpørreundersøkelseResultat(spørreundersøkelseId = dokumentReferanseId)
             .getOrElse {
                 return Feil(
                     feilmelding = "Ingen resultat funnet for referanseId '$dokumentReferanseId' og type: '${dokumentType.name}'",

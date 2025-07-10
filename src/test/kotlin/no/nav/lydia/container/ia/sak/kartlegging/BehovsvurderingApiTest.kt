@@ -22,6 +22,7 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.flytt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.slett
@@ -42,7 +43,7 @@ import no.nav.lydia.helper.opprettNyttSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent.FullførtBehovsvurdering
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SPØRREUNDERSØKELSE_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseDto
@@ -59,10 +60,9 @@ class BehovsvurderingApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid(token = authContainerHelper.saksbehandler1.token)
         val ikkeEierEllerFølger = authContainerHelper.saksbehandler2
 
-        shouldFail {
-            sak.opprettSpørreundersøkelse(token = ikkeEierEllerFølger.token)
-        }
-        val behovsvurdering = sak.opprettSpørreundersøkelse(token = authContainerHelper.saksbehandler1.token)
+        shouldFail { sak.opprettBehovsvurdering(token = ikkeEierEllerFølger.token) }
+
+        val behovsvurdering = sak.opprettBehovsvurdering(token = authContainerHelper.saksbehandler1.token)
 
         shouldFail {
             behovsvurdering.start(token = ikkeEierEllerFølger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -83,7 +83,7 @@ class BehovsvurderingApiTest {
     fun `kun saksbehandlere som er eier eller følger skal kunne slette behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid(token = authContainerHelper.saksbehandler1.token)
         val ikkeEierEllerFølger = authContainerHelper.saksbehandler2
-        val behovsvurdering = sak.opprettSpørreundersøkelse(token = authContainerHelper.saksbehandler1.token)
+        val behovsvurdering = sak.opprettBehovsvurdering(token = authContainerHelper.saksbehandler1.token)
 
         shouldFail {
             behovsvurdering.slett(token = ikkeEierEllerFølger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -118,7 +118,7 @@ class BehovsvurderingApiTest {
         val samarbeid2 = alleSamarbeid.last()
         val ikkeEierEllerFølger = authContainerHelper.saksbehandler2
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse(token = authContainerHelper.saksbehandler1.token, prosessId = samarbeid1.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(token = authContainerHelper.saksbehandler1.token, prosessId = samarbeid1.id)
         behovsvurdering.start(token = authContainerHelper.saksbehandler1.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(token = authContainerHelper.saksbehandler1.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -143,9 +143,7 @@ class BehovsvurderingApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid(token = authContainerHelper.saksbehandler1.token)
         val følger = authContainerHelper.saksbehandler2
         sak.leggTilFolger(token = følger.token)
-        val behovsvurdering = sak.opprettSpørreundersøkelse(
-            token = følger.token,
-        )
+        val behovsvurdering = sak.opprettBehovsvurdering(token = følger.token)
         behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
         val påbegyntBehovsvurdering = behovsvurdering.start(token = følger.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -159,7 +157,7 @@ class BehovsvurderingApiTest {
     fun `skal sette riktig gyldighetstid`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val behovsvurdering = sak.opprettBehovsvurdering()
         val opprettet = behovsvurdering.opprettetTidspunkt
         val burdeVæreGyldigTil = opprettet.toJavaLocalDateTime().plusHours(ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG).toKotlinLocalDateTime()
         behovsvurdering.gyldigTilTidspunkt shouldBe burdeVæreGyldigTil
@@ -169,7 +167,7 @@ class BehovsvurderingApiTest {
     fun `kan opprette en spørreundersøkelse av type behovsvurdering i status KARTLEGGES`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.id.length shouldBe 36
 
         postgresContainerHelper.hentEnkelKolonne<String>(
@@ -181,7 +179,7 @@ class BehovsvurderingApiTest {
     fun `kan opprette en spørreundersøkelse av type behovsvurdering i status VI_BISTÅR`() {
         val sak = nySakIViBistår()
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.id.length shouldBe 36
 
         postgresContainerHelper.hentEnkelKolonne<String>(
@@ -191,7 +189,7 @@ class BehovsvurderingApiTest {
 
     @Test
     fun `kan opprette en spørreundersøkelse av type behovsvurdering med flere temaer`() {
-        val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettSpørreundersøkelse()
+        val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettBehovsvurdering()
 
         behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
         behovsvurdering.temaer shouldHaveSize 3
@@ -206,7 +204,7 @@ class BehovsvurderingApiTest {
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.temaer shouldHaveSize 3
                     spørreundersøkelse.temaer.forAll {
                         it.spørsmål.shouldNotBeEmpty()
@@ -225,7 +223,7 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = "ukjent",
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Behovsvurdering",
+            type = Spørreundersøkelse.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -239,7 +237,7 @@ class BehovsvurderingApiTest {
             orgnr = "222233334",
             saksnummer = sak.saksnummer,
             prosessId = sak.hentAlleSamarbeid().first().id,
-            type = "Behovsvurdering",
+            type = Spørreundersøkelse.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
         resp.second.statusCode shouldBe HttpStatusCode.BadRequest.value
@@ -249,7 +247,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `kan opprette spørreundersøkelse av typen behovsvurdering og sende den på kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val behovsvurdering = sak.opprettBehovsvurdering()
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
@@ -258,12 +256,12 @@ class BehovsvurderingApiTest {
             ) { liste ->
                 liste.map { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.id shouldBe behovsvurdering.id
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
                     spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-                    spørreundersøkelse.type shouldBe "Behovsvurdering"
+                    spørreundersøkelse.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
                     spørreundersøkelse.temaer shouldHaveSize 3
                     spørreundersøkelse.temaer.forAll { tema ->
                         tema.spørsmål.shouldNotBeEmpty()
@@ -280,7 +278,7 @@ class BehovsvurderingApiTest {
     fun `kan hente liste av alle spørreundersøkelser av typen Behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val behvosvurdering = sak.opprettSpørreundersøkelse()
+        val behvosvurdering = sak.opprettBehovsvurdering()
 
         val alleKartlegginger = hentSpørreundersøkelse(
             orgnr = sak.orgnr,
@@ -302,8 +300,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal returnere publiseringsstatus for behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelseType = Spørreundersøkelse.Type.Behovsvurdering.name
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = spørreundersøkelseType)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -327,7 +324,7 @@ class BehovsvurderingApiTest {
     fun `nylig opprettet behovsvurdering får alle spørsmål med riktige svaralternativer knyttet til seg`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.temaer.shouldNotBeEmpty()
         behovsvurdering.temaer.forEach { spørsmålOgSvarPerTema ->
             val temaId: Int = postgresContainerHelper.hentEnkelKolonne(
@@ -361,11 +358,10 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal ikke kunne hente resultat før kartlegging er avsluttet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val påbegyntBehovsvurdering = sak.opprettSpørreundersøkelse().also {
-            it.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-        }.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).also {
-            it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        }
+        val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
+            .also { it.status shouldBe Spørreundersøkelse.Status.OPPRETTET }
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .also { it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT }
 
         listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
             enDeltakerSvarerPåEtSpørsmål(kartleggingDto = påbegyntBehovsvurdering, UUID.randomUUID().toString())
@@ -393,14 +389,12 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal ikke kunne få antall svar dersom antall deltakere er færre enn 3`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val påbegyntBehovsvurdering = sak.opprettSpørreundersøkelse().also {
-            it.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-        }.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).also {
-            it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        }
+        val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
+            .also { it.status shouldBe Spørreundersøkelse.Status.OPPRETTET }
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .also { it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT }
 
-        val førsteSpørsmål =
-            påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
+        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
         val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
 
         val antallSvar = 2
@@ -436,14 +430,12 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal få svardetaljer for et spørsmål dersom antall besvarelser er 3 eller flere`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val påbegyntBehovsvurdering = sak.opprettSpørreundersøkelse().also {
-            it.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-        }.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer).also {
-            it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
-        }
+        val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
+            .also { it.status shouldBe Spørreundersøkelse.Status.OPPRETTET }
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .also { it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT }
 
-        val førsteSpørsmål =
-            påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
+        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
         val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
 
         val antallSvar = 3
@@ -484,7 +476,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `alle med tilgang til fia skal kunne hente resultater av kartlegging`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val resultater = hentKartleggingMedSvar(
@@ -506,7 +498,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `kan starte en Spørreundersøkelse av type Behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val behovsvurdering = sak.opprettSpørreundersøkelse()
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
         behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
@@ -530,7 +522,7 @@ class BehovsvurderingApiTest {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
                 }
             }
@@ -540,7 +532,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal kunne avslutte en påbegynt kartlegging`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         val påbegyntKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         påbegyntKartlegging.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
 
@@ -564,7 +556,7 @@ class BehovsvurderingApiTest {
                 konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
                 }
             }
@@ -574,7 +566,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal ikke kunne avslutte kartlegging med status OPPRETTET`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         kartleggingDto.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
         val response = applikasjon.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/${sak.orgnr}/${sak.saksnummer}/${kartleggingDto.id}/avslutt")
@@ -590,7 +582,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal kunne slette en kartlegging`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         kartleggingDto.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
         val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -618,7 +610,7 @@ class BehovsvurderingApiTest {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.SLETTET
                 }
             }
@@ -643,7 +635,7 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal kunne slette en kartlegging i status VI_BISTÅR`() {
         val sak = nySakIViBistår()
-        val kartleggingDto = sak.opprettSpørreundersøkelse()
+        val kartleggingDto = sak.opprettBehovsvurdering()
         kartleggingDto.status shouldBe Spørreundersøkelse.Status.OPPRETTET
         kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -673,7 +665,7 @@ class BehovsvurderingApiTest {
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 2
         alleSamarbeid.forEach { samarbeid ->
-            sak.opprettSpørreundersøkelse(prosessId = samarbeid.id)
+            sak.opprettBehovsvurdering(prosessId = samarbeid.id)
 
             hentSpørreundersøkelse(
                 orgnr = sak.orgnr,
@@ -685,7 +677,7 @@ class BehovsvurderingApiTest {
     }
 
     @Test
-    fun `skal kunne flytte en behhovsvurdering fra en prosess til en annen`() {
+    fun `skal kunne flytte en spørreundersøkelse fra et samarbeid til et annet`() {
         val sak = nySakIKartlegges()
             .opprettNyttSamarbeid(navn = "Først")
             .opprettNyttSamarbeid(navn = "Sist")
@@ -694,8 +686,9 @@ class BehovsvurderingApiTest {
         val førsteSamarbeid = alleSamarbeid.first()
         val sisteSamarbeid = alleSamarbeid.last()
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
-        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = Spørreundersøkelse.Type.Behovsvurdering)
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val type = Spørreundersøkelse.Type.Behovsvurdering
+        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id, type = type)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -707,9 +700,9 @@ class BehovsvurderingApiTest {
         )
         oppdatertBehovsvurdering.endretTidspunkt shouldNotBe oppdatertBehovsvurdering.fullførtTidspunkt
 
-        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, førsteSamarbeid.id, type = Spørreundersøkelse.Type.Behovsvurdering)
+        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id, type = type)
             .map { it.id } shouldBe emptyList()
-        hentSpørreundersøkelse(sak.orgnr, sak.saksnummer, sisteSamarbeid.id, type = Spørreundersøkelse.Type.Behovsvurdering)
+        hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = sisteSamarbeid.id, type = type)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
     }
 
@@ -722,7 +715,7 @@ class BehovsvurderingApiTest {
         val førsteSamarbeid = alleSamarbeid.first()
         val sisteSamarbeid = alleSamarbeid.last()
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         runBlocking {
@@ -760,7 +753,7 @@ class BehovsvurderingApiTest {
             .opprettNyttSamarbeid()
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 1
-        val behovsvurdering = sak.opprettSpørreundersøkelse(alleSamarbeid.first().id)
+        val behovsvurdering = sak.opprettBehovsvurdering(alleSamarbeid.first().id)
 
         // -- skal ikke kunne flytte til ikke eksisterende prosess
         shouldFail {
@@ -805,17 +798,18 @@ class BehovsvurderingApiTest {
         val førsteSamarbeid = alleSamarbeid.first()
         val andreSamarbeid = alleSamarbeid.last()
 
-        val behovsvurdering = sak.opprettSpørreundersøkelse(prosessId = førsteSamarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         shouldFail { behovsvurdering.flytt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = andreSamarbeid.id) }.message shouldContain
             "kan ikke bytte samarbeid"
 
+        val type = Spørreundersøkelse.Type.Behovsvurdering
         hentSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = førsteSamarbeid.id,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
+            type = type,
         ).forExactlyOne {
             it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
             it.samarbeidId shouldBe førsteSamarbeid.id
@@ -825,14 +819,14 @@ class BehovsvurderingApiTest {
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
             prosessId = andreSamarbeid.id,
-            type = Spørreundersøkelse.Type.Behovsvurdering,
+            type = type,
         ) shouldHaveSize 0
     }
 
     @Test
     fun `Oppretting, start og fullføring av spørreundersøkelse oppdaterer rette tidspunktfelter`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val spørreundersøkelseDto = sak.opprettSpørreundersøkelse()
+        val spørreundersøkelseDto = sak.opprettBehovsvurdering()
         spørreundersøkelseDto.status shouldBe Spørreundersøkelse.Status.OPPRETTET
         spørreundersøkelseDto.endretTidspunkt shouldBe null
         spørreundersøkelseDto.påbegyntTidspunkt shouldBe null
@@ -859,7 +853,7 @@ class BehovsvurderingApiTest {
                 konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
-                    val spørreundersøkelse = Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
                 }
             }

@@ -97,7 +97,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
+            call.respond(HttpStatusCode.OK, it.tilUtenInnholdDto())
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }

@@ -9,7 +9,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlanMal
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
@@ -158,9 +159,9 @@ class VirksomhetOppdateringTest {
 
         val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val behovsvurdering = sak.opprettBehovsvurdering()
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
-        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val evaluering = sak.opprettEvaluering()
 
         sendSlettingForVirksomhet(virksomhet)
 
@@ -185,17 +186,17 @@ class VirksomhetOppdateringTest {
     }
 
     @Test
-    fun `skal ikke røre ikke aktive saker når vikrsomhet blir slettet`() {
+    fun `skal ikke røre ikke aktive saker når virksomhet blir slettet`() {
         val virksomhet = lastInnNyVirksomhet()
 
         val sak = SakHelper.nySakIViBistår(orgnummer = virksomhet.orgnr)
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val behovsvurdering = sak.opprettBehovsvurdering()
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val plan = sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
         plan.planleggOgFullførAlleUndertemaer(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, prosessId = samarbeid.id)
-        val evaluering = sak.opprettSpørreundersøkelse(type = Spørreundersøkelse.Type.Behovsvurdering.name)
+        val evaluering = sak.opprettEvaluering()
         evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         evaluering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val sakEtterFullføring = sak.nyHendelse(

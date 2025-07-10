@@ -20,6 +20,6 @@ fun Plan.tilDto(): PlanDto =
         id = id.toString(),
         sistEndret = sistEndret,
         sistPublisert = sistPublisert,
-        status = this.status,
+        status = status,
         temaer = temaer.tilDtoer(),
     )

@@ -13,6 +13,6 @@ fun List<Svaralternativ>.tilDto() = map { it.tilDto() }
 
 fun Svaralternativ.tilDto() =
     SvaralternativDto(
-        svarId = svarId.toString(),
-        svartekst = svartekst,
+        svarId = id.toString(),
+        svartekst = tekst,
     )

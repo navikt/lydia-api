@@ -53,9 +53,7 @@ class IASamarbeidService(
     fun hentSamarbeid(
         sak: IASak,
         samarbeidId: Int,
-    ): Either<Feil, IASamarbeid> =
-        samarbeidRepository.hentSamarbeid(saksnummer = sak.saksnummer, samarbeidId = samarbeidId)?.right()
-            ?: IASamarbeidFeil.`ugyldig samarbeidId`.left()
+    ): Either<Feil, IASamarbeid> = hentSamarbeid(saksnummer = sak.saksnummer, samarbeidId = samarbeidId)
 
     fun hentSamarbeid(
         saksnummer: String,

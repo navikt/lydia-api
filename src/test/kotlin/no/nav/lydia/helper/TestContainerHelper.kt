@@ -688,9 +688,9 @@ class IASakKartleggingHelper {
             saksnummer: String,
             prosessId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
-            type: String,
+            type: Spørreundersøkelse.Type,
         ) = applikasjon.performPost(
-            "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/$type",
+            "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}",
         ).authentication().bearer(token)
 
         fun hentSpørreundersøkelse(
@@ -706,16 +706,15 @@ class IASakKartleggingHelper {
                 failure = { fail(it.message) },
             )
 
-        fun IASakDto.opprettSpørreundersøkelse(
+        fun IASakDto.opprettBehovsvurdering(
             prosessId: Int = hentAlleSamarbeid().first().id,
-            type: String = "Behovsvurdering",
             token: String = authContainerHelper.saksbehandler1.token,
         ) = opprettSpørreundersøkelse(
             orgnr = orgnr,
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
-            type = type,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
@@ -729,7 +728,7 @@ class IASakKartleggingHelper {
             saksnummer = saksnummer,
             prosessId = prosessId,
             token = token,
-            type = "Evaluering",
+            type = Spørreundersøkelse.Type.Evaluering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
             success = { respons -> respons },
             failure = { fail(it.message) },
@@ -737,7 +736,7 @@ class IASakKartleggingHelper {
 
         fun IASakDto.hentForhåndsvisning(
             prosessId: Int = hentAlleSamarbeid().first().id,
-            type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Evaluering,
+            type: Spørreundersøkelse.Type,
             spørreundersøkseId: String,
             token: String = authContainerHelper.saksbehandler1.token,
         ): SpørreundersøkelseDto =
