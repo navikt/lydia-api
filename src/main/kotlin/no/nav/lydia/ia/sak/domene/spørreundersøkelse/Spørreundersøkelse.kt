@@ -1,9 +1,7 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toKotlinLocalDateTime
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
-import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.SpørreundersøkelseDatabaseRad
 import java.util.UUID
 
 data class Spørreundersøkelse(
@@ -26,76 +24,6 @@ data class Spørreundersøkelse(
     companion object {
         const val ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG = 24L
         const val MINIMUM_ANTALL_DELTAKERE = 3
-
-        fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelser(): List<Spørreundersøkelse> =
-            this.groupBy {
-                it.spørreundersøkelseId
-            }.mapNotNull { (_, spørreundersøkelseRad) ->
-                spørreundersøkelseRad.tilSpørreundersøkelse()
-            }
-
-        fun List<SpørreundersøkelseDatabaseRad>.tilSpørreundersøkelse(): Spørreundersøkelse? {
-            if (this.isEmpty()) {
-                return null
-            }
-
-            val spørreundersøkelse = first()
-            return Spørreundersøkelse(
-                virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
-                orgnummer = spørreundersøkelse.orgnummer,
-                saksnummer = spørreundersøkelse.saksnummer,
-                samarbeidId = spørreundersøkelse.samarbeidId,
-                id = spørreundersøkelse.spørreundersøkelseId,
-                type = spørreundersøkelse.type,
-                status = spørreundersøkelse.status,
-                opprettetAv = spørreundersøkelse.opprettetAv,
-                opprettetTidspunkt = spørreundersøkelse.opprettet.toKotlinLocalDateTime(),
-                gyldigTilTidspunkt = spørreundersøkelse.gyldigTil.toKotlinLocalDateTime(),
-                endretTidspunkt = spørreundersøkelse.endret?.toKotlinLocalDateTime(),
-                påbegyntTidspunkt = spørreundersøkelse.påbegynt?.toKotlinLocalDateTime(),
-                fullførtTidspunkt = spørreundersøkelse.fullført?.toKotlinLocalDateTime(),
-                publiseringStatus = spørreundersøkelse.publiseringStatus,
-                temaer = groupBy { it.temaId }.map { (_, temaRader) ->
-                    val tema = temaRader.first()
-                    Tema(
-                        id = tema.temaId,
-                        navn = tema.temaNavn,
-                        status = tema.temaStatus,
-                        rekkefølge = tema.temaRekkefølge,
-                        stengtForSvar = tema.temaStengt,
-                        sistEndret = tema.temaEndret.toKotlinLocalDateTime(),
-                        undertemaer = temaRader.groupBy { it.undertemaId }.map { (_, undertemaRader) ->
-                            val undertema = undertemaRader.first()
-                            Undertema(
-                                id = undertema.undertemaId,
-                                navn = undertema.undertemaNavn,
-                                status = undertema.undertemaStatus,
-                                rekkefølge = undertema.undertemaRekkefølge,
-                                spørsmål = undertemaRader.groupBy { it.spørsmålId }.map { (_, spørsmålRader) ->
-                                    val spørsmål = spørsmålRader.first()
-                                    Spørsmål(
-                                        id = spørsmål.spørsmålId,
-                                        tekst = spørsmål.spørsmålTekst,
-                                        rekkefølge = spørsmål.spørsmålRekkefølge,
-                                        flervalg = spørsmål.flervalg,
-                                        antallSvar = spørsmål.antallSvarPerSpørsmål,
-                                        svaralternativer = spørsmålRader.groupBy { it.svaralternativId }
-                                            .map { (_, svaralternativRader) ->
-                                                val svaralternativ = svaralternativRader.first()
-                                                Svaralternativ(
-                                                    id = svaralternativ.svaralternativId,
-                                                    tekst = svaralternativ.svaralternativTekst,
-                                                    antallSvar = svaralternativ.antallSvar,
-                                                )
-                                            },
-                                    )
-                                },
-                            )
-                        },
-                    )
-                },
-            )
-        }
     }
 
     enum class Status {
