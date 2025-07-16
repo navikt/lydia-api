@@ -25,7 +25,6 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -65,7 +64,8 @@ class DokumentPubliseringApiTest {
     }
 
     @Test
-    fun `opprettelese av et dokument til publisering returnerer 404 Not Found dersom referanse ikke er funnet`() {
+    fun `opprettelese av et dokument til publisering returnerer 400 Bad Request dersom referanse ikke er funnet`() {
+        // TODO: Feil for uthenting av spørreundersøkelser returnerer 400 Bad Request, men burde kanskje endre det til 404 Not Found?
         nySakIKartleggesMedEtSamarbeid()
         val dokumentRefId = UUID.randomUUID().toString()
 
@@ -73,14 +73,14 @@ class DokumentPubliseringApiTest {
             dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
-        response.statuskode() shouldBe HttpStatusCode.NotFound.value
+        response.statuskode() shouldBe HttpStatusCode.BadRequest.value
         response.second.body()
-            .asString(contentType = "text/plain") shouldBe
-            "Innhold dokumentet refererer til, med referanseId: '$dokumentRefId' og type: 'BEHOVSVURDERING', ble ikke funnet"
+            .asString(contentType = "text/plain; charset=utf-8") shouldBe
+            "Ugyldig spørreundersøkelse"
     }
 
     @Test
-    fun `opprettelese av et dokument av type Behovsvurdering returnerer 400 Bad Request dersom status ikke er FULLFØRT`() {
+    fun `opprettelese av et dokument av type Behovsvurdering returnerer 403 Forbidden dersom status ikke er FULLFØRT`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val startetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
@@ -90,10 +90,10 @@ class DokumentPubliseringApiTest {
             dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
-        response.statuskode() shouldBe HttpStatusCode.BadRequest.value
+        response.statuskode() shouldBe HttpStatusCode.Forbidden.value
         response.second.body()
             .asString(contentType = "text/plain; charset=utf-8") shouldBe
-            "Spørreundersøkelse med id: '$dokumentRefId' har status '${Spørreundersøkelse.Status.PÅBEGYNT}' (forventet ${Spørreundersøkelse.Status.AVSLUTTET}) og/eller mangler fullført tidspunkt, og dermed ikke kan lagres som dokument. "
+            "Spørreundersøkelse er ikke i forventet status: 'AVSLUTTET'"
     }
 
     @Test

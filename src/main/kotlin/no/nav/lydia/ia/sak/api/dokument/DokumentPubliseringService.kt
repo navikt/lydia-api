@@ -5,11 +5,11 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
-import kotlinx.datetime.LocalDateTime
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.SpørreundersøkelseService
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.medTilsvarendeInnhold
+import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.azure.NavEnhet
@@ -60,13 +60,8 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        val spørreundersøkelse = spørreundersøkelseService.hentSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId)
-            .getOrElse {
-                return Feil(
-                    feilmelding = "Innhold dokumentet refererer til, med referanseId: '$dokumentReferanseId' og type: '${dokumentType.name}', ble ikke funnet",
-                    httpStatusCode = HttpStatusCode.NotFound,
-                ).left()
-            }
+        val spørreundersøkelse = spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId)
+            .getOrElse { return it.left() }
 
         if (spørreundersøkelse.type != Spørreundersøkelse.Type.Behovsvurdering) {
             return Feil(
@@ -75,7 +70,7 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        if (spørreundersøkelse.status != Spørreundersøkelse.Status.AVSLUTTET || spørreundersøkelse.fullførtTidspunkt == null) {
+        if (spørreundersøkelse.fullførtTidspunkt == null) {
             return Feil(
                 feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har status '${spørreundersøkelse.status}' " +
                     "(forventet ${Spørreundersøkelse.Status.AVSLUTTET}) og/eller mangler fullført tidspunkt, " +
@@ -84,31 +79,22 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        val spørreundersøkelseResultat = spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId = dokumentReferanseId)
-            .getOrElse {
-                return Feil(
-                    feilmelding = "Ingen resultat funnet for referanseId '$dokumentReferanseId' og type: '${dokumentType.name}'",
-                    httpStatusCode = HttpStatusCode.NotFound,
-                ).left()
-            }
-
-        if (spørreundersøkelseResultat.spørsmålMedSvarPerTema.isEmpty()) {
+        if (spørreundersøkelse.harMinstEttResultat()) {
             return Feil(
                 feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ingen resultat , og dermed ikke kan lagres som dokument. ",
                 httpStatusCode = HttpStatusCode.BadRequest,
             ).left()
         }
 
-        val fullførtTidspunkt: LocalDateTime = spørreundersøkelse.fullførtTidspunkt
-        val spørreundersøkelseOpprettetAv: String = spørreundersøkelse.opprettetAv
-
-        val samarbeid: IASamarbeid =
-            samarbeidService.hentSamarbeid(saksnummer = spørreundersøkelse.saksnummer, samarbeidId = spørreundersøkelse.samarbeidId).getOrElse {
-                return Feil(
-                    feilmelding = "Samarbeid med id: '${spørreundersøkelse.samarbeidId}' ble ikke funnet",
-                    httpStatusCode = HttpStatusCode.NotFound,
-                ).left()
-            }
+        val samarbeid: IASamarbeid = samarbeidService.hentSamarbeid(
+            saksnummer = spørreundersøkelse.saksnummer,
+            samarbeidId = spørreundersøkelse.samarbeidId,
+        ).getOrElse {
+            return Feil(
+                feilmelding = "Samarbeid med id: '${spørreundersøkelse.samarbeidId}' ble ikke funnet",
+                httpStatusCode = HttpStatusCode.NotFound,
+            ).left()
+        }
 
         return dokumentPubliseringRepository.opprettDokument(
             referanseId = dokumentReferanseId,
@@ -121,9 +107,9 @@ class DokumentPubliseringService(
                     virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
                     samarbeid = samarbeid,
                     navEnhet = navEnhet,
-                    spørreundersøkelseOpprettetAv = spørreundersøkelseOpprettetAv,
-                    spørreundersøkelseResultat = spørreundersøkelseResultat,
-                    fullførtTidspunkt = fullførtTidspunkt,
+                    spørreundersøkelseOpprettetAv = spørreundersøkelse.opprettetAv,
+                    spørreundersøkelseResultat = spørreundersøkelse.tilResultatDto(),
+                    fullførtTidspunkt = spørreundersøkelse.fullførtTidspunkt,
                 ),
             )
         }

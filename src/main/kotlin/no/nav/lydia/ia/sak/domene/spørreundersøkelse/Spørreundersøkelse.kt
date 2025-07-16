@@ -38,6 +38,8 @@ data class Spørreundersøkelse(
         Behovsvurdering,
     }
 
+    fun alleTemaErFullført(): Boolean = temaer.all { it.stengtForSvar }
+
     fun harMinstEttResultat(): Boolean =
         status == Status.AVSLUTTET && temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.any { it.antallSvar >= MINIMUM_ANTALL_DELTAKERE }
 

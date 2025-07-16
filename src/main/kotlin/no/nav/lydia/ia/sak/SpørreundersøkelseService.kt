@@ -16,9 +16,7 @@ import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultatDto
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseSvarDto
-import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
 import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository
 import no.nav.lydia.ia.sak.domene.IASak
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
@@ -41,12 +39,11 @@ class SpørreundersøkelseService(
 
     fun lagreSvar(svarliste: List<SpørreundersøkelseSvarDto>) {
         svarliste.forEach { besvarelse ->
-            val spørreundersøkelse =
-                spørreundersøkelseRepository.hentSpørreundersøkelse(besvarelse.spørreundersøkelseId.tilUUID(hvaErJeg = "spørreundersøkelseId"))
-                    ?: run {
-                        log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
-                        return@forEach
-                    }
+            val spørreundersøkelse = hentSpørreundersøkelse(besvarelse.spørreundersøkelseId.tilUUID(hvaErJeg = "spørreundersøkelseId")).getOrElse {
+                log.error("Fant ikke kartlegging på denne iden: ${besvarelse.spørreundersøkelseId}, hopper over")
+                return@forEach
+            }
+
             if (spørreundersøkelse.status != Spørreundersøkelse.Status.PÅBEGYNT) {
                 log.warn("Kan ikke svare på en kartlegging i status ${spørreundersøkelse.status}, hopper over")
                 return@forEach
@@ -87,15 +84,12 @@ class SpørreundersøkelseService(
         }
     }
 
-    fun hentFullførtSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, SpørreundersøkelseResultatDto> {
-        val spørreundersøkelse =
-            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
-                ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
+    fun hentFullførtSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> {
+        val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { return it.left() }
         if (spørreundersøkelse.status != Spørreundersøkelse.Status.AVSLUTTET) {
             return IASakSpørreundersøkelseError.`ikke avsluttet`.left()
         }
-
-        return spørreundersøkelse.tilResultatDto().right()
+        return spørreundersøkelse.right()
     }
 
     fun opprettSpørreundersøkelse(
@@ -170,8 +164,7 @@ class SpørreundersøkelseService(
         }
 
     fun slettSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> {
-        val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId)
-            ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
+        val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId).getOrElse { return it.left() }
 
         spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
 
@@ -208,9 +201,7 @@ class SpørreundersøkelseService(
         spørreundersøkelseId: UUID,
         statusViSkalEndreTil: Spørreundersøkelse.Status,
     ): Either<Feil, Spørreundersøkelse> {
-        val spørreundersøkelse = spørreundersøkelseRepository.hentSpørreundersøkelse(
-            spørreundersøkelseId = spørreundersøkelseId,
-        ) ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
+        val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { return it.left() }
 
         val oppdatertSpørreundersøkelse: Spørreundersøkelse = when (statusViSkalEndreTil) {
             Spørreundersøkelse.Status.PÅBEGYNT ->
@@ -242,36 +233,28 @@ class SpørreundersøkelseService(
         val spørreundersøkelseId = hendelse.spørreundersøkelseId.tilUUID(hvaErJeg = "spørreundersøkelseId")
         log.info("Mottok stenging av tema: ${hendelse.temaId} i spørreundersøkelse $spørreundersøkelseId")
 
-        val spørreundersøkelse =
-            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
-
-        if (spørreundersøkelse == null) {
+        val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { feil ->
             log.warn(
-                "Kunne ikke stenge tema med id: '${hendelse.temaId}' i spørreundersøkelse med id '$spørreundersøkelseId', fant ikke spørreundersøkelsen",
+                "Kunne ikke stenge tema med id: '${hendelse.temaId}' i spørreundersøkelse med id '$spørreundersøkelseId', Feil: '${feil.feilmelding}'",
             )
             return
         }
 
         spørreundersøkelseRepository.stengTema(
-            spørreundersøkelseId = spørreundersøkelseId,
+            spørreundersøkelseId = spørreundersøkelse.id,
             temaId = hendelse.temaId,
         )
 
-        val oppdatertSpørreundersøkelse =
-            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
-
-        if (oppdatertSpørreundersøkelse == null) {
+        val oppdatertSpørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { feil ->
             log.warn(
-                "Kunne ikke hente ut spørreundersøkels etter stenging av tema med id: '${hendelse.temaId}' i spørreundersøkelse med id '$spørreundersøkelseId', fant ikke spørreundersøkelsen etter stenging",
+                "Kunne ikke hente ut spørreundersøkels etter stenging av tema med id: '${hendelse.temaId}' i spørreundersøkelse med id '$spørreundersøkelseId', Feil: '${feil.feilmelding}'",
             )
             return
         }
 
-        val alleTemaErFullført = oppdatertSpørreundersøkelse.temaer.all { it.stengtForSvar }
-
-        if (alleTemaErFullført) {
+        if (oppdatertSpørreundersøkelse.alleTemaErFullført()) {
             endreSpørreundersøkelseStatus(
-                spørreundersøkelseId = spørreundersøkelseId,
+                spørreundersøkelseId = oppdatertSpørreundersøkelse.id,
                 statusViSkalEndreTil = Spørreundersøkelse.Status.AVSLUTTET,
             )
             log.info("Alle temaer i spørreundersøkelse '${hendelse.spørreundersøkelseId}' er fullført, spørreundersøkelse er avsluttet")
@@ -283,19 +266,18 @@ class SpørreundersøkelseService(
         )
     }
 
-    fun oppdaterSamarbeidIdIBehovsvurdering(
-        behovsvurderingId: UUID,
-        oppdaterBehovsvurderingDto: OppdaterBehovsvurderingDto,
+    fun oppdaterSamarbeidIdISpørreundersøkelse(
+        spørreundersøkelseId: UUID,
+        oppdaterSpørreundersøkelseDto: OppdaterBehovsvurderingDto,
     ): Either<Feil, Spørreundersøkelse> {
-        val behovsvurdering = spørreundersøkelseRepository.hentSpørreundersøkelse(behovsvurderingId)
-            ?: return IASakSpørreundersøkelseError.`generell feil under uthenting`.left()
+        val behovsvurdering = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { return it.left() }
         if (behovsvurdering.type == Spørreundersøkelse.Type.Evaluering) {
             return IASakSpørreundersøkelseError.`ugyldig type`.left()
         }
-        if (behovsvurdering.orgnummer != oppdaterBehovsvurderingDto.orgnummer) {
+        if (behovsvurdering.orgnummer != oppdaterSpørreundersøkelseDto.orgnummer) {
             return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
         }
-        if (behovsvurdering.saksnummer != oppdaterBehovsvurderingDto.saksnummer) {
+        if (behovsvurdering.saksnummer != oppdaterSpørreundersøkelseDto.saksnummer) {
             return IASakSpørreundersøkelseError.`feil under oppdatering`.left()
         }
         if (behovsvurdering.status != Spørreundersøkelse.Status.AVSLUTTET) {
@@ -307,8 +289,8 @@ class SpørreundersøkelseService(
         }.map { prosess ->
             prosess.map { it.id }
         }.flatMap { prosesserISak ->
-            if (prosesserISak.contains(oppdaterBehovsvurderingDto.prosessId)) {
-                spørreundersøkelseRepository.oppdaterBehovsvurdering(behovsvurderingId, oppdaterBehovsvurderingDto)
+            if (prosesserISak.contains(oppdaterSpørreundersøkelseDto.prosessId)) {
+                spørreundersøkelseRepository.oppdaterBehovsvurdering(spørreundersøkelseId, oppdaterSpørreundersøkelseDto)
             } else {
                 IASakSpørreundersøkelseError.`feil under oppdatering`.left()
             }
@@ -340,9 +322,7 @@ class SpørreundersøkelseService(
         spørreundersøkelseId: UUID,
         temaId: Int,
     ): Either<Feil, TemaResultatKafkaDto> {
-        val spørreundersøkelse =
-            spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
-                ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()
+        val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId).getOrElse { return it.left() }
 
         val temaResultat = spørreundersøkelse.temaer.firstOrNull { it.id == temaId }
             ?: return IASakSpørreundersøkelseError.`ugyldig temaId`.left()
