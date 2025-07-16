@@ -16,6 +16,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import kotlin.collections.flatMap
 
 class SpørreundersøkelseProdusent(
     kafka: Kafka,
@@ -38,7 +39,7 @@ class SpørreundersøkelseProdusent(
         }
 
         val nøkkel = input.id.toString()
-        val verdi = SerializableSpørreundersøkelse(
+        val verdi = SpørreundersøkelseKafkaDto(
             id = input.id.toString(),
             orgnummer = input.orgnummer,
             virksomhetsNavn = input.virksomhetsNavn,
@@ -46,7 +47,7 @@ class SpørreundersøkelseProdusent(
             status = input.status,
             type = input.type.name,
             plan = plan,
-            temaer = input.temaer.map { it.tilKafkaMelding() },
+            temaer = input.temaer.map { it.tilKafkaDto() },
             opprettet = input.opprettetTidspunkt,
             endret = input.endretTidspunkt,
             gyldigTil = input.opprettetTidspunkt.toJavaLocalDateTime().plusDays(1).toKotlinLocalDateTime(),
@@ -54,36 +55,38 @@ class SpørreundersøkelseProdusent(
         return nøkkel to Json.encodeToString(verdi)
     }
 
-    private fun Tema.tilKafkaMelding(): SerializableTema =
-        SerializableTema(
-            id = this.tema.id,
-            navn = this.tema.navn,
-            spørsmål = this.spørsmål.map { it.tilKafkaMelding() },
+    private fun Tema.tilKafkaDto(): TemaKafkaDto =
+        TemaKafkaDto(
+            id = id,
+            navn = navn,
+            spørsmål = undertemaer.flatMap { it.spørsmål.tilKafkaDto(undertemanavn = it.navn) },
         )
 
-    private fun Spørsmål.tilKafkaMelding() =
-        SerializableSpørsmål(
-            id = spørsmålId.toString(),
-            tekst = spørsmåltekst,
-            svaralternativer = svaralternativer.map { it.tilKafkaMelding() },
+    private fun Spørsmål.tilKafkaDto(undertemanavn: String): SpørsmålKafkaDto =
+        SpørsmålKafkaDto(
+            id = id.toString(),
+            tekst = tekst,
+            svaralternativer = svaralternativer.map { it.tilKafkaDto() },
             flervalg = flervalg,
             kategori = undertemanavn,
         )
 
-    private fun Svaralternativ.tilKafkaMelding(): SerializableSvaralternativ =
-        SerializableSvaralternativ(
-            id = svarId.toString(),
-            tekst = svartekst,
+    private fun Svaralternativ.tilKafkaDto(): SvaralternativKafkaDto =
+        SvaralternativKafkaDto(
+            id = id.toString(),
+            tekst = tekst,
         )
 
+    private fun List<Spørsmål>.tilKafkaDto(undertemanavn: String): List<SpørsmålKafkaDto> = map { it.tilKafkaDto(undertemanavn = undertemanavn) }
+
     @Serializable
-    data class SerializableSpørreundersøkelse(
+    data class SpørreundersøkelseKafkaDto(
         val id: String,
         val orgnummer: String,
         val samarbeidsNavn: String,
         val virksomhetsNavn: String,
         val status: Spørreundersøkelse.Status,
-        val temaer: List<SerializableTema>,
+        val temaer: List<TemaKafkaDto>,
         val type: String,
         val plan: PlanDto?,
         val opprettet: LocalDateTime,
@@ -92,23 +95,23 @@ class SpørreundersøkelseProdusent(
     )
 
     @Serializable
-    data class SerializableTema(
+    data class TemaKafkaDto(
         val id: Int,
         val navn: String,
-        val spørsmål: List<SerializableSpørsmål>,
+        val spørsmål: List<SpørsmålKafkaDto>,
     )
 
     @Serializable
-    data class SerializableSpørsmål(
+    data class SpørsmålKafkaDto(
         val id: String,
         val tekst: String,
         val flervalg: Boolean,
-        val svaralternativer: List<SerializableSvaralternativ>,
+        val svaralternativer: List<SvaralternativKafkaDto>,
         val kategori: String,
     )
 
     @Serializable
-    data class SerializableSvaralternativ(
+    data class SvaralternativKafkaDto(
         val id: String,
         val tekst: String,
     )

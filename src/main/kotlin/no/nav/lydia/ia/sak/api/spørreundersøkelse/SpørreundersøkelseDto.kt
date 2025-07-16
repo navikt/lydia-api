@@ -7,15 +7,9 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 @Serializable
 data class SpørreundersøkelseDto(
     val id: String,
-    @Deprecated("Bruk id")
-    val kartleggingId: String,
     val samarbeidId: Int,
-    @Deprecated("Bruk samarbeidId")
-    val prosessId: Int,
     val status: Spørreundersøkelse.Status,
     val temaer: List<TemaDto>,
-    @Deprecated("Bruk temaer")
-    val temaMedSpørsmålOgSvaralternativer: List<TemaDto>,
     val opprettetAv: String,
     val type: Spørreundersøkelse.Type,
     val opprettetTidspunkt: LocalDateTime,
@@ -25,15 +19,12 @@ data class SpørreundersøkelseDto(
     val gyldigTilTidspunkt: LocalDateTime,
 )
 
-fun Spørreundersøkelse.tilDto() =
+fun Spørreundersøkelse.tilDto(): SpørreundersøkelseDto =
     SpørreundersøkelseDto(
         id = id.toString(),
-        kartleggingId = id.toString(),
         samarbeidId = samarbeidId,
-        prosessId = samarbeidId,
         status = status,
-        temaer = temaer.map { it.toDto() },
-        temaMedSpørsmålOgSvaralternativer = temaer.map { it.toDto() },
+        temaer = temaer.map { it.tilDto() },
         opprettetAv = opprettetAv,
         type = type,
         opprettetTidspunkt = opprettetTidspunkt,

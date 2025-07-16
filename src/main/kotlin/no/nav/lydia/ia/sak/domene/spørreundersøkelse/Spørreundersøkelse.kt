@@ -1,6 +1,7 @@
 package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 
 import kotlinx.datetime.LocalDateTime
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import java.util.UUID
 
 data class Spørreundersøkelse(
@@ -16,11 +17,13 @@ data class Spørreundersøkelse(
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
+    val publiseringStatus: DokumentPublisering.Status,
     val temaer: List<Tema>,
     val gyldigTilTidspunkt: LocalDateTime,
 ) {
     companion object {
         const val ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG = 24L
+        const val MINIMUM_ANTALL_DELTAKERE = 3
     }
 
     enum class Status {
@@ -34,4 +37,11 @@ data class Spørreundersøkelse(
         Evaluering,
         Behovsvurdering,
     }
+
+    fun alleTemaErFullført(): Boolean = temaer.all { it.stengtForSvar }
+
+    fun harMinstEttResultat(): Boolean =
+        status == Status.AVSLUTTET && temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.any { it.antallSvar >= MINIMUM_ANTALL_DELTAKERE }
+
+    fun finnSpørsmål(spørsmålId: UUID): Spørsmål? = temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.firstOrNull { it.id == spørsmålId }
 }

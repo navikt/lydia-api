@@ -49,9 +49,9 @@ class DokumentPubliseringProdusent(
                     saksnummer = samarbeid.saksnummer,
                     navenhet = navEnhet.enhetsnavn,
                 ),
-                referanseId = this.referanseId,
-                type = this.dokumentType,
-                dokumentOpprettetAv = this.opprettetAv,
+                referanseId = referanseId,
+                type = dokumentType,
+                dokumentOpprettetAv = opprettetAv,
                 virksomhet = VirksomhetDto(
                     orgnummer = orgnr,
                     navn = virksomhetsNavn,
@@ -71,10 +71,10 @@ class DokumentPubliseringProdusent(
             spørreundersøkelseOpprettetAv: String,
         ): SpørreundersøkelseInnholdIDokumentDto =
             SpørreundersøkelseInnholdIDokumentDto(
-                id = this.id,
+                id = id,
                 spørreundersøkelseOpprettetAv = spørreundersøkelseOpprettetAv,
                 fullførtTidspunkt = fullførtTidspunkt,
-                spørsmålMedSvarPerTema = this.spørsmålMedSvarPerTema,
+                spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
             )
     }
 }

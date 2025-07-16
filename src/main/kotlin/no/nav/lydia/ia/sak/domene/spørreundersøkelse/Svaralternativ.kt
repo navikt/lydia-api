@@ -3,6 +3,7 @@ package no.nav.lydia.ia.sak.domene.spørreundersøkelse
 import java.util.UUID
 
 data class Svaralternativ(
-    val svarId: UUID,
-    val svartekst: String,
+    val id: UUID,
+    val tekst: String,
+    val antallSvar: Int,
 )

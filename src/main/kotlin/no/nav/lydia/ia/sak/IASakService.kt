@@ -347,7 +347,7 @@ class IASakService(
                     if (!tørrKjør) {
                         spørreundersøkelser.forEach { spørreundersøkelse ->
                             spørreundersøkelseRepository.slettSpørreundersøkelse(
-                                spørreundersøkelseId = spørreundersøkelse.id.toString(),
+                                spørreundersøkelseId = spørreundersøkelse.id,
                             )?.let { oppdatertSpørreundersøkelse ->
                                 spørreundersøkelseObservers.forEach {
                                     it.receive(input = oppdatertSpørreundersøkelse)
@@ -620,7 +620,7 @@ class IASakService(
                     spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Behovsvurdering)
                         .plus(spørreundersøkelseRepository.hentSpørreundersøkelser(samarbeid = samarbeid, type = Spørreundersøkelse.Type.Evaluering))
                         .filter { it.status != Spørreundersøkelse.Status.AVSLUTTET }
-                        .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id.toString()) }
+                        .forEach { spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = it.id) }
 
                     // slett eventuell plan for samarbeid
                     planRepository.hentPlan(samarbeidId = samarbeid.id)

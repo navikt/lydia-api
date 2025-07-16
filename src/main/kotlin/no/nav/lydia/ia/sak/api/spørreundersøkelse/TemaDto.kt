@@ -10,9 +10,9 @@ data class TemaDto(
     val spørsmålOgSvaralternativer: List<SpørsmålDto>,
 )
 
-fun Tema.toDto() =
+fun Tema.tilDto(): TemaDto =
     TemaDto(
-        temaId = this.tema.id,
-        navn = this.tema.navn,
-        spørsmålOgSvaralternativer = this.spørsmål.tilDto(),
+        temaId = id,
+        navn = navn,
+        spørsmålOgSvaralternativer = undertemaer.flatMap { it.spørsmål.tilDto(undertemanavn = it.navn) },
     )

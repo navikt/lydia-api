@@ -169,7 +169,6 @@ fun startLydiaBackend() {
     )
     val spørreundersøkelseBigqueryProdusent = SpørreundersøkelseBigqueryProdusent(
         kafka = naisEnv.kafka,
-        spørreundersøkelseRepository = spørreundersøkelseRepository,
     )
     val samarbeidsplanBigqueryProdusent = SamarbeidsplanBigqueryProdusent(kafka = naisEnv.kafka)
     val samarbeidBigqueryProdusent = SamarbeidBigqueryProdusent(kafka = naisEnv.kafka)

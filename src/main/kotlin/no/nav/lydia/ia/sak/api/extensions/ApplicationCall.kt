@@ -14,7 +14,7 @@ val ApplicationCall.saksnummer
 val ApplicationCall.type
     get() = parameters["type"]?.let { Spørreundersøkelse.Type.valueOf(it) }
 val ApplicationCall.spørreundersøkelseId
-    get() = parameters["sporreundersokelseId"]
+    get() = parameters["sporreundersokelseId"]?.tilUUID(hvaErJeg = "spørreundersøkelseId")
 val ApplicationCall.iaSakLeveranseId
     get() = parameters["iaSakLeveranseId"]
 val ApplicationCall.temaId
@@ -24,7 +24,16 @@ val ApplicationCall.prosessId
 val ApplicationCall.dokumentType
     get() = parameters["dokumentType"]?.tilDokumentTilPubliseringType()
 val ApplicationCall.dokumentReferanseId
-    get() = parameters["dokumentReferanseId"]?.let { UUID.fromString(it) }
-
+    get() = parameters["dokumentReferanseId"]?.tilUUID(hvaErJeg = "dokumentReferanseId")
 
 suspend fun ApplicationCall.sendFeil(feil: Feil) = respond(feil.httpStatusCode, feil.feilmelding)
+
+fun String.tilUUID(hvaErJeg: String): UUID =
+    try {
+        UUID.fromString(this)
+    } catch (e: Exception) {
+        throw IllegalArgumentException(
+            "Kunne ikke konvertere '$this' til UUID for $hvaErJeg",
+            e,
+        )
+    }

@@ -28,7 +28,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.opprettNyttSamarbeid
-import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SerializableSpørreundersøkelse
+import no.nav.lydia.ia.eksport.SpørreundersøkelseProdusent.SpørreundersøkelseKafkaDto
 import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
@@ -72,7 +72,7 @@ class EvalueringApiTest {
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.temaer shouldHaveSize 3
                     spørreundersøkelse.temaer.forAll {
                         it.spørsmål.shouldNotBeEmpty()
@@ -148,7 +148,7 @@ class EvalueringApiTest {
             ) {
                 it.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.type shouldBe type.name
                     spørreundersøkelse.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT
                     spørreundersøkelse.plan?.id shouldBe opprettetPlan.id
@@ -178,7 +178,7 @@ class EvalueringApiTest {
             ) { meldinger ->
                 meldinger.forExactlyOne { melding ->
                     val spørreundersøkelse =
-                        Json.decodeFromString<SerializableSpørreundersøkelse>(melding)
+                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.id shouldBe evaluering.id
                     spørreundersøkelse.temaer shouldHaveSize 1
                     spørreundersøkelse.temaer.forExactlyOne { tema ->

@@ -4,7 +4,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SpørsmålResultatKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.SvarResultatKafkaDto
+import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
+import no.nav.lydia.ia.sak.db.SpørreundersøkelseRepository.SpørreundersøkelseAntallSvar
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørsmål
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Svaralternativ
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Tema
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -121,3 +128,31 @@ class SpørreundersøkelseOppdateringProdusent(
         val oppdateringsType: SpørreundersøkelseOppdatering.Type,
     )
 }
+
+fun Tema.tilTemaResultatKafkaDto(): TemaResultatKafkaDto =
+    TemaResultatKafkaDto(
+        id = id,
+        navn = navn,
+        spørsmålMedSvar = undertemaer.tilResultatKafkaDto(),
+    )
+
+fun List<Undertema>.tilResultatKafkaDto(): List<SpørsmålResultatKafkaDto> =
+    flatMap { undertema ->
+        undertema.spørsmål.map { it.tilResultatKafkaDto(undertemanavn = undertema.navn) }
+    }
+
+fun Spørsmål.tilResultatKafkaDto(undertemanavn: String): SpørsmålResultatKafkaDto =
+    SpørsmålResultatKafkaDto(
+        id = id.toString(),
+        tekst = tekst,
+        flervalg = flervalg,
+        svarListe = svaralternativer.map { it.tilResultatKafkaDto() },
+        kategori = undertemanavn,
+    )
+
+fun Svaralternativ.tilResultatKafkaDto(): SvarResultatKafkaDto =
+    SvarResultatKafkaDto(
+        id = id.toString(),
+        tekst = tekst,
+        antallSvar = antallSvar,
+    )

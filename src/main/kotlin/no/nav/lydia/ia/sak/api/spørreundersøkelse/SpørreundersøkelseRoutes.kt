@@ -97,7 +97,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it.tilDto())
+            call.respond(HttpStatusCode.OK, it.tilUtenInnholdDto())
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -132,7 +132,7 @@ fun Route.iaSakSpørreundersøkelse(
         val id = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            spørreundersøkelseService.hentSpørreundersøkelseResultat(spørreundersøkelseId = id)
+            spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId = id)
         }.also { spørreundersøkelseResultatEither ->
             auditLog.auditloggEither(
                 call = call,
@@ -142,7 +142,7 @@ fun Route.iaSakSpørreundersøkelse(
                 saksnummer = call.saksnummer,
             )
         }.map {
-            call.respond(HttpStatusCode.OK, it)
+            call.respond(HttpStatusCode.OK, it.tilResultatDto())
         }.mapLeft {
             call.respond(it.httpStatusCode, it.feilmelding)
         }
@@ -227,9 +227,9 @@ fun Route.iaSakSpørreundersøkelse(
             if (!iaTeamService.erEierEllerFølgerAvSak(iaSak = iaSak, saksbehandler = saksbehandler)) {
                 return@somSaksbehandler IASakError.`er ikke følger eller eier av sak`.left()
             }
-            spørreundersøkelseService.oppdaterSamarbeidIdIBehovsvurdering(
-                behovsvurderingId = id,
-                oppdaterBehovsvurderingDto = input,
+            spørreundersøkelseService.oppdaterSamarbeidIdISpørreundersøkelse(
+                spørreundersøkelseId = id,
+                oppdaterSpørreundersøkelseDto = input,
             )
         }.also { spørreundersøkelseEither ->
             auditLog.auditloggEither(
@@ -277,7 +277,7 @@ object IASakSpørreundersøkelseError {
         Feil("Kan ikke starte spørreundersøkelse, feil status", HttpStatusCode.Forbidden)
     val `ikke avsluttet` =
         Feil(
-            "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke hente resultat",
+            "Spørreundersøkelse er ikke i forventet status: '${Spørreundersøkelse.Status.AVSLUTTET.name}'",
             HttpStatusCode.Forbidden,
         )
     val `ikke avsluttet, kan ikke bytte samarbeid` =

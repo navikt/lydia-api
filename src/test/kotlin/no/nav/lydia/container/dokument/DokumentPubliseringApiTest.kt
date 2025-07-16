@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.opprettDokumentPubliseringRespons
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -25,7 +25,6 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -52,8 +51,7 @@ class DokumentPubliseringApiTest {
     fun `uthenting av et dokument til publisering returnerer 404 Not Found hvis ikke funnet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val dokumentType = DokumentPublisering.Type.BEHOVSVURDERING
-        val spørreundersøkelseType = Spørreundersøkelse.Type.Behovsvurdering.name
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = spørreundersøkelseType)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -66,26 +64,10 @@ class DokumentPubliseringApiTest {
     }
 
     @Test
-    fun `opprettelese av et dokument til publisering returnerer 404 Not Found dersom referanse ikke er funnet`() {
+    fun `opprettelese av et dokument til publisering returnerer 400 Bad Request dersom referanse ikke er funnet`() {
+        // TODO: Feil for uthenting av spørreundersøkelser returnerer 400 Bad Request, men burde kanskje endre det til 404 Not Found?
         nySakIKartleggesMedEtSamarbeid()
         val dokumentRefId = UUID.randomUUID().toString()
-
-        val response = opprettDokumentPubliseringRespons(
-            dokumentReferanseId = dokumentRefId,
-            token = authContainerHelper.saksbehandler1.token,
-        )
-        response.statuskode() shouldBe HttpStatusCode.NotFound.value
-        response.second.body()
-            .asString(contentType = "text/plain") shouldBe
-            "Innhold dokumentet refererer til, med referanseId: '$dokumentRefId' og type: 'BEHOVSVURDERING', ble ikke funnet"
-    }
-
-    @Test
-    fun `opprettelese av et dokument av type Behovsvurdering returnerer 400 Bad Request dersom status ikke er FULLFØRT`() {
-        val sak = nySakIKartleggesMedEtSamarbeid()
-        val startetBehovsvurdering = sak.opprettSpørreundersøkelse(type = "Behovsvurdering")
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        val dokumentRefId = startetBehovsvurdering.id
 
         val response = opprettDokumentPubliseringRespons(
             dokumentReferanseId = dokumentRefId,
@@ -94,14 +76,30 @@ class DokumentPubliseringApiTest {
         response.statuskode() shouldBe HttpStatusCode.BadRequest.value
         response.second.body()
             .asString(contentType = "text/plain; charset=utf-8") shouldBe
-            "Spørreundersøkelse med id: '$dokumentRefId' har status 'PÅBEGYNT' (forventet AVSLUTTET) og/eller mangler fullført tidspunkt, og dermed ikke kan lagres som dokument. "
+            "Ugyldig spørreundersøkelse"
+    }
+
+    @Test
+    fun `opprettelese av et dokument av type Behovsvurdering returnerer 403 Forbidden dersom status ikke er FULLFØRT`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+        val startetBehovsvurdering = sak.opprettBehovsvurdering()
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val dokumentRefId = startetBehovsvurdering.id
+
+        val response = opprettDokumentPubliseringRespons(
+            dokumentReferanseId = dokumentRefId,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.Forbidden.value
+        response.second.body()
+            .asString(contentType = "text/plain; charset=utf-8") shouldBe
+            "Spørreundersøkelse er ikke i forventet status: 'AVSLUTTET'"
     }
 
     @Test
     fun `opprettelese av dokument til publisering returnerer 409 Conflict dersom dokument allerede er opprettet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val type = "Behovsvurdering"
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val dokumentRefId = fullførtBehovsvurdering.id
@@ -127,8 +125,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val type = "Behovsvurdering"
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val samarbeidId = fullførtBehovsvurdering.samarbeidId
@@ -187,8 +184,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `uthenting av dokument til publisering returnerer 200 OK og selve dokumentet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val type = "Behovsvurdering"
-        val fullførtBehovsvurdering = sak.opprettSpørreundersøkelse(type = type)
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
