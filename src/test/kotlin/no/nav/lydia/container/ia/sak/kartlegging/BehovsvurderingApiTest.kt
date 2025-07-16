@@ -191,7 +191,7 @@ class BehovsvurderingApiTest {
     fun `kan opprette en spørreundersøkelse av type behovsvurdering med flere temaer`() {
         val behovsvurdering = nySakIKartleggesMedEtSamarbeid().opprettBehovsvurdering()
 
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
         behovsvurdering.temaer shouldHaveSize 3
         behovsvurdering.temaer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -498,7 +498,7 @@ class BehovsvurderingApiTest {
     fun `kan starte en Spørreundersøkelse av type Behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val behovsvurdering = sak.opprettBehovsvurdering()
-        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering
+        behovsvurdering.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
         behovsvurdering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
         val påbegyntBehovsvurdering = behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)

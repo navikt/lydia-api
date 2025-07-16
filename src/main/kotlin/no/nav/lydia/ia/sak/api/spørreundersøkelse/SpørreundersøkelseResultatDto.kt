@@ -11,6 +11,7 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Undertema
 @Serializable
 data class SpørreundersøkelseResultatDto(
     val id: String,
+    val type: String,
     val spørsmålMedSvarPerTema: List<TemaResultatDto>,
 )
 
@@ -40,15 +41,16 @@ data class SvarResultatDto(
 
 fun Spørreundersøkelse.tilResultatDto(): SpørreundersøkelseResultatDto =
     SpørreundersøkelseResultatDto(
-        id = this.id.toString(),
-        spørsmålMedSvarPerTema = this.temaer.map { it.tilResultatDto() },
+        id = id.toString(),
+        type = type.name.uppercase(),
+        spørsmålMedSvarPerTema = temaer.map { it.tilResultatDto() },
     )
 
 fun Tema.tilResultatDto(): TemaResultatDto =
     TemaResultatDto(
-        id = this.id,
-        navn = this.navn,
-        spørsmålMedSvar = this.undertemaer.tilResultatDto(),
+        id = id,
+        navn = navn,
+        spørsmålMedSvar = undertemaer.tilResultatDto(),
     )
 
 fun List<Undertema>.tilResultatDto(): List<SpørsmålResultatDto> =

@@ -12,7 +12,7 @@ data class SpørreundersøkelseUtenInnholdDto(
     val status: Spørreundersøkelse.Status,
     val publiseringStatus: DokumentPublisering.Status,
     val opprettetAv: String,
-    val type: Spørreundersøkelse.Type,
+    val type: String,
     val opprettetTidspunkt: LocalDateTime,
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
@@ -36,5 +36,5 @@ fun Spørreundersøkelse.tilUtenInnholdDto(): SpørreundersøkelseUtenInnholdDto
         fullførtTidspunkt = fullførtTidspunkt,
         gyldigTilTidspunkt = gyldigTilTidspunkt,
         harMinstEttResultat = harMinstEttResultat(),
-        type = type,
+        type = type.name.uppercase(),
     )

@@ -58,7 +58,7 @@ class EvalueringApiTest {
         sak.opprettEnPlan(plan = PlanMalDto().inkluderAlt())
         val evaluering = sak.opprettEvaluering()
 
-        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering
+        evaluering.type shouldBe Spørreundersøkelse.Type.Evaluering.name.uppercase()
         evaluering.temaer shouldHaveSize 3
         evaluering.temaer.forAll {
             it.spørsmålOgSvaralternativer.shouldNotBeEmpty()
@@ -124,7 +124,7 @@ class EvalueringApiTest {
         val type = Spørreundersøkelse.Type.Evaluering
         val evaluering = sak.opprettEvaluering()
 
-        evaluering.type shouldBe type
+        evaluering.type shouldBe type.name.uppercase()
         evaluering.status shouldBe Spørreundersøkelse.Status.OPPRETTET
 
         val påbegyntEvaluering = evaluering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)

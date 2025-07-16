@@ -11,13 +11,7 @@ data class DokumentPublisering(
     val dokumentType: Type,
 ) {
     companion object {
-        fun String.tilDokumentTilPubliseringType(): Type =
-            when (this) {
-                "Evaluering" -> Type.EVALUERING
-                "Behovsvurdering" -> Type.BEHOVSVURDERING
-                "Samarbeidsplan" -> Type.SAMARBEIDSPLAN
-                else -> throw kotlin.IllegalArgumentException("Ugyldig type: $this")
-            }
+        fun String.tilDokumentTilPubliseringType(): Type = Type.valueOf(this.uppercase())
 
         fun String?.tilDokumentTilPubliseringStatus(): Status =
             when (this) {
