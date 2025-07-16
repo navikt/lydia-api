@@ -19,7 +19,7 @@ data class SpørreundersøkelseDto(
     val gyldigTilTidspunkt: LocalDateTime,
 )
 
-fun Spørreundersøkelse.tilDto() =
+fun Spørreundersøkelse.tilDto(): SpørreundersøkelseDto =
     SpørreundersøkelseDto(
         id = id.toString(),
         samarbeidId = samarbeidId,

@@ -132,7 +132,7 @@ fun Route.iaSakSpørreundersøkelse(
         val id = call.spørreundersøkelseId ?: return@get call.sendFeil(IASakSpørreundersøkelseError.`ugyldig id`)
 
         call.somLesebruker(adGrupper = adGrupper) { _ ->
-            spørreundersøkelseService.hentSpørreundersøkelseResultat(spørreundersøkelseId = id)
+            spørreundersøkelseService.hentFullførtSpørreundersøkelse(spørreundersøkelseId = id)
         }.also { spørreundersøkelseResultatEither ->
             auditLog.auditloggEither(
                 call = call,

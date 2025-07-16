@@ -71,10 +71,10 @@ class DokumentPubliseringProdusent(
             spørreundersøkelseOpprettetAv: String,
         ): SpørreundersøkelseInnholdIDokumentDto =
             SpørreundersøkelseInnholdIDokumentDto(
-                id = this.id,
+                id = id,
                 spørreundersøkelseOpprettetAv = spørreundersøkelseOpprettetAv,
                 fullførtTidspunkt = fullførtTidspunkt,
-                spørsmålMedSvarPerTema = this.spørsmålMedSvarPerTema,
+                spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
             )
     }
 }

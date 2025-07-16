@@ -87,7 +87,7 @@ class SpørreundersøkelseService(
         }
     }
 
-    fun hentSpørreundersøkelseResultat(spørreundersøkelseId: UUID): Either<Feil, SpørreundersøkelseResultatDto> {
+    fun hentFullførtSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, SpørreundersøkelseResultatDto> {
         val spørreundersøkelse =
             spørreundersøkelseRepository.hentSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
                 ?: return IASakSpørreundersøkelseError.`ugyldig id`.left()

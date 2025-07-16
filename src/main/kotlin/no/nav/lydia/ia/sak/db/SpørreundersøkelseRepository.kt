@@ -37,11 +37,12 @@ class SpørreundersøkelseRepository(
     fun hentSpørreundersøkelser(
         samarbeid: IASamarbeid,
         type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Behovsvurdering,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.transaction { tx ->
-            tx.run(
-                queryOf(
-                    """
+    ): List<Spørreundersøkelse> =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        """
                         SELECT sporreundersokelse.kartlegging_id AS id,
                                sporreundersokelse.type,
                                sporreundersokelse.status,
@@ -66,17 +67,17 @@ class SpørreundersøkelseRepository(
                         WHERE samarbeid.id = :samarbeidId
                             AND sporreundersokelse.status != '${Spørreundersøkelse.Status.SLETTET}'
                             AND sporreundersokelse.type = :type;
-                    """.trimMargin(),
-                    mapOf(
-                        "samarbeidId" to samarbeid.id,
-                        "type" to type.name,
-                    ),
-                ).map { it.tilSpørreundersøkelse(tx) }.asList,
-            )
+                        """.trimMargin(),
+                        mapOf(
+                            "samarbeidId" to samarbeid.id,
+                            "type" to type.name,
+                        ),
+                    ).map { it.tilSpørreundersøkelse(tx) }.asList,
+                )
+            }
         }
-    }
 
-    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID) =
+    fun hentSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
@@ -241,9 +242,10 @@ class SpørreundersøkelseRepository(
     private fun hentTemaer(
         spørreundersøkelseId: UUID,
         transactionalSession: TransactionalSession,
-    ) = transactionalSession.run(
-        queryOf(
-            """
+    ): List<Tema> =
+        transactionalSession.run(
+            queryOf(
+                """
                 SELECT sporreundersokelse_tema.tema_id AS id,
                        tema.navn,
                        tema.status,
@@ -254,50 +256,45 @@ class SpørreundersøkelseRepository(
                          JOIN ia_sak_kartlegging_tema tema
                               ON tema.tema_id = sporreundersokelse_tema.tema_id
                 WHERE sporreundersokelse_tema.kartlegging_id = :kartleggingId;
-            """.trimMargin(),
-            mapOf(
-                "kartleggingId" to spørreundersøkelseId.toString(),
-            ),
-        ).map { it.tilSpørreundersøkelseTema(transactionalSession, spørreundersøkelseId) }.asList,
-    )
+                """.trimMargin(),
+                mapOf(
+                    "kartleggingId" to spørreundersøkelseId.toString(),
+                ),
+            ).map { it.tilSpørreundersøkelseTema(transactionalSession, spørreundersøkelseId) }.asList,
+        )
 
     fun hentAntallSvar(
         spørreundersøkelseId: UUID,
         spørsmålId: UUID,
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
+    ): SpørreundersøkelseAntallSvar =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
                         SELECT COUNT(*) AS antallSvar
                         FROM ia_sak_kartlegging_svar
                         WHERE kartlegging_id = :kartleggingId
                         AND sporsmal_id = :sporsmalId
-                """.trimMargin(),
-                mapOf(
-                    "kartleggingId" to spørreundersøkelseId.toString(),
-                    "sporsmalId" to spørsmålId.toString(),
-                ),
-            ).map { rad ->
-                SpørreundersøkelseAntallSvar(
-                    spørreundersøkelseId = spørreundersøkelseId,
-                    spørsmålId = spørsmålId,
-                    antallSvar = rad.int("antallSvar"),
-                )
-            }.asSingle,
+                    """.trimMargin(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "sporsmalId" to spørsmålId.toString(),
+                    ),
+                ).map { rad ->
+                    SpørreundersøkelseAntallSvar(
+                        spørreundersøkelseId = spørreundersøkelseId,
+                        spørsmålId = spørsmålId,
+                        antallSvar = rad.int("antallSvar"),
+                    )
+                }.asSingle,
+            )
+        } ?: SpørreundersøkelseAntallSvar(
+            spørreundersøkelseId = spørreundersøkelseId,
+            spørsmålId = spørsmålId,
+            antallSvar = 0,
         )
-    } ?: SpørreundersøkelseAntallSvar(
-        spørreundersøkelseId = spørreundersøkelseId,
-        spørsmålId = spørsmålId,
-        antallSvar = 0,
-    )
 
-    data class SpørreundersøkelseAntallSvar(
-        val spørreundersøkelseId: UUID,
-        val spørsmålId: UUID,
-        val antallSvar: Int,
-    )
-
-    fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto) =
+    fun lagreSvar(karleggingSvarDto: SpørreundersøkelseSvarDto): Int =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -331,25 +328,26 @@ class SpørreundersøkelseRepository(
     fun slettSpørreundersøkelse(
         spørreundersøkelseId: UUID,
         sistEndret: LocalDateTime = LocalDateTime.now(),
-    ) = using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                """
-                UPDATE ia_sak_kartlegging SET
-                    status = '${Spørreundersøkelse.Status.SLETTET}',
-                    endret = :sistEndret
-                WHERE kartlegging_id = :kartleggingId
-                """.trimIndent(),
-                mapOf(
-                    "kartleggingId" to spørreundersøkelseId.toString(),
-                    "sistEndret" to sistEndret,
-                ),
-            ).asUpdate,
-        )
-        hentSpørreundersøkelse(spørreundersøkelseId)
-    }
+    ): Spørreundersøkelse? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE ia_sak_kartlegging SET
+                        status = '${Spørreundersøkelse.Status.SLETTET}',
+                        endret = :sistEndret
+                    WHERE kartlegging_id = :kartleggingId
+                    """.trimIndent(),
+                    mapOf(
+                        "kartleggingId" to spørreundersøkelseId.toString(),
+                        "sistEndret" to sistEndret,
+                    ),
+                ).asUpdate,
+            )
+            hentSpørreundersøkelse(spørreundersøkelseId)
+        }
 
-    fun startSpørreundersøkelse(spørreundersøkelseId: UUID) =
+    fun startSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -369,7 +367,7 @@ class SpørreundersøkelseRepository(
             hentSpørreundersøkelse(spørreundersøkelseId)
         }
 
-    fun avsluttSpørreundersøkelse(spørreundersøkelseId: UUID) =
+    fun avsluttSpørreundersøkelse(spørreundersøkelseId: UUID): Spørreundersøkelse? =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -469,7 +467,7 @@ class SpørreundersøkelseRepository(
             )
         }
 
-    private fun mapTilUndertema(row: Row) =
+    private fun mapTilUndertema(row: Row): UndertemaInfo =
         UndertemaInfo(
             id = row.int("undertema_id"),
             navn = row.string("navn"),
@@ -680,6 +678,12 @@ class SpørreundersøkelseRepository(
             antallSvar = intOrNull("antall_svar") ?: 0,
         )
     }
+
+    data class SpørreundersøkelseAntallSvar(
+        val spørreundersøkelseId: UUID,
+        val spørsmålId: UUID,
+        val antallSvar: Int,
+    )
 
     companion object {
         const val MINIMUM_ANTALL_SVAR_FØR_MASKERING = Spørreundersøkelse.MINIMUM_ANTALL_DELTAKERE

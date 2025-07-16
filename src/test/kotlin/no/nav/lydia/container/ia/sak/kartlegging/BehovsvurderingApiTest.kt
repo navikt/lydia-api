@@ -255,8 +255,7 @@ class BehovsvurderingApiTest {
                 konsument = spørreundersøkelseKonsument,
             ) { liste ->
                 liste.map { melding ->
-                    val spørreundersøkelse =
-                        Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
+                    val spørreundersøkelse = Json.decodeFromString<SpørreundersøkelseKafkaDto>(melding)
                     spørreundersøkelse.id shouldBe behovsvurdering.id
                     spørreundersøkelse.orgnummer shouldBe sak.orgnr
                     spørreundersøkelse.virksomhetsNavn shouldBe "Navn ${sak.orgnr}"
