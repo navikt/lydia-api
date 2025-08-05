@@ -1,4 +1,4 @@
-val ktorVersion = "3.2.0"
+val ktorVersion = "3.2.3"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "1.11.0"
 val kotestVerstion = "5.9.1"
@@ -52,12 +52,12 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.7")
-    implementation("com.zaxxer:HikariCP:6.3.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.10.0")
+    implementation("com.zaxxer:HikariCP:7.0.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.10.5")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
@@ -65,7 +65,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.1")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.9.1")
+    implementation("org.apache.kafka:kafka-clients:4.0.0")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -81,7 +81,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.3")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.4")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -101,7 +101,7 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.13.1")
 
     // -- validere pdfa
-    testImplementation("org.verapdf:validation-model:1.28.1")
+    testImplementation("org.verapdf:validation-model:1.28.2")
 
     // Autentisering
     testImplementation("no.nav.security:mock-oauth2-server:2.2.1")
@@ -115,7 +115,7 @@ dependencies {
         }
         testImplementation("org.apache.commons:commons-compress") {
             version {
-                require("1.27.1")
+                require("1.28.0")
             }
             because("testcontainers har sårbar versjon")
         }
