@@ -74,6 +74,24 @@ class IASamarbeidRepository(
             )
         }
 
+    fun hentAlleSamarbeid(orgnr: String): List<IASamarbeid> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT ia_prosess.*
+                    FROM ia_sak JOIN ia_prosess using (saksnummer)
+                    WHERE orgnr = :orgnr
+                    AND ia_prosess.status != :slettetStatus
+                    """.trimIndent(),
+                    mapOf(
+                        "orgnr" to orgnr,
+                        "slettetStatus" to IASamarbeid.Status.SLETTET.name,
+                    ),
+                ).map(this::mapRowToIaSamarbeidDto).asList,
+            )
+        }
+
     fun hentAlleSamarbeid(): List<IASamarbeid> =
         using(sessionOf(dataSource)) { session ->
             session.run(

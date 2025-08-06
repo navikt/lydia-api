@@ -578,7 +578,9 @@ private fun Application.lydiaRestApi(
 
         authenticate {
             // TODO: Flytt til idporten autentiserring
-            samarbeid()
+            samarbeid(
+                samarbeidService = samarbeidService,
+            )
             // --
 
             sykefraværsstatistikk(

@@ -41,6 +41,13 @@ class IASamarbeidService(
     val planRepository: PlanRepository,
     val planObservers: List<Observer<ObservedPlan>>,
 ) {
+    fun hentAlleSamarbeid(orgnr: String) =
+        Either.catch {
+            samarbeidRepository.hentAlleSamarbeid(orgnr = orgnr)
+        }.mapLeft {
+            IASamarbeidFeil.`feil ved henting av samarbeid`
+        }
+
     fun hentSamarbeid(sak: IASak): Either<Feil, List<IASamarbeid>> =
         Either.catch {
             samarbeidRepository.hentSamarbeid(saksnummer = sak.saksnummer)
