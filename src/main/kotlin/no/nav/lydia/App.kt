@@ -30,6 +30,7 @@ import no.nav.lydia.appstatus.HelseMonitor
 import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.appstatus.healthChecks
 import no.nav.lydia.appstatus.metrics
+import no.nav.lydia.arbeidsgiver.samarbeid
 import no.nav.lydia.exceptions.UautorisertException
 import no.nav.lydia.ia.eksport.FullførtBehovsvurderingProdusent
 import no.nav.lydia.ia.eksport.IASakEksporterer
@@ -576,6 +577,10 @@ private fun Application.lydiaRestApi(
         metrics()
 
         authenticate {
+            // TODO: Flytt til idporten autentiserring
+            samarbeid()
+            // --
+
             sykefraværsstatistikk(
                 geografiService = GeografiService(),
                 sykefraværsstatistikkService = sykefraværsstatistikkService,
