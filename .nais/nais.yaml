@@ -61,6 +61,8 @@ spec:
           - id: {{teamPiaGroup}}
         extra:
           - "NAVident"
+  tokenx:
+    enabled: true
   gcp:
     sqlInstances:
     - type: POSTGRES_14

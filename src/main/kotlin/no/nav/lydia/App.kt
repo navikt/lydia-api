@@ -1,17 +1,13 @@
 package no.nav.lydia
 
 import arrow.core.Either
-import com.auth0.jwk.JwkProviderBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.application.log
-import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.engine.addShutdownHook
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
@@ -102,6 +98,7 @@ import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetServ
 import no.nav.lydia.integrasjoner.salesforce.http.SalesforceClient
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
+import no.nav.lydia.konfigurasjon.configureSecurity
 import no.nav.lydia.statusoversikt.StatusoversiktRepository
 import no.nav.lydia.statusoversikt.StatusoversiktService
 import no.nav.lydia.statusoversikt.api.statusoversikt
@@ -537,30 +534,8 @@ private fun Application.lydiaRestApi(
         registry = Metrics.appMicrometerRegistry
     }
 
-    val jwkProvider = JwkProviderBuilder(naisEnv.security.azureConfig.jwksUri)
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
-    install(Authentication) {
-        jwt {
-            verifier(jwkProvider, naisEnv.security.azureConfig.issuer)
-            validate { credentials ->
-                try {
-                    requireNotNull(credentials.payload.audience) {
-                        "Auth: Missing audience in token"
-                    }
-                    require(credentials.payload.audience.contains(naisEnv.security.azureConfig.clientId)) {
-                        "Auth: Valid audience not found in claims"
-                    }
-                    JWTPrincipal(credentials.payload)
-                } catch (e: Throwable) {
-                    application.log.error("Feil under autentisering")
-                    application.log.error(e.message)
-                    null
-                }
-            }
-        }
-    }
+    configureSecurity(naisEnv)
+
     install(StatusPages) {
         exception<UautorisertException> { call, cause ->
             call.application.log.error("Ikke autorisert", cause)
@@ -576,13 +551,13 @@ private fun Application.lydiaRestApi(
         healthChecks(HelseMonitor)
         metrics()
 
-        authenticate {
-            // TODO: Flytt til idporten autentiserring
+        authenticate("tokenx") {
             samarbeid(
                 samarbeidService = samarbeidService,
             )
-            // --
+        }
 
+        authenticate("azure") {
             sykefraværsstatistikk(
                 geografiService = GeografiService(),
                 sykefraværsstatistikkService = sykefraværsstatistikkService,

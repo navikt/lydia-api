@@ -30,7 +30,7 @@ class SamarbeidApiTest {
         val orgnr = VirksomhetHelper.nyttOrgnummer()
         SakHelper.nySakIKartleggesMedEtSamarbeid(orgnummer = orgnr, navnPåSamarbeid = "Test")
         val respons = TestContainerHelper.applikasjon.performGet("$ARBEIDSGIVER_SAMARBEID_PATH/$orgnr")
-            .authentication().bearer(TestContainerHelper.authContainerHelper.superbruker1.token)
+            .authentication().bearer(TestContainerHelper.tokenXAccessToken().serialize())
             .tilListeRespons<IASamarbeidDto>().third
             .fold(
                 success = { it },
@@ -48,7 +48,7 @@ class SamarbeidApiTest {
         SakHelper.nySakIViBistår(orgnummer = orgnr)
 
         val respons = TestContainerHelper.applikasjon.performGet("$ARBEIDSGIVER_SAMARBEID_PATH/$orgnr")
-            .authentication().bearer(TestContainerHelper.authContainerHelper.superbruker1.token)
+            .authentication().bearer(TestContainerHelper.tokenXAccessToken().serialize())
             .tilListeRespons<IASamarbeidDto>().third
             .fold(
                 success = { it },
@@ -67,7 +67,7 @@ class SamarbeidApiTest {
             )
 
         val respons = TestContainerHelper.applikasjon.performGet("$ARBEIDSGIVER_SAMARBEID_PATH/$orgnr")
-            .authentication().bearer(TestContainerHelper.authContainerHelper.superbruker1.token)
+            .authentication().bearer(TestContainerHelper.tokenXAccessToken().serialize())
             .tilListeRespons<IASamarbeidDto>().third
             .fold(
                 success = { it },

@@ -43,6 +43,7 @@ class Database(
 
 class Security(
     val azureConfig: AzureConfig = AzureConfig(),
+    val tokenXConfig: TokenXConfig = TokenXConfig(),
     val adGrupper: ADGrupper = ADGrupper(),
 ) {
     companion object {
@@ -64,6 +65,12 @@ class AzureConfig(
 ) {
     override fun toString() = "AzureConfig(audience='$clientId', jwksUri=$jwksUri, issuer='$issuer', tokenEndpoint='$tokenEndpoint')"
 }
+
+class TokenXConfig(
+    val tokenxIssuer: String = System.getenv("TOKEN_X_ISSUER"),
+    val tokenxJwksUri: URL = URL(getEnvVar("TOKEN_X_JWKS_URI")),
+    val tokenxClientId: String = System.getenv("TOKEN_X_CLIENT_ID"),
+)
 
 class ADGrupper(
     val superbrukerGruppe: String = getEnvVar("FIA_SUPERBRUKER_GROUP_ID"),

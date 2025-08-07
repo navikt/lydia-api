@@ -241,6 +241,20 @@ class TestContainerHelper {
             VirksomhetHelper.lastInnStandardTestdata(ANTALL_TEST_VIRKSOMHETER)
         }
 
+        internal fun tokenXAccessToken(
+            subject: String = "123",
+            audience: String = "tokenx:lydia-api",
+            claims: Map<String, String> = mapOf(
+                "acr" to "Level4",
+                "pid" to subject,
+            ),
+        ) = authContainerHelper.issueToken(
+            subject = subject,
+            audience = audience,
+            claims = claims,
+            issuerId = "tokenx",
+        )
+
         private fun GenericContainer<*>.buildUrl(url: String) = "http://${this.host}:${this.getMappedPort(8080)}/$url"
 
         fun GenericContainer<*>.performGet(url: String) = buildUrl(url = url).httpGet()

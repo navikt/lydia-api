@@ -87,7 +87,7 @@ class AuthContainerHelper(
         val navIdent: String,
         gruppe: String,
         audience: String = "lydia-api",
-        issuerId: String = "default",
+        issuerId: String = "azure",
     ) {
         val navn = "F_$navIdent E_$navIdent"
         val token: String = issueToken(
@@ -102,7 +102,7 @@ class AuthContainerHelper(
         ).serialize()
     }
 
-    private fun issueToken(
+    fun issueToken(
         issuerId: String,
         subject: String = UUID.randomUUID().toString(),
         audience: String,
@@ -132,8 +132,9 @@ class AuthContainerHelper(
         mapOf(
             "AZURE_APP_CLIENT_ID" to "lydia-api",
             "AZURE_APP_CLIENT_SECRET" to "AZURE_APP_CLIENT_SECRET",
-            "AZURE_OPENID_CONFIG_ISSUER" to "$baseEndpointUrl/default",
-            "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "$baseEndpointUrl/default/token",
+            "AZURE_OPENID_CONFIG_ISSUER" to "$baseEndpointUrl/azure",
+            "AZURE_OPENID_CONFIG_JWKS_URI" to "$baseEndpointUrl/azure/jwks",
+            "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "$baseEndpointUrl/azure/token",
             "AZURE_APP_JWK" to
                 """
                 {
@@ -150,10 +151,12 @@ class AuthContainerHelper(
                     "n": "s7mjPNyx4wtQ-ij0VIAvfooN9m2qgqidE7wJ50zAzmG2cS9Y9XpV09KJAAgP21RVQNqbxU3BCwltYD5bhsYSn-T5HZ7uXbjb9zgSY5XUM0TWGMV7qqdISWmHCH6-LYZGrJiN7ofDW3XGINsRlxj3gZbSuSNnXdbreOC97wT5i-qVxWt9xhobB60Jjf3gNiA3XMaOGyE47Ty-6WMH_zs_sENWXQ0eGoD58DROqbF1CUb_9ppubK9nU4Sjo0ih57J14n8aKZVEWg4uN02Gv0TL1ratvyDTwRZrtKprfgFBzylxtV2zkvhETsi7zkrzjsrv4v8hap6V32NgXc8E1xDj2Q"
                 }
                 """.trimIndent(),
-            "AZURE_OPENID_CONFIG_JWKS_URI" to "$baseEndpointUrl/default/jwks",
             "FIA_SUPERBRUKER_GROUP_ID" to SUPERBRUKER_GROUP_ID,
             "FIA_SAKSBEHANDLER_GROUP_ID" to SAKSBEHANDLER_GROUP_ID,
             "FIA_LESETILGANG_GROUP_ID" to LESETILGANG_GROUP_ID,
             "TEAM_PIA_GROUP_ID" to TEAM_PLA_GROUP_ID,
+            "TOKEN_X_CLIENT_ID" to "tokenx:lydia-api",
+            "TOKEN_X_ISSUER" to "http://$networkalias:$port/tokenx",
+            "TOKEN_X_JWKS_URI" to "http://$networkalias:$port/tokenx/jwks",
         )
 }
