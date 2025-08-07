@@ -74,13 +74,16 @@ class IASamarbeidRepository(
             )
         }
 
-    fun hentAlleSamarbeid(orgnr: String): List<IASamarbeid> =
+    fun hentAlleSamarbeidSomHarDokumenter(orgnr: String): List<IASamarbeid> =
         using(sessionOf(dataSource)) { session ->
             session.run(
+                // TODO: Sjekk på status om den er PUBLISERT
                 queryOf(
                     """
                     SELECT ia_prosess.*
-                    FROM ia_sak JOIN ia_prosess using (saksnummer)
+                    FROM ia_sak 
+                      JOIN ia_prosess using (saksnummer)
+                      JOIN dokument_til_publisering dok ON (dok.ia_prosess = ia_prosess.id) 
                     WHERE orgnr = :orgnr
                     AND ia_prosess.status != :slettetStatus
                     """.trimIndent(),

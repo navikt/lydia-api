@@ -305,10 +305,10 @@ class SpørreundersøkelseBigqueryEksportererTest {
     fun `jobb starter re-eksport av alle behovsvurderinger til bigquery`() {
         val sak1 = nySakIKartlegges()
         val samarbeid1 = sak1.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak1.opprettBehovsvurdering(prosessId = samarbeid1.id)
+        sak1.opprettBehovsvurdering(samarbeidId = samarbeid1.id)
         val sak2 = nySakIKartlegges()
         val samarbeid2 = sak2.opprettNyttSamarbeid().hentAlleSamarbeid().first()
-        sak2.opprettBehovsvurdering(prosessId = samarbeid2.id)
+        sak2.opprettBehovsvurdering(samarbeidId = samarbeid2.id)
 
         runBlocking { kafkaContainerHelper.sendJobbMelding(Jobb.spørreundersøkelseBigQueryEksport) }
 

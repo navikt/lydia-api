@@ -667,7 +667,7 @@ class IASakProsessTest {
         val sak = nySakIKartlegges().opprettNyttSamarbeid()
         val alleSamarbeidFørSletting = sak.hentAlleSamarbeid()
         val samarbeidSomSkalSlettes = alleSamarbeidFørSletting.first()
-        sak.opprettBehovsvurdering(prosessId = samarbeidSomSkalSlettes.id)
+        sak.opprettBehovsvurdering(samarbeidId = samarbeidSomSkalSlettes.id)
         shouldFail {
             sak.slettSamarbeid(samarbeidSomSkalSlettes)
         }

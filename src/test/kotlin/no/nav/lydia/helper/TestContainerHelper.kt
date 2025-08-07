@@ -686,7 +686,7 @@ class SakHelper {
 
 class DokumentPubliseringHelper {
     companion object {
-        fun opprettDokumentPubliseringRespons(
+        fun publiserDokument(
             dokumentReferanseId: String,
             token: String,
         ) = applikasjon.performPost(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/Behovsvurdering/ref/$dokumentReferanseId")
@@ -700,11 +700,11 @@ class IASakKartleggingHelper {
         fun opprettSpørreundersøkelse(
             orgnr: String,
             saksnummer: String,
-            prosessId: Int,
+            samarbeidId: Int,
             token: String = authContainerHelper.saksbehandler1.token,
             type: Spørreundersøkelse.Type,
         ) = applikasjon.performPost(
-            "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$prosessId/type/${type.name}",
+            "$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/prosess/$samarbeidId/type/${type.name}",
         ).authentication().bearer(token)
 
         fun hentSpørreundersøkelse(
@@ -721,12 +721,12 @@ class IASakKartleggingHelper {
             )
 
         fun IASakDto.opprettBehovsvurdering(
-            prosessId: Int = hentAlleSamarbeid().first().id,
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
             token: String = authContainerHelper.saksbehandler1.token,
         ) = opprettSpørreundersøkelse(
             orgnr = orgnr,
             saksnummer = saksnummer,
-            prosessId = prosessId,
+            samarbeidId = samarbeidId,
             token = token,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(
@@ -740,7 +740,7 @@ class IASakKartleggingHelper {
         ) = opprettSpørreundersøkelse(
             orgnr = orgnr,
             saksnummer = saksnummer,
-            prosessId = prosessId,
+            samarbeidId = prosessId,
             token = token,
             type = Spørreundersøkelse.Type.Evaluering,
         ).tilSingelRespons<SpørreundersøkelseDto>().third.fold(

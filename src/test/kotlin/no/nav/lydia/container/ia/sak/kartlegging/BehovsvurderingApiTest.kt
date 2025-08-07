@@ -17,7 +17,7 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.opprettDokumentPubliseringRespons
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.flytt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
@@ -118,7 +118,7 @@ class BehovsvurderingApiTest {
         val samarbeid2 = alleSamarbeid.last()
         val ikkeEierEllerFølger = authContainerHelper.saksbehandler2
 
-        val behovsvurdering = sak.opprettBehovsvurdering(token = authContainerHelper.saksbehandler1.token, prosessId = samarbeid1.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(token = authContainerHelper.saksbehandler1.token, samarbeidId = samarbeid1.id)
         behovsvurdering.start(token = authContainerHelper.saksbehandler1.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(token = authContainerHelper.saksbehandler1.token, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -222,7 +222,7 @@ class BehovsvurderingApiTest {
         val resp = opprettSpørreundersøkelse(
             orgnr = sak.orgnr,
             saksnummer = "ukjent",
-            prosessId = sak.hentAlleSamarbeid().first().id,
+            samarbeidId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -236,7 +236,7 @@ class BehovsvurderingApiTest {
         val resp = opprettSpørreundersøkelse(
             orgnr = "222233334",
             saksnummer = sak.saksnummer,
-            prosessId = sak.hentAlleSamarbeid().first().id,
+            samarbeidId = sak.hentAlleSamarbeid().first().id,
             type = Spørreundersøkelse.Type.Behovsvurdering,
         ).tilSingelRespons<SpørreundersøkelseDto>()
 
@@ -303,7 +303,7 @@ class BehovsvurderingApiTest {
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val response = opprettDokumentPubliseringRespons(
+        val response = publiserDokument(
             dokumentReferanseId = fullførtBehovsvurdering.id,
             token = authContainerHelper.saksbehandler1.token,
         )
@@ -664,7 +664,7 @@ class BehovsvurderingApiTest {
         val alleSamarbeid = sak.hentAlleSamarbeid()
         alleSamarbeid shouldHaveSize 2
         alleSamarbeid.forEach { samarbeid ->
-            sak.opprettBehovsvurdering(prosessId = samarbeid.id)
+            sak.opprettBehovsvurdering(samarbeidId = samarbeid.id)
 
             hentSpørreundersøkelse(
                 orgnr = sak.orgnr,
@@ -685,7 +685,7 @@ class BehovsvurderingApiTest {
         val førsteSamarbeid = alleSamarbeid.first()
         val sisteSamarbeid = alleSamarbeid.last()
 
-        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = førsteSamarbeid.id)
         val type = Spørreundersøkelse.Type.Behovsvurdering
         hentSpørreundersøkelse(orgnr = sak.orgnr, saksnummer = sak.saksnummer, prosessId = førsteSamarbeid.id, type = type)
             .map { it.id } shouldBe listOf(behovsvurdering.id)
@@ -714,7 +714,7 @@ class BehovsvurderingApiTest {
         val førsteSamarbeid = alleSamarbeid.first()
         val sisteSamarbeid = alleSamarbeid.last()
 
-        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = førsteSamarbeid.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         behovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         runBlocking {
@@ -797,7 +797,7 @@ class BehovsvurderingApiTest {
         val førsteSamarbeid = alleSamarbeid.first()
         val andreSamarbeid = alleSamarbeid.last()
 
-        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = førsteSamarbeid.id)
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         shouldFail { behovsvurdering.flytt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = andreSamarbeid.id) }.message shouldContain
