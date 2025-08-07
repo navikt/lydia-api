@@ -63,7 +63,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     fun `skal oppdatere spørreundersøkelse til stengt i databasen om alle temaer har blitt stengt`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = samarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = samarbeid.id)
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
@@ -89,7 +89,7 @@ class SpørreundersøkelseHendelseKonsumentTest {
     fun `steng tema skal ikke avslutte spørreundersøkelse før alle temaer er stengt`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val samarbeid = sak.hentAlleSamarbeid().first()
-        val behovsvurdering = sak.opprettBehovsvurdering(prosessId = samarbeid.id)
+        val behovsvurdering = sak.opprettBehovsvurdering(samarbeidId = samarbeid.id)
 
         behovsvurdering.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 

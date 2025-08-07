@@ -8,7 +8,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.opprettDokumentPubliseringRespons
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
@@ -69,7 +69,7 @@ class DokumentPubliseringApiTest {
         nySakIKartleggesMedEtSamarbeid()
         val dokumentRefId = UUID.randomUUID().toString()
 
-        val response = opprettDokumentPubliseringRespons(
+        val response = publiserDokument(
             dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
@@ -86,7 +86,7 @@ class DokumentPubliseringApiTest {
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
         val dokumentRefId = startetBehovsvurdering.id
 
-        val response = opprettDokumentPubliseringRespons(
+        val response = publiserDokument(
             dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
@@ -105,14 +105,14 @@ class DokumentPubliseringApiTest {
         val dokumentRefId = fullførtBehovsvurdering.id
 
         // 1- verifiser at et dokument har blitt opprettet
-        val response = opprettDokumentPubliseringRespons(
+        val response = publiserDokument(
             dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
         response.statuskode() shouldBe HttpStatusCode.Created.value
 
         // 2- verifiser at samme POST request returneres en 409 Conflict
-        val responseDuplisertRequest = opprettDokumentPubliseringRespons(
+        val responseDuplisertRequest = publiserDokument(
             dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
@@ -133,7 +133,7 @@ class DokumentPubliseringApiTest {
         val navIdent = authContainerHelper.saksbehandler1.navIdent
 
         // 1- verifiser at et dokument har blitt opprettet
-        val response = opprettDokumentPubliseringRespons(
+        val response = publiserDokument(
             dokumentReferanseId = dokumentRefId,
             token = authContainerHelper.saksbehandler1.token,
         )
@@ -188,7 +188,7 @@ class DokumentPubliseringApiTest {
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
             .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
-        val postResponse = opprettDokumentPubliseringRespons(
+        val postResponse = publiserDokument(
             dokumentReferanseId = fullførtBehovsvurdering.id,
             token = authContainerHelper.saksbehandler1.token,
         )

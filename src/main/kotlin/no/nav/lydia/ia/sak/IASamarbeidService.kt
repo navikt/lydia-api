@@ -43,7 +43,7 @@ class IASamarbeidService(
 ) {
     fun hentAlleSamarbeid(orgnr: String) =
         Either.catch {
-            samarbeidRepository.hentAlleSamarbeid(orgnr = orgnr)
+            samarbeidRepository.hentAlleSamarbeidSomHarDokumenter(orgnr = orgnr)
         }.mapLeft {
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }

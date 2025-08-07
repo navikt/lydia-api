@@ -179,7 +179,7 @@ class IASakApiTest {
         )
 
         val førsteSamarbeid = alleSamarbeid.first()
-        val kartlegging = sak.opprettBehovsvurdering(prosessId = førsteSamarbeid.id)
+        val kartlegging = sak.opprettBehovsvurdering(samarbeidId = førsteSamarbeid.id)
         val saksStatusMedEnKartlegging = sak.hentSaksStatus()
         saksStatusMedEnKartlegging.kanFullføres shouldBe false
         saksStatusMedEnKartlegging.årsaker.map { it.type } shouldContainExactlyInAnyOrder listOf(

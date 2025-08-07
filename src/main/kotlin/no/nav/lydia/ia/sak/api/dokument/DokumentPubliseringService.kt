@@ -97,6 +97,7 @@ class DokumentPubliseringService(
         }
 
         return dokumentPubliseringRepository.opprettDokument(
+            samarbeid = samarbeid,
             referanseId = dokumentReferanseId,
             dokumentType = dokumentType,
             opprettetAv = opprettetAv,
