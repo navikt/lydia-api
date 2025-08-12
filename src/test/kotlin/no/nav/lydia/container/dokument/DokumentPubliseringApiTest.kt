@@ -12,6 +12,7 @@ import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
@@ -45,6 +46,48 @@ class DokumentPubliseringApiTest {
             konsument.unsubscribe()
             konsument.close()
         }
+    }
+
+    @Test
+    fun `følgere av sak som er saksbehandlere skal kunne publisere et dokument`() {
+        val saksbehandlerToken = authContainerHelper.saksbehandler1.token
+        val følgerToken = authContainerHelper.saksbehandler2.token
+
+        val sak = nySakIKartleggesMedEtSamarbeid(token = saksbehandlerToken)
+        sak.leggTilFolger(token = følgerToken)
+
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering(token = saksbehandlerToken)
+            .start(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .avslutt(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val dokumentRefId = fullførtBehovsvurdering.id
+
+        val response = publiserDokument(
+            dokumentReferanseId = dokumentRefId,
+            token = følgerToken,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+    }
+
+    @Test
+    fun `følgere av sak som er lesebrukere skal IKKE kunne publisere et dokument`() {
+        val saksbehandlerToken = authContainerHelper.saksbehandler1.token
+        val lesebrukerToken = authContainerHelper.lesebruker.token
+
+        val sak = nySakIKartleggesMedEtSamarbeid(token = saksbehandlerToken)
+        sak.leggTilFolger(token = lesebrukerToken)
+
+        val fullførtBehovsvurdering = sak.opprettBehovsvurdering(token = saksbehandlerToken)
+            .start(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .avslutt(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val dokumentRefId = fullførtBehovsvurdering.id
+
+        val response = publiserDokument(
+            dokumentReferanseId = dokumentRefId,
+            token = lesebrukerToken,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.Forbidden.value
     }
 
     @Test
