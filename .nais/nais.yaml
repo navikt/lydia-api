@@ -49,6 +49,7 @@ spec:
     inbound:
       rules:
         - application: lydia-radgiver-frontend
+        - application: fia-arbeidsgiver
   azure:
     application:
       enabled: true
