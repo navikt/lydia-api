@@ -12,6 +12,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.m
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.harMinstEttResultat
 import no.nav.lydia.integrasjoner.azure.NavEnhet
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
@@ -79,9 +80,10 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        if (spørreundersøkelse.harMinstEttResultat()) {
+        if (harMinstEttResultat(spørreundersøkelse)) {
+            val svar = spørreundersøkelse.temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }.map { it.antallSvar }
             return Feil(
-                feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ingen resultat , og dermed ikke kan lagres som dokument. ",
+                feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ingen resultat, og dermed ikke kan lagres som dokument. antallSvar: $svar",
                 httpStatusCode = HttpStatusCode.BadRequest,
             ).left()
         }

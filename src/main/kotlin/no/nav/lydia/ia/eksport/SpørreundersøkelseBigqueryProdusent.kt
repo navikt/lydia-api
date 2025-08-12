@@ -7,6 +7,7 @@ import no.nav.lydia.Kafka
 import no.nav.lydia.Observer
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.harMinstEttResultat
 
 class SpørreundersøkelseBigqueryProdusent(
     kafka: Kafka,
@@ -26,7 +27,7 @@ class SpørreundersøkelseBigqueryProdusent(
             saksnummer = input.saksnummer,
             opprettetAv = input.opprettetAv,
             opprettet = input.opprettetTidspunkt,
-            harMinstEttSvar = input.harMinstEttResultat(),
+            harMinstEttSvar = harMinstEttResultat(input),
             endret = input.endretTidspunkt,
             påbegynt = input.påbegyntTidspunkt,
             fullført = input.fullførtTidspunkt,
