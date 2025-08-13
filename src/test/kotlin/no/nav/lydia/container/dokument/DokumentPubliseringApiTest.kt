@@ -9,9 +9,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarPåSpørsmål
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -26,6 +27,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.util.UUID
@@ -56,9 +58,7 @@ class DokumentPubliseringApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid(token = saksbehandlerToken)
         sak.leggTilFolger(token = følgerToken)
 
-        val fullførtBehovsvurdering = sak.opprettBehovsvurdering(token = saksbehandlerToken)
-            .start(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val dokumentRefId = fullførtBehovsvurdering.id
 
         val response = publiserDokument(
@@ -77,9 +77,7 @@ class DokumentPubliseringApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid(token = saksbehandlerToken)
         sak.leggTilFolger(token = lesebrukerToken)
 
-        val fullførtBehovsvurdering = sak.opprettBehovsvurdering(token = saksbehandlerToken)
-            .start(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(token = saksbehandlerToken, orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val dokumentRefId = fullførtBehovsvurdering.id
 
         val response = publiserDokument(
@@ -94,9 +92,7 @@ class DokumentPubliseringApiTest {
     fun `uthenting av et dokument til publisering returnerer 404 Not Found hvis ikke funnet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val dokumentType = DokumentPublisering.Type.BEHOVSVURDERING
-        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
 
         val response = hentDokumentPubliseringRespons(dokumentReferanseId = fullførtBehovsvurdering.id, token = authContainerHelper.lesebruker.token)
 
@@ -127,6 +123,7 @@ class DokumentPubliseringApiTest {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val startetBehovsvurdering = sak.opprettBehovsvurdering()
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .also { it.svarPåSpørsmål(antallSvarPåSpørsmål = 3) }
         val dokumentRefId = startetBehovsvurdering.id
 
         val response = publiserDokument(
@@ -142,9 +139,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av dokument til publisering returnerer 409 Conflict dersom dokument allerede er opprettet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val dokumentRefId = fullførtBehovsvurdering.id
 
         // 1- verifiser at et dokument har blitt opprettet
@@ -168,9 +163,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `opprettelese av dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val samarbeidId = fullførtBehovsvurdering.samarbeidId
         val dokumentRefId = fullførtBehovsvurdering.id
         val navIdent = authContainerHelper.saksbehandler1.navIdent
@@ -227,9 +220,7 @@ class DokumentPubliseringApiTest {
     @Test
     fun `uthenting av dokument til publisering returnerer 200 OK og selve dokumentet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
 
         val postResponse = publiserDokument(
             dokumentReferanseId = fullførtBehovsvurdering.id,

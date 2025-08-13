@@ -4,7 +4,6 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.harMinstEttResultat
 
 @Serializable
 data class SpørreundersøkelseUtenInnholdDto(
@@ -36,6 +35,6 @@ fun Spørreundersøkelse.tilUtenInnholdDto(): SpørreundersøkelseUtenInnholdDto
         påbegyntTidspunkt = påbegyntTidspunkt,
         fullførtTidspunkt = fullførtTidspunkt,
         gyldigTilTidspunkt = gyldigTilTidspunkt,
-        harMinstEttResultat = harMinstEttResultat(this),
+        harMinstEttResultat = harMinstEttResultat(),
         type = type.name.uppercase(),
     )

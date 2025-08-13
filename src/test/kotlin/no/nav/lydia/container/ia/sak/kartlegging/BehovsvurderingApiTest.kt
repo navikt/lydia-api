@@ -24,9 +24,10 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSv
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSpørreundersøkelse
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.slett
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarPåSpørsmål
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartlegges
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
@@ -51,7 +52,6 @@ import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse.Companion.ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import java.util.UUID
 import kotlin.test.Test
 
 class BehovsvurderingApiTest {
@@ -299,9 +299,8 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal returnere publiseringsstatus for behovsvurdering`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val fullførtBehovsvurdering = sak.opprettBehovsvurdering()
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
 
         val response = publiserDokument(
             dokumentReferanseId = fullførtBehovsvurdering.id,
@@ -358,23 +357,8 @@ class BehovsvurderingApiTest {
     fun `skal ikke kunne hente resultat før kartlegging er avsluttet`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
-            .also { it.status shouldBe Spørreundersøkelse.Status.OPPRETTET }
             .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .also { it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT }
-
-        listOf(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()).forEach { sesjonId ->
-            enDeltakerSvarerPåEtSpørsmål(kartleggingDto = påbegyntBehovsvurdering, UUID.randomUUID().toString())
-        }
-
-        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
-        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
-        val sesjonId = UUID.randomUUID()
-        sendKartleggingSvarTilKafka(
-            kartleggingId = påbegyntBehovsvurdering.id,
-            spørsmålId = førsteSpørsmål.id,
-            sesjonId = sesjonId.toString(),
-            svarIder = listOf(førsteSvaralternativ.svarId),
-        )
+            .also { it.svarPåSpørsmål(antallSvarPåSpørsmål = 4) }
 
         shouldFail {
             hentKartleggingMedSvar(
@@ -388,32 +372,12 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal ikke kunne få antall svar dersom antall deltakere er færre enn 3`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
-            .also { it.status shouldBe Spørreundersøkelse.Status.OPPRETTET }
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .also { it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT }
-
-        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
-        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
-
-        val antallSvar = 2
-
-        repeat(antallSvar) {
-            val sesjonId = UUID.randomUUID()
-            sendKartleggingSvarTilKafka(
-                kartleggingId = påbegyntBehovsvurdering.id,
-                spørsmålId = førsteSpørsmål.id,
-                sesjonId = sesjonId.toString(),
-                svarIder = listOf(førsteSvaralternativ.svarId),
-            )
-        }
-
-        påbegyntBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering, antallSvarPåSpørsmål = 2)
 
         val spørreundersøkelseResultat = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = påbegyntBehovsvurdering.id,
+            kartleggingId = fullførtBehovsvurdering.id,
         )
 
         spørreundersøkelseResultat.spørsmålMedSvarPerTema.forAll { tema ->
@@ -429,37 +393,32 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal få svardetaljer for et spørsmål dersom antall besvarelser er 3 eller flere`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
-            .also { it.status shouldBe Spørreundersøkelse.Status.OPPRETTET }
-            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-            .also { it.status shouldBe Spørreundersøkelse.Status.PÅBEGYNT }
-
-        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
-        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
 
         val antallSvar = 3
+        val temaIdx = 0
+        val spørsmålIdx = 0
+        val svaralternativIdx = 0
 
-        repeat(antallSvar) {
-            val sesjonId = UUID.randomUUID()
-            sendKartleggingSvarTilKafka(
-                kartleggingId = påbegyntBehovsvurdering.id,
-                spørsmålId = førsteSpørsmål.id,
-                sesjonId = sesjonId.toString(),
-                svarIder = listOf(førsteSvaralternativ.svarId),
-            )
-        }
-
-        påbegyntBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(
+            Spørreundersøkelse.Type.Behovsvurdering,
+            antallSvarPåSpørsmål = 3,
+            temaIdx = temaIdx,
+            spørsmålIdx = spørsmålIdx,
+            svaralternativIdx = svaralternativIdx,
+        )
 
         val spørreundersøkelseResultat = hentKartleggingMedSvar(
             orgnr = sak.orgnr,
             saksnummer = sak.saksnummer,
-            kartleggingId = påbegyntBehovsvurdering.id,
+            kartleggingId = fullførtBehovsvurdering.id,
         )
 
         spørreundersøkelseResultat.spørsmålMedSvarPerTema.forAll { tema ->
             tema.spørsmålMedSvar.forAll { spørsmål ->
-                if (spørsmål.id == førsteSpørsmål.id) {
+                if (spørsmål.id == spørreundersøkelseResultat
+                        .spørsmålMedSvarPerTema[temaIdx]
+                        .spørsmålMedSvar[spørsmålIdx].id
+                ) {
                     spørsmål.antallDeltakereSomHarSvart shouldBe antallSvar
                     spørsmål.svarListe.first().antallSvar shouldBe antallSvar
                 } else {
@@ -581,30 +540,19 @@ class BehovsvurderingApiTest {
     @Test
     fun `skal kunne slette en kartlegging`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val kartleggingDto = sak.opprettBehovsvurdering()
-        kartleggingDto.status shouldBe Spørreundersøkelse.Status.OPPRETTET
-
-        val pågåendeKartlegging = kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-
-        val førsteSpørsmål = pågåendeKartlegging.temaer.first().spørsmålOgSvaralternativer.first()
-        sendKartleggingSvarTilKafka(
-            kartleggingId = pågåendeKartlegging.id,
-            spørsmålId = førsteSpørsmål.id,
-            sesjonId = UUID.randomUUID().toString(),
-            svarIder = listOf(
-                førsteSpørsmål.svaralternativer.first().svarId,
-            ),
-        )
+        val pågåendeKartlegging = sak.opprettBehovsvurdering()
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .also { it.svarPåSpørsmål(antallSvarPåSpørsmål = 1) }
 
         postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
-            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${pågåendeKartlegging.id}'",
         ) shouldHaveSize 1
 
         pågåendeKartlegging.slett(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
-                key = kartleggingDto.id,
+                key = pågåendeKartlegging.id,
                 konsument = spørreundersøkelseKonsument,
             ) {
                 it.forExactlyOne { melding ->
@@ -616,11 +564,11 @@ class BehovsvurderingApiTest {
         }
 
         postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
-            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${kartleggingDto.id}'",
+            "select kartlegging_id from ia_sak_kartlegging_svar where kartlegging_id = '${pågåendeKartlegging.id}'",
         ).shouldNotBeEmpty()
 
         postgresContainerHelper.hentAlleRaderTilEnkelKolonne<String>(
-            "select status from ia_sak_kartlegging where kartlegging_id = '${kartleggingDto.id}'",
+            "select status from ia_sak_kartlegging where kartlegging_id = '${pågåendeKartlegging.id}'",
         ).forAll { it shouldBe "SLETTET" }
 
         hentSpørreundersøkelse(
@@ -880,21 +828,6 @@ class BehovsvurderingApiTest {
             spørreundersøkelseKonsument.close()
             fullførtBehovsvurderingKonsument.unsubscribe()
             fullførtBehovsvurderingKonsument.close()
-        }
-
-        private fun enDeltakerSvarerPåEtSpørsmål(
-            kartleggingDto: SpørreundersøkelseDto,
-            sesjonId: String = UUID.randomUUID().toString(),
-        ) {
-            val førsteTema = kartleggingDto.temaer.first()
-            val førsteSpørsmålId = førsteTema.spørsmålOgSvaralternativer.first().id
-            val førsteSvarId = førsteTema.spørsmålOgSvaralternativer.first().svaralternativer.first().svarId
-            sendKartleggingSvarTilKafka(
-                kartleggingId = kartleggingDto.id,
-                spørsmålId = førsteSpørsmålId,
-                sesjonId = sesjonId,
-                svarIder = listOf(førsteSvarId),
-            )
         }
     }
 }

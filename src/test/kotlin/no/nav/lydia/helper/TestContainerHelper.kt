@@ -734,6 +734,44 @@ class IASakKartleggingHelper {
             failure = { fail(it.message) },
         )
 
+        fun IASakDto.opprettSvarOgAvsluttSpørreundersøkelse(
+            type: Spørreundersøkelse.Type,
+            token: String = authContainerHelper.saksbehandler1.token,
+            samarbeidId: Int = hentAlleSamarbeid().first().id,
+            temaIdx: Int = 0,
+            spørsmålIdx: Int = 0,
+            svaralternativIdx: Int = 0,
+            antallSvarPåSpørsmål: Int = 3,
+        ): SpørreundersøkelseDto =
+            when (type) {
+                Spørreundersøkelse.Type.Evaluering -> opprettEvaluering(
+                    prosessId = samarbeidId,
+                    token = token,
+                )
+                Spørreundersøkelse.Type.Behovsvurdering -> opprettBehovsvurdering(
+                    samarbeidId = samarbeidId,
+                    token = token,
+                )
+            }
+                .start(
+                    token = token,
+                    orgnummer = orgnr,
+                    saksnummer = saksnummer,
+                )
+                .also {
+                    it.svarPåSpørsmål(
+                        temaIdx = temaIdx,
+                        spørsmålIdx = spørsmålIdx,
+                        svaralternativIdx = svaralternativIdx,
+                        antallSvarPåSpørsmål = antallSvarPåSpørsmål,
+                    )
+                }
+                .avslutt(
+                    token = token,
+                    orgnummer = orgnr,
+                    saksnummer = saksnummer,
+                )
+
         fun IASakDto.opprettEvaluering(
             prosessId: Int = hentAlleSamarbeid().first().id,
             token: String = authContainerHelper.saksbehandler1.token,
@@ -777,12 +815,32 @@ class IASakKartleggingHelper {
             token: String = authContainerHelper.saksbehandler1.token,
             orgnummer: String,
             saksnummer: String,
-        ) = applikasjon.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnummer/$saksnummer/$id/avslutt")
+        ) = applikasjon.performPost("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnummer/$saksnummer/${this.id}/avslutt")
             .authentication().bearer(token)
             .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
                 success = { it },
                 failure = { fail(it.message) },
             )
+
+        fun SpørreundersøkelseDto.svarPåSpørsmål(
+            temaIdx: Int = 0,
+            spørsmålIdx: Int = 0,
+            svaralternativIdx: Int = 0,
+            antallSvarPåSpørsmål: Int = 3,
+        ) {
+            val førsteSpørsmål = this.temaer[temaIdx].spørsmålOgSvaralternativer[spørsmålIdx]
+            val førsteSvaralternativ = førsteSpørsmål.svaralternativer[svaralternativIdx]
+
+            repeat(antallSvarPåSpørsmål) {
+                val sesjonId = UUID.randomUUID()
+                sendKartleggingSvarTilKafka(
+                    kartleggingId = this.id,
+                    spørsmålId = førsteSpørsmål.id,
+                    sesjonId = sesjonId.toString(),
+                    svarIder = listOf(førsteSvaralternativ.svarId),
+                )
+            }
+        }
 
         fun SpørreundersøkelseDto.slett(
             token: String = authContainerHelper.saksbehandler1.token,

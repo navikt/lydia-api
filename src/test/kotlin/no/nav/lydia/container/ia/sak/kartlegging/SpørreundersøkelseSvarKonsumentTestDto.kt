@@ -182,7 +182,7 @@ class SpørreundersøkelseSvarKonsumentTestDto {
     fun `svar skal overskrives i DB ved nytt svar til et flervalg spørsmål mottatt på Kafka topic`() {
         val sak = SakHelper.nySakIKartleggesMedEtSamarbeid()
         val kartleggingDto = sak.opprettBehovsvurdering()
-        kartleggingDto.start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+            .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
 
         val kartleggingSvarDto = kartleggingDto.sendKartleggingFlervalgSvarTilKafka(
             svarIder = kartleggingDto.svarAlternativerTilEtFlervalgSpørsmål(),

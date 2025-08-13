@@ -6,9 +6,7 @@ import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
 import no.nav.lydia.arbeidsgiver.ARBEIDSGIVER_SAMARBEID_PATH
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.TestContainerHelper
@@ -19,6 +17,7 @@ import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
+import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import kotlin.test.Test
 import kotlin.test.fail
 
@@ -75,14 +74,14 @@ internal fun hentSamarbeid(orgnr: String) =
 
 internal fun publiserDokument(
     sak: IASakDto,
+    type: Spørreundersøkelse.Type = Spørreundersøkelse.Type.Behovsvurdering,
     samarbeid: IASamarbeidDto = sak.hentAlleSamarbeid().first(),
 ) {
     // publiser et dokument
-    val fullførtBehovsvurdering = sak.opprettBehovsvurdering(
+    val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(
+        type = type,
         samarbeidId = samarbeid.id,
     )
-        .start(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
-        .avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
     val dokumentRefId = fullførtBehovsvurdering.id
 
     publiserDokument(

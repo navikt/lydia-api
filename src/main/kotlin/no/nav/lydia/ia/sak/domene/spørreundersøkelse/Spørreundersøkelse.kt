@@ -24,10 +24,6 @@ data class Spørreundersøkelse(
     companion object {
         const val ANTALL_TIMER_EN_SPØRREUNDERSØKELSE_ER_TILGJENGELIG = 24L
         const val MINIMUM_ANTALL_DELTAKERE = 3
-
-        fun harMinstEttResultat(spørreundersøkelse: Spørreundersøkelse): Boolean =
-            spørreundersøkelse.status == Status.AVSLUTTET && spørreundersøkelse.temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }
-                .any { it.antallSvar >= MINIMUM_ANTALL_DELTAKERE }
     }
 
     enum class Status {
@@ -41,6 +37,11 @@ data class Spørreundersøkelse(
         Evaluering,
         Behovsvurdering,
     }
+
+    fun harMinstEttResultat(): Boolean =
+        status == Status.AVSLUTTET &&
+            temaer.flatMap { it.undertemaer }.flatMap { it.spørsmål }
+                .any { it.antallSvar >= MINIMUM_ANTALL_DELTAKERE }
 
     fun alleTemaErFullført(): Boolean = temaer.all { it.stengtForSvar }
 

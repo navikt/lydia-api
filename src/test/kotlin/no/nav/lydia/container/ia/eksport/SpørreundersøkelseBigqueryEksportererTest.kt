@@ -11,7 +11,7 @@ import no.nav.lydia.Topic
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.sendKartleggingSvarTilKafka
+import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.inkluderAlt
 import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
@@ -29,7 +29,6 @@ import no.nav.lydia.ia.sak.domene.plan.PlanMalDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import java.util.UUID
 import kotlin.test.Test
 
 class SpørreundersøkelseBigqueryEksportererTest {
@@ -252,27 +251,7 @@ class SpørreundersøkelseBigqueryEksportererTest {
     @Test
     fun `Behovsvurdering med info om besvarelse skal kunne sendes før fullføring`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
-        val påbegyntBehovsvurdering = sak.opprettBehovsvurdering()
-            .start(
-                orgnummer = sak.orgnr,
-                saksnummer = sak.saksnummer,
-            )
-
-        val førsteSpørsmål = påbegyntBehovsvurdering.temaer.first().spørsmålOgSvaralternativer.first()
-        val førsteSvaralternativ = førsteSpørsmål.svaralternativer.first()
-
-        val antallSvar = 3
-        repeat(antallSvar) {
-            val sesjonId = UUID.randomUUID()
-            sendKartleggingSvarTilKafka(
-                kartleggingId = påbegyntBehovsvurdering.id,
-                spørsmålId = førsteSpørsmål.id,
-                sesjonId = sesjonId.toString(),
-                svarIder = listOf(førsteSvaralternativ.svarId),
-            )
-        }
-
-        val avsluttetSpørreundersøkelse = påbegyntBehovsvurdering.avslutt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer)
+        val avsluttetSpørreundersøkelse = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
 
         runBlocking {
             kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
