@@ -10,7 +10,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.SpørreundersøkelseResultat
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.TemaResultatDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.azure.NavEnhet
-import no.nav.lydia.integrasjoner.pdfgen.SakDto
+import no.nav.lydia.integrasjoner.pdfgen.DokumentPubliseringSakDto
 import no.nav.lydia.integrasjoner.pdfgen.SamarbeidDto
 import no.nav.lydia.integrasjoner.pdfgen.VirksomhetDto
 
@@ -45,9 +45,9 @@ class DokumentPubliseringProdusent(
             spørreundersøkelseOpprettetAv: String,
         ): DokumentPubliseringMedInnhold =
             DokumentPubliseringMedInnhold(
-                sak = SakDto(
+                sak = DokumentPubliseringSakDto(
                     saksnummer = samarbeid.saksnummer,
-                    navenhet = navEnhet.enhetsnavn,
+                    navenhet = navEnhet,
                 ),
                 referanseId = referanseId,
                 type = dokumentType,
@@ -81,7 +81,7 @@ class DokumentPubliseringProdusent(
 
 @Serializable
 data class DokumentPubliseringMedInnhold(
-    val sak: SakDto,
+    val sak: DokumentPubliseringSakDto,
     val virksomhet: VirksomhetDto,
     val samarbeid: SamarbeidDto,
     val referanseId: String,
