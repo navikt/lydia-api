@@ -107,6 +107,14 @@ dependencies {
     testImplementation("no.nav.security:mock-oauth2-server:2.2.1")
 
     constraints {
+        implementation("io.netty:netty-codec-http2") {
+            version {
+                require("4.2.4.Final")
+            }
+            because(
+                "ktor-server-netty har sårbar versjon",
+            )
+        }
         implementation("joda-time:joda-time") {
             version {
                 require("2.14.0")
