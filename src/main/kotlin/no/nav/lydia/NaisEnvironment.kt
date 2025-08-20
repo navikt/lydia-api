@@ -256,6 +256,10 @@ enum class Topic(
         navn = "pia.dokument-publisering-v1",
         konsumentGruppe = "dokument-publisering-producer",
     ),
+    DOKUMENT_KVITTERING_TOPIC(
+        navn = "pia.dokument-kvittering-v1",
+        konsumentGruppe = "dokument-kvittering-producer",
+    ),
 
     @Deprecated("Bruk SPORREUNDERSOKELSE_HENDELSE_TOPIC")
     SPORREUNDERSOKELSE_SVAR_TOPIC(

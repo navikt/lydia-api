@@ -1,6 +1,5 @@
 package no.nav.lydia.container.dokument
 
-import com.github.kittinunf.fuel.core.extensions.authentication
 import io.kotest.matchers.collections.shouldHaveAtLeastSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -8,6 +7,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.hentDokumentPubliseringRespons
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
@@ -15,14 +15,10 @@ import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarPåSpørsmål
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
-import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
-import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.statuskode
-import no.nav.lydia.helper.tilSingelRespons
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
-import no.nav.lydia.ia.sak.api.dokument.DOKUMENT_PUBLISERING_BASE_ROUTE
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
@@ -238,11 +234,4 @@ class DokumentPubliseringApiTest {
         dokumentPubliseringDto.opprettetTidspunkt shouldNotBe null
         dokumentPubliseringDto.publisertTidspunkt shouldBe null
     }
-
-    private fun hentDokumentPubliseringRespons(
-        dokumentReferanseId: String,
-        token: String = authContainerHelper.lesebruker.token,
-    ) = applikasjon.performGet(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/Behovsvurdering/ref/$dokumentReferanseId")
-        .authentication().bearer(token = token)
-        .tilSingelRespons<DokumentPubliseringDto>()
 }
