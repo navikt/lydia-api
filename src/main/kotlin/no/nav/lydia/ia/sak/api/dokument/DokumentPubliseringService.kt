@@ -13,6 +13,7 @@ import no.nav.lydia.ia.sak.api.spørreundersøkelse.tilResultatDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import no.nav.lydia.integrasjoner.azure.NavEnhet
+import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -115,4 +116,6 @@ class DokumentPubliseringService(
             )
         }
     }
+
+    fun lagreKvittering(kvittering: KvitteringDto) = dokumentPubliseringRepository.lagreKvittering(kvittering)
 }

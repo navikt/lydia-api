@@ -14,4 +14,5 @@ data class DokumentPubliseringDto(
     val dokumentType: Type,
     val opprettetTidspunkt: LocalDateTime,
     val publisertTidspunkt: LocalDateTime?,
+    val samarbeidId: Int,
 )
