@@ -692,6 +692,21 @@ class DokumentPubliseringHelper {
         ) = applikasjon.performPost(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/Behovsvurdering/ref/$dokumentReferanseId")
             .authentication().bearer(token = token)
             .tilSingelRespons<DokumentPubliseringDto>()
+
+        fun hentDokumentPubliseringRespons(
+            dokumentReferanseId: String,
+            token: String = authContainerHelper.lesebruker.token,
+        ) = applikasjon.performGet(url = "$DOKUMENT_PUBLISERING_BASE_ROUTE/type/Behovsvurdering/ref/$dokumentReferanseId")
+            .authentication().bearer(token = token)
+            .tilSingelRespons<DokumentPubliseringDto>()
+
+        fun hentDokumentPublisering(
+            dokumentReferanseId: String,
+            token: String = authContainerHelper.lesebruker.token,
+        ) = hentDokumentPubliseringRespons(dokumentReferanseId = dokumentReferanseId, token = token).third.fold(
+            success = { it },
+            failure = { fail(it.message) },
+        )
     }
 }
 

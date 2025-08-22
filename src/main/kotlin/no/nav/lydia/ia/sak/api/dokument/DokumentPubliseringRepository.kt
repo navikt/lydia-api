@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import io.ktor.http.HttpStatusCode
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotliquery.Row
 import kotliquery.queryOf
@@ -11,6 +12,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
+import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 import javax.sql.DataSource
@@ -89,6 +91,42 @@ class DokumentPubliseringRepository(
             )
         }
 
+    fun lagreKvittering(kvittering: KvitteringDto) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE dokument_til_publisering SET
+                    status = :status,
+                    dokument_id = :dokumentId,
+                    journalpost_id = :journalpostId,
+                    publisert = :publisertDato
+                    WHERE referanse_id = :referanseId 
+                    AND type = :type
+                    """.trimIndent(),
+                    mapOf(
+                        "status" to DokumentPublisering.Status.PUBLISERT.name, // TODO: hva ved feilende journalføring?
+                        "dokumentId" to kvittering.dokumentId,
+                        "journalpostId" to kvittering.journalpostId,
+                        "publisertDato" to kvittering.publisertDato.toJavaLocalDateTime(),
+                        "referanseId" to kvittering.referanseId,
+                        "type" to kvittering.type,
+                    ),
+                ).asUpdate,
+            ).also {
+                println(
+                    mapOf(
+                        "status" to DokumentPublisering.Status.PUBLISERT.name, // TODO: hva ved feilende journalføring?
+                        "dokumentId" to kvittering.dokumentId,
+                        "journalpostId" to kvittering.journalpostId,
+                        "publisertDato" to kvittering.publisertDato.toJavaLocalDateTime(),
+                        "referanse_id" to kvittering.referanseId,
+                        "type" to kvittering.type,
+                    ).toString(),
+                )
+            }
+        }
+
     fun Row.tilDokumentDto(): DokumentPubliseringDto =
         DokumentPubliseringDto(
             dokumentId = this.stringOrNull(columnLabel = "dokument_id"),
@@ -98,5 +136,6 @@ class DokumentPubliseringRepository(
             dokumentType = DokumentPublisering.Type.valueOf(this.string(columnLabel = "type")),
             opprettetTidspunkt = this.localDateTime(columnLabel = "opprettet").toKotlinLocalDateTime(),
             publisertTidspunkt = this.localDateTimeOrNull(columnLabel = "publisert")?.toKotlinLocalDateTime(),
+            samarbeidId = this.int("ia_prosess"),
         )
 }

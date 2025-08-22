@@ -91,6 +91,7 @@ import no.nav.lydia.integrasjoner.jobblytter.Jobblytter
 import no.nav.lydia.integrasjoner.journalpost.JournalpostService
 import no.nav.lydia.integrasjoner.kartlegging.KartleggingSvarConsumer
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendelseConsumer
+import no.nav.lydia.integrasjoner.kvittering.KvitteringConsumer
 import no.nav.lydia.integrasjoner.pdfgen.PiaPdfgenService
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetConsumer
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitetRepository
@@ -392,6 +393,11 @@ fun startLydiaBackend() {
                 planRepository = planRepository,
             ),
         )
+        run()
+    }.also { HelseMonitor.leggTilHelsesjekk(it) }
+
+    KvitteringConsumer().apply {
+        create(kafka = naisEnv.kafka, dokumentPubliseringService = dokumentPubliseringService)
         run()
     }.also { HelseMonitor.leggTilHelsesjekk(it) }
 
