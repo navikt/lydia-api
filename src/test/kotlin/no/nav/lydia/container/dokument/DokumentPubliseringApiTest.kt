@@ -198,7 +198,6 @@ class DokumentPubliseringApiTest {
                         dokumentPubliseringMedInnhold.dokumentOpprettetAv shouldBe navIdent
                         dokumentPubliseringMedInnhold.innhold.id shouldBe dokumentRefId
                         dokumentPubliseringMedInnhold.innhold.fullførtTidspunkt shouldNotBe null
-                        dokumentPubliseringMedInnhold.innhold.spørreundersøkelseOpprettetAv shouldBe "X12345"
                         dokumentPubliseringMedInnhold.type shouldBe DokumentPublisering.Type.BEHOVSVURDERING
                         dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach { it.navn shouldNotBe null }
                         dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach {

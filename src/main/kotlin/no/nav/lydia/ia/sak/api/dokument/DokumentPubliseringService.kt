@@ -109,7 +109,6 @@ class DokumentPubliseringService(
                     virksomhetsNavn = spørreundersøkelse.virksomhetsNavn,
                     samarbeid = samarbeid,
                     navEnhet = navEnhet,
-                    spørreundersøkelseOpprettetAv = spørreundersøkelse.opprettetAv,
                     spørreundersøkelseResultat = spørreundersøkelse.tilResultatDto(),
                     fullførtTidspunkt = spørreundersøkelse.fullførtTidspunkt,
                 ),

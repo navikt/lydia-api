@@ -1,10 +1,14 @@
 package no.nav.lydia.container.arbeidsgiver
 
 import com.github.kittinunf.fuel.core.extensions.authentication
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import io.ktor.http.HttpStatusCode
 import no.nav.lydia.arbeidsgiver.ARBEIDSGIVER_SAMARBEID_PATH
+import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
+import no.nav.lydia.helper.DokumentPubliseringHelper
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.SakHelper
@@ -13,7 +17,9 @@ import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.performGet
 import no.nav.lydia.helper.VirksomhetHelper
+import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.hentAlleSamarbeid
+import no.nav.lydia.helper.statuskode
 import no.nav.lydia.helper.tilListeRespons
 import no.nav.lydia.ia.sak.api.IASakDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
@@ -33,7 +39,7 @@ class SamarbeidApiTest {
         val orgnr = VirksomhetHelper.nyttOrgnummer()
         SakHelper.nySakIKartleggesMedEtSamarbeid(orgnummer = orgnr, navnPåSamarbeid = "Test")
 
-        val samarbeidSomHarDokumenter = hentSamarbeid(orgnr)
+        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 0
     }
 
@@ -44,7 +50,7 @@ class SamarbeidApiTest {
         val samarbeid = sak.hentAlleSamarbeid().first()
         publiserDokument(sak = sak, samarbeid = samarbeid)
 
-        val samarbeidSomHarDokumenter = hentSamarbeid(orgnr)
+        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 1
         samarbeidSomHarDokumenter.first().navn shouldBe samarbeid.navn
     }
@@ -58,18 +64,36 @@ class SamarbeidApiTest {
         val aktivSak = SakHelper.nySakIViBistår(orgnummer = orgnr)
         publiserDokument(sak = aktivSak)
 
-        val samarbeidSomHarDokumenter = hentSamarbeid(orgnr)
+        val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 2
+    }
+
+    @Test
+    fun `skal få kun ett samarbeid selvom det er publisert mange dokumenter`() {
+        val orgnr = VirksomhetHelper.nyttOrgnummer()
+        val sak = SakHelper.nySakIViBistår(orgnummer = orgnr)
+        publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
+        publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
+        publiserDokument(sak = sak, type = Spørreundersøkelse.Type.Behovsvurdering)
+
+        val samarbeid = hentSamarbeidMedDokumenter(orgnr)
+        samarbeid shouldHaveSize 1
+        samarbeid.forExactlyOne {
+            it.dokumenter shouldHaveSize 3
+            it.dokumenter.forAll { dokument ->
+                dokument.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
+            }
+        }
     }
 }
 
-internal fun hentSamarbeid(orgnr: String) =
+internal fun hentSamarbeidMedDokumenter(orgnr: String) =
     TestContainerHelper.applikasjon.performGet("$ARBEIDSGIVER_SAMARBEID_PATH/$orgnr")
         .authentication().bearer(TestContainerHelper.tokenXAccessToken().serialize())
-        .tilListeRespons<IASamarbeidDto>().third
+        .tilListeRespons<SamarbeidMedDokumenterDto>().third
         .fold(
             success = { it },
-            failure = { fail(it.message) },
+            failure = { fail("Feil ved uthenting av samarbeid: ${it.message}") },
         )
 
 internal fun publiserDokument(
@@ -84,8 +108,17 @@ internal fun publiserDokument(
     )
     val dokumentRefId = fullførtBehovsvurdering.id
 
-    publiserDokument(
+    val publiseringsRespons = publiserDokument(
         dokumentReferanseId = dokumentRefId,
         token = authContainerHelper.saksbehandler1.token,
     )
+
+    publiseringsRespons.statuskode() shouldBe HttpStatusCode.Created.value
+
+    val dokument = publiseringsRespons.third.fold(
+        success = { it },
+        failure = { fail(it.message) },
+    )
+
+    DokumentPubliseringHelper.sendKvittering(dokument)
 }

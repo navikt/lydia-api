@@ -16,6 +16,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -82,6 +83,7 @@ import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
 import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.integrasjoner.kartlegging.HendelsType
 import no.nav.lydia.integrasjoner.kartlegging.SpørreundersøkelseHendeleseNøkkel
+import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.integrasjoner.ssb.NæringsRepository
 import no.nav.lydia.statusoversikt.StatusoversiktResponsDto
@@ -112,6 +114,7 @@ import org.testcontainers.containers.Network
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy
 import org.testcontainers.images.builder.ImageFromDockerfile
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.io.path.Path
 import kotlin.test.fail
@@ -708,9 +711,22 @@ class DokumentPubliseringHelper {
             failure = { fail(it.message) },
         )
 
-        suspend fun sendKvittering(dokumentReferanseId: String) {
+        fun sendKvittering(dokument: DokumentPubliseringDto) {
             val dokId = UUID.randomUUID().toString()
-            kafkaContainerHelper.sendOgVentTilKonsumert()
+            kafkaContainerHelper.sendOgVentTilKonsumert(
+                nøkkel = dokId,
+                melding = Json.encodeToString(
+                    KvitteringDto(
+                        referanseId = dokument.referanseId,
+                        samarbeidId = 1,
+                        dokumentId = dokId,
+                        journalpostId = UUID.randomUUID().toString(),
+                        publisertDato = LocalDateTime.now().toKotlinLocalDateTime(),
+                        type = dokument.dokumentType.name,
+                    ),
+                ),
+                topic = Topic.DOKUMENT_KVITTERING_TOPIC,
+            )
         }
     }
 }
