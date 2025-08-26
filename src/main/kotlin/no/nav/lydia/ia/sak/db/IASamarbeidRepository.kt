@@ -6,8 +6,11 @@ import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
@@ -74,24 +77,58 @@ class IASamarbeidRepository(
             )
         }
 
-    fun hentAlleSamarbeidSomHarDokumenter(orgnr: String): List<IASamarbeid> =
+    fun hentAlleSamarbeidSomHarDokumenter(orgnr: String): List<SamarbeidMedDokumenterDto> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 // TODO: Sjekk på status om den er PUBLISERT
                 queryOf(
                     """
-                    SELECT ia_prosess.*
+                    SELECT 
+                        ia_prosess.*
                     FROM ia_sak 
                       JOIN ia_prosess using (saksnummer)
                       JOIN dokument_til_publisering dok ON (dok.ia_prosess = ia_prosess.id) 
                     WHERE orgnr = :orgnr
                     AND ia_prosess.status != :slettetStatus
+                    AND dok.dokument_id IS NOT NULL
+                    AND dok.status = :publisertStatus
                     """.trimIndent(),
                     mapOf(
                         "orgnr" to orgnr,
                         "slettetStatus" to IASamarbeid.Status.SLETTET.name,
+                        "publisertStatus" to DokumentPublisering.Status.PUBLISERT.name,
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asList,
+                ).map({
+                    val samarbeid = mapRowToIaSamarbeidDto(it)
+                    SamarbeidMedDokumenterDto(
+                        id = samarbeid.id,
+                        saksnummer = samarbeid.saksnummer,
+                        navn = samarbeid.navn,
+                        status = samarbeid.status,
+                        opprettet = samarbeid.opprettet,
+                        sistEndret = samarbeid.sistEndret,
+                        dokumenter = hentdokumentIderForSamarbeid(samarbeid.id),
+                    )
+                }).asList,
+            )
+        }
+
+    fun hentdokumentIderForSamarbeid(id: Int) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT id
+                    FROM dokument_til_publisering
+                    WHERE
+                        dokument_id IS NOT NULL  
+                        AND status = :publisertStatus
+                    """.trimIndent(),
+                    mapOf(
+                        "samarbeidId" to id,
+                        "publisertStatus" to DokumentPublisering.Status.PUBLISERT.name,
+                    ),
+                ).map { it.string("id") }.asList,
             )
         }
 

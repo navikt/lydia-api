@@ -22,7 +22,7 @@ fun Route.samarbeid(samarbeidService: IASamarbeidService) {
         )
         samarbeidService.hentAlleSamarbeid(orgnr = orgnr)
             .map {
-                call.respond(status = HttpStatusCode.OK, message = it.tilDto())
+                call.respond(status = HttpStatusCode.OK, message = it)
             }.mapLeft {
                 call.sendFeil(it)
             }

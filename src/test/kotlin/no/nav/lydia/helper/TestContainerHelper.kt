@@ -707,6 +707,11 @@ class DokumentPubliseringHelper {
             success = { it },
             failure = { fail(it.message) },
         )
+
+        suspend fun sendKvittering(dokumentReferanseId: String) {
+            val dokId = UUID.randomUUID().toString()
+            kafkaContainerHelper.sendOgVentTilKonsumert()
+        }
     }
 }
 
