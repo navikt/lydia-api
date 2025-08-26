@@ -81,7 +81,7 @@ class SamarbeidApiTest {
         samarbeid.forExactlyOne {
             it.dokumenter shouldHaveSize 3
             it.dokumenter.forAll { dokument ->
-                dokument.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name
+                dokument.type shouldBe Spørreundersøkelse.Type.Behovsvurdering.name.uppercase()
             }
         }
     }
