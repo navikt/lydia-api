@@ -7,6 +7,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_EVALUERING
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.FINNES_BEHOVSVURDERING
@@ -33,6 +34,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType.SLETT_PROSESS
 import no.nav.lydia.ia.sak.domene.ProsessHendelse
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
+import org.slf4j.LoggerFactory
 
 class IASamarbeidService(
     val samarbeidRepository: IASamarbeidRepository,
@@ -41,10 +43,22 @@ class IASamarbeidService(
     val planRepository: PlanRepository,
     val planObservers: List<Observer<ObservedPlan>>,
 ) {
-    fun hentAlleSamarbeid(orgnr: String) =
+    private val log = LoggerFactory.getLogger(this::class.java)
+
+    fun hentSamarbeidMedPubliserteDokumenter(orgnr: String) =
         Either.catch {
-            samarbeidRepository.hentAlleSamarbeidSomHarDokumenter(orgnr = orgnr)
+            samarbeidRepository.hentSamarbeidForOrgnr(orgnr)
+                .map { samarbeid ->
+                    SamarbeidMedDokumenterDto(
+                        id = samarbeid.id,
+                        navn = samarbeid.navn,
+                        status = samarbeid.status,
+                        sistEndret = samarbeid.sistEndret,
+                        dokumenter = samarbeidRepository.hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId = samarbeid.id),
+                    )
+                }.filter { it.dokumenter.isNotEmpty() }
         }.mapLeft {
+            log.warn("Feil ved uthenting av samarbeid", it)
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
 
@@ -307,7 +321,7 @@ object IASamarbeidFeil {
 
     // TODO: Endre feilmelding fra prosess til samarbeid
     val `feil ved henting av samarbeid` =
-        Feil(feilmelding = "Feil ved henting av prosess", httpStatusCode = HttpStatusCode.InternalServerError)
+        Feil(feilmelding = "Feil ved henting av samarbeid", httpStatusCode = HttpStatusCode.InternalServerError)
 
     // TODO: Endre feilmelding fra prosess til samarbeid
     val `ugyldig samarbeidId` =

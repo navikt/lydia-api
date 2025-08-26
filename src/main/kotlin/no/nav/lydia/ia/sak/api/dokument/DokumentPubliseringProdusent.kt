@@ -42,7 +42,6 @@ class DokumentPubliseringProdusent(
             navEnhet: NavEnhet,
             spørreundersøkelseResultat: SpørreundersøkelseResultatDto,
             fullførtTidspunkt: LocalDateTime,
-            spørreundersøkelseOpprettetAv: String,
         ): DokumentPubliseringMedInnhold =
             DokumentPubliseringMedInnhold(
                 sak = DokumentPubliseringSakDto(
@@ -61,18 +60,13 @@ class DokumentPubliseringProdusent(
                     navn = samarbeid.navn,
                 ),
                 innhold = spørreundersøkelseResultat.tilSpørreundersøkelseInnholdDto(
-                    spørreundersøkelseOpprettetAv = spørreundersøkelseOpprettetAv,
                     fullførtTidspunkt = fullførtTidspunkt,
                 ),
             )
 
-        fun SpørreundersøkelseResultatDto.tilSpørreundersøkelseInnholdDto(
-            fullførtTidspunkt: LocalDateTime,
-            spørreundersøkelseOpprettetAv: String,
-        ): SpørreundersøkelseInnholdIDokumentDto =
+        fun SpørreundersøkelseResultatDto.tilSpørreundersøkelseInnholdDto(fullførtTidspunkt: LocalDateTime): SpørreundersøkelseInnholdIDokumentDto =
             SpørreundersøkelseInnholdIDokumentDto(
                 id = id,
-                spørreundersøkelseOpprettetAv = spørreundersøkelseOpprettetAv,
                 fullførtTidspunkt = fullførtTidspunkt,
                 spørsmålMedSvarPerTema = spørsmålMedSvarPerTema,
             )
@@ -93,7 +87,6 @@ data class DokumentPubliseringMedInnhold(
 @Serializable
 data class SpørreundersøkelseInnholdIDokumentDto(
     val id: String,
-    val spørreundersøkelseOpprettetAv: String,
     val fullførtTidspunkt: LocalDateTime,
     val spørsmålMedSvarPerTema: List<TemaResultatDto>,
 )
