@@ -71,15 +71,6 @@ class DokumentPubliseringService(
             ).left()
         }
 
-        if (spørreundersøkelse.fullførtTidspunkt == null) {
-            return Feil(
-                feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har status '${spørreundersøkelse.status}' " +
-                    "(forventet ${Spørreundersøkelse.Status.AVSLUTTET}) og/eller mangler fullført tidspunkt, " +
-                    "og dermed ikke kan lagres som dokument. ",
-                httpStatusCode = HttpStatusCode.BadRequest,
-            ).left()
-        }
-
         if (!spørreundersøkelse.harMinstEttResultat()) {
             return Feil(
                 feilmelding = "Spørreundersøkelse med id: '$dokumentReferanseId' har ingen resultat, og dermed ikke kan lagres som dokument.",
@@ -110,7 +101,7 @@ class DokumentPubliseringService(
                     samarbeid = samarbeid,
                     navEnhet = navEnhet,
                     spørreundersøkelseResultat = spørreundersøkelse.tilResultatDto(),
-                    fullførtTidspunkt = spørreundersøkelse.fullførtTidspunkt,
+                    fullførtTidspunkt = spørreundersøkelse.fullførtTidspunkt ?: spørreundersøkelse.endretTidspunkt ?: spørreundersøkelse.opprettetTidspunkt,
                 ),
             )
         }
