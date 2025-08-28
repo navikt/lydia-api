@@ -10,11 +10,13 @@ import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.ia.eksport.SamarbeidDto
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
+import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.samarbeid.IASamarbeidDto
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.SalesforceAktivitet
 import no.nav.lydia.integrasjoner.salesforce.aktiviteter.mapTilSalesforceAktivitet
 import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 class IASamarbeidRepository(
@@ -136,6 +138,7 @@ class IASamarbeidRepository(
         }
 
     fun opprettNyttSamarbeid(
+        offentligId: UUID = UUID.randomUUID(),
         saksnummer: String,
         navn: String? = DEFAULT_SAMARBEID_NAVN,
     ): IASamarbeid =
@@ -143,11 +146,12 @@ class IASamarbeidRepository(
             session.run(
                 queryOf(
                     """
-                    INSERT INTO ia_prosess (saksnummer, navn) 
-                    values (:saksnummer, :navn)
+                    INSERT INTO ia_prosess (offentlig_id, saksnummer, navn) 
+                    values (:offentligId, :saksnummer, :navn)
                      returning *
                     """.trimIndent(),
                     mapOf(
+                        "offentligId" to offentligId,
                         "saksnummer" to saksnummer,
                         "navn" to navn.nullIfEmpty(),
                     ),
@@ -178,6 +182,7 @@ class IASamarbeidRepository(
     private fun mapRowToIaSamarbeidDto(row: Row): IASamarbeid =
         IASamarbeid(
             id = row.int("id"),
+            offentligId = row.string("offentlig_id").tilUUID("offentlig_id"),
             saksnummer = row.string("saksnummer"),
             navn = row.string("navn"),
             status = row.stringOrNull("status")?.let { IASamarbeid.Status.valueOf(it) },

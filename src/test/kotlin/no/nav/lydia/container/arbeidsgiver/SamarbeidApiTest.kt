@@ -5,6 +5,8 @@ import io.kotest.inspectors.forAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.UUIDVersion
+import io.kotest.matchers.string.shouldBeUUID
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.arbeidsgiver.ARBEIDSGIVER_SAMARBEID_PATH
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
@@ -53,6 +55,7 @@ class SamarbeidApiTest {
         val samarbeidSomHarDokumenter = hentSamarbeidMedDokumenter(orgnr)
         samarbeidSomHarDokumenter shouldHaveSize 1
         samarbeidSomHarDokumenter.first().navn shouldBe samarbeid.navn
+        samarbeidSomHarDokumenter.first().offentligId.shouldBeUUID(version = UUIDVersion.ANY)
     }
 
     @Test
