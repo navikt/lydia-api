@@ -32,3 +32,6 @@ build
 
 # Ignore VSCode project-specific directory
 .vscode
+
+/scripts/tenor/output/
+/scripts/tenor/.venv/
