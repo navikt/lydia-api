@@ -283,6 +283,7 @@ fun startLydiaBackend() {
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
     brregConsumer(naisEnv = naisEnv, virksomhetService)
+
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
     val iaSakshendelseRepository = IASakshendelseRepository(dataSource = dataSource)

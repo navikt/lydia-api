@@ -86,6 +86,8 @@ object BrregOppdateringConsumer : CoroutineScope {
                                             virksomhetService.insertNæringsundergrupper(virksomhet)
                                         } catch (_: UgyldigAdresseException) {
                                             antallIrrelevanteBedrifter += 1
+                                        } catch (e: Exception) {
+                                            logger.warn("Fikk feil ved oppdatering av virksomhet", e)
                                         }
                                     }
 
