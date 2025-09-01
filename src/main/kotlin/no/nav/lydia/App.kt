@@ -282,9 +282,7 @@ fun startLydiaBackend() {
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))
 
-    // -- TODO: uncomment når næringskoder er oppdatert
-//    brregConsumer(naisEnv = naisEnv, virksomhetService)
-    // --
+    brregConsumer(naisEnv = naisEnv, virksomhetService)
 
     brregAlleVirksomheterConsumer(naisEnv = naisEnv, dataSource = dataSource)
 
