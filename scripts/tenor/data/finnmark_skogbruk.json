@@ -1,0 +1,269 @@
+{
+  "treff": 2,
+  "rader": 2,
+  "offset": 0,
+  "nesteSide": null,
+  "seed": 6,
+  "dokumentListe": [
+    {
+      "forretningsadresse": {
+        "kommune": "HAMMERFEST",
+        "landkode": "NO",
+        "postnummer": "9657",
+        "adresse": ["Sandan 1"],
+        "land": "Norge",
+        "kommunenummer": "5603",
+        "poststed": "KÅRHAMN"
+      },
+      "naeringBeskrivelse": ["Avvirkning", "Godstransport på vei"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "HAMMERFEST",
+              "landkode": "NO",
+              "postnummer": "9657",
+              "adresse": ["Sandan 1"],
+              "land": "Norge",
+              "kommunenummer": "5603",
+              "poststed": "KÅRHAMN"
+            },
+            "naeringBeskrivelse": ["Avvirkning", "Godstransport på vei"],
+            "registrertIMvaregisteret": true,
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": false,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "ENK",
+              "beskrivelse": "Enkeltpersonforetak"
+            },
+            "naeringKode": ["02.200", "49.410"],
+            "navn": "FILOSOFISK MOTSTANDSDYKTIG KATT ABBED",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"314050177\",\"navn\":\"FILOSOFISK MOTSTANDSDYKTIG KATT ABBED\",\"oppdeltNavn\":[\"FILOSOFISK MOTSTANDSDYKTIG KATT\",\"ABBED\"],\"organisasjonsform\":{\"kode\":\"ENK\",\"beskrivelse\":\"Enkeltpersonforetak\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9657\",\"poststed\":\"KÅRHAMN\",\"adresse\":[\"Sandan 1\"],\"kommune\":\"HAMMERFEST\",\"kommunenummer\":\"5603\"},\"postadresse\":{\"adresse\":[]},\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"49\",\"beskrivelse\":\"Landtransport og rørtransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"49.4\",\"beskrivelse\":\"Godstransport på vei, herunder flyttetransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"49.41\",\"beskrivelse\":\"Godstransport på vei\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"49.410\",\"beskrivelse\":\"Godstransport på vei\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"8200\",\"beskrivelse\":\"Personlig næringsdrivende \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"aktivitetBransje\":[\"Avvirkning\",\"Godstransport på vei\"],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":7,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[{\"kode\":\"BFLA\",\"beskrivelse\":\"Bortforpakter av landbrukseiendom\"}],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"person\":{\"foedselsnummer\":\"25819199798\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314245083\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T21:28:32.238+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T20:36:21.745+01:00",
+              "id": "314050177",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:56:28.660232346+01:00",
+              "testdataVersjon": 1705868911
+            },
+            "antallUnderenheter": 1,
+            "antallAnsatte": 7,
+            "kapital": { "antallAksjer": 0, "belop": 0 },
+            "varamedlemmer": [],
+            "innehaver": "25819199798",
+            "harUnderenheter": ["315404533"],
+            "regnskapsfoerere": ["314245083"],
+            "revisorer": [],
+            "styremedlemmer": [],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "314050177",
+            "registreringsdatoEnhetsregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "314050177" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["02.200", "49.410"],
+      "navn": "FILOSOFISK MOTSTANDSDYKTIG KATT ABBED",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315404533\",\"navn\":\"FILOSOFISK MOTSTANDSDYKTIG KATT ABBED\",\"oppdeltNavn\":[\"FILOSOFISK MOTSTANDSDYKTIG KATT\",\"ABBED\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9657\",\"poststed\":\"KÅRHAMN\",\"adresse\":[\"Sandan 1\"],\"kommune\":\"HAMMERFEST\",\"kommunenummer\":\"5603\"},\"postadresse\":{\"adresse\":[]},\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"49\",\"beskrivelse\":\"Landtransport og rørtransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"49.4\",\"beskrivelse\":\"Godstransport på vei, herunder flyttetransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"49.41\",\"beskrivelse\":\"Godstransport på vei\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"49.410\",\"beskrivelse\":\"Godstransport på vei\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":7,\"underenhet\":{\"hovedenhet\":\"314050177\",\"oppstartsdato\":\"2001-08-07\",\"datoEierskifte\":\"2009-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314050177\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:56:28.217+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T12:08:20.294+01:00",
+        "id": "315404533",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:56:28.660240204+01:00",
+        "testdataVersjon": 1705877787
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 7,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315404533",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "MÅSØY",
+        "landkode": "NO",
+        "postnummer": "9670",
+        "adresse": ["Østre Omveienutsiktspunktet"],
+        "land": "Norge",
+        "kommunenummer": "5618",
+        "poststed": "TUFJORD"
+      },
+      "naeringBeskrivelse": ["Tjenester tilknyttet skogbruk"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "MÅSØY",
+        "landkode": "NO",
+        "postnummer": "9690",
+        "adresse": ["Strandgata 158"],
+        "land": "Norge",
+        "kommunenummer": "5618",
+        "poststed": "HAVØYSUND"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "MÅSØY",
+              "landkode": "NO",
+              "postnummer": "9670",
+              "adresse": ["Østre Omveienutsiktspunktet"],
+              "land": "Norge",
+              "kommunenummer": "5618",
+              "poststed": "TUFJORD"
+            },
+            "naeringBeskrivelse": ["Tjenester tilknyttet skogbruk"],
+            "registrertIMvaregisteret": true,
+            "Postadresse": {
+              "kommune": "MÅSØY",
+              "landkode": "NO",
+              "postnummer": "9690",
+              "adresse": ["Strandgata 158"],
+              "land": "Norge",
+              "kommunenummer": "5618",
+              "poststed": "HAVØYSUND"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "MÅSØY",
+              "landkode": "NO",
+              "postnummer": "9690",
+              "adresse": ["Strandgata 158"],
+              "land": "Norge",
+              "kommunenummer": "5618",
+              "poststed": "HAVØYSUND"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2002-07-17",
+            "kontaktpersoner": ["21927298527"],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "DA",
+              "beskrivelse": "Ansvarlig selskap med delt ansvar"
+            },
+            "naeringKode": ["02.400"],
+            "navn": "STADIG KRY HUND DA",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313962857\",\"navn\":\"STADIG KRY HUND DA\",\"oppdeltNavn\":[\"STADIG KRY HUND DA\"],\"organisasjonsform\":{\"kode\":\"DA\",\"beskrivelse\":\"Ansvarlig selskap med delt ansvar\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9670\",\"poststed\":\"TUFJORD\",\"adresse\":[\"Østre Omveienutsiktspunktet\"],\"kommune\":\"MÅSØY\",\"kommunenummer\":\"5618\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9690\",\"poststed\":\"HAVØYSUND\",\"adresse\":[\"Strandgata 158\"],\"kommune\":\"MÅSØY\",\"kommunenummer\":\"5618\"},\"telefonnummer\":\"03 13 96 85\",\"mobilnummer\":\"031 39 628\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.4\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.40\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.400\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2300\",\"beskrivelse\":\"Personlige foretak \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-14\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-14\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2002-07-17\",\"aktivitetBransje\":[\"Tjenester tilknyttet skogbruk\"],\"vedtektsdato\":\"2004-06-03\",\"vedtektsfestetFormaal\":[\"Tjenester tilknyttet skogbruk\"],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":5,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DELT\",\"beskrivelse\":\"Deltakere\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DTPR\",\"beskrivelse\":\"Deltaker med proratarisk ansvar (delt ansvar)\"},\"person\":{\"foedselsnummer\":\"21927298527\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"ansvarsandel\":\"50%\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"DELT\",\"beskrivelse\":\"Deltakere\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DTPR\",\"beskrivelse\":\"Deltaker med proratarisk ansvar (delt ansvar)\"},\"person\":{\"foedselsnummer\":\"29818399152\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"ansvarsandel\":\"50%\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"KONT\",\"beskrivelse\":\"Kontaktperson\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"KONT\",\"beskrivelse\":\"Kontaktperson\"},\"person\":{\"foedselsnummer\":\"21927298527\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Deltakerne i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T21:19:02.835+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T20:26:50.073+01:00",
+              "id": "313962857",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:26:43.431444879+01:00",
+              "testdataVersjon": 1705868342
+            },
+            "antallUnderenheter": 1,
+            "antallAnsatte": 5,
+            "kapital": { "antallAksjer": 0, "belop": 0 },
+            "varamedlemmer": [],
+            "harUnderenheter": ["315125952"],
+            "regnskapsfoerere": [],
+            "revisorer": [],
+            "styremedlemmer": [],
+            "telefonnummer": "03 13 96 85",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313962857",
+            "registreringsdatoEnhetsregisteret": "2021-03-14",
+            "registreringsdatoForetaksregisteret": "2021-03-14"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "MÅSØY",
+        "landkode": "NO",
+        "postnummer": "9690",
+        "adresse": ["Strandgata 158"],
+        "land": "Norge",
+        "kommunenummer": "5618",
+        "poststed": "HAVØYSUND"
+      },
+      "erUnderenhet": { "hovedenhet": "313962857" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["02.400"],
+      "navn": "STADIG KRY HUND DA",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315125952\",\"navn\":\"STADIG KRY HUND DA\",\"oppdeltNavn\":[\"STADIG KRY HUND DA\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9670\",\"poststed\":\"TUFJORD\",\"adresse\":[\"Østre Omveienutsiktspunktet\"],\"kommune\":\"MÅSØY\",\"kommunenummer\":\"5618\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9690\",\"poststed\":\"HAVØYSUND\",\"adresse\":[\"Strandgata 158\"],\"kommune\":\"MÅSØY\",\"kommunenummer\":\"5618\"},\"telefonnummer\":\"03 15 12 95\",\"mobilnummer\":\"031 51 259\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.4\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.40\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.400\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":5,\"underenhet\":{\"hovedenhet\":\"313962857\",\"oppstartsdato\":\"2001-09-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313962857\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:26:42.984+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:41:44.922+01:00",
+        "id": "315125952",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:26:43.431453801+01:00",
+        "testdataVersjon": 1705876002
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 5,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 12 95",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315125952",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    }
+  ],
+  "fasetter": {}
+}

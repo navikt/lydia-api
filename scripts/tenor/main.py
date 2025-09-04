@@ -5,45 +5,46 @@ import os
 class Virksomhet:
     def __init__(
         self,
-        orgnummer,
-        navn,
-        næringskode,
-        kommune,
-        postnummer,
-        adresse_lines,
-        kommunenummer,
-        poststed,
-        landkode,
-        land,
-        oppstartsdato,
-        antall_ansatte,
+        orgnummer: str,
+        navn: str,
+        næringskode: list[str],
+        kommune: str,
+        postnummer: str,
+        adresse_lines: list[str],
+        kommunenummer: str,
+        poststed: str,
+        landkode: str,
+        land: str,
+        oppstartsdato: str,
+        antall_ansatte: int,
     ):
         self.orgnummer: str = orgnummer
-        self.navn = navn
-        self.næringskode = næringskode
-        self.kommune = kommune
-        self.postnummer = postnummer
-        self.adresse_lines = adresse_lines
-        self.kommunenummer = kommunenummer
-        self.poststed = poststed
-        self.landkode = landkode
-        self.land = land
-        self.oppstartsdato = oppstartsdato
-        self.antall_ansatte = antall_ansatte
+        self.navn: str = navn
+        self.næringskode: list[str] = næringskode
+        self.kommune: str = kommune
+        self.postnummer: str = postnummer
+        self.adresse_lines: list[str] = adresse_lines
+        self.kommunenummer: str = kommunenummer
+        self.poststed: str = poststed
+        self.landkode: str = landkode
+        self.land: str = land
+        self.oppstartsdato: str = oppstartsdato
+        self.antall_ansatte: int = antall_ansatte
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Virksomhet):
+            return NotImplemented
+
         return self.orgnummer == other.orgnummer
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(("orgnummer", self.orgnummer))
-
-
 
 
 def parse_tenor_fil(
     import_filename: str,
 ) -> list[Virksomhet]:
-    nye_virksomheter = []
+    nye_virksomheter: list[Virksomhet] = []
 
     with open(import_filename, "r") as tenorTestDataFil:
         json_decode = json.load(tenorTestDataFil)
@@ -52,7 +53,7 @@ def parse_tenor_fil(
                 Virksomhet(
                     orgnummer=virksomhet.get("organisasjonsnummer"),
                     navn=virksomhet.get("navn"),
-                    næringskode=virksomhet.get("naeringKode")[0],
+                    næringskode=virksomhet.get("naeringKode"),
                     kommune=virksomhet.get("forretningsadresse").get("kommune"),
                     postnummer=virksomhet.get("forretningsadresse").get("postnummer"),
                     adresse_lines=[
@@ -107,7 +108,7 @@ def skriv_til_fil(
             sql_file.write("\n")
             sql_file.write(
                 insert_virksomhet_naringsundergrupper(
-                    ny_virksomhet.orgnummer, ny_virksomhet.næringskode
+                    ny_virksomhet.orgnummer, ny_virksomhet.næringskode[0]
                 )
             )
             sql_file.write("\n")
@@ -120,58 +121,43 @@ if __name__ == "__main__":
     input_folder = "data"
     output_folder = "output"
 
-    alle_virksomheter = []
+    alle_virksomheter: list[Virksomhet] = []
     innleste_orgnr: set[str] = set()
     duplikater_fjernet = 0
+    total_count = 0
 
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
 
-    for fylke in os.listdir(input_folder):
-        if fylke == ".DS_Store":
+    for fil in os.listdir(input_folder):
+        if fil == ".DS_Store":
             continue
 
-        print(f"Antall virksomheter for {fylke}:")
-        count = 0
+        filename: str = f"{input_folder}/{fil}"
 
-        for næring in os.listdir(f"{input_folder}/{fylke}"):
-            if næring == ".DS_Store":
-                continue
+        nye_virksomheter: list[Virksomhet] = parse_tenor_fil(filename)
+        antall_nye_virksomheter: int = len(nye_virksomheter)
 
-            for filename in os.listdir(f"{input_folder}/{fylke}/{næring}"):
-                if filename == ".DS_Store":
-                    continue
+        nye_virksomheter = [
+            virksomhet
+            for virksomhet in nye_virksomheter
+            if virksomhet.orgnummer not in innleste_orgnr
+        ]
 
-                filename: str = f"{input_folder}/{fylke}/{næring}/{filename}"
+        innleste_orgnr.update([virksomhet.orgnummer for virksomhet in nye_virksomheter])
 
-                nye_virksomheter: list[Virksomhet] = parse_tenor_fil(filename)
+        duplikater_fjernet += antall_nye_virksomheter - len(nye_virksomheter)
 
-                antall_nye_virksomheter: int = len(nye_virksomheter)
-                print(f" {næring}: {len(nye_virksomheter)}")
+        total_count += len(nye_virksomheter)
 
-                nye_virksomheter = [
-                    virksomhet
-                    for virksomhet in nye_virksomheter
-                    if virksomhet.orgnummer not in innleste_orgnr
-                ]
+        skriv_til_fil(
+            f"{output_folder}/{fil}.sql",
+            nye_virksomheter,
+        )
 
-                innleste_orgnr.update(
-                    [virksomhet.orgnummer for virksomhet in nye_virksomheter]
-                )
+        alle_virksomheter.extend(nye_virksomheter)
 
-                duplikater_fjernet += antall_nye_virksomheter - len(nye_virksomheter)
-
-                count += len(nye_virksomheter)
-
-                skriv_til_fil(
-                    f"{output_folder}/{fylke.lower().replace(' ', '')}_{næring}_insert_testvirksomheter.sql",
-                    nye_virksomheter,
-                )
-
-                alle_virksomheter.extend(nye_virksomheter)
-
-        print(f" Totalt: {count}")
-        print("---------------")
+    print(f"Totalt antall virksomheter: {total_count}")
 
     if duplikater_fjernet > 0:
         print(f"Duplikater droppet: {duplikater_fjernet}")

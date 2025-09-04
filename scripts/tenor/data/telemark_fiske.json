@@ -1,0 +1,1315 @@
+{
+  "treff": 9,
+  "rader": 9,
+  "offset": 0,
+  "nesteSide": null,
+  "seed": 2681,
+  "dokumentListe": [
+    {
+      "forretningsadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3726",
+        "adresse": ["Strømdallia 17"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "naeringBeskrivelse": ["Hav- og kystfiske"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "SKIEN",
+              "landkode": "NO",
+              "postnummer": "3726",
+              "adresse": ["Strømdallia 17"],
+              "land": "Norge",
+              "kommunenummer": "4003",
+              "poststed": "SKIEN"
+            },
+            "naeringBeskrivelse": ["Hav- og kystfiske"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "30895296593",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2008-04-01",
+            "kontaktpersoner": ["30895296593"],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.111"],
+            "navn": "VERTIKAL FAMILIÆR TIGER AS",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"311024531\",\"navn\":\"VERTIKAL FAMILIÆR TIGER AS\",\"oppdeltNavn\":[\"VERTIKAL FAMILIÆR TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3726\",\"poststed\":\"SKIEN\",\"adresse\":[\"Strømdallia 17\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"adresse\":[]},\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-14\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-14\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2008-04-01\",\"aktivitetBransje\":[\"Hav- og kystfiske\"],\"vedtektsdato\":\"2011-05-03\",\"vedtektsfestetFormaal\":[\"Hav- og kystfiske\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":9,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"100000.00\",\"antallAksjer\":\"100000\",\"paalydendeBelop\":\"1.00\",\"innbetaltBelop\":\"100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"KONT\",\"beskrivelse\":\"Kontaktperson\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"KONT\",\"beskrivelse\":\"Kontaktperson\"},\"person\":{\"foedselsnummer\":\"30895296593\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314241878\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"30895296593\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"A-AK\",\"beskrivelse\":\"Representant for A-aksjonærene\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"31859199944\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"A-AK\",\"beskrivelse\":\"Representant for A-aksjonærene\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"19828798513\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"A-AK\",\"beskrivelse\":\"Representant for A-aksjonærene\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"23927599422\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"A-AK\",\"beskrivelse\":\"Representant for A-aksjonærene\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T16:03:25.846+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T15:26:09.114+01:00",
+              "id": "311024531",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-22T00:47:58.747643556+01:00",
+              "testdataVersjon": 1705849405
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 9,
+            "kapital": {
+              "antallAksjer": 100000,
+              "type": "Aksjekapital",
+              "belop": 100000
+            },
+            "varamedlemmer": ["31859199944", "19828798513", "23927599422"],
+            "harUnderenheter": ["315889464"],
+            "regnskapsfoerere": [],
+            "revisorer": ["314241878"],
+            "styremedlemmer": [],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "311024531",
+            "registreringsdatoEnhetsregisteret": "2021-03-14",
+            "registreringsdatoForetaksregisteret": "2021-03-14"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "311024531" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.111"],
+      "navn": "VERTIKAL FAMILIÆR TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315889464\",\"navn\":\"VERTIKAL FAMILIÆR TIGER AS\",\"oppdeltNavn\":[\"VERTIKAL FAMILIÆR TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3726\",\"poststed\":\"SKIEN\",\"adresse\":[\"Strømdallia 17\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"adresse\":[]},\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-20\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":9,\"underenhet\":{\"hovedenhet\":\"311024531\",\"oppstartsdato\":\"2007-10-13\",\"datoEierskifte\":\"2007-09-14\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"311024531\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-22T00:47:58.311+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T12:55:57.689+01:00",
+        "id": "315889464",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-22T00:47:58.747650897+01:00",
+        "testdataVersjon": 1705880878
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 9,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315889464",
+      "registreringsdatoEnhetsregisteret": "2021-03-20"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3936",
+        "adresse": ["Kirstistien 16"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "naeringBeskrivelse": ["Hav- og kystfiske"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3936",
+              "adresse": ["Kirstistien 16"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "naeringBeskrivelse": ["Hav- og kystfiske"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "29845499754",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2002-11-13",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.111"],
+            "navn": "LYSEGUL SORGLØS TIGER AS",
+            "dagligLeder": "17865699646",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313662888\",\"navn\":\"LYSEGUL SORGLØS TIGER AS\",\"oppdeltNavn\":[\"LYSEGUL SORGLØS TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3936\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Kirstistien 16\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 13 66 88\",\"telefaksnummer\":\"03 13 66 88\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2002-11-13\",\"aktivitetBransje\":[\"Hav- og kystfiske\"],\"vedtektsdato\":\"2004-09-30\",\"vedtektsfestetFormaal\":[\"Hav- og kystfiske\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":12,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"8100000.00\",\"antallAksjer\":\"8100\",\"paalydendeBelop\":\"1000.00\",\"innbetaltBelop\":\"8100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"17865699646\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313772993\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":6}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314251687\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"29845499754\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"20875999797\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"29849899579\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T20:45:46.431+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T19:54:03.208+01:00",
+              "id": "313662888",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:30:38.315034129+01:00",
+              "testdataVersjon": 1705866346
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 12,
+            "kapital": {
+              "antallAksjer": 8100,
+              "type": "Aksjekapital",
+              "belop": 8100000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["315162785"],
+            "regnskapsfoerere": ["313772993"],
+            "revisorer": ["314251687"],
+            "styremedlemmer": ["20875999797", "29849899579"],
+            "telefonnummer": "03 13 66 88",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313662888",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "313662888" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.111"],
+      "navn": "LYSEGUL SORGLØS TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315162785\",\"navn\":\"LYSEGUL SORGLØS TIGER AS\",\"oppdeltNavn\":[\"LYSEGUL SORGLØS TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3936\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Kirstistien 16\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 15 16 78\",\"telefaksnummer\":\"03 15 16 78\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":12,\"underenhet\":{\"hovedenhet\":\"313662888\",\"oppstartsdato\":\"2002-01-04\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313662888\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:30:37.896+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:45:14.528+01:00",
+        "id": "315162785",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:30:38.315045609+01:00",
+        "testdataVersjon": 1705876237
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 12,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 16 78",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315162785",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3912",
+        "adresse": ["Friggsgate 10B"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "naeringBeskrivelse": [
+        "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3901",
+        "adresse": ["Postboks 9048"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3912",
+              "adresse": ["Friggsgate 10B"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "naeringBeskrivelse": [
+              "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "30814399199",
+            "Postadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3901",
+              "adresse": ["Postboks 9048"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3901",
+              "adresse": ["Postboks 9048"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2001-04-08",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.211"],
+            "navn": "UNYTTIG RUSTEN TIGER AS",
+            "dagligLeder": "04827396120",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313423158\",\"navn\":\"UNYTTIG RUSTEN TIGER AS\",\"oppdeltNavn\":[\"UNYTTIG RUSTEN TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3912\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Friggsgate 10B\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3901\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Postboks 9048\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"telefonnummer\":\"03 13 42 15\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2001-04-08\",\"aktivitetBransje\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"vedtektsdato\":\"2003-02-24\",\"vedtektsfestetFormaal\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":27,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"100000.00\",\"antallAksjer\":\"100\",\"paalydendeBelop\":\"1000.00\",\"innbetaltBelop\":\"100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"04827396120\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314239644\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":6}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312939053\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Daglig leder og styrets leder i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"04827396120\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"30814399199\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"05924698006\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T20:19:33.86+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T19:30:04.436+01:00",
+              "id": "313423158",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:11:40.562639441+01:00",
+              "testdataVersjon": 1705864773
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 27,
+            "kapital": {
+              "antallAksjer": 100,
+              "type": "Aksjekapital",
+              "belop": 100000
+            },
+            "varamedlemmer": ["05924698006"],
+            "harUnderenheter": ["314984102"],
+            "regnskapsfoerere": ["314239644"],
+            "revisorer": ["312939053"],
+            "styremedlemmer": ["04827396120"],
+            "telefonnummer": "03 13 42 15",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313423158",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3901",
+        "adresse": ["Postboks 9048"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "erUnderenhet": { "hovedenhet": "313423158" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.211"],
+      "navn": "UNYTTIG RUSTEN TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"314984102\",\"navn\":\"UNYTTIG RUSTEN TIGER AS\",\"oppdeltNavn\":[\"UNYTTIG RUSTEN TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3912\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Friggsgate 10B\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3901\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Postboks 9048\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"telefonnummer\":\"03 14 98 10\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":27,\"underenhet\":{\"hovedenhet\":\"313423158\",\"oppstartsdato\":\"2000-06-02\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313423158\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:11:40.144+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:28:10.775+01:00",
+        "id": "314984102",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:11:40.562656137+01:00",
+        "testdataVersjon": 1705875099
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 27,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 14 98 10",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "314984102",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3710",
+        "adresse": ["Nedre Røysengrenden"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "naeringBeskrivelse": [
+        "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3713",
+        "adresse": ["Håvundvegen 296A"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "OSLO",
+              "landkode": "NO",
+              "postnummer": "0464",
+              "adresse": ["Øvre Neset"],
+              "land": "Norge",
+              "kommunenummer": "0301",
+              "poststed": "OSLO"
+            },
+            "naeringBeskrivelse": [
+              "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "08895398757",
+            "Postadresse": {
+              "kommune": "OSLO",
+              "landkode": "NO",
+              "postnummer": "1055",
+              "adresse": ["Høybråtenveien 7A"],
+              "land": "Norge",
+              "kommunenummer": "0301",
+              "poststed": "OSLO"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "OSLO",
+              "landkode": "NO",
+              "postnummer": "1055",
+              "adresse": ["Høybråtenveien 7A"],
+              "land": "Norge",
+              "kommunenummer": "0301",
+              "poststed": "OSLO"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "1999-03-20",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.211"],
+            "navn": "VIRKELIG REAL TIGER AS",
+            "dagligLeder": "09817497788",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"312209241\",\"navn\":\"VIRKELIG REAL TIGER AS\",\"oppdeltNavn\":[\"VIRKELIG REAL TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"0464\",\"poststed\":\"OSLO\",\"adresse\":[\"Øvre Neset\"],\"kommune\":\"OSLO\",\"kommunenummer\":\"0301\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1055\",\"poststed\":\"OSLO\",\"adresse\":[\"Høybråtenveien 7A\"],\"kommune\":\"OSLO\",\"kommunenummer\":\"0301\"},\"telefonnummer\":\"03 12 20 24\",\"telefaksnummer\":\"03 12 20 24\",\"e-post\":\"copernicus@lernasitula.no\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"1999-03-20\",\"aktivitetBransje\":[\"Slakting, bearbeiding og konservering av fisk og fiskevarer ellers\",\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"vedtektsdato\":\"2008-04-30\",\"vedtektsfestetFormaal\":[\"Slakting, bearbeiding og konservering av fisk og fiskevarer ellers\",\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":312,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"60000000.00\",\"antallAksjer\":\"1000\",\"paalydendeBelop\":\"60000.00\",\"innbetaltBelop\":\"60000000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"09817497788\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"person\":{\"foedselsnummer\":\"25875196920\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":7}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314239458\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"To styremedlemmer i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"08895398757\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"25875196920\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"09817196931\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"11906399514\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"15879398905\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"28865997517\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"08847996405\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":6}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"19848797629\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":7}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T18:07:47.087+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T17:24:40.001+01:00",
+              "id": "312209241",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T18:07:47.700120207+01:00",
+              "testdataVersjon": 1705856866
+            },
+            "antallUnderenheter": 2,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 312,
+            "kapital": {
+              "antallAksjer": 1000,
+              "type": "Aksjekapital",
+              "belop": 60000000
+            },
+            "varamedlemmer": ["08847996405", "19848797629"],
+            "harUnderenheter": ["311391143", "311391151"],
+            "regnskapsfoerere": [],
+            "revisorer": ["314239458"],
+            "styremedlemmer": [
+              "25875196920",
+              "09817196931",
+              "11906399514",
+              "15879398905",
+              "28865997517"
+            ],
+            "telefonnummer": "03 12 20 24",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "312209241",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3713",
+        "adresse": ["Håvundvegen 296A"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "erUnderenhet": { "hovedenhet": "312209241" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.211"],
+      "navn": "HEL LØSNINGSORIENTERT FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311391143\",\"navn\":\"HEL LØSNINGSORIENTERT FJELLREV\",\"oppdeltNavn\":[\"HEL LØSNINGSORIENTERT FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3710\",\"poststed\":\"SKIEN\",\"adresse\":[\"Nedre Røysengrenden\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3713\",\"poststed\":\"SKIEN\",\"adresse\":[\"Håvundvegen 296A\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"telefonnummer\":\"03 11 39 14\",\"telefaksnummer\":\"03 11 39 14\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":132,\"underenhet\":{\"hovedenhet\":\"312209241\",\"oppstartsdato\":\"1988-02-07\",\"datoEierskifte\":\"1996-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312209241\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T16:42:07.349+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T16:03:12.051+01:00",
+        "id": "311391143",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T18:07:47.700130842+01:00",
+        "testdataVersjon": 1705851727
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 132,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 11 39 14",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311391143",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3716",
+        "adresse": ["Jernbanevegen 14"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "naeringBeskrivelse": ["Hav- og kystfiske"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3716",
+        "adresse": ["Jernbanevegen 14"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "KRISTIANSAND",
+              "landkode": "NO",
+              "postnummer": "4640",
+              "adresse": ["Tjønnebakken 4"],
+              "land": "Norge",
+              "kommunenummer": "4204",
+              "poststed": "SØGNE"
+            },
+            "naeringBeskrivelse": ["Hav- og kystfiske"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "18925699310",
+            "Postadresse": {
+              "kommune": "KRISTIANSAND",
+              "landkode": "NO",
+              "postnummer": "4640",
+              "adresse": ["Tjønnebakken 4"],
+              "land": "Norge",
+              "kommunenummer": "4204",
+              "poststed": "SØGNE"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "KRISTIANSAND",
+              "landkode": "NO",
+              "postnummer": "4640",
+              "adresse": ["Tjønnebakken 4"],
+              "land": "Norge",
+              "kommunenummer": "4204",
+              "poststed": "SØGNE"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2005-09-13",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.111"],
+            "navn": "SAKTE MEMORERENDE TIGER AS",
+            "dagligLeder": "04816099973",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313938611\",\"navn\":\"SAKTE MEMORERENDE TIGER AS\",\"oppdeltNavn\":[\"SAKTE MEMORERENDE TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"4640\",\"poststed\":\"SØGNE\",\"adresse\":[\"Tjønnebakken 4\"],\"kommune\":\"KRISTIANSAND\",\"kommunenummer\":\"4204\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"4640\",\"poststed\":\"SØGNE\",\"adresse\":[\"Tjønnebakken 4\"],\"kommune\":\"KRISTIANSAND\",\"kommunenummer\":\"4204\"},\"mobilnummer\":\"031 39 386\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2005-09-13\",\"aktivitetBransje\":[\"Hav- og kystfiske\"],\"vedtektsdato\":\"2019-11-06\",\"vedtektsfestetFormaal\":[\"Hav- og kystfiske\"],\"sisteInnsendteAarsregnskap\":\"2018\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":15,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"52100.00\",\"antallAksjer\":\"520\",\"innbetaltBelop\":\"52100.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"04816099973\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312171104\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312939053\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"To styremedlemmer i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"04816099973\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"18925699310\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T21:16:25.632+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T20:24:04.204+01:00",
+              "id": "313938611",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-22T00:04:04.802230672+01:00",
+              "testdataVersjon": 1705868185
+            },
+            "antallUnderenheter": 2,
+            "sisteInnsendteAarsregnskap": "2018",
+            "antallAnsatte": 15,
+            "kapital": {
+              "antallAksjer": 520,
+              "type": "Aksjekapital",
+              "belop": 52100
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["315477042", "315477050"],
+            "regnskapsfoerere": ["312171104"],
+            "revisorer": ["312939053"],
+            "styremedlemmer": ["04816099973"],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313938611",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3716",
+        "adresse": ["Jernbanevegen 14"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "erUnderenhet": { "hovedenhet": "313938611" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.111"],
+      "navn": "VÅKEN UTÅLMODIG FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315477050\",\"navn\":\"VÅKEN UTÅLMODIG FJELLREV\",\"oppdeltNavn\":[\"VÅKEN UTÅLMODIG FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3716\",\"poststed\":\"SKIEN\",\"adresse\":[\"Jernbanevegen 14\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3716\",\"poststed\":\"SKIEN\",\"adresse\":[\"Jernbanevegen 14\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"mobilnummer\":\"031 54 770\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":13,\"underenhet\":{\"hovedenhet\":\"313938611\",\"oppstartsdato\":\"2004-11-04\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313938611\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-22T00:04:04.361+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T12:15:30.177+01:00",
+        "id": "315477050",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-22T00:04:04.802240158+01:00",
+        "testdataVersjon": 1705878244
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 13,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315477050",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3710",
+        "adresse": ["Kystenskråningen"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "naeringBeskrivelse": [
+        "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "SKIEN",
+              "landkode": "NO",
+              "postnummer": "3710",
+              "adresse": ["Kystenskråningen"],
+              "land": "Norge",
+              "kommunenummer": "4003",
+              "poststed": "SKIEN"
+            },
+            "naeringBeskrivelse": [
+              "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "03897498749",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Nynorsk",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2008-07-29",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.211"],
+            "navn": "VAKKER SUNN TIGER AS",
+            "dagligLeder": "02877397168",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"312699028\",\"navn\":\"VAKKER SUNN TIGER AS\",\"oppdeltNavn\":[\"VAKKER SUNN TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3710\",\"poststed\":\"SKIEN\",\"adresse\":[\"Kystenskråningen\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 26 990\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2008-07-29\",\"aktivitetBransje\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"vedtektsdato\":\"2020-03-18\",\"vedtektsfestetFormaal\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"sisteInnsendteAarsregnskap\":\"2018\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Nynorsk\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":17,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"1000000.00\",\"antallAksjer\":\"500\",\"paalydendeBelop\":\"2000.00\",\"innbetaltBelop\":\"1000000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"02877397168\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314251180\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310990361\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Daglig leder og styrets leder i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"03897498749\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"02856997327\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"14919198509\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"18895298383\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T19:00:43.435+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T18:14:01.589+01:00",
+              "id": "312699028",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-22T00:52:13.232863164+01:00",
+              "testdataVersjon": 1705860043
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2018",
+            "antallAnsatte": 17,
+            "kapital": {
+              "antallAksjer": 500,
+              "type": "Aksjekapital",
+              "belop": 1000000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["315930057"],
+            "regnskapsfoerere": ["314251180"],
+            "revisorer": ["310990361"],
+            "styremedlemmer": ["02856997327", "14919198509", "18895298383"],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "312699028",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "312699028" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.211"],
+      "navn": "VAKKER SUNN TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315930057\",\"navn\":\"VAKKER SUNN TIGER AS\",\"oppdeltNavn\":[\"VAKKER SUNN TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3710\",\"poststed\":\"SKIEN\",\"adresse\":[\"Kystenskråningen\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 59 300\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-20\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":17,\"underenhet\":{\"hovedenhet\":\"312699028\",\"oppstartsdato\":\"2007-10-20\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312699028\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-22T00:52:12.811+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T12:59:58.089+01:00",
+        "id": "315930057",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-22T00:52:13.23287065+01:00",
+        "testdataVersjon": 1705881132
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 17,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315930057",
+      "registreringsdatoEnhetsregisteret": "2021-03-20"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "BAMBLE",
+        "landkode": "NO",
+        "postnummer": "3960",
+        "adresse": ["Strandgata 22"],
+        "land": "Norge",
+        "kommunenummer": "4012",
+        "poststed": "STATHELLE"
+      },
+      "naeringBeskrivelse": [
+        "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "BAMBLE",
+        "landkode": "NO",
+        "postnummer": "3960",
+        "adresse": ["Strandgata 22"],
+        "land": "Norge",
+        "kommunenummer": "4012",
+        "poststed": "STATHELLE"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "BAMBLE",
+              "landkode": "NO",
+              "postnummer": "3960",
+              "adresse": ["Strandgata 22"],
+              "land": "Norge",
+              "kommunenummer": "4012",
+              "poststed": "STATHELLE"
+            },
+            "naeringBeskrivelse": [
+              "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "02916298334",
+            "Postadresse": {
+              "kommune": "BAMBLE",
+              "landkode": "NO",
+              "postnummer": "3960",
+              "adresse": ["Strandgata 22"],
+              "land": "Norge",
+              "kommunenummer": "4012",
+              "poststed": "STATHELLE"
+            },
+            "maalform": "Nynorsk",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "BAMBLE",
+              "landkode": "NO",
+              "postnummer": "3960",
+              "adresse": ["Strandgata 22"],
+              "land": "Norge",
+              "kommunenummer": "4012",
+              "poststed": "STATHELLE"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2002-08-20",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.211"],
+            "navn": "BRA LEDENDE TIGER AS",
+            "dagligLeder": "02916298334",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"310777188\",\"navn\":\"BRA LEDENDE TIGER AS\",\"oppdeltNavn\":[\"BRA LEDENDE TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3960\",\"poststed\":\"STATHELLE\",\"adresse\":[\"Strandgata 22\"],\"kommune\":\"BAMBLE\",\"kommunenummer\":\"4012\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3960\",\"poststed\":\"STATHELLE\",\"adresse\":[\"Strandgata 22\"],\"kommune\":\"BAMBLE\",\"kommunenummer\":\"4012\"},\"telefonnummer\":\"03 10 77 18\",\"telefaksnummer\":\"03 10 77 18\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2002-08-20\",\"aktivitetBransje\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"vedtektsdato\":\"2008-12-19\",\"vedtektsfestetFormaal\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Nynorsk\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":32,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"1000000.00\",\"antallAksjer\":\"1000\",\"paalydendeBelop\":\"1000.00\",\"innbetaltBelop\":\"1000000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"02916298334\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313588270\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"02916298334\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"03826699778\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"01885497345\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T15:36:50.857+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T15:02:19.53+01:00",
+              "id": "310777188",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:26:39.354031652+01:00",
+              "testdataVersjon": 1705847810
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 32,
+            "kapital": {
+              "antallAksjer": 1000,
+              "type": "Aksjekapital",
+              "belop": 1000000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["315125235"],
+            "regnskapsfoerere": [],
+            "revisorer": ["313588270"],
+            "styremedlemmer": ["03826699778", "01885497345"],
+            "telefonnummer": "03 10 77 18",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "310777188",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "BAMBLE",
+        "landkode": "NO",
+        "postnummer": "3960",
+        "adresse": ["Strandgata 22"],
+        "land": "Norge",
+        "kommunenummer": "4012",
+        "poststed": "STATHELLE"
+      },
+      "erUnderenhet": { "hovedenhet": "310777188" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.211"],
+      "navn": "BRA LEDENDE TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315125235\",\"navn\":\"BRA LEDENDE TIGER AS\",\"oppdeltNavn\":[\"BRA LEDENDE TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3960\",\"poststed\":\"STATHELLE\",\"adresse\":[\"Strandgata 22\"],\"kommune\":\"BAMBLE\",\"kommunenummer\":\"4012\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3960\",\"poststed\":\"STATHELLE\",\"adresse\":[\"Strandgata 22\"],\"kommune\":\"BAMBLE\",\"kommunenummer\":\"4012\"},\"telefonnummer\":\"03 15 12 23\",\"telefaksnummer\":\"03 15 12 23\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":32,\"underenhet\":{\"hovedenhet\":\"310777188\",\"oppstartsdato\":\"2001-10-11\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310777188\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:26:38.913+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:41:44.9+01:00",
+        "id": "315125235",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:26:39.354040484+01:00",
+        "testdataVersjon": 1705875998
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 32,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 12 23",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315125235",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3919",
+        "adresse": ["Østre Klyveveg 34"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "naeringBeskrivelse": [
+        "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3919",
+        "adresse": ["Østre Klyveveg 34"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3919",
+              "adresse": ["Østre Klyveveg 34"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "naeringBeskrivelse": [
+              "Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "02916298334",
+            "Postadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3919",
+              "adresse": ["Østre Klyveveg 34"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3919",
+              "adresse": ["Østre Klyveveg 34"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2000-12-16",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.211"],
+            "navn": "SKRAVLETE ELEGANT TIGER AS",
+            "dagligLeder": "02916298334",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313828867\",\"navn\":\"SKRAVLETE ELEGANT TIGER AS\",\"oppdeltNavn\":[\"SKRAVLETE ELEGANT TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3919\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Østre Klyveveg 34\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3919\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Østre Klyveveg 34\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"telefonnummer\":\"03 13 82 86\",\"telefaksnummer\":\"03 13 82 86\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2000-12-16\",\"aktivitetBransje\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"vedtektsdato\":\"2011-04-29\",\"vedtektsfestetFormaal\":[\"Produksjon av matfisk og skalldyr i hav- og kystbasert fiskeoppdrett\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":20,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"300000.00\",\"antallAksjer\":\"300\",\"paalydendeBelop\":\"1000.00\",\"innbetaltBelop\":\"300000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"02916298334\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313588270\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder og ett styremedlem i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"02916298334\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"01885497345\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"03826699778\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T21:04:10.799+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T20:11:36.92+01:00",
+              "id": "313828867",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T22:46:39.354222601+01:00",
+              "testdataVersjon": 1705867450
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 20,
+            "kapital": {
+              "antallAksjer": 300,
+              "type": "Aksjekapital",
+              "belop": 300000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["314773128"],
+            "regnskapsfoerere": [],
+            "revisorer": ["313588270"],
+            "styremedlemmer": ["01885497345", "03826699778"],
+            "telefonnummer": "03 13 82 86",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313828867",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3919",
+        "adresse": ["Østre Klyveveg 34"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "erUnderenhet": { "hovedenhet": "313828867" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.211"],
+      "navn": "SKRAVLETE ELEGANT TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"314773128\",\"navn\":\"SKRAVLETE ELEGANT TIGER AS\",\"oppdeltNavn\":[\"SKRAVLETE ELEGANT TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3919\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Østre Klyveveg 34\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3919\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Østre Klyveveg 34\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.2\",\"beskrivelse\":\"Akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.21\",\"beskrivelse\":\"Hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.211\",\"beskrivelse\":\"Produksjon av matfisk, bløtdyr, krepsdyr og pigghuder i hav- og kystbasert akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":20,\"underenhet\":{\"hovedenhet\":\"313828867\",\"oppstartsdato\":\"1998-05-06\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313828867\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T22:46:38.95+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:06:56.938+01:00",
+        "id": "314773128",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T22:46:39.354233844+01:00",
+        "testdataVersjon": 1705873598
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 20,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "314773128",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3911",
+        "adresse": ["Utsikten 6"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "naeringBeskrivelse": ["Hav- og kystfiske"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3905",
+        "adresse": ["Postboks 9177"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3911",
+              "adresse": ["Utsikten 6"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "naeringBeskrivelse": ["Hav- og kystfiske"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "19906198196",
+            "Postadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3905",
+              "adresse": ["Postboks 9177"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3905",
+              "adresse": ["Postboks 9177"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "PORSGRUNN"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2015-01-05",
+            "kontaktpersoner": ["19906198196"],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["03.111"],
+            "navn": "KOMPLISERT UKONTROVERSIELL TIGER AS",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"312547538\",\"navn\":\"KOMPLISERT UKONTROVERSIELL TIGER AS\",\"oppdeltNavn\":[\"KOMPLISERT UKONTROVERSIELL TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3911\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Utsikten 6\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3905\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Postboks 9177\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"mobilnummer\":\"031 25 475\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2015-01-05\",\"aktivitetBransje\":[\"Hav- og kystfiske\"],\"vedtektsdato\":\"2018-06-13\",\"vedtektsfestetFormaal\":[\"Hav- og kystfiske\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":6,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"50000.00\",\"antallAksjer\":\"100\",\"paalydendeBelop\":\"500.00\",\"innbetaltBelop\":\"50000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"KONT\",\"beskrivelse\":\"Kontaktperson\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"KONT\",\"beskrivelse\":\"Kontaktperson\"},\"person\":{\"foedselsnummer\":\"19906198196\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310495670\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"19906198196\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"08815797583\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"06875596568\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T18:44:21.591+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T17:58:42.053+01:00",
+              "id": "312547538",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T18:44:22.210285397+01:00",
+              "testdataVersjon": 1705859061
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 6,
+            "kapital": {
+              "antallAksjer": 100,
+              "type": "Aksjekapital",
+              "belop": 50000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["311348116"],
+            "regnskapsfoerere": [],
+            "revisorer": ["310495670"],
+            "styremedlemmer": ["08815797583", "06875596568"],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "312547538",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3905",
+        "adresse": ["Postboks 9177"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "PORSGRUNN"
+      },
+      "erUnderenhet": { "hovedenhet": "312547538" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["03.111"],
+      "navn": "KOMPLISERT UKONTROVERSIELL TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311348116\",\"navn\":\"KOMPLISERT UKONTROVERSIELL TIGER AS\",\"oppdeltNavn\":[\"KOMPLISERT UKONTROVERSIELL TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3911\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Utsikten 6\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3905\",\"poststed\":\"PORSGRUNN\",\"adresse\":[\"Postboks 9177\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"mobilnummer\":\"031 13 481\",\"naeringskoder\":[{\"kode\":\"03\",\"beskrivelse\":\"Fiske, fangst og akvakultur\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"03.1\",\"beskrivelse\":\"Fiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"03.11\",\"beskrivelse\":\"Hav- og kystfiske og fangst\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"03.111\",\"beskrivelse\":\"Hav- og kystfiske\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":6,\"underenhet\":{\"hovedenhet\":\"312547538\",\"oppstartsdato\":\"2014-02-26\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312547538\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T16:37:27.47+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T15:58:50.276+01:00",
+        "id": "311348116",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T18:44:22.210295456+01:00",
+        "testdataVersjon": 1705851447
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 6,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311348116",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    }
+  ],
+  "fasetter": {}
+}

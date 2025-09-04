@@ -1,0 +1,1688 @@
+{
+  "treff": 12,
+  "rader": 12,
+  "offset": 0,
+  "nesteSide": null,
+  "seed": 3244,
+  "dokumentListe": [
+    {
+      "forretningsadresse": {
+        "kommune": "GAMVIK",
+        "landkode": "NO",
+        "postnummer": "9770",
+        "adresse": ["Øvre Fjellvannetdalen"],
+        "land": "Norge",
+        "kommunenummer": "5626",
+        "poststed": "MEHAMN"
+      },
+      "naeringBeskrivelse": [
+        "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "INDRE ØSTFOLD",
+              "landkode": "NO",
+              "postnummer": "1821",
+              "adresse": ["Giltvedtveien 116"],
+              "land": "Norge",
+              "kommunenummer": "3118",
+              "poststed": "SPYDEBERG"
+            },
+            "naeringBeskrivelse": [
+              "Engroshandel med datamaskiner, tilleggsutstyr til datamaskiner samt programvare"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "17836297539",
+            "Postadresse": {
+              "kommune": "INDRE ØSTFOLD",
+              "landkode": "NO",
+              "postnummer": "1804",
+              "adresse": ["Postboks 9081"],
+              "land": "Norge",
+              "kommunenummer": "3118",
+              "poststed": "SPYDEBERG"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "INDRE ØSTFOLD",
+              "landkode": "NO",
+              "postnummer": "1804",
+              "adresse": ["Postboks 9081"],
+              "land": "Norge",
+              "kommunenummer": "3118",
+              "poststed": "SPYDEBERG"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "1998-11-11",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["46.510"],
+            "navn": "GLUPSK OVERFØLSOM TIGER AS",
+            "dagligLeder": "14876796792",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"312832860\",\"navn\":\"GLUPSK OVERFØLSOM TIGER AS\",\"oppdeltNavn\":[\"GLUPSK OVERFØLSOM TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1821\",\"poststed\":\"SPYDEBERG\",\"adresse\":[\"Giltvedtveien 116\"],\"kommune\":\"INDRE ØSTFOLD\",\"kommunenummer\":\"3118\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1804\",\"poststed\":\"SPYDEBERG\",\"adresse\":[\"Postboks 9081\"],\"kommune\":\"INDRE ØSTFOLD\",\"kommunenummer\":\"3118\"},\"telefonnummer\":\"03 12 83 86\",\"telefaksnummer\":\"03 12 83 86\",\"nettadresse\":\"www.intanheze.no\",\"naeringskoder\":[{\"kode\":\"46\",\"beskrivelse\":\"Agentur- og engroshandel, unntatt med motorvogner\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"46.5\",\"beskrivelse\":\"Engroshandel med IKT-utstyr\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"46.51\",\"beskrivelse\":\"Engroshandel med datamaskiner, tilleggsutstyr til datamaskiner samt programvare\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"46.510\",\"beskrivelse\":\"Engroshandel med datamaskiner, tilleggsutstyr til datamaskiner samt programvare\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"1998-11-11\",\"aktivitetBransje\":[\"Engroshandel med datamaskiner, tilleggsutstyr til datamaskiner samt\",\"programvare\",\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"vedtektsdato\":\"2011-09-21\",\"vedtektsfestetFormaal\":[\"Engroshandel med datamaskiner, tilleggsutstyr til datamaskiner samt\",\"programvare\",\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":1638,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[{\"kode\":\"ULBA\",\"beskrivelse\":\"Utleier av bygg eller anlegg\"}],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"100100000.00\",\"antallAksjer\":\"100100\",\"paalydendeBelop\":\"1000.00\",\"innbetaltBelop\":\"100100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"14876796792\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"POFE\",\"beskrivelse\":\"Prokura i fellesskap\"},\"person\":{\"foedselsnummer\":\"14837098735\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"POFE\",\"beskrivelse\":\"Prokura i fellesskap\"},\"person\":{\"foedselsnummer\":\"13840199694\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312939053\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":9}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"To styremedlemmer i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"17836297539\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"14837098735\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"23886698895\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"08859399836\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"06813649363\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"15817398313\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"12926097146\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":6}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"07898496621\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":7}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"14847899728\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":8}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"14847198312\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":9}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"19867999461\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":10}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T19:15:14.12+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T18:27:20.971+01:00",
+              "id": "312832860",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T19:15:14.807032832+01:00",
+              "testdataVersjon": 1705860913
+            },
+            "antallUnderenheter": 29,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 1638,
+            "kapital": {
+              "antallAksjer": 100100,
+              "type": "Aksjekapital",
+              "belop": 100100000
+            },
+            "varamedlemmer": [
+              "12926097146",
+              "07898496621",
+              "14847899728",
+              "14847198312",
+              "19867999461"
+            ],
+            "harUnderenheter": [
+              "211374152",
+              "211374292",
+              "211374322",
+              "311374079",
+              "311374087",
+              "311374095",
+              "311374109",
+              "311374117",
+              "311374125",
+              "311374133",
+              "311374141",
+              "311374168",
+              "311374176",
+              "311374184",
+              "311374192",
+              "311374206",
+              "311374214",
+              "311374222",
+              "311374230",
+              "311374249",
+              "311374257",
+              "311374265",
+              "311374273",
+              "311374281",
+              "311374303",
+              "311374311",
+              "311374338",
+              "311374346",
+              "311374354"
+            ],
+            "regnskapsfoerere": [],
+            "revisorer": ["312939053"],
+            "styremedlemmer": [
+              "14837098735",
+              "23886698895",
+              "08859399836",
+              "06813649363",
+              "15817398313"
+            ],
+            "telefonnummer": "03 12 83 86",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "312832860",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "312832860" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.020"],
+      "navn": "HENSYNSLØS SALT FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311374346\",\"navn\":\"HENSYNSLØS SALT FJELLREV\",\"oppdeltNavn\":[\"HENSYNSLØS SALT FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9770\",\"poststed\":\"MEHAMN\",\"adresse\":[\"Øvre Fjellvannetdalen\"],\"kommune\":\"GAMVIK\",\"kommunenummer\":\"5626\"},\"postadresse\":{\"adresse\":[]},\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":79,\"underenhet\":{\"hovedenhet\":\"312832860\",\"oppstartsdato\":\"2011-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312832860\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T16:40:24.122+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T16:01:28.726+01:00",
+        "id": "311374346",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T19:15:14.807040247+01:00",
+        "testdataVersjon": 1705851623
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 79,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311374346",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "TANA",
+        "landkode": "NO",
+        "postnummer": "9843",
+        "adresse": ["Deanugeaidnu 3992"],
+        "land": "Norge",
+        "kommunenummer": "5628",
+        "poststed": "TANA"
+      },
+      "naeringBeskrivelse": [
+        "Alminnelige somatiske sykehus",
+        "Programmeringstjenester"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "FROGN",
+              "landkode": "NO",
+              "postnummer": "1446",
+              "adresse": ["Tussefaret 5F"],
+              "land": "Norge",
+              "kommunenummer": "3214",
+              "poststed": "DRØBAK"
+            },
+            "naeringBeskrivelse": [
+              "Alminnelige somatiske sykehus",
+              "Programmeringstjenester"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "12856597677",
+            "Postadresse": {
+              "kommune": "FROGN",
+              "landkode": "NO",
+              "postnummer": "1441",
+              "adresse": ["Postboks 9120"],
+              "land": "Norge",
+              "kommunenummer": "3214",
+              "poststed": "DRØBAK"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "FROGN",
+              "landkode": "NO",
+              "postnummer": "1441",
+              "adresse": ["Postboks 9120"],
+              "land": "Norge",
+              "kommunenummer": "3214",
+              "poststed": "DRØBAK"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2017-11-08",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "SÆR",
+              "beskrivelse": "Annet foretak iflg. særskilt lov"
+            },
+            "naeringKode": ["86.101", "62.010"],
+            "navn": "TREG UAVHENGIG KAIMAN HF",
+            "dagligLeder": "06816394331",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"310377562\",\"navn\":\"TREG UAVHENGIG KAIMAN HF\",\"oppdeltNavn\":[\"TREG UAVHENGIG KAIMAN HF\"],\"organisasjonsform\":{\"kode\":\"SÆR\",\"beskrivelse\":\"Annet foretak iflg. særskilt lov\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1446\",\"poststed\":\"DRØBAK\",\"adresse\":[\"Tussefaret 5F\"],\"kommune\":\"FROGN\",\"kommunenummer\":\"3214\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1441\",\"poststed\":\"DRØBAK\",\"adresse\":[\"Postboks 9120\"],\"kommune\":\"FROGN\",\"kommunenummer\":\"3214\"},\"e-post\":\"pisces@octansarcturus.no\",\"naeringskoder\":[{\"kode\":\"86\",\"beskrivelse\":\"Helsetjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"86.1\",\"beskrivelse\":\"Sykehustjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"86.10\",\"beskrivelse\":\"Sykehustjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"86.101\",\"beskrivelse\":\"Alminnelige somatiske sykehus\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"6100\",\"beskrivelse\":\"Statsforvaltningen \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2017-11-08\",\"aktivitetBransje\":[\"Alminnelige somatiske sykehus\",\"Programmeringstjenester\"],\"vedtektsdato\":\"2015-11-26\",\"vedtektsfestetFormaal\":[\"Alminnelige somatiske sykehus\",\"Programmeringstjenester\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":320,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"06816394331\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"HLSE\",\"beskrivelse\":\"Helseforetak\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"HLSE\",\"beskrivelse\":\"Helseforetak\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313200183\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":16}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314239458\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":15}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"12856597677\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"NEST\",\"beskrivelse\":\"Nestleder\"},\"person\":{\"foedselsnummer\":\"26885997790\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"12816498560\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"15869497476\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"22827099612\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"09906197321\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":6}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"14837199116\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":7}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"06877199426\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":8}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"18888299080\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":9}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"14827098907\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":10}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"14847896176\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":11}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"26882948748\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":12}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"13836496730\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":13}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"24827996188\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":14}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"14897598184\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":15}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T14:51:36.665+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T14:23:46.661+01:00",
+              "id": "310377562",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T17:42:19.712613447+01:00",
+              "testdataVersjon": 1705845096
+            },
+            "antallUnderenheter": 10,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 320,
+            "kapital": { "antallAksjer": 0, "belop": 0 },
+            "varamedlemmer": [
+              "18888299080",
+              "14827098907",
+              "14847896176",
+              "26882948748",
+              "13836496730",
+              "24827996188",
+              "14897598184"
+            ],
+            "harUnderenheter": [
+              "211966432",
+              "311966413",
+              "311966421",
+              "311966448",
+              "311966456",
+              "311966464",
+              "311966472",
+              "311966480",
+              "311966499",
+              "311966502"
+            ],
+            "regnskapsfoerere": [],
+            "revisorer": ["314239458"],
+            "styremedlemmer": [
+              "12816498560",
+              "15869497476",
+              "22827099612",
+              "09906197321",
+              "14837199116",
+              "06877199426"
+            ],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "310377562",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "310377562" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["86.101", "62.010"],
+      "navn": "VAKLENDE GRØNN FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311966480\",\"navn\":\"VAKLENDE GRØNN FJELLREV\",\"oppdeltNavn\":[\"VAKLENDE GRØNN FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9843\",\"poststed\":\"TANA\",\"adresse\":[\"Deanugeaidnu 3992\"],\"kommune\":\"TANA\",\"kommunenummer\":\"5628\"},\"postadresse\":{\"adresse\":[]},\"naeringskoder\":[{\"kode\":\"86\",\"beskrivelse\":\"Helsetjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"86.1\",\"beskrivelse\":\"Sykehustjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"86.10\",\"beskrivelse\":\"Sykehustjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"86.101\",\"beskrivelse\":\"Alminnelige somatiske sykehus\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":8,\"underenhet\":{\"hovedenhet\":\"310377562\",\"oppstartsdato\":\"2006-02-07\",\"datoEierskifte\":\"2017-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310377562\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T17:42:19.3+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T17:00:49.139+01:00",
+        "id": "311966480",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T17:42:19.712621104+01:00",
+        "testdataVersjon": 1705855339
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 8,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311966480",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "SØR-VARANGER",
+        "landkode": "NO",
+        "postnummer": "9900",
+        "adresse": ["Dr. Wessels gate 8"],
+        "land": "Norge",
+        "kommunenummer": "5605",
+        "poststed": "KIRKENES"
+      },
+      "naeringBeskrivelse": [
+        "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "SØR-VARANGER",
+              "landkode": "NO",
+              "postnummer": "9900",
+              "adresse": ["Dr. Wessels gate 8"],
+              "land": "Norge",
+              "kommunenummer": "5605",
+              "poststed": "KIRKENES"
+            },
+            "naeringBeskrivelse": [
+              "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "06913049991",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2007-12-17",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.020"],
+            "navn": "OPERATIV DYPSINDIG TIGER AS",
+            "dagligLeder": "06913049991",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"310787035\",\"navn\":\"OPERATIV DYPSINDIG TIGER AS\",\"oppdeltNavn\":[\"OPERATIV DYPSINDIG TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9900\",\"poststed\":\"KIRKENES\",\"adresse\":[\"Dr. Wessels gate 8\"],\"kommune\":\"SØR-VARANGER\",\"kommunenummer\":\"5605\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 10 78 03\",\"telefaksnummer\":\"03 10 78 03\",\"mobilnummer\":\"031 07 870\",\"e-post\":\"cepheus@anchakeid.no\",\"nettadresse\":\"www.betelgeusediadem.no\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2007-12-17\",\"aktivitetBransje\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"vedtektsdato\":\"2015-07-13\",\"vedtektsfestetFormaal\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":11,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"100000.00\",\"antallAksjer\":\"100000\",\"paalydendeBelop\":\"1.00\",\"innbetaltBelop\":\"100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"06913049991\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"214248522\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"212204242\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Daglig leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"06913049991\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"    \"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"23858997526\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"    \"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"21917498811\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"    \"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T15:37:54.741+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T15:03:10.008+01:00",
+              "id": "310787035",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-22T00:44:27.581518057+01:00",
+              "testdataVersjon": 1705847874
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 11,
+            "kapital": {
+              "antallAksjer": 100000,
+              "type": "Aksjekapital",
+              "belop": 100000
+            },
+            "varamedlemmer": ["21917498811"],
+            "harUnderenheter": ["315855713"],
+            "regnskapsfoerere": ["214248522"],
+            "revisorer": ["212204242"],
+            "styremedlemmer": ["23858997526"],
+            "telefonnummer": "03 10 78 03",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "310787035",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "310787035" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.020"],
+      "navn": "OPERATIV DYPSINDIG TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315855713\",\"navn\":\"OPERATIV DYPSINDIG TIGER AS\",\"oppdeltNavn\":[\"OPERATIV DYPSINDIG TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9900\",\"poststed\":\"KIRKENES\",\"adresse\":[\"Dr. Wessels gate 8\"],\"kommune\":\"SØR-VARANGER\",\"kommunenummer\":\"5605\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 15 85 71\",\"telefaksnummer\":\"03 15 85 71\",\"mobilnummer\":\"031 58 557\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-20\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":11,\"underenhet\":{\"hovedenhet\":\"310787035\",\"oppstartsdato\":\"2007-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310787035\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-22T00:44:27.16+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T12:52:47.817+01:00",
+        "id": "315855713",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-22T00:44:27.581525844+01:00",
+        "testdataVersjon": 1705880666
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 11,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 85 71",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315855713",
+      "registreringsdatoEnhetsregisteret": "2021-03-20"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "LOPPA",
+        "landkode": "NO",
+        "postnummer": "9583",
+        "adresse": ["Vestre Kvervet"],
+        "land": "Norge",
+        "kommunenummer": "5614",
+        "poststed": "LANGFJORDHAMN"
+      },
+      "naeringBeskrivelse": [
+        "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "LOPPA",
+              "landkode": "NO",
+              "postnummer": "9583",
+              "adresse": ["Vestre Kvervet"],
+              "land": "Norge",
+              "kommunenummer": "5614",
+              "poststed": "LANGFJORDHAMN"
+            },
+            "naeringBeskrivelse": [
+              "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "14886599979",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2001-12-06",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.020"],
+            "navn": "TROVERDIG UTØRST TIGER AS",
+            "dagligLeder": "12925899761",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313540340\",\"navn\":\"TROVERDIG UTØRST TIGER AS\",\"oppdeltNavn\":[\"TROVERDIG UTØRST TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9583\",\"poststed\":\"LANGFJORDHAMN\",\"adresse\":[\"Vestre Kvervet\"],\"kommune\":\"LOPPA\",\"kommunenummer\":\"5614\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 13 54 34\",\"telefaksnummer\":\"03 13 54 34\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2001-12-06\",\"aktivitetBransje\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"vedtektsdato\":\"2017-03-20\",\"vedtektsfestetFormaal\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":42,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"100000.00\",\"antallAksjer\":\"100000\",\"paalydendeBelop\":\"1.00\",\"innbetaltBelop\":\"100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"12925899761\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314239954\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314239458\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styret i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"12925899761\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"14886599979\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T20:32:19.017+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T19:41:52.005+01:00",
+              "id": "313540340",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:18:25.303906052+01:00",
+              "testdataVersjon": 1705865538
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 42,
+            "kapital": {
+              "antallAksjer": 100000,
+              "type": "Aksjekapital",
+              "belop": 100000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["315047765"],
+            "regnskapsfoerere": ["314239954"],
+            "revisorer": ["314239458"],
+            "styremedlemmer": ["12925899761"],
+            "telefonnummer": "03 13 54 34",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313540340",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "313540340" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.020"],
+      "navn": "TROVERDIG UTØRST TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315047765\",\"navn\":\"TROVERDIG UTØRST TIGER AS\",\"oppdeltNavn\":[\"TROVERDIG UTØRST TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9583\",\"poststed\":\"LANGFJORDHAMN\",\"adresse\":[\"Vestre Kvervet\"],\"kommune\":\"LOPPA\",\"kommunenummer\":\"5614\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 15 04 76\",\"telefaksnummer\":\"03 15 04 76\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":42,\"underenhet\":{\"hovedenhet\":\"313540340\",\"oppstartsdato\":\"2001-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313540340\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:18:24.846+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:34:20.06+01:00",
+        "id": "315047765",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:18:25.303913884+01:00",
+        "testdataVersjon": 1705875504
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 42,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 04 76",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315047765",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "MÅSØY",
+        "landkode": "NO",
+        "postnummer": "9672",
+        "adresse": ["Østre Åsenåkeren"],
+        "land": "Norge",
+        "kommunenummer": "5618",
+        "poststed": "INGØY"
+      },
+      "naeringBeskrivelse": ["Programmeringstjenester"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "MÅSØY",
+        "landkode": "NO",
+        "postnummer": "9691",
+        "adresse": ["Postboks 9126"],
+        "land": "Norge",
+        "kommunenummer": "5618",
+        "poststed": "HAVØYSUND"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "NORDRE FOLLO",
+              "landkode": "NO",
+              "postnummer": "1405",
+              "adresse": ["Skansen 2"],
+              "land": "Norge",
+              "kommunenummer": "3207",
+              "poststed": "LANGHUS"
+            },
+            "naeringBeskrivelse": ["Programmeringstjenester"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "26876797959",
+            "Postadresse": {
+              "kommune": "LARVIK",
+              "landkode": "NO",
+              "postnummer": "3253",
+              "adresse": ["Postboks 9144"],
+              "land": "Norge",
+              "kommunenummer": "3909",
+              "poststed": "LARVIK"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "LARVIK",
+              "landkode": "NO",
+              "postnummer": "3253",
+              "adresse": ["Postboks 9144"],
+              "land": "Norge",
+              "kommunenummer": "3909",
+              "poststed": "LARVIK"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2001-08-02",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.010"],
+            "navn": "FIN ORDINÆR TIGER AS",
+            "dagligLeder": "30888798311",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"213636812\",\"navn\":\"FIN ORDINÆR TIGER AS\",\"oppdeltNavn\":[\"FIN ORDINÆR TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1405\",\"poststed\":\"LANGHUS\",\"adresse\":[\"Skansen 2\"],\"kommune\":\"NORDRE FOLLO\",\"kommunenummer\":\"3207\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3253\",\"poststed\":\"LARVIK\",\"adresse\":[\"Postboks 9144\"],\"kommune\":\"LARVIK\",\"kommunenummer\":\"3909\"},\"telefonnummer\":\"02 13 63 81\",\"telefaksnummer\":\"02 13 63 81\",\"mobilnummer\":\"021 36 368\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2001-08-02\",\"aktivitetBransje\":[\"Programmeringstjenester\"],\"vedtektsdato\":\"2017-10-05\",\"vedtektsfestetFormaal\":[\"Programmeringstjenester\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":95,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[{\"kode\":\"ULBA\",\"beskrivelse\":\"Utleier av bygg eller anlegg\"}],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"1050000.00\",\"antallAksjer\":\"300\",\"paalydendeBelop\":\"3500.00\",\"innbetaltBelop\":\"1050000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"30888798311\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Daglig leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314241126\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310495670\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"To styremedlemmer i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"26876797959\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"18856698315\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T13:47:18.066+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T13:25:03.835+01:00",
+              "id": "213636812",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T22:57:53.683446896+01:00",
+              "testdataVersjon": 1705841237
+            },
+            "antallUnderenheter": 5,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 95,
+            "kapital": {
+              "antallAksjer": 300,
+              "type": "Aksjekapital",
+              "belop": 1050000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": [
+              "314860438",
+              "314860446",
+              "314860454",
+              "314860462",
+              "314860470"
+            ],
+            "regnskapsfoerere": ["314241126"],
+            "revisorer": ["310495670"],
+            "styremedlemmer": ["18856698315"],
+            "telefonnummer": "02 13 63 81",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "213636812",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "MÅSØY",
+        "landkode": "NO",
+        "postnummer": "9691",
+        "adresse": ["Postboks 9126"],
+        "land": "Norge",
+        "kommunenummer": "5618",
+        "poststed": "HAVØYSUND"
+      },
+      "erUnderenhet": { "hovedenhet": "213636812" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.010"],
+      "navn": "HÅNDLAGET GRETTEN FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"314860462\",\"navn\":\"HÅNDLAGET GRETTEN FJELLREV\",\"oppdeltNavn\":[\"HÅNDLAGET GRETTEN FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9672\",\"poststed\":\"INGØY\",\"adresse\":[\"Østre Åsenåkeren\"],\"kommune\":\"MÅSØY\",\"kommunenummer\":\"5618\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9691\",\"poststed\":\"HAVØYSUND\",\"adresse\":[\"Postboks 9126\"],\"kommune\":\"MÅSØY\",\"kommunenummer\":\"5618\"},\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":19,\"underenhet\":{\"hovedenhet\":\"213636812\",\"oppstartsdato\":\"2000-08-07\",\"datoEierskifte\":\"2018-02-23\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"213636812\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T22:57:53.249+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:15:52.6+01:00",
+        "id": "314860462",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T22:57:53.683457356+01:00",
+        "testdataVersjon": 1705874272
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 19,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "314860462",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "PORSANGER",
+        "landkode": "NO",
+        "postnummer": "9700",
+        "adresse": ["Meieriveien 36"],
+        "land": "Norge",
+        "kommunenummer": "5622",
+        "poststed": "LAKSELV"
+      },
+      "naeringBeskrivelse": ["Programmeringstjenester"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "PORSANGER",
+              "landkode": "NO",
+              "postnummer": "9700",
+              "adresse": ["Meieriveien 36"],
+              "land": "Norge",
+              "kommunenummer": "5622",
+              "poststed": "LAKSELV"
+            },
+            "naeringBeskrivelse": ["Programmeringstjenester"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "10875498342",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2009-01-21",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.010"],
+            "navn": "DYR LETT TIGER AS",
+            "dagligLeder": "10875498342",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"310623547\",\"navn\":\"DYR LETT TIGER AS\",\"oppdeltNavn\":[\"DYR LETT TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9700\",\"poststed\":\"LAKSELV\",\"adresse\":[\"Meieriveien 36\"],\"kommune\":\"PORSANGER\",\"kommunenummer\":\"5622\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 10 62 54\",\"telefaksnummer\":\"03 10 62 54\",\"e-post\":\"cepheus@fangtonatiuh.no\",\"nettadresse\":\"www.alphardpavo.no\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2009-01-21\",\"aktivitetBransje\":[\"Programmeringstjenester\"],\"vedtektsdato\":\"2016-08-31\",\"vedtektsfestetFormaal\":[\"Programmeringstjenester\"],\"sisteInnsendteAarsregnskap\":\"2018\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":9,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"126200.00\",\"antallAksjer\":\"1350\",\"paalydendeBelop\":\"93.48\",\"innbetaltBelop\":\"126200.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"10875498342\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Daglig leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312646099\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310495670\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":6}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Daglig leder og styrets leder i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"10875498342\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"A-AK\",\"beskrivelse\":\"Representant for A-aksjonærene\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"22828998572\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"A-AK\",\"beskrivelse\":\"Representant for A-aksjonærene\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"06879298286\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"A-AK\",\"beskrivelse\":\"Representant for A-aksjonærene\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T15:20:26.456+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T14:47:23.808+01:00",
+              "id": "310623547",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T17:04:19.135894435+01:00",
+              "testdataVersjon": 1705846826
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2018",
+            "antallAnsatte": 9,
+            "kapital": {
+              "antallAksjer": 1350,
+              "type": "Aksjekapital",
+              "belop": 126200
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["311604686"],
+            "regnskapsfoerere": ["312646099"],
+            "revisorer": ["310495670"],
+            "styremedlemmer": ["22828998572", "06879298286"],
+            "telefonnummer": "03 10 62 54",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "310623547",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "310623547" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.010"],
+      "navn": "DYR LETT TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311604686\",\"navn\":\"DYR LETT TIGER AS\",\"oppdeltNavn\":[\"DYR LETT TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9700\",\"poststed\":\"LAKSELV\",\"adresse\":[\"Meieriveien 36\"],\"kommune\":\"PORSANGER\",\"kommunenummer\":\"5622\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 11 60 68\",\"telefaksnummer\":\"03 11 60 68\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":9,\"underenhet\":{\"hovedenhet\":\"310623547\",\"oppstartsdato\":\"2008-03-14\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310623547\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T17:04:18.756+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T16:24:20.614+01:00",
+        "id": "311604686",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T17:04:19.135902672+01:00",
+        "testdataVersjon": 1705853058
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 9,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 11 60 68",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311604686",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "NORDKAPP",
+        "landkode": "NO",
+        "postnummer": "9750",
+        "adresse": ["Ringveien 6"],
+        "land": "Norge",
+        "kommunenummer": "5620",
+        "poststed": "HONNINGSVÅG"
+      },
+      "naeringBeskrivelse": ["Programmeringstjenester"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "NORDKAPP",
+              "landkode": "NO",
+              "postnummer": "9750",
+              "adresse": ["Ringveien 6"],
+              "land": "Norge",
+              "kommunenummer": "5620",
+              "poststed": "HONNINGSVÅG"
+            },
+            "naeringBeskrivelse": ["Programmeringstjenester"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "27897898972",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2014-11-12",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.010"],
+            "navn": "ALDRENDE RASK TIGER AS",
+            "dagligLeder": "10896897530",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"314233433\",\"navn\":\"ALDRENDE RASK TIGER AS\",\"oppdeltNavn\":[\"ALDRENDE RASK TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9750\",\"poststed\":\"HONNINGSVÅG\",\"adresse\":[\"Ringveien 6\"],\"kommune\":\"NORDKAPP\",\"kommunenummer\":\"5620\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 42 334\",\"e-post\":\"camelopardalis@dabihcorcaroli.com\",\"nettadresse\":\"www.arnebpisces.com\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2014-11-12\",\"aktivitetBransje\":[\"Programmeringstjenester\"],\"vedtektsdato\":\"2019-08-18\",\"vedtektsfestetFormaal\":[\"Programmeringstjenester\"],\"sisteInnsendteAarsregnskap\":\"2018\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":5,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"30000.00\",\"antallAksjer\":\"30\",\"paalydendeBelop\":\"1000.00\",\"innbetaltBelop\":\"30000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"10896897530\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Daglig leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314243005\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310990361\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"27897898972\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"10919098460\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T21:48:27.453+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T20:56:16.565+01:00",
+              "id": "314233433",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T21:48:28.071238847+01:00",
+              "testdataVersjon": 1705870107
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2018",
+            "antallAnsatte": 5,
+            "kapital": {
+              "antallAksjer": 30,
+              "type": "Aksjekapital",
+              "belop": 30000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["311307754"],
+            "regnskapsfoerere": ["314243005"],
+            "revisorer": ["310990361"],
+            "styremedlemmer": ["10919098460"],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "314233433",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "314233433" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.010"],
+      "navn": "ALDRENDE RASK TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311307754\",\"navn\":\"ALDRENDE RASK TIGER AS\",\"oppdeltNavn\":[\"ALDRENDE RASK TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9750\",\"poststed\":\"HONNINGSVÅG\",\"adresse\":[\"Ringveien 6\"],\"kommune\":\"NORDKAPP\",\"kommunenummer\":\"5620\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 13 077\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":5,\"underenhet\":{\"hovedenhet\":\"314233433\",\"oppstartsdato\":\"2014-11-22\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314233433\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T16:33:20.401+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T15:54:55.366+01:00",
+        "id": "311307754",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T21:48:28.071247394+01:00",
+        "testdataVersjon": 1705851200
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 5,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311307754",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "KARASJOK",
+        "landkode": "NO",
+        "postnummer": "9731",
+        "adresse": ["Niittojohka 27"],
+        "land": "Norge",
+        "kommunenummer": "5610",
+        "poststed": "KARASJOK"
+      },
+      "naeringBeskrivelse": ["Programmeringstjenester"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "KVINNHERAD",
+              "landkode": "NO",
+              "postnummer": "5454",
+              "adresse": ["Heiastølen 15"],
+              "land": "Norge",
+              "kommunenummer": "4617",
+              "poststed": "SÆBØVIK"
+            },
+            "naeringBeskrivelse": [
+              "Databehandling, datalagring og tilknyttede tjenester"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "27832748795",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2003-01-24",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["63.110"],
+            "navn": "FERSK LOGISK TIGER AS",
+            "dagligLeder": "13856697384",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313537188\",\"navn\":\"FERSK LOGISK TIGER AS\",\"oppdeltNavn\":[\"FERSK LOGISK TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"5454\",\"poststed\":\"SÆBØVIK\",\"adresse\":[\"Heiastølen 15\"],\"kommune\":\"KVINNHERAD\",\"kommunenummer\":\"4617\"},\"postadresse\":{\"adresse\":[]},\"e-post\":\"sceptrum@pavosualocin.com\",\"nettadresse\":\"www.merakpipirima.no\",\"naeringskoder\":[{\"kode\":\"63\",\"beskrivelse\":\"Informasjonstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"63.1\",\"beskrivelse\":\"Databehandling, datalagring og tilknyttede tjenester, drift av web portaler\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"63.11\",\"beskrivelse\":\"Databehandling, datalagring og tilknyttede tjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"63.110\",\"beskrivelse\":\"Databehandling, datalagring og tilknyttede tjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2003-01-24\",\"aktivitetBransje\":[\"Programmeringstjenester\",\"Databehandling, datalagring og tilknyttede tjenester\"],\"vedtektsdato\":\"2017-01-18\",\"vedtektsfestetFormaal\":[\"Programmeringstjenester\",\"Databehandling, datalagring og tilknyttede tjenester\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":71,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[{\"kode\":\"ULBA\",\"beskrivelse\":\"Utleier av bygg eller anlegg\"}],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"1000000.00\",\"antallAksjer\":\"500\",\"paalydendeBelop\":\"2000.00\",\"innbetaltBelop\":\"1000000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"13856697384\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313645983\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314241517\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Daglig leder eller styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"27832748795\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"24865199372\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"20865896396\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"23876898322\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T20:31:58.907+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T19:41:39.773+01:00",
+              "id": "313537188",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:36:18.802620656+01:00",
+              "testdataVersjon": 1705865518
+            },
+            "antallUnderenheter": 4,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 71,
+            "kapital": {
+              "antallAksjer": 500,
+              "type": "Aksjekapital",
+              "belop": 1000000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": [
+              "315216508",
+              "315216516",
+              "315216524",
+              "315216532"
+            ],
+            "regnskapsfoerere": ["313645983"],
+            "revisorer": ["314241517"],
+            "styremedlemmer": ["24865199372", "20865896396", "23876898322"],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313537188",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "313537188" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.010"],
+      "navn": "KORREKT FYLDIG FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315216524\",\"navn\":\"KORREKT FYLDIG FJELLREV\",\"oppdeltNavn\":[\"KORREKT FYLDIG FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9731\",\"poststed\":\"KARASJOK\",\"adresse\":[\"Niittojohka 27\"],\"kommune\":\"KARASJOK\",\"kommunenummer\":\"5610\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 15 21 52\",\"telefaksnummer\":\"03 15 21 52\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":30,\"underenhet\":{\"hovedenhet\":\"313537188\",\"oppstartsdato\":\"1998-04-04\",\"datoEierskifte\":\"2008-12-10\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313537188\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:36:18.391+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:50:22.004+01:00",
+        "id": "315216524",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:36:18.802634116+01:00",
+        "testdataVersjon": 1705876578
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 30,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 21 52",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315216524",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "TANA",
+        "landkode": "NO",
+        "postnummer": "9842",
+        "adresse": ["Austertanaveien 4740"],
+        "land": "Norge",
+        "kommunenummer": "5628",
+        "poststed": "TANA"
+      },
+      "naeringBeskrivelse": ["Programmeringstjenester"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "TANA",
+              "landkode": "NO",
+              "postnummer": "9842",
+              "adresse": ["Austertanaveien 4740"],
+              "land": "Norge",
+              "kommunenummer": "5628",
+              "poststed": "TANA"
+            },
+            "naeringBeskrivelse": ["Programmeringstjenester"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "11884897361",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2008-11-04",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.010"],
+            "navn": "TILFELDIG ALTERNATIV TIGER AS",
+            "dagligLeder": "28846898338",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"311032801\",\"navn\":\"TILFELDIG ALTERNATIV TIGER AS\",\"oppdeltNavn\":[\"TILFELDIG ALTERNATIV TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9842\",\"poststed\":\"TANA\",\"adresse\":[\"Austertanaveien 4740\"],\"kommune\":\"TANA\",\"kommunenummer\":\"5628\"},\"postadresse\":{\"adresse\":[]},\"telefaksnummer\":\"03 11 03 80\",\"mobilnummer\":\"031 10 328\",\"e-post\":\"copernicus@asellusprimusfawaris.no\",\"nettadresse\":\"www.nashalpherg.no\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2008-11-04\",\"aktivitetBransje\":[\"Programmeringstjenester\"],\"vedtektsdato\":\"2016-09-20\",\"vedtektsfestetFormaal\":[\"Programmeringstjenester\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":11,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"100000.00\",\"antallAksjer\":\"1000\",\"paalydendeBelop\":\"100.00\",\"innbetaltBelop\":\"100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"28846898338\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313569187\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Daglig leder eller styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"SIHV\",\"beskrivelse\":\"Signatur hver for seg\"},\"person\":{\"foedselsnummer\":\"11884897361\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"SIHV\",\"beskrivelse\":\"Signatur hver for seg\"},\"person\":{\"foedselsnummer\":\"28846898338\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"11884897361\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"28846898338\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"20903048973\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T16:04:18.56+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T15:27:04.274+01:00",
+              "id": "311032801",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T17:02:09.874584333+01:00",
+              "testdataVersjon": 1705849458
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 11,
+            "kapital": {
+              "antallAksjer": 1000,
+              "type": "Aksjekapital",
+              "belop": 100000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["311584316"],
+            "regnskapsfoerere": [],
+            "revisorer": ["313569187"],
+            "styremedlemmer": ["28846898338", "20903048973"],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "311032801",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "311032801" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.010"],
+      "navn": "TILFELDIG ALTERNATIV TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311584316\",\"navn\":\"TILFELDIG ALTERNATIV TIGER AS\",\"oppdeltNavn\":[\"TILFELDIG ALTERNATIV TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9842\",\"poststed\":\"TANA\",\"adresse\":[\"Austertanaveien 4740\"],\"kommune\":\"TANA\",\"kommunenummer\":\"5628\"},\"postadresse\":{\"adresse\":[]},\"telefaksnummer\":\"03 11 58 31\",\"mobilnummer\":\"031 15 843\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.01\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.010\",\"beskrivelse\":\"Programmeringstjenester\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":11,\"underenhet\":{\"hovedenhet\":\"311032801\",\"oppstartsdato\":\"2008-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"311032801\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T17:02:09.495+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T16:22:23.909+01:00",
+        "id": "311584316",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T17:02:09.874591674+01:00",
+        "testdataVersjon": 1705852929
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 11,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311584316",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "GAMVIK",
+        "landkode": "NO",
+        "postnummer": "9773",
+        "adresse": ["Øvre Innlandetneset"],
+        "land": "Norge",
+        "kommunenummer": "5626",
+        "poststed": "NERVEI"
+      },
+      "naeringBeskrivelse": [
+        "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "OSLO",
+              "landkode": "NO",
+              "postnummer": "1291",
+              "adresse": ["Nordre Åkeren"],
+              "land": "Norge",
+              "kommunenummer": "0301",
+              "poststed": "OSLO"
+            },
+            "naeringBeskrivelse": [
+              "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "69927301733",
+            "Postadresse": {
+              "kommune": "OSLO",
+              "landkode": "NO",
+              "postnummer": "0308",
+              "adresse": ["Postboks 9025"],
+              "land": "Norge",
+              "kommunenummer": "0301",
+              "poststed": "OSLO"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "OSLO",
+              "landkode": "NO",
+              "postnummer": "0308",
+              "adresse": ["Postboks 9025"],
+              "land": "Norge",
+              "kommunenummer": "0301",
+              "poststed": "OSLO"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "1989-01-28",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.020"],
+            "navn": "HEVNGJERRIG ØKONOMISK TIGER AS",
+            "dagligLeder": "14897298717",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"314283775\",\"navn\":\"HEVNGJERRIG ØKONOMISK TIGER AS\",\"oppdeltNavn\":[\"HEVNGJERRIG ØKONOMISK TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1291\",\"poststed\":\"OSLO\",\"adresse\":[\"Nordre Åkeren\"],\"kommune\":\"OSLO\",\"kommunenummer\":\"0301\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"0308\",\"poststed\":\"OSLO\",\"adresse\":[\"Postboks 9025\"],\"kommune\":\"OSLO\",\"kommunenummer\":\"0301\"},\"telefonnummer\":\"03 14 28 77\",\"telefaksnummer\":\"03 14 28 77\",\"e-post\":\"pisces@mulipheinasellusaustralis.com\",\"nettadresse\":\"www.naledichamukuy.com\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"1989-01-28\",\"aktivitetBransje\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"Utgivelse av annen programvare\"],\"vedtektsdato\":\"2015-01-05\",\"vedtektsfestetFormaal\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"Utgivelse av annen programvare\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":112,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"5800000.00\",\"antallAksjer\":\"95100\",\"paalydendeBelop\":\"60.99\",\"innbetaltBelop\":\"5800000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"14897298717\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Daglig leder eller styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"POHV\",\"beskrivelse\":\"Prokura hver for seg\"},\"person\":{\"foedselsnummer\":\"01877698641\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":6}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313230090\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310495670\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder alene eller to styremedlemmer i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"69927301733\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"59927400132\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"09828299422\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T21:54:22.771+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T21:04:19.694+01:00",
+              "id": "314283775",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T22:20:04.849016314+01:00",
+              "testdataVersjon": 1705870462
+            },
+            "antallUnderenheter": 3,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 112,
+            "kapital": {
+              "antallAksjer": 95100,
+              "type": "Aksjekapital",
+              "belop": 5800000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": ["314528182", "314528190", "314528204"],
+            "regnskapsfoerere": ["313230090"],
+            "revisorer": ["310495670"],
+            "styremedlemmer": ["59927400132", "09828299422"],
+            "telefonnummer": "03 14 28 77",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "314283775",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "314283775" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.020"],
+      "navn": "TOÅRIG ORIENTAL FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"314528182\",\"navn\":\"TOÅRIG ORIENTAL FJELLREV\",\"oppdeltNavn\":[\"TOÅRIG ORIENTAL FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9773\",\"poststed\":\"NERVEI\",\"adresse\":[\"Øvre Innlandetneset\"],\"kommune\":\"GAMVIK\",\"kommunenummer\":\"5626\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 14 52 18\",\"telefaksnummer\":\"03 14 52 18\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":111,\"underenhet\":{\"hovedenhet\":\"314283775\",\"oppstartsdato\":\"1988-06-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314283775\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T22:20:04.427+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T10:42:00.8+01:00",
+        "id": "314528182",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T22:20:04.849024615+01:00",
+        "testdataVersjon": 1705872004
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 111,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 14 52 18",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "314528182",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "ALTA",
+        "landkode": "NO",
+        "postnummer": "9517",
+        "adresse": ["Aspesletta 12"],
+        "land": "Norge",
+        "kommunenummer": "5601",
+        "poststed": "ALTA"
+      },
+      "naeringBeskrivelse": [
+        "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "VOLDA",
+        "landkode": "NO",
+        "postnummer": "6134",
+        "adresse": ["Postboks 9036"],
+        "land": "Norge",
+        "kommunenummer": "1577",
+        "poststed": "LAUVSTAD"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "INDRE ØSTFOLD",
+              "landkode": "NO",
+              "postnummer": "1850",
+              "adresse": ["Vestengveien 8C"],
+              "land": "Norge",
+              "kommunenummer": "3118",
+              "poststed": "MYSEN"
+            },
+            "naeringBeskrivelse": [
+              "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "22889599794",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2005-06-17",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.020"],
+            "navn": "MORALSK NORMAL TIGER AS",
+            "dagligLeder": "15917499761",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"312248425\",\"navn\":\"MORALSK NORMAL TIGER AS\",\"oppdeltNavn\":[\"MORALSK NORMAL TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1850\",\"poststed\":\"MYSEN\",\"adresse\":[\"Vestengveien 8C\"],\"kommune\":\"INDRE ØSTFOLD\",\"kommunenummer\":\"3118\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 22 484\",\"e-post\":\"copernicus@dubhetiaki.no\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2005-06-17\",\"aktivitetBransje\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"vedtektsdato\":\"2017-01-24\",\"vedtektsfestetFormaal\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":122,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[{\"kode\":\"ULBA\",\"beskrivelse\":\"Utleier av bygg eller anlegg\"}],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"1000000.00\",\"antallAksjer\":\"500\",\"paalydendeBelop\":\"2000.00\",\"innbetaltBelop\":\"1000000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"15917499761\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Daglig leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314257324\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312939053\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder og ett styremedlem i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"22889599794\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"03866297915\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"26826496729\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"09916495959\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"28847698839\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"28896797583\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T18:12:01.168+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T17:28:37.264+01:00",
+              "id": "312248425",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T18:12:01.781017771+01:00",
+              "testdataVersjon": 1705857120
+            },
+            "antallUnderenheter": 5,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 122,
+            "kapital": {
+              "antallAksjer": 500,
+              "type": "Aksjekapital",
+              "belop": 1000000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": [
+              "215460592",
+              "315460573",
+              "315460581",
+              "315460603",
+              "315460611"
+            ],
+            "regnskapsfoerere": ["314257324"],
+            "revisorer": ["312939053"],
+            "styremedlemmer": [
+              "03866297915",
+              "26826496729",
+              "09916495959",
+              "28847698839",
+              "28896797583"
+            ],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "312248425",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "VOLDA",
+        "landkode": "NO",
+        "postnummer": "6134",
+        "adresse": ["Postboks 9036"],
+        "land": "Norge",
+        "kommunenummer": "1577",
+        "poststed": "LAUVSTAD"
+      },
+      "erUnderenhet": { "hovedenhet": "312248425" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.020"],
+      "navn": "TILFREDSSTILLENDE UNG FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"215460592\",\"navn\":\"TILFREDSSTILLENDE UNG FJELLREV\",\"oppdeltNavn\":[\"TILFREDSSTILLENDE UNG FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9517\",\"poststed\":\"ALTA\",\"adresse\":[\"Aspesletta 12\"],\"kommune\":\"ALTA\",\"kommunenummer\":\"5601\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"6134\",\"poststed\":\"LAUVSTAD\",\"adresse\":[\"Postboks 9036\"],\"kommune\":\"VOLDA\",\"kommunenummer\":\"1577\"},\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":13,\"underenhet\":{\"hovedenhet\":\"312248425\",\"oppstartsdato\":\"2006-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312248425\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T14:06:18.117+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T13:42:32.26+01:00",
+        "id": "215460592",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T18:12:01.781029542+01:00",
+        "testdataVersjon": 1705842377
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 13,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "215460592",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "LEBESBY",
+        "landkode": "NO",
+        "postnummer": "9742",
+        "adresse": ["Nedre Vatnettjernet"],
+        "land": "Norge",
+        "kommunenummer": "5624",
+        "poststed": "KUNES"
+      },
+      "naeringBeskrivelse": [
+        "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "INDRE ØSTFOLD",
+              "landkode": "NO",
+              "postnummer": "1850",
+              "adresse": ["Vestengveien 8C"],
+              "land": "Norge",
+              "kommunenummer": "3118",
+              "poststed": "MYSEN"
+            },
+            "naeringBeskrivelse": [
+              "Konsulentvirksomhet tilknyttet informasjonsteknologi"
+            ],
+            "registrertIMvaregisteret": true,
+            "styreleder": "22889599794",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2005-06-17",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["62.020"],
+            "navn": "MORALSK NORMAL TIGER AS",
+            "dagligLeder": "15917499761",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"312248425\",\"navn\":\"MORALSK NORMAL TIGER AS\",\"oppdeltNavn\":[\"MORALSK NORMAL TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"1850\",\"poststed\":\"MYSEN\",\"adresse\":[\"Vestengveien 8C\"],\"kommune\":\"INDRE ØSTFOLD\",\"kommunenummer\":\"3118\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 22 484\",\"e-post\":\"copernicus@dubhetiaki.no\",\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2005-06-17\",\"aktivitetBransje\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"vedtektsdato\":\"2017-01-24\",\"vedtektsfestetFormaal\":[\"Konsulentvirksomhet tilknyttet informasjonsteknologi\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":122,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[{\"kode\":\"ULBA\",\"beskrivelse\":\"Utleier av bygg eller anlegg\"}],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"1000000.00\",\"antallAksjer\":\"500\",\"paalydendeBelop\":\"2000.00\",\"innbetaltBelop\":\"1000000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"15917499761\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Daglig leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314257324\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312939053\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder og ett styremedlem i fellesskap\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"22889599794\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"03866297915\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"26826496729\"},\"virksomhet\":{},\"valgtAv\":{\"kode\":\"AREP\",\"beskrivelse\":\"Representant for de ansatte\"},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"09916495959\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"28847698839\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":4}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"MEDL\",\"beskrivelse\":\"Styremedlem\"},\"person\":{\"foedselsnummer\":\"28896797583\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":5}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T18:12:01.168+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T17:28:37.264+01:00",
+              "id": "312248425",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-22T00:02:21.212077977+01:00",
+              "testdataVersjon": 1705857120
+            },
+            "antallUnderenheter": 5,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 122,
+            "kapital": {
+              "antallAksjer": 500,
+              "type": "Aksjekapital",
+              "belop": 1000000
+            },
+            "varamedlemmer": [],
+            "harUnderenheter": [
+              "215460592",
+              "315460573",
+              "315460581",
+              "315460603",
+              "315460611"
+            ],
+            "regnskapsfoerere": ["314257324"],
+            "revisorer": ["312939053"],
+            "styremedlemmer": [
+              "03866297915",
+              "26826496729",
+              "09916495959",
+              "28847698839",
+              "28896797583"
+            ],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "312248425",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "312248425" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["62.020"],
+      "navn": "MINIMALISTISK KORT FJELLREV",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315460603\",\"navn\":\"MINIMALISTISK KORT FJELLREV\",\"oppdeltNavn\":[\"MINIMALISTISK KORT FJELLREV\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"9742\",\"poststed\":\"KUNES\",\"adresse\":[\"Nedre Vatnettjernet\"],\"kommune\":\"LEBESBY\",\"kommunenummer\":\"5624\"},\"postadresse\":{\"adresse\":[]},\"naeringskoder\":[{\"kode\":\"62\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"62.0\",\"beskrivelse\":\"Tjenester tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"62.02\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"62.020\",\"beskrivelse\":\"Konsulentvirksomhet tilknyttet informasjonsteknologi\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":5,\"underenhet\":{\"hovedenhet\":\"312248425\",\"oppstartsdato\":\"2008-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312248425\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-22T00:02:20.785+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T12:13:50.841+01:00",
+        "id": "315460603",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-22T00:02:21.212085434+01:00",
+        "testdataVersjon": 1705878140
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 5,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315460603",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    }
+  ],
+  "fasetter": {}
+}
