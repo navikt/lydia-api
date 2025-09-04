@@ -1,0 +1,651 @@
+{
+  "treff": 5,
+  "rader": 5,
+  "offset": 0,
+  "nesteSide": null,
+  "seed": 8283,
+  "dokumentListe": [
+    {
+      "forretningsadresse": {
+        "kommune": "MIDT-TELEMARK",
+        "landkode": "NO",
+        "postnummer": "3804",
+        "adresse": ["Margretes veg 17"],
+        "land": "Norge",
+        "kommunenummer": "4020",
+        "poststed": "BØ I TELEMARK"
+      },
+      "naeringBeskrivelse": [
+        "Drosjebiltransport",
+        "Drift av ferieleiligheter",
+        "Avvirkning"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "MIDT-TELEMARK",
+              "landkode": "NO",
+              "postnummer": "3804",
+              "adresse": ["Margretes veg 17"],
+              "land": "Norge",
+              "kommunenummer": "4020",
+              "poststed": "BØ I TELEMARK"
+            },
+            "naeringBeskrivelse": [
+              "Drosjebiltransport",
+              "Drift av ferieleiligheter",
+              "Avvirkning"
+            ],
+            "registrertIMvaregisteret": true,
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "ENK",
+              "beskrivelse": "Enkeltpersonforetak"
+            },
+            "naeringKode": ["49.320", "55.202", "02.200"],
+            "navn": "HELLIG ROSA KATT FRUKTHAGE",
+            "dagligLeder": "14862548745",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"312498782\",\"navn\":\"HELLIG ROSA KATT FRUKTHAGE\",\"oppdeltNavn\":[\"HELLIG ROSA KATT FRUKTHAGE\"],\"organisasjonsform\":{\"kode\":\"ENK\",\"beskrivelse\":\"Enkeltpersonforetak\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3804\",\"poststed\":\"BØ I TELEMARK\",\"adresse\":[\"Margretes veg 17\"],\"kommune\":\"MIDT-TELEMARK\",\"kommunenummer\":\"4020\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 12 49 78\",\"telefaksnummer\":\"03 12 49 78\",\"e-post\":\"cassiopeia@nunkilich.no\",\"nettadresse\":\"www.zubenelhakrabialnitak.no\",\"naeringskoder\":[{\"kode\":\"49\",\"beskrivelse\":\"Landtransport og rørtransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"49.3\",\"beskrivelse\":\"Annen landtransport med passasjerer\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"49.32\",\"beskrivelse\":\"Drosjebiltransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"49.320\",\"beskrivelse\":\"Drosjebiltransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"55\",\"beskrivelse\":\"Overnattingsvirksomhet\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"55.2\",\"beskrivelse\":\"Drift av vandrerhjem og ferieleiligheter\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"55.20\",\"beskrivelse\":\"Drift av vandrerhjem og ferieleiligheter\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"55.202\",\"beskrivelse\":\"Drift av ferieleiligheter\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4},{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"8200\",\"beskrivelse\":\"Personlig næringsdrivende \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-14\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-14\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"aktivitetBransje\":[\"Drosjebiltransport\",\"Drift av ferieleiligheter\",\"Avvirkning\"],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":8,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"14862548745\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"person\":{\"foedselsnummer\":\"14862548745\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[{\"plassering\":\"Daglig leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310923729\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T18:39:06.612+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T17:53:50.106+01:00",
+              "id": "312498782",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T23:33:56.252137169+01:00",
+              "testdataVersjon": 1705858746
+            },
+            "antallUnderenheter": 1,
+            "antallAnsatte": 8,
+            "kapital": { "antallAksjer": 0, "belop": 0 },
+            "varamedlemmer": [],
+            "innehaver": "14862548745",
+            "harUnderenheter": ["315194148"],
+            "regnskapsfoerere": ["310923729"],
+            "revisorer": [],
+            "styremedlemmer": [],
+            "telefonnummer": "03 12 49 78",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "312498782",
+            "registreringsdatoEnhetsregisteret": "2021-03-14",
+            "registreringsdatoForetaksregisteret": "2021-03-14"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "312498782" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["49.320", "55.202", "02.200"],
+      "navn": "HELLIG ROSA KATT FRUKTHAGE",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315194148\",\"navn\":\"HELLIG ROSA KATT FRUKTHAGE\",\"oppdeltNavn\":[\"HELLIG ROSA KATT FRUKTHAGE\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3804\",\"poststed\":\"BØ I TELEMARK\",\"adresse\":[\"Margretes veg 17\"],\"kommune\":\"MIDT-TELEMARK\",\"kommunenummer\":\"4020\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 15 19 14\",\"telefaksnummer\":\"03 15 19 14\",\"naeringskoder\":[{\"kode\":\"49\",\"beskrivelse\":\"Landtransport og rørtransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"49.3\",\"beskrivelse\":\"Annen landtransport med passasjerer\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"49.32\",\"beskrivelse\":\"Drosjebiltransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"49.320\",\"beskrivelse\":\"Drosjebiltransport\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"55\",\"beskrivelse\":\"Overnattingsvirksomhet\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"55.2\",\"beskrivelse\":\"Drift av vandrerhjem og ferieleiligheter\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"55.20\",\"beskrivelse\":\"Drift av vandrerhjem og ferieleiligheter\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"55.202\",\"beskrivelse\":\"Drift av ferieleiligheter\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4},{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-19\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":8,\"underenhet\":{\"hovedenhet\":\"312498782\",\"datoEierskifte\":\"2002-03-21\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312498782\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T23:33:55.809+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T11:48:14.484+01:00",
+        "id": "315194148",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T23:33:56.252146222+01:00",
+        "testdataVersjon": 1705876435
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 8,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 19 14",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315194148",
+      "registreringsdatoEnhetsregisteret": "2021-03-19"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3726",
+        "adresse": ["Stigeråsen 39B"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "naeringBeskrivelse": [
+        "Dyrking av ettårige vekster ellers",
+        "Avvirkning"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "SKIEN",
+              "landkode": "NO",
+              "postnummer": "3726",
+              "adresse": ["Stigeråsen 39B"],
+              "land": "Norge",
+              "kommunenummer": "4003",
+              "poststed": "SKIEN"
+            },
+            "naeringBeskrivelse": [
+              "Dyrking av ettårige vekster ellers",
+              "Avvirkning"
+            ],
+            "registrertIMvaregisteret": true,
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "ENK",
+              "beskrivelse": "Enkeltpersonforetak"
+            },
+            "naeringKode": ["01.190", "02.200"],
+            "navn": "NYTTIG GYLDEN KATT BØTTE",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"310944890\",\"navn\":\"NYTTIG GYLDEN KATT BØTTE\",\"oppdeltNavn\":[\"NYTTIG GYLDEN KATT BØTTE\"],\"organisasjonsform\":{\"kode\":\"ENK\",\"beskrivelse\":\"Enkeltpersonforetak\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3726\",\"poststed\":\"SKIEN\",\"adresse\":[\"Stigeråsen 39B\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"adresse\":[]},\"telefaksnummer\":\"03 10 94 89\",\"mobilnummer\":\"031 09 448\",\"naeringskoder\":[{\"kode\":\"01\",\"beskrivelse\":\"Jordbruk og tjenester tilknyttet jordbruk, jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"01.1\",\"beskrivelse\":\"Dyrking av ettårige vekster\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"01.19\",\"beskrivelse\":\"Dyrking av ettårige vekster ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"01.190\",\"beskrivelse\":\"Dyrking av ettårige vekster ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"8200\",\"beskrivelse\":\"Personlig næringsdrivende \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-15\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-15\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"aktivitetBransje\":[\"Dyrking av ettårige vekster ellers\",\"Avvirkning\"],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":5,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"person\":{\"foedselsnummer\":\"06877798133\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"312790300\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T15:54:50.259+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T15:18:22.156+01:00",
+              "id": "310944890",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T15:54:50.858460715+01:00",
+              "testdataVersjon": 1705848889
+            },
+            "antallUnderenheter": 1,
+            "antallAnsatte": 5,
+            "kapital": { "antallAksjer": 0, "belop": 0 },
+            "varamedlemmer": [],
+            "innehaver": "06877798133",
+            "harUnderenheter": ["215504352"],
+            "regnskapsfoerere": ["312790300"],
+            "revisorer": [],
+            "styremedlemmer": [],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "310944890",
+            "registreringsdatoEnhetsregisteret": "2021-03-15",
+            "registreringsdatoForetaksregisteret": "2021-03-15"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "310944890" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["01.190", "02.200"],
+      "navn": "NYTTIG GYLDEN KATT BØTTE",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"215504352\",\"navn\":\"NYTTIG GYLDEN KATT BØTTE\",\"oppdeltNavn\":[\"NYTTIG GYLDEN KATT BØTTE\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3726\",\"poststed\":\"SKIEN\",\"adresse\":[\"Stigeråsen 39B\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"02 15 50 35\",\"mobilnummer\":\"021 55 043\",\"naeringskoder\":[{\"kode\":\"01\",\"beskrivelse\":\"Jordbruk og tjenester tilknyttet jordbruk, jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"01.1\",\"beskrivelse\":\"Dyrking av ettårige vekster\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"01.19\",\"beskrivelse\":\"Dyrking av ettårige vekster ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"01.190\",\"beskrivelse\":\"Dyrking av ettårige vekster ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":5,\"underenhet\":{\"hovedenhet\":\"310944890\",\"datoEierskifte\":\"2005-02-06\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310944890\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T14:06:43.428+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T13:42:56.969+01:00",
+        "id": "215504352",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T15:54:50.858475734+01:00",
+        "testdataVersjon": 1705842403
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 5,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "02 15 50 35",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "215504352",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "VINJE",
+        "landkode": "NO",
+        "postnummer": "3864",
+        "adresse": ["Farastadhaugen 43"],
+        "land": "Norge",
+        "kommunenummer": "4036",
+        "poststed": "RAULAND"
+      },
+      "naeringBeskrivelse": ["Tjenester tilknyttet skogbruk"],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "VINJE",
+              "landkode": "NO",
+              "postnummer": "3864",
+              "adresse": ["Farastadhaugen 43"],
+              "land": "Norge",
+              "kommunenummer": "4036",
+              "poststed": "RAULAND"
+            },
+            "naeringBeskrivelse": ["Tjenester tilknyttet skogbruk"],
+            "registrertIMvaregisteret": true,
+            "styreleder": "25918599439",
+            "Postadresse": { "adresse": [] },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "stiftelsesdato": "2008-12-17",
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "AS",
+              "beskrivelse": "Aksjeselskap"
+            },
+            "naeringKode": ["02.400"],
+            "navn": "SVÆR GÅEN TIGER AS",
+            "dagligLeder": "25918599439",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"310346462\",\"navn\":\"SVÆR GÅEN TIGER AS\",\"oppdeltNavn\":[\"SVÆR GÅEN TIGER AS\"],\"organisasjonsform\":{\"kode\":\"AS\",\"beskrivelse\":\"Aksjeselskap\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3864\",\"poststed\":\"RAULAND\",\"adresse\":[\"Farastadhaugen 43\"],\"kommune\":\"VINJE\",\"kommunenummer\":\"4036\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 03 464\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.4\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.40\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.400\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"2100\",\"beskrivelse\":\"Private aksjeselskaper mv. \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"stiftelsesdato\":\"2008-12-17\",\"aktivitetBransje\":[\"Tjenester tilknyttet skogbruk\"],\"vedtektsdato\":\"2010-11-04\",\"vedtektsfestetFormaal\":[\"Tjenester tilknyttet skogbruk\"],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":15,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"type\":\"Aksjekapital\",\"belop\":\"100000.00\",\"antallAksjer\":\"100\",\"paalydendeBelop\":\"1000.00\",\"innbetaltBelop\":\"100000.00\",\"fritekst\":[],\"fulltInnbetaltBelop\":\"J\",\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"DAGL\",\"beskrivelse\":\"Daglig leder/administrerende direktør\"},\"person\":{\"foedselsnummer\":\"25918599439\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314244966\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314242742\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"SIGN\",\"beskrivelse\":\"Signatur\"},\"fritekst\":[{\"plassering\":\"Styrets leder alene\"}],\"roller\":[{\"type\":{},\"person\":{},\"virksomhet\":{},\"valgtAv\":{},\"fritekst\":[],\"rekkefolge\":0}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"LEDE\",\"beskrivelse\":\"Styrets leder\"},\"person\":{\"foedselsnummer\":\"25918599439\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"STYR\",\"beskrivelse\":\"Styre\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"VARA\",\"beskrivelse\":\"Varamedlem\"},\"person\":{\"foedselsnummer\":\"27907498099\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T14:48:16.081+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T14:20:47.31+01:00",
+              "id": "310346462",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T17:02:40.620446641+01:00",
+              "testdataVersjon": 1705844895
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 15,
+            "kapital": {
+              "antallAksjer": 100,
+              "type": "Aksjekapital",
+              "belop": 100000
+            },
+            "varamedlemmer": ["27907498099"],
+            "harUnderenheter": ["311589199"],
+            "regnskapsfoerere": ["314244966"],
+            "revisorer": ["314242742"],
+            "styremedlemmer": [],
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "310346462",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "310346462" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["02.400"],
+      "navn": "SVÆR GÅEN TIGER AS",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"311589199\",\"navn\":\"SVÆR GÅEN TIGER AS\",\"oppdeltNavn\":[\"SVÆR GÅEN TIGER AS\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3864\",\"poststed\":\"RAULAND\",\"adresse\":[\"Farastadhaugen 43\"],\"kommune\":\"VINJE\",\"kommunenummer\":\"4036\"},\"postadresse\":{\"adresse\":[]},\"mobilnummer\":\"031 15 891\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.4\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.40\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.400\",\"beskrivelse\":\"Tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":15,\"underenhet\":{\"hovedenhet\":\"310346462\",\"oppstartsdato\":\"2008-02-21\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310346462\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T17:02:40.195+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T16:22:49.985+01:00",
+        "id": "311589199",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T17:02:40.620454535+01:00",
+        "testdataVersjon": 1705852959
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 15,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "311589199",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3746",
+        "adresse": ["Bergheimvegen 4"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "naeringBeskrivelse": [
+        "Avvirkning",
+        "Jakt, viltstell og tjenester tilknyttet jakt og viltstell",
+        "Utleie av egen eller leid fast eiendom ellers"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3702",
+        "adresse": ["Postboks 9074"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "SKIEN",
+              "landkode": "NO",
+              "postnummer": "3746",
+              "adresse": ["Bergheimvegen 4"],
+              "land": "Norge",
+              "kommunenummer": "4003",
+              "poststed": "SKIEN"
+            },
+            "naeringBeskrivelse": [
+              "Avvirkning",
+              "Jakt, viltstell og tjenester tilknyttet jakt og viltstell",
+              "Utleie av egen eller leid fast eiendom ellers"
+            ],
+            "registrertIMvaregisteret": true,
+            "Postadresse": {
+              "kommune": "SKIEN",
+              "landkode": "NO",
+              "postnummer": "3702",
+              "adresse": ["Postboks 9074"],
+              "land": "Norge",
+              "kommunenummer": "4003",
+              "poststed": "SKIEN"
+            },
+            "maalform": "Bokmål",
+            "harUtenlandskPostadresse": false,
+            "postadresse": {
+              "kommune": "SKIEN",
+              "landkode": "NO",
+              "postnummer": "3702",
+              "adresse": ["Postboks 9074"],
+              "land": "Norge",
+              "kommunenummer": "4003",
+              "poststed": "SKIEN"
+            },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "ENK",
+              "beskrivelse": "Enkeltpersonforetak"
+            },
+            "naeringKode": ["02.200", "01.700", "68.209"],
+            "navn": "MOMENTAN MODERAT KATT BESTEMOR",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"313810925\",\"navn\":\"MOMENTAN MODERAT KATT BESTEMOR\",\"oppdeltNavn\":[\"MOMENTAN MODERAT KATT BESTEMOR\"],\"organisasjonsform\":{\"kode\":\"ENK\",\"beskrivelse\":\"Enkeltpersonforetak\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3746\",\"poststed\":\"SKIEN\",\"adresse\":[\"Bergheimvegen 4\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3702\",\"poststed\":\"SKIEN\",\"adresse\":[\"Postboks 9074\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"telefonnummer\":\"03 13 81 92\",\"telefaksnummer\":\"03 13 81 92\",\"mobilnummer\":\"031 38 109\",\"e-post\":\"camelopardalis@edasichsaclateni.com\",\"nettadresse\":\"www.nikawiycanesvenatici.no\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"01\",\"beskrivelse\":\"Jordbruk og tjenester tilknyttet jordbruk, jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"01.7\",\"beskrivelse\":\"Jakt, viltstell og tjenester tilknyttet jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"01.70\",\"beskrivelse\":\"Jakt, viltstell og tjenester tilknyttet jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"01.700\",\"beskrivelse\":\"Jakt, viltstell og tjenester tilknyttet jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4},{\"kode\":\"68\",\"beskrivelse\":\"Omsetning og drift av fast eiendom\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":1},{\"kode\":\"68.2\",\"beskrivelse\":\"Utleie av egen eller leid fast eiendom\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":2},{\"kode\":\"68.20\",\"beskrivelse\":\"Utleie av egen eller leid fast eiendom\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":3},{\"kode\":\"68.209\",\"beskrivelse\":\"Utleie av egen eller leid fast eiendom ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"8200\",\"beskrivelse\":\"Personlig næringsdrivende \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"aktivitetBransje\":[\"Avvirkning\",\"Jakt, viltstell og tjenester tilknyttet jakt og viltstell\",\"Utleie av egen eller leid fast eiendom ellers\"],\"vedtektsfestetFormaal\":[],\"sisteInnsendteAarsregnskap\":\"2019\",\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Bokmål\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":8,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[{\"kode\":\"ULBA\",\"beskrivelse\":\"Utleier av bygg eller anlegg\"}],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"person\":{\"foedselsnummer\":\"06907499306\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"POHV\",\"beskrivelse\":\"Prokura hver for seg\"},\"person\":{\"foedselsnummer\":\"11854598394\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":2}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"POHV\",\"beskrivelse\":\"Prokura hver for seg\"},\"person\":{\"foedselsnummer\":\"06907397708\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":3}]},{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REVI\",\"beskrivelse\":\"Revisor\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"314239946\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T21:02:03.689+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T20:09:36.616+01:00",
+              "id": "313810925",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-21T21:02:04.305320829+01:00",
+              "testdataVersjon": 1705867323
+            },
+            "antallUnderenheter": 1,
+            "sisteInnsendteAarsregnskap": "2019",
+            "antallAnsatte": 8,
+            "kapital": { "antallAksjer": 0, "belop": 0 },
+            "varamedlemmer": [],
+            "innehaver": "06907499306",
+            "harUnderenheter": ["212312002"],
+            "regnskapsfoerere": [],
+            "revisorer": ["314239946"],
+            "styremedlemmer": [],
+            "telefonnummer": "03 13 81 92",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "313810925",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": {
+        "kommune": "SKIEN",
+        "landkode": "NO",
+        "postnummer": "3702",
+        "adresse": ["Postboks 9074"],
+        "land": "Norge",
+        "kommunenummer": "4003",
+        "poststed": "SKIEN"
+      },
+      "erUnderenhet": { "hovedenhet": "313810925" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["02.200", "01.700", "68.209"],
+      "navn": "MOMENTAN MODERAT KATT BESTEMOR",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"212312002\",\"navn\":\"MOMENTAN MODERAT KATT BESTEMOR\",\"oppdeltNavn\":[\"MOMENTAN MODERAT KATT BESTEMOR\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3746\",\"poststed\":\"SKIEN\",\"adresse\":[\"Bergheimvegen 4\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"postadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3702\",\"poststed\":\"SKIEN\",\"adresse\":[\"Postboks 9074\"],\"kommune\":\"SKIEN\",\"kommunenummer\":\"4003\"},\"telefonnummer\":\"02 12 31 00\",\"telefaksnummer\":\"02 12 31 00\",\"mobilnummer\":\"021 23 120\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.2\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.20\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.200\",\"beskrivelse\":\"Avvirkning\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"01\",\"beskrivelse\":\"Jordbruk og tjenester tilknyttet jordbruk, jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"01.7\",\"beskrivelse\":\"Jakt, viltstell og tjenester tilknyttet jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"01.70\",\"beskrivelse\":\"Jakt, viltstell og tjenester tilknyttet jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"01.700\",\"beskrivelse\":\"Jakt, viltstell og tjenester tilknyttet jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4},{\"kode\":\"68\",\"beskrivelse\":\"Omsetning og drift av fast eiendom\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":1},{\"kode\":\"68.2\",\"beskrivelse\":\"Utleie av egen eller leid fast eiendom\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":2},{\"kode\":\"68.20\",\"beskrivelse\":\"Utleie av egen eller leid fast eiendom\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":3},{\"kode\":\"68.209\",\"beskrivelse\":\"Utleie av egen eller leid fast eiendom ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":3,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-18\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":8,\"underenhet\":{\"hovedenhet\":\"313810925\",\"datoEierskifte\":\"2005-02-07\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"313810925\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-21T13:33:04.207+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-26T13:12:09.99+01:00",
+        "id": "212312002",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-21T21:02:04.30533137+01:00",
+        "testdataVersjon": 1705840383
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 8,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "02 12 31 00",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "212312002",
+      "registreringsdatoEnhetsregisteret": "2021-03-18"
+    },
+    {
+      "forretningsadresse": {
+        "kommune": "PORSGRUNN",
+        "landkode": "NO",
+        "postnummer": "3947",
+        "adresse": ["Myrhaugvegen 6"],
+        "land": "Norge",
+        "kommunenummer": "4001",
+        "poststed": "LANGANGEN"
+      },
+      "naeringBeskrivelse": [
+        "Skogskjøtsel og andre skogbruksaktiviteter",
+        "Husdyrhold ellers"
+      ],
+      "registrertIMvaregisteret": false,
+      "Postadresse": { "adresse": [] },
+      "maalform": " ",
+      "harUtenlandskPostadresse": false,
+      "tenorRelasjoner": {
+        "brreg-er-fr": [
+          {
+            "forretningsadresse": {
+              "kommune": "PORSGRUNN",
+              "landkode": "NO",
+              "postnummer": "3947",
+              "adresse": ["Myrhaugvegen 6"],
+              "land": "Norge",
+              "kommunenummer": "4001",
+              "poststed": "LANGANGEN"
+            },
+            "naeringBeskrivelse": [
+              "Skogskjøtsel og andre skogbruksaktiviteter",
+              "Husdyrhold ellers"
+            ],
+            "registrertIMvaregisteret": true,
+            "Postadresse": { "adresse": [] },
+            "maalform": "Nynorsk",
+            "harUtenlandskPostadresse": false,
+            "postadresse": { "adresse": [] },
+            "erUnderenhet": {},
+            "registrertIFrivillighetsregisteret": false,
+            "kontaktpersoner": [],
+            "fravalgAvRevisjon": { "fravalg": false },
+            "slettetIEnhetsregisteret": false,
+            "enhetStatuser": [],
+            "registrertIForetaksregisteret": true,
+            "norsk_representant": [],
+            "organisasjonsform": {
+              "kode": "ENK",
+              "beskrivelse": "Enkeltpersonforetak"
+            },
+            "naeringKode": ["02.100", "01.490"],
+            "navn": "USIKKER DEILIG KATT AKELEIE",
+            "tenorMetadata": {
+              "kildedata": "{\"organisasjonsnummer\":\"310585874\",\"navn\":\"USIKKER DEILIG KATT AKELEIE\",\"oppdeltNavn\":[\"USIKKER DEILIG KATT AKELEIE\"],\"organisasjonsform\":{\"kode\":\"ENK\",\"beskrivelse\":\"Enkeltpersonforetak\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3947\",\"poststed\":\"LANGANGEN\",\"adresse\":[\"Myrhaugvegen 6\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 10 58 87\",\"mobilnummer\":\"031 05 858\",\"e-post\":\"sceptrum@arkabposteriornikawiy.no\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.1\",\"beskrivelse\":\"Skogskjøtsel og andre skogbruksaktiviteter\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.10\",\"beskrivelse\":\"Skogskjøtsel og andre skogbruksaktiviteter\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.100\",\"beskrivelse\":\"Skogskjøtsel og andre skogbruksaktiviteter\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"01\",\"beskrivelse\":\"Jordbruk og tjenester tilknyttet jordbruk, jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"01.4\",\"beskrivelse\":\"Husdyrhold\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"01.49\",\"beskrivelse\":\"Husdyrhold ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"01.490\",\"beskrivelse\":\"Husdyrhold ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{\"kode\":\"8200\",\"beskrivelse\":\"Personlig næringsdrivende \"},\"registreringsdatoEnhetsregisteret\":\"2021-03-16\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"J\",\"registreringsdatoForetaksregisteret\":\"2021-03-16\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"J\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"J\",\"aktivitetBransje\":[\"Skogskjøtsel og andre skogbruksaktiviteter\",\"Husdyrhold ellers\"],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\"Nynorsk\",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"J\",\"antallAnsatte\":9,\"underenhet\":{},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"INNH\",\"beskrivelse\":\"Innehaver\"},\"person\":{\"foedselsnummer\":\"24888198543\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"PROK\",\"beskrivelse\":\"Prokura\"},\"person\":{\"foedselsnummer\":\"14887798479\"},\"virksomhet\":{},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]},{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"REGN\",\"beskrivelse\":\"Regnskapsfører\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310144193\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":0}]}]}",
+              "kilder": null,
+              "oppdatert": "2024-01-21T15:16:24.647+01:00",
+              "datasettVersjon": 0,
+              "opprettet": "2021-11-26T14:43:51.437+01:00",
+              "id": "310585874",
+              "kildeMime": "application/json",
+              "indeksert": "2024-01-22T00:51:04.934041212+01:00",
+              "testdataVersjon": 1705846584
+            },
+            "antallUnderenheter": 1,
+            "antallAnsatte": 9,
+            "kapital": { "antallAksjer": 0, "belop": 0 },
+            "varamedlemmer": [],
+            "innehaver": "24888198543",
+            "harUnderenheter": ["315919215"],
+            "regnskapsfoerere": ["310144193"],
+            "revisorer": [],
+            "styremedlemmer": [],
+            "telefonnummer": "03 10 58 87",
+            "harUtenlandskForretningsadresse": false,
+            "tenorRelasjonsnavn": "erUnderenhet.hovedenhet",
+            "organisasjonsnummer": "310585874",
+            "registreringsdatoEnhetsregisteret": "2021-03-16",
+            "registreringsdatoForetaksregisteret": "2021-03-16"
+          }
+        ]
+      },
+      "postadresse": { "adresse": [] },
+      "erUnderenhet": { "hovedenhet": "310585874" },
+      "registrertIFrivillighetsregisteret": false,
+      "kontaktpersoner": [],
+      "fravalgAvRevisjon": { "fravalg": false },
+      "slettetIEnhetsregisteret": false,
+      "enhetStatuser": [],
+      "registrertIForetaksregisteret": false,
+      "norsk_representant": [],
+      "organisasjonsform": {
+        "kode": "BEDR",
+        "beskrivelse": "Underenhet til næringsdrivende og offentlig forvaltning"
+      },
+      "naeringKode": ["02.100", "01.490"],
+      "navn": "USIKKER DEILIG KATT AKELEIE",
+      "tenorMetadata": {
+        "kildedata": "{\"organisasjonsnummer\":\"315919215\",\"navn\":\"USIKKER DEILIG KATT AKELEIE\",\"oppdeltNavn\":[\"USIKKER DEILIG KATT AKELEIE\"],\"organisasjonsform\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Underenhet til næringsdrivende og offentlig forvaltning\"},\"forretningsadresse\":{\"land\":\"Norge\",\"landkode\":\"NO\",\"postnummer\":\"3947\",\"poststed\":\"LANGANGEN\",\"adresse\":[\"Myrhaugvegen 6\"],\"kommune\":\"PORSGRUNN\",\"kommunenummer\":\"4001\"},\"postadresse\":{\"adresse\":[]},\"telefonnummer\":\"03 15 91 21\",\"mobilnummer\":\"031 59 192\",\"naeringskoder\":[{\"kode\":\"02\",\"beskrivelse\":\"Skogbruk og tjenester tilknyttet skogbruk\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":1},{\"kode\":\"02.1\",\"beskrivelse\":\"Skogskjøtsel og andre skogbruksaktiviteter\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":2},{\"kode\":\"02.10\",\"beskrivelse\":\"Skogskjøtsel og andre skogbruksaktiviteter\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":3},{\"kode\":\"02.100\",\"beskrivelse\":\"Skogskjøtsel og andre skogbruksaktiviteter\",\"hjelpeenhetskode\":false,\"rekkefolge\":1,\"nivaa\":4},{\"kode\":\"01\",\"beskrivelse\":\"Jordbruk og tjenester tilknyttet jordbruk, jakt og viltstell\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":1},{\"kode\":\"01.4\",\"beskrivelse\":\"Husdyrhold\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":2},{\"kode\":\"01.49\",\"beskrivelse\":\"Husdyrhold ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":3},{\"kode\":\"01.490\",\"beskrivelse\":\"Husdyrhold ellers\",\"hjelpeenhetskode\":false,\"rekkefolge\":2,\"nivaa\":4}],\"institusjonellSektorkode\":{},\"registreringsdatoEnhetsregisteret\":\"2021-03-20\",\"slettetIEnhetsregisteret\":\"N\",\"registrertIForetaksregisteret\":\"N\",\"slettetIForetaksregisteret\":\"N\",\"registreringspliktigForetaksregisteret\":\"N\",\"registrertIFrivillighetsregisteret\":\"N\",\"registrertIStiftelsesregisteret\":\"N\",\"registrertIMvaregisteret\":\"N\",\"aktivitetBransje\":[],\"vedtektsfestetFormaal\":[],\"konkurs\":\"N\",\"underAvvikling\":\"N\",\"underTvangsavviklingEllerTvangsopplosning\":\"N\",\"maalform\":\" \",\"ansvarsbegrensning\":\"N\",\"harAnsatte\":\"N\",\"antallAnsatte\":9,\"underenhet\":{\"hovedenhet\":\"310585874\",\"oppstartsdato\":\"2007-08-15\"},\"bedriftsforsamling\":\"N\",\"representantskap\":\"N\",\"enhetstatuser\":[],\"fullmakter\":[],\"frivilligMvaRegistrert\":[],\"finansielleInstrumenter\":[],\"kapital\":{\"antallAksjer\":\"0\",\"fritekst\":[],\"sakkyndigRedegjorelse\":\"N\"},\"kjonnsrepresentasjon\":\"N\",\"matrikkelnummer\":[],\"paategninger\":[],\"fravalgAvRevisjon\":{\"fravalg\":\"N\"},\"norskregistrertUtenlandskForetak\":{\"helNorskEierskap\":\"N\",\"aktivitetINorge\":\"N\"},\"lovgivningOgForetaksformIHjemlandet\":{\"foretaksform\":\"\"},\"registerIHjemlandet\":{\"navnRegister\":[],\"adresse\":[]},\"fusjoner\":[],\"fisjoner\":[],\"rollegrupper\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"Virksomhet til næringsdrivende person\"},\"fritekst\":[],\"roller\":[{\"type\":{\"kode\":\"BEDR\",\"beskrivelse\":\"har som registreringsenhet\"},\"person\":{},\"virksomhet\":{\"organisasjonsnummer\":\"310585874\"},\"valgtAv\":{},\"fratraadt\":\"N\",\"fritekst\":[],\"rekkefolge\":1}]}]}",
+        "kilder": ["brreg-er-fr"],
+        "oppdatert": "2024-01-22T00:51:04.511+01:00",
+        "datasettVersjon": 0,
+        "opprettet": "2021-11-29T12:58:53.122+01:00",
+        "id": "315919215",
+        "kildeMime": "application/json",
+        "indeksert": "2024-01-22T00:51:04.934049023+01:00",
+        "testdataVersjon": 1705881064
+      },
+      "antallUnderenheter": 0,
+      "antallAnsatte": 9,
+      "kapital": { "antallAksjer": 0, "belop": 0 },
+      "varamedlemmer": [],
+      "harUnderenheter": [],
+      "regnskapsfoerere": [],
+      "revisorer": [],
+      "styremedlemmer": [],
+      "telefonnummer": "03 15 91 21",
+      "harUtenlandskForretningsadresse": false,
+      "organisasjonsnummer": "315919215",
+      "registreringsdatoEnhetsregisteret": "2021-03-20"
+    }
+  ],
+  "fasetter": {}
+}
