@@ -43,7 +43,7 @@ Fia mottar ny statistikk via Kafka. Denne produseres av [pia-sykefravarsstatisti
 ### Testdata i dev-miljø for nytt kvartal
 Testdata må produseres av scripts i [pia-dvh-import](https://github.com/navikt/pia-dvh-import) før du følger [vanlig framgangsmåte](#import-av-nytt-kvartal)
 
-Framgangsmåte for å produsere nytt kvartal av testdata er beskrevet [her](todo)
+Framgangsmåte for å produsere nytt kvartal av testdata er beskrevet [her](https://github.com/navikt/pia-dvh-import/blob/main/scripts/README.md)
 
 ### Import av nytt kvartal
 Dette krever noe vedlikehold for å holde appen oppdatert:
