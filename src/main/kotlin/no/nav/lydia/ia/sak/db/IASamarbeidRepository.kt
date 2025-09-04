@@ -39,7 +39,7 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "prosessId" to samarbeidId,
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asSingle,
+                ).map(this::mapRowToIASamarbeid).asSingle,
             )
         }
 
@@ -57,7 +57,7 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "slettetStatus" to IASamarbeid.Status.SLETTET.name,
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asList,
+                ).map(this::mapRowToIASamarbeid).asList,
             )
         }
 
@@ -74,7 +74,7 @@ class IASamarbeidRepository(
                     mapOf(
                         "saksnummer" to saksnummer,
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asList,
+                ).map(this::mapRowToIASamarbeid).asList,
             )
         }
 
@@ -94,7 +94,7 @@ class IASamarbeidRepository(
                         "orgnr" to orgnr,
                         "slettetStatus" to IASamarbeid.Status.SLETTET.name,
                     ),
-                ).map { mapRowToIaSamarbeidDto(it) }.asList,
+                ).map { mapRowToIASamarbeid(it) }.asList,
             )
         }
 
@@ -133,7 +133,7 @@ class IASamarbeidRepository(
                     SELECT *
                     FROM ia_prosess
                     """.trimIndent(),
-                ).map(this::mapRowToIaSamarbeidDto).asList,
+                ).map(this::mapRowToIASamarbeid).asList,
             )
         }
 
@@ -155,7 +155,7 @@ class IASamarbeidRepository(
                         "saksnummer" to saksnummer,
                         "navn" to navn.nullIfEmpty(),
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asSingle,
+                ).map(this::mapRowToIASamarbeid).asSingle,
             )!!
         }
 
@@ -179,7 +179,7 @@ class IASamarbeidRepository(
 
     private fun String?.nullIfEmpty(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
 
-    private fun mapRowToIaSamarbeidDto(row: Row): IASamarbeid =
+    private fun mapRowToIASamarbeid(row: Row): IASamarbeid =
         IASamarbeid(
             id = row.int("id"),
             offentligId = row.string("offentlig_id").tilUUID("offentlig_id"),
@@ -209,7 +209,7 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.SLETTET.name,
                         "endret_tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asSingle,
+                ).map(this::mapRowToIASamarbeid).asSingle,
             )!!
         }
 
@@ -230,7 +230,7 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.FULLFØRT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asSingle,
+                ).map(this::mapRowToIASamarbeid).asSingle,
             )!!
         }
 
@@ -251,7 +251,7 @@ class IASamarbeidRepository(
                         "status" to IASamarbeid.Status.AVBRUTT.name,
                         "tidspunkt" to LocalDateTime.now(),
                     ),
-                ).map(this::mapRowToIaSamarbeidDto).asSingle,
+                ).map(this::mapRowToIASamarbeid).asSingle,
             )!!
         }
 
