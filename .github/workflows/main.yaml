@@ -69,7 +69,7 @@ jobs:
       id-token: write
     name: Deploy app to dev
     needs: build
-    if: github.ref == 'refs/heads/offentlig-id-til-samarbeid'
+    if: github.ref == 'refs/heads/fjerne-samarbeid-id-fra-samarbeid-med-dokument-dto'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
