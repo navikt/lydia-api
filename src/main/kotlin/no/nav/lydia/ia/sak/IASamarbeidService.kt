@@ -50,7 +50,6 @@ class IASamarbeidService(
             samarbeidRepository.hentSamarbeidForOrgnr(orgnr)
                 .map { samarbeid ->
                     SamarbeidMedDokumenterDto(
-                        id = samarbeid.id,
                         offentligId = samarbeid.offentligId.toString(),
                         navn = samarbeid.navn,
                         status = samarbeid.status,
