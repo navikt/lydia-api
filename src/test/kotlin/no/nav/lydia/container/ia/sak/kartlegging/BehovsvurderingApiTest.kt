@@ -771,6 +771,37 @@ class BehovsvurderingApiTest {
     }
 
     @Test
+    fun `Skal IKKE kunne flytte en avsluttet (fullført) behovsvurdering som er publisert`() {
+        val sak = nySakIKartlegges()
+            .opprettNyttSamarbeid(navn = "Først")
+            .opprettNyttSamarbeid(navn = "Sist")
+
+        val alleSamarbeid = sak.hentAlleSamarbeid()
+        alleSamarbeid shouldHaveSize 2
+
+        val førsteSamarbeid = alleSamarbeid.first()
+        val andreSamarbeid = alleSamarbeid.last()
+
+        val type = Spørreundersøkelse.Type.Behovsvurdering
+        val avsluttetBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(type = type, samarbeidId = førsteSamarbeid.id)
+        avsluttetBehovsvurdering.status shouldBe Spørreundersøkelse.Status.AVSLUTTET
+
+        val response = publiserDokument(
+            dokumentReferanseId = avsluttetBehovsvurdering.id,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+        val dokumentPubliseringDto = response.third.get()
+        dokumentPubliseringDto.referanseId shouldBe avsluttetBehovsvurdering.id
+        dokumentPubliseringDto.status shouldNotBe DokumentPublisering.Status.IKKE_PUBLISERT
+
+        shouldFail {
+            avsluttetBehovsvurdering.flytt(orgnummer = sak.orgnr, saksnummer = sak.saksnummer, samarbeidId = andreSamarbeid.id)
+        }.message shouldContain "er publisert, kan ikke bytte samarbeid"
+    }
+
+    @Test
     fun `Oppretting, start og fullføring av spørreundersøkelse oppdaterer rette tidspunktfelter`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val spørreundersøkelseDto = sak.opprettBehovsvurdering()

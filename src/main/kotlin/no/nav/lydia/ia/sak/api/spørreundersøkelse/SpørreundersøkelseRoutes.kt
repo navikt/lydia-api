@@ -285,6 +285,10 @@ object IASakSpørreundersøkelseError {
             "Spørreundersøkelse er ikke i status '${Spørreundersøkelse.Status.AVSLUTTET.name}', kan ikke bytte samarbeid",
             HttpStatusCode.BadRequest,
         )
+    val `publisert, kan ikke bytte samarbeid` = Feil(
+        "Spørreundersøkelse er publisert, kan ikke bytte samarbeid",
+        HttpStatusCode.BadRequest,
+    )
     val `generell feil under uthenting` =
         Feil("Generell feil under uthenting av en spørreundersøkelse", HttpStatusCode.InternalServerError)
     val `feil under oppdatering` =

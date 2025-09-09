@@ -13,6 +13,7 @@ import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.Companio
 import no.nav.lydia.ia.eksport.SpørreundersøkelseOppdateringProdusent.TemaResultatKafkaDto
 import no.nav.lydia.ia.eksport.tilTemaResultatKafkaDto
 import no.nav.lydia.ia.sak.api.Feil
+import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.extensions.tilUUID
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.IASakSpørreundersøkelseError
 import no.nav.lydia.ia.sak.api.spørreundersøkelse.OppdaterBehovsvurderingDto
@@ -282,6 +283,9 @@ class SpørreundersøkelseService(
         }
         if (behovsvurdering.status != Spørreundersøkelse.Status.AVSLUTTET) {
             return IASakSpørreundersøkelseError.`ikke avsluttet, kan ikke bytte samarbeid`.left()
+        }
+        if (behovsvurdering.publiseringStatus != DokumentPublisering.Status.IKKE_PUBLISERT) {
+            return IASakSpørreundersøkelseError.`publisert, kan ikke bytte samarbeid`.left()
         }
 
         val oppdatertBehovsvurdering = iaSakService.hentIASak(saksnummer = behovsvurdering.saksnummer).flatMap {
