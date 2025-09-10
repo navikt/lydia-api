@@ -33,15 +33,18 @@ class StatusoversiktApiTest {
     }
 
     @Test
-    fun `skal ikke kunne hente statusoversikt dersom man ikke er superbruker eller saksbehandler`() {
+    fun `skal ikke kunne hente statusoversikt dersom man ikke er superbruker, saksbehandler eller lesebruker`() {
         StatusoversiktHelper.hentStatusoversikt(
-            token = authContainerHelper.lesebruker.token,
+            token = authContainerHelper.brukerUtenTilgangsrolle.token,
         ).second.statusCode shouldBe 403
         StatusoversiktHelper.hentStatusoversikt(
             token = authContainerHelper.saksbehandler1.token,
         ).second.statusCode shouldBe 200
         StatusoversiktHelper.hentStatusoversikt(
             token = authContainerHelper.superbruker1.token,
+        ).second.statusCode shouldBe 200
+        StatusoversiktHelper.hentStatusoversikt(
+            token = authContainerHelper.lesebruker.token,
         ).second.statusCode shouldBe 200
     }
 
