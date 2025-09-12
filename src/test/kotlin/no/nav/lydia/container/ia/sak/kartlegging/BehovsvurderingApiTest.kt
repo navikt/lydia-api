@@ -17,7 +17,9 @@ import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.hentDokumentPublisering
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
+import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.sendKvittering
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.flytt
 import no.nav.lydia.helper.IASakKartleggingHelper.Companion.hentKartleggingMedSvar
@@ -316,6 +318,47 @@ class BehovsvurderingApiTest {
         )
 
         alleSpørreundersøkelser.first().publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
+    }
+
+    @Test
+    fun `skal returnere publisertTidspunkt for en publisert behovsvurdering`() {
+        val sak = nySakIKartleggesMedEtSamarbeid()
+
+        val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
+
+        val response = publiserDokument(
+            dokumentReferanseId = fullførtBehovsvurdering.id,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+        val dokumentPubliseringDto = response.third.get()
+
+        val alleSpørreundersøkelser = hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = fullførtBehovsvurdering.samarbeidId,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        )
+
+        alleSpørreundersøkelser.first().publiseringStatus shouldBe DokumentPublisering.Status.OPPRETTET
+        alleSpørreundersøkelser.first().publisertTidspunkt shouldBe null
+
+        sendKvittering(dokument = dokumentPubliseringDto)
+
+        val publisertDokument = hentDokumentPublisering(
+            dokumentReferanseId = dokumentPubliseringDto.referanseId,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        val hentAlleSpørreundersøkelserIgjen = hentSpørreundersøkelse(
+            orgnr = sak.orgnr,
+            saksnummer = sak.saksnummer,
+            prosessId = fullførtBehovsvurdering.samarbeidId,
+            type = Spørreundersøkelse.Type.Behovsvurdering,
+        )
+
+        hentAlleSpørreundersøkelserIgjen.first().publiseringStatus shouldBe DokumentPublisering.Status.PUBLISERT
+        hentAlleSpørreundersøkelserIgjen.first().publisertTidspunkt shouldBe publisertDokument.publisertTidspunkt
     }
 
     @Test

@@ -17,6 +17,7 @@ data class SpørreundersøkelseUtenInnholdDto(
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
+    val publisertTidspunkt: LocalDateTime?,
     val gyldigTilTidspunkt: LocalDateTime,
     val harMinstEttResultat: Boolean,
 )
@@ -35,6 +36,7 @@ fun Spørreundersøkelse.tilUtenInnholdDto(): SpørreundersøkelseUtenInnholdDto
         påbegyntTidspunkt = påbegyntTidspunkt,
         fullførtTidspunkt = fullførtTidspunkt,
         gyldigTilTidspunkt = gyldigTilTidspunkt,
+        publisertTidspunkt = publisertTidspunkt,
         harMinstEttResultat = harMinstEttResultat(),
         type = type.name.uppercase(),
     )

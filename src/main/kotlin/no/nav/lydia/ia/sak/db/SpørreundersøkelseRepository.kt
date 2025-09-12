@@ -56,7 +56,8 @@ class SpørreundersøkelseRepository(
                                virksomhet.orgnr,
                                sak.saksnummer,
                                samarbeid.id                      AS samarbeid_id,
-                               dokument_til_publisering.status   AS publisering_status
+                               dokument_til_publisering.status   AS publisering_status,
+                               dokument_til_publisering.publisert AS publisert
                         FROM ia_sak_kartlegging sporreundersokelse
                                  JOIN ia_prosess samarbeid
                                       ON sporreundersokelse.ia_prosess = samarbeid.id
@@ -96,7 +97,8 @@ class SpørreundersøkelseRepository(
                                virksomhet.orgnr,
                                sak.saksnummer,
                                samarbeid.id                      AS samarbeid_id,
-                               dokument_til_publisering.status   AS publisering_status
+                               dokument_til_publisering.status   AS publisering_status,
+                               dokument_til_publisering.publisert AS publisert
                         FROM ia_sak_kartlegging sporreundersokelse
                                  JOIN ia_prosess samarbeid
                                       ON sporreundersokelse.ia_prosess = samarbeid.id
@@ -236,6 +238,7 @@ class SpørreundersøkelseRepository(
             fullførtTidspunkt = localDateTimeOrNull("fullfort")?.toKotlinLocalDateTime(),
             gyldigTilTidspunkt = localDateTime("gyldig_til").toKotlinLocalDateTime(),
             publiseringStatus = stringOrNull("publisering_status").tilDokumentTilPubliseringStatus(),
+            publisertTidspunkt = localDateTimeOrNull("publisert")?.toKotlinLocalDateTime(),
         )
     }
 
@@ -517,7 +520,8 @@ class SpørreundersøkelseRepository(
                                virksomhet.orgnr,
                                sak.saksnummer,
                                samarbeid.id                      AS samarbeid_id,
-                               dokument_til_publisering.status   AS publisering_status
+                               dokument_til_publisering.status   AS publisering_status,
+                               dokument_til_publisering.publisert AS publisert
                         FROM ia_sak_kartlegging sporreundersokelse
                                  JOIN ia_prosess samarbeid
                                       ON sporreundersokelse.ia_prosess = samarbeid.id

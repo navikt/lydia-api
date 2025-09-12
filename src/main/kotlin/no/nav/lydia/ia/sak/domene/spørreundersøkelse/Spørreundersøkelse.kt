@@ -17,6 +17,7 @@ data class Spørreundersøkelse(
     val endretTidspunkt: LocalDateTime?,
     val påbegyntTidspunkt: LocalDateTime?,
     val fullførtTidspunkt: LocalDateTime?,
+    val publisertTidspunkt: LocalDateTime?,
     val publiseringStatus: DokumentPublisering.Status,
     val temaer: List<Tema>,
     val gyldigTilTidspunkt: LocalDateTime,
