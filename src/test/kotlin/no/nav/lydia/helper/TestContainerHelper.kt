@@ -405,13 +405,13 @@ class SakHelper {
             token: String = authContainerHelper.saksbehandler1.token,
         ) = opprettSakForVirksomhet(orgnummer)
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES, token = token)
 
         fun nySakIKartlegges(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = authContainerHelper.saksbehandler1.token,
         ) = nySakIKontaktes(orgnummer, token)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES, token = token)
             .also {
                 it.status shouldBe IASak.Status.KARTLEGGES
             }
@@ -420,7 +420,8 @@ class SakHelper {
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
             token: String = authContainerHelper.saksbehandler1.token,
             navnPåSamarbeid: String = DEFAULT_SAMARBEID_NAVN,
-        ) = nySakIKartlegges(orgnummer = orgnummer, token = token).opprettNyttSamarbeid(navn = navnPåSamarbeid)
+        ) = nySakIKartlegges(orgnummer = orgnummer, token = token)
+            .opprettNyttSamarbeid(navn = navnPåSamarbeid, token = token)
 
         fun nySakIViBistår(
             orgnummer: String = VirksomhetHelper.nyttOrgnummer(),
@@ -428,10 +429,10 @@ class SakHelper {
             navnPåSamarbeid: String = DEFAULT_SAMARBEID_NAVN,
         ) = opprettSakForVirksomhet(orgnummer)
             .nyHendelse(IASakshendelseType.TA_EIERSKAP_I_SAK, token = token)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES)
-            .opprettNyttSamarbeid(navn = navnPåSamarbeid)
-            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_KONTAKTES, token = token)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_KARTLEGGES, token = token)
+            .opprettNyttSamarbeid(navn = navnPåSamarbeid, token = token)
+            .nyHendelse(IASakshendelseType.VIRKSOMHET_SKAL_BISTÅS, token = token)
             .also {
                 it.status shouldBe IASak.Status.VI_BISTÅR
             }

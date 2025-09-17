@@ -48,6 +48,7 @@ class AuthContainerHelper(
     val lesebrukerAudit: TestBruker
     val saksbehandler1: TestBruker
     val saksbehandler2: TestBruker
+    val saksbehandler3: TestBruker
     val superbruker1: TestBruker
     val superbruker2: TestBruker
     val teamPiaBruker: TestBruker
@@ -77,6 +78,7 @@ class AuthContainerHelper(
             lesebrukerAudit = TestBruker(navIdent = "A54321", LESETILGANG_GROUP_ID)
             saksbehandler1 = TestBruker(navIdent = "X12345", SAKSBEHANDLER_GROUP_ID)
             saksbehandler2 = TestBruker(navIdent = "Y54321", SAKSBEHANDLER_GROUP_ID)
+            saksbehandler3 = TestBruker(navIdent = "Z123456", SAKSBEHANDLER_GROUP_ID)
             superbruker1 = TestBruker(navIdent = "S54321", SUPERBRUKER_GROUP_ID)
             superbruker2 = TestBruker(navIdent = "S22222", SUPERBRUKER_GROUP_ID)
             teamPiaBruker = TestBruker(navIdent = "P12345", TEAM_PLA_GROUP_ID)
