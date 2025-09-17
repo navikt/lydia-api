@@ -1,7 +1,7 @@
-val ktorVersion = "3.2.3"
+val ktorVersion = "3.3.0"
 val fuelVersion = "2.3.1"
 val iaFellesVersion = "2.0.3"
-val kotestVerstion = "5.9.1"
+val kotestVerstion = "6.0.3"
 val testcontainersVersion = "1.21.3"
 val logbackVersion = "1.5.18"
 val logstashLogbackEncoderVersion = "8.1"
@@ -9,9 +9,9 @@ val opentelemetryLogbackMdcVersion = "2.16.0-alpha"
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-    kotlin("jvm") version "2.2.0"
+    kotlin("jvm") version "2.2.20"
     // Skru json-serialisering
-    kotlin("plugin.serialization") version "2.2.0"
+    kotlin("plugin.serialization") version "2.2.20"
     // For å bygge fatjar
     id("com.github.johnrengelman.shadow") version "8.1.1"
     // Apply the application plugin to add support for building a CLI application in Java.
@@ -52,20 +52,20 @@ dependencies {
 
     // metrics
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.15.2")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
 
     // Database
     implementation("org.postgresql:postgresql:42.7.7")
-    implementation("com.zaxxer:HikariCP:7.0.0")
-    implementation("org.flywaydb:flyway-database-postgresql:11.10.5")
+    implementation("com.zaxxer:HikariCP:7.0.2")
+    implementation("org.flywaydb:flyway-database-postgresql:11.13.0")
     implementation("com.github.seratch:kotliquery:1.9.1")
 
     // Enklere httpklient
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
-    implementation("com.google.code.gson:gson:2.13.1")
+    implementation("com.google.code.gson:gson:2.13.2")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:4.0.0")
+    implementation("org.apache.kafka:kafka-clients:4.1.0")
 
     // ULID
     implementation("com.github.guepardoapps:kulid:2.0.0.0")
@@ -81,7 +81,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.4")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.5")
 
     // TEST
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -104,12 +104,12 @@ dependencies {
     testImplementation("org.verapdf:validation-model:1.28.2")
 
     // Autentisering
-    testImplementation("no.nav.security:mock-oauth2-server:2.2.1")
+    testImplementation("no.nav.security:mock-oauth2-server:2.3.0")
 
     constraints {
         implementation("io.netty:netty-codec-http2") {
             version {
-                require("4.2.4.Final")
+                require("4.2.6.Final")
             }
             because(
                 "ktor-server-netty har sårbar versjon",
