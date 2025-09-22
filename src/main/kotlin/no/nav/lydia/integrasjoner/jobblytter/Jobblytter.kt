@@ -3,14 +3,12 @@ package no.nav.lydia.integrasjoner.jobblytter
 import ia.felles.integrasjoner.jobbsender.Jobb
 import ia.felles.integrasjoner.jobbsender.Jobb.engangsJobb
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakEksport
-import ia.felles.integrasjoner.jobbsender.Jobb.iaSakLeveranseEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidBigQueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanBigqueryEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakSamarbeidsplanEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatistikkEksport
 import ia.felles.integrasjoner.jobbsender.Jobb.iaSakStatusExport
-import ia.felles.integrasjoner.jobbsender.Jobb.kalkulerResulterendeStatusForHendelser
 import ia.felles.integrasjoner.jobbsender.Jobb.materializedViewOppdatering
 import ia.felles.integrasjoner.jobbsender.Jobb.næringsImport
 import ia.felles.integrasjoner.jobbsender.Jobb.ryddeIUrørteSaker
@@ -28,7 +26,6 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
 import no.nav.lydia.Topic
 import no.nav.lydia.ia.eksport.IASakEksporterer
-import no.nav.lydia.ia.eksport.IASakLeveranseEksportør
 import no.nav.lydia.ia.eksport.IASakStatistikkEksporterer
 import no.nav.lydia.ia.eksport.IASakStatusEksportør
 import no.nav.lydia.ia.eksport.SamarbeidBigqueryEksporterer
@@ -41,7 +38,6 @@ import no.nav.lydia.integrasjoner.ssb.NæringsDownloader
 import no.nav.lydia.vedlikehold.IASakSamarbeidOppdaterer
 import no.nav.lydia.vedlikehold.IASakStatusOppdaterer
 import no.nav.lydia.vedlikehold.IaSakhendelseStatusJobb
-import no.nav.lydia.vedlikehold.LukkAlleÅpneIaTjenester
 import no.nav.lydia.vedlikehold.StatistikkViewOppdaterer
 import no.nav.lydia.virksomhet.VirksomhetService
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -63,7 +59,6 @@ object Jobblytter : CoroutineScope {
     private lateinit var iaSakStatusOppdaterer: IASakStatusOppdaterer
     private lateinit var iaSakEksporterer: IASakEksporterer
     private lateinit var iaSakStatistikkEksporterer: IASakStatistikkEksporterer
-    private lateinit var iaSakLeveranseEksportør: IASakLeveranseEksportør
     private lateinit var iaSakStatusExportør: IASakStatusEksportør
     private lateinit var næringsDownloader: NæringsDownloader
     private lateinit var statistikkViewOppdaterer: StatistikkViewOppdaterer
@@ -72,7 +67,6 @@ object Jobblytter : CoroutineScope {
     private lateinit var samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer
     private lateinit var samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer
     private lateinit var spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer
-    private lateinit var lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester
     private lateinit var samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer
     private lateinit var iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer
     private lateinit var virksomhetService: VirksomhetService
@@ -91,7 +85,6 @@ object Jobblytter : CoroutineScope {
         iaSakStatusOppdaterer: IASakStatusOppdaterer,
         iaSakEksporterer: IASakEksporterer,
         iaSakStatistikkEksporterer: IASakStatistikkEksporterer,
-        iaSakLeveranseEksportør: IASakLeveranseEksportør,
         iaSakStatusExportør: IASakStatusEksportør,
         næringsDownloader: NæringsDownloader,
         statistikkViewOppdaterer: StatistikkViewOppdaterer,
@@ -100,7 +93,6 @@ object Jobblytter : CoroutineScope {
         samarbeidBigqueryEksporterer: SamarbeidBigqueryEksporterer,
         samarbeidsplanBigqueryEksporterer: SamarbeidsplanBigqueryEksporterer,
         spørreundersøkelseBigqueryEksporterer: SpørreundersøkelseBigqueryEksporterer,
-        lukkAlleÅpneIaTjenester: LukkAlleÅpneIaTjenester,
         samarbeidKafkaEksporterer: SamarbeidKafkaEksporterer,
         iaSakSamarbeidOppdaterer: IASakSamarbeidOppdaterer,
         virksomhetService: VirksomhetService,
@@ -119,7 +111,6 @@ object Jobblytter : CoroutineScope {
         this.iaSakEksporterer = iaSakEksporterer
         this.iaSakStatusExportør = iaSakStatusExportør
         this.iaSakStatistikkEksporterer = iaSakStatistikkEksporterer
-        this.iaSakLeveranseEksportør = iaSakLeveranseEksportør
         this.næringsDownloader = næringsDownloader
         this.statistikkViewOppdaterer = statistikkViewOppdaterer
         this.iaSakhendelseStatusJobb = iaSakhendelseStatusJobb
@@ -127,7 +118,6 @@ object Jobblytter : CoroutineScope {
         this.samarbeidBigqueryEksporterer = samarbeidBigqueryEksporterer
         this.samarbeidsplanBigqueryEksporterer = samarbeidsplanBigqueryEksporterer
         this.spørreundersøkelseBigqueryEksporterer = spørreundersøkelseBigqueryEksporterer
-        this.lukkAlleÅpneIaTjenester = lukkAlleÅpneIaTjenester
         this.samarbeidKafkaEksporterer = samarbeidKafkaEksporterer
         this.iaSakSamarbeidOppdaterer = iaSakSamarbeidOppdaterer
         this.virksomhetService = virksomhetService
@@ -175,10 +165,6 @@ object Jobblytter : CoroutineScope {
                                         iaSakStatusOppdaterer.ryddeIUrørteSaker(tørrKjør = true)
                                     }
 
-                                    kalkulerResulterendeStatusForHendelser -> {
-                                        lukkAlleÅpneIaTjenester.kjør()
-                                    }
-
                                     iaSakEksport -> {
                                         iaSakEksporterer.eksporter()
                                     }
@@ -189,10 +175,6 @@ object Jobblytter : CoroutineScope {
 
                                     iaSakStatusExport -> {
                                         iaSakStatusExportør.eksporter()
-                                    }
-
-                                    iaSakLeveranseEksport -> {
-                                        iaSakLeveranseEksportør.eksporter()
                                     }
 
                                     næringsImport -> {
