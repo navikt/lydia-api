@@ -7,6 +7,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.lydia.Observer
 import no.nav.lydia.appstatus.ObservedPlan
 import no.nav.lydia.appstatus.PlanHendelseType
+import no.nav.lydia.arbeidsgiver.DokumentMetadata
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_BEHOVSVURDERING
 import no.nav.lydia.ia.sak.IASamarbeidService.StatusendringBegrunnelser.AKTIV_EVALUERING
@@ -54,13 +55,17 @@ class IASamarbeidService(
                         navn = samarbeid.navn,
                         status = samarbeid.status,
                         sistEndret = samarbeid.sistEndret,
-                        dokumenter = samarbeidRepository.hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId = samarbeid.id),
+                        dokumenter = hentPubliserteDokumenter(samarbeidId = samarbeid.id),
                     )
                 }.filter { it.dokumenter.isNotEmpty() }
         }.mapLeft {
             log.warn("Feil ved uthenting av samarbeid", it)
             IASamarbeidFeil.`feil ved henting av samarbeid`
         }
+
+    private fun hentPubliserteDokumenter(samarbeidId: Int): List<DokumentMetadata> =
+        samarbeidRepository.hentSpørreundersøkelseDokumenterForSamarbeid(samarbeidId = samarbeidId)
+            .plus(samarbeidRepository.hentSamarbeidsplanDokumenterForSamarbeid(samarbeidId = samarbeidId))
 
     fun hentSamarbeid(sak: IASak): Either<Feil, List<IASamarbeid>> =
         Either.catch {

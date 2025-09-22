@@ -125,6 +125,33 @@ class IASamarbeidRepository(
             )
         }
 
+    fun hentSamarbeidsplanDokumenterForSamarbeid(samarbeidId: Int) =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT dok.dokument_id, dok.type, isp.sist_publisert
+                    FROM dokument_til_publisering dok
+                    JOIN ia_sak_plan isp on (isp.plan_id = dok.referanse_id)
+                    WHERE
+                        dok.dokument_id IS NOT NULL  
+                        AND dok.status = :publisertStatus
+                        AND dok.ia_prosess = :samarbeidId
+                    """.trimIndent(),
+                    mapOf(
+                        "samarbeidId" to samarbeidId,
+                        "publisertStatus" to DokumentPublisering.Status.PUBLISERT.name,
+                    ),
+                ).map {
+                    DokumentMetadata(
+                        dokumentId = it.string("dokument_id"),
+                        type = it.string("type"),
+                        dato = it.localDateTime("sist_publisert").toKotlinLocalDateTime(),
+                    )
+                }.asList,
+            )
+        }
+
     fun hentAlleSamarbeid(): List<IASamarbeid> =
         using(sessionOf(dataSource)) { session ->
             session.run(
