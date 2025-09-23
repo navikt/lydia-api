@@ -52,18 +52,6 @@ fun Modul.tilDto() =
         deaktivert = deaktivert,
     )
 
-@Serializable
-data class IASakLeveranseOpprettelsesDto(
-    val saksnummer: String,
-    val modulId: Int,
-    val frist: LocalDate,
-)
-
-@Serializable
-data class IASakLeveranseOppdateringsDto(
-    val status: IASakLeveranseStatus,
-)
-
 fun IASakLeveranse.tilDto() =
     IASakLeveranseDto(
         id = id,

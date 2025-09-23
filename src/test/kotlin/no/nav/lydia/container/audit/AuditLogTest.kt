@@ -4,7 +4,6 @@ import com.github.kittinunf.fuel.core.Request
 import io.ktor.http.HttpStatusCode
 import no.nav.lydia.AuditType
 import no.nav.lydia.Tillat
-import no.nav.lydia.helper.IATjenesteoversiktHelper
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.StatistikkHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.applikasjon
@@ -14,8 +13,6 @@ import no.nav.lydia.helper.TestVirksomhet
 import no.nav.lydia.helper.VirksomhetHelper
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
 import no.nav.lydia.ia.sak.domene.IASakshendelseType
-import no.nav.lydia.iatjenesteoversikt.api.IATJENESTEOVERSIKT_PATH
-import no.nav.lydia.iatjenesteoversikt.api.MINE_IATJENESTER_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.SYKEFRAVÆRSSTATISTIKK_PATH
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.FYLKER
 import no.nav.lydia.sykefraværsstatistikk.api.Søkeparametere.Companion.KOMMUNER
@@ -274,35 +271,6 @@ class AuditLogTest {
                     tillat = Tillat.Ja,
                     melding =
                         "Søk med parametere: sykefravarsprosentFra=5.0 sykefravarsprosentTil=30.0 ansatteFra=10 ansatteTil=50 kommuner=[1750] naringsgrupper=[bil] iaStatus=50 sorteringsnokkel=tapte_dagsverk sorteringsretning=asc side=2",
-                )
-            }
-    }
-
-    @Test
-    fun `auditlogger henting av ia-tjenesteoversikt`() {
-        val saksbehandler = authContainerHelper.saksbehandler1
-        IATjenesteoversiktHelper.hentMineIATjenester(saksbehandler.token)
-            .also {
-                applikasjon shouldContainLog auditLog(
-                    path = "/$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH",
-                    method = "GET",
-                    navIdent = saksbehandler.navIdent,
-                    auditType = AuditType.access,
-                    tillat = Tillat.Ja,
-                    melding = "Henter IA-tjenestene som er under arbeid og eies av: ${saksbehandler.navIdent}",
-                )
-            }
-
-        val lesebruker = authContainerHelper.lesebruker
-        IATjenesteoversiktHelper.hentMineIATjenester(lesebruker.token)
-            .also {
-                applikasjon shouldContainLog auditLog(
-                    path = "/$IATJENESTEOVERSIKT_PATH/$MINE_IATJENESTER_PATH",
-                    method = "GET",
-                    navIdent = lesebruker.navIdent,
-                    auditType = AuditType.access,
-                    tillat = Tillat.Nei,
-                    melding = "",
                 )
             }
     }

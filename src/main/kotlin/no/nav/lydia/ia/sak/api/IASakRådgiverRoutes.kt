@@ -7,10 +7,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.routing.put
 import no.nav.lydia.ADGrupper
 import no.nav.lydia.AuditLog
 import no.nav.lydia.AuditType
@@ -18,12 +16,10 @@ import no.nav.lydia.appstatus.Metrics
 import no.nav.lydia.ia.sak.IASakService
 import no.nav.lydia.ia.sak.IASamarbeidService
 import no.nav.lydia.ia.sak.api.IASakDto.Companion.toDto
-import no.nav.lydia.ia.sak.api.extensions.iaSakLeveranseId
 import no.nav.lydia.ia.sak.api.extensions.orgnummer
 import no.nav.lydia.ia.sak.api.extensions.saksnummer
 import no.nav.lydia.ia.sak.api.extensions.sendFeil
 import no.nav.lydia.ia.sak.api.samarbeid.tilDto
-import no.nav.lydia.ia.sak.domene.IATjeneste
 import no.nav.lydia.ia.sak.domene.TilstandsmaskinFeil
 import no.nav.lydia.integrasjoner.azure.AzureService
 import no.nav.lydia.tilgangskontroll.fia.objectId
@@ -36,8 +32,6 @@ const val IA_SAK_RADGIVER_PATH = "iasak/radgiver"
 const val SAK_HENDELSE_SUB_PATH = "hendelse"
 const val SAMARBEIDSHISTORIKK_PATH = "historikk"
 const val IA_SAK_LEVERANSE_PATH = "leveranse"
-const val IA_TJENESTER_PATH = "tjenester"
-const val IA_MODULER_PATH = "moduler"
 
 fun Route.iaSakRådgiver(
     iaSakService: IASakService,
@@ -189,99 +183,6 @@ fun Route.iaSakRådgiver(
             call.respond(message = it.feilmelding, status = it.httpStatusCode)
         }
     }
-
-    post("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}") {
-        val orgnr = call.orgnummer ?: return@post call.sendFeil(feil = IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@post call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
-        val leveranse = call.receive<IASakLeveranseOpprettelsesDto>()
-
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaSakService.opprettIASakLeveranse(leveranse = leveranse, saksbehandler = saksbehandler)
-        }.also {
-            auditLog.auditloggEither(
-                call = call,
-                either = it,
-                orgnummer = orgnr,
-                auditType = AuditType.update,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(status = HttpStatusCode.Created, message = it.tilDto())
-        }.mapLeft {
-            call.respond(status = it.httpStatusCode, message = it.feilmelding)
-        }
-    }
-
-    put("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnr}/{saksnummer}/{iaSakLeveranseId}") {
-        val orgnr = call.parameters["orgnr"] ?: return@put call.sendFeil(feil = IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.parameters["saksnummer"] ?: return@put call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
-        val iaSakLeveranseId =
-            call.parameters["iaSakLeveranseId"] ?: return@put call.sendFeil(feil = IASakError.`ugyldig iaSakLeveranseId`)
-        val oppdateringsDto = call.receive<IASakLeveranseOppdateringsDto>()
-
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaSakService.oppdaterIASakLeveranse(
-                iaSakLeveranseId = iaSakLeveranseId.toInt(),
-                oppdateringsDto = oppdateringsDto,
-                saksbehandler = saksbehandler,
-            )
-        }.also {
-            auditLog.auditloggEither(
-                call = call,
-                either = it,
-                orgnummer = orgnr,
-                auditType = AuditType.update,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(it.tilDto())
-        }.mapLeft {
-            call.respond(message = it.feilmelding, status = it.httpStatusCode)
-        }
-    }
-
-    delete("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/{orgnummer}/{saksnummer}/{iaSakLeveranseId}") {
-        val orgnr = call.orgnummer ?: return@delete call.sendFeil(feil = IASakError.`ugyldig orgnummer`)
-        val saksnummer = call.saksnummer ?: return@delete call.sendFeil(feil = IASakError.`ugyldig saksnummer`)
-        val iaSakLeveranseId =
-            call.iaSakLeveranseId ?: return@delete call.sendFeil(feil = IASakError.`ugyldig iaSakLeveranseId`)
-
-        call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
-            iaSakService.slettIASakLeveranse(iaSakLeveranseId = iaSakLeveranseId.toInt(), saksbehandler)
-        }.also {
-            auditLog.auditloggEither(
-                call = call,
-                either = it,
-                orgnummer = orgnr,
-                auditType = AuditType.delete,
-                saksnummer = saksnummer,
-            )
-        }.map {
-            call.respond(it)
-        }.mapLeft {
-            call.respond(message = it.feilmelding, status = it.httpStatusCode)
-        }
-    }
-
-    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_TJENESTER_PATH") {
-        call.somLesebruker(adGrupper = adGrupper) { _ ->
-            iaSakService.hentTjenester()
-        }.map {
-            call.respond(it.map(IATjeneste::tilDto).sorted())
-        }.mapLeft {
-            call.respond(message = it.feilmelding, status = it.httpStatusCode)
-        }
-    }
-
-    get("$IA_SAK_RADGIVER_PATH/$IA_SAK_LEVERANSE_PATH/$IA_MODULER_PATH") {
-        call.somSaksbehandler(adGrupper = adGrupper) { _ ->
-            iaSakService.hentModuler()
-        }.map {
-            call.respond(it.map { modul -> modul.tilDto() })
-        }.mapLeft {
-            call.respond(message = it.feilmelding, status = it.httpStatusCode)
-        }
-    }
 }
 
 class Feil(
@@ -300,28 +201,18 @@ object IASakError {
         Feil(feilmelding = "Prøvde å legge til hendelse på gammel sak", httpStatusCode = HttpStatusCode.Conflict)
     val `fikk ikke oppdatert sak` =
         Feil(feilmelding = "Fikk ikke oppdatert sak", httpStatusCode = HttpStatusCode.Conflict)
-    val `fikk ikke oppdatert leveranse` =
-        Feil(feilmelding = "Fikk ikke oppdatert leveranse", httpStatusCode = HttpStatusCode.Conflict)
     val `fikk ikke slettet sak` =
         Feil(feilmelding = "Fikk ikke slettet sak", httpStatusCode = HttpStatusCode.InternalServerError)
     val `ugyldig orgnummer` =
         Feil(feilmelding = "Ugyldig orgnummer", httpStatusCode = HttpStatusCode.BadRequest)
     val `ugyldig saksnummer` =
         Feil(feilmelding = "Ugyldig saksnummer", httpStatusCode = HttpStatusCode.BadRequest)
-    val `ugyldig iaSakLeveranseId` =
-        Feil(feilmelding = "Ugyldig leveranseId", httpStatusCode = HttpStatusCode.BadRequest)
-    val `ugyldig modul` =
-        Feil(feilmelding = "Ugyldig modul", httpStatusCode = HttpStatusCode.BadRequest)
-    val `ikke eier av sak` =
-        Feil(feilmelding = "Ikke eier av sak", httpStatusCode = HttpStatusCode.BadRequest)
     val `er ikke følger eller eier av sak` =
         Feil(feilmelding = "Er ikke følger eller eier av sak", httpStatusCode = HttpStatusCode.Forbidden)
     val `det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet` =
         Feil(feilmelding = "Det finnes flere saker på dette orgnummeret som ikke regnes som avsluttet", httpStatusCode = HttpStatusCode.NotImplemented)
     val `generell feil under uthenting` =
         Feil(feilmelding = "Generell feil under uthenting", httpStatusCode = HttpStatusCode.InternalServerError)
-    val `kan ikke fullføre med gjenstående leveranser` =
-        Feil(feilmelding = "Kan ikke fullføre med gjenstående leveranser", httpStatusCode = HttpStatusCode.BadRequest)
     val `kan ikke fullføre sak med aktive samarbeid` =
         Feil(feilmelding = "Kan ikke avslutte sak med aktive samarbeid", httpStatusCode = HttpStatusCode.BadRequest)
 }
