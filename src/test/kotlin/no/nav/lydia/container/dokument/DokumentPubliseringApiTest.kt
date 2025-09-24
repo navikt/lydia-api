@@ -9,10 +9,10 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.hentDokumentPubliseringRespons
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.svarPåSpørsmål
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarPåSpørsmål
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper

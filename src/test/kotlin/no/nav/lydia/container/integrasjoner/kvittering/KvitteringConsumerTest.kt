@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.hentDokumentPublisering
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
 import no.nav.lydia.helper.TestContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper

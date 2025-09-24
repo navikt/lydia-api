@@ -12,7 +12,7 @@ import no.nav.lydia.arbeidsgiver.ARBEIDSGIVER_SAMARBEID_PATH
 import no.nav.lydia.arbeidsgiver.SamarbeidMedDokumenterDto
 import no.nav.lydia.helper.DokumentPubliseringHelper
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.SakHelper
 import no.nav.lydia.helper.SakHelper.Companion.fullførSak
 import no.nav.lydia.helper.TestContainerHelper

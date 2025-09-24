@@ -167,17 +167,26 @@ class SpørreundersøkelseService(
     fun slettSpørreundersøkelse(spørreundersøkelseId: UUID): Either<Feil, Spørreundersøkelse> {
         val spørreundersøkelse = hentSpørreundersøkelse(spørreundersøkelseId).getOrElse { return it.left() }
 
+        if (spørreundersøkelse.status == Spørreundersøkelse.Status.SLETTET) {
+            return IASakSpørreundersøkelseError.`allerede slettet`.left()
+        }
+        if (spørreundersøkelse.publiseringStatus != DokumentPublisering.Status.IKKE_PUBLISERT) {
+            return IASakSpørreundersøkelseError.`publisert, kan ikke slettes`.left()
+        }
+        if (spørreundersøkelse.status == Spørreundersøkelse.Status.AVSLUTTET && spørreundersøkelse.harMinstEttResultat()) {
+            return IASakSpørreundersøkelseError.`kan ikke slettes`.left()
+        }
+
         spørreundersøkelseRepository.slettSpørreundersøkelse(spørreundersøkelseId = spørreundersøkelseId)
 
-        val oppdatertKartlegging =
-            spørreundersøkelse.copy(
-                status = Spørreundersøkelse.Status.SLETTET,
-                endretTidspunkt = LocalDateTime.now().toKotlinLocalDateTime(),
-            )
+        val oppdatertSpørreundersøkelse = spørreundersøkelse.copy(
+            status = Spørreundersøkelse.Status.SLETTET,
+            endretTidspunkt = LocalDateTime.now().toKotlinLocalDateTime(),
+        )
 
-        spørreundersøkelseObservers.forEach { it.receive(oppdatertKartlegging) }
+        spørreundersøkelseObservers.forEach { it.receive(oppdatertSpørreundersøkelse) }
 
-        return oppdatertKartlegging.right()
+        return oppdatertSpørreundersøkelse.right()
     }
 
     fun hentSpørreundersøkelser(

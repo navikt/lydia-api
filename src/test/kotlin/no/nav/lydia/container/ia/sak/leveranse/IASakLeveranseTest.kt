@@ -38,6 +38,7 @@ import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.postgresContainerHelper
 import no.nav.lydia.helper.TestData
 import no.nav.lydia.helper.VirksomhetHelper.Companion.nyttOrgnummer
+import no.nav.lydia.helper.body
 import no.nav.lydia.helper.forExactlyOne
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.api.IATjenesteDto
@@ -279,7 +280,7 @@ class IASakLeveranseTest {
             token = authContainerHelper.saksbehandler1.token,
         )
         response.statuskode() shouldBe BadRequest.value
-        response.second.body().asString("text/plain") shouldMatch "Kan ikke fullf.*re med gjenst.*ende leveranser"
+        response.body() shouldMatch "Kan ikke fullføre med gjenstående leveranser"
     }
 
     @Test

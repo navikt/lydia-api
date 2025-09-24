@@ -17,10 +17,10 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Topic
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.avslutt
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettBehovsvurdering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.opprettEvaluering
-import no.nav.lydia.helper.IASakKartleggingHelper.Companion.start
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.avslutt
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBehovsvurdering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettEvaluering
+import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.PlanHelper.Companion.endreFlereTemaerIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.endreStatusPåInnholdIPlan
 import no.nav.lydia.helper.PlanHelper.Companion.hentPlan
@@ -153,7 +153,6 @@ class IASakProsessTest {
 
     @Test
     fun `fullføring av samarbeid skal oppdatere fullført_tidspunkt`() {
-        // TODO: Lag test for avbryting av samarbeid også når det er implementert
         val sak = nySakIViBistår()
         val samarbeid = sak.hentAlleSamarbeid().first()
         sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
@@ -161,6 +160,18 @@ class IASakProsessTest {
         sak.fullførSamarbeid(samarbeid)
         postgresContainerHelper.hentEnkelKolonne<String>(
             "SELECT fullfort_tidspunkt FROM ia_prosess WHERE id = ${samarbeid.id}",
+        ).shouldNotBeNull()
+    }
+
+    @Test
+    fun `avbryting av samarbeid skal oppdatere avbrutt_tidspunkt`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        sak.opprettEnPlan(plan = hentPlanMal().inkluderAlt())
+
+        sak.avbrytSamarbeid(samarbeid)
+        postgresContainerHelper.hentEnkelKolonne<String>(
+            "SELECT avbrutt_tidspunkt FROM ia_prosess WHERE id = ${samarbeid.id}",
         ).shouldNotBeNull()
     }
 

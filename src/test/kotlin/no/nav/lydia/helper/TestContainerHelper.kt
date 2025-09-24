@@ -732,7 +732,7 @@ class DokumentPubliseringHelper {
     }
 }
 
-class IASakKartleggingHelper {
+class IASakSpørreundersøkelseHelper {
     companion object {
         fun opprettSpørreundersøkelse(
             orgnr: String,
@@ -885,10 +885,7 @@ class IASakKartleggingHelper {
             saksnummer: String,
         ) = applikasjon.performDelete("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnummer/$saksnummer/$id")
             .authentication().bearer(token)
-            .tilSingelRespons<SpørreundersøkelseDto>().third.fold(
-                success = { it },
-                failure = { fail(it.message) },
-            )
+            .tilSingelRespons<SpørreundersøkelseDto>()
 
         fun SpørreundersøkelseDto.flytt(
             token: String = authContainerHelper.saksbehandler1.token,
@@ -976,13 +973,13 @@ class IASakKartleggingHelper {
             return spørreundersøkelseSvarDto
         }
 
-        fun hentKartleggingMedSvar(
+        fun hentSpørreundersøkelseResultat(
             token: String = authContainerHelper.saksbehandler1.token,
             orgnr: String,
             saksnummer: String,
-            kartleggingId: String,
+            spørreundersøkelseId: String,
         ): SpørreundersøkelseResultatDto =
-            applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$kartleggingId")
+            applikasjon.performGet("$SPØRREUNDERSØKELSE_BASE_ROUTE/$orgnr/$saksnummer/$spørreundersøkelseId")
                 .authentication().bearer(token)
                 .tilSingelRespons<SpørreundersøkelseResultatDto>().third.fold(
                     success = { respons -> respons },
