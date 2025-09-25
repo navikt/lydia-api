@@ -12,7 +12,8 @@ data class BrregVirksomhetDto(
     val organisasjonsnummer: String,
     val oppstartsdato: String? = null,
     val navn: String,
-    val beliggenhetsadresse: Beliggenhetsadresse? = null,
+    val beliggenhetsadresse: Adresse? = null,
+    val postadresse: Adresse? = null,
     val naeringskode1: NæringsundergruppeBrreg? = null,
     val naeringskode2: NæringsundergruppeBrreg? = null,
     val naeringskode3: NæringsundergruppeBrreg? = null,
@@ -32,27 +33,34 @@ fun BrregVirksomhetDto.tilVirksomhet(
     status: VirksomhetStatus = VirksomhetStatus.AKTIV,
     oppdateringsId: Long?,
 ): VirksomhetLagringDao {
-    if (this.beliggenhetsadresse != null && this.beliggenhetsadresse.erRelevant()) {
-        return VirksomhetLagringDao(
-            orgnr = organisasjonsnummer,
-            navn = navn,
-            status = status,
-            kommunenummer = beliggenhetsadresse.kommunenummer!!,
-            næringsgrupper = hentNæringsgruppekoder().toMap(),
-            poststed = beliggenhetsadresse.poststed!!,
-            postnummer = beliggenhetsadresse.postnummer!!,
-            kommune = beliggenhetsadresse.kommune!!,
-            land = beliggenhetsadresse.land!!,
-            landkode = beliggenhetsadresse.landkode!!,
-            oppstartsdato = oppstartsdato?.let { LocalDate.parse(it) },
-            oppdatertAvBrregOppdateringsId = oppdateringsId,
-            adresse = beliggenhetsadresse.adresse ?: emptyList(),
-        )
-    }
-    throw UgyldigAdresseException(
-        "Beliggenhetsadresse $beliggenhetsadresse for orgnr $organisasjonsnummer inneholder ugyldige verdier for lagring",
+    val adresse = hentGyldigAdresse()
+    return VirksomhetLagringDao(
+        orgnr = organisasjonsnummer,
+        navn = navn,
+        status = status,
+        kommunenummer = adresse.kommunenummer!!,
+        næringsgrupper = hentNæringsgruppekoder().toMap(),
+        poststed = adresse.poststed!!,
+        postnummer = adresse.postnummer!!,
+        kommune = adresse.kommune!!,
+        land = adresse.land!!,
+        landkode = adresse.landkode!!,
+        oppstartsdato = oppstartsdato?.let { LocalDate.parse(it) },
+        oppdatertAvBrregOppdateringsId = oppdateringsId,
+        adresse = adresse.adresse ?: emptyList(),
     )
 }
+
+private fun BrregVirksomhetDto.hentGyldigAdresse() =
+    if (beliggenhetsadresse != null && beliggenhetsadresse.erRelevant()) {
+        beliggenhetsadresse
+    } else if (postadresse != null && postadresse.erRelevant()) {
+        postadresse
+    } else {
+        throw UgyldigAdresseException(
+            "Adresse for orgnr $organisasjonsnummer inneholder ugyldige verdier for lagring",
+        )
+    }
 
 @Serializable
 data class NæringsundergruppeBrreg(
@@ -61,7 +69,7 @@ data class NæringsundergruppeBrreg(
 )
 
 @Serializable
-data class Beliggenhetsadresse(
+data class Adresse(
     val land: String? = null,
     val landkode: String? = null,
     val postnummer: String? = null,

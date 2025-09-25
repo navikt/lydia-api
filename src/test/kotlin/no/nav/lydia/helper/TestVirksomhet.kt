@@ -4,7 +4,7 @@ import no.nav.lydia.helper.TestData.Companion.BARNEHAGER
 import no.nav.lydia.helper.TestData.Companion.BEDRIFTSRÅDGIVNING
 import no.nav.lydia.helper.TestData.Companion.DYRKING_AV_RIS
 import no.nav.lydia.helper.TestData.Companion.SCENEKUNST
-import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
+import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.sykefraværsstatistikk.api.geografi.Kommune
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 
@@ -12,7 +12,7 @@ data class TestVirksomhet(
     val orgnr: String,
     val navn: String,
     val næringsundergrupper: List<Næringsgruppe>,
-    val beliggenhet: Beliggenhetsadresse?,
+    val beliggenhet: Adresse?,
 ) {
     val næringsundergruppe1 = næringsundergrupper.first()
     val næringsundergruppe2 = næringsundergrupper.getOrNull(1)
@@ -110,7 +110,7 @@ data class TestVirksomhet(
         }
 
         fun nyVirksomhet(
-            beliggenhet: Beliggenhetsadresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
+            beliggenhet: Adresse = beliggenhet(kommune = KOMMUNE_OSLO, adresse = listOf("adresse")),
             næringer: List<Næringsgruppe> = tilfeldigeNæringsgrupper(),
             orgnr: String = hentUniktOrgnummer(),
             navn: String = "Navn $orgnr",
@@ -136,7 +136,7 @@ data class TestVirksomhet(
             postnummer: String? = "1234",
             poststed: String? = "POSTSTED",
             adresse: List<String>? = listOf("adresse"),
-        ) = Beliggenhetsadresse(
+        ) = Adresse(
             land = land,
             landkode = landkode,
             postnummer = postnummer,

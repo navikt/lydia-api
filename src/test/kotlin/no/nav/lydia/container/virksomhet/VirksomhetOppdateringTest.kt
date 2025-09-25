@@ -37,7 +37,7 @@ import no.nav.lydia.ia.sak.domene.IASakshendelseType
 import no.nav.lydia.ia.sak.domene.plan.PlanUndertema
 import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
-import no.nav.lydia.integrasjoner.brreg.Beliggenhetsadresse
+import no.nav.lydia.integrasjoner.brreg.Adresse
 import no.nav.lydia.virksomhet.api.VirksomhetDto
 import no.nav.lydia.virksomhet.domene.Næringsgruppe
 import no.nav.lydia.virksomhet.domene.VirksomhetStatus
@@ -124,7 +124,7 @@ class VirksomhetOppdateringTest {
 
     @Test
     fun `gjør ingenting med virksomheter som ikke er relevante`() {
-        val virksomhetUtenAdresse = nyVirksomhet(beliggenhet = Beliggenhetsadresse())
+        val virksomhetUtenAdresse = nyVirksomhet(beliggenhet = Adresse())
         sendEndringForVirksomhet(virksomhet = virksomhetUtenAdresse)
         VirksomhetHelper.hentVirksomhetsinformasjonRespons(
             orgnummer = virksomhetUtenAdresse.orgnr,
