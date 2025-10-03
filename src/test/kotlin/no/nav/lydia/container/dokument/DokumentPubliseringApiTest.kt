@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
 import no.nav.lydia.Topic
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.hentDokumentPubliseringRespons
 import no.nav.lydia.helper.DokumentPubliseringHelper.Companion.publiserDokument
@@ -23,6 +24,7 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
+import no.nav.lydia.ia.sak.api.dokument.SpørreundersøkelseInnholdIDokumentDto
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -196,11 +198,12 @@ class DokumentPubliseringApiTest {
                         dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeidId
                         dokumentPubliseringMedInnhold.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
                         dokumentPubliseringMedInnhold.dokumentOpprettetAv shouldBe navIdent
-                        dokumentPubliseringMedInnhold.innhold.id shouldBe dokumentRefId
-                        dokumentPubliseringMedInnhold.innhold.fullførtTidspunkt shouldNotBe null
+                        val innhold = Json.decodeFromJsonElement<SpørreundersøkelseInnholdIDokumentDto>(dokumentPubliseringMedInnhold.innhold)
+                        innhold.id shouldBe dokumentRefId
+                        innhold.fullførtTidspunkt shouldNotBe null
                         dokumentPubliseringMedInnhold.type shouldBe DokumentPublisering.Type.BEHOVSVURDERING
-                        dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach { it.navn shouldNotBe null }
-                        dokumentPubliseringMedInnhold.innhold.spørsmålMedSvarPerTema.forEach {
+                        innhold.spørsmålMedSvarPerTema.forEach { it.navn shouldNotBe null }
+                        innhold.spørsmålMedSvarPerTema.forEach {
                             it.spørsmålMedSvar.forEach {
                                 it.svarListe.forEach {
                                     it.antallSvar shouldNotBe null

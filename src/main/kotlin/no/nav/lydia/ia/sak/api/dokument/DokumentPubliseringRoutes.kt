@@ -46,9 +46,9 @@ fun Route.dokumentPublisering(
 
         call.somSaksbehandler(adGrupper = adGrupper) { saksbehandler ->
             azureService.hentNavenhet(objectId = call.objectId()).flatMap { navEnhet: NavEnhet ->
-                dokumentPubliseringService.opprettOgSendTilPublisering(
-                    dokumentReferanseId = dokumentReferanseId,
+                dokumentPubliseringService.publiserDokument(
                     dokumentType = dokumentType,
+                    dokumentReferanseId = dokumentReferanseId,
                     opprettetAv = saksbehandler,
                     navEnhet = navEnhet,
                 )
