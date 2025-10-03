@@ -11,20 +11,24 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.lydia.ia.sak.api.Feil
-import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.integrasjoner.kvittering.KvitteringDto
 import no.nav.lydia.tilgangskontroll.fia.NavAnsatt
 import java.util.UUID
 import javax.sql.DataSource
-import kotlin.text.trimIndent
-import kotlin.text.trimMargin
-import kotlin.to
 
 class DokumentPubliseringRepository(
     val dataSource: DataSource,
 ) {
+    fun hentDokumentPubliseringMetadata(samarbeidsId: Int): DokumentPubliseringMetadata? {
+        TODO(
+            """
+            SELECT FROM ia_prosess JOIN ia_sak JOIN virksomhet ... WHERE samarbeidId = :samarbeidId
+            """.trimIndent(),
+        )
+    }
+
     fun opprettDokument(
-        samarbeid: IASamarbeid,
+        samarbeidId: Int,
         referanseId: UUID,
         dokumentType: DokumentPublisering.Type,
         opprettetAv: NavAnsatt,
@@ -33,7 +37,7 @@ class DokumentPubliseringRepository(
             session.run(
                 action = queryOf(
                     paramMap = mapOf(
-                        "samarbeidId" to samarbeid.id,
+                        "samarbeidId" to samarbeidId,
                         "referanseId" to referanseId.toString(),
                         "type" to dokumentType.name,
                         "opprettetAv" to opprettetAv.navIdent,
@@ -55,7 +59,7 @@ class DokumentPubliseringRepository(
                           :opprettetAv, 
                           :status
                         )
-                        ON CONFLICT (referanse_id, type) DO NOTHING
+                        ON CONFLICT (id) DO NOTHING
                         RETURNING *
                         """.trimIndent(),
                 ).map { row ->

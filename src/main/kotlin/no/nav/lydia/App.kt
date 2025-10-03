@@ -278,6 +278,7 @@ fun startLydiaBackend() {
         spørreundersøkelseService = spørreundersøkelseService,
         samarbeidService = samarbeidService,
         dokumentPubliseringProdusent = DokumentPubliseringProdusent(kafka = naisEnv.kafka, topic = Topic.DOKUMENT_PUBLISERING_TOPIC),
+        planRepository = planRepository,
     )
 
     HelseMonitor.leggTilHelsesjekk(DatabaseHelsesjekk(dataSource))

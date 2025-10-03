@@ -137,6 +137,24 @@ class PlanRepository(
             ).left()
     }
 
+    fun hentPlan(planId: UUID): Plan? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT *
+                        FROM ia_sak_plan
+                        JOIN ia_prosess ON (ia_sak_plan.ia_prosess = ia_prosess.id)
+                        WHERE plan_id = :planId
+                        AND status != 'SLETTET'
+                    """.trimMargin(),
+                    mapOf(
+                        "planId" to planId.toString(),
+                    ),
+                ).map { tilPlan(it, session) }.asSingle,
+            )
+        }
+
     fun hentPlan(samarbeidId: Int): Plan? =
         using(sessionOf(dataSource)) { session ->
             session.run(
