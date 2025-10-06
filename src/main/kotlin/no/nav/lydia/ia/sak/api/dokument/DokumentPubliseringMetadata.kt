@@ -4,6 +4,6 @@ data class DokumentPubliseringMetadata(
     val orgnummer: String,
     val virksomhetsNavn: String,
     val saksnummer: String,
-    val samarbeidsId: Int,
-    val samarbeidsNavn: String,
+    val samarbeidId: Int,
+    val samarbeidsnavn: String,
 )

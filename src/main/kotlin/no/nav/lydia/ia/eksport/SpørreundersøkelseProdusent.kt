@@ -3,6 +3,7 @@ package no.nav.lydia.ia.eksport
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDateTime
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import no.nav.lydia.Kafka
@@ -28,7 +29,7 @@ class SpørreundersøkelseProdusent(
     override fun receive(input: Spørreundersøkelse) = sendPåKafka(input = input)
 
     override fun tilKafkaMelding(input: Spørreundersøkelse): Pair<String, String> {
-        val samarbeidNavn = samarbeidRepository.hentSamarbeid(
+        val samarbeidsnavn = samarbeidRepository.hentSamarbeid(
             saksnummer = input.saksnummer,
             samarbeidId = input.samarbeidId,
         )?.navn ?: input.virksomhetsNavn
@@ -43,7 +44,7 @@ class SpørreundersøkelseProdusent(
             id = input.id.toString(),
             orgnummer = input.orgnummer,
             virksomhetsNavn = input.virksomhetsNavn,
-            samarbeidsNavn = samarbeidNavn,
+            samarbeidsnavn = samarbeidsnavn,
             status = input.status,
             type = input.type.name,
             plan = plan,
@@ -83,7 +84,8 @@ class SpørreundersøkelseProdusent(
     data class SpørreundersøkelseKafkaDto(
         val id: String,
         val orgnummer: String,
-        val samarbeidsNavn: String,
+        @SerialName("samarbeidsNavn")
+        val samarbeidsnavn: String,
         val virksomhetsNavn: String,
         val status: Spørreundersøkelse.Status,
         val temaer: List<TemaKafkaDto>,
