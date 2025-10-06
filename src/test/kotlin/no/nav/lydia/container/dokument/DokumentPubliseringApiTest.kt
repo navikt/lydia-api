@@ -14,10 +14,13 @@ import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettBeho
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.opprettSvarOgAvsluttSpørreundersøkelse
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.start
 import no.nav.lydia.helper.IASakSpørreundersøkelseHelper.Companion.svarPåSpørsmål
+import no.nav.lydia.helper.PlanHelper.Companion.opprettEnPlan
 import no.nav.lydia.helper.SakHelper.Companion.leggTilFolger
 import no.nav.lydia.helper.SakHelper.Companion.nySakIKartleggesMedEtSamarbeid
+import no.nav.lydia.helper.SakHelper.Companion.nySakIViBistår
 import no.nav.lydia.helper.TestContainerHelper.Companion.authContainerHelper
 import no.nav.lydia.helper.TestContainerHelper.Companion.kafkaContainerHelper
+import no.nav.lydia.helper.hentAlleSamarbeid
 import no.nav.lydia.helper.statuskode
 import no.nav.lydia.ia.sak.DEFAULT_SAMARBEID_NAVN
 import no.nav.lydia.ia.sak.api.dokument.DokumentPublisering
@@ -25,6 +28,8 @@ import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringDto
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringMedInnhold
 import no.nav.lydia.ia.sak.api.dokument.DokumentPubliseringProdusent.Companion.getKafkaMeldingKey
 import no.nav.lydia.ia.sak.api.dokument.SpørreundersøkelseInnholdIDokumentDto
+import no.nav.lydia.ia.sak.api.plan.PlanDto
+import no.nav.lydia.ia.sak.domene.samarbeid.IASamarbeid
 import no.nav.lydia.ia.sak.domene.spørreundersøkelse.Spørreundersøkelse
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -159,7 +164,7 @@ class DokumentPubliseringApiTest {
     }
 
     @Test
-    fun `opprettelese av dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
+    fun `opprettelese av behovsvurdering dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
         val sak = nySakIKartleggesMedEtSamarbeid()
         val fullførtBehovsvurdering = sak.opprettSvarOgAvsluttSpørreundersøkelse(Spørreundersøkelse.Type.Behovsvurdering)
         val samarbeidId = fullførtBehovsvurdering.samarbeidId
@@ -169,6 +174,7 @@ class DokumentPubliseringApiTest {
         // 1- verifiser at et dokument har blitt opprettet
         val response = publiserDokument(
             dokumentReferanseId = dokumentRefId,
+            dokumentType = DokumentPublisering.Type.BEHOVSVURDERING,
             token = authContainerHelper.saksbehandler1.token,
         )
 
@@ -207,6 +213,65 @@ class DokumentPubliseringApiTest {
                             it.spørsmålMedSvar.forEach {
                                 it.svarListe.forEach {
                                     it.antallSvar shouldNotBe null
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
+    @Test
+    fun `opprettelese av samarbeidsplan dokument til publisering returnerer 201 Created og sender dokumentet med innhold til Kafka`() {
+        val sak = nySakIViBistår()
+        val samarbeid = sak.hentAlleSamarbeid().first()
+        val samarbeidId = samarbeid.id
+        val plan = sak.opprettEnPlan()
+        val dokumentRefId = plan.id
+        val navIdent = authContainerHelper.saksbehandler1.navIdent
+
+        // 1- verifiser at et dokument har blitt opprettet
+        val response = publiserDokument(
+            dokumentReferanseId = dokumentRefId,
+            dokumentType = DokumentPublisering.Type.SAMARBEIDSPLAN,
+            token = authContainerHelper.saksbehandler1.token,
+        )
+
+        response.statuskode() shouldBe HttpStatusCode.Created.value
+        val dokumentPubliseringDto: DokumentPubliseringDto = response.third.get()
+        dokumentPubliseringDto.referanseId shouldBe dokumentRefId
+        dokumentPubliseringDto.dokumentType shouldBe DokumentPublisering.Type.SAMARBEIDSPLAN
+        dokumentPubliseringDto.opprettetAv shouldBe navIdent
+        dokumentPubliseringDto.status shouldBe DokumentPublisering.Status.OPPRETTET
+        dokumentPubliseringDto.dokumentId shouldBe null
+        dokumentPubliseringDto.opprettetTidspunkt shouldNotBe null
+        dokumentPubliseringDto.publisertTidspunkt shouldBe null
+
+        // 2- verifiser at dokumentet + innhold er sent til Kafka
+        runBlocking {
+            kafkaContainerHelper.ventOgKonsumerKafkaMeldinger(
+                // key: '1-f44fee5f-cc38-41e5-bb59-ab4a7c83051d-BEHOVSVURDERING'
+                key = getKafkaMeldingKey(samarbeidId = samarbeidId, referanseId = dokumentRefId, type = DokumentPublisering.Type.SAMARBEIDSPLAN),
+                konsument = konsument,
+            ) { meldinger ->
+                meldinger shouldHaveAtLeastSize 1
+                Json.decodeFromString<DokumentPubliseringMedInnhold>(meldinger.first())
+                    .also { dokumentPubliseringMedInnhold ->
+                        dokumentPubliseringMedInnhold.referanseId shouldBe dokumentRefId
+                        dokumentPubliseringMedInnhold.virksomhet.orgnummer shouldBe sak.orgnr
+                        dokumentPubliseringMedInnhold.sak.saksnummer shouldBe sak.saksnummer
+                        dokumentPubliseringMedInnhold.samarbeid.id shouldBe samarbeidId
+                        dokumentPubliseringMedInnhold.samarbeid.navn shouldBe DEFAULT_SAMARBEID_NAVN
+                        dokumentPubliseringMedInnhold.dokumentOpprettetAv shouldBe navIdent
+                        val innhold = Json.decodeFromJsonElement<PlanDto>(dokumentPubliseringMedInnhold.innhold)
+                        innhold.id shouldBe dokumentRefId
+                        innhold.status shouldBe IASamarbeid.Status.AKTIV
+                        dokumentPubliseringMedInnhold.type shouldBe DokumentPublisering.Type.SAMARBEIDSPLAN
+                        innhold.temaer.forEach { it.navn shouldNotBe null }
+                        innhold.temaer.forEach {
+                            it.undertemaer.forEach {
+                                it.navn.forEach {
+                                    it shouldNotBe ""
                                 }
                             }
                         }

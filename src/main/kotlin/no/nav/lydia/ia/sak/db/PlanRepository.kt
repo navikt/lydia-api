@@ -146,7 +146,7 @@ class PlanRepository(
                         FROM ia_sak_plan
                         JOIN ia_prosess ON (ia_sak_plan.ia_prosess = ia_prosess.id)
                         WHERE plan_id = :planId
-                        AND status != 'SLETTET'
+                        AND ia_sak_plan.status != 'SLETTET'
                     """.trimMargin(),
                     mapOf(
                         "planId" to planId.toString(),
